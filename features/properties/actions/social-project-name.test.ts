@@ -60,6 +60,26 @@ describe("renderPropertySocialTemplate - Project Name replacement", () => {
     const result = await renderPropertySocialTemplate(template, propertyWithPartialProject, "en");
     expect(result).toContain("Project: เดอะ ไลน์ สุขุมวิท");
   });
+
+  it("should fallback to property.project_name if project object is not linked", async () => {
+    const propertyWithDirectName: any = {
+      id: "456",
+      project_name: "แอชลี่ย์ สุขุมวิท",
+    };
+    const template = "Project: {{project_name}}";
+    const result = await renderPropertySocialTemplate(template, propertyWithDirectName, "th");
+    expect(result).toContain("Project: แอชลี่ย์ สุขุมวิท");
+  });
+
+  it("should handle project as a direct string", async () => {
+    const propertyWithStringProject: any = {
+      id: "789",
+      project: "โนเบิล รีวอลฟ์",
+    };
+    const template = "Project: {{project_name}}";
+    const result = await renderPropertySocialTemplate(template, propertyWithStringProject, "th");
+    expect(result).toContain("Project: โนเบิล รีวอลฟ์");
+  });
 });
 
 describe("renderPropertySocialTemplate - Agent Name replacement", () => {

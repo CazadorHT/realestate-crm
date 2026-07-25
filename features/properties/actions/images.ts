@@ -20,7 +20,7 @@ export type UploadedImageResult = {
   publicUrl: string; // public URL สำหรับแสดงผล
 };
 
-export type UploadImageActionResponse = 
+export type UploadImageActionResponse =
   | (UploadedImageResult & { success?: true })
   | { success: false; message: string };
 
@@ -38,7 +38,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
         .eq("identity_id", user.id)
         .limit(1)
         .maybeSingle();
-      
+
       if (firstMember?.tenant_id) {
         tenantId = firstMember.tenant_id;
       } else {

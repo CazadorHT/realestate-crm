@@ -339,7 +339,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                       value={field.value ?? ""}
                       onChange={(e) => {
                         field.onChange(e.target.value);
-                        form.setValue("project_id", null, { shouldDirty: true });
+                        if (!e.target.value.trim()) {
+                          form.setValue("project_id", null, { shouldDirty: true });
+                        }
                       }}
                       onFocus={() => {
                         setShowDropdown(true);

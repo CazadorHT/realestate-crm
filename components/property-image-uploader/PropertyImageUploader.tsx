@@ -64,7 +64,10 @@ export function PropertyImageUploader({
 
     if (valuePaths.length > 0) {
       // Create a map of initial images by storage path/url for quick lookup
-      const initialMap = new Map<string, { image_url?: string; storage_path?: string; is_cover?: boolean }>();
+      const initialMap = new Map<
+        string,
+        { image_url?: string; storage_path?: string; is_cover?: boolean }
+      >();
       if (initialImages && initialImages.length > 0) {
         initialImages.forEach((img) => {
           if (img.storage_path) {
@@ -82,7 +85,8 @@ export function PropertyImageUploader({
         const matchingInitial = initialMap.get(path);
         if (matchingInitial) {
           const preview_url =
-            matchingInitial.image_url && matchingInitial.image_url.startsWith("http")
+            matchingInitial.image_url &&
+            matchingInitial.image_url.startsWith("http")
               ? matchingInitial.image_url
               : matchingInitial.storage_path
                 ? getPublicImageUrl(matchingInitial.storage_path)
@@ -108,22 +112,31 @@ export function PropertyImageUploader({
     }
 
     if (initialImages && initialImages.length > 0) {
-      return initialImages.map((img: { image_url?: string; storage_path?: string; is_cover?: boolean }, index) => {
-        const preview_url =
-          img.image_url && img.image_url.startsWith("http")
-            ? img.image_url
-            : img.storage_path
-              ? getPublicImageUrl(img.storage_path)
-              : "";
+      return initialImages.map(
+        (
+          img: {
+            image_url?: string;
+            storage_path?: string;
+            is_cover?: boolean;
+          },
+          index,
+        ) => {
+          const preview_url =
+            img.image_url && img.image_url.startsWith("http")
+              ? img.image_url
+              : img.storage_path
+                ? getPublicImageUrl(img.storage_path)
+                : "";
 
-        return {
-          id: `initial-${index}`,
-          storage_path: img.storage_path,
-          preview_url: preview_url,
-          is_cover: img.is_cover ?? index === 0,
-          origin: "initial",
-        };
-      });
+          return {
+            id: `initial-${index}`,
+            storage_path: img.storage_path,
+            preview_url: preview_url,
+            is_cover: img.is_cover ?? index === 0,
+            origin: "initial",
+          };
+        },
+      );
     }
 
     return [];
@@ -280,9 +293,12 @@ export function PropertyImageUploader({
       // Update state immediately to show skeletons/placeholders
       setImages((prev) => [...prev, ...newItems]);
 
-      const processId = startProcess(`อัปโหลดรูปภาพ (${acceptedFiles.length} รูป)`, {
-        type: "IMAGE_UPLOAD",
-      });
+      const processId = startProcess(
+        `อัปโหลดรูปภาพ (${acceptedFiles.length} รูป)`,
+        {
+          type: "IMAGE_UPLOAD",
+        },
+      );
       activeUploadProcessIdRef.current = processId;
 
       // Step 2: Process each file in background (Sequential to avoid overloading)
@@ -348,24 +364,29 @@ export function PropertyImageUploader({
                 : img,
             ),
           );
-          
+
           successCount++;
-          finishProcess(processId, "PROCESSING", `อัปโหลดสำเร็จแล้ว ${successCount}/${acceptedFiles.length} รูป`);
+          finishProcess(
+            processId,
+            "PROCESSING",
+            `อัปโหลดสำเร็จแล้ว ${successCount}/${acceptedFiles.length} รูป`,
+          );
         } catch (error: unknown) {
           console.error(`Error processing ${file.name}:`, error);
           const rawMsg = error instanceof Error ? error.message : "ล้มเหลว";
           let friendlyMsg = rawMsg;
-          
+
           if (
-            rawMsg.includes("unexpected response") || 
-            rawMsg.includes("403") || 
+            rawMsg.includes("unexpected response") ||
+            rawMsg.includes("403") ||
             rawMsg.includes("Forbidden") ||
             rawMsg.includes("Payload too large") ||
             rawMsg.includes("413")
           ) {
-            friendlyMsg = "ระบบความปลอดภัยของเซิร์ฟเวอร์ (WAF) ปฏิเสธการอัปโหลดไฟล์รูปนี้เนื่องจากโครงสร้างภาพมีความเสี่ยง หรือขนาดใหญ่เกินไป\n💡 วิธีแก้ไข: กรุณาลองแคปหน้าจอภาพนี้ (Screenshot) แล้วใช้อัพโหลดแทน";
+            friendlyMsg =
+              "ระบบความปลอดภัยของเซิร์ฟเวอร์ (WAF) ปฏิเสธการอัปโหลดไฟล์รูปนี้เนื่องจากโครงสร้างภาพมีความเสี่ยง หรือขนาดใหญ่เกินไป\n💡 วิธีแก้ไข: กรุณาลองแคปหน้าจอภาพนี้ (Screenshot) แล้วใช้อัพโหลดแทน";
           }
-          
+
           uploadErrors.push(`${friendlyMsg}`);
 
           // Keep the item in state but mark as error to retain the preview
@@ -385,9 +406,14 @@ export function PropertyImageUploader({
       }
 
       if (uploadErrors.length > 0) {
-        finishProcess(processId, "ERROR", `พบข้อผิดพลาด ${uploadErrors.length} รายการ จากทั้งหมด ${acceptedFiles.length} รายการ`, {
-          errorDetails: uploadErrors.join("\n")
-        });
+        finishProcess(
+          processId,
+          "ERROR",
+          `พบข้อผิดพลาด ${uploadErrors.length} รายการ จากทั้งหมด ${acceptedFiles.length} รายการ`,
+          {
+            errorDetails: uploadErrors.join("\n"),
+          },
+        );
         setErrorDialog({
           type: "error",
           title: "พบข้อผิดพลาดขณะอัปโหลด",
@@ -395,15 +421,28 @@ export function PropertyImageUploader({
           errors: uploadErrors,
         });
       } else {
-        finishProcess(processId, "SUCCESS", `อัปโหลดรูปภาพ ${successCount} รูปสำเร็จเรียบร้อย ✨`, {
-          resultLink: typeof window !== "undefined" ? window.location.href : undefined
-        });
+        finishProcess(
+          processId,
+          "SUCCESS",
+          `อัปโหลดรูปภาพ ${successCount} รูปสำเร็จเรียบร้อย ✨`,
+          {
+            resultLink:
+              typeof window !== "undefined" ? window.location.href : undefined,
+          },
+        );
       }
 
       isUploadingRef.current = false;
       activeUploadProcessIdRef.current = null;
     },
-    [disabled, images.length, maxFiles, maxFileSizeMB, sessionId, isWatermarkEnabled],
+    [
+      disabled,
+      images.length,
+      maxFiles,
+      maxFileSizeMB,
+      sessionId,
+      isWatermarkEnabled,
+    ],
   );
 
   const handlePaste = useCallback(
@@ -526,7 +565,7 @@ export function PropertyImageUploader({
     setIsConfirmClearOpen(false);
 
     const tempImages = images.filter(
-      (img) => img.origin === "temp" && img.storage_path && !img.is_uploading
+      (img) => img.origin === "temp" && img.storage_path && !img.is_uploading,
     );
 
     for (const img of images) {
@@ -543,7 +582,10 @@ export function PropertyImageUploader({
     for (const img of tempImages) {
       if (img.storage_path) {
         deletePropertyImageFromStorage(img.storage_path).catch((error) => {
-          console.error("Failed to delete from storage during clear all:", error);
+          console.error(
+            "Failed to delete from storage during clear all:",
+            error,
+          );
         });
       }
     }
@@ -685,7 +727,10 @@ export function PropertyImageUploader({
               items={images.map((img) => img.id)}
               strategy={rectSortingStrategy}
             >
-              <div id="tour-property-images-grid" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div
+                id="tour-property-images-grid"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"
+              >
                 {images.map((image, index) => (
                   <SortableImageItem
                     key={image.id}
@@ -738,23 +783,25 @@ export function PropertyImageUploader({
       >
         <div className="flex flex-col gap-4 py-2">
           <div className="flex items-center gap-3">
-             <div
-               className={cn(
-                 "p-3 rounded-full shrink-0",
-                 errorDialog?.type === "error"
-                   ? "bg-red-50 text-red-600"
-                   : "bg-amber-50 text-amber-600",
-               )}
-             >
-               {errorDialog?.type === "error" ? (
-                 <AlertTriangle className="w-6 h-6" />
-               ) : (
-                 <Info className="w-6 h-6" />
-               )}
-             </div>
-             <p className="text-sm font-semibold text-slate-800">
-               {errorDialog?.type === "error" ? "พบปัญหาขัดข้อง" : "คำแนะนำเพิ่มเติม"}
-             </p>
+            <div
+              className={cn(
+                "p-3 rounded-full shrink-0",
+                errorDialog?.type === "error"
+                  ? "bg-red-50 text-red-600"
+                  : "bg-amber-50 text-amber-600",
+              )}
+            >
+              {errorDialog?.type === "error" ? (
+                <AlertTriangle className="w-6 h-6" />
+              ) : (
+                <Info className="w-6 h-6" />
+              )}
+            </div>
+            <p className="text-sm font-semibold text-slate-800">
+              {errorDialog?.type === "error"
+                ? "พบปัญหาขัดข้อง"
+                : "คำแนะนำเพิ่มเติม"}
+            </p>
           </div>
 
           {errorDialog?.errors && errorDialog.errors.length > 0 && (
@@ -786,12 +833,12 @@ export function PropertyImageUploader({
       >
         <div className="flex flex-col gap-4 py-2">
           <div className="flex items-center gap-3">
-             <div className="p-3 rounded-full shrink-0 bg-red-50 text-red-600">
-               <Trash2 className="w-6 h-6" />
-             </div>
-             <p className="text-sm font-semibold text-slate-800">
-               คุณกำลังจะลบรูปภาพทั้งหมดของประกาศนี้
-             </p>
+            <div className="p-3 rounded-full shrink-0 bg-red-50 text-red-600">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-semibold text-slate-800">
+              คุณกำลังจะลบรูปภาพทั้งหมดของประกาศนี้
+            </p>
           </div>
 
           <div className="flex gap-3 mt-2">

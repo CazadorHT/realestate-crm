@@ -80,25 +80,28 @@ async function syncProjectAddress(supabase: any, projectId: string | null | unde
     if (values.subdistrict && project.subdistrict !== values.subdistrict) {
       updates.subdistrict = values.subdistrict;
     }
+    if (values.postal_code && project.postal_code !== values.postal_code) {
+      updates.postal_code = values.postal_code;
+    }
 
-    // Sync project name translations if edited
+    // Sync project name translations if missing
     const currentName = (project.name as any) || {};
     const newName: any = { ...currentName };
     let nameChanged = false;
 
-    if (values.address_line1 && currentName.th !== values.address_line1) {
+    if (values.address_line1 && !currentName.th) {
       newName.th = values.address_line1;
       nameChanged = true;
     }
-    if (values.address_line1_en && currentName.en !== values.address_line1_en) {
+    if (values.address_line1_en && !currentName.en) {
       newName.en = values.address_line1_en;
       nameChanged = true;
     }
-    if (values.address_line1_cn && currentName.cn !== values.address_line1_cn) {
+    if (values.address_line1_cn && !currentName.cn) {
       newName.cn = values.address_line1_cn;
       nameChanged = true;
     }
-    if (values.address_line1_ru && currentName.ru !== values.address_line1_ru) {
+    if (values.address_line1_ru && !currentName.ru) {
       newName.ru = values.address_line1_ru;
       nameChanged = true;
     }

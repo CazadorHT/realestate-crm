@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { m, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -26,6 +26,39 @@ export function ImageLightbox({
   title,
 }: ImageLightboxProps) {
   const [direction, setDirection] = useState(0);
+  const thumbContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen && thumbContainerRef.current) {
+      const activeThumb = thumbContainerRef.current.children[currentIndex] as HTMLElement;
+      if (activeThumb) {
+        activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    }
+  }, [currentIndex, isOpen]);
+
+  const lightboxTouchStartX = useRef(0);
+  const lightboxTouchEndX = useRef(0);
+
+  const handleLightboxTouchStart = (e: React.TouchEvent) => {
+    lightboxTouchStartX.current = e.touches[0].clientX;
+    lightboxTouchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleLightboxTouchMove = (e: React.TouchEvent) => {
+    lightboxTouchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleLightboxTouchEnd = () => {
+    const deltaX = lightboxTouchStartX.current - lightboxTouchEndX.current;
+    if (Math.abs(deltaX) > 30) {
+      if (deltaX > 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+  };
 
   const handleNext = useCallback(() => {
     setDirection(1);
@@ -96,7 +129,12 @@ export function ImageLightbox({
         </button>
 
         {/* Main Content Area */}
-        <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12 overflow-hidden">
+        <div
+          className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12 overflow-hidden touch-pan-y"
+          onTouchStart={handleLightboxTouchStart}
+          onTouchMove={handleLightboxTouchMove}
+          onTouchEnd={handleLightboxTouchEnd}
+        >
           <AnimatePresence initial={false} custom={direction}>
             <m.div
               key={currentIndex}
@@ -129,7 +167,7 @@ export function ImageLightbox({
               dragElastic={1}
               onDragEnd={(e, { offset, velocity }) => {
                 const swipe =
-                  Math.abs(offset.x) > 50 || Math.abs(velocity.x) > 500;
+                  Math.abs(offset.x) > 25 || Math.abs(velocity.x) > 200;
                 if (swipe) {
                   if (offset.x > 0) {
                     handlePrev();
@@ -138,7 +176,7 @@ export function ImageLightbox({
                   }
                 }
               }}
-              className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16"
+              className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 select-none touch-none"
             >
               <div className="relative w-full h-full">
                 <Image
@@ -181,32 +219,37 @@ export function ImageLightbox({
         )}
 
         {/* Thumbnails */}
-        <div className="absolute bottom-2 md:bottom-4 left-0 right-0 flex justify-center gap-1.5 md:gap-2 overflow-x-auto px-2 md:px-4 py-2 md:py-3 no-scrollbar z-50">
-          {images.map((img, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setDirection(idx > currentIndex ? 1 : -1);
-                onIndexChange(idx);
-              }}
-              className={cn(
-                "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0",
-                currentIndex === idx
-                  ? "border-white scale-105 md:scale-110 shadow-lg"
-                  : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60",
-              )}
-            >
-              <div className="relative w-full h-full">
-                <Image
-                  src={img}
-                  alt={`Thumbnail ${idx + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="10vw"
-                />
-              </div>
-            </button>
-          ))}
+        <div className="absolute bottom-2 md:bottom-4 left-0 right-0 z-50 px-2 md:px-4 pointer-events-auto">
+          <div
+            ref={thumbContainerRef}
+            className="flex justify-start md:justify-center items-center gap-1.5 md:gap-2 overflow-x-auto py-2 md:py-3 no-scrollbar max-w-full w-max mx-auto"
+          >
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setDirection(idx > currentIndex ? 1 : -1);
+                  onIndexChange(idx);
+                }}
+                className={cn(
+                  "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0",
+                  currentIndex === idx
+                    ? "border-white scale-105 md:scale-110 shadow-lg"
+                    : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60",
+                )}
+              >
+                <div className="relative w-full h-full">
+                  <Image
+                    src={img}
+                    alt={`Thumbnail ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="10vw"
+                  />
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

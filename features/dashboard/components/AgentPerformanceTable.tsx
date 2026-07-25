@@ -73,12 +73,12 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
                     router.push(`/protected/settings/users/${agent.agentId}`);
                   }}
                 >
-                  {navigatingId === agent.agentId && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center pl-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                    </div>
-                  )}
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-4 text-center relative">
+                    {navigatingId === agent.agentId && (
+                      <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                      </div>
+                    )}
                     <RankBadge rank={index + 1} />
                   </td>
                   <td className="px-6 py-4">

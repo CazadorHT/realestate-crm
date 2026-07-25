@@ -557,12 +557,23 @@ export async function renderPropertySocialTemplate(
   };
 
   const projectObj = (property as any).project || null;
-  let tProjectName = "";
-  if (projectObj && projectObj.name) {
-    if (typeof projectObj.name === "object" && projectObj.name !== null) {
-      tProjectName = (projectObj.name as any)[lang] || (projectObj.name as any).th || (projectObj.name as any).en || "";
-    } else {
-      tProjectName = String(projectObj.name || "");
+  let tProjectName = (property as any).project_name || "";
+  if (projectObj) {
+    if (typeof projectObj === "string") {
+      tProjectName = projectObj;
+    } else if (projectObj.name) {
+      if (typeof projectObj.name === "object" && projectObj.name !== null) {
+        tProjectName =
+          (projectObj.name as any)[lang] ||
+          (projectObj.name as any).th ||
+          (projectObj.name as any).en ||
+          (projectObj.name as any).cn ||
+          (projectObj.name as any).ru ||
+          Object.values(projectObj.name)[0] ||
+          "";
+      } else {
+        tProjectName = String(projectObj.name || "");
+      }
     }
   }
 

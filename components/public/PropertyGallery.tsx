@@ -166,42 +166,42 @@ export function PropertyGallery({
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Touch handling refs for directional swipe detection
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const isHorizontalSwipe = useRef<boolean | null>(null);
+  // Thumbnail container ref for auto-scrolling
+  const thumbContainerRef = useRef<HTMLDivElement>(null);
 
-  // Touch handlers: detect horizontal vs vertical swipe direction
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    isHorizontalSwipe.current = null; // reset direction
+  // Lightbox Touch Handlers Fallback
+  const lightboxTouchStartX = useRef(0);
+  const lightboxTouchEndX = useRef(0);
+
+  const handleLightboxTouchStart = (e: React.TouchEvent) => {
+    lightboxTouchStartX.current = e.touches[0].clientX;
+    lightboxTouchEndX.current = e.touches[0].clientX;
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!scrollRef.current) return;
+  const handleLightboxTouchMove = (e: React.TouchEvent) => {
+    lightboxTouchEndX.current = e.touches[0].clientX;
+  };
 
-    const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
-    const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
-
-    // Determine direction on first significant move (threshold: 5px)
-    if (isHorizontalSwipe.current === null && (dx > 5 || dy > 5)) {
-      isHorizontalSwipe.current = dx > dy;
-    }
-
-    // If vertical swipe: let browser handle scrolling naturally
-    if (isHorizontalSwipe.current === false) {
-      scrollRef.current.style.overflowX = "hidden";
+  const handleLightboxTouchEnd = () => {
+    const deltaX = lightboxTouchStartX.current - lightboxTouchEndX.current;
+    if (Math.abs(deltaX) > 30) {
+      if (deltaX > 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
     }
   };
 
-  const handleTouchEnd = () => {
-    // Re-enable horizontal scroll after touch ends
-    if (scrollRef.current) {
-      scrollRef.current.style.overflowX = "auto";
+  // Auto-scroll active thumbnail into view when current index or lightbox visibility changes
+  useEffect(() => {
+    if (open && thumbContainerRef.current) {
+      const activeThumb = thumbContainerRef.current.children[currentIndex] as HTMLElement;
+      if (activeThumb) {
+        activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
     }
-    isHorizontalSwipe.current = null;
-  };
+  }, [currentIndex, open]);
 
   // Sort: Cover first
   const sortedImages = [...(images || [])].sort((a, b) => {
@@ -343,10 +343,7 @@ export function PropertyGallery({
 
           <div
             ref={scrollRef}
-            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
+            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar touch-pan-y"
             onScroll={(e) => {
               const scrollLeft = e.currentTarget.scrollLeft;
               const width = e.currentTarget.offsetWidth;
@@ -578,7 +575,12 @@ export function PropertyGallery({
             <X className="h-6 w-6" />
           </button>
 
-          <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12 overflow-hidden">
+          <div
+            className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12 overflow-hidden touch-pan-y"
+            onTouchStart={handleLightboxTouchStart}
+            onTouchMove={handleLightboxTouchMove}
+            onTouchEnd={handleLightboxTouchEnd}
+          >
             <AnimatePresence initial={false} custom={direction}>
               <m.div
                 key={currentIndex}
@@ -611,7 +613,7 @@ export function PropertyGallery({
                 dragElastic={1}
                 onDragEnd={(e, { offset, velocity }) => {
                   const swipe =
-                    Math.abs(offset.x) > 50 || Math.abs(velocity.x) > 500;
+                    Math.abs(offset.x) > 25 || Math.abs(velocity.x) > 200;
                   if (swipe) {
                     if (offset.x > 0) {
                       handlePrev();
@@ -620,7 +622,7 @@ export function PropertyGallery({
                     }
                   }
                 }}
-                className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16"
+                className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 select-none touch-none"
               >
                 <ImageWithFallback
                   img={sortedImages[currentIndex]}
@@ -663,28 +665,33 @@ export function PropertyGallery({
           )}
 
           {/* Thumbnails Strip (Bottom) - Compact */}
-          <div className="absolute bottom-2 md:bottom-4 left-0 right-0 flex justify-center gap-1.5 md:gap-2 overflow-x-auto px-2 md:px-4 py-2 md:py-3 no-scrollbar z-50">
-            {sortedImages.map((img, idx) => (
-              <button
-                key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
-                onClick={() => setCurrentIndex(idx)}
-                className={cn(
-                  "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0",
-                  currentIndex === idx
-                    ? "border-white scale-105 md:scale-110 shadow-lg"
-                    : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60",
-                )}
-              >
-                <ImageWithFallback
-                   img={img}
-                  alt={`${imageAlt || title} thumbnail ${idx + 1}`}
-                  className="object-cover"
-                  sizes="10vw"
-                  onImageError={handleImageError}
-                  failedImages={failedImages}
-                />
-              </button>
-            ))}
+          <div className="absolute bottom-2 md:bottom-4 left-0 right-0 z-50 px-2 md:px-4 pointer-events-auto">
+            <div
+              ref={thumbContainerRef}
+              className="flex justify-start md:justify-center items-center gap-1.5 md:gap-2 overflow-x-auto py-2 md:py-3 no-scrollbar max-w-full w-max mx-auto"
+            >
+              {sortedImages.map((img, idx) => (
+                <button
+                  key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={cn(
+                    "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0",
+                    currentIndex === idx
+                      ? "border-white scale-105 md:scale-110 shadow-lg"
+                      : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60",
+                  )}
+                >
+                  <ImageWithFallback
+                    img={img}
+                    alt={`${imageAlt || title} thumbnail ${idx + 1}`}
+                    className="object-cover"
+                    sizes="10vw"
+                    onImageError={handleImageError}
+                    failedImages={failedImages}
+                  />
+                </button>
+              ))}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
