@@ -12,6 +12,7 @@ import { logAudit } from "@/lib/audit";
 import { PROPERTY_IMAGES_BUCKET } from "../logic/images";
 import { mapDbError } from "@/lib/db-error";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
+import { refreshProjectStatsView } from "./refresh-stats";
 
 /**
  * Delete property and cleanup storage
@@ -150,6 +151,7 @@ export async function deletePropertyAction(formData: FormData) {
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");

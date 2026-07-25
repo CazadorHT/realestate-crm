@@ -6,6 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
 import { getStatusFromDb } from "../labels";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
+import { refreshProjectStatsView } from "./refresh-stats";
 
 /**
  * Soft delete a property by setting deleted_at to now
@@ -107,6 +108,7 @@ export async function softDeleteProperty(id: string) {
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     return { success: true };
@@ -187,6 +189,7 @@ export async function restoreProperty(id: string) {
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     return { success: true };
@@ -278,6 +281,7 @@ export async function permanentDeleteProperty(id: string) {
     revalidatePath("/protected/properties/trash");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     return { success: true };

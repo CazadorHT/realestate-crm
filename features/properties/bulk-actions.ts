@@ -7,6 +7,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { PROPERTY_IMAGES_BUCKET } from "./logic/images";
 import { mapDbError } from "@/lib/db-error";
 import { PROPERTY_STATUS_DB_VALUE, PropertyStatus, getStatusFromDb } from "./labels";
+import { refreshProjectStatsView } from "./actions/refresh-stats";
 
 /**
  * Result type for bulk operations
@@ -110,6 +111,7 @@ export async function bulkDeletePropertiesAction(
     revalidatePath("/protected/properties/trash");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
 
@@ -185,6 +187,7 @@ export async function bulkRestorePropertiesAction(
     revalidatePath("/protected/properties/trash");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
 
@@ -297,6 +300,7 @@ export async function bulkPermanentDeletePropertiesAction(
     revalidatePath("/protected/properties/trash");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
 
@@ -363,6 +367,7 @@ export async function bulkMovePropertiesToTenantAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
 
@@ -438,6 +443,7 @@ export async function bulkApproveAiReviewAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
 
@@ -519,6 +525,7 @@ export async function bulkUpdateStatusAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
 

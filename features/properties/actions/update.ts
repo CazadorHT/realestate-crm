@@ -29,6 +29,7 @@ import {
 } from "../labels";
 import { PropertyRow } from "@/lib/services/properties";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
+import { refreshProjectStatsView } from "./refresh-stats";
 import {
   finalizeUploadSession,
   validatePropertyImagePaths,
@@ -617,6 +618,7 @@ export async function updatePropertyAction(
     revalidatePath("/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
@@ -731,6 +733,7 @@ export async function updatePropertyStatusAction(input: {
 
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (err) {

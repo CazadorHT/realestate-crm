@@ -19,6 +19,7 @@ import {
   PropertyRow,
 } from "../types";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
+import { refreshProjectStatsView } from "./refresh-stats";
 import {
   PROPERTY_STATUS_DB_VALUE,
   LISTING_TYPE_DB_VALUE,
@@ -516,6 +517,7 @@ export async function createPropertyAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
@@ -752,6 +754,7 @@ export async function duplicatePropertyAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
