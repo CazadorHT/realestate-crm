@@ -388,7 +388,7 @@ export const ManagementSection = ({
                       }}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-11! flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm">
+                        <SelectTrigger className="h-11! w-full flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm overflow-hidden">
                           <SelectValue placeholder="ค้นหาหรือเลือกเจ้าของ" />
                         </SelectTrigger>
                       </FormControl>
@@ -450,9 +450,9 @@ export const ManagementSection = ({
                                 value={o.id}
                                 className="py-3 font-medium text-sm rounded-lg"
                               >
-                                <span className="flex items-center gap-1.5 min-w-0">
+                                <span className="flex items-center gap-1.5 min-w-0 w-full overflow-hidden">
                                   <span className="text-slate-500 shrink-0">K.</span>
-                                  <span className="inline-block truncate flex-1 min-w-0 align-bottom">{o.full_name}</span>
+                                  <span className="inline-block truncate flex-1 min-w-0 max-w-[80px] align-bottom">{o.full_name}</span>
                                   {isNew && (
                                     <span className="px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200 shrink-0">
                                       NEW

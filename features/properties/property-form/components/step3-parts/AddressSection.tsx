@@ -113,11 +113,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
       const provOpt = provinces.find(p => cleanWord(p.name_th) === cleanWord(proj.province));
       if (provOpt) {
         form.setValue("province", provOpt.name_th, { shouldValidate: true });
+        let foundDistrict = false;
         if (proj.district) {
           const dists = getDistricts(provOpt.id);
           const distOpt = dists.find(d => cleanWord(d.name_th) === cleanWord(proj.district));
           if (distOpt) {
             form.setValue("district", distOpt.name_th, { shouldValidate: true });
+            foundDistrict = true;
             if (proj.subdistrict) {
               const subs = getSubDistricts(distOpt.id);
               const subOpt = subs.find(s => cleanWord(s.name_th) === cleanWord(proj.subdistrict));
@@ -128,8 +130,30 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                 form.setValue("subdistrict", cleanWord(proj.subdistrict), { shouldValidate: true });
               }
             }
-          } else {
-            form.setValue("district", cleanWord(proj.district), { shouldValidate: true });
+          }
+        }
+
+        // Reverse lookup district from subdistrict if district was not matched or missing
+        if (!foundDistrict && proj.subdistrict) {
+          const dists = getDistricts(provOpt.id);
+          for (const d of dists) {
+            const subs = getSubDistricts(d.id);
+            const subOpt = subs.find(s => cleanWord(s.name_th) === cleanWord(proj.subdistrict));
+            if (subOpt) {
+              form.setValue("district", d.name_th, { shouldValidate: true });
+              form.setValue("subdistrict", subOpt.name_th, { shouldValidate: true });
+              if (subOpt.zip_code) {
+                form.setValue("postal_code", String(subOpt.zip_code), { shouldValidate: true });
+              }
+              foundDistrict = true;
+              break;
+            }
+          }
+        }
+
+        if (!foundDistrict && proj.district) {
+          form.setValue("district", cleanWord(proj.district), { shouldValidate: true });
+          if (proj.subdistrict) {
             form.setValue("subdistrict", cleanWord(proj.subdistrict), { shouldValidate: true });
           }
         }
@@ -183,6 +207,26 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
   const activeProvinceId = provinces.find(
     (p) => cleanWordGlobal(p.name_th) === cleanWordGlobal(watchedProvince),
   )?.id;
+
+  // Auto reverse-lookup District if Province and Subdistrict are filled, but District is empty/missing
+  React.useEffect(() => {
+    if (activeProvinceId && watchedSubdistrict && !watchedDistrict) {
+      const dists = getDistricts(activeProvinceId);
+      for (const d of dists) {
+        const subs = getSubDistricts(d.id);
+        const subOpt = subs.find(
+          (s) => cleanWordGlobal(s.name_th) === cleanWordGlobal(watchedSubdistrict),
+        );
+        if (subOpt) {
+          form.setValue("district", d.name_th, { shouldValidate: true, shouldDirty: true });
+          if (!form.getValues("postal_code") && subOpt.zip_code) {
+            form.setValue("postal_code", String(subOpt.zip_code), { shouldValidate: true, shouldDirty: true });
+          }
+          break;
+        }
+      }
+    }
+  }, [activeProvinceId, watchedSubdistrict, watchedDistrict, getDistricts, getSubDistricts, form]);
 
   const districtOptions = activeProvinceId
     ? getDistricts(activeProvinceId)
