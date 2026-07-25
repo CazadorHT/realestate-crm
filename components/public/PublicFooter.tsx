@@ -353,22 +353,42 @@ export function PublicFooter() {
             </div>
           </div>
 
-          {/* SEO Category Landing Pages Links */}
+          {/* SEO Category & Popular Station Landing Pages Links */}
           <div className="pt-8 pb-4 border-t border-slate-800/30">
-            <h4 className="text-sm font-semibold text-white mb-4 tracking-wider uppercase">
-              {language === "th" ? "หมวดหมู่อสังหาฯ แนะนำ" : "Featured Categories"}
+            <h4 className="text-sm font-semibold text-white mb-3 tracking-wider uppercase">
+              {language === "th" ? "หมวดหมู่อสังหาฯ & ทำเลติดรถไฟฟ้ายอดนิยม" : "Featured Categories & Popular Stations"}
             </h4>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-              <Link href="/properties/pet-friendly-condo" className="text-slate-400 hover:text-blue-400 transition-colors">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400">
+              <Link href="/properties/pet-friendly-condo" className="hover:text-blue-400 transition-colors">
                 {language === "th" ? "คอนโดเลี้ยงสัตว์ได้" : "Pet-Friendly Condos"}
               </Link>
               <span className="text-slate-700">|</span>
-              <Link href="/properties/office-for-rent" className="text-slate-400 hover:text-blue-400 transition-colors">
+              <Link href="/properties/office-for-rent" className="hover:text-blue-400 transition-colors">
                 {language === "th" ? "สำนักงานออฟฟิศให้เช่า" : "Offices for Rent"}
               </Link>
               <span className="text-slate-700">|</span>
-              <Link href="/properties/luxury-villa" className="text-slate-400 hover:text-blue-400 transition-colors">
+              <Link href="/properties/luxury-villa" className="hover:text-blue-400 transition-colors">
                 {language === "th" ? "พูลวิลล่าและบ้านเดี่ยวหรู" : "Luxury Villas & Houses"}
+              </Link>
+              <span className="text-slate-700">|</span>
+              <Link href="/near-station/wongwian-yai" className="hover:text-blue-400 transition-colors">
+                {language === "th" ? "คอนโด BTS วงเวียนใหญ่" : "Condos near BTS Wongwian Yai"}
+              </Link>
+              <span className="text-slate-700">|</span>
+              <Link href="/near-station/bang-chak" className="hover:text-blue-400 transition-colors">
+                {language === "th" ? "คอนโด BTS บางจาก" : "Condos near BTS Bang Chak"}
+              </Link>
+              <span className="text-slate-700">|</span>
+              <Link href="/near-station/udom-suk" className="hover:text-blue-400 transition-colors">
+                {language === "th" ? "คอนโด BTS อุดมสุข" : "Condos near BTS Udom Suk"}
+              </Link>
+              <span className="text-slate-700">|</span>
+              <Link href="/near-station/bang-na" className="hover:text-blue-400 transition-colors">
+                {language === "th" ? "คอนโด BTS บางนา" : "Condos near BTS Bang Na"}
+              </Link>
+              <span className="text-slate-700">|</span>
+              <Link href="/near-station/asok" className="hover:text-blue-400 transition-colors">
+                {language === "th" ? "คอนโด BTS อโศก" : "Condos near BTS Asok"}
               </Link>
             </div>
           </div>

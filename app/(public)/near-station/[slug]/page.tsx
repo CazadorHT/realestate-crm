@@ -18,6 +18,7 @@ import { StationQuickSelector } from "@/components/public/StationQuickSelector";
 import { StationHero } from "@/components/public/near-station/StationHero";
 import { StationSeoContent } from "@/components/public/near-station/StationSeoContent";
 import { NearbyStationsSection } from "@/components/public/near-station/NearbyStationsSection";
+import { generateStationFAQSchema } from "@/lib/seo-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -147,22 +148,22 @@ export async function generateMetadata(
 
   const title = station.seoTitle || (
     language === "en"
-      ? `Properties & Condos near ${stationNameFormatted} | ${siteConfig.name}`
+      ? `Condos & Properties near ${stationNameFormatted} | Rent & Sale Updated 2026 | ${siteConfig.name}`
       : language === "cn"
-        ? `${stationNameFormatted}附近公寓与房源 | ${siteConfig.name}`
+        ? `${stationNameFormatted}附近公寓出租出售 | 2026最新 | ${siteConfig.name}`
         : language === "ru"
-          ? `Недвижимость рядом с ${stationNameFormatted} | ${siteConfig.name}`
-          : `คอนโด อสังหาฯ ใกล้ ${stationNameFormatted} | ${siteConfig.name}`
+          ? `Недвижимость และ кондо рядом с ${stationNameFormatted} | 2026 | ${siteConfig.name}`
+          : `รวมคอนโดติด ${stationNameFormatted} เช่า-ขาย ราคาดี อัปเดต 2026 | ${siteConfig.name}`
   );
   
   const description = station.seoDescription || (
     language === "en"
-      ? `Find condos, houses, and townhomes near ${stationNameFormatted}. Verified premium listings with pictures, details, and price.`
+      ? `Find condos, houses, and townhomes near ${stationNameFormatted}. Verified premium listings for rent & sale with pictures, details, and price updated for 2026.`
       : language === "cn"
-        ? `寻找${stationNameFormatted}附近的公寓、别墅和联排别墅。经过验证的高端房源，配有实景图、详细信息和价格。`
+        ? `寻找${stationNameFormatted}附近的公寓、别墅和联排别墅。经过验证的高端房源，配有实景图、详细信息和2026最新价格。`
         : language === "ru"
-          ? `Найдите кондоминиумы, дома и таунхаусы рядом с ${stationNameFormatted}. Проверенные объявления с фотографиями, подробностями и ценами.`
-          : `ค้นหาคอนโด บ้าน ทาวน์โฮม ใกล้${stationNameFormatted} (${station.label.en}) พร้อมราคา รูปถ่ายจริง และรายละเอียดครบถ้วน`
+          ? `Найдите кондоминиумы, дома и таунхаусы рядом с ${stationNameFormatted}. Проверенные объявления с фотографиями, подробностями и ценами 2026 года.`
+          : `รวมคอนโดใกล้${stationNameFormatted} (${station.label.en}) ทั้งเช่าและขาย คัดสรรห้องสวย แต่งครบ พร้อมเข้าอยู่ ดูรูปจริง สภาพจริง อัปเดตราคาล่าสุดปี 2026 | VCC Asset`
   );
 
   return {
@@ -241,6 +242,8 @@ export default async function StationDetailPage(
     ],
   };
 
+  const stationFaqJsonLd = generateStationFAQSchema(stationNameFormatted, language);
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50">
       <script
@@ -250,6 +253,10 @@ export default async function StationDetailPage(
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(stationFaqJsonLd) }}
       />
 
       {/* Hero Section */}

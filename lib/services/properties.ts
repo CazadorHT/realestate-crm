@@ -337,34 +337,34 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         const itemsPerPage = options.limit || 60;
 
-        if (options.sort === "NEWEST") {
+        const effectiveSort = options.sort || "NEWEST";
+
+        if (effectiveSort === "NEWEST") {
           query = query.order("created_at", { ascending: false });
-        } else if (options.sort === "PRICE_ASC") {
+        } else if (effectiveSort === "PRICE_ASC") {
           const effectivePriceType = options.priceType || options.listingType;
           if (effectivePriceType === "RENT") {
             query = query.order("rental_price", { ascending: true, nullsFirst: false });
           } else {
             query = query.order("price", { ascending: true, nullsFirst: false });
           }
-        } else if (options.sort === "PRICE_DESC") {
+        } else if (effectiveSort === "PRICE_DESC") {
           const effectivePriceType = options.priceType || options.listingType;
           if (effectivePriceType === "RENT") {
             query = query.order("rental_price", { ascending: false, nullsFirst: false });
           } else {
             query = query.order("price", { ascending: false, nullsFirst: false });
           }
-        } else if (options.sort === "AREA_ASC") {
+        } else if (effectiveSort === "AREA_ASC") {
           query = query.order("size_sqm", { ascending: true, nullsFirst: false });
-        } else if (options.sort === "AREA_DESC") {
+        } else if (effectiveSort === "AREA_DESC") {
           query = query.order("size_sqm", { ascending: false, nullsFirst: false });
         } else {
           // Default fallbacks
           if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal") {
             query = query.order("updated_at", { ascending: false });
-          } else if (options.listingType === "RENT") {
-            query = query.order("rental_price", { ascending: true, nullsFirst: false });
           } else {
-            query = query.order("price", { ascending: true, nullsFirst: false });
+            query = query.order("created_at", { ascending: false });
           }
         }
 

@@ -60,21 +60,21 @@ export async function generateMetadata(
 
   const title = project.seoTitle?.[language as keyof typeof project.seoTitle] || 
     (language === "en"
-      ? `Rooms & Properties for Sale/Rent at ${nameText} | ${siteConfig.name}`
+      ? `Condos for Sale & Rent at ${nameText} | Updated 2026 | ${siteConfig.name}`
       : language === "cn"
-        ? `${nameText} 公寓出售/出租，房源汇总 | ${siteConfig.name}`
+        ? `${nameText} 公寓出租/出售 | 2026最新 | ${siteConfig.name}`
         : language === "ru"
-          ? `Продажа и аренда квартир в ЖК ${nameText} | ${siteConfig.name}`
-          : `รวมห้องว่าง ขาย/เช่า ในโครงการ ${nameText} | ${siteConfig.name}`);
+          ? `Аренда и продажа в ЖК ${nameText} | 2026 | ${siteConfig.name}`
+          : `รวมห้องว่าง เช่า-ขาย โครงการ ${nameText} ราคาดี อัปเดต 2026 | ${siteConfig.name}`);
 
   const description = project.seoDescription?.[language as keyof typeof project.seoDescription] ||
     (language === "en"
-      ? `Compare prices and view available properties at ${nameText}. Includes completion year, amenities list, and map locations.`
+      ? `Compare prices and view available condo listings for rent and sale at ${nameText}. Checked and updated for 2026.`
       : language === "cn"
-        ? `在 ${nameText} 对比价格并浏览全部在租/在售房源。提供项目竣工时间、公用配套设施及地图定位。`
+        ? `在 ${nameText} 对比价格并浏览全部在租/在售房源。提供项目竣工时间、公用配套设施及地图定位，2026最新。`
         : language === "ru"
-          ? `Сравнивайте цены и просматривайте объявления в ЖК ${nameText}. Полная информация о комплексе, удобствах и расположении.`
-          : `ค้นหาคอนโด บ้านว่าง ในโครงการ ${nameText} เปรียบเทียบราคา ขนาดห้อง ชั้น ทิศ พร้อมรายละเอียดส่วนกลางครบถ้วน`);
+          ? `Сравнивайте цены и просматривайте объявления в ЖК ${nameText}. Полная информация о комплексе, удобствах и ценах 2026 года.`
+          : `รวมประกาศเช่า-ขายห้องว่างในโครงการ ${nameText} คัดสรรห้องสวย แต่งครบ มีรูปจริง สภาพจริง เช็กราคาเช่าและขายล่าสุดปี 2026 บน VCC Asset`);
 
   return {
     title,

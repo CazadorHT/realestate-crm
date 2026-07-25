@@ -459,23 +459,16 @@ export function generateMetaTitle(
   const locationStr = popular_area || district || province || "";
   if (locationStr) parts.push(locationStr);
 
-  // If popular area is used, optionally add district for extra context if it's different and short
-  if (
-    data.popular_area &&
-    data.district &&
-    data.popular_area !== data.district
-  ) {
-    if ((parts.join(" | ") + data.district).length < 50) {
-      parts.push(data.district);
-    }
-  }
+  // High-CTR modifier (Update 2026 / Price value)
+  const ctrSuffix = lang === "en" ? "Updated 2026" : lang === "cn" ? "2026最新" : lang === "ru" ? "Обновлено 2026" : "อัปเดต 2026";
+  parts.push(ctrSuffix);
 
   const fullTitle = parts.join(" | ");
   const suffix = ` - ${siteConfig.name}`;
 
-  // Truncate if too long (max 60)
-  if (fullTitle.length + suffix.length > 60) {
-    return fullTitle.slice(0, 60 - suffix.length - 3) + "..." + suffix;
+  // Truncate if too long (max 65)
+  if (fullTitle.length + suffix.length > 65) {
+    return fullTitle.slice(0, 65 - suffix.length - 3) + "..." + suffix;
   }
 
   return fullTitle + suffix;
@@ -967,3 +960,102 @@ export function generatePropertySEO(
     ogPriceCurrency: "THB",
   };
 }
+
+/**
+ * Generate Station Specific FAQ Schema (JSON-LD)
+ */
+export function generateStationFAQSchema(
+  stationName: string,
+  language: string = "th",
+): Record<string, unknown> {
+  const lang = language === "en" ? "en" : language === "cn" ? "cn" : language === "ru" ? "ru" : "th";
+  
+  const faqs = [
+    {
+      "@type": "Question",
+      name: lang === "en"
+        ? `What is the average price of condos near ${stationName}?`
+        : lang === "cn"
+          ? `${stationName} 附近的公寓平均价格是多少？`
+          : lang === "ru"
+            ? `Какова средняя цена кондо рядом со станцией ${stationName}?`
+            : `คอนโดใกล้ ${stationName} ราคาเช่า-ขาย เริ่มต้นเท่าไหร่?`,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: lang === "en"
+          ? `Properties and condos near ${stationName} are available for both rent and sale, with various price options updated for 2026 on VCC Asset.`
+          : lang === "cn"
+            ? `${stationName} 附近的房产和公寓均提供出租和出售，VCC Asset 2026年最新更新多种价格选择。`
+            : lang === "ru"
+              ? `Недвижимость и кондо рядом со станцией ${stationName} доступны как для аренды, так и для продажи с обновленными ценами 2026 года.`
+              : `คอนโดและอสังหาฯ ใกล้ ${stationName} มีทั้งประกาศปล่อยเช่าและขาย ครอบคลุมหลายระดับราคา อัปเดตยูนิตจริงปี 2026 บน VCC Asset`,
+      },
+    },
+    {
+      "@type": "Question",
+      name: lang === "en"
+        ? `Are there pet-friendly condos near ${stationName}?`
+        : lang === "cn"
+          ? `${stationName} 附近有允许携带宠物的公寓吗？`
+          : lang === "ru"
+            ? `Есть ли кондо, где можно с животными, рядом со станцией ${stationName}?`
+            : `มีคอนโดเลี้ยงสัตว์ได้ (Pet Friendly) ใกล้ ${stationName} ไหม?`,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: lang === "en"
+          ? `Yes, several condominium projects near ${stationName} offer pet-friendly policies. You can filter pet-friendly listings directly on VCC Asset.`
+          : lang === "cn"
+            ? `是的，${stationName} 附近的几家公寓项目提供宠物友好政策。您可以在 VCC Asset 上直接筛选允许携带宠物的房源。`
+            : lang === "ru"
+              ? `Да, несколько жилых комплексов рядом со станцией ${stationName} разрешают проживание с животными.`
+              : `มีโครงการคอนโดมิเนียมหลายแห่งรอบบริเวณ ${stationName} ที่อนุญาตให้เลี้ยงสัตว์ได้ สามารถใช้ตัวกรอง Pet Friendly ค้นหาบน VCC Asset ได้ทันที`,
+      },
+    },
+  ];
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs,
+  };
+}
+
+/**
+ * Generate Area Specific FAQ Schema (JSON-LD)
+ */
+export function generateAreaFAQSchema(
+  areaName: string,
+  language: string = "th",
+): Record<string, unknown> {
+  const lang = language === "en" ? "en" : language === "cn" ? "cn" : language === "ru" ? "ru" : "th";
+  
+  const faqs = [
+    {
+      "@type": "Question",
+      name: lang === "en"
+        ? `Why choose properties in ${areaName}?`
+        : lang === "cn"
+          ? `为什么选择 ${areaName} 的房产？`
+          : lang === "ru"
+            ? `Почему стоит выбрать недвижимость в районе ${areaName}?`
+            : `ทำไมควรเลือกเช่าหรือซื้ออสังหาริมทรัพย์ย่าน ${areaName}?`,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: lang === "en"
+          ? `${areaName} is a prime location with excellent transportation, commercial amenities, and lifestyle conveniences.`
+          : lang === "cn"
+            ? `${areaName} 位于黄金地段，交通便利，商业配套齐全，生活方便。`
+            : lang === "ru"
+              ? `${areaName} — это превосходный район с отличной транспортной доступностью и развитой инфраструктурой.`
+              : `ย่าน ${areaName} เป็นทำเลศักยภาพที่เดินทางสะดวก รายล้อมด้วยศูนย์การค้า ร้านอาหาร และสิ่งอำนวยความสะดวกครบครัน`,
+      },
+    },
+  ];
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs,
+  };
+}
+

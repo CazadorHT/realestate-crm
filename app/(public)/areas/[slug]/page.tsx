@@ -18,6 +18,7 @@ import { AreaPropertiesClient } from "@/components/public/AreaPropertiesClient";
 import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 import { getProvinceName } from "@/lib/utils/provinces";
+import { generateAreaFAQSchema } from "@/lib/seo-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -36,21 +37,21 @@ export async function generateMetadata(
 
   const title = (area.seoTitle as any)?.[language] ||
     (language === "en"
-      ? `Properties & Condos for Sale/Rent in ${nameText} | ${siteConfig.name}`
+      ? `Properties & Condos for Sale/Rent in ${nameText} | Updated 2026 | ${siteConfig.name}`
       : language === "cn"
-        ? `${nameText} 房屋及公寓出售/出租 | ${siteConfig.name}`
+        ? `${nameText} 房屋公寓出租出售 | 2026最新 | ${siteConfig.name}`
         : language === "ru"
-          ? `Недвижимость и квартиры на продажу/аренду в ${nameText} | ${siteConfig.name}`
-          : `คอนโด บ้านเดี่ยว ทาวน์โฮม ในย่าน ${nameText} | ${siteConfig.name}`);
+          ? `Недвижимость и кондо в районе ${nameText} | 2026 | ${siteConfig.name}`
+          : `รวมคอนโด-บ้าน ย่าน ${nameText} เช่า-ขาย ราคาดี อัปเดต 2026 | ${siteConfig.name}`);
 
   const description = (area.seoDescription as any)?.[language] ||
     (language === "en"
-      ? `Discover active listings and market pricing indexes in ${nameText}. See top residential projects, transit links, and local lifestyle.`
+      ? `Discover active residential listings and market pricing indexes in ${nameText}. Find top condos, houses, and townhomes for rent and sale updated for 2026.`
       : language === "cn"
-        ? `在 ${nameText} 寻找适合您的住宅。查看该区域的市场行情价格指数、热门项目及轨道交通路线。`
+        ? `在 ${nameText} 寻找适合您的住宅。查看该区域的市场行情价格指数、热门项目及轨道交通路线，2026最新更新。`
         : language === "ru"
-          ? `Объявления о продаже и аренде жилья в ${nameText}. Медианные цены, популярные проекты и доступный транспорт.`
-          : `ค้นหาคอนโดและบ้านเดี่ยวในทำเล ${nameText} เปรียบเทียบราคา สรุปสถิติราคากลางมัธยฐานรายเดือน และข้อมูลไลฟ์สไตล์การอยู่อาศัย`);
+          ? `Объявления о продаже и аренде жилья в ${nameText}. Медианные цены, популярные проекты и доступный транспорт в 2026 году.`
+          : `รวมประกาศเช่าและขาย คอนโด บ้านเดี่ยว ทาวน์โฮม ย่าน ${nameText} เปรียบเทียบราคา สรุปสถิติมัธยฐาน และข้อมูลทำเลอยู่อาศัย อัปเดตล่าสุดปี 2026 | VCC Asset`);
 
   return {
     title,
@@ -173,6 +174,8 @@ export default async function AreaDetailPage(
   }
   const areaCover = area.imageUrl || fallbackCover || "/images/area-placeholder1.jpg";
 
+  const areaFaqJsonLd = generateAreaFAQSchema(nameText, language);
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50/30">
       <script
@@ -182,6 +185,10 @@ export default async function AreaDetailPage(
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(areaFaqJsonLd) }}
       />
 
       {/* Hero Visual Section */}
