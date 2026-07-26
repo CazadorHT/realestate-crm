@@ -243,6 +243,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
         // Fetch 100 properties to cover all categories in the background
         const res = await fetch("/api/public/properties?sort=NEWEST&limit=100", {
           signal: controller.signal,
+          cache: "no-store",
         });
 
         if (!res.ok) {
@@ -251,7 +252,9 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
 
         const data = (await res.json()) as PropertySearchResponse;
         const propertiesArray = data.properties || [];
-        setProperties(Array.isArray(propertiesArray) ? propertiesArray : []);
+        if (Array.isArray(propertiesArray) && propertiesArray.length > 0) {
+          setProperties(propertiesArray);
+        }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
         // Only show error if we don't have initialProperties to fallback to
@@ -319,10 +322,11 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
       items = items.filter((p) => (p.province ?? "").includes(provinceFilter));
     }
 
-    return [...items].sort(
-      (a, b) =>
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-    );
+    return [...items].sort((a, b) => {
+      const timeB = (b as any).created_at_time || new Date(b.created_at || b.updated_at || 0).getTime();
+      const timeA = (a as any).created_at_time || new Date(a.created_at || a.updated_at || 0).getTime();
+      return timeB - timeA;
+    });
   }, [filter, properties, areaFilter, provinceFilter]);
   
   // Removed AOS refresh effect as we migrated to Framer Motion
