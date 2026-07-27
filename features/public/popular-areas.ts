@@ -168,29 +168,78 @@ export const getPopularAreasAction = unstable_cache(
       });
 
       // คัดเลือกเฉพาะ Top 16 ย่านที่มีจำนวนทรัพย์จริงสูงสุด
-      const top16Areas = preMappedAreas
+      let top16Areas = preMappedAreas
         .filter((a: any) => a.count > 0)
         .sort((a: any, b: any) => b.count - a.count)
         .slice(0, 16);
+
+      // 🛡️ Fallback: หากจังหวัดนั้นไม่มี popular_area ที่ตั้งค่าไว้ ให้ดึง เขต/แขวง (district/subdistrict) จากทรัพย์ที่มีจริงในจังหวัดนั้นมาแสดงแทน
+      if (top16Areas.length === 0 && province) {
+        const targetProvinces = provinceMap[province] || [province];
+        
+        const { data: areaProps } = await client
+          .from("properties")
+          .select("subdistrict, district, province, main_image")
+          .eq("status", "ACTIVE")
+          .is("deleted_at", null)
+          .in("province", targetProvinces);
+
+        if (areaProps && areaProps.length > 0) {
+          const areaCountMap = new Map<string, { count: number; cover?: string; district?: string }>();
+          
+          for (const p of areaProps) {
+            const areaName = (p.subdistrict || p.district || "").trim();
+            if (!areaName) continue;
+            
+            const existing = areaCountMap.get(areaName);
+            if (existing) {
+              existing.count += 1;
+              if (!existing.cover && p.main_image) existing.cover = p.main_image;
+            } else {
+              areaCountMap.set(areaName, {
+                count: 1,
+                cover: p.main_image || undefined,
+                district: p.district || undefined,
+              });
+            }
+          }
+
+          const fallbackList = Array.from(areaCountMap.entries()).map(([name, data]) => ({
+            id: name,
+            nameTh: name,
+            nameEn: null,
+            nameCn: null,
+            nameRu: null,
+            province: province,
+            count: data.count,
+            cover: data.cover || null,
+            slug: encodeURIComponent(name),
+          }));
+
+          top16Areas = fallbackList
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 16);
+        }
+      }
 
       if (top16Areas.length === 0) return [];
 
       // 4. [S-Tier Optimization] ดึงรูปภาพภาพหน้าปก (main_image) จากทรัพย์สินล่าสุดในแต่ละย่าน (เฉพาะปากช่องย่านท็อป 16 เท่านั้น)
       // การดึงเจาะจงเฉพาะกลุ่ม 16 ย่านนี้ ช่วยเซฟปริมาณดาวน์โหลด Egress เป็นศูนย์และค้นหาเสร็จ in เสี้ยววินาทีครับ
-      const topAreaNames = top16Areas.map((a: any) => a.nameTh);
+      const targetProvincesForCover = (province && provinceMap[province]) ? provinceMap[province] : (province ? [province] : []);
       const { data: recentProps } = await client
         .from("properties")
-        .select("popular_area, main_image")
+        .select("popular_area, subdistrict, district, main_image")
         .eq("status", "ACTIVE")
         .is("deleted_at", null)
         .not("main_image", "is", null)
-        .in("popular_area", topAreaNames)
+        .in("province", targetProvincesForCover)
         .order("created_at", { ascending: false });
 
       const areaCoverMap = new Map<string, string>();
       if (recentProps) {
         for (const p of recentProps) {
-          const areaClean = (p.popular_area || "").trim().toLowerCase();
+          const areaClean = (p.popular_area || p.subdistrict || p.district || "").trim().toLowerCase();
           if (areaClean && p.main_image && !areaCoverMap.has(areaClean)) {
             areaCoverMap.set(areaClean, p.main_image);
           }
@@ -224,7 +273,7 @@ export const getPopularAreasAction = unstable_cache(
       return [];
     }
   },
-  ["popular-areas-cache-v8"],
+  ["popular-areas-cache-v9"],
   { revalidate: 604800, tags: ["popular-areas", "public-data"] }
 );
 
