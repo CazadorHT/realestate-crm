@@ -94,10 +94,48 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
 
     const tenantId = await resolveTenantId(ctx.supabase, ctx.user.id, ctx.tenantId);
 
+    // Auto-resolve slug collision if slug is already taken by another project
+    let baseSlug = input.slug.trim().toLowerCase();
+    let finalSlug = baseSlug;
+
+    let slugQuery = ctx.supabase
+      .from("projects")
+      .select("id")
+      .eq("slug", finalSlug);
+
+    if (input.id) {
+      slugQuery = slugQuery.neq("id", input.id);
+    }
+
+    const { data: existingWithSlug } = await slugQuery.maybeSingle();
+
+    if (existingWithSlug) {
+      let counter = 2;
+      let isUnique = false;
+      while (!isUnique && counter <= 50) {
+        const candidate = `${baseSlug}-${counter}`;
+        let testQuery = ctx.supabase
+          .from("projects")
+          .select("id")
+          .eq("slug", candidate);
+        if (input.id) testQuery = testQuery.neq("id", input.id);
+        const { data: collision } = await testQuery.maybeSingle();
+        if (!collision) {
+          finalSlug = candidate;
+          isUnique = true;
+        } else {
+          counter++;
+        }
+      }
+      if (!isUnique) {
+        finalSlug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
+      }
+    }
+
     const projectData: any = {
       tenant_id: tenantId,
       name: input.name as unknown as Json,
-      slug: input.slug.trim().toLowerCase(),
+      slug: finalSlug,
       developer: input.developer || null,
       property_type: input.property_type,
       province: input.province || "กรุงเทพมหานคร",

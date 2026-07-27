@@ -30,6 +30,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 
+/** Helper to ensure plain text containing line breaks (\n) is wrapped into HTML paragraphs (<p>) */
+function formatInitialContent(val: string): string {
+  if (!val) return "";
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(val);
+  if (!hasHtmlTags) {
+    return val
+      .split(/\r?\n/)
+      .map((line) => `<p>${line.trim() ? line : "<br>"}</p>`)
+      .join("");
+  }
+  return val;
+}
+
 export function SmartEditor({
   value,
   onChange,
@@ -56,7 +69,7 @@ export function SmartEditor({
       TextStyle,
       Color,
     ],
-    content: value,
+    content: formatInitialContent(value),
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
@@ -65,14 +78,36 @@ export function SmartEditor({
       attributes: {
         class: `prose prose-sm max-w-none p-4 focus:outline-none focus:ring-0 min-h-[400px] ${lineHeight}`,
       },
+      transformPastedHTML(html) {
+        if (!html) return "";
+        return html
+          .replace(/style="([^"]*)"/gi, (match, styleContent) => {
+            const cleaned = styleContent
+              .replace(/(?:color|background-color|font-family|font-size)\s*:[^;"]*;?/gi, "")
+              .trim();
+            return cleaned ? `style="${cleaned}"` : "";
+          })
+          .replace(/<font[^>]*>/gi, "")
+          .replace(/<\/font>/gi, "");
+      },
     },
     editable: !disabled,
   });
 
   // Sync editor content when value changes externally
   React.useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value);
+    if (editor && value !== undefined) {
+      const currentHtml = editor.getHTML();
+      const isCurrentEmpty = !currentHtml || currentHtml === "<p></p>";
+      const isValueEmpty = !value || value === "<p></p>";
+
+      // Don't trigger unnecessary re-renders when both are empty
+      if (isCurrentEmpty && isValueEmpty) return;
+
+      const formatted = formatInitialContent(value);
+      if (formatted !== currentHtml) {
+        editor.commands.setContent(formatted);
+      }
     }
   }, [value, editor]);
 
@@ -83,6 +118,18 @@ export function SmartEditor({
         editorProps: {
           attributes: {
             class: `prose prose-sm max-w-none p-4 focus:outline-none focus:ring-0 min-h-[400px] ${lineHeight}`,
+          },
+          transformPastedHTML(html) {
+            if (!html) return "";
+            return html
+              .replace(/style="([^"]*)"/gi, (match, styleContent) => {
+                const cleaned = styleContent
+                  .replace(/(?:color|background-color|font-family|font-size)\s*:[^;"]*;?/gi, "")
+                  .trim();
+                return cleaned ? `style="${cleaned}"` : "";
+              })
+              .replace(/<font[^>]*>/gi, "")
+              .replace(/<\/font>/gi, "");
           },
         },
       });

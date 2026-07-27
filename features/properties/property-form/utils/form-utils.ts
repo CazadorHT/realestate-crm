@@ -17,6 +17,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   status: "DRAFT",
   branch_id: "", 
   tenant_id: undefined,
+  project_id: null,
   price: undefined,
   original_price: undefined,
   rental_price: undefined,
@@ -88,6 +89,8 @@ export const EMPTY_VALUES: PropertyFormValues = {
   nearby_places: [],
   
   is_co_agent: false,
+  co_broker_id: null,
+  co_broker_ids: [],
   co_agent_name: "",
   co_agent_phone: "",
   co_agent_contact_channel: "Line",
@@ -216,6 +219,7 @@ export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
     "dining_rooms",
   ],
   3: [
+    "project_id",
     "district",
     "subdistrict",
     "address_line1", "address_line1_en", "address_line1_cn", "address_line1_ru",
@@ -294,13 +298,14 @@ export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
 
 export const FIELD_LABELS: Record<string, string> = {
   // Step 1
+  branch_id: "สาขาที่ดูแล",
   listing_type: "รูปแบบประกาศ",
   property_type: "ประเภททรัพย์",
   title: "ชื่อทรัพย์ (TH)",
   title_en: "Title (EN)",
   title_cn: "物业名称 (CN)",
   title_ru: "Название (RU)",
-  popular_area: "ย่าน/โครงการ (TH)",
+  popular_area: "ย่าน (TH)",
   popular_area_en: "Area (EN)",
   popular_area_cn: "区域 (CN)",
   popular_area_ru: "Район (RU)",
@@ -342,6 +347,7 @@ export const FIELD_LABELS: Record<string, string> = {
 
   // Co-Agent
   is_co_agent: "Co-Agent",
+  co_broker_id: "Co-Broker",
   co_agent_name: "ชื่อ Co-Agent",
   co_agent_phone: "เบอร์โทร Co-Agent",
   co_agent_contact_channel: "ช่องทางติดต่อ Co-Agent",
@@ -350,6 +356,7 @@ export const FIELD_LABELS: Record<string, string> = {
   co_agent_rent_commission_months: "ส่วนแบ่งเช่า Co-Agent (เดือน)",
 
   // Step 3 - Location
+  project_id: "โครงการ",
   province: "จังหวัด",
   district: "อำเภอ/เขต",
   subdistrict: "ตำบล/แขวง",
@@ -447,6 +454,7 @@ export function mapRowToFormValues(
 
   return {
     // 1. Core Identification
+    project_id: (row.project_id as string | null) || null,
     title: get("title", ""),
     title_en: get("title_en", ""),
     title_cn: get("title_cn", ""),
@@ -549,6 +557,8 @@ export function mapRowToFormValues(
     
     // Co-Agent (Nested in meta)
     is_co_agent: Boolean(get("is_co_agent", false)),
+    co_broker_id: (get("co_broker_id", null) as string | null) || null,
+    co_broker_ids: (get("co_broker_ids", []) as string[]) || [],
     co_agent_name: get("co_agent_name", ""),
     co_agent_phone: get("co_agent_phone", ""),
     co_agent_contact_channel: get("co_agent_contact_channel", "Line"),

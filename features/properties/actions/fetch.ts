@@ -298,6 +298,19 @@ export async function addPopularAreaAction(data: {
     console.error("Auto AI generation for popular area error:", err);
   }
 
+  let areaSlug = aiData?.slug || null;
+  if (areaSlug) {
+    const { data: existingArea } = await supabase
+      .from("popular_areas_v3")
+      .select("id")
+      .eq("slug", areaSlug)
+      .maybeSingle();
+
+    if (existingArea) {
+      areaSlug = `${areaSlug}-${Date.now().toString().slice(-4)}`;
+    }
+  }
+
   const { error } = await supabase.from("popular_areas_v3").insert({
     name: {
       th: nameTh,
@@ -306,7 +319,7 @@ export async function addPopularAreaAction(data: {
       ru: nameRu || null,
     },
     province: province,
-    slug: aiData?.slug || null,
+    slug: areaSlug,
     description: aiData?.description || {},
     seo_title: aiData?.seoTitle || {},
     seo_description: aiData?.seoDescription || {},
