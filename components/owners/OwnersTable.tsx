@@ -482,13 +482,13 @@ export function OwnersTable({
                       )}
                     </TableCell>
                     {/* LINE */}
-                    <TableCell>
+                    <TableCell className="max-w-sm! truncate">
                       {owner.line_id ? (
                         <a
                           href={`https://line.me/ti/p/~${owner.line_id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:underline text-emerald-600 font-medium"
+                          className="hover:underline text-emerald-600 font-medium max-w-sm! truncate "
                         >
                           {owner.line_id}
                         </a>
