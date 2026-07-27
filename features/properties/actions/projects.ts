@@ -420,3 +420,75 @@ async function resolveTenantId(
 
   throw new Error("Unauthorized: Tenant ID is required but missing");
 }
+
+/**
+ * Fetch default features for a project by checking associated properties in the project
+ */
+export async function getProjectDefaultFeaturesAction(projectId: string): Promise<{ success: boolean; featureIds?: string[] }> {
+  try {
+    const ctx = await requireAuthContext();
+
+    const featureSet = new Set<string>();
+
+    // 1. Check if project itself has facilities array
+    const { data: project } = await ctx.supabase
+      .from("projects")
+      .select("facilities")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (project && Array.isArray(project.facilities) && project.facilities.length > 0) {
+      // Fetch feature database to match names or keywords
+      const { data: allFeatures } = await ctx.supabase
+        .from("features")
+        .select("id, name");
+
+      if (allFeatures && allFeatures.length > 0) {
+        for (const facText of project.facilities) {
+          if (typeof facText !== "string") continue;
+          const cleanFac = facText.trim().toLowerCase();
+          for (const feat of allFeatures) {
+            const featName = feat.name.trim().toLowerCase();
+            if (featName.includes(cleanFac) || cleanFac.includes(featName)) {
+              featureSet.add(feat.id);
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Fetch recent properties in this project to get their feature_ids as fallback or addition
+    const { data: props, error } = await ctx.supabase
+      .from("properties_core")
+      .select(`
+        id,
+        updated_at,
+        property_features (
+          feature_id
+        )
+      `)
+      .eq("project_id", projectId)
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(10);
+
+    if (!error && props && props.length > 0) {
+      for (const p of props) {
+        const pfList = (p as any).property_features;
+        if (Array.isArray(pfList) && pfList.length > 0) {
+          for (const item of pfList) {
+            if (item.feature_id) {
+              featureSet.add(item.feature_id);
+            }
+          }
+        }
+      }
+    }
+
+    return { success: true, featureIds: Array.from(featureSet) };
+  } catch (err: any) {
+    console.error("Error in getProjectDefaultFeaturesAction:", err);
+    return { success: false, featureIds: [] };
+  }
+}
+

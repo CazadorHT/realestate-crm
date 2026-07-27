@@ -32,6 +32,7 @@ import type { PropertyFormValues } from "@/features/properties/schema";
 
 import { getProjectSuggestions } from "../../../actions/project-suggestions";
 import { getExistingProjectLocationAction } from "../../actions/ai-actions";
+import { getProjectDefaultFeaturesAction } from "@/features/properties/actions/projects";
 import { toast } from "sonner";
 import { AddressSelectorField } from "./AddressSelectorField";
 import { QuickCreateProjectDialog } from "./QuickCreateProjectDialog";
@@ -43,6 +44,7 @@ interface AddressSectionProps {
 export function AddressSection({ form: formProp }: AddressSectionProps) {
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
+
   const {
     provinces,
     getDistricts,
@@ -197,6 +199,19 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           form.setValue("nearby_places", places, { shouldDirty: true, shouldTouch: true });
           toast.success("ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการเดิมสำเร็จ ✨");
         }
+      }
+    });
+
+    // Auto-fetch default project features for Step 5
+    getProjectDefaultFeaturesAction(proj.id).then((res) => {
+      if (res.success && res.featureIds && res.featureIds.length > 0) {
+        const currentFeatures = new Set<string>(form.getValues("feature_ids") || []);
+        res.featureIds.forEach((id) => currentFeatures.add(id));
+        form.setValue("feature_ids", Array.from(currentFeatures), {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+        toast.success(`เลือกสิ่งอำนวยความสะดวกจากโครงการสำเร็จ ✨ (${res.featureIds.length} รายการ)`);
       }
     });
 

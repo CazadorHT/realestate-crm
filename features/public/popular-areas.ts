@@ -228,3 +228,139 @@ export const getPopularAreasAction = unstable_cache(
   { revalidate: 604800, tags: ["popular-areas", "public-data"] }
 );
 
+export type DynamicSuggestionItem = {
+  text: string;
+  type: "landmark" | "transit" | "area" | "feature";
+  label: string;
+};
+
+/**
+ * [S-Tier] Fetch all active search suggestions dynamically from master data,
+ * nearby places saved in Step 3 (projects/properties), stations, and popular areas.
+ */
+export const getDynamicSearchSuggestionsAction = unstable_cache(
+  async (): Promise<DynamicSuggestionItem[]> => {
+    try {
+      const client = await createClient();
+
+      // 1. Fetch Transit Stations & Master Data
+      const { data: masterData } = await client
+        .from("ref_master_data")
+        .select("type, code, label")
+        .eq("is_active", true);
+
+      // 2. Fetch Projects (Names & Address Info Nearby Places)
+      const { data: projectsData } = await client
+        .from("projects_v3")
+        .select("name, address_info")
+        .eq("is_active", true);
+
+      // 3. Fetch Popular Areas
+      const { data: areasData } = await client
+        .from("popular_areas_v3")
+        .select("name_th")
+        .eq("is_active", true);
+
+      const itemsSet = new Map<string, DynamicSuggestionItem>();
+
+      // Add Master Stations
+      if (masterData) {
+        for (const item of masterData) {
+          if (item.type === "TRANSIT_STATION") {
+            const labelObj = item.label as any;
+            const thName = labelObj?.th || item.code;
+            if (thName) {
+              const textWithNear = thName.startsWith("ใกล้") ? thName : `ใกล้ ${thName}`;
+              itemsSet.set(textWithNear, {
+                text: textWithNear,
+                type: "transit",
+                label: "รถไฟฟ้า",
+              });
+              if (!thName.startsWith("ใกล้")) {
+                itemsSet.set(thName, {
+                  text: thName,
+                  type: "transit",
+                  label: "สถานีรถไฟฟ้า",
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // Add Master/Step 3 Nearby Places from Projects
+      if (projectsData) {
+        for (const proj of projectsData) {
+          if (proj.name) {
+            itemsSet.set(proj.name, {
+              text: proj.name,
+              type: "area",
+              label: "โครงการ",
+            });
+          }
+
+          const addressInfo = proj.address_info as any;
+          if (addressInfo) {
+            // Extract nearby_places array from Step 3
+            if (Array.isArray(addressInfo.nearby_places)) {
+              for (const place of addressInfo.nearby_places) {
+                const placeName = place.name || place.label || place.place_name || place.name_th;
+                if (placeName && typeof placeName === "string") {
+                  const cleanName = placeName.trim();
+                  const textWithNear = cleanName.startsWith("ใกล้") ? cleanName : `ใกล้ ${cleanName}`;
+                  itemsSet.set(textWithNear, {
+                    text: textWithNear,
+                    type: "landmark",
+                    label: "สถานที่ใกล้เคียง",
+                  });
+                }
+              }
+            }
+            // Extract nearby_transits array from Step 3
+            if (Array.isArray(addressInfo.nearby_transits)) {
+              for (const transit of addressInfo.nearby_transits) {
+                const stationName = transit.station_name || transit.name || transit.label;
+                if (stationName && typeof stationName === "string") {
+                  const cleanStation = stationName.trim();
+                  const textWithNear = cleanStation.startsWith("ใกล้") ? cleanStation : `ใกล้ ${cleanStation}`;
+                  itemsSet.set(textWithNear, {
+                    text: textWithNear,
+                    type: "transit",
+                    label: "รถไฟฟ้า",
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Add Popular Areas
+      if (areasData) {
+        for (const area of areasData) {
+          if (area.name_th) {
+            itemsSet.set(area.name_th, {
+              text: area.name_th,
+              type: "area",
+              label: "ย่านยอดนิยม",
+            });
+            const nearArea = `ใกล้ ${area.name_th}`;
+            itemsSet.set(nearArea, {
+              text: nearArea,
+              type: "landmark",
+              label: "ทำเลใกล้เคียง",
+            });
+          }
+        }
+      }
+
+      return Array.from(itemsSet.values());
+    } catch (err) {
+      console.error("getDynamicSearchSuggestionsAction error:", err);
+      return [];
+    }
+  },
+  ["dynamic-search-suggestions-v2"],
+  { revalidate: 3600, tags: ["suggestions", "master-data", "projects", "public-data"] }
+);
+
