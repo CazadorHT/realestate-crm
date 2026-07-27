@@ -345,7 +345,7 @@ export function QuickCreateProjectDialog({
             variant="outline"
             onClick={() => onClose(false)}
             disabled={isSaving}
-            className="rounded-xl font-semibold text-xs px-4 h-9 text-slate-600 border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
+            className="rounded-xl font-semibold text-xs px-4 h-9 text-slate-600! border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
           >
             ยกเลิก
           </Button>
