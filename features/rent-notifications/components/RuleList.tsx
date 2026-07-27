@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Table,
@@ -80,25 +80,27 @@ export function RuleList({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
+  const [isPending, startTransition] = useTransition();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
   const { t, language } = useLanguage();
 
-  // Handle Search Debounce
+  // Handle Search Debounce with startTransition
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
-      if (searchTerm) {
-        params.set("search", searchTerm);
+      if (searchTerm.trim()) {
+        params.set("search", searchTerm.trim());
       } else {
         params.delete("search");
       }
-      // Reset to page 1 on new search
       params.set("page", "1");
       
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    }, 300);
+      startTransition(() => {
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    }, 700);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, pathname, router, searchParams]);

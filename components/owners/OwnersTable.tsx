@@ -108,32 +108,38 @@ export function OwnersTable({
     setSelectedOwnerType(ownerType);
   }, [ownerType]);
 
+  const performSearch = (term: string, type: string) => {
+    const currentQ = searchParams.get("q") || "";
+    const currentOwnerType = searchParams.get("owner_type") || "ALL";
+
+    if (term !== currentQ || type !== currentOwnerType) {
+      const params = new URLSearchParams(searchParams.toString());
+      if (term.trim()) {
+        params.set("q", term.trim());
+      } else {
+        params.delete("q");
+      }
+
+      if (type && type !== "ALL") {
+        params.set("owner_type", type);
+      } else {
+        params.delete("owner_type");
+      }
+
+      params.set("page", "1");
+      startTransition(() => {
+        router.push(`/protected/owners?${params.toString()}`);
+      });
+    }
+  };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      const currentQ = searchParams.get("q") || "";
-      const currentOwnerType = searchParams.get("owner_type") || "ALL";
-
-      if (searchTerm !== currentQ || selectedOwnerType !== currentOwnerType) {
-        const params = new URLSearchParams(searchParams.toString());
-        if (searchTerm) {
-          params.set("q", searchTerm);
-        } else {
-          params.delete("q");
-        }
-
-        if (selectedOwnerType && selectedOwnerType !== "ALL") {
-          params.set("owner_type", selectedOwnerType);
-        } else {
-          params.delete("owner_type");
-        }
-
-        params.set("page", "1");
-        router.push(`/protected/owners?${params.toString()}`);
-      }
-    }, 400);
+      performSearch(searchTerm, selectedOwnerType);
+    }, 700);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, selectedOwnerType, searchParams, router]);
+  }, [searchTerm, selectedOwnerType]);
 
   const handleSelectAllGlobal = async () => {
     setIsGlobalLoading(true);
@@ -267,16 +273,30 @@ export function OwnersTable({
       {/* 🔍 Search & Filters Bar */}
       <div className="flex flex-col md:flex-row gap-3 items-center justify-between bg-slate-50/50 p-4 rounded-2xl border border-slate-200/60 shadow-xs animate-in fade-in duration-200">
         <div className="relative w-full md:max-w-md group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+          {isPending ? (
+            <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500 animate-spin" />
+          ) : (
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+          )}
           <Input
-            placeholder="ค้นหาชื่อเจ้าของ, เบอร์โทร, LINE ID..."
+            placeholder="ค้นหาชื่อเจ้าของ, เบอร์โทร, LINE ID (กด Enter เพื่อค้นหาทันที)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                performSearch(searchTerm, selectedOwnerType);
+              }
+            }}
             className="pl-10 pr-10 h-11 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
           />
           {searchTerm && (
             <button
-              onClick={() => setSearchTerm("")}
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                performSearch("", selectedOwnerType);
+              }}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 hover:bg-slate-100 p-1 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X className="h-4 w-4" />
@@ -356,7 +376,7 @@ export function OwnersTable({
         </div>
       )}
 
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+      <div className={cn("border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm transition-opacity duration-300", isPending && "opacity-50 pointer-events-none")}>
         {/* Desktop Table View */}
         <div className="hidden lg:block overflow-x-auto">
           <Table>

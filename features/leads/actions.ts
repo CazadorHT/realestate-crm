@@ -14,7 +14,7 @@ import { z } from "zod";
 import { getCoverImage } from "@/lib/property-hardened-utils";
 import type { PropertyAddressV3, PropertyPricingV3 } from "@/features/properties/types/v3";
 import { logAudit } from "@/lib/audit";
-import { UserRole } from "@/lib/authz";
+import { UserRole, requireAuthContext, assertAdminOrManager } from "@/lib/authz";
 import { mapDbError } from "@/lib/db-error";
 import { 
   LISTING_TYPE_DB_VALUE, 
@@ -1094,4 +1094,114 @@ export const requestLeadTransferAction = createSafeAction(
     return { success: true };
   }
 );
+
+/**
+ * Automatically find and merge duplicate lead records in the system (e.g. created by webhook retries)
+ */
+export async function cleanupDuplicateLeadsAction() {
+  const { supabase, role } = await requireAuthContext();
+  assertAdminOrManager(role);
+
+  const { decrypt } = await import("@/lib/crypto");
+  const PLACEHOLDER_NAMES = ["Facebook User", "FB User", "IG User", "Line User", "Unknown", "LINE User", "FB Lead Ad User"];
+
+  // 1. Fetch all identities with role = 'LEAD' and their associated crm_leads_v3 records
+  const { data: identities, error } = await supabase
+    .from("identities_v3")
+    .select("id, display_name, social_links, created_at, crm_leads_v3(id, created_at)")
+    .eq("role", "LEAD");
+
+  if (error || !identities) {
+    return { success: false, message: error?.message || "ไม่สามารถดึงข้อมูลลีดได้" };
+  }
+
+  // 2. Group identities by decrypted display name
+  const nameGroups = new Map<string, typeof identities>();
+
+  for (const identity of identities) {
+    const rawName = identity.display_name;
+    const decName = (decrypt(rawName) || rawName || "").trim();
+    if (!decName || PLACEHOLDER_NAMES.includes(decName)) continue;
+
+    const normalizedKey = decName.toLowerCase();
+    const existingGroup = nameGroups.get(normalizedKey) || [];
+    existingGroup.push(identity);
+    nameGroups.set(normalizedKey, existingGroup);
+  }
+
+  let mergedCount = 0;
+
+  // 3. For groups with duplicates, merge them into the earliest identity
+  for (const group of Array.from(nameGroups.values())) {
+    if (group.length <= 1) continue;
+
+    // Sort by created_at ascending (earliest first)
+    group.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    const primaryIdentity = group[0];
+    const primaryLead = (Array.isArray(primaryIdentity.crm_leads_v3) ? primaryIdentity.crm_leads_v3[0] : primaryIdentity.crm_leads_v3) as { id: string } | undefined;
+    if (!primaryLead || !primaryLead.id) continue;
+
+    const duplicateIdentities = group.slice(1);
+
+    let combinedSocialLinks = { ...(primaryIdentity.social_links as Record<string, any> || {}) };
+
+    for (const dupIdentity of duplicateIdentities) {
+      const dupLead = (Array.isArray(dupIdentity.crm_leads_v3) ? dupIdentity.crm_leads_v3[0] : dupIdentity.crm_leads_v3) as { id: string } | undefined;
+      const dupSocial = (dupIdentity.social_links as Record<string, any>) || {};
+
+      // Merge social links
+      combinedSocialLinks = { ...dupSocial, ...combinedSocialLinks };
+
+      if (dupLead) {
+        // Re-assign omni-channel messages to primary lead
+        await supabase
+          .from("omni_messages_v3")
+          .update({ lead_id: primaryLead.id })
+          .eq("lead_id", dupLead.id);
+
+        // Re-assign deals to primary lead
+        await supabase
+          .from("deals")
+          .update({ lead_id: primaryLead.id })
+          .eq("lead_id", dupLead.id);
+
+        // Delete duplicate lead record
+        await supabase
+          .from("crm_leads_v3")
+          .delete()
+          .eq("id", dupLead.id);
+      }
+
+      // Delete duplicate identity secrets & identity
+      await supabase
+        .from("identity_secrets_v3")
+        .delete()
+        .eq("identity_id", dupIdentity.id);
+
+      await supabase
+        .from("identities_v3")
+        .delete()
+        .eq("id", dupIdentity.id);
+
+      mergedCount++;
+    }
+
+    // Update primary identity with merged social links
+    await supabase
+      .from("identities_v3")
+      .update({ social_links: combinedSocialLinks })
+      .eq("id", primaryIdentity.id);
+  }
+
+  const { revalidatePath } = await import("next/cache");
+  revalidatePath("/protected/leads");
+
+  return {
+    success: true,
+    message: mergedCount > 0
+      ? `รวมลีดที่ซ้ำซ้อนเรียบร้อยแล้ว ${mergedCount} รายการ ✨`
+      : "ไม่พบลีดที่ซ้ำซ้อนในระบบเพิ่มเติม ✨",
+  };
+}
 

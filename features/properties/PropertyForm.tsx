@@ -241,6 +241,7 @@ export function PropertyForm({
   const [shareStatus, setShareStatus] = React.useState<
     Record<string, { loading: boolean; success: boolean; url?: string | null }>
   >({});
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   // Redirect if not staff
   const [currentStep, setCurrentStep] = React.useState(1);
@@ -980,9 +981,10 @@ export function PropertyForm({
           <Button
             variant="outline"
             className="w-full justify-start gap-4 h-16 text-base font-medium border-slate-200 rounded-2xl hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group"
-            disabled={successData?.status !== "ACTIVE"}
+            disabled={successData?.status !== "ACTIVE" || isNavigating}
             onClick={() => {
               if (successData?.slug) {
+                setIsNavigating(true);
                 window.open(`/properties/${successData.slug}`, "_blank");
                 router.push("/protected/properties?success=true#table");
               } else {
@@ -991,7 +993,11 @@ export function PropertyForm({
             }}
           >
             <div className="bg-slate-100 p-2 rounded-xl group-hover:bg-emerald-100 group-hover:text-emerald-600! transition-colors">
-              <ExternalLink className="w-5 h-5" />
+              {isNavigating ? (
+                <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+              ) : (
+                <ExternalLink className="w-5 h-5" />
+              )}
             </div>
             <div className="flex flex-col items-start leading-tight group-hover:text-emerald-600!">
               <span>ดูหน้าเว็บไซต์</span>
@@ -1005,12 +1011,18 @@ export function PropertyForm({
 
           <Button
             className="w-full justify-start gap-4 h-16 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-2xl shadow-lg shadow-slate-200"
-            onClick={() =>
-              router.push("/protected/properties?success=true#table")
-            }
+            disabled={isNavigating}
+            onClick={() => {
+              setIsNavigating(true);
+              router.push("/protected/properties?success=true#table");
+            }}
           >
             <div className="bg-white/10 p-2 rounded-xl">
-              <List className="w-5 h-5 text-white" />
+              {isNavigating ? (
+                <Loader2 className="w-5 h-5 animate-spin text-white" />
+              ) : (
+                <List className="w-5 h-5 text-white" />
+              )}
             </div>
             <div className="flex flex-col items-start leading-tight">
               <span>กลับหน้ารายการ</span>

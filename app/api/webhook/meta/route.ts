@@ -284,13 +284,32 @@ async function handleFacebookChange(change: any, pageId?: string) {
   if (!lead) {
     // Check for duplicate Facebook lead by name
     if (senderName && !PLACEHOLDER_NAMES.includes(senderName)) {
-      const fullNameHash = generateBlindIndex(senderName.toLowerCase().trim());
-      const { data: existingIdentity } = await supabase
+      const normalizedName = senderName.toLowerCase().trim();
+      const fullNameHash = generateBlindIndex(normalizedName);
+      let { data: existingIdentity } = await supabase
         .from("identities_v3")
         .select("id, social_links, crm_leads_v3(id)")
         .eq("social_links->>full_name_hash", fullNameHash)
         .eq("role", "LEAD")
         .maybeSingle();
+
+      // Fallback: If hash search missed, scan identities directly by decrypting display_name
+      if (!existingIdentity) {
+        const { data: allLeadIdentities } = await supabase
+          .from("identities_v3")
+          .select("id, display_name, social_links, crm_leads_v3(id)")
+          .eq("role", "LEAD");
+
+        if (allLeadIdentities) {
+          const matched = allLeadIdentities.find((i: any) => {
+            const decName = (decrypt(i.display_name) || i.display_name || "").toLowerCase().trim();
+            return decName === normalizedName;
+          });
+          if (matched) {
+            existingIdentity = matched;
+          }
+        }
+      }
 
       if (existingIdentity?.crm_leads_v3?.[0]) {
         lead = existingIdentity.crm_leads_v3[0] as { id: string };
@@ -299,6 +318,7 @@ async function handleFacebookChange(change: any, pageId?: string) {
         const currentSocialLinks = (existingIdentity.social_links as Record<string, any>) || {};
         const updatedSocialLinks = {
           ...currentSocialLinks,
+          full_name_hash: fullNameHash,
           facebook_psid_hash: facebookPsidHash,
           facebook_psid: encrypt(senderId),
         };
@@ -333,7 +353,7 @@ async function handleFacebookChange(change: any, pageId?: string) {
         social_links: {
           facebook_psid_hash: facebookPsidHash,
           facebook_psid: encryptedFacebookPsid,
-          full_name_hash: generateBlindIndex(senderName),
+          full_name_hash: generateBlindIndex(senderName.toLowerCase().trim()),
         },
         is_active: true,
       })
