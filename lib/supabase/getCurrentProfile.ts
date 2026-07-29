@@ -25,8 +25,10 @@ type IdentityWithProfile = IdentityRow & {
   profile: ProfileRow | null;
 };
 
-// ดึงข้อมูลโปรไฟล์ปัจจุบันจาก Supabase Auth และตาราง profiles
-export async function getCurrentProfile(): Promise<Profile | null> {
+import { cache } from "react";
+
+// ดึงข้อมูลโปรไฟล์ปัจจุบันจาก Supabase Auth และตาราง profiles (Memoized per request)
+export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
 
   // 1. ดึงข้อมูล User จาก Supabase Auth (System Table)
@@ -179,4 +181,4 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     whatsapp_user_id:
       identity.whatsapp_user_id || profile?.whatsapp_user_id || null,
   } as Profile;
-}
+});

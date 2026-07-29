@@ -1206,17 +1206,6 @@ export async function postPropertyToMetaAction(
           }
         }
 
-        const cleanUrl = activeUrl.split("?")[0].toLowerCase();
-        const isCompatible = [".jpg", ".jpeg", ".png"].some((ext) => cleanUrl.endsWith(ext));
-        const isWebp = cleanUrl.endsWith(".webp");
-
-        if (isCompatible) return activeUrl;
-
-        // Serve WebP directly via Render Endpoint with format=origin (100% Free - zero transformation quota used)
-        if (isWebp && activeUrl.includes("/storage/v1/object/public/")) {
-          return activeUrl.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + "?format=origin";
-        }
-
         return activeUrl;
       })
       .filter(Boolean) as string[];

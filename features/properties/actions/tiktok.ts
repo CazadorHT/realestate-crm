@@ -109,25 +109,7 @@ export async function postPropertyToTikTokAction(
       })
       .filter(Boolean) as string[];
     
-    const supportedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
-    
-    // Get the current app URL for the image proxy
-    const imagesToPost = rawImages
-      .map(url => {
-        const cleanUrl = url.split("?")[0].toLowerCase();
-        const isCompatible = [".jpg", ".jpeg", ".png"].some(ext => cleanUrl.endsWith(ext));
-        const isWebp = cleanUrl.endsWith(".webp");
-        
-        if (isCompatible) return url;
-        
-        // Serve WebP directly via Render Endpoint with format=origin (100% Free - zero transformation quota used)
-        if (isWebp && url.includes("/storage/v1/object/public/")) {
-          return url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + "?format=origin";
-        }
-        
-        return null;
-      })
-      .filter(Boolean) as string[];
+    const imagesToPost = rawImages;
 
     console.log(`[TikTok Post] Sending ${imagesToPost.length} images to TikTok (with Proxy if WebP):`, imagesToPost);
 

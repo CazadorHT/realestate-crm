@@ -60,8 +60,8 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
 
       try {
         setIsLoading(true);
-        const res = await fetch("/api/public/properties?filter=hot_deals", {
-          cache: "no-store",
+        const res = await fetch("/api/public/properties?filter=hot_deals&limit=8", {
+          next: { revalidate: 3600 },
         });
         if (!res.ok) throw new Error("Failed to fetch");
         const json = await res.json();

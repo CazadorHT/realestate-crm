@@ -106,10 +106,10 @@ export async function getPropertiesTableData(params: {
     .from("properties")
     .select(
       `
-      id, slug, title, description, status, property_type, listing_type, 
+      id, slug, title, status, property_type, listing_type, 
       price, rental_price, original_price, original_rental_price, 
       updated_at, created_at, bedrooms, bathrooms, office_capacity, province, district, subdistrict, 
-      popular_area, view_count, address_line1, images, total_units, 
+      popular_area, view_count, address_line1, total_units, 
       sold_units, posted_to_facebook_at, posted_to_instagram_at, 
       posted_to_line_at, posted_to_tiktok_at, assigned_to, created_by,
       agent:profiles(full_name, role, email),

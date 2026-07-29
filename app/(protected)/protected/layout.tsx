@@ -8,7 +8,7 @@ import { UserNav } from "@/components/dashboard/UserNav";
 import { MobileNav } from "@/components/dashboard/MobileNav";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { siteConfig } from "@/lib/site-config";
-import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries/stats";
+import { getAiReviewCountQuery } from "@/features/properties/queries/stats";
 
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
@@ -41,9 +41,9 @@ export default async function ProtectedLayout({
       return redirect("/auth/pending");
     }
 
-    // 3. Parallel Fetching: Now safe to run staff-only queries
-    const [propertyStats, cookieStore] = await Promise.all([
-      getPropertiesDashboardStatsQuery(),
+    // 3. Parallel Fetching: Now safe to run staff-only queries (0-bytes payload egress via head query)
+    const [aiReviewCount, cookieStore] = await Promise.all([
+      getAiReviewCountQuery(),
       cookies(),
     ]);
 
@@ -60,7 +60,7 @@ export default async function ProtectedLayout({
             <SidebarNav 
               role={profile.role} 
               initialCollapsed={initialCollapsed} 
-              aiReviewCount={propertyStats.aiReviewCount}
+              aiReviewCount={aiReviewCount}
             />
 
           <div className="flex flex-1 flex-col min-w-0">

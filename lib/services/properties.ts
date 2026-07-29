@@ -335,7 +335,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           query = query.or(textConditions.join(","));
         }
 
-        const itemsPerPage = options.limit || 60;
+        const itemsPerPage = options.limit || 24;
 
         const effectiveSort = options.sort || "NEWEST";
 

@@ -47,18 +47,7 @@ export function getPublicImageUrl(
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  // 🛡️ Elite Optimization: Use Supabase Render service if options are provided
-  if (options && (options.width || options.height || options.quality)) {
-    const params = new URLSearchParams();
-    if (options.width) params.append("width", options.width.toString());
-    if (options.height) params.append("height", options.height.toString());
-    if (options.quality) params.append("quality", options.quality.toString());
-    if (options.format) params.append("format", options.format);
-
-    return `${baseUrl}/storage/v1/render/image/public/${bucket}/${encodedPath}?${params.toString()}`;
-  }
-
-  // Fallback to standard public URL
+  // Always return standard public object URL (Free, direct CDN serving, no Supabase Image Transformation quota consumed)
   return `${baseUrl}/storage/v1/object/public/${bucket}/${encodedPath}`;
 }
 

@@ -240,10 +240,10 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
         }
         setError(null);
 
-        // Fetch 100 properties to cover all categories in the background
-        const res = await fetch("/api/public/properties?sort=NEWEST&limit=100", {
+        // Fetch 24 properties to cover initial view with cache revalidation
+        const res = await fetch("/api/public/properties?sort=NEWEST&limit=24", {
           signal: controller.signal,
-          cache: "no-store",
+          next: { revalidate: 3600 },
         });
 
         if (!res.ok) {

@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
+import { MissingLocationDialog } from "./components/MissingLocationDialog";
 import type {
   PropertyRow,
   PropertyWithImages,
@@ -252,6 +253,11 @@ export function PropertyForm({
   >([]);
   const [showDuplicateDialog, setShowDuplicateDialog] = React.useState(false);
   const [pendingSubmit, setPendingSubmit] =
+    React.useState<PropertyFormValues | null>(null);
+
+  // Missing location check state
+  const [showMissingAreaDialog, setShowMissingAreaDialog] = React.useState(false);
+  const [pendingValuesWithoutArea, setPendingValuesWithoutArea] =
     React.useState<PropertyFormValues | null>(null);
 
   // Step 1 specific state
@@ -509,8 +515,8 @@ export function PropertyForm({
     return true;
   };
 
-  // === SUBMIT ===
-  const onSubmit = async (values: PropertyFormValues) => {
+  // === SUBMIT CORE ===
+  const executeSubmit = async (values: PropertyFormValues) => {
     setIsActuallySubmitting(true);
     try {
       const canProceed = await checkDuplicates(values);
@@ -566,6 +572,97 @@ export function PropertyForm({
       toast.error(msg);
     } finally {
       setIsActuallySubmitting(false);
+    }
+  };
+
+  // === SUBMIT ENTRYPOINT ===
+  const onSubmit = async (values: PropertyFormValues) => {
+    if (!values.popular_area?.trim()) {
+      setPendingValuesWithoutArea(values);
+      setShowMissingAreaDialog(true);
+      return;
+    }
+    await executeSubmit(values);
+  };
+
+  // === MISSING LOCATION HANDLERS ===
+  const handleSelectAreaAndSubmit = async (areaName: string) => {
+    setShowMissingAreaDialog(false);
+    const targetValues = pendingValuesWithoutArea || form.getValues();
+    const updatedValues = { ...targetValues, popular_area: areaName };
+    form.setValue("popular_area", areaName, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+    setPendingValuesWithoutArea(null);
+    await executeSubmit(updatedValues);
+  };
+
+  const handleCreateAreaAndSubmit = async (areaData: {
+    name: string;
+    name_en?: string;
+    name_cn?: string;
+    name_ru?: string;
+  }): Promise<boolean> => {
+    try {
+      const province = form.getValues("province");
+      const res = await addPopularAreaAction({
+        name: areaData.name,
+        name_en: areaData.name_en,
+        name_cn: areaData.name_cn,
+        name_ru: areaData.name_ru,
+        province: province,
+      });
+
+      if (res.success) {
+        toast.success("เพิ่มย่านสำเร็จ");
+        await refreshPopularAreas(province);
+
+        const targetValues = pendingValuesWithoutArea || form.getValues();
+        const updatedValues = {
+          ...targetValues,
+          popular_area: areaData.name,
+          popular_area_en: areaData.name_en || targetValues.popular_area_en,
+          popular_area_cn: areaData.name_cn || targetValues.popular_area_cn,
+          popular_area_ru: areaData.name_ru || targetValues.popular_area_ru,
+        };
+
+        form.setValue("popular_area", areaData.name, {
+          shouldValidate: true,
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+        if (areaData.name_en) {
+          form.setValue("popular_area_en", areaData.name_en, { shouldDirty: true });
+        }
+        if (areaData.name_cn) {
+          form.setValue("popular_area_cn", areaData.name_cn, { shouldDirty: true });
+        }
+        if (areaData.name_ru) {
+          form.setValue("popular_area_ru", areaData.name_ru, { shouldDirty: true });
+        }
+
+        setShowMissingAreaDialog(false);
+        setPendingValuesWithoutArea(null);
+        await executeSubmit(updatedValues);
+        return true;
+      } else {
+        toast.error(res.message || "เกิดข้อผิดพลาดในการเพิ่มย่าน");
+        return false;
+      }
+    } catch (err) {
+      toast.error("เกิดข้อผิดพลาดในการเพิ่มย่าน");
+      return false;
+    }
+  };
+
+  const handleSkipAreaAndSubmit = async () => {
+    setShowMissingAreaDialog(false);
+    if (pendingValuesWithoutArea) {
+      const targetValues = pendingValuesWithoutArea;
+      setPendingValuesWithoutArea(null);
+      await executeSubmit(targetValues);
     }
   };
 
@@ -955,6 +1052,17 @@ export function PropertyForm({
           setShowDuplicateDialog(false);
           setPendingSubmit(null);
         }}
+      />
+
+      {/* Missing Location Dialog */}
+      <MissingLocationDialog
+        open={showMissingAreaDialog}
+        onOpenChange={setShowMissingAreaDialog}
+        popularAreas={popularAreas}
+        province={form.watch("province")}
+        onSelectAreaAndSubmit={handleSelectAreaAndSubmit}
+        onCreateAreaAndSubmit={handleCreateAreaAndSubmit}
+        onSkipAndSubmit={handleSkipAreaAndSubmit}
       />
 
       {/* Success Navigation Dialog */}

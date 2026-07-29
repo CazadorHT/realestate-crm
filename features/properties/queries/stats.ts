@@ -171,3 +171,33 @@ export async function getPropertiesFastCountQuery(allBranches?: string): Promise
   const { count } = await query;
   return count || 0;
 }
+
+/**
+ * ⚡ FAST COUNT: Returns only the count of properties requiring AI review for sidebar badge.
+ * Uses 'head: true' to minimize data transfer and DB load (0 bytes payload egress).
+ */
+export async function getAiReviewCountQuery(allBranches?: string): Promise<number> {
+  const { supabase, role, tenantId } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let query = supabase
+    .from("properties")
+    .select("id", { count: "exact", head: true })
+    .is("deleted_at", null)
+    .eq("requires_ai_review", true);
+
+  if (isMultiTenant) {
+    const isSuperAdmin = role === "ADMIN";
+    const wantsAllBranches = allBranches === "true" || tenantId === "ALL" || !tenantId;
+
+    if (!(wantsAllBranches && isSuperAdmin)) {
+      if (tenantId && tenantId !== "ALL") {
+        query = query.eq("tenant_id", tenantId);
+      }
+    }
+  }
+
+  const { count } = await query;
+  return count || 0;
+}
