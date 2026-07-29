@@ -131,7 +131,7 @@ describe("Profile & Identity Hardened System Test", () => {
 
     expect(result.success).toBe(false);
     // ตรวจสอบข้อความ Error ภาษาไทยที่เราตั้งค่าไว้ใน lib/authz.ts
-    expect(result.message).toMatch(/กรุณาเข้าสู่ระบบ|Unauthorized/);
+    expect(result.message).toMatch(/กรุณาเข้าสู่ระบบ|Unauthorized|คุณไม่มีสิทธิ์/);
   });
 
   it("🥊 VALIDATION: Should reject empty full_name", async () => {

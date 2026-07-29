@@ -65,8 +65,45 @@ function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
   return parsed.success ? (parsed.data as GetPropertiesOptions) : { limit: 12 };
 }
 
+const STATION_SEO_MAP: Record<string, Record<string, string>> = {
+  "BTS อ่อนนุช": { en: "BTS On Nut", cn: "BTS On Nut 站", ru: "BTS Он Нут" },
+  "BTS อารีย์": { en: "BTS Ari", cn: "BTS Ari 站", ru: "BTS Ари" },
+  "BTS ทองหล่อ": { en: "BTS Thong Lo", cn: "BTS Thong Lo 站", ru: "BTS Тонглор" },
+  "BTS เอกมัย": { en: "BTS Ekkamai", cn: "BTS Ekkamai 站", ru: "BTS Эккамай" },
+  "BTS บางนา": { en: "BTS Bang Na", cn: "BTS Bang Na 站", ru: "BTS Бангна" },
+  "BTS บางจาก": { en: "BTS Bang Chak", cn: "BTS Bang Chak 站", ru: "BTS Бангчак" },
+  "BTS อุดมสุข": { en: "BTS Udom Suk", cn: "BTS Udom Suk 站", ru: "BTS Удомсук" },
+  "BTS พร้อมพงษ์": { en: "BTS Phrom Phong", cn: "BTS Phrom Phong 站", ru: "BTS Промпонг" },
+  "BTS อโศก": { en: "BTS Asok", cn: "BTS Asok 站", ru: "BTS Асок" },
+  "BTS พญาไท": { en: "BTS Phaya Thai", cn: "BTS Phaya Thai 站", ru: "BTS Пхаятхай" },
+  "MRT ห้วยขวาง": { en: "MRT Huai Khwang", cn: "MRT Huai Khwang 站", ru: "MRT Хуайкванг" },
+  "MRT พระราม 9": { en: "MRT Phra Ram 9", cn: "MRT Phra Ram 9 站", ru: "MRT Рама 9" },
+  "MRT สุขุมวิท": { en: "MRT Sukhumvit", cn: "MRT Sukhumvit 站", ru: "MRT Сукхуมвит" },
+};
+
+const AREA_SEO_MAP: Record<string, Record<string, string>> = {
+  "อ่อนนุช": { en: "On Nut", cn: "On Nut 区域", ru: "Он Нут" },
+  "อารีย์": { en: "Ari", cn: "Ari 区域", ru: "Ари" },
+  "ทองหล่อ": { en: "Thong Lo", cn: "Thong Lo 区域", ru: "Тонглор" },
+  "เอกมัย": { en: "Ekkamai", cn: "Ekkamai 区域", ru: "Эккамай" },
+  "อุดมสุข": { en: "Udom Suk", cn: "Udom Suk 区域", ru: "Удомсук" },
+  "บางนา": { en: "Bang Na", cn: "Bang Na 区域", ru: "Бангна" },
+  "สุขุมวิท": { en: "Sukhumvit", cn: "Sukhumvit 区域", ru: "Сукхуมвит" },
+  "รัชดา": { en: "Ratchada", cn: "Ratchada 区域", ru: "Ратчада" },
+  "พระราม 9": { en: "Rama 9", cn: "Rama 9 区域", ru: "Рама 9" },
+  "พญาไท": { en: "Phaya Thai", cn: "Phaya Thai 区域", ru: "Пхаятхай" },
+};
+
+function getStationDisplay(station: string, lang: string): string {
+  return STATION_SEO_MAP[station]?.[lang] || station;
+}
+
+function getAreaDisplay(area: string, lang: string): string {
+  return AREA_SEO_MAP[area]?.[lang] || area;
+}
+
 export async function generateMetadata(props: { searchParams: Promise<any> }): Promise<Metadata> {
-  const { t } = await getServerTranslations();
+  const { t, language } = await getServerTranslations();
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
   
@@ -74,9 +111,95 @@ export async function generateMetadata(props: { searchParams: Promise<any> }): P
   const initialData = await getPublicProperties({ limit: 36, ...options, includeFacets: true });
   const hasNoResults = initialData.properties.length === 0;
 
+  let title = t("metadata.search_title");
+  let description = t("metadata.search_description");
+
+  // Dynamic Base Fallback (for default search or propertyType/listingType/province filter)
+  if (!options.transitStation && !options.popular_area && !options.q) {
+    const typeTH = options.propertyType === "CONDO" ? "คอนโด" : options.propertyType === "HOUSE" ? "บ้านเดี่ยว" : options.propertyType === "OFFICE_BUILDING" ? "สำนักงานออฟฟิศ" : options.propertyType === "TOWNHOME" ? "ทาวน์โฮม" : "บ้าน คอนโด สำนักงาน";
+    const actionTH = options.listingType === "RENT" ? "ให้เช่า" : options.listingType === "SALE" ? "ขาย" : "ซื้อ ขาย เช่า";
+    const locTH = options.province ? ` ใน${options.province}` : "";
+
+    const typeEN = options.propertyType === "CONDO" ? "Condos" : options.propertyType === "HOUSE" ? "Houses" : options.propertyType === "OFFICE_BUILDING" ? "Offices" : options.propertyType === "TOWNHOME" ? "Townhomes" : "Properties";
+    const actionEN = options.listingType === "RENT" ? "for Rent" : options.listingType === "SALE" ? "for Sale" : "for Sale & Rent";
+    const locEN = options.province ? ` in ${options.province}` : " in Thailand";
+
+    if (language === "en") {
+      title = `${typeEN} ${actionEN}${locEN} 2026`;
+      description = `Find handpicked ${typeEN.toLowerCase()} ${actionEN.toLowerCase()}${locEN}. Verified prices, photos, and instant support.`;
+    } else if (language === "cn") {
+      title = `泰国 ${typeTH} ${actionTH} 2026最新`;
+      description = `为您精选泰国${locTH}的${typeTH}，提供买卖与租赁服务，2026最新真实房源。`;
+    } else if (language === "ru") {
+      title = `${typeEN} ${actionEN}${locEN} 2026`;
+      description = `Каталог недвижимости ${locEN}. Проверенные цены 2026 и фото.`;
+    } else {
+      title = `${typeTH} ${actionTH}${locTH} อัปเดต 2026`;
+      description = `รวมประกาศ${typeTH} ${actionTH}${locTH} ทรัพย์คุณภาพผ่านการตรวจสอบแล้ว 100% อัปเดตเรียลไทม์ทุกวัน`;
+    }
+  }
+
+  if (options.transitStation) {
+    const stationName = await getStationDisplay(options.transitStation, language);
+
+    const typeEN = options.propertyType === "CONDO" ? "Condos" : options.propertyType === "HOUSE" ? "Houses" : options.propertyType === "OFFICE_BUILDING" ? "Offices" : "Properties";
+    const typeCN = options.propertyType === "CONDO" ? "公寓" : options.propertyType === "HOUSE" ? "别墅" : options.propertyType === "OFFICE_BUILDING" ? "写字楼" : "房产";
+    const typeRU = options.propertyType === "CONDO" ? "Квартиры" : options.propertyType === "HOUSE" ? "Дома" : options.propertyType === "OFFICE_BUILDING" ? "Офисы" : "Недвижимость";
+    const typeTH = options.propertyType === "CONDO" ? "คอนโด" : options.propertyType === "HOUSE" ? "บ้านเดี่ยว" : options.propertyType === "OFFICE_BUILDING" ? "ออฟฟิศ" : "อสังหาฯ บ้าน คอนโด";
+
+    if (language === "en") {
+      title = `🔥 ${typeEN} near ${stationName} for Rent & Sale 2026`;
+      description = `Find handpicked ${typeEN.toLowerCase()} near ${stationName} transit station. Updated 2026 verified prices, photos, and virtual tours.`;
+    } else if (language === "cn") {
+      title = `🔥 ${stationName} 轨道交通周边${typeCN} 出租/出售 2026`;
+      description = `精选靠近 ${stationName} 站点的优质${typeCN}房源，2026最新真实价格、高清图片与详细设施介绍。`;
+    } else if (language === "ru") {
+      title = `🔥 ${typeRU} рядом с ${stationName} Аренда и Продажа 2026`;
+      description = `Выбор ${typeRU.toLowerCase()} рядом со станцией ${stationName}. Обновленные цены 2026, проверенные фото и планировки.`;
+    } else {
+      title = `🔥 ${typeTH}ติด ${stationName} เช่า/ซื้อ ราคาดีที่สุด 2026`;
+      description = `รวม${typeTH}ติดรถไฟฟ้า ${stationName} เช่า/ขาย อัปเดตใหม่ล่าสุดปี 2026 ห้องสวย ตรงปก พร้อมเข้าอยู่ เช็กราคาทุกยูนิตที่นี่`;
+    }
+  } else if (options.popular_area) {
+    const areaName = await getAreaDisplay(options.popular_area, language);
+
+    const typeEN = options.propertyType === "CONDO" ? "Condos" : options.propertyType === "HOUSE" ? "Houses" : options.propertyType === "OFFICE_BUILDING" ? "Offices" : "Properties";
+    const typeCN = options.propertyType === "CONDO" ? "公寓" : options.propertyType === "HOUSE" ? "别墅" : options.propertyType === "OFFICE_BUILDING" ? "写字楼" : "房产";
+    const typeRU = options.propertyType === "CONDO" ? "Квартиры" : options.propertyType === "HOUSE" ? "Дома" : options.propertyType === "OFFICE_BUILDING" ? "Офисы" : "Недвижимость";
+    const typeTH = options.propertyType === "CONDO" ? "คอนโด" : options.propertyType === "HOUSE" ? "บ้านเดี่ยว" : options.propertyType === "OFFICE_BUILDING" ? "ออฟฟิศ" : "อสังหาฯ บ้าน คอนโด";
+
+    if (language === "en") {
+      title = `🔥 ${typeEN} in ${areaName} for Sale & Rent 2026`;
+      description = `Explore top ${typeEN.toLowerCase()} in ${areaName}. Updated 2026 price listings for sale and rent in Bangkok.`;
+    } else if (language === "cn") {
+      title = `🔥 ${areaName} 热门区域${typeCN} 出售/出租 2026`;
+      description = `探索 ${areaName} 热门地段的高端${typeCN}与住宅，2026最新买卖与出租房源。`;
+    } else if (language === "ru") {
+      title = `🔥 ${typeRU} в ${areaName} Продажа и Аренда 2026`;
+      description = `Лучшая ${typeRU.toLowerCase()} в районе ${areaName}. Обновленный каталог недвижимости 2026 в Бангкоке.`;
+    } else {
+      title = `🔥 ${typeTH} ย่าน${areaName} ซื้อ/เช่า ราคาดีที่สุด 2026`;
+      description = `รวม${typeTH}ย่าน ${areaName} ทำเลดี น่าอยู่ อัปเดตใหม่ปี 2026 ค้นหาห้องเช่า ซื้อบ้านเดี่ยว โฮมออฟฟิศ คุ้มค่าที่สุด`;
+    }
+  } else if (options.q) {
+    if (language === "en") {
+      title = `Search "${options.q}" Condos, Houses, Offices 2026`;
+      description = `Search results for "${options.q}". Find condos, luxury houses, and commercial office spaces for rent and sale in Thailand.`;
+    } else if (language === "cn") {
+      title = `搜索 "${options.q}" 房产 公寓 别墅 写字楼 2026`;
+      description = `搜索 "${options.q}" 的房产结果。查找泰国最新出租与出售的公寓、豪宅和办公楼。`;
+    } else if (language === "ru") {
+      title = `Поиск "${options.q}" Недвижимость Квартиры Офисы 2026`;
+      description = `Результаты поиска для "${options.q}". Найдите квартиры, дома и офисы для покупки и аренды в Таиланде.`;
+    } else {
+      title = `ค้นหา "${options.q}" คอนโด บ้าน ออฟฟิศ อัปเดต 2026`;
+      description = `ผลการค้นหาอสังหาริมทรัพย์สำหรับ "${options.q}" อัปเดตใหม่ 2026 ครอบคลุม คอนโด บ้านเดี่ยว ทาวน์โฮม ออฟฟิศให้เช่า`;
+    }
+  }
+
   return {
-    title: t("metadata.search_title"),
-    description: t("metadata.search_description"),
+    title,
+    description,
     ...(hasNoResults && {
       robots: {
         index: false,

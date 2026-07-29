@@ -466,9 +466,9 @@ export function generateMetaTitle(
   const fullTitle = parts.join(" | ");
   const suffix = ` - ${siteConfig.name}`;
 
-  // Truncate if too long (max 65)
-  if (fullTitle.length + suffix.length > 65) {
-    return fullTitle.slice(0, 65 - suffix.length - 3) + "..." + suffix;
+  // Truncate if too long (max 60)
+  if (fullTitle.length + suffix.length > 60) {
+    return fullTitle.slice(0, 60 - suffix.length - 3) + "..." + suffix;
   }
 
   return fullTitle + suffix;

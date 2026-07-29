@@ -61,18 +61,13 @@ describe("Public Data - Popular Areas (เทสโหดๆ แบบไม่�
 
     it("should aggregate popular areas with cover images in public mode", async () => {
       mockSupabase
-        .mockTableResult("properties", [
-          { id: "p1", popular_area: "Asoke", province: "กรุงเทพมหานคร" },
-          { id: "p2", popular_area: "Asoke", province: "กรุงเทพมหานคร" },
-          { id: "p3", popular_area: "Thonglor", province: "กรุงเทพมหานคร" },
-        ])
-        .mockTableResult("property_images", [
-          { property_id: "p1", image_url: "http://img.com/asoke.jpg", is_cover: true, sort_order: 0 },
-          { property_id: "p3", image_url: "http://img.com/thonglor.jpg", is_cover: true, sort_order: 0 },
+        .mockTableResult("mv_project_property_stats", [
+          { primary_popular_area: "Asoke", property_count: 2, price_min: 5000000, rental_min: 20000 },
+          { primary_popular_area: "Thonglor", property_count: 1, price_min: 8000000, rental_min: 35000 },
         ])
         .mockTableResult("popular_areas_v3", [
-          { name: "Asoke", name_en: "Asoke EN", province: "กรุงเทพมหานคร" },
-          { name: "Thonglor", name_en: "Thonglor EN", province: "กรุงเทพมหานคร" },
+          { id: "a1", name: { th: "Asoke", en: "Asoke" }, slug: "asoke", image_url: "http://img.com/asoke.jpg", province: "กรุงเทพมหานคร", is_active: true },
+          { id: "a2", name: { th: "Thonglor", en: "Thonglor" }, slug: "thonglor", image_url: "http://img.com/thonglor.jpg", province: "กรุงเทพมหานคร", is_active: true },
         ]);
 
       const areas = await getPopularAreasAction("Bangkok");
