@@ -12,6 +12,7 @@ import { ScrollToProperties } from "@/components/public/ScrollToProperties";
 import { MdOutlinePets } from "react-icons/md";
 import { FaBuilding } from "react-icons/fa6";
 import { CategoryNavigationCards } from "@/components/public/CategoryNavigationCards";
+import { FeaturedStoryCarousel } from "@/components/public/FeaturedStoryCarousel";
 
 export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
 
@@ -302,27 +303,30 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
                 </div>
               </div>
 
-              {/* Header Image with glowing blobs */}
+              {/* Dynamic Featured Property Story Carousel */}
               <div className="relative shrink-0 w-full lg:w-[600px]">
-                {/* Glow blobs behind image */}
+                {/* Glow blobs behind carousel */}
                 <div className="absolute -inset-4 -z-10 rounded-[2.5rem]">
                   <div className="absolute -top-6 -right-6 h-48 w-48 rounded-full bg-blue-400/25 blur-[60px]" />
                   <div className="absolute -bottom-6 -left-6 h-40 w-40 rounded-full bg-indigo-500/20 blur-[50px]" />
                 </div>
-                {/* Image container */}
-                <div className="relative w-full h-[320px] lg:h-[380px] rounded-3xl overflow-hidden border border-white/60 shadow-2xl ring-1 ring-blue-200/50">
-                  <Image
-                    src="/images/properties-hero.webp"
-                    alt={language === "en" ? "Thailand real estate inventory skyline" :
-                         language === "cn" ? "泰国高品质房产分布" :
-                         language === "ru" ? "Панорама качественной недвижимости в Таиланде" :
-                         "รวมอสังหาริมทรัพย์คุณภาพสูงในประเทศไทย"}
-                    fill
-                    className="object-cover"
-                    priority
+                
+                {initialData.properties && initialData.properties.length > 0 ? (
+                  <FeaturedStoryCarousel
+                    properties={initialData.properties.slice(0, 6)}
+                    language={language}
                   />
-                  <div className="absolute inset-0 bg-linear-to-tr from-blue-900/10 via-transparent to-white/5" />
-                </div>
+                ) : (
+                  <div className="relative w-full h-[360px] rounded-3xl overflow-hidden border border-white/60 shadow-2xl ring-1 ring-blue-200/50">
+                    <Image
+                      src="/images/properties-hero.webp"
+                      alt={siteConfig.name}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
