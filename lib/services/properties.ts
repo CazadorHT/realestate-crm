@@ -20,6 +20,12 @@ export type PropertyRow = {
   title_en: string | null;
   title_cn: string | null;
   title_ru: string | null;
+  project_id?: string | null;
+  project_name?: string | null;
+  projects?: {
+    name_th?: string | null;
+    name_en?: string | null;
+  } | null;
   description: string | null;
   description_en: string | null;
   description_cn: string | null;
@@ -98,7 +104,7 @@ export type PropertyRow = {
 };
 
 const PUBLIC_LIST_COLUMNS = `
-  id, slug, title, title_en, title_cn, title_ru,
+  id, slug, title, title_en, title_cn, title_ru, project_id,
   property_type, price, rental_price, original_price, original_rental_price,
   verified, min_contract_months, bedrooms, meta_keywords, bathrooms,
   size_sqm, land_size_sqwah, parking_slots, floor, created_at, updated_at,
@@ -119,7 +125,7 @@ const PUBLIC_LIST_COLUMNS = `
 `;
 
 const PUBLIC_DETAIL_COLUMNS = `
-  id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru,
+  id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, project_id,
   property_type, price, rental_price, original_price, original_rental_price,
   verified, min_contract_months, bedrooms, meta_keywords, bathrooms,
   size_sqm, land_size_sqwah, parking_slots, floor, created_at, updated_at,
@@ -409,8 +415,39 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           );
         }
 
+        const projectIds = Array.from(
+          new Set(
+            (propertiesData || [])
+              .map((row: any) => row.project_id)
+              .filter((id: string | null): id is string => !!id),
+          ),
+        );
+        const projectMap = new Map<string, { name_th: string | null; name_en: string | null }>();
+
+        if (projectIds.length > 0) {
+          const { data: projectsData } = await supabase
+            .from("projects")
+            .select("id, name")
+            .in("id", projectIds);
+          (projectsData || []).forEach((p: any) => {
+            if (p.id) {
+              // `name` is a JSON column: { th: "...", en: "..." } or a plain string
+              const nameObj = p.name;
+              const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
+              const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
+              projectMap.set(p.id, { name_th: nameTh, name_en: nameEn });
+            }
+          });
+        }
+
         const finalProperties = (propertiesData as unknown as PropertyRow[] ?? []).map((row: PropertyRow) => {
           const trans = areaTranslationsMap.get(row.popular_area || "");
+          const projectInfo = row.project_id ? projectMap.get(row.project_id) : null;
+          const projectsObj = projectInfo
+            ? { name_th: projectInfo.name_th, name_en: projectInfo.name_en }
+            : row.projects || null;
+          const finalProjectName = projectsObj?.name_th || projectsObj?.name_en || row.project_name || null;
+
           const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
           
           const finalImages = (pi && pi.length > 0) 
@@ -419,6 +456,8 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
           return {
             ...cardBase,
+            project_name: finalProjectName,
+            projects: projectsObj,
             popular_area_en: trans?.en ?? null,
             popular_area_cn: trans?.cn ?? null,
             popular_area_ru: trans?.ru ?? null,

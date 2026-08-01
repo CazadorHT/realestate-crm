@@ -28,6 +28,7 @@ export interface StoryPropertyItem {
   transit_station?: string | null;
   cover_image?: string | null;
   images?: string[] | { url?: string; image_url?: string }[] | null;
+  project_name?: string | null;
   projects?: {
     name_th?: string | null;
     name_en?: string | null;
@@ -58,9 +59,21 @@ export function FeaturedStoryCarousel({
       if (language === "en" && item.title_en) return item.title_en;
       if (language === "cn" && item.title_cn) return item.title_cn;
       if (language === "ru" && item.title_ru) return item.title_ru;
-      return item.title || item.projects?.name_th || "ทรัพย์คุณภาพไฮไลท์";
+      return item.title || item.project_name || item.projects?.name_th || "ทรัพย์คุณภาพไฮไลท์";
     },
     [language]
+  );
+
+  // Helper for localized project name
+  const getProjectName = useCallback(
+    (item: StoryPropertyItem) => {
+      if (!item) return "";
+      if (language !== "th") {
+        return item.projects?.name_en || item.projects?.name_th || item.project_name || getDisplayTitle(item);
+      }
+      return item.projects?.name_th || item.projects?.name_en || item.project_name || getDisplayTitle(item);
+    },
+    [language, getDisplayTitle]
   );
 
   const handleNext = useCallback(() => {
@@ -103,14 +116,14 @@ export function FeaturedStoryCarousel({
       `}</style>
 
       <div
-        className="relative w-full max-w-full mx-auto bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border text-white transition-all duration-300 hover:shadow-blue-500/10 group"
+        className="relative w-full max-w-full mx-auto bg-white rounded-3xl overflow-hidden shadow-xl shadow-slate-200/60 border border-slate-200/80 text-slate-900 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 group"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
         onTouchEnd={() => setIsPaused(false)}
       >
         {/* Top Segmented Story Progress Bar (Hardware-Accelerated CSS Keyframes) */}
-        <div className="absolute top-0 left-0 right-0 z-30 p-3 pt-3.5 bg-linear-to-b from-black/40 to-transparent flex gap-1.5 items-center">
+        <div className="absolute top-0 left-0 right-0 z-30 p-3 pt-3.5 bg-linear-to-b from-black/50 via-black/20 to-transparent flex gap-1.5 items-center">
           {properties.map((_, idx) => {
             const isCompleted = idx < currentIndex;
             const isActive = idx === currentIndex;
@@ -125,7 +138,7 @@ export function FeaturedStoryCarousel({
                 <div
                   key={`${currentIndex}-${idx}`}
                   onAnimationEnd={isActive ? handleNext : undefined}
-                  className="h-full bg-linear-to-r from-blue-500 via-indigo-500 to-sky-400 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.9)]"
+                  className="h-full bg-linear-to-r from-blue-400 via-indigo-400 to-sky-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.9)]"
                   style={{
                     width: isCompleted ? "100%" : isActive ? undefined : "0%",
                     animationName: isActive ? "storyProgressFill" : "none",
@@ -140,99 +153,100 @@ export function FeaturedStoryCarousel({
           })}
         </div>
 
-        {/* Hero Image Container (Widescreen cinematic presentation) */}
-        <div className="relative w-full h-[360px] sm:h-[400px]  overflow-hidden bg-slate-950">
-          <AnimatePresence mode="popLayout">
+        {/* Hero Image Container (Supports Landscape & Portrait via Ambient Blurred Backdrop) */}
+        <div className="relative w-full h-[350px] sm:h-[400px] overflow-hidden bg-slate-100">
+          <AnimatePresence mode="sync">
             <m.div
               key={currentProperty.id}
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
               className="absolute inset-0 w-full h-full"
             >
+              {/* Ambient Blurred Backdrop (Fills empty edges naturally for portrait images) */}
+              <Image
+                src={currentImageUrl}
+                alt=""
+                fill
+                className="object-cover scale-110 blur-lg opacity-80 select-none pointer-events-none"
+                priority
+              />
+
+              {/* Main Crisp Image (Fully visible without awkward cropping) */}
               <Image
                 src={currentImageUrl}
                 alt={getDisplayTitle(currentProperty)}
                 fill
-                className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="object-contain relative z-10 transition-transform duration-700 ease-out group-hover:scale-105"
                 priority
               />
             </m.div>
           </AnimatePresence>
 
-        {/* Top Gradient Shadow ONLY for Progress Bar (Photo remains 100% bright & vivid) */}
-        <div className="absolute top-0 left-0 right-0 h-20 bg-linear-to-b from-black/60 to-transparent pointer-events-none z-10" />
+          {/* Top Gradient Shadow ONLY for Progress Bar */}
+          <div className="absolute top-0 left-0 right-0 h-20 bg-linear-to-b from-black/50 to-transparent pointer-events-none z-10" />
 
-        {/* Top Header Overlay Badges */}
-        <div className="absolute top-6 left-4 right-4 z-20 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-600/90 text-white text-[11px] font-bold shadow-md backdrop-blur-md">
-              <Sparkles className="w-3 h-3 text-amber-300 animate-pulse" />
-              <span>
-                {language === "en"
-                  ? "HOT DEAL"
-                  : language === "cn"
-                  ? "热门房源"
-                  : language === "ru"
-                  ? "ХИТ ПРОДАЖ"
-                  : "ทรัพย์ไฮไลท์เด็ด"}
+          {/* Top Header Overlay Badges */}
+          <div className="absolute top-6 left-4 right-4 z-20 flex justify-between items-center mt-2">
+            <div className="flex items-center gap-2 max-w-[75%]">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md text-slate-900 text-xs font-semibold shadow-lg border border-white/90 ring-1 ring-slate-900/5 truncate">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse shrink-0" />
+                <span className="truncate">
+                  {getProjectName(currentProperty)}
+                </span>
               </span>
-            </span>
+            </div>
 
-            <span className="px-2 py-0.5 rounded-full bg-black/50 text-white/90 text-[11px] font-medium backdrop-blur-md border border-white/10">
-              {currentIndex + 1} / {totalItems}
-            </span>
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              className="p-1.5 rounded-full bg-black/30 hover:bg-black/50 text-white/80 backdrop-blur-md border border-white/20 opacity-60 group-hover:opacity-100 transition-all cursor-pointer shrink-0"
+              title={isPaused ? "Play" : "Pause"}
+            >
+              {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
+            </button>
           </div>
 
+          {/* Manual Left/Right Navigation Arrows (Subtle Translucent Glass Pills) */}
           <button
-            onClick={() => setIsPaused(!isPaused)}
-            className="p-1.5 rounded-full bg-black/40 text-white/80 hover:text-white backdrop-blur-md transition-all hover:bg-black/60 cursor-pointer"
-            title={isPaused ? "Play" : "Pause"}
+            onClick={handlePrev}
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 hover:bg-black/60 text-white/90 backdrop-blur-md border border-white/20 shadow-xs opacity-60 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
+            aria-label="Previous property"
           >
-            {isPaused ? <Play className="w-3 h-3 fill-current" /> : <Pause className="w-3 h-3 fill-current" />}
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={handleNext}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 hover:bg-black/60 text-white/90 backdrop-blur-md border border-white/20 shadow-xs opacity-60 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
+            aria-label="Next property"
+          >
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Manual Left/Right Navigation Arrows */}
-        <button
-          onClick={handlePrev}
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/40 text-white/90 hover:text-white backdrop-blur-md transition-all hover:bg-black/70 cursor-pointer hover:scale-110 active:scale-95"
-          aria-label="Previous property"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-
-        <button
-          onClick={handleNext}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/40 text-white/90 hover:text-white backdrop-blur-md transition-all hover:bg-black/70 cursor-pointer hover:scale-110 active:scale-95"
-          aria-label="Next property"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-
-        {/* Floating Translucent Light Glass Widget (Bright Frosted White Glassmorphism) */}
-        <div className="absolute bottom-3 left-3 right-3 z-20 p-3 sm:p-3.5 rounded-2xl bg-white/80 backdrop-blur-md border border-white/60 shadow-xl ring-1 ring-slate-900/5 space-y-2 text-slate-900">
-          {/* Row 1: Title & Location */}
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 truncate max-w-[70%] group-hover:text-blue-600 transition-colors">
+        {/* Bright Modern Info Panel Below Image */}
+        <div className="p-4 sm:p-5 bg-white space-y-3 border-t border-slate-100">
+          {/* Row 1: Title & Location Badge */}
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-base sm:text-lg font-semibold text-slate-900 truncate  max-w-[70%] group-hover:text-blue-600 transition-colors">
               {getDisplayTitle(currentProperty)}
             </h3>
 
             {(currentProperty.transit_station || currentProperty.popular_area) && (
-              <div className="flex items-center gap-1 text-[10px] text-indigo-700 font-bold bg-indigo-50/90 px-2 py-0.5 rounded-full border border-indigo-200/60 shrink-0 shadow-2xs">
-                <MapPin className="w-2.5 h-2.5 text-indigo-600 shrink-0" />
-                <span className="truncate max-w-[110px]">
+              <div className="flex items-center gap-1 text-xs text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100 shrink-0 shadow-2xs">
+                <MapPin className="w-3 h-3 text-indigo-600 shrink-0" />
+                <span className="truncate max-w-[120px]">
                   {currentProperty.transit_station || currentProperty.popular_area}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Row 2: Price + Specs + Action Button (Single Compact Bar) */}
-          <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60">
+          {/* Row 2: Price + Specs + Action Button */}
+          <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-slate-100">
             {/* Price & Specs Left Cluster */}
-            <div className="flex items-center gap-2.5 truncate">
+            <div className="flex items-center gap-3 truncate">
               {/* Dynamic Price */}
               {(() => {
                 const isRental = currentProperty.listing_type === "RENT" || currentProperty.listing_type === "SALE_AND_RENT" || currentProperty.listing_type === "BOTH";
@@ -263,10 +277,10 @@ export function FeaturedStoryCarousel({
                 if (rentVal && saleVal && (currentProperty.listing_type === "BOTH" || currentProperty.listing_type === "SALE_AND_RENT")) {
                   return (
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-800 text-xs font-black border border-amber-300/60 shadow-2xs">
+                      <span className="px-2.5 py-1 rounded-lg bg-amber-50/50 text-amber-600 text-md sm:text-lg font-bold border border-amber-200/80 shadow-2xs">
                         {formatR(rentVal)}
                       </span>
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-100/90 text-emerald-800 text-xs font-black border border-emerald-300/60 shadow-2xs">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-50/50 text-emerald-800 text-md sm:text-lg font-bold border border-emerald-200/80 shadow-2xs">
                         {formatMil(saleVal)}
                       </span>
                     </div>
@@ -275,7 +289,7 @@ export function FeaturedStoryCarousel({
 
                 if (rentVal && (currentProperty.listing_type === "RENT" || !saleVal)) {
                   return (
-                    <span className="text-base sm:text-lg font-black text-amber-600 shrink-0 drop-shadow-2xs">
+                    <span className="text-lg shrink-0 px-2.5 py-1 rounded-lg bg-amber-50/50 text-amber-600 text-md sm:text-lg font-bold border border-amber-200/80 shadow-2xs">
                       {formatR(rentVal)}
                     </span>
                   );
@@ -283,7 +297,7 @@ export function FeaturedStoryCarousel({
 
                 if (saleVal || currentProperty.price) {
                   return (
-                    <span className="text-base sm:text-lg font-black text-emerald-600 shrink-0 drop-shadow-2xs">
+                    <span className="text-lg shrink-0 px-2.5 py-1 rounded-lg bg-emerald-50/50 text-emerald-800 text-md sm:text-lg font-bold border border-emerald-200/80 shadow-2xs">
                       {formatMil(saleVal || currentProperty.price!)}
                     </span>
                   );
@@ -296,25 +310,25 @@ export function FeaturedStoryCarousel({
                 );
               })()}
 
-              {/* Inline Specs */}
-              <div className="hidden sm:flex items-center gap-2 text-[11px] text-slate-600 font-semibold border-l border-slate-200 pl-2.5">
+              {/* Inline Specs Pills */}
+              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-600 font-semibold border-l border-slate-200 pl-3">
                 {(currentProperty.bedrooms !== undefined && currentProperty.bedrooms !== null) && (
-                  <div className="flex items-center gap-1">
-                    <Bed className="w-3 h-3 text-blue-600" />
+                  <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                    <Bed className="w-3.5 h-3.5 text-blue-600" />
                     <span>{currentProperty.bedrooms}</span>
                   </div>
                 )}
 
                 {(currentProperty.bathrooms !== undefined && currentProperty.bathrooms !== null) && (
-                  <div className="flex items-center gap-1">
-                    <Bath className="w-3 h-3 text-indigo-600" />
+                  <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                    <Bath className="w-3.5 h-3.5 text-indigo-600" />
                     <span>{currentProperty.bathrooms}</span>
                   </div>
                 )}
 
                 {((currentProperty.usable_area || currentProperty.size_sqm) !== undefined && (currentProperty.usable_area || currentProperty.size_sqm) !== null) && (
-                  <div className="flex items-center gap-1">
-                    <Maximize2 className="w-3 h-3 text-emerald-600" />
+                  <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                    <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
                     <span>{currentProperty.usable_area || currentProperty.size_sqm} ㎡</span>
                   </div>
                 )}
@@ -324,7 +338,7 @@ export function FeaturedStoryCarousel({
             {/* Compact Action Button */}
             <Link
               href={detailLink}
-              className="inline-flex items-center justify-center gap-1 py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all shrink-0 active:scale-95 shadow-blue-500/20"
+              className="inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs shadow-md shadow-blue-500/25 transition-all shrink-0 active:scale-95"
             >
               <span>
                 {language === "en"
@@ -335,12 +349,11 @@ export function FeaturedStoryCarousel({
                   ? "Инфо"
                   : "ดูรายละเอียด"}
               </span>
-              <ArrowUpRight className="w-3 h-3" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
       </div>
-    </div>
-  </>
-);
+    </>
+  );
 }
