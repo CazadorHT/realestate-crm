@@ -1,6 +1,6 @@
 "use server";
 import { unstable_cache } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 import type { PublicPropertyNearStation } from "./stations";
 
 // ============================================================
@@ -85,7 +85,7 @@ const LINE_COLORS: Record<string, string> = {
 export async function getAreaBySlug(slug: string): Promise<PublicAreaDetail | null> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
 
       let { data, error } = await supabase
         .from("popular_areas_v3")
@@ -123,7 +123,9 @@ export async function getAreaBySlug(slug: string): Promise<PublicAreaDetail | nu
         }
       }
 
-      const nameObj = data.name as Record<string, string> | null || {};
+      if (!data) return null;
+
+      const nameObj = (data as any).name as Record<string, string> | null || {};
 
       return {
         id: data.id,
@@ -150,7 +152,7 @@ export async function getAreaBySlug(slug: string): Promise<PublicAreaDetail | nu
 export async function getAreaMarketInsights(areaNameTh: string): Promise<AreaMarketInsights> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
 
       const { data, error } = await supabase
         .from("properties")

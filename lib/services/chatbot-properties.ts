@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { Database } from "@/lib/database.types";
 import { Json } from "@/lib/database.types.generated";
 import { 
@@ -80,7 +80,7 @@ export interface ChatbotSearchOptions {
 export async function searchPropertiesForChatbot(
   options: ChatbotSearchOptions = {},
 ) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   let query = supabase
     .from("properties")
@@ -349,7 +349,7 @@ export async function searchPropertiesForChatbot(
     return [];
   }
 
-  return (data ?? []).map((r: PropertyRow) => {
+  return (data ?? []).map((r: any) => {
     return {
       id: r.id,
       slug: r.slug,
@@ -380,8 +380,8 @@ export async function searchPropertiesForChatbot(
       images: getSafeImages(r.images),
       location: buildLocation(r),
       features: (r.property_features || [])
-        .map((pf) => pf.features)
-        .filter((f): f is NonNullable<typeof f> => f !== null),
+        .map((pf: any) => pf.features)
+        .filter((f: any) => Boolean(f)),
       near_transit: r.near_transit,
       transit_type: r.transit_type,
       transit_station_name: r.transit_station_name,

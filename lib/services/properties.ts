@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 import {
   getSafeImages,
   getCoverImage,
@@ -184,7 +184,7 @@ import { unstable_cache } from "next/cache";
 export const getPublicProperties = cache(async (options: GetPropertiesOptions = {}) => {
     return unstable_cache(
       async () => {
-        const supabase = await createClient();
+        const supabase = createPublicClient();
 
         let query = supabase
           .from("properties")
@@ -390,7 +390,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         const popularAreaNames = Array.from(
           new Set(
             (propertiesData || [])
-              .map((row: PropertyRow) => row.popular_area)
+              .map((row: any) => row.popular_area)
               .filter((area: string | null): area is string => !!area),
           ),
         );
@@ -451,7 +451,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 export const getPublicPropertyBySlug = cache(async (slug: string) => {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data, error } = await supabase.from("properties").select(PUBLIC_DETAIL_COLUMNS).eq("slug", slug).eq("status", "ACTIVE").single();
       if (error || !data) return null;
 

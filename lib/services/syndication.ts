@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 
 /**
  * Generates an XML feed for LivingInsider
  * Based on their standard XML format requirement.
  */
 export async function generateLivingInsiderXML() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // Fetch active properties joined with syndication status
   const { data: properties, error } = await supabase
@@ -54,7 +54,7 @@ export async function generateLivingInsiderXML() {
       xml += `    </images>\n`;
     }
 
-    xml += `    <last_updated>${new Date(p.updated_at).toISOString()}</last_updated>\n`;
+    xml += `    <last_updated>${new Date(p.updated_at || Date.now()).toISOString()}</last_updated>\n`;
     xml += `  </property>\n`;
   }
 

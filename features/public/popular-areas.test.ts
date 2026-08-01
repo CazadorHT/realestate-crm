@@ -14,6 +14,7 @@ describe("Public Data - Popular Areas (เทสโหดๆ แบบไม่�
 
     vi.doMock("@/lib/supabase/server", () => ({
       createClient: vi.fn().mockResolvedValue(mockSupabase),
+      createPublicClient: vi.fn().mockReturnValue(mockSupabase),
     }));
 
     vi.doMock("next/cache", () => ({

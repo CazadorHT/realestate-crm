@@ -17,7 +17,7 @@ import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteSettings } from "@/features/site-settings/actions";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
 import { getProvinceName } from "@/lib/utils/provinces";
 // Removed force-dynamic to allow Next.js to optimize routing and enable SSG where possible.
@@ -53,7 +53,7 @@ interface ActiveLocation {
 const getActiveLocations = unstable_cache(
   async (): Promise<ActiveLocation[]> => {
     try {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data } = await supabase
         .from("properties")
         .select("popular_area, popular_area_en, popular_area_cn, popular_area_ru, province")

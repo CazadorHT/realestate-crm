@@ -1,5 +1,5 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
 
 export type PopularAreaItem = {
@@ -25,7 +25,7 @@ export type PopularAreaItem = {
 export const getPublicProvincesAction = unstable_cache(
   async () => {
     try {
-      const client = await createClient();
+      const client = createPublicClient();
       const { data: provData } = await client
         .from("properties")
         .select("province")
@@ -65,7 +65,7 @@ export const getPublicProvincesAction = unstable_cache(
 export const getPopularAreasAction = unstable_cache(
   async (params?: string | { onlyActive?: boolean; province?: string }): Promise<any> => {
     try {
-      const client = await createClient();
+      const client = createPublicClient();
       
       // Parse params
       const onlyActive = typeof params === "object" ? params.onlyActive !== false : true;

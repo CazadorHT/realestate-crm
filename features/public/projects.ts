@@ -1,6 +1,6 @@
 "use server";
 import { unstable_cache } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 import type { PublicPropertyNearStation } from "./stations";
 
 // ============================================================
@@ -51,7 +51,7 @@ export interface PublicProject {
 export async function getPublicProjects(): Promise<PublicProject[]> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
 
       // 1. ดึงข้อมูลตารางโครงการหลัก (ล็อกเฉพาะฟิลด์ที่ต้องใช้งานจริง)
       const { data: projects, error } = await supabase

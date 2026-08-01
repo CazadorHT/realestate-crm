@@ -1,11 +1,11 @@
 import { MetadataRoute } from "next";
 
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/lib/site-config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // Helper to generate alternate language objects for search engine indexing
   const getAlternates = (path: string) => {

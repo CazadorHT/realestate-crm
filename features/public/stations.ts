@@ -1,6 +1,6 @@
 "use server";
 import { unstable_cache } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 
 // ============================================================
 // Types
@@ -134,7 +134,7 @@ function generateSlug(code: string): string {
  * [OPTIMIZED: ดึงข้อมูลสรุปรวบยอดผ่าน Materialized View เพื่อเซฟท่อ Egress 99%]
  */
 export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // 1. ดึงข้อมูลสรุปสถานีรถไฟฟ้าจาก Materialized View (คิวรีเสร็จใน 0.01 วินาที)
   const { data: statsData, error: statsError } = await supabase
@@ -280,7 +280,7 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
 export async function getStationBySlug(slug: string): Promise<StationDetail | null> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
 
       // Fetch all stations to find by slug and determine neighbors
       const { data, error } = await supabase

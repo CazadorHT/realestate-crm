@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
-import type { BlogPost } from "@/features/blog/types";  // ✅ เพิ่ม BlogPost
+import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
+import type { BlogPost } from "@/features/blog/types";
 export type { BlogPost } from "@/features/blog/types";  // ✅
 
 
@@ -84,31 +85,37 @@ export async function getBlogPosts(
   limit = 10,
   offset = 0,
 ): Promise<BlogPost[]> {
-  const supabase = await createClient();
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
 
-  let query = supabase
-    .from("cms_content_v3")
-    .select(
-      "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
-      { count: "exact" },
-    )
-    .eq("content_type", "BLOG")
-    .eq("status", "PUBLISHED")
-    .order("published_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+      let query = supabase
+        .from("cms_content_v3")
+        .select(
+          "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
+          { count: "exact" },
+        )
+        .eq("content_type", "BLOG")
+        .eq("status", "PUBLISHED")
+        .order("published_at", { ascending: false })
+        .range(offset, offset + limit - 1);
 
-  if (category) {
-    query = query.filter("meta_data->>category", "eq", category);
-  }
+      if (category) {
+        query = query.filter("meta_data->>category", "eq", category);
+      }
 
-  const { data, error } = await query;
+      const { data, error } = await query;
 
-  if (error) {
-    console.error("Error fetching blog posts:", error);
-    return [];
-  }
+      if (error) {
+        console.error("Error fetching blog posts:", error);
+        return [];
+      }
 
-  return await mapCmsRowsToBlogPosts(data, supabase);
+      return await mapCmsRowsToBlogPosts(data, supabase);
+    },
+    [`public-blog-posts-${category || "all"}-${limit}-${offset}`],
+    { revalidate: 86400, tags: ["cms", "blog"] }
+  )();
 }
 
 /**
@@ -155,25 +162,31 @@ export async function getAllBlogPosts(
 export async function getBlogPostBySlug(
   slug: string,
 ): Promise<BlogPost | null> {
-  const supabase = await createClient();
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
 
-  const { data, error } = await supabase
-    .from("cms_content_v3")
-    .select(
-      "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
-      { count: "exact" },
-    )
-    .eq("content_type", "BLOG")
-    .neq("status", "TRASH")
-    .eq("slug", slug)
-    .single();
+      const { data, error } = await supabase
+        .from("cms_content_v3")
+        .select(
+          "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
+          { count: "exact" },
+        )
+        .eq("content_type", "BLOG")
+        .neq("status", "TRASH")
+        .eq("slug", slug)
+        .single();
 
-  if (error || !data) {
-    return null;
-  }
+      if (error || !data) {
+        return null;
+      }
 
-  const posts = await mapCmsRowsToBlogPosts([data], supabase);
-  return posts[0] || null;
+      const posts = await mapCmsRowsToBlogPosts([data], supabase);
+      return posts[0] || null;
+    },
+    ["public-blog-by-slug", slug],
+    { revalidate: 86400, tags: ["cms", "blog"] }
+  )();
 }
 
 /**
@@ -184,24 +197,30 @@ export async function getRelatedPosts(
   category: string,
   limit: number = 3,
 ): Promise<BlogPost[]> {
-  const supabase = await createClient();
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
 
-  const { data, error } = await supabase
-    .from("cms_content_v3")
-    .select(
-      "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
-      { count: "exact" },
-    )
-    .eq("content_type", "BLOG")
-    .eq("status", "PUBLISHED")
-    .filter("meta_data->>category", "eq", category)
-    .neq("slug", currentSlug)
-    .limit(limit);
+      const { data, error } = await supabase
+        .from("cms_content_v3")
+        .select(
+          "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
+          { count: "exact" },
+        )
+        .eq("content_type", "BLOG")
+        .eq("status", "PUBLISHED")
+        .filter("meta_data->>category", "eq", category)
+        .neq("slug", currentSlug)
+        .limit(limit);
 
-  if (error) {
-    console.error("Error fetching related posts:", error);
-    return [];
-  }
+      if (error) {
+        console.error("Error fetching related posts:", error);
+        return [];
+      }
 
-  return await mapCmsRowsToBlogPosts(data || [], supabase);
+      return await mapCmsRowsToBlogPosts(data || [], supabase);
+    },
+    [`public-related-posts-${currentSlug}-${category}-${limit}`],
+    { revalidate: 86400, tags: ["cms", "blog"] }
+  )();
 }
