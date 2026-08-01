@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
     imageSizes: [64, 128, 256, 384],
     formats: ["image/webp"],
     minimumCacheTTL: 2592000,
-    // qualities: [75]
+    qualities: [40, 75, 80, 90, 100],
     remotePatterns: (() => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       if (!supabaseUrl) return [];

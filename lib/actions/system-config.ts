@@ -19,7 +19,7 @@ export const getSystemConfig = cache(async (): Promise<SystemConfig> => {
     .from("site_settings")
     .select("value")
     .eq("key", "system_config")
-    .single();
+    .maybeSingle();
 
   if (error || !data) {
     return {

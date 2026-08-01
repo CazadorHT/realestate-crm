@@ -49,22 +49,21 @@ export async function searchGlobalAction(
 
     // 2. Search Leads
     const leadsQuery = supabase
-      .from("leads")
-      .select("id, full_name, phone, email, created_by")
-      .or(
-        `full_name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`
-      )
+      .from("crm_leads_v3")
+      .select("id, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name, phone, email)")
+      .or("id.ilike.%" + query + "%")
       .limit(5);
 
     const { data: leads } = await leadsQuery;
 
     if (leads) {
       leads.forEach((l) => {
+        const ident = l.identity as { display_name?: string; phone?: string; email?: string } | null;
         results.push({
           id: l.id || "",
           type: "lead",
-          title: l.full_name || "",
-          subtitle: l.phone || l.email || undefined,
+          title: ident?.display_name || "Lead",
+          subtitle: ident?.phone || ident?.email || undefined,
           url: `/protected/leads/${l.id}`,
         });
       });

@@ -67,15 +67,15 @@ export async function getSetupProgress(tenantId?: string | null, userId?: string
           : supabase.from("tenants_v3").select("name, logo_url", { count: "exact" }),
         getSiteSettings(),
         supabase
-          .from("tenant_members_v3")
-          .select("id, profiles!inner(line_user_id, line_id)", { count: "exact", head: true })
-          .eq("tenant_id", tenantId || "")
-          .or("line_user_id.not.is.null,line_id.not.is.null", { foreignTable: "profiles" }),
-        supabase
-          .from("tenant_invitations_v3")
+          .from("profiles")
           .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId || "")
-          .eq("status", "PENDING"),
+          .or("line_user_id.not.is.null,line_id.not.is.null"),
+        applyTenantFilter(
+          supabase
+            .from("tenant_invitations_v3")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "PENDING"),
+        ),
         userId ? supabase.from("profiles").select("avatar_url, phone").eq("id", userId).single() : Promise.resolve({ data: null }),
       ]);
 
@@ -142,8 +142,8 @@ export async function getFollowUpLeads(
   // Fetch leads not updated in last 3 days and not closed
   const { data: leads } = await applyFilters(
     supabase
-      .from("leads")
-      .select("id, full_name, updated_at, stage")
+      .from("crm_leads_v3")
+      .select("id, updated_at, stage, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
       .lt("updated_at", threeDaysAgo.toISOString())
       .neq("stage", "CLOSED")
       .limit(5),
@@ -151,15 +151,16 @@ export async function getFollowUpLeads(
 
   if (!leads) return [];
 
-  return (leads as unknown as RawLead[]).map((l) => {
-    const updated = new Date(l.updated_at);
+  return (leads as any[]).map((l) => {
+    const updated = new Date(l.updated_at || Date.now());
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - updated.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const ident = l.identity as { display_name?: string } | null;
 
     return {
       id: l.id,
-      name: l.full_name,
+      name: ident?.display_name || "Lead",
       daysQuiet: diffDays,
       stage: l.stage,
     };
@@ -189,8 +190,8 @@ export async function getRiskDeals(
 
     const { data: deals } = await applyFilters(
       supabase
-        .from("deals")
-        .select("id, updated_at, status, properties(title)")
+        .from("crm_deals_v3")
+        .select("id, updated_at, status, properties_core(slug)")
         .lt("updated_at", sevenDaysAgo.toISOString())
         .neq("status", "CLOSED_WIN")
         .neq("status", "CLOSED_LOSS")
@@ -199,15 +200,15 @@ export async function getRiskDeals(
 
     if (!deals) return [];
 
-    return (deals as unknown as RawDeal[]).map((d) => {
-      const updated = new Date(d.updated_at);
+    return (deals as any[]).map((d) => {
+      const updated = new Date(d.updated_at || Date.now());
       const now = new Date();
       const diffTime = Math.abs(now.getTime() - updated.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
       return {
         id: d.id,
-        title: d.properties?.title || `Deal #${d.id.slice(0, 4)}`,
+        title: `Deal #${d.id.slice(0, 8)}`,
         daysInStage: diffDays,
         stage: d.status,
       };

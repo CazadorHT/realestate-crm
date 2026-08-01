@@ -114,19 +114,22 @@ export async function RecentPropertiesSection({
 
   const rawProperties = (propertiesResult as unknown as RawProperty[]) ?? [];
 
-  // Fetch leads count for these specific properties
+  // Fetch deals/leads count for these specific properties
   const propertyIds = rawProperties.map(p => p.id);
-  const { data: leadsData } = await supabase
-    .from("leads")
-    .select("property_id")
-    .in("property_id", propertyIds);
-
   const leadsCountMap = new Map<string, number>();
-  (leadsData as { property_id: string | null }[] | null)?.forEach(lead => {
-    if (lead.property_id) {
-      leadsCountMap.set(lead.property_id, (leadsCountMap.get(lead.property_id) || 0) + 1);
-    }
-  });
+
+  if (propertyIds.length > 0) {
+    const { data: dealsData } = await supabase
+      .from("crm_deals_v3")
+      .select("property_id")
+      .in("property_id", propertyIds);
+
+    (dealsData as { property_id: string | null }[] | null)?.forEach(deal => {
+      if (deal.property_id) {
+        leadsCountMap.set(deal.property_id, (leadsCountMap.get(deal.property_id) || 0) + 1);
+      }
+    });
+  }
 
   const now = new Date().getTime();
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;

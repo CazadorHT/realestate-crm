@@ -676,10 +676,19 @@ export async function bulkUpdateBlogStatusAction(
 export async function incrementBlogViewCount(id: string): Promise<void> {
   try {
     const supabase = await createClient();
-    // We use the database-level RPC to handle atomic increment and logging
-    await supabase.rpc('increment_blog_post_view', { post_id: id });
+    const { error } = await supabase.rpc('increment_blog_post_view', { post_id: id });
+    if (error) {
+      const { data } = await supabase.from("cms_content_v3").select("meta_data").eq("id", id).single();
+      if (data) {
+        const meta = (data.meta_data as Record<string, any>) || {};
+        const currentViews = typeof meta.views === "number" ? meta.views : 0;
+        await supabase.from("cms_content_v3").update({
+          meta_data: { ...meta, views: currentViews + 1 }
+        }).eq("id", id);
+      }
+    }
   } catch (error: unknown) {
-    console.error("Error incrementing view count via RPC:", error);
+    console.error("Error incrementing view count:", error);
   }
 }
 

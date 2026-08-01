@@ -26,8 +26,8 @@ export async function generateFollowUpScriptAction(
 
     // Fetch Lead Data
     const { data: lead, error: leadError } = await supabase
-      .from("leads")
-      .select("full_name, stage, note, ai_summary_content, preferred_property_types, preferred_locations")
+      .from("crm_leads_v3")
+      .select("stage, ai_summary, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
       .eq("id", leadId)
       .single();
 
@@ -35,8 +35,9 @@ export async function generateFollowUpScriptAction(
       return { success: false, message: "Lead not found" };
     }
 
-    const leadName = decrypt(lead.full_name) || "ลูกค้า";
-    const leadNotes = lead.ai_summary_content || decrypt(lead.note) || "ไม่มีข้อมูลเพิ่มเติม";
+    const ident = lead.identity as { display_name?: string } | null;
+    const leadName = ident?.display_name || "ลูกค้า";
+    const leadNotes = lead.ai_summary || "ไม่มีข้อมูลเพิ่มเติม";
 
     const systemInstruction = `
       คุณเป็น "Professional Real Estate Agent Assistant" ที่เชี่ยวชาญการเขียนข้อความติดตามลูกค้าแบบเป็นกันเองแต่มีความเป็นมืออาชีพ (Polite, Professional, Helpful)
@@ -50,8 +51,7 @@ export async function generateFollowUpScriptAction(
       ข้อมูลลูกค้า:
       - ชื่อ: ${leadName}
       - ขั้นตอนปัจจุบัน: ${lead.stage}
-      - ความสนใจ: ${lead.preferred_property_types?.join(", ") || "ไม่ระบุ"} ในพื้นที่ ${lead.preferred_locations?.join(", ") || "ไม่ระบุ"}
-      - รายละเอียดเพิ่มเติม/AI Summary: ${leadNotes}
+      - รายละเอียดเพิ่มเติม: ${leadNotes}
 
       คำแนะนำ:
       1. เขียนให้ดูเหมือน Agent เขียนเองจริงๆ ไม่ใช่ AI

@@ -291,8 +291,8 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
           return { success: false, message: "คุณไม่มีสิทธิ์จัดการเอกสารของทรัพย์สินผู้อื่น" };
         }
       } else if (validated.owner_type === "LEAD") {
-        const { data: lead } = await supabase.from("leads").select("created_by, assigned_to").eq("id", validated.owner_id).single();
-        const isOwner = lead && (lead.created_by === user.id || lead.assigned_to === user.id);
+        const { data: lead } = await supabase.from("crm_leads_v3").select("assigned_to").eq("id", validated.owner_id).single();
+        const isOwner = lead && lead.assigned_to === user.id;
         if (!isOwner) {
           return { success: false, message: "คุณไม่มีสิทธิ์จัดการเอกสารของลีดผู้อื่น" };
         }
