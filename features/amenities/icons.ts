@@ -32,6 +32,7 @@ import {
   Layout,
   Microscope,
   CarFront,
+  Plane,
 } from "lucide-react";
 
 export const ICON_MAP: Record<string, any> = {
@@ -57,6 +58,8 @@ export const ICON_MAP: Record<string, any> = {
   train: Train,
   school: School,
   hospital: Hospital,
+  airport: Plane,
+  plane: Plane,
   sun: Sun,
   moon: Moon,
   wind: Wind,

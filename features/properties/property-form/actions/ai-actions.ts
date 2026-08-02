@@ -205,6 +205,7 @@ function normalizeTransitType(type: string): string {
 
 function normalizePlaceCategory(category: string): string {
   const c = String(category || "").trim().toLowerCase();
+  if (c.includes("airport") || c.includes("flight") || c.includes("สนามบิน")) return "Airport";
   if (c.includes("school") || c.includes("university") || c.includes("education")) return "School";
   if (c.includes("mall") || c.includes("shopping") || c.includes("market") || c.includes("supermarket")) return "Mall";
   if (c.includes("hospital") || c.includes("clinic") || c.includes("medical")) return "Hospital";
@@ -365,8 +366,8 @@ Instructions:
    - station_name_cn (Chinese station name, e.g. "阿索克")
    - station_name_ru (Russian station name, e.g. "Асок")
 
-3. Find nearby key landmark places (like Shopping Malls, Schools, Hospitals, Supermarkets, Parks, work offices, etc.). Limit to at most 5 places. For each place, find:
-   - category (must be one of: "School", "Mall", "Hospital", "Transport", "Park", "Office", "Other")
+3. Find nearby key landmark places (like Airports, Shopping Malls, Schools, Hospitals, Supermarkets, Parks, work offices, etc.). Limit to at most 5 places. For each place, find:
+   - category (must be one of: "School", "Mall", "Hospital", "Airport", "Transport", "Park", "Office", "Other")
    - name in Thai (e.g. "เอ็มควอเทียร์", "โรงพยาบาลสมิติเวช สุขุมวิท")
    - distance_meters (estimated walking/driving distance in meters, e.g. 1200)
    - time (estimated time in minutes as string, e.g. "10")

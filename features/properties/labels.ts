@@ -268,7 +268,7 @@ export const TRANSIT_TYPE_STYLES: Record<TransitType, { bg: string; text: string
 };
 
 export const NEARBY_PLACE_CATEGORIES = [
-  { value: "School", label: "โรงเรียน / มหาวิทยาลัย" }, { value: "Mall", label: "ห้างสรรพสินค้า / ตลาด" }, { value: "Hospital", label: "โรงพยาบาล" }, { value: "Transport", label: "ทางด่วน" }, { value: "Park", label: "สวนสาธารณะ" }, { value: "Office", label: "สถานที่ทำงาน" }, { value: "Other", label: "อื่นๆ" }
+  { value: "School", label: "โรงเรียน / มหาวิทยาลัย" }, { value: "Mall", label: "ห้างสรรพสินค้า / ตลาด" }, { value: "Hospital", label: "โรงพยาบาล" }, { value: "Airport", label: "สนามบิน" }, { value: "Transport", label: "ทางด่วน" }, { value: "Park", label: "สวนสาธารณะ" }, { value: "Office", label: "สถานที่ทำงาน" }, { value: "Other", label: "อื่นๆ" }
 ] as const;
 
 export const POPULAR_AREAS = [

@@ -215,6 +215,7 @@ export function generatePropertyDescription(
       School: "สถานศึกษา",
       Mall: "ห้างสรรพสินค้า/ตลาด",
       Hospital: "โรงพยาบาล",
+      Airport: "สนามบิน",
       Transport: "การเดินทาง",
       Park: "สวนสาธารณะ",
       Office: "อาคารสำนักงาน",

@@ -7,6 +7,7 @@ import {
   Bus,
   Building2,
   TrainFront,
+  Plane,
 } from "lucide-react";
 import Link from "next/link";
 import { TRANSIT_TYPE_STYLES } from "@/features/properties/labels";
@@ -49,6 +50,7 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   School: School,
   Mall: ShoppingBag,
   Hospital: Stethoscope,
+  Airport: Plane,
   Transport: Bus,
   Park: Map,
   Office: Building2,
@@ -59,6 +61,7 @@ const CATEGORY_LABEL_MAP: Record<string, string> = {
   School: "property.categories.school",
   Mall: "property.categories.mall",
   Hospital: "property.categories.hospital",
+  Airport: "property.categories.airport",
   Transport: "property.categories.transport",
   Park: "property.categories.park",
   Office: "property.categories.office",
