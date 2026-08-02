@@ -9,6 +9,7 @@ import {
   dictionaries,
 } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { formatDescriptionToHtml } from "@/lib/utils/format-description";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
 import { type Language } from "@/lib/i18n";
@@ -51,12 +52,14 @@ export function PropertyDescription({
     language,
   );
 
+  const formattedHtml = formatDescriptionToHtml(localizedDescription);
+
   const [sanitizedDescription, setSanitizedDescription] = useState<string>(
-    localizedDescription || "",
+    formattedHtml || "",
   );
 
   useEffect(() => {
-    if (!localizedDescription) {
+    if (!formattedHtml) {
       setSanitizedDescription("");
       return;
     }
@@ -64,9 +67,9 @@ export function PropertyDescription({
     // Client-side only sanitization to avoid jsdom/SSR overhead and crashes
     import("dompurify").then((module) => {
       const DOMPurify = module.default;
-      setSanitizedDescription(DOMPurify.sanitize(localizedDescription));
+      setSanitizedDescription(DOMPurify.sanitize(formattedHtml));
     });
-  }, [localizedDescription]);
+  }, [formattedHtml]);
 
   useEffect(() => {
     if (contentRef.current) {

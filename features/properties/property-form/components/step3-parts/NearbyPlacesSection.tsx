@@ -135,7 +135,14 @@ export function NearbyPlacesSection({
     getNearbyPlaceCategoriesAction().then((data) => {
       if (isMounted) {
         if (data.length > 0) {
-          setCategories(data.map((d) => ({ value: d.code, label: d.label.th })));
+          const dbValues = new Set(data.map((d) => d.code));
+          const defaultsToAdd = NEARBY_PLACE_CATEGORIES
+            .filter((c) => !dbValues.has(c.value))
+            .map((c) => ({ value: c.value, label: c.label }));
+          setCategories([
+            ...data.map((d) => ({ value: d.code, label: d.label.th })),
+            ...defaultsToAdd,
+          ]);
         }
         setIsLoadingCats(false);
       }
