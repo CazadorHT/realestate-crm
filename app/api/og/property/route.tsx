@@ -49,14 +49,14 @@ export async function GET(req: NextRequest) {
         );
 
         const { data: images } = await supabase
-          .from("property_images")
-          .select("image_url, storage_path")
+          .from("property_media_v3")
+          .select("url, storage_path")
           .eq("property_id", id)
           .order("is_cover", { ascending: false })
           .limit(1);
 
         if (images?.[0]) {
-          imageUrl = images[0].image_url;
+          imageUrl = images[0].url;
           // ถ้าไม่มี image_url ที่เป็น HTTP ให้ใช้ storage_path มา gen เป็น Public URL เต็มๆ แทน
           if ((!imageUrl || !imageUrl.startsWith('http')) && images[0].storage_path) {
             imageUrl = supabase.storage

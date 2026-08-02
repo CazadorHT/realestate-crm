@@ -33,7 +33,7 @@ describe("Global Search Module - Actions (เทสโหดๆ แบบไม�
   it("should search across properties, leads, owners, and agents successfully", async () => {
     mockSupabase
       .mockTableResult("properties", [{ id: "p1", title: "Condo A", district: "Asoke" }])
-      .mockTableResult("leads", [{ id: "l1", full_name: "John Doe", phone: "0812345678" }])
+      .mockTableResult("crm_leads_v3", [{ id: "l1", identity: { display_name: "John Doe", phone: "0812345678" } }])
       .mockTableResult("owners", [{ id: "o1", full_name: "Jane Smith", phone: "0898765432" }])
       .mockTableResult("profiles", [{ id: "a1", full_name: "Agent Bob", role: "AGENT", phone: "0855555555" }]);
 

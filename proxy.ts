@@ -65,13 +65,18 @@ export async function proxy(request: NextRequest) {
   }
 
   // 2. 🔑 Supabase Session Management (Auth Refresh)
-  // [OPTIMIZATION] Returns both response and user context
+  // [OPTIMIZATION] Only run session management on protected & auth routes
   const isPublicApi = path.startsWith("/api/public");
+  const isAuthOrProtected = 
+    path.startsWith("/protected") || 
+    path.startsWith("/auth") || 
+    path.startsWith("/api/protected") ||
+    path.startsWith("/api/admin");
   
   let response = NextResponse.next();
   let user = null;
 
-  if (!isPublicApi) {
+  if (isAuthOrProtected) {
     const { response: authResponse, user: sessionUser } = await updateSession(request);
     response = authResponse;
     user = sessionUser;
