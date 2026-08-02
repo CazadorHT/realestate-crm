@@ -51,7 +51,7 @@ export function RiskAlerts({ deals = [], role, view = "personal" }: RiskAlertsPr
                   <span className="text-xs text-muted-foreground">
                     Stage: {deal.stage}
                     {isAdminView && (
-                      <span className="ml-1 text-slate-400 font-bold">• Agent 01</span>
+                      <span className="ml-1 text-slate-400 font-bold">• โดย: {deal.agentName || "ไม่ระบุ"}</span>
                     )}
                   </span>
                   <span className="text-xs font-bold text-red-600">

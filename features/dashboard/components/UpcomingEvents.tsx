@@ -101,9 +101,9 @@ export function UpcomingEvents({ events, role, view = "personal" }: UpcomingEven
                         <Badge variant="outline" className={`text-[10px] h-4 px-1.5 font-medium border-none ${config.className}`}>
                           {config.label}
                         </Badge>
-                        {isAdminView && (
+                        {isAdminView && (event as any).agentName && (
                           <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                             <span>• โดย: Agent 01</span>
+                             <span>• โดย: {(event as any).agentName}</span>
                           </div>
                         )}
                       </div>

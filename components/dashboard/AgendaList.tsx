@@ -111,9 +111,9 @@ export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListP
                             </div>
                             
                             {/* สำหรับ Admin/Manager: แสดงเจ้าของงาน (ถ้ามีข้อมูลในอนาคต) */}
-                            {isAdminView && (
+                            {isAdminView && (event as any).agentName && (
                               <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
-                                <span>• โดย: Agent 01</span>
+                                <span>• โดย: {(event as any).agentName}</span>
                               </div>
                             )}
                           </div>

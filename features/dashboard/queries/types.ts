@@ -75,6 +75,7 @@ export type FollowUpLead = {
   name: string;
   daysQuiet: number;
   stage: string;
+  agentName?: string;
 };
 
 export type RiskDeal = {
@@ -82,6 +83,7 @@ export type RiskDeal = {
   title: string;
   daysInStage: number;
   stage: string;
+  agentName?: string;
 };
 
 export type PropertyAnalytics = {

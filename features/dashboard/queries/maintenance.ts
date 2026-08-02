@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { FollowUpLead, RiskDeal } from "./types";
 import { PostgrestFilterBuilder } from "@supabase/supabase-js";
+import { decrypt } from "@/lib/crypto";
 
 interface RawLead {
   id: string;
@@ -143,7 +144,7 @@ export async function getFollowUpLeads(
   const { data: leads } = await applyFilters(
     supabase
       .from("crm_leads_v3")
-      .select("id, updated_at, stage, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
+      .select("id, updated_at, stage, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name), agent:identities_v3!crm_leads_v3_assigned_to_fkey(display_name)")
       .lt("updated_at", threeDaysAgo.toISOString())
       .neq("stage", "CLOSED")
       .limit(5),
@@ -157,12 +158,15 @@ export async function getFollowUpLeads(
     const diffTime = Math.abs(now.getTime() - updated.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const ident = l.identity as { display_name?: string } | null;
+    const rawName = ident?.display_name ? (decrypt(ident.display_name) || ident.display_name) : "Lead";
+    const agent = l.agent as { display_name?: string } | null;
 
     return {
       id: l.id,
-      name: ident?.display_name || "Lead",
+      name: rawName,
       daysQuiet: diffDays,
       stage: l.stage,
+      agentName: agent?.display_name || undefined,
     };
   });
 }
@@ -191,7 +195,7 @@ export async function getRiskDeals(
     const { data: deals } = await applyFilters(
       supabase
         .from("crm_deals_v3")
-        .select("id, updated_at, status, properties_core(slug)")
+        .select("id, title, updated_at, status, property:properties!crm_deals_v3_property_id_fkey(title), agent:identities_v3!crm_deals_v3_agent_id_fkey(display_name), creator:identities_v3!crm_deals_v3_created_by_fkey(display_name)")
         .lt("updated_at", sevenDaysAgo.toISOString())
         .neq("status", "CLOSED_WIN")
         .neq("status", "CLOSED_LOSS")
@@ -205,12 +209,17 @@ export async function getRiskDeals(
       const now = new Date();
       const diffTime = Math.abs(now.getTime() - updated.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const propertyTitle = (d.property as { title?: string } | null)?.title;
+      const isGeneratedTitle = typeof d.title === "string" && d.title.startsWith("Deal for Property");
+      const dealTitle = (!isGeneratedTitle && d.title) ? d.title : (propertyTitle || d.title || `Deal #${d.id.slice(0, 8)}`);
+      const agent = (d.agent as { display_name?: string } | null) || (d.creator as { display_name?: string } | null);
 
       return {
         id: d.id,
-        title: `Deal #${d.id.slice(0, 8)}`,
+        title: dealTitle,
         daysInStage: diffDays,
         stage: d.status,
+        agentName: agent?.display_name || undefined,
       };
     });
   } catch (error) {

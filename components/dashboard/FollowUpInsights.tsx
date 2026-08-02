@@ -48,7 +48,7 @@ export function FollowUpInsights({ leads = [], role, view = "personal" }: Follow
                     </span>
                     {isAdminView && (
                       <span className="text-[10px] text-slate-400 font-bold ml-1">
-                        • โดย: Agent 01
+                        • โดย: {lead.agentName || "ไม่ระบุ"}
                       </span>
                     )}
                   </div>
