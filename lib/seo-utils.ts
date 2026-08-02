@@ -256,23 +256,35 @@ const TRANSLIT_MAP: Record<string, string> = {
   ตรม: "sqm",
   "ตร.ม.": "sqm",
   ตารางเมตร: "sqm",
+  ตารางวา: "sqwah",
+  ตรวา: "sqwah",
   เมตร: "m",
   กม: "km",
   กิโลเมตร: "km",
   ชั้น: "floor",
   ที่ดิน: "land",
   บ้าน: "house",
+  บ้านเดี่ยว: "single-house",
+  ทาวน์โฮม: "townhome",
   คอนโด: "condo",
   อพาร์ทเม้น: "apartment",
+  อาคารพาณิชย์: "shophouse",
+  อาคารสำนักงาน: "office",
   สวย: "prime",
   หรู: "luxury",
   ถูก: "cheap",
-  ลดราคา: "sale-off",
-  ติดรถไฟฟ้า: "near-transit",
+  ลดราคา: "hot-price",
+  ติดรถไฟฟ้า: "near-bts",
+  ใกล้รถไฟฟ้า: "near-bts",
   ใกล้: "near",
   ใหม่: "new",
-  พร้อมอยู่: "ready-to-move-in",
-  // Locations (Common - these aren't in SEO_LABELS yet)
+  พร้อมอยู่: "ready-to-move",
+  แต่งครบ: "fully-furnished",
+  เฟอร์ครบ: "fully-furnished",
+  ห้องมุม: "corner-unit",
+  เลี้ยงสัตว์ได้: "pet-friendly",
+  โควต้าต่างชาติ: "foreigner-quota",
+  // Locations & Popular Areas (Bangkok & Major Cities)
   กรุงเทพ: "bangkok",
   กรุงเทพมหานคร: "bangkok",
   ภูเก็ต: "phuket",
@@ -282,6 +294,81 @@ const TRANSLIT_MAP: Record<string, string> = {
   สมุทรปราการ: "samut-prakan",
   นนทบุรี: "nonthaburi",
   ปทุมธานี: "pathum-thani",
+  บางนา: "bangna",
+  สุขุมวิท: "sukhumvit",
+  รัชดา: "ratchada",
+  รัชดาภิเษก: "ratchadaphisek",
+  สาทร: "sathorn",
+  สีลม: "silom",
+  "พระราม 9": "rama-9",
+  พระราม9: "rama-9",
+  "พระราม 3": "rama-3",
+  พระราม3: "rama-3",
+  "พระราม 2": "rama-2",
+  พระราม2: "rama-2",
+  "พระราม 4": "rama-4",
+  พระราม4: "rama-4",
+  "พระราม 5": "rama-5",
+  พระราม5: "rama-5",
+  ห้วยขวาง: "huai-khwang",
+  ลาดพร้าว: "lat-phrao",
+  อารีย์: "ari",
+  ทองหล่อ: "thonglor",
+  เอกมัย: "ekkamai",
+  พญาไท: "phaya-thai",
+  อนุสาวรีย์ชัย: "victory-monument",
+  ราชเทวี: "ratchathewi",
+  ปทุมวัน: "pathum-wan",
+  ชิดลม: "chit-lom",
+  เพลินจิต: "ploenchit",
+  อโศก: "asoke",
+  พร้อมพงษ์: "phrom-phong",
+  พระโขนง: "phra-khanong",
+  อ่อนนุช: "on-nut",
+  อุดมสุข: "udom-suk",
+  แบริ่ง: "bearing",
+  สำโรง: "samrong",
+  ศรีนครินทร์: "srinakarin",
+  พัฒนาการ: "phatthanakan",
+  รามคำแหง: "ramkhamhaeng",
+  บางกะปิ: "bang-kapi",
+  บึงกุ่ม: "bueng-kum",
+  คันนายาว: "khannayao",
+  มีนบุรี: "min-buri",
+  สายไหม: "sai-mai",
+  ดอนเมือง: "don-mueang",
+  หลักสี่: "lak-si",
+  จตุจักร: "chatuchak",
+  พหลโยธิน: "phahonyothin",
+  วิภาวดี: "vibhavadi",
+  งามวงศ์วาน: "ngamwongwan",
+  แจ้งวัฒนะ: "chaeng-wattana",
+  ปากเกร็ด: "pak-kret",
+  บางบัวทอง: "bang-buathong",
+  บางใหญ่: "bang-yai",
+  ราชพฤกษ์: "ratchaphruek",
+  ชัยพฤกษ์: "chaiyaphruek",
+  กาญจนาภิเษก: "kanchanaphisek",
+  เพชรเกษม: "phetkasem",
+  บางแค: "bang-khae",
+  ภาษีเจริญ: "phasi-charoen",
+  ธนบุรี: "thon-buri",
+  คลองสาน: "khlong-san",
+  เจริญกรุง: "charoen-krung",
+  เจริญนคร: "charoen-nakhon",
+  ฝั่งธน: "thonburi-side",
+  ตลิ่งชัน: "taling-chan",
+  ทวีวัฒนา: "thawi-watthan",
+  พุทธมณฑล: "phutthamonthon",
+  ศาลายา: "salaya",
+  สนามบินสุวรรณภูมิ: "suvarnabhumi-airport",
+  สุวรรณภูมิ: "suvarnabhumi",
+  ดอนเมืองแอร์พอร์ต: "don-mueang-airport",
+  บางพลี: "bang-phli",
+  กิ่งแก้ว: "king-kaew",
+  เทพารักษ์: "thepharak",
+  แพรกษา: "phraek-sa",
+  บางปู: "bang-poo",
 };
 
 // Initialize mapping from SEO_LABELS to avoid duplication
@@ -315,120 +402,136 @@ export function generatePropertySlug(
   data: PropertyDataForSEO,
   language: string = "th",
 ): string {
-  const getWords = (s: string) =>
-    s
-      ? s
-          .toLowerCase()
-          .split(/[\s-]+/)
-          .filter(Boolean)
-      : [];
-  const uniqueWords = new Set<string>();
-  const addWords = (s: string | undefined | null) => {
-    if (!s) return;
-    getWords(s).forEach((w: string) => uniqueWords.add(w));
+  const parts: string[] = [];
+
+  const cleanToken = (str: string): string => {
+    return transliterate(str)
+      .toLowerCase()
+      .replace(/[^\x00-\x7F]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   };
 
-  // 1. Action (e.g. "for-sale", "for-rent")
+  // Track existing words/tokens to strictly avoid duplicates
+  const existingTokens = new Set<string>();
+
+  const addUniqueWords = (text: string | null | undefined) => {
+    if (!text) return;
+    const tokens = cleanToken(text).split("-").filter(Boolean);
+    for (const token of tokens) {
+      if (!existingTokens.has(token)) {
+        existingTokens.add(token);
+        parts.push(token);
+      }
+    }
+  };
+
+  // 1. Action (for-rent / for-sale / for-sale-rent)
   const actionLabel =
     data.listing_type === "RENT"
       ? "for-rent"
       : data.listing_type === "SALE"
         ? "for-sale"
         : "for-sale-rent";
-  addWords(actionLabel);
+  addUniqueWords(actionLabel);
 
-  // 2. Property Type (e.g. "condo", "house")
-  addWords(
-    data.property_type ? SEO_LABELS[data.property_type]?.["en"] : "property",
-  );
+  // 2. Property Type (house / condo / townhome / etc.)
+  const typeLabel = data.property_type
+    ? SEO_LABELS[data.property_type]?.["en"] || "property"
+    : "property";
+  addUniqueWords(typeLabel);
 
-  // Enforce English for fully ASCII URLs
-  const slugLang = "en";
+  // 3. Main Location (Area, District, Province) - Priority SEO Placement
+  if (data.popular_area_en || data.popular_area) {
+    addUniqueWords(data.popular_area_en || data.popular_area);
+  }
+  if (data.district_en || data.district) {
+    addUniqueWords(data.district_en || data.district);
+  }
+  if (data.province_en || data.province) {
+    addUniqueWords(data.province_en || data.province);
+  }
 
-  // 3. Title / Project Name (Increasing to 15 words)
-  const titlePart = data.title_en || transliterate(data.title);
-  addWords(
-    titlePart
-      .split(/[\s-]+/)
-      .slice(0, 20)
-      .join("-"),
-  );
+  // 4. Title / Project Name
+  const titleText = data.title_en || data.title || "";
+  addUniqueWords(titleText);
 
-  // 4. Detailed Location (Area, District, Province) - Move up for better SEO context
-  addWords(data.popular_area_en || transliterate(data.popular_area || ""));
-  addWords(data.district_en || transliterate(data.district || ""));
-  addWords(data.province_en || transliterate(data.province || ""));
-
-  // 5. Room Specs
-  if (data.bedrooms) addWords(`${data.bedrooms}${SEO_LABELS.BEDS[slugLang]?.toLowerCase() || "bedroom"}`);
-  if (data.bathrooms) addWords(`${data.bathrooms}${SEO_LABELS.BATHS[slugLang]?.toLowerCase() || "bathroom"}`);
-  if (data.size_sqm) addWords(`${data.size_sqm}${SEO_LABELS.SQM[slugLang]?.toLowerCase() || "sqm"}`);
-
-  // 6. Special Flags
-  const getFlagLabel = (key: string) => SEO_LABELS[key]?.[slugLang] || SEO_LABELS[key]?.["en"] || key.toLowerCase().replace(/_/g, '-');
-
-  if (data.is_pet_friendly) addWords(getFlagLabel("PET_FRIENDLY"));
-  if (data.is_corner_unit) addWords(getFlagLabel("CORNER_UNIT"));
-  if (data.is_renovated) addWords(getFlagLabel("RENOVATED"));
-  if (data.is_fully_furnished) addWords(getFlagLabel("FULLY_FURNISHED"));
-  if (data.is_foreigner_quota) addWords(getFlagLabel("FOREIGNER_QUOTA"));
-  if (data.is_hot_sale) addWords(getFlagLabel("HOT_SALE"));
-
-  // 7. Refined Transit & Nearby Places (2 each, unique categories/types)
-  const addedTransitTypes = new Set<string>();
-  let transitCount = 0;
+  // 5. Transit Station (BTS/MRT) - High Priority SEO
   if (data.nearby_transits && data.nearby_transits.length > 0) {
-    data.nearby_transits.forEach((transit: any) => {
-      if (transitCount < 2 && !addedTransitTypes.has(transit.type)) {
-        const station =
-          transit.station_name_en || transliterate(transit.station_name || "");
-        if (station) {
-          addWords("near");
-          addWords(station);
-          addedTransitTypes.add(transit.type);
-          transitCount++;
+    for (const transit of data.nearby_transits) {
+      const station = transit.station_name_en || transit.station_name;
+      if (station) {
+        const stationToken = cleanToken(station);
+        if (stationToken && !existingTokens.has(stationToken)) {
+          parts.push("near", ...stationToken.split("-").filter(Boolean));
+          stationToken.split("-").forEach((t) => existingTokens.add(t));
+          existingTokens.add("near");
+          break;
         }
       }
-    });
+    }
   } else if (data.transit_station_name) {
-    const station =
-      data.transit_station_name_en || transliterate(data.transit_station_name);
-    if (station) {
-      addWords("near");
-      addWords(station);
+    const station = data.transit_station_name_en || data.transit_station_name;
+    const stationToken = cleanToken(station);
+    if (stationToken && !existingTokens.has(stationToken)) {
+      parts.push("near", ...stationToken.split("-").filter(Boolean));
+      stationToken.split("-").forEach((t) => existingTokens.add(t));
+      existingTokens.add("near");
     }
   }
 
-  const addedPlaceCats = new Set<string>();
-  let placeCount = 0;
+  // 6. Compact Room & Size Specs (4br-5ba-258sqm)
+  if (data.bedrooms) addUniqueWords(`${data.bedrooms}br`);
+  if (data.bathrooms) addUniqueWords(`${data.bathrooms}ba`);
+  if (data.size_sqm) addUniqueWords(`${data.size_sqm}sqm`);
+
+  // 7. Special Selling Features & Amenities
+  if (data.is_pet_friendly) addUniqueWords("pet-friendly");
+  if (data.is_corner_unit) addUniqueWords("corner-unit");
+  if (data.is_renovated) addUniqueWords("renovated");
+  if (data.is_fully_furnished) addUniqueWords("fully-furnished-ready-to-move");
+  if (data.is_foreigner_quota) addUniqueWords("foreigner-quota");
+  if (data.is_hot_sale) addUniqueWords("hot-deal");
+
+  // 8. Nearby Places / Landmarks (Mega Bangna, Central, etc.)
   if (data.nearby_places && data.nearby_places.length > 0) {
-    data.nearby_places.forEach((place) => {
-      if (placeCount < 2 && !addedPlaceCats.has(place.category)) {
-        const placeName = place.name_en || transliterate(place.name || "");
-        if (placeName) {
-          addWords("near");
-          addWords(placeName);
-          addedPlaceCats.add(place.category);
-          placeCount++;
+    for (const place of data.nearby_places) {
+      const placeName = place.name_en || place.name;
+      if (placeName) {
+        const placeTokens = cleanToken(placeName).split("-").filter(Boolean);
+        const newTokens = placeTokens.filter((t) => !existingTokens.has(t));
+        if (newTokens.length > 0) {
+          if (!existingTokens.has("near")) {
+            parts.push("near");
+            existingTokens.add("near");
+          }
+          parts.push(...newTokens);
+          newTokens.forEach((t) => existingTokens.add(t));
+          break; // Keep 1 best landmark to avoid URL bloat
         }
       }
-    });
+    }
   }
 
-  // Final assembly
-  const baseSlug = Array.from(uniqueWords)
-    .join("-")
-    .replace(/[^\x00-\x7F]/g, "") // Strictly ASCII
-    .replace(/[^a-zA-Z0-9\s_-]/g, " ")
-    .trim()
-    .toLowerCase()
-    .replace(/[\s/_]+/g, "-")
-    .replace(/-+/g, "-");
-
   const suffix = Date.now().toString(36).slice(-4);
+  const maxBaseLength = 200 - (suffix.length + 1); // 195 chars for base
 
-  // High limit: 160 characters to allow more keywords while staying safe
-  return `${baseSlug.slice(0, 180)}-${suffix}`;
+  // Build clean base string
+  let baseSlug = parts.join("-").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+
+  // Safe truncation: If over length, trim at word boundary and remove dangling "near"
+  if (baseSlug.length > maxBaseLength) {
+    baseSlug = baseSlug.slice(0, maxBaseLength);
+    const lastDash = baseSlug.lastIndexOf("-");
+    if (lastDash > 0) {
+      baseSlug = baseSlug.slice(0, lastDash);
+    }
+  }
+
+  // Prevent trailing "near" or orphaned prepositions at the end of trimmed slug
+  baseSlug = baseSlug.replace(/-(near|for|and|with|to|in|of|by)$/i, "");
+
+  return `${baseSlug}-${suffix}`;
 }
 
 /**

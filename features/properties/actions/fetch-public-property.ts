@@ -123,26 +123,11 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
         .from("property_slug_history")
         .select("property_id")
         .eq("old_slug", slugOrId)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (byHistory?.property_id) {
         resolvedId = byHistory.property_id;
-      }
-    }
-
-    // Robust fallback: search by prefix/partial slug if exact matches fail
-    if (!resolvedId) {
-      const parts = slugOrId.split("-").filter(Boolean);
-      if (parts.length >= 4) {
-        // Use the first 6 parts of the slug representing a highly specific title/description prefix
-        const searchPrefix = parts.slice(0, Math.min(parts.length, 6)).join("-");
-        const { data: partialMatches } = await supabase
-          .from("properties_details")
-          .select("property_id")
-          .filter("address_info->>slug", "like", `%${searchPrefix}%`);
-          
-        if (partialMatches && partialMatches.length > 0) {
-          resolvedId = partialMatches[0].property_id;
-        }
       }
     }
 
