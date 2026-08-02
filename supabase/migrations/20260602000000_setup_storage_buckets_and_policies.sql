@@ -109,7 +109,7 @@ drop policy if exists "Staff delete: finance" on storage.objects;
 -- --------------------------------------------------------------------
 
 -- [property-images]
-create policy "Public viewing: property-images" on storage.objects for select using (bucket_id = 'property-images');
+create policy "Staff viewing: property-images" on storage.objects for select to authenticated using (bucket_id = 'property-images');
 
 create policy "Staff insert: property-images" on storage.objects for insert to authenticated with check (
   bucket_id = 'property-images' 
