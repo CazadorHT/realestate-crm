@@ -133,8 +133,22 @@ export function PropertySpecs({
     (item) => item.show && item.value !== null && item.value !== undefined,
   );
 
+  // Dynamic grid column class based on visible specs count
+  const getGridColsClass = (count: number) => {
+    if (count <= 2) return "grid-cols-2 lg:grid-cols-4";
+    if (count === 3) return "grid-cols-3 lg:grid-cols-4";
+    if (count === 4) return "grid-cols-2 sm:grid-cols-4";
+    if (count === 5) return "grid-cols-2 sm:grid-cols-5";
+    if (count === 6) return "grid-cols-2 sm:grid-cols-3";
+    if (count === 7) return "grid-cols-2 sm:grid-cols-4";
+    if (count === 8) return "grid-cols-2 sm:grid-cols-4";
+    if (count === 9) return "grid-cols-2 sm:grid-cols-5";
+    // Default dynamic grid strategy for 5, 7, 9+ items
+    return "grid-cols-2 sm:grid-cols-3 ";
+  };
+
   return (
-    <div className="grid grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
+    <div className={`grid ${getGridColsClass(specs.length)} gap-2 md:gap-4`}>
       {specs.map((spec, index) => (
         <div
           key={index}

@@ -15,7 +15,7 @@ export function formatDescriptionToHtml(text: string | null | undefined): string
 
   if (!hasBlockHtml) {
     // Convert inline markdown bullets (e.g. "text * **key:** val * **key2:** val") into newlines
-    input = input.replace(/\s*\*\s+(?=\*\*|[\u0E00-\u0E7F\w])/g, "\n* ");
+    input = input.replace(/(?<=\S)\s+\*\s+(?=\*\*|[^\s\*])/g, "\n* ");
 
     // Split into lines
     const lines = input.split(/\r?\n/);
@@ -33,9 +33,17 @@ export function formatDescriptionToHtml(text: string | null | undefined): string
         continue;
       }
 
-      // Format inline markdown (bold)
+      // Horizontal rule (--- or *** or ___)
+      if (/^(---|\*\*\*|___)$/.test(trimmed)) {
+        if (inList) { resultHtmlLines.push("</ul>"); inList = false; }
+        resultHtmlLines.push("<hr class=\"my-4 border-slate-200\" />");
+        continue;
+      }
+
+      // Format inline markdown (bold & italic)
       let formattedLine = trimmed.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
       formattedLine = formattedLine.replace(/__(.*?)__/g, "<strong>$1</strong>");
+      formattedLine = formattedLine.replace(/(^|[^\*])\*(?!\*)(.*?)\*/g, "$1<em>$2</em>");
 
       // Headers
       if (/^###\s+/.test(formattedLine)) {
