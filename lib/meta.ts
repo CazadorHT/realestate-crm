@@ -821,13 +821,14 @@ export async function postToMetaPage(
       const publishUrl = `${metaConfig.graphApiUrl}/${igId}/media_publish?creation_id=${carouselData.id}&access_token=${token}`;
       let publishRes: Response | null = null;
       let publishData: any = null;
-      const maxRetries = 5;
-      const retryDelayMs = 3000;
+      const maxRetries = 4;
+      const retryDelayMs = 2000;
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        // Wait a bit before publishing: 2 seconds on the first attempt, and 3 seconds on subsequent retries
-        const waitTime = attempt === 1 ? 2000 : retryDelayMs;
-        await new Promise((resolve) => setTimeout(resolve, waitTime));
+        // Attempt immediately on attempt 1 (0ms wait), retry with 2s delay if transient error
+        if (attempt > 1) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+        }
 
         console.log(`[meta.ts] Attempting to publish Instagram carousel (Attempt ${attempt}/${maxRetries})...`);
         publishRes = await fetch(publishUrl, { method: "POST" });

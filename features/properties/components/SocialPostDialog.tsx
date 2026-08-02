@@ -273,7 +273,10 @@ export function SocialPostDialog({
 
       finishProcess(processId, "ERROR", errorMessage);
       setStatus("ERROR");
-      setResultMessage(errorMessage);
+      setResultMessage(`เกิดข้อผิดพลาดในการโพสต์: ${errorMessage}`);
+      toast.error(`โพสต์ไปที่ ${platform} ไม่สำเร็จ! (${errorMessage})`, {
+        duration: 6000,
+      });
     }
   };
 

@@ -248,8 +248,8 @@ export default async function RootLayout({
         className={`${prompt.className} ${notoThai.variable} antialiased`}
         style={{ scrollbarGutter: "stable" }}
       >
-        {/* Meta Pixel Safe Stub to prevent "fbq is not defined" ReferenceError */}
-        <Script id="meta-pixel-stub" strategy="beforeInteractive">
+        {/* Safe stubs for third-party tags and webviews to prevent ReferenceError / TypeError in Sentry */}
+        <Script id="global-third-party-stubs" strategy="beforeInteractive">
           {`
             window.fbq = window.fbq || function() {
               (window.fbq.q = window.fbq.q || []).push(arguments);
@@ -258,6 +258,11 @@ export default async function RootLayout({
             window.fbq.loaded = true;
             window.fbq.version = '2.0';
             window.fbq.queue = [];
+
+            window.googletag = window.googletag || { cmd: [] };
+            if (typeof window !== 'undefined' && !window.webkit) {
+              window.webkit = { messageHandlers: {} };
+            }
           `}
         </Script>
       
