@@ -117,6 +117,18 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
       }
     }
 
+    // Check property_slug_history for old/historical slug (301 Permanent Redirect System)
+    if (!resolvedId) {
+      const { data: byHistory } = await supabase
+        .from("property_slug_history")
+        .select("property_id")
+        .eq("old_slug", slugOrId)
+        .maybeSingle();
+      if (byHistory?.property_id) {
+        resolvedId = byHistory.property_id;
+      }
+    }
+
     // Robust fallback: search by prefix/partial slug if exact matches fail
     if (!resolvedId) {
       const parts = slugOrId.split("-").filter(Boolean);

@@ -522,6 +522,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs_v3_2026_10: {
+        Row: {
+          action: string
+          actor_id: string | null
+          client_ip: string | null
+          created_at: string
+          entity_id: string | null
+          entity_table: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          tenant_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          client_ip?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_table: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          tenant_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          client_ip?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_table?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          tenant_id?: string | null
+        }
+        Relationships: []
+      }
       banks: {
         Row: {
           code: string
@@ -2850,6 +2889,42 @@ export type Database = {
           },
         ]
       }
+      property_slug_history: {
+        Row: {
+          created_at: string
+          id: string
+          old_slug: string
+          property_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          old_slug: string
+          property_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          old_slug?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_slug_history_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_slug_history_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_syndication_v3: {
         Row: {
           external_id: string | null
@@ -2894,6 +2969,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      property_transit_stations: {
+        Row: {
+          created_at: string | null
+          distance_meters: number | null
+          id: string
+          property_id: string
+          station_name: string
+          station_name_cn: string | null
+          station_name_en: string | null
+          station_name_ru: string | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          distance_meters?: number | null
+          id?: string
+          property_id: string
+          station_name: string
+          station_name_cn?: string | null
+          station_name_en?: string | null
+          station_name_ru?: string | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          distance_meters?: number | null
+          id?: string
+          property_id?: string
+          station_name?: string
+          station_name_cn?: string | null
+          station_name_en?: string | null
+          station_name_ru?: string | null
+          type?: string | null
+        }
+        Relationships: []
       }
       raw_ingestions: {
         Row: {
@@ -3838,6 +3949,36 @@ export type Database = {
         Relationships: []
       }
       traffic_views_v3_2026_09: {
+        Row: {
+          created_at: string
+          id: string
+          identity_id: string | null
+          target_id: string
+          target_type: string
+          tenant_id: string | null
+          visitor_session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identity_id?: string | null
+          target_id: string
+          target_type: string
+          tenant_id?: string | null
+          visitor_session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identity_id?: string | null
+          target_id?: string
+          target_type?: string
+          tenant_id?: string | null
+          visitor_session_id?: string | null
+        }
+        Relationships: []
+      }
+      traffic_views_v3_2026_10: {
         Row: {
           created_at: string
           id: string
@@ -5672,6 +5813,15 @@ export type Database = {
           title: string
         }[]
       }
+      get_public_property_facets_v2: {
+        Args: {
+          p_listing_type?: string
+          p_property_type?: string
+          p_province?: string
+          p_q?: string
+        }
+        Returns: Json
+      }
       get_user_tenants: { Args: never; Returns: string[] }
       gettransactionid: { Args: never; Returns: unknown }
       increment_property_view: { Args: { p_id: string }; Returns: undefined }
@@ -5871,6 +6021,7 @@ export type Database = {
         }
       }
       refresh_executive_dashboard: { Args: never; Returns: undefined }
+      refresh_project_property_stats: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       st_3dclosestpoint: {

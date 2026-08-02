@@ -317,6 +317,21 @@ export async function updatePropertyAction(
       (mergedKeywords && mergedKeywords.some((k: string) => ["hot deal", "hotdeal", "hot_deal"].includes(k.toLowerCase().trim())))
     );
 
+    // Record slug history if slug changes (SEO 301 Permanent Redirect System)
+    const oldSlug = (addressInfo.slug || existingMeta?.slug || (data as Record<string, unknown>).slug) as string | undefined;
+    if (oldSlug && seoData.slug && oldSlug !== seoData.slug) {
+      try {
+        await supabase
+          .from("property_slug_history")
+          .insert({
+            property_id: id,
+            old_slug: oldSlug,
+          });
+      } catch (err) {
+        console.error("Error recording property slug history:", err);
+      }
+    }
+
     // 4.1 Update properties_core (Hot Table)
     const { error: coreUpdateError } = await supabase
       .from("properties_core")

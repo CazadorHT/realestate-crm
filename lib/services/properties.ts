@@ -383,11 +383,11 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         let facets: PropertyFacets | null = null;
         if (options.includeFacets) {
-          const rpcParams: FacetRPCParams = {
-            p_q: options.q || null,
-            p_province: options.province || null,
-            p_property_type: options.propertyType || null,
-            p_listing_type: options.listingType || null
+          const rpcParams = {
+            p_q: options.q || undefined,
+            p_province: options.province || undefined,
+            p_property_type: options.propertyType || undefined,
+            p_listing_type: options.listingType || undefined
           };
           const { data: facetData } = await supabase.rpc('get_public_property_facets_v2', rpcParams);
           facets = (facetData as unknown) as PropertyFacets | null;

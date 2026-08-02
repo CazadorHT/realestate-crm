@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { Metadata } from "next";
@@ -63,6 +63,11 @@ export default async function PublicPropertyDetailPage(props: {
   // 1. Centralized Data Fetching (Single Source of Truth)
   const data = await getPublicPropertyDetail(slug);
   if (!data) notFound();
+
+  // SEO 301 Permanent Redirect: If user accessed via an old/historical slug or UUID, redirect to canonical slug
+  if (data.slug && data.slug !== slug) {
+    redirect(`/properties/${encodeURIComponent(data.slug)}`);
+  }
 
   const agent = data.assigned_agent;
   const features = (data.property_features || [])
