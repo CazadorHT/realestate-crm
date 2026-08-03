@@ -243,7 +243,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
         // Fetch 24 properties to cover initial view with cache revalidation
         const res = await fetch("/api/public/properties?sort=NEWEST&limit=24", {
           signal: controller.signal,
-          cache: "default",
+          cache: "no-cache",
         });
 
         if (!res.ok) {

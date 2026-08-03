@@ -42,12 +42,34 @@ interface FeaturedStoryCarouselProps {
 }
 
 export function FeaturedStoryCarousel({
-  properties,
+  properties: initialProperties,
   language = "th",
   autoPlayIntervalMs = 4500,
 }: FeaturedStoryCarouselProps) {
+  const [properties, setProperties] = useState<StoryPropertyItem[]>(initialProperties);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Client-side refresh: fetch latest properties to ensure new ones appear immediately
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/public/properties?sort=NEWEST&limit=6", {
+      signal: controller.signal,
+      cache: "no-cache",
+    })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.properties && Array.isArray(data.properties) && data.properties.length > 0) {
+          setProperties(data.properties.slice(0, 6));
+          // Reset index if it's out of bounds after data change
+          setCurrentIndex((prev) => prev >= data.properties.slice(0, 6).length ? 0 : prev);
+        }
+      })
+      .catch(() => {
+        // Silently fall back to server-rendered initialProperties
+      });
+    return () => controller.abort();
+  }, []);
 
   const totalItems = properties.length;
   const currentProperty = properties[currentIndex] || properties[0];
