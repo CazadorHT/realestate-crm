@@ -18,7 +18,7 @@ import { siteConfig } from "@/lib/site-config";
 
 import { Metadata } from "next";
 
-export const revalidate = 86400; // S-Tier Hardening: Revalidate every 24 hours
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 interface BlogListingPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

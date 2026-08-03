@@ -30,6 +30,8 @@ export interface PropertyDataForSEO {
   title_en?: string | null;
   title_cn?: string | null;
   title_ru?: string | null;
+  project_name?: string | null;
+  project_name_en?: string | null;
   property_type: PropertyType;
   listing_type: ListingType;
   bedrooms?: number | null;
@@ -452,11 +454,7 @@ export function generatePropertySlug(
     addUniqueWords(data.province_en || data.province);
   }
 
-  // 4. Title / Project Name
-  const titleText = data.title_en || data.title || "";
-  addUniqueWords(titleText);
-
-  // 5. Transit Station (BTS/MRT) - High Priority SEO
+  // 4. Transit Station (BTS/MRT) & Nearby Places (near-...) - Promoted High Priority
   if (data.nearby_transits && data.nearby_transits.length > 0) {
     for (const transit of data.nearby_transits) {
       const station = transit.station_name_en || transit.station_name;
@@ -480,20 +478,6 @@ export function generatePropertySlug(
     }
   }
 
-  // 6. Compact Room & Size Specs (4br-5ba-258sqm)
-  if (data.bedrooms) addUniqueWords(`${data.bedrooms}br`);
-  if (data.bathrooms) addUniqueWords(`${data.bathrooms}ba`);
-  if (data.size_sqm) addUniqueWords(`${data.size_sqm}sqm`);
-
-  // 7. Special Selling Features & Amenities
-  if (data.is_pet_friendly) addUniqueWords("pet-friendly");
-  if (data.is_corner_unit) addUniqueWords("corner-unit");
-  if (data.is_renovated) addUniqueWords("renovated");
-  if (data.is_fully_furnished) addUniqueWords("fully-furnished-ready-to-move");
-  if (data.is_foreigner_quota) addUniqueWords("foreigner-quota");
-  if (data.is_hot_sale) addUniqueWords("hot-deal");
-
-  // 8. Nearby Places / Landmarks (Mega Bangna, Central, etc.)
   if (data.nearby_places && data.nearby_places.length > 0) {
     for (const place of data.nearby_places) {
       const placeName = place.name_en || place.name;
@@ -503,15 +487,47 @@ export function generatePropertySlug(
         if (newTokens.length > 0) {
           if (!existingTokens.has("near")) {
             parts.push("near");
-            existingTokens.add("near");
           }
           parts.push(...newTokens);
           newTokens.forEach((t) => existingTokens.add(t));
-          break; // Keep 1 best landmark to avoid URL bloat
+          existingTokens.add("near");
+          break; // Keep 1 best landmark
         }
       }
     }
   }
+
+  // 5. Project Name (Priority) / Title Fallback
+  const rawProject = data.project_name_en || data.project_name || "";
+  const rawTitle = data.title_en || data.title || "";
+  const nameToUse = rawProject.trim() ? rawProject : rawTitle;
+
+  const cleanedTitleStr = cleanToken(nameToUse);
+  const titleTokens = cleanedTitleStr
+    .split("-")
+    .filter(Boolean)
+    .slice(0, 8); // Extract top 8 core words
+
+  for (const token of titleTokens) {
+    if (["with", "features", "ideally", "located", "stunning", "and", "or", "for"].includes(token)) continue;
+    if (!existingTokens.has(token)) {
+      existingTokens.add(token);
+      parts.push(token);
+    }
+  }
+
+  // 6. Compact Room & Size Specs (4br-5ba-258sqm) - High Priority
+  if (data.bedrooms) addUniqueWords(`${data.bedrooms}br`);
+  if (data.bathrooms) addUniqueWords(`${data.bathrooms}ba`);
+  if (data.size_sqm) addUniqueWords(`${data.size_sqm}sqm`);
+
+  // 7. Special Selling Features & Amenities
+  if (data.is_fully_furnished) addUniqueWords("fully-furnished-ready-to-move-in");
+  if (data.is_pet_friendly) addUniqueWords("pet-friendly");
+  if (data.is_corner_unit) addUniqueWords("corner-unit");
+  if (data.is_renovated) addUniqueWords("renovated");
+  if (data.is_foreigner_quota) addUniqueWords("foreigner-quota");
+  if (data.is_hot_sale) addUniqueWords("hot-deal");
 
   const suffix = Date.now().toString(36).slice(-4);
   const maxBaseLength = 200 - (suffix.length + 1); // 195 chars for base

@@ -6,7 +6,7 @@ import { getServerTranslations } from "@/lib/i18n";
 import { getPublicProjects, type PublicProject } from "@/features/public/projects";
 import { ProjectsHubClient } from "./ProjectsHubClient";
 
-export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 const PAGE_LOCALIZATION: Record<string, Record<string, string>> = {
   breadcrumb_home: { th: "หน้าแรก", en: "Home", cn: "首页", ru: "Главная" },

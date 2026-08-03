@@ -20,7 +20,7 @@ import {
 import type { Locale } from "date-fns";
 import type { Metadata } from "next";
 import Link from "next/link";
-export const revalidate = 86400; // S-Tier Hardening: Revalidate every 24 hours
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 // New modular components
 import { BlogDetailHero } from "@/components/public/blog/BlogDetailHero";

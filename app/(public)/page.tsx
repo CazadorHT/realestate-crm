@@ -93,7 +93,7 @@ const FAQSection = dynamic(
 );
 
 // S-Tier Scaling: Static generation with 5-minute revalidation (Egress Optimized)
-export const revalidate = 300;
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 /**
  * [S-Tier] Hardened Metadata Generator

@@ -515,6 +515,7 @@ export async function createPropertyAction(
     );
     revalidatePath("/");
     revalidatePath("/properties");
+    revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
@@ -753,6 +754,7 @@ export async function duplicatePropertyAction(
 
     revalidatePath("/", "layout");
     revalidatePath("/properties");
+    revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");

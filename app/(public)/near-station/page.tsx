@@ -5,7 +5,7 @@ import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
 import { getTransitLinesWithStations, type TransitLine } from "@/features/public/stations";
 
-export const revalidate = 3600; // 1 hour
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 const PAGE_LOCALIZATION: Record<string, Record<string, string>> = {
   breadcrumb_home: {

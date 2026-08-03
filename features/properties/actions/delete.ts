@@ -149,6 +149,7 @@ export async function deletePropertyAction(formData: FormData) {
 
     revalidatePath("/");
     revalidatePath("/properties");
+    revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");

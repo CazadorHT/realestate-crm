@@ -631,6 +631,7 @@ export async function updatePropertyAction(
     revalidatePath("/");
     revalidatePath(`/properties/${seoData.slug}`);
     revalidatePath("/properties");
+    revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");

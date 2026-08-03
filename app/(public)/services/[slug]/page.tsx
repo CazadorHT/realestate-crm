@@ -23,7 +23,7 @@ import { ServiceViewCounter } from "@/components/services/ServiceViewCounter";
 
 import { getServices } from "@/features/services/actions";
 
-export const revalidate = 86400; // 1 day cache (ISR)
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 export async function generateStaticParams() {
   const res = await getServices(1, 100);
