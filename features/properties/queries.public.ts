@@ -45,7 +45,23 @@ export async function getPublicPropertyWithImagesBySlug(slug: string) {
   const { data, error } = await supabase
     .from("properties")
     .select(`
-      *,
+      id,
+      slug,
+      title,
+      title_en,
+      title_cn,
+      title_ru,
+      price,
+      rental_price,
+      original_price,
+      original_rental_price,
+      listing_type,
+      property_type,
+      bedrooms,
+      bathrooms,
+      size_sqm,
+      popular_area,
+      status,
       property_images (
         id,
         property_id,

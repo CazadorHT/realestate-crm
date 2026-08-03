@@ -343,7 +343,7 @@ export function PropertyGallery({
 
           <div
             ref={scrollRef}
-            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar touch-pan-y"
+            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar touch-pan-x touch-pan-y"
             onScroll={(e) => {
               const scrollLeft = e.currentTarget.scrollLeft;
               const width = e.currentTarget.offsetWidth;
