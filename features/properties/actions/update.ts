@@ -628,10 +628,10 @@ export async function updatePropertyAction(
       console.warn("Post-update side effects partially failed (non-critical):", sideEffectError);
     }
 
-    revalidatePath("/", "layout");
+    revalidatePath("/");
     revalidatePath(`/properties/${seoData.slug}`);
     revalidatePath("/properties");
-    revalidatePath("/sitemap.xml");
+    revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));

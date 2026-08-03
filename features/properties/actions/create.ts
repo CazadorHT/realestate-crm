@@ -513,9 +513,8 @@ export async function createPropertyAction(
         },
       },
     );
-    revalidatePath("/", "layout");
+    revalidatePath("/");
     revalidatePath("/properties");
-    revalidatePath("/sitemap.xml");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");

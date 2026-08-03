@@ -147,9 +147,9 @@ export async function deletePropertyAction(formData: FormData) {
 
     // Clean up TEMP uploads (V3 handled via storage cleanup)
 
-    revalidatePath("/", "layout");
+    revalidatePath("/");
+    revalidatePath("/properties");
     revalidatePath("/protected/properties");
-    revalidatePath("/sitemap.xml");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));

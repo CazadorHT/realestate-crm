@@ -243,7 +243,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
         // Fetch 24 properties to cover initial view with cache revalidation
         const res = await fetch("/api/public/properties?sort=NEWEST&limit=24", {
           signal: controller.signal,
-          next: { revalidate: 3600 },
+          cache: "default",
         });
 
         if (!res.ok) {
@@ -254,11 +254,15 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
         const propertiesArray = data.properties || [];
         if (Array.isArray(propertiesArray) && propertiesArray.length > 0) {
           setProperties(propertiesArray);
+        } else if (initialProperties && initialProperties.length > 0) {
+          setProperties(initialProperties);
         }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
-        // Only show error if we don't have initialProperties to fallback to
-        if (!initialProperties || initialProperties.length === 0) {
+        // Fallback to initialProperties if available
+        if (initialProperties && initialProperties.length > 0) {
+          setProperties(initialProperties);
+        } else {
           setError(t("common.error_loading") || "Failed to load properties. Please try again.");
         }
       } finally {
