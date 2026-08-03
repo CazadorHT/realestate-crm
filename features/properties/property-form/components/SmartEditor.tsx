@@ -30,17 +30,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 
-/** Helper to ensure plain text containing line breaks (\n) is wrapped into HTML paragraphs (<p>) */
+import { formatDescriptionToHtml } from "@/lib/utils/format-description";
+
+/** Helper to ensure plain text containing line breaks or markdown syntax is formatted to HTML */
 function formatInitialContent(val: string): string {
   if (!val) return "";
-  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(val);
-  if (!hasHtmlTags) {
-    return val
-      .split(/\r?\n/)
-      .map((line) => `<p>${line.trim() ? line : "<br>"}</p>`)
-      .join("");
-  }
-  return val;
+  return formatDescriptionToHtml(val);
 }
 
 export function SmartEditor({
@@ -80,6 +75,12 @@ export function SmartEditor({
       },
       transformPastedHTML(html) {
         if (!html) return "";
+
+        // If pasted HTML contains raw Markdown syntax from AI chats (e.g. **bold**, * bullet, # header), format it
+        if (/\*\*|__|\n\s*\*|\n\s*-|^#\s+/m.test(html)) {
+          html = formatDescriptionToHtml(html);
+        }
+
         return html
           .replace(/style="([^"]*)"/gi, (match, styleContent) => {
             const cleaned = styleContent
