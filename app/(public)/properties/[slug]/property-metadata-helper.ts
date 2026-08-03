@@ -75,6 +75,9 @@ export async function generatePropertyMetadataAsync(slug: string): Promise<Metad
   ogUrl.searchParams.set("type", data.property_type ? t(`property_types.${data.property_type.toLowerCase()}`) || data.property_type : "");
   ogUrl.searchParams.set("location", data.popular_area || data.district || "");
   ogUrl.searchParams.set("id", data.id);
+  if (COVER_IMAGE && COVER_IMAGE.startsWith("http")) {
+    ogUrl.searchParams.set("img", COVER_IMAGE);
+  }
   ogUrl.searchParams.set("lang", language);
 
   const DYNAMIC_OG_IMAGE = ogUrl.toString();

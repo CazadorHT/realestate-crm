@@ -515,6 +515,7 @@ export async function createPropertyAction(
     );
     revalidatePath("/", "layout");
     revalidatePath("/properties");
+    revalidatePath("/sitemap.xml");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");

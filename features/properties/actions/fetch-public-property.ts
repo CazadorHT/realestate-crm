@@ -5,10 +5,10 @@ import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { PropertyDetail, ListingType, PropertyType } from "../types";
 import { getListingTypeFromDb, getPropertyTypeFromDb } from "../labels";
 import { type PropertyTransitInfoConsolidated } from "../types";
-import type { 
-  PropertyAmenitiesV3, 
-  PropertyAddressV3, 
-  PropertyPricingV3, 
+import type {
+  PropertyAmenitiesV3,
+  PropertyAddressV3,
+  PropertyPricingV3,
   PropertyImageV3,
   PropertyMetaDataV3,
   PropertyTransitV3
@@ -155,7 +155,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
         const labels = (item.label as Record<string, string>) || {};
         const meta = (item.metadata as Record<string, any>) || {};
         const slug = meta.slug || item.code.toLowerCase().replace(/_/g, "-");
-        
+
         if (labels.th) stationSlugMap.set(labels.th.trim().toLowerCase(), slug);
         if (labels.en) stationSlugMap.set(labels.en.trim().toLowerCase(), slug);
         if (item.code) {
@@ -172,8 +172,8 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
   const details = rawData.details as unknown as {
     title: { th?: string; en?: string; cn?: string; ru?: string };
     description: { th?: string; en?: string; cn?: string; ru?: string };
-    address_info: { 
-      slug?: string; 
+    address_info: {
+      slug?: string;
       popular_area?: string;
       popular_area_en?: string;
       popular_area_cn?: string;
@@ -195,7 +195,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     amenities: PropertyAmenitiesV3;
     pricing_details: PropertyPricingV3;
     meta_data: PropertyMetaDataV3;
-    transit_info?: PropertyTransitInfoConsolidated; 
+    transit_info?: PropertyTransitInfoConsolidated;
   } | null;
 
   const address = details?.address_info || {};
@@ -365,12 +365,12 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     floor_plan_url: rawData.floor_plan_url,
     created_at: rawData.created_at,
     updated_at: rawData.updated_at,
-    
+
     title: getV3Value(details, "title") || "",
     title_en: sanitizeString(details?.title?.en) || null,
     title_cn: sanitizeString(details?.title?.cn) || null,
     title_ru: sanitizeString(details?.title?.ru) || null,
-    
+
     description: getV3Value(details, "description") || "",
     description_en: sanitizeString(details?.description?.en) || null,
     description_cn: sanitizeString(details?.description?.cn) || null,
@@ -399,20 +399,20 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     transit_info: details?.transit_info || null,
     nearby_places: (details?.transit_info as any)?.places || [],
     nearby_transits: (() => {
-      const rawTransits = Array.isArray((details?.transit_info as any)?.transits) 
-        ? (details?.transit_info as any)?.transits 
+      const rawTransits = Array.isArray((details?.transit_info as any)?.transits)
+        ? (details?.transit_info as any)?.transits
         : (Array.isArray(details?.transit_info) ? details.transit_info : []);
 
       return rawTransits.map((t: any) => {
         if (!t) return t;
         const thName = (t.station_name || "").trim().toLowerCase();
         const enName = (t.station_name_en || "").trim().toLowerCase();
-        
+
         let resolvedSlug = t.slug;
         if (!resolvedSlug) {
           resolvedSlug = stationSlugMap.get(thName) || stationSlugMap.get(enName);
         }
-        
+
         if (!resolvedSlug && t.type && (thName || enName)) {
           const typePrefix = String(t.type).toLowerCase().replace(/_/g, "-");
           const namePart = (enName || thName)

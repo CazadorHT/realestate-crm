@@ -3,6 +3,8 @@ import { MetadataRoute } from "next";
 import { createPublicClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/lib/site-config";
 
+export const revalidate = 86400; // Cache Sitemap generation for 24 hours (1 day)
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
   const supabase = createPublicClient();

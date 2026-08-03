@@ -631,6 +631,7 @@ export async function updatePropertyAction(
     revalidatePath("/", "layout");
     revalidatePath(`/properties/${seoData.slug}`);
     revalidatePath("/properties");
+    revalidatePath("/sitemap.xml");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
