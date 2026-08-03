@@ -21,11 +21,19 @@ export function usePropertyData(initialProperties?: ApiProperty[], initialFacets
   const [facets, setFacets] = useState<PropertyFacets | null>(initialFacets || null);
   const [isLoading, setIsLoading] = useState(properties.length === 0);
   const [isRefetching, setIsRefetching] = useState(false);
+  const [limit, setLimit] = useState<number>(36);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
   const abortControllerRef = useRef<AbortController | null>(null);
   const isFirstLoadRef = useRef(true);
 
+  // Reset limit when search parameters change
   useEffect(() => {
-    if (isFirstLoadRef.current && initialProperties && initialProperties.length > 0) {
+    setLimit(36);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (isFirstLoadRef.current && initialProperties && initialProperties.length > 0 && limit === 36) {
       isFirstLoadRef.current = false;
       return;
     }
@@ -45,10 +53,15 @@ export function usePropertyData(initialProperties?: ApiProperty[], initialFacets
       try {
         if (isFirstLoadRef.current && properties.length === 0) {
           setIsLoading(true);
+        } else if (limit > 36 && properties.length > 0) {
+          setIsFetchingMore(true);
         } else {
           setIsRefetching(true);
         }
-        const query = searchParams.toString();
+
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("limit", String(limit));
+        const query = params.toString();
         const url = `/api/public/properties${query ? `?${query}` : ""}`;
 
         const res = await fetch(url, {
@@ -103,6 +116,7 @@ export function usePropertyData(initialProperties?: ApiProperty[], initialFacets
         if (!controller.signal.aborted) {
           setIsLoading(false);
           setIsRefetching(false);
+          setIsFetchingMore(false);
           isFirstLoadRef.current = false;
         }
       }
@@ -119,7 +133,11 @@ export function usePropertyData(initialProperties?: ApiProperty[], initialFacets
         }
       }
     };
-  }, [searchParams, t]);
+  }, [searchParams, limit, t]);
 
-  return { properties, facets, isLoading, isRefetching };
+  const loadMoreProperties = () => {
+    setLimit((prev) => prev + 36);
+  };
+
+  return { properties, facets, isLoading, isRefetching, isFetchingMore, loadMoreProperties };
 }

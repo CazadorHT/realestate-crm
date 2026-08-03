@@ -309,6 +309,9 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             `popular_area.ilike.${pctTerm}`,
             `province.ilike.${pctTerm}`,
             `district.ilike.${pctTerm}`,
+            `project_name.ilike.${pctTerm}`,
+            `address_line1.ilike.${pctTerm}`,
+            `address_line1_en.ilike.${pctTerm}`,
             `meta_keywords.cs.{"${searchTerm}"}`
           ];
 
