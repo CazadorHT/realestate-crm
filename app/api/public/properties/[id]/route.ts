@@ -67,8 +67,15 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json({
-    ...data,
-    cover_image_url: pickCoverImage((data as any).property_images),
-  });
+  return NextResponse.json(
+    {
+      ...data,
+      cover_image_url: pickCoverImage((data as any).property_images),
+    },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=86400",
+      },
+    },
+  );
 }

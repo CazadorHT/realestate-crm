@@ -14,7 +14,7 @@ export async function GET(request: Request) {
       const result = await getPublicProvincesAction();
       return NextResponse.json(result, {
         headers: {
-          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=60",
+          "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=86400",
         },
       });
     }
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     const popularAreas = await getPopularAreasAction(requestedProvince);
     return NextResponse.json(popularAreas, {
       headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=60",
+        "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=86400",
       },
     });
   } catch (e) {

@@ -24,7 +24,7 @@ import Link from "next/link";
 import { ScrollToProperties } from "@/components/public/ScrollToProperties";
 import { PopularAreaTags } from "@/components/public/PopularAreaTags";
 
-export const revalidate = 86400; // 24 hours cache (ISR)
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
   const rawParams: Record<string, any> = {};
