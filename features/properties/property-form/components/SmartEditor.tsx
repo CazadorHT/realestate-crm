@@ -35,7 +35,12 @@ import { formatDescriptionToHtml } from "@/lib/utils/format-description";
 /** Helper to ensure plain text containing line breaks or markdown syntax is formatted to HTML */
 function formatInitialContent(val: string): string {
   if (!val) return "";
-  return formatDescriptionToHtml(val);
+  try {
+    return formatDescriptionToHtml(val);
+  } catch (err) {
+    console.error("formatInitialContent error:", err);
+    return val;
+  }
 }
 
 export function SmartEditor({
@@ -105,7 +110,8 @@ export function SmartEditor({
       // Don't trigger unnecessary re-renders when both are empty
       if (isCurrentEmpty && isValueEmpty) return;
 
-      const formatted = formatInitialContent(value);
+      const stringValue = typeof value === "string" ? value : (typeof value === "object" && value !== null ? ((value as any).description || (value as any).th || JSON.stringify(value)) : String(value || ""));
+      const formatted = formatInitialContent(stringValue);
       if (formatted !== currentHtml) {
         editor.commands.setContent(formatted);
       }

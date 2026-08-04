@@ -6,10 +6,23 @@
  * 3. Already valid HTML content (preserves HTML while formatting embedded markdown syntax like `**bold**`)
  * 4. Mixed/weird formatting (handles orphan markdown asterisks, missing tag closes, etc.)
  */
-export function formatDescriptionToHtml(text: string | null | undefined): string {
-  if (!text || !text.trim()) return "";
+export function formatDescriptionToHtml(text: unknown): string {
+  if (!text) return "";
 
-  let input = text.trim();
+  let inputStr = "";
+  if (typeof text === "string") {
+    inputStr = text;
+  } else if (typeof text === "object") {
+    // Handle object values (e.g. AI generator JSON output or locale objects)
+    const obj = text as Record<string, any>;
+    inputStr = obj.description || obj.th || obj.en || JSON.stringify(text);
+  } else {
+    inputStr = String(text);
+  }
+
+  if (!inputStr || typeof inputStr !== "string" || !inputStr.trim()) return "";
+
+  let input = inputStr.trim();
 
   // Check if text already contains block HTML tags
   const hasBlockHtml = /<\/(p|div|ul|ol|li|h[1-6]|table|blockquote)>|<br\s*\/?>/i.test(input);
