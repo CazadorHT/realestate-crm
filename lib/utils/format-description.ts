@@ -16,7 +16,7 @@ export function formatDescriptionToHtml(text: string | null | undefined): string
 
   if (!hasBlockHtml) {
     // 1. Convert inline markdown bullets (e.g. "text * **key:** val * **key2:** val") into newlines
-    input = input.replace(/(?<=\S)\s+[\*\-•]\s+(?=\*\*|[^\s\*])/g, "\n* ");
+    input = input.replace(/(?<=\S)\s+\*\s+(?=\*\*|[^\s\*])/g, "\n* ");
 
     // Split into lines
     const lines = input.split(/\r?\n/);
@@ -35,7 +35,7 @@ export function formatDescriptionToHtml(text: string | null | undefined): string
       }
 
       // Horizontal rule (--- or *** or ___)
-      if (/^(---|\\*\\*\\*|___)$/.test(trimmed)) {
+      if (/^(---|[*]{3}|___)$/.test(trimmed)) {
         if (inList) { resultHtmlLines.push("</ul>"); inList = false; }
         resultHtmlLines.push("<hr class=\"my-4 border-slate-200\" />");
         continue;
@@ -57,10 +57,9 @@ export function formatDescriptionToHtml(text: string | null | undefined): string
       }
 
       // Bullet lists (* item, - item, • item, or 📍/✅/🔹 emoji bullets)
-      const listMatch = formattedLine.match(/^([\*\-•]|[\u2000-\u3300\ud83c-\udfff]\s*)\s+(.*)$/);
-      const isBullet = listMatch && (["*", "-", "•"].includes(listMatch[1]) || listMatch[0].startsWith("* "));
+      const listMatch = formattedLine.match(/^([\*\-•])\s+(.*)$/);
 
-      if (isBullet && listMatch) {
+      if (listMatch) {
         if (!inList) {
           resultHtmlLines.push("<ul>");
           inList = true;
