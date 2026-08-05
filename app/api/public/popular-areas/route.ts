@@ -14,7 +14,7 @@ export async function GET(request: Request) {
       const result = await getPublicProvincesAction();
       return NextResponse.json(result, {
         headers: {
-          "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=86400",
+          "Cache-Control": "public, max-age=300, s-maxage=31536000, stale-while-revalidate=86400",
         },
       });
     }

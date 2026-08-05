@@ -328,7 +328,7 @@ export async function GET(req: NextRequest) {
       if (imageResponse && imageResponse.headers) {
         imageResponse.headers.set(
           "Cache-Control",
-          "public, s-maxage=31536000, stale-while-revalidate=86400",
+          "public, max-age=86400, s-maxage=31536000, stale-while-revalidate=86400",
         );
       }
     } catch (e) {
