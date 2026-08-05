@@ -30,6 +30,8 @@ export interface PropertyFacets {
     isHotDeal: number;
     allowAirbnb: number;
   };
+  availablePrices?: Record<string, number>;
+  availableSizes?: Record<string, number>;
 }
 
 export interface PropertySearchResponse {

@@ -59,6 +59,8 @@ export function PropertySearchPage({
     availableListingTypes,
     availableQuickFilters,
     availableBedrooms,
+    availablePrices,
+    availableSizes,
     availableStations,
     allStations,
     matchesFilters,
@@ -160,6 +162,8 @@ export function PropertySearchPage({
         availableTypes={availableTypes}
         availableListingTypes={availableListingTypes}
         availableQuickFilters={availableQuickFilters}
+        availablePrices={availablePrices}
+        availableSizes={availableSizes}
         availableBedrooms={availableBedrooms}
         availableStations={availableStations}
         allStations={allStations}

@@ -324,6 +324,8 @@ export function usePropertyFiltering(
         name_cn: val.name_cn,
         name_ru: val.name_ru
       })),
+      availablePrices: undefined as Record<string, number> | undefined,
+      availableSizes: undefined as Record<string, number> | undefined,
     };
   }, [properties, checkMatch, sort, listingType, priceType]);
 
@@ -353,6 +355,8 @@ export function usePropertyFiltering(
             ...serverFacets.availableQuickFilters,
           }
         : results.availableQuickFilters,
+      availablePrices: serverFacets.availablePrices || undefined,
+      availableSizes: serverFacets.availableSizes || undefined,
     };
   }, [results, serverFacets]);
 

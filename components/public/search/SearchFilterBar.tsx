@@ -75,6 +75,8 @@ interface SearchFilterBarProps {
     name_cn?: string | null;
     name_ru?: string | null;
   }[];
+  availablePrices?: Record<string, number>;
+  availableSizes?: Record<string, number>;
   allStations?: {
     name: string;
     type: string;
@@ -137,6 +139,8 @@ export function SearchFilterBar({
   availableQuickFilters,
   availableBedrooms,
   availableStations,
+  availablePrices,
+  availableSizes,
   allStations,
   properties,
   matchesFilters,
@@ -196,9 +200,20 @@ export function SearchFilterBar({
 
   // Compute counts per price option
   const priceCounts = useMemo(() => {
-    if (!properties || !matchesFilters) return new Map<string, number>();
     const counts = new Map<string, number>();
     const opts = flatPriceOptions.filter((o: any) => o.min !== "" || o.max !== "");
+
+    if (availablePrices && Object.keys(availablePrices).length > 0) {
+      opts.forEach((opt: any) => {
+        const key = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
+        if (key in availablePrices) {
+          counts.set(key, availablePrices[key]);
+        }
+      });
+      return counts;
+    }
+
+    if (!properties || !matchesFilters) return counts;
     
     properties.forEach((p: any) => {
       // Apply all filters EXCEPT price
@@ -228,7 +243,7 @@ export function SearchFilterBar({
       });
     });
     return counts;
-  }, [properties, matchesFilters, flatPriceOptions]);
+  }, [properties, matchesFilters, flatPriceOptions, availablePrices]);
 
   const sizeOptions = useMemo(() => {
     const isEn = language === "en";
@@ -248,9 +263,20 @@ export function SearchFilterBar({
 
   // Compute counts per size option
   const sizeCounts = useMemo(() => {
-    if (!properties || !matchesFilters) return new Map<string, number>();
     const counts = new Map<string, number>();
     const opts = sizeOptions.filter((o) => o.min !== "" || o.max !== "");
+
+    if (availableSizes && Object.keys(availableSizes).length > 0) {
+      opts.forEach((opt) => {
+        const key = `${opt.min}-${opt.max}`;
+        if (key in availableSizes) {
+          counts.set(key, availableSizes[key]);
+        }
+      });
+      return counts;
+    }
+
+    if (!properties || !matchesFilters) return counts;
 
     properties.forEach((p: any) => {
       // Apply all filters EXCEPT size
@@ -269,7 +295,7 @@ export function SearchFilterBar({
       });
     });
     return counts;
-  }, [properties, matchesFilters, sizeOptions]);
+  }, [properties, matchesFilters, sizeOptions, availableSizes]);
 
   const currentPriceOption =
     flatPriceOptions.find(

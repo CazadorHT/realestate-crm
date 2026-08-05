@@ -385,7 +385,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         }
 
         let facets: PropertyFacets | null = null;
-        if (options.includeFacets) {
+        if (options.includeFacets !== false) {
           const rpcParams = {
             p_q: options.q || undefined,
             p_province: options.province || undefined,
@@ -396,12 +396,14 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           facets = (facetData as unknown) as PropertyFacets | null;
         }
 
+        const facetAreas = Object.keys(facets?.availableAreas || {});
         const popularAreaNames = Array.from(
-          new Set(
-            (propertiesData || [])
+          new Set([
+            ...facetAreas,
+            ...(propertiesData || [])
               .map((row: any) => row.popular_area)
               .filter((area: string | null): area is string => !!area),
-          ),
+          ])
         );
         const areaTranslationsMap = new Map<
           string,
