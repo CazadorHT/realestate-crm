@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,13 @@ export function PaginationControls({
   const searchParams = useSearchParams();
   const { t } = useLanguage();
   const isCRM = pathname?.includes("/protected");
+
+  const [isPending, startTransition] = useTransition();
+  const [targetPage, setTargetPage] = useState<number | null>(null);
+
+  useEffect(() => {
+    setTargetPage(null);
+  }, [currentPage, searchParams]);
 
   // Helper to force Thai for CRM, otherwise use context language
   const T = (key: string, params?: Record<string, string | number>): string => {
@@ -50,10 +58,13 @@ export function PaginationControls({
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    const params = new URLSearchParams(searchParams);
-    params.set("page", page.toString());
-    router.replace(`${pathname}?${params.toString()}#table`, { scroll: false });
+    if (page < 1 || page > totalPages || page === currentPage || isPending) return;
+    setTargetPage(page);
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams);
+      params.set("page", page.toString());
+      router.replace(`${pathname}?${params.toString()}#table`, { scroll: false });
+    });
   };
 
   const getPageNumbers = () => {
@@ -111,11 +122,15 @@ export function PaginationControls({
           variant="ghost"
           size="sm"
           onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage <= 1}
-          className="h-8 w-8 sm:h-9 sm:w-auto px-0 sm:px-3 text-slate-600 hover:bg-white hover:text-blue-600 transition-all rounded-lg"
+          disabled={currentPage <= 1 || isPending}
+          className="h-8 w-8 sm:h-9 sm:w-auto px-0 sm:px-3 text-slate-600 hover:bg-white hover:text-blue-600 transition-all rounded-lg disabled:opacity-50"
           title={T("common.back")}
         >
-          <ChevronLeft className="h-4 w-4 sm:mr-1.5" />
+          {isPending && targetPage === currentPage - 1 ? (
+            <Loader2 className="h-4 w-4 animate-spin sm:mr-1.5" />
+          ) : (
+            <ChevronLeft className="h-4 w-4 sm:mr-1.5" />
+          )}
           <span className="hidden sm:inline">{T("common.back")}</span>
         </Button>
 
@@ -134,20 +149,28 @@ export function PaginationControls({
             }
 
             const isCurrent = page === currentPage;
+            const isLoadingThisPage = isPending && targetPage === page;
+
             return (
               <Button
                 key={`page-${page}`}
                 variant={isCurrent ? "default" : "ghost"}
                 size="sm"
                 onClick={() => handlePageChange(page as number)}
+                disabled={isPending}
                 className={cn(
                   "w-8 h-8 sm:w-9 sm:h-9 p-0 rounded-lg text-xs sm:text-sm transition-all font-medium",
                   isCurrent
                     ? "bg-blue-600 text-white shadow-md hover:bg-blue-700 pointer-events-none scale-105"
                     : "text-slate-600 hover:bg-white hover:text-blue-600 border border-transparent hover:border-slate-100",
+                  isLoadingThisPage && "bg-blue-50 text-blue-600 border-blue-200"
                 )}
               >
-                {page}
+                {isLoadingThisPage ? (
+                  <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                ) : (
+                  page
+                )}
               </Button>
             );
           })}
@@ -158,12 +181,16 @@ export function PaginationControls({
           variant="ghost"
           size="sm"
           onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage >= totalPages}
-          className="h-8 w-8 sm:h-9 sm:w-auto px-0 sm:px-3 text-slate-600 hover:bg-white hover:text-blue-600 transition-all rounded-lg"
+          disabled={currentPage >= totalPages || isPending}
+          className="h-8 w-8 sm:h-9 sm:w-auto px-0 sm:px-3 text-slate-600 hover:bg-white hover:text-blue-600 transition-all rounded-lg disabled:opacity-50"
           title={T("common.next")}
         >
           <span className="hidden sm:inline">{T("common.next")}</span>
-          <ChevronRight className="h-4 w-4 sm:ml-1.5" />
+          {isPending && targetPage === currentPage + 1 ? (
+            <Loader2 className="h-4 w-4 animate-spin sm:ml-1.5" />
+          ) : (
+            <ChevronRight className="h-4 w-4 sm:ml-1.5" />
+          )}
         </Button>
       </div>
     </div>
