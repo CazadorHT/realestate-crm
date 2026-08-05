@@ -21,6 +21,15 @@ export interface PropertyFacets {
     name_ru: string | null;
     type: string;
   }>;
+  availableQuickFilters?: {
+    nearTrain: number;
+    petFriendly: number;
+    fullyFurnished: number;
+    isForeigner: number;
+    companyRegistered: number;
+    isHotDeal: number;
+    allowAirbnb: number;
+  };
 }
 
 export interface PropertySearchResponse {

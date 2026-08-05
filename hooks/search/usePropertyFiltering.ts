@@ -347,6 +347,12 @@ export function usePropertyFiltering(
       availableStations: serverStations.length > 0 ? serverStations : results.availableStations,
       availableTypes: serverFacets.availableTypes || results.availableTypes,
       availableListingTypes: serverFacets.availableListingTypes || results.availableListingTypes,
+      availableQuickFilters: serverFacets.availableQuickFilters
+        ? {
+            ...results.availableQuickFilters,
+            ...serverFacets.availableQuickFilters,
+          }
+        : results.availableQuickFilters,
     };
   }, [results, serverFacets]);
 
