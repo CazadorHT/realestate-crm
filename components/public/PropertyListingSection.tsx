@@ -230,20 +230,19 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
     const controller = new AbortController();
 
     async function loadProperties() {
-      // If we have initialProperties (12 items) from server, we show them immediately
-      // But we still fetch 100 items in the background to populate the full filters
       const isInitialFetch = reloadKey === 0 && initialProperties && initialProperties.length > 0;
+      if (isInitialFetch) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
-        if (!isInitialFetch) {
-          setIsLoading(true);
-        }
+        setIsLoading(true);
         setError(null);
 
         // Fetch 24 properties to cover initial view with cache revalidation
         const res = await fetch("/api/public/properties?sort=NEWEST&limit=24", {
           signal: controller.signal,
-          cache: "no-cache",
         });
 
         if (!res.ok) {

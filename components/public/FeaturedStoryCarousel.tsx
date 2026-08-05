@@ -52,10 +52,11 @@ export function FeaturedStoryCarousel({
 
   // Client-side refresh: fetch latest properties to ensure new ones appear immediately
   useEffect(() => {
+    if (initialProperties && initialProperties.length > 0) return;
+
     const controller = new AbortController();
     fetch("/api/public/properties?sort=NEWEST&limit=6", {
       signal: controller.signal,
-      cache: "no-cache",
     })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
