@@ -30,6 +30,7 @@ export type LeadWithJoins = LeadRow & {
   ai_status_label?: string | null;
   utm_source?: string | null;
   deals_count?: number | null;
+  interaction_count?: number;
   tenants?: {
     name: string;
   } | null;

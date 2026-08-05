@@ -48,7 +48,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   let query = supabase
     .from("crm_leads_v3")
-    .select("id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone)", { count: "exact" });
+    .select("id, identity_id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(id, display_name, email, phone)", { count: "exact" });
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -76,13 +76,33 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   if (error) throw new Error(mapDbError(error));
 
-  const leads = (data || []).map((l: any) => ({
+  const rawLeads = (data || []).map((l: any) => ({
     ...l,
     full_name: decrypt(l.identity?.display_name) || "Unknown",
     phone: decrypt(l.identity?.phone) || null,
     email: decrypt(l.identity?.email) || null,
     note: l.ai_summary || null,
-  })) as unknown as LeadWithJoins[];
+  }));
+
+  // Group by identity_id/full_name so each unique customer appears once in the leads table
+  const uniqueLeadsMap = new Map<string, any>();
+  const interactionCounts: Record<string, number> = {};
+
+  rawLeads.forEach((l) => {
+    const key = l.identity_id || l.identity?.id || l.full_name;
+    interactionCounts[key] = (interactionCounts[key] || 0) + 1;
+    if (!uniqueLeadsMap.has(key)) {
+      uniqueLeadsMap.set(key, l);
+    }
+  });
+
+  const leads = Array.from(uniqueLeadsMap.values()).map((l) => {
+    const key = l.identity_id || l.identity?.id || l.full_name;
+    return {
+      ...l,
+      interaction_count: interactionCounts[key] || 1,
+    };
+  }) as unknown as LeadWithJoins[];
   const leadIds = leads.map((l) => l.id);
 
   // fetch deals for these leads and compute counts client-side

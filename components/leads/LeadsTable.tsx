@@ -338,14 +338,21 @@ export function LeadsTable({
                             <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                           </div>
                         )}
-                        <div
-                          className="underline cursor-pointer hover:text-blue-900 transition-colors"
-                          onClick={() => {
-                            setNavigatingId(l.id);
-                            router.push(`/protected/leads/${l.id}`);
-                          }}
-                        >
-                          {l.full_name}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <div
+                            className="underline cursor-pointer hover:text-blue-900 transition-colors"
+                            onClick={() => {
+                              setNavigatingId(l.id);
+                              router.push(`/protected/leads/${l.id}`);
+                            }}
+                          >
+                            {l.full_name}
+                          </div>
+                          {l.interaction_count && l.interaction_count > 1 && (
+                            <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-md border border-blue-200/60 whitespace-nowrap">
+                              ติดต่อ {l.interaction_count} ครั้ง
+                            </span>
+                          )}
                         </div>
                       </div>
                       {l.created_at &&
