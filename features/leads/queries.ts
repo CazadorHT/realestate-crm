@@ -43,7 +43,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   const stage = (args.stage ?? "").trim();
   const source = (args.source ?? "").trim();
   const page = Math.max(1, args.page ?? 1);
-  const pageSize = Math.min(200, Math.max(5, args.pageSize ?? 10));
+  const pageSize = Math.min(200, Math.max(5, args.pageSize ?? 100));
   const sortOrder = args.sortOrder ?? "desc";
 
   let query = supabase
@@ -84,12 +84,20 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     note: l.ai_summary || null,
   }));
 
-  // Group by identity_id/full_name so each unique customer appears once in the leads table
+  // Group by name/phone so each unique customer appears once in the leads table
   const uniqueLeadsMap = new Map<string, any>();
   const interactionCounts: Record<string, number> = {};
 
+  const getLeadKey = (l: any) => {
+    const cleanName = (l.full_name || "").toLowerCase().trim();
+    const cleanPhone = (l.phone || "").trim();
+    if (cleanPhone && cleanPhone !== "-") return `phone:${cleanPhone}`;
+    if (cleanName && cleanName !== "unknown") return `name:${cleanName}`;
+    return `id:${l.identity_id || l.id}`;
+  };
+
   rawLeads.forEach((l) => {
-    const key = l.identity_id || l.identity?.id || l.full_name;
+    const key = getLeadKey(l);
     interactionCounts[key] = (interactionCounts[key] || 0) + 1;
     if (!uniqueLeadsMap.has(key)) {
       uniqueLeadsMap.set(key, l);
@@ -97,7 +105,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   });
 
   const leads = Array.from(uniqueLeadsMap.values()).map((l) => {
-    const key = l.identity_id || l.identity?.id || l.full_name;
+    const key = getLeadKey(l);
     return {
       ...l,
       interaction_count: interactionCounts[key] || 1,
