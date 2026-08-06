@@ -22,6 +22,8 @@ export const CSP_DIRECTIVES = {
     "blob:",
     "data:",
     "https://*.supabase.co",
+    "https://cdn.vccasset.com",
+    "https://*.vccasset.com",
     "https://images.unsplash.com",
     "https://api.dicebear.com",
     "https://www.google-analytics.com",

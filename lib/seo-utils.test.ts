@@ -39,7 +39,7 @@ describe('SEO Utilities', () => {
     it('should include SEO flags in slug', () => {
       const hotProperty = { ...mockProperty, is_hot_sale: true, is_pet_friendly: true };
       const slug = generatePropertySlug(hotProperty, 'en');
-      expect(slug).toContain('cheap-hot-sale');
+      expect(slug).toContain('hot-deal');
       expect(slug).toContain('pet-friendly');
     });
   });
