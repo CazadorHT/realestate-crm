@@ -453,7 +453,7 @@ export async function markAsPaidAction(
     // Fetch adjustments explicitly from financial_ledger_v3
     const { data: adjustmentsData } = await supabase
       .from("financial_ledger_v3")
-      .select("*")
+      .select("id, reference_id, amount, entry_type, note, created_at")
       .eq("reference_entity", "COMMISSION")
       .eq("reference_id", commissionId);
     const adjustments = (adjustmentsData as any[]) || [];
@@ -958,7 +958,7 @@ export async function getAgentWalletStatsAction(agentId: string): Promise<{
     const { data: ledgerData } = commissionIds.length > 0
       ? await supabase
           .from("financial_ledger_v3")
-          .select("*")
+          .select("id, reference_id, amount, entry_type, note, created_at")
           .eq("reference_entity", "COMMISSION")
           .in("reference_id", commissionIds)
       : { data: [] };
@@ -1127,7 +1127,7 @@ export async function bulkMarkAsPaidAction(
       // Fetch adjustments explicitly from financial_ledger_v3
       const { data: adjustmentsData } = await supabase
         .from("financial_ledger_v3")
-        .select("*")
+        .select("id, reference_id, amount, entry_type, note, created_at")
         .eq("reference_entity", "COMMISSION")
         .eq("reference_id", commissionId);
       const adjustments = (adjustmentsData as any[]) || [];

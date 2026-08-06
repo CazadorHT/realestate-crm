@@ -151,7 +151,9 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
     const { tenantId, user, role } = await requireAuthContext();
     const adminSupabase = createAdminClient();
 
-    let query = adminSupabase.from("system_task_queue").select("*");
+    let query = adminSupabase
+      .from("system_task_queue")
+      .select("id, task_type, payload, status, result, error_message, run_at, attempts, created_at, updated_at");
 
     const { data, error } = await query
       .order("run_at", { ascending: false })
@@ -202,7 +204,7 @@ export async function getBackgroundTaskByIdAction(id: string): Promise<Backgroun
 
     const { data, error } = await adminSupabase
       .from("system_task_queue")
-      .select("*")
+      .select("id, task_name, status, payload, error_log, run_at, completed_at")
       .eq("id", id)
       .single();
 
@@ -252,7 +254,7 @@ export async function cancelBackgroundTaskAction(id: string): Promise<Background
     // ดึงข้อมูลปัจจุบันเพื่อเช็คสิทธิ์ก่อนยกเลิก
     const { data: currentTask, error: fetchError } = await adminSupabase
       .from("system_task_queue")
-      .select("*")
+      .select("id, payload, status")
       .eq("id", id)
       .single();
     if (fetchError || !currentTask) {

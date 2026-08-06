@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("properties")
-      .select("*")
+      .select("id, slug, title, title_en, property_type, listing_type, price, rental_price, bedrooms, bathrooms, size_sqm, status, created_at")
       .eq("id", id)
       .maybeSingle();
 
