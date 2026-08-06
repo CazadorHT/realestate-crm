@@ -93,28 +93,23 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       const arrayBuffer = await file.arrayBuffer();
       const inputBuffer = Buffer.from(arrayBuffer);
 
-      // Resize and optional watermark composite
+      // Resize to HD (max width 1400px) and compress to WebP (82% quality)
       let sharpImg = sharp(inputBuffer)
         .resize({
-          width: 1920,
+          width: 1400,
           withoutEnlargement: true,
           fit: "inside",
         });
 
       if (watermark === "true") {
         const svgWatermark = Buffer.from(
-          `<svg width="70" height="70" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="vccGradFav" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08"/>
-                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.04"/>
-              </linearGradient>
-            </defs>
-            <g transform="translate(10, 10) scale(0.6)">
-              <!-- VCC Brand Isometric Icon Watermark (No font needed) -->
-              <path d="M0 30l40-20v60l-40 20z" fill="#ffffff" fill-opacity="0.05"/>
-              <path d="M40 10l40 20v60l-40-20z" fill="url(#vccGradFav)"/>
-              <path d="M0 30l40-20 40 20-40 20z" fill="#ffffff" fill-opacity="0.06"/>
+          `<svg width="150" height="48" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100%" height="100%" rx="8" fill="#000000" fill-opacity="0.35"/>
+            <g transform="translate(10, 8)">
+              <!-- Isometric VCC Logo Icon -->
+              <path d="M0 16l16-8v24l-16 8z" fill="#ffffff" fill-opacity="0.9"/>
+              <path d="M16 8l16 8v24l-16-8z" fill="#3b82f6" fill-opacity="0.9"/>
+              <path d="M0 16l16-8 16 8-16 8z" fill="#60a5fa" fill-opacity="0.9"/>
             </g>
           </svg>`
         );
@@ -127,7 +122,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       }
 
       processedBuffer = await sharpImg
-        .webp({ quality: 80 })
+        .webp({ quality: 82, effort: 6 })
         .toBuffer();
 
       fileName = `${randomUUID()}.webp`;
@@ -166,7 +161,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
     const { error: uploadError } = await adminSupabase.storage
       .from(PROPERTY_IMAGES_BUCKET)
       .upload(path, processedBuffer, {
-        cacheControl: "3600",
+        cacheControl: "31536000",
         upsert: false,
         contentType: finalFileType,
       });

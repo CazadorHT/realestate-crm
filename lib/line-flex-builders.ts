@@ -1308,6 +1308,131 @@ export function buildDepositFlex(lang: BotLang = "th"): FlexMessage {
 }
 
 // ============================
+// Deposit Interactive Flow Builders
+// ============================
+export function buildDepositTransactionTypeQuickReply(lang: BotLang = "th"): {
+  type: "text";
+  text: string;
+  quickReply: QuickReply;
+} {
+  const titleMap: Record<BotLang, string> = {
+    th: "ยินดีให้บริการฝากขาย/ฝากเช่าครับ 📝\n\nคุณลูกค้าต้องการเลือกประเภทประกาศแบบไหนครับ?",
+    en: "Glad to assist with listing your property 📝\nWhich type of listing would you like?",
+    cn: "很高兴为您提供房产委托服务 📝\n请问您想选择哪种发布类型？",
+    ru: "Рады помочь с размещением объекта 📝\nКакой тип объявления вас интересует?",
+  };
+
+  return {
+    type: "text",
+    text: titleMap[lang] || titleMap["th"],
+    quickReply: {
+      items: [
+        {
+          type: "action",
+          action: {
+            type: "message",
+            label: lang === "th" ? "🔵 ฝากเช่า" : "🔵 Rent",
+            text: "ฝากเช่า",
+          },
+        },
+        {
+          type: "action",
+          action: {
+            type: "message",
+            label: lang === "th" ? "🔴 ฝากขาย" : "🔴 Sale",
+            text: "ฝากขาย",
+          },
+        },
+        {
+          type: "action",
+          action: {
+            type: "message",
+            label: lang === "th" ? "🟣 ฝากขาย/เช่า" : "🟣 Sale & Rent",
+            text: "ฝากขาย/เช่า",
+          },
+        },
+      ],
+    },
+  };
+}
+
+export function buildDepositPropertyTypeQuickReply(
+  txType: string,
+  lang: BotLang = "th",
+): { type: "text"; text: string; quickReply: QuickReply } {
+  const titleMap: Record<BotLang, string> = {
+    th: `คุณลูกค้าสนใจฝาก [${txType}] อสังหาริมทรัพย์ประเภทไหนครับ? 🏢`,
+    en: `What type of property would you like to [${txType}]? 🏢`,
+    cn: `您想[${txType}]哪种类型的房产？🏢`,
+    ru: `Какой тип недвижимости вы хотите [${txType}]? 🏢`,
+  };
+
+  const types = [
+    { label: "🏢 คอนโด", val: "คอนโด" },
+    { label: "🏡 บ้านเดี่ยว", val: "บ้านเดี่ยว" },
+    { label: "🏠 ทาวน์โฮม", val: "ทาวน์โฮม" },
+    { label: "🏢 ออฟฟิศ/สำนักงาน", val: "ออฟฟิศ/สำนักงาน" },
+    { label: "🏬 อาคารพาณิชย์", val: "อาคารพาณิชย์" },
+    { label: "🏭 โกดัง/โรงงาน", val: "โกดัง/โรงงาน" },
+    { label: "🏞️ ที่ดิน", val: "ที่ดิน" },
+  ];
+
+  return {
+    type: "text",
+    text: titleMap[lang] || titleMap["th"],
+    quickReply: {
+      items: types.map((t) => ({
+        type: "action" as const,
+        action: {
+          type: "message" as const,
+          label: t.label.slice(0, 20),
+          text: `ฝาก${txType}:${t.val}`,
+        },
+      })),
+    },
+  };
+}
+
+export function buildDepositSummaryMessage(
+  txType: string,
+  propType: string,
+  lang: BotLang = "th",
+): { type: "text"; text: string; quickReply: QuickReply } {
+  const textTH = `รับทราบครับ! สนใจฝาก [${txType}] ประเภท [${propType}] นะครับ 😊
+
+เพื่อให้ประเมินราคาได้เร็วขึ้น รบกวนส่งข้อมูลเพิ่มเติมทิ้งไว้ได้เลยครับ:
+
+• ทำเล / ย่านที่ตั้ง (หรือชื่อโครงการ)
+
+• ขนาดพื้นที่ (ตร.ม.)
+
+• ราคาที่ตั้งไว้
+
+• รูปถ่าย / สิ่งอำนวยความสะดวก
+
+*(หากไม่สะดวกส่งข้อมูล ระบบรับเรื่องไว้แล้ว เดี๋ยวเจ้าหน้าที่ติดต่อกลับครับ)*
+
+เดี๋ยวทางเราสรุปข้อมูลและให้แอดมินรีบจัดการให้ครับ!`;
+
+  return {
+    type: "text",
+    text: textTH,
+    quickReply: {
+      items: [
+        {
+          type: "action",
+          action: {
+            type: "message",
+            label: "📞 ติดต่อเจ้าหน้าที่",
+            text: "ติดต่อเจ้าหน้าที่",
+          },
+        },
+      ],
+    },
+  };
+}
+
+// ============================
 // No Results Message
 // ============================
 export function buildNoResultsMessage(
@@ -1989,6 +2114,97 @@ export function buildSocialPostFlex(
   return {
     type: "flex",
     altText: `แชร์ทรัพย์: ${title}`,
+    contents: bubble,
+  };
+}
+
+/**
+ * 🤝 Handover Confirmation Card (Beautiful Flex Message)
+ */
+export function buildHandoverConfirmFlex(lang: BotLang = "th"): FlexMessage {
+  const titles: Record<BotLang, string> = {
+    th: "รับเรื่องเรียบร้อยแล้วครับ 🙏",
+    en: "Request Received! 🙏",
+    cn: "已收到您的请求！🙏",
+    ru: "Запрос получен! 🙏",
+  };
+
+  const subtitles: Record<BotLang, string> = {
+    th: "แอดมินได้รับข้อมูลแล้ว และจะติดต่อกลับโดยเร็วที่สุดครับ",
+    en: "Our agent has been notified and will contact you shortly.",
+    cn: "我们的客服已收到通知，将尽快与您联系。",
+    ru: "Наш агент уведомлен и свяжется с вами в ближайшее время.",
+  };
+
+  const badgeTexts: Record<BotLang, string> = {
+    th: "🟢 เจ้าหน้าที่จะติดต่อกลับโดยเร็ว",
+    en: "🟢 Staff Will Contact You",
+    cn: "🟢 客服即将回复",
+    ru: "🟢 Агент ответит вам",
+  };
+
+  const bubble: FlexBubble = {
+    type: "bubble",
+    size: "mega",
+    body: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "lg",
+      contents: [
+        {
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "text",
+              text: badgeTexts[lang] || badgeTexts["th"],
+              size: "xs",
+              color: "#10B981",
+              weight: "bold",
+            },
+          ],
+        },
+        {
+          type: "text",
+          text: titles[lang] || titles["th"],
+          weight: "bold",
+          size: "lg",
+          color: "#1E3A5F",
+          margin: "md",
+        },
+        {
+          type: "text",
+          text: subtitles[lang] || subtitles["th"],
+          size: "sm",
+          color: "#475569",
+          wrap: true,
+          margin: "sm",
+        },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "md",
+      contents: [
+        {
+          type: "button",
+          style: "secondary",
+          height: "sm",
+          action: {
+            type: "uri",
+            label: "🌐 เข้าชมเว็บไซต์",
+            uri: siteConfig.url,
+          },
+          color: "#F1F5F9",
+        },
+      ],
+    },
+  };
+
+  return {
+    type: "flex",
+    altText: titles[lang] || titles["th"],
     contents: bubble,
   };
 }

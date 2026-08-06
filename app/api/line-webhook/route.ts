@@ -27,6 +27,10 @@ import {
   buildNoResultsMessage,
   buildLanguageSelection,
   buildSearchResultText,
+  buildHandoverConfirmFlex,
+  buildDepositTransactionTypeQuickReply,
+  buildDepositPropertyTypeQuickReply,
+  buildDepositSummaryMessage,
   type AreaTranslations,
   type PropertyForFlex,
   t,
@@ -402,8 +406,76 @@ async function handlePostbackEvent(
   }
 
   if (action === "contact") {
-    const msg = buildContactInfoMessage(lang);
-    await replyMessage(event.replyToken, [msg]);
+    // 1. ตอบกลับการ์ด Flex Message ตกลงจะติดต่อกลับอย่างสวยงาม
+    const confirmCard = buildHandoverConfirmFlex(lang);
+    await replyMessage(event.replyToken, [confirmCard]);
+
+    // 2. ดึง/สร้าง Lead เพื่อทำการ Pause Bot
+    const supabase = createAdminClient();
+    const lineIdHash = generateBlindIndex(userId);
+    let activeLeadId: string | undefined;
+
+    if (lineIdHash) {
+      const { data: leadRow } = await supabase
+        .from("crm_leads_v3")
+        .select("id, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name)")
+        .eq("identity.social_links->>line_id_hash", lineIdHash)
+        .maybeSingle();
+
+      if (leadRow) {
+        activeLeadId = leadRow.id;
+        const currentUtmData = (leadRow.utm_data as Record<string, any>) || {};
+        const currentPrefs = currentUtmData.preferences || {};
+
+        await supabase
+          .from("crm_leads_v3")
+          .update({
+            utm_data: {
+              ...currentUtmData,
+              preferences: {
+                ...currentPrefs,
+                bot_paused: true,
+                bot_paused_at: new Date().toISOString(),
+              },
+            },
+          })
+          .eq("id", leadRow.id);
+      }
+    }
+
+    // 3. ดึงโปรไฟล์ผู้ใช้งานสำหรับแจ้งเตือน
+    let displayName = "ลูกค้า LINE";
+    try {
+      const profile = await getLineProfile(userId);
+      if (profile?.displayName) {
+        displayName = profile.displayName;
+      }
+    } catch (pErr) {
+      console.warn("[HANDOVER] Could not fetch LINE profile on postback:", pErr);
+    }
+
+    // 4. แจ้งเตือน LINE Admin
+    try {
+      const adminAlert = `🚨 [ลูกค้ากดปุ่มขอคุยกับแอดมิน]\n\nผู้ติดต่อ: ${displayName}\n(ระบบหยุดการตอบของบอทให้อัตโนมัติแล้ว กรุณาเข้าตอบแชทครับ)`;
+      await sendLineNotification(adminAlert);
+    } catch (lineErr) {
+      console.error("[HANDOVER] LINE Notification failed:", lineErr);
+    }
+
+    // 5. แจ้งเตือน Telegram Admin
+    try {
+      const safeDisplayName = displayName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const tgMessage = `🚨 <b>ลูกค้ากดปุ่มขอติดต่อเจ้าหน้าที่!</b>\n\n<b>ผู้ติดต่อ:</b> ${safeDisplayName}\n\n<i>(ระบบหยุดบอทตอบให้อัตโนมัติแล้ว)</i>`;
+      const tgKeyboard = buildLeadActionKeyboard(activeLeadId || "", null);
+
+      await sendAdminNotification(tgMessage, {
+        parseMode: "HTML",
+        replyMarkup: tgKeyboard,
+      });
+    } catch (tgErr) {
+      console.error("[HANDOVER] Telegram Notification failed:", tgErr);
+    }
+
     return;
   }
 
@@ -674,7 +746,15 @@ async function handleIncomingChannelMessage(
 
   // Interactive Commands
   const trimmedText = text.trim();
-  await handleInteractiveCommand(event, trimmedText, userId, areaTranslations);
+  await handleInteractiveCommand(
+    event,
+    trimmedText,
+    userId,
+    areaTranslations,
+    activeLeadId,
+    currentUtmData,
+    currentPrefs
+  );
 }
 
 // ============================
@@ -685,9 +765,41 @@ async function handleInteractiveCommand(
   text: string,
   userId: string,
   areaTranslations?: AreaTranslations,
+  activeLeadId?: string,
+  currentUtmData?: Record<string, any>,
+  currentPrefs?: Record<string, any>,
 ) {
   const { replyToken } = event;
   const lang = getUserLang(userId);
+  const supabase = createAdminClient();
+
+  // --- 🛡️ 0. Check if Bot is Paused for this Lead (Human Handover Mode) ---
+  if (currentPrefs?.bot_paused === true) {
+    // Command to re-enable bot
+    if (text === "/bot on" || text === "/startbot" || text === "เปิดบอท") {
+      if (activeLeadId) {
+        const updatedPrefs = {
+          ...currentPrefs,
+          bot_paused: false,
+        };
+        await supabase
+          .from("crm_leads_v3")
+          .update({
+            utm_data: {
+              ...currentUtmData,
+              preferences: updatedPrefs,
+            },
+          })
+          .eq("id", activeLeadId);
+      }
+      await replyText(replyToken, "เปิดการทำงานของ AI Bot เรียบร้อยครับ 🤖");
+      return;
+    }
+
+    // If bot is paused, stay silent so human admin can chat
+    console.log(`[BOT] Bot is currently PAUSED for lead ${activeLeadId}. Ignoring automatic response.`);
+    return;
+  }
 
   // --- เปลี่ยนภาษา ---
   if (
@@ -885,30 +997,152 @@ async function handleInteractiveCommand(
     return;
   }
 
-  // --- ติดต่อเจ้าหน้าที่ ---
-  if (
+  // --- ติดต่อเจ้าหน้าที่ / ขอคุยกับ Admin ---
+  const lowerText = text.toLowerCase();
+  const isContactAdminTrigger =
     text === "ติดต่อเจ้าหน้าที่" ||
     text === "📞 ติดต่อเจ้าหน้าที่" ||
     text === "ติดต่อ" ||
-    text.toLowerCase() === "contact"
-  ) {
-    const msg = buildContactInfoMessage(lang);
-    await replyMessage(replyToken, [msg]);
+    lowerText === "contact" ||
+    lowerText === "admin" ||
+    lowerText.includes("แอดมิน") ||
+    lowerText.includes("เจ้าหน้าที่") ||
+    lowerText.includes("คุยกับคน") ||
+    lowerText.includes("ติดต่อคน");
+
+  if (isContactAdminTrigger) {
+    // 1. ตอบกลับการ์ด Flex Message ตกลงจะติดต่อกลับอย่างสวยงาม
+    const confirmCard = buildHandoverConfirmFlex(lang);
+    await replyMessage(event.replyToken, [confirmCard]);
+
+    // 2. หยุดบอทตอบกลับสำหรับลูกค้ารายนี้ (bot_paused = true)
+    if (activeLeadId) {
+      const updatedPrefs = {
+        ...currentPrefs,
+        bot_paused: true,
+        bot_paused_at: new Date().toISOString(),
+      };
+      await supabase
+        .from("crm_leads_v3")
+        .update({
+          utm_data: {
+            ...currentUtmData,
+            preferences: updatedPrefs,
+          },
+        })
+        .eq("id", activeLeadId);
+    }
+
+    // 3. ดึงโปรไฟล์ผู้ใช้งานสำหรับแจ้งเตือน
+    let displayName = "ลูกค้า LINE";
+    try {
+      const profile = await getLineProfile(userId);
+      if (profile?.displayName) {
+        displayName = profile.displayName;
+      }
+    } catch (pErr) {
+      console.warn("[HANDOVER] Could not fetch LINE profile:", pErr);
+    }
+
+    // 4. แจ้งเตือน LINE Admin (แยก try/catch เพื่อความเสถียร)
+    try {
+      const adminAlert = `🚨 [ลูกค้าขอคุยกับแอดมิน]\n\nผู้ติดต่อ: ${displayName}\nข้อความ: ${text}\n(ระบบหยุดการตอบของบอทให้อัตโนมัติแล้ว กรุณาเข้าตอบแชทครับ)`;
+      await sendLineNotification(adminAlert);
+    } catch (lineErr) {
+      console.error("[HANDOVER] LINE Notification failed:", lineErr);
+    }
+
+    // 5. แจ้งเตือน Telegram Admin (แยก try/catch + Escape HTML)
+    try {
+      const safeDisplayName = displayName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+      const tgMessage = `🚨 <b>ลูกค้าขอติดต่อเจ้าหน้าที่!</b>\n\n<b>ผู้ติดต่อ:</b> ${safeDisplayName}\n<b>ข้อความ:</b> ${safeText}\n\n<i>(ระบบหยุดบอทตอบให้อัตโนมัติแล้ว)</i>`;
+      const tgKeyboard = buildLeadActionKeyboard(activeLeadId || "", null);
+      
+      await sendAdminNotification(tgMessage, {
+        parseMode: "HTML",
+        replyMarkup: tgKeyboard,
+      });
+    } catch (tgErr) {
+      console.error("[HANDOVER] Telegram Notification failed:", tgErr);
+    }
+
     return;
   }
 
-  // --- ฝากขาย/เช่า ---
+  // --- ฝากขาย/เช่า (Interactive 2-Step Flow) ---
   if (
     text === "ฝากขาย/เช่า" ||
     text === "📝 ฝากขาย/เช่า" ||
-    text === "ฝากขาย" ||
-    text === "ฝากเช่า" ||
     text === "ฝากทรัพย์" ||
     text.toLowerCase() === "deposit" ||
     text.toLowerCase() === "list"
   ) {
-    const msg = buildDepositFlex(lang);
+    const msg = buildDepositTransactionTypeQuickReply(lang);
     await replyMessage(replyToken, [msg]);
+    return;
+  }
+
+  if (text === "ฝากเช่า" || text === "ฝากขาย") {
+    const txType = text === "ฝากเช่า" ? "เช่า" : "ขาย";
+    const msg = buildDepositPropertyTypeQuickReply(txType, lang);
+    await replyMessage(replyToken, [msg]);
+    return;
+  }
+
+  if (text.startsWith("ฝากเช่า:") || text.startsWith("ฝากขาย:") || text.startsWith("ฝากขาย/เช่า:")) {
+    const parts = text.split(":");
+    const txType = parts[0].replace("ฝาก", "").trim();
+    const propType = parts[1]?.trim() || "ทรัพย์สิน";
+
+    // 1. ตอบกลับข้อความสรุปพร้อมปุ่มติดต่อเจ้าหน้าที่
+    const msg = buildDepositSummaryMessage(txType, propType, lang);
+    await replyMessage(replyToken, [msg]);
+
+    // 2. บันทึกข้อมูลฝากทรัพย์เบื้องต้นลง CRM Lead Note
+    if (activeLeadId) {
+      const depositNote = `[ฝากทรัพย์] สนใจฝาก ${txType} - ประเภท: ${propType}`;
+      const updatedPrefs = {
+        ...currentPrefs,
+        deposit_request: {
+          transaction_type: txType,
+          property_type: propType,
+          created_at: new Date().toISOString(),
+        },
+        note: `[${new Date().toLocaleString("th-TH")}] ${depositNote}\n${currentPrefs?.note || ""}`,
+      };
+
+      await supabase
+        .from("crm_leads_v3")
+        .update({
+          utm_data: {
+            ...currentUtmData,
+            preferences: updatedPrefs,
+          },
+        })
+        .eq("id", activeLeadId);
+    }
+
+    // 3. แจ้งเตือน Admin (LINE & Telegram)
+    let displayName = "ลูกค้า LINE";
+    try {
+      const profile = await getLineProfile(userId);
+      if (profile?.displayName) displayName = profile.displayName;
+    } catch (e) {}
+
+    try {
+      const adminAlert = `📝 [มีลูกค้าลงทะเบียนฝากทรัพย์]\n\nผู้ฝาก: ${displayName}\nความต้องการ: ฝาก${txType} (${propType})\n\n(ระบบได้ขอข้อมูลรูปและทำเลแล้ว หากลูกค้าระบุข้อมูลเพิ่มจะถูกบันทึกในระบบครับ)`;
+      await sendLineNotification(adminAlert);
+    } catch (lineErr) {}
+
+    try {
+      const safeName = displayName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const tgMessage = `📝 <b>มีลูกค้าลงทะเบียนฝากทรัพย์!</b>\n\n<b>ผู้ฝาก:</b> ${safeName}\n<b>ประเภท:</b> ฝาก${txType} (${propType})`;
+      const tgKeyboard = buildLeadActionKeyboard(activeLeadId || "", null);
+      await sendAdminNotification(tgMessage, { parseMode: "HTML", replyMarkup: tgKeyboard });
+    } catch (tgErr) {}
+
     return;
   }
 
