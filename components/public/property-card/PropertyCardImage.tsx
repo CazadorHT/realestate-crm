@@ -317,12 +317,6 @@ export function PropertyCardImage({
               >
                 {shouldRender ? (
                   <>
-                    {/* Shimmer & Loading Spinner while image is loading */}
-                    {!loadedImages[index] && (
-                      <div className="absolute inset-0 z-10 bg-slate-200/90 backdrop-blur-xs flex items-center justify-center pointer-events-none transition-opacity duration-300">
-                        <div className="w-6 h-6 border-2 border-slate-400/40 border-t-slate-700 rounded-full animate-spin" />
-                      </div>
-                    )}
                     <Image
                       src={img}
                       alt={`${
@@ -338,13 +332,10 @@ export function PropertyCardImage({
                       } - Image ${index + 1}`}
                       fill
                       sizes="(max-width: 640px) 95vw, (max-width: 768px) 45vw, (max-width: 1280px) 300px, 320px"
-                      className={`object-cover object-center transition-opacity duration-500 ${
-                        loadedImages[index] ? "opacity-100" : "opacity-0"
-                      }`}
+                      className="object-cover object-center"
                       priority={priority && index === 0}
                       {...(!(priority && index === 0) && { loading: "lazy" })}
                       onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
-                      onError={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
                     />
                   </>
                 ) : (
