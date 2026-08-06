@@ -164,6 +164,7 @@ export function PropertyGallery({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inlineActiveIndex, setInlineActiveIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [visibleMobileCount, setVisibleMobileCount] = useState(5);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Thumbnail container ref for auto-scrolling
@@ -213,6 +214,9 @@ export function PropertyGallery({
   const mainImage = sortedImages[0];
   const subImages = sortedImages.slice(1, 5); // Take next 4 for grid
   const remainingCount = Math.max(0, sortedImages.length - 5);
+
+  // Progressive loading for mobile carousel: render only visibleMobileCount initially
+  const mobileImages = sortedImages.slice(0, visibleMobileCount);
 
   const [direction, setDirection] = useState(0);
 
@@ -351,9 +355,13 @@ export function PropertyGallery({
               if (newIndex !== inlineActiveIndex) {
                 setInlineActiveIndex(newIndex);
               }
+              // Progressive load: expand when user swipes near end of visible images
+              if (newIndex >= mobileImages.length - 2 && mobileImages.length < sortedImages.length) {
+                setVisibleMobileCount(sortedImages.length);
+              }
             }}
           >
-            {sortedImages.map((img, idx) => (
+            {mobileImages.map((img, idx) => (
               <div
                 key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
                 className="shrink-0 w-full h-full snap-center relative overflow-hidden"

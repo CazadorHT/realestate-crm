@@ -44,8 +44,10 @@ export function PropertyCardImage({
   hideShare = false,
 }: PropertyCardImageProps) {
   const { t, language } = useLanguage();
+  const INITIAL_BATCH_SIZE = 5;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
+  const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
   const scrollRef = useRef<HTMLDivElement>(null);
   
   // Quick Share States
@@ -89,7 +91,7 @@ export function PropertyCardImage({
   const isHorizontalSwipe = useRef<boolean | null>(null);
 
   // Normalized images list from both possible formats (string array or object array with .url)
-  const displayImages = (() => {
+  const allImages = (() => {
     const rawImages = (() => {
       const images: unknown = property.images;
       if (Array.isArray(images) && images.length > 0) {
@@ -125,6 +127,10 @@ export function PropertyCardImage({
       })
       .filter(url => typeof url === 'string' && url.trim() !== "");
   })();
+
+  // Progressive loading: only render visibleCount images in DOM to reduce egress.
+  // When user swipes near the end, expand to show all images for this card.
+  const displayImages = allImages.slice(0, visibleCount);
 
   const badge = getListingBadge(property.listing_type);
 
@@ -172,6 +178,12 @@ export function PropertyCardImage({
     if (scrollRef.current) {
       const { scrollLeft, clientWidth } = scrollRef.current;
       const index = Math.round(scrollLeft / clientWidth);
+
+      // Progressive load: when user swipes near end, expand to show all images
+      if (index >= displayImages.length - 2 && displayImages.length < allImages.length) {
+        setVisibleCount(allImages.length);
+      }
+
       if (index !== activeImageIndex) {
         setActiveImageIndex(index);
 
@@ -184,7 +196,7 @@ export function PropertyCardImage({
           hasTrackedSlide.current = true;
           pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE, {
             ...trackImageParams(),
-            total_images: displayImages.length,
+            total_images: allImages.length,
           });
           updateAIScore(2);
         }
@@ -195,18 +207,18 @@ export function PropertyCardImage({
           pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE_MID, {
             ...trackImageParams(),
             images_viewed: uniqueCount,
-            total_images: displayImages.length,
+            total_images: allImages.length,
           });
           updateAIScore(3);
         }
 
         // 1.8) Viewed > 50% of images: image_slide_half
-        if (!hasTrackedHalf.current && uniqueCount > displayImages.length / 2 && displayImages.length > 2) {
+        if (!hasTrackedHalf.current && uniqueCount > allImages.length / 2 && allImages.length > 2) {
           hasTrackedHalf.current = true;
           pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE_HALF, {
             ...trackImageParams(),
             images_viewed: uniqueCount,
-            total_images: displayImages.length,
+            total_images: allImages.length,
           });
           updateAIScore(4);
         }
@@ -217,17 +229,17 @@ export function PropertyCardImage({
           pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE_DEEP, {
             ...trackImageParams(),
             images_viewed: uniqueCount,
-            total_images: displayImages.length,
+            total_images: allImages.length,
           });
           updateAIScore(5);
         }
 
         // 3) Viewed ALL images: image_slide_all
-        if (!hasTrackedAll.current && uniqueCount >= displayImages.length && displayImages.length > 1) {
+        if (!hasTrackedAll.current && uniqueCount >= allImages.length && allImages.length > 1) {
           hasTrackedAll.current = true;
           pushToDataLayer(GTM_EVENTS.IMAGE_SLIDE_ALL, {
             ...trackImageParams(),
-            total_images: displayImages.length,
+            total_images: allImages.length,
           });
           updateAIScore(8);
         }

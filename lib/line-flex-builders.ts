@@ -90,6 +90,18 @@ export const LOCATION_MAP: Record<string, Record<BotLang, string>> = {
   คลองสาน: { th: "คลองสาน", en: "Khlong San", cn: "空讪", ru: "Клонг Сан" },
 };
 
+/**
+ * Optimize image URL for LINE Flex Messages via wsrv.nl CDN proxy.
+ * Resizes to 800x600 JPEG (~40KB instead of ~200KB from Supabase)
+ * and caches on wsrv.nl CDN → LINE servers hit cache, not Supabase.
+ */
+function optimizeImageForLine(url: string): string {
+  if (!url || url.includes("placehold.co")) return url;
+  // Already proxied
+  if (url.includes("wsrv.nl")) return url;
+  return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=800&h=600&fit=cover&output=jpg&q=75`;
+}
+
 // ============================
 // i18n Strings
 // ============================
@@ -845,7 +857,7 @@ export function buildPropertyCarousel(
           propertyUrl = ensureHttps(`${baseUrl}/properties/${prop.id}`);
         }
 
-        const imageUrl = ensureHttps(getPublicImageUrl(rawImageUrl));
+        const imageUrl = optimizeImageForLine(ensureHttps(getPublicImageUrl(rawImageUrl)));
 
         // Localized title
         let title = prop.title || "—";

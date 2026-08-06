@@ -6,7 +6,8 @@ import fs from "fs";
 import path from "path";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+// Removed `export const dynamic = "force-dynamic"` to allow Vercel CDN caching
+// OG images are cached via Cache-Control: s-maxage=31536000 set in the response
 
 // Cache font data across requests in the same execution unit
 let cachedFont: ArrayBuffer | null = null;
