@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import { requireAuthContext } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { Database } from "@/lib/database.types.generated";
 
 export type UpdateProfileResult = {
@@ -215,10 +216,8 @@ export async function uploadAvatarAction(
     );
   }
 
-  // 4. สร้าง public URL
-  const {
-    data: { publicUrl },
-  } = ctx.supabase.storage.from("user-assets").getPublicUrl(filePath);
+  // 4. สร้าง public URL ผ่าน CDN
+  const publicUrl = getPublicImageUrl(filePath, "user-assets");
 
   // 5. อัปเดต avatar_url ทั้งสองตารางเพื่อให้ข้อมูล Sync กันทั้งระบบ
     const [profileRes, identityRes] = await Promise.all([

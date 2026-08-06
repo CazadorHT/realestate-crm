@@ -1,5 +1,6 @@
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import type { BlogPost } from "@/features/blog/types";
 export type { BlogPost } from "@/features/blog/types";  // ✅
 
@@ -57,7 +58,7 @@ async function mapCmsRowsToBlogPosts(
       excerpt_cn: metaObj.excerpt_cn || null,
       excerpt_ru: metaObj.excerpt_ru || null,
       category: metaObj.category || null,
-      cover_image: row.cover_image || null,
+      cover_image: row.cover_image ? getPublicImageUrl(row.cover_image) : null,
       is_published: row.status === "PUBLISHED",
       published_at: row.published_at || null,
       tags: Array.isArray(metaObj.tags) ? metaObj.tags : [], // เช็กให้มั่นใจว่าเป็น Array

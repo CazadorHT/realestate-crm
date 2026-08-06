@@ -5,6 +5,7 @@ import { mapDbError } from "@/lib/db-error";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { createClient } from "@/lib/supabase/server";
 import { type Json } from "@/lib/database.types.generated";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 export type LocalizedString = {
   th?: string;
@@ -162,9 +163,11 @@ export async function getServices(
       const metaObj = (row.meta_data || {}) as Record<string, any>;
       const descObj = (metaObj.description || {}) as Record<string, any>;
       const priceObj = (metaObj.price_range || {}) as Record<string, any>;
+      const rawGallery = Array.isArray(metaObj.gallery_images) ? metaObj.gallery_images : [];
 
       return {
         ...row,
+        cover_image: row.cover_image ? getPublicImageUrl(row.cover_image) : null,
         title: titleObj.th || titleObj.en || "",
         content: contentObj.th || contentObj.en || "",
         meta_data: metaObj as ServiceRow["meta_data"],
@@ -178,7 +181,7 @@ export async function getServices(
         content_en: contentObj.en || null,
         content_cn: contentObj.cn || null,
         content_ru: contentObj.ru || null,
-        gallery_images: metaObj.gallery_images || [],
+        gallery_images: rawGallery.map((img: string) => getPublicImageUrl(img)),
         price_range: priceObj.th || null,
         price_range_en: priceObj.en || null,
         price_range_cn: priceObj.cn || null,
@@ -209,9 +212,11 @@ export async function getServiceBySlug(slug: string) {
   const metaObj = (data.meta_data || {}) as Record<string, any>;
   const descObj = (metaObj.description || {}) as Record<string, any>;
   const priceObj = (metaObj.price_range || {}) as Record<string, any>;
+  const rawGallery = Array.isArray(metaObj.gallery_images) ? metaObj.gallery_images : [];
 
   return {
     ...data,
+    cover_image: data.cover_image ? getPublicImageUrl(data.cover_image) : null,
     title: titleObj.th || titleObj.en || "",
     content: contentObj.th || contentObj.en || "",
     meta_data: metaObj as ServiceRow["meta_data"],
@@ -225,7 +230,7 @@ export async function getServiceBySlug(slug: string) {
     content_en: contentObj.en || null,
     content_cn: contentObj.cn || null,
     content_ru: contentObj.ru || null,
-    gallery_images: metaObj.gallery_images || [],
+    gallery_images: rawGallery.map((img: string) => getPublicImageUrl(img)),
     price_range: priceObj.th || null,
     price_range_en: priceObj.en || null,
     price_range_cn: priceObj.cn || null,

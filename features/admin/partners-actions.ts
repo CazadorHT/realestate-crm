@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
 import { requireAuthContext, assertSystemAdmin } from "@/lib/authz";
@@ -119,7 +120,7 @@ export async function getPartners(params?: {
       return {
         id: item.id,
         name: nameStr,
-        logo_url: item.cover_image || "",
+        logo_url: getPublicImageUrl(item.cover_image) || "",
         website_url: (meta?.website_url as string) || null,
         sort_order: (meta?.sort_order as number) || 0,
         is_active: item.status === "published",

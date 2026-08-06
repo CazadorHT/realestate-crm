@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { siteConfig } from "@/lib/site-config";
 import { createClient } from "@supabase/supabase-js";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import fs from "fs";
 import path from "path";
 
@@ -57,13 +58,8 @@ export async function GET(req: NextRequest) {
           .limit(1);
 
         if (images?.[0]) {
-          imageUrl = images[0].url;
-          // ถ้าไม่มี image_url ที่เป็น HTTP ให้ใช้ storage_path มา gen เป็น Public URL เต็มๆ แทน
-          if ((!imageUrl || !imageUrl.startsWith('http')) && images[0].storage_path) {
-            imageUrl = supabase.storage
-              .from("property-images")
-              .getPublicUrl(images[0].storage_path).data.publicUrl;
-          }
+          const rawPath = images[0].url || images[0].storage_path || "";
+          imageUrl = getPublicImageUrl(rawPath);
         }
       } catch (dbError) {
         console.error("OG DB Fetch Error:", dbError);

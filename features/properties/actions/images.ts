@@ -13,6 +13,7 @@ import {
 } from "../logic/images";
 import { mapDbError } from "@/lib/db-error";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { getPublicImageUrl } from "../image-utils";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type UploadedImageResult = {
@@ -184,12 +185,10 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       throw trackErr;
     }
 
-    // Construct URL manually or use getPublicUrl
-    const { data } = adminSupabase.storage
-      .from(PROPERTY_IMAGES_BUCKET)
-      .getPublicUrl(path);
+    // Construct CDN-ready public URL via getPublicImageUrl
+    const publicUrl = getPublicImageUrl(path);
 
-    return { path, publicUrl: data.publicUrl };
+    return { path, publicUrl };
   } catch (error: unknown) {
     console.error("uploadPropertyImageAction → error:", error);
     if (error && typeof error === "object" && (("name" in error && error.name === "AuthzError") || ("code" in error && error.code === "AUTHZ_ERROR"))) {

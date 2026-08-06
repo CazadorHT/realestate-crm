@@ -379,7 +379,8 @@ export async function getPropertiesTableData(params: {
   imagesResult.data?.forEach((img) => {
     if (!img.property_id) return;
     if (!bestImageMap.has(img.property_id)) {
-      const bestUrl = img.image_url || img.storage_path;
+      const rawTarget = img.image_url || img.storage_path || "";
+      const bestUrl = getPublicImageUrl(rawTarget);
       if (bestUrl) bestImageMap.set(img.property_id, bestUrl);
     }
   });

@@ -1,6 +1,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { PropertyWithImages } from "../types";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 /**
  * ✅ PROTECTED: ใช้ใน CRM เท่านั้น
@@ -55,11 +56,19 @@ export async function getProtectedPropertyWithImagesById(
 
   if (error || !data) throw error;
 
-  if (Array.isArray(data.property_images)) {
-    (data.property_images as any[]).sort(
-      (a: { sort_order: number | null }, b: { sort_order: number | null }) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
-    );
-  }
+  const rawImages = Array.isArray(data.property_images) ? (data.property_images as any[]) : [];
+  const processedImages = rawImages
+    .map((img) => {
+      const rawPath = img.image_url || img.storage_path || "";
+      return {
+        ...img,
+        image_url: getPublicImageUrl(rawPath) || img.image_url,
+      };
+    })
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
-  return data as unknown as PropertyWithImages;
+  return {
+    ...data,
+    property_images: processedImages,
+  } as unknown as PropertyWithImages;
 }

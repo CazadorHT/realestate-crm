@@ -475,7 +475,8 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     created_at: string | null;
     property_id: string | null;
   }> || []).map((img) => {
-    const finalUrl = img.image_url || (img.storage_path ? getPublicImageUrl(img.storage_path) : "/images/hero-realestate.png");
+    const rawTarget = img.image_url || img.storage_path || "";
+    const finalUrl = getPublicImageUrl(rawTarget) || "/images/hero-realestate.png";
     return {
       id: img.id,
       url: finalUrl,
