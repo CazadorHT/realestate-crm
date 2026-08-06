@@ -282,7 +282,7 @@ export async function getTransitAndProjectsInArea(
           if (missingImageProjIds.length > 0) {
             const { data: propImages } = await supabase
               .from("properties")
-              .select("project_id, main_image, images")
+              .select("project_id, main_image")
               .in("project_id", missingImageProjIds)
               .eq("status", "ACTIVE")
               .is("deleted_at", null);
@@ -417,7 +417,7 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
         if (!imageUrl) {
           const { data: propImg } = await supabase
             .from("properties")
-            .select("main_image, images")
+            .select("main_image")
             .eq("popular_area", nameTh)
             .eq("status", "ACTIVE")
             .is("deleted_at", null)
@@ -498,7 +498,7 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
           // Fetch fallback cover image from active properties in this popular area
           const { data: propImg } = await supabase
             .from("properties")
-            .select("main_image, images")
+            .select("main_image")
             .eq("popular_area", nameTh)
             .eq("status", "ACTIVE")
             .is("deleted_at", null)

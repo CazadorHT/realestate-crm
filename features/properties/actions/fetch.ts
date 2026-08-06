@@ -387,6 +387,9 @@ export async function getGlobalPropertiesTableDataAction(params: {
       bedrooms, bathrooms, size_sqm, land_size_sqwah, title, pricing_details, meta_data, main_image_url,
       tenants (
         name
+      ),
+      projects!properties_core_project_id_fkey (
+        name
       )
     `,
       { count: "exact" },
@@ -395,9 +398,9 @@ export async function getGlobalPropertiesTableDataAction(params: {
     .order("created_at", { ascending: false });
 
   if (q) {
-    // 🛡️ These columns exist in the 'properties' view
+    // 🛡️ Search by title, address, district, province, and linked project name (JSONB th/en)
     query = query.or(
-      `title.ilike.%${q}%,description.ilike.%${q}%,address_line1.ilike.%${q}%,district.ilike.%${q}%,province.ilike.%${q}%`,
+      `title.ilike.%${q}%,title_en.ilike.%${q}%,address_line1.ilike.%${q}%,address_line1_en.ilike.%${q}%,district.ilike.%${q}%,province.ilike.%${q}%,projects.name->>th.ilike.%${q}%,projects.name->>en.ilike.%${q}%`,
     );
   }
 

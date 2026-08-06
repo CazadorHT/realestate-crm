@@ -1265,10 +1265,10 @@ export async function postPropertyToMetaAction(
 export async function generateSocialCaptionsAction(propertyId: string, platform: 'facebook' | 'tiktok' | 'instagram' | 'all') {
   const supabase = await createClient();
   
-  // 1. Fetch Property Data
+  // 1. Fetch Property Data (Low-Egress Minimal Select)
   const { data: property, error } = await supabase
     .from("properties")
-    .select("*")
+    .select("id, title, title_en, property_type, listing_type, price, rental_price, bedrooms, bathrooms, size_sqm, land_size_sqwah, popular_area, district, province")
     .eq("id", propertyId)
     .single();
 

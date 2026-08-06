@@ -91,6 +91,7 @@
     "for_rent": "For Rent",
     "no_location": "Location not specified",
     "loading": "Loading...",
+    "error": "Error",
     "error_loading": "Error loading data",
     "search_error": "Search failed. Please try again.",
     "retry": "Retry",

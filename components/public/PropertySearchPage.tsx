@@ -74,11 +74,17 @@ export function PropertySearchPage({
     return filtered.slice(0, displayCount);
   }, [filtered, displayCount]);
 
-  // Total count from facets if available, or current filtered length
-  const totalAvailableCount = serverFacets?.availableListingTypes?.ALL || filtered.length;
+  // Total count for current active area filter (or total server count)
+  const currentAreaFacetCount = filters.area && serverFacets?.availableAreas?.[filters.area]?.count !== undefined
+    ? serverFacets.availableAreas[filters.area].count
+    : null;
+
+  const totalAvailableCount = currentAreaFacetCount !== null 
+    ? currentAreaFacetCount 
+    : (serverFacets?.availableListingTypes?.ALL || filtered.length);
   
-  // Can load more if we haven't displayed all local filtered properties OR if server has more properties
-  const hasMore = displayCount < filtered.length || properties.length < totalAvailableCount;
+  // Can load more if we haven't displayed all local filtered properties OR if server has more properties for this filter
+  const hasMore = displayCount < filtered.length || (currentAreaFacetCount === null && properties.length < totalAvailableCount);
 
   const loadMore = useCallback(() => {
     if (displayCount < filtered.length) {
@@ -121,9 +127,29 @@ export function PropertySearchPage({
     filters.isForeigner, filters.isHotDeal, filters.transitStation
   ]);
 
+  // 🛡️ Loop Protection Guard: Reset auto-fetch attempt tracker on filter change
+  const lastFetchedFilterRef = useRef<string>("");
   useEffect(() => {
     setDisplayCount(ITEMS_PER_PAGE);
+    lastFetchedFilterRef.current = ""; // Reset tracker when user changes filter
   }, [filterFingerprint]);
+
+  // 🛡️ Hardened Auto-Fetch Trigger (Guarded against Infinite Loops)
+  const hasNoFilteredResults = filtered.length === 0;
+  const hasMorePropertiesOnServer = properties.length < totalAvailableCount;
+
+  useEffect(() => {
+    if (
+      hasNoFilteredResults && 
+      !isLoading && 
+      !isFetchingMore && 
+      hasMorePropertiesOnServer &&
+      lastFetchedFilterRef.current !== filterFingerprint // 🛑 Prevent duplicate loops for same filter state
+    ) {
+      lastFetchedFilterRef.current = filterFingerprint;
+      loadMoreProperties();
+    }
+  }, [hasNoFilteredResults, isLoading, isFetchingMore, hasMorePropertiesOnServer, filterFingerprint, loadMoreProperties]);
 
   // 5. Automatic Infinite Scroll Observer
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -189,13 +215,30 @@ export function PropertySearchPage({
         {isLoading ? (
           <PropertyGridSkeleton count={8} />
         ) : filtered.length === 0 ? (
-          <NoResultsView onClearFilters={filters.clearFilters} />
+          <NoResultsView
+            onClearFilters={filters.clearFilters}
+            areaFilterName={filters.area || undefined}
+            serverAreaTotal={filters.area && serverFacets?.availableAreas?.[filters.area]?.count ? serverFacets.availableAreas[filters.area].count : 0}
+            serverGrandTotal={totalAvailableCount}
+            onFetchMoreServer={loadMoreProperties}
+            isFetchingMore={isFetchingMore}
+          />
         ) : (
           <>
           <div className={cn("transition-opacity duration-200", isRefetching && "opacity-60 pointer-events-none")}>
             <PropertyGrid
               properties={visibleProperties}
               currentPage={1}
+              hasMore={hasMore}
+              areaRemainingCount={
+                filters.area && serverFacets?.availableAreas?.[filters.area]?.count !== undefined
+                  ? Math.max(0, serverFacets.availableAreas[filters.area].count - visibleProperties.length)
+                  : Math.max(0, filtered.length - visibleProperties.length)
+              }
+              totalRemainingCount={Math.max(0, totalAvailableCount - visibleProperties.length)}
+              isFetchingMore={isFetchingMore}
+              loadMore={loadMore}
+              areaFilterName={filters.area || undefined}
             />
           </div>
 
@@ -242,6 +285,9 @@ export function PropertySearchPage({
                 </p>
               </div>
             )}
+
+            {/* 🛡️ Infinite Scroll Sentinel Element */}
+            <div ref={sentinelRef} className="h-10 w-full pointer-events-none" aria-hidden="true" />
           </>
         )}
       </div>

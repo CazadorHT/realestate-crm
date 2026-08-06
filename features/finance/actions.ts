@@ -290,7 +290,7 @@ export async function recalculatePayoutTotalsAction(
     // Fetch adjustments explicitly from financial_ledger_v3
     const { data: adjustmentsData } = await supabase
       .from("financial_ledger_v3")
-      .select("*")
+      .select("id, reference_id, amount, entry_type, note, created_at")
       .eq("reference_entity", "COMMISSION")
       .eq("reference_id", commissionId);
     const adjustments = (adjustmentsData as any[]) || [];
@@ -622,17 +622,10 @@ export async function getPayoutQueueAction(filters?: {
       queryBuilder = queryBuilder.in("status", ["UNPAID", "READY_TO_PAY"]);
     }
 
-    // [PERFORMANCE] Parallel Fetching: Table data AND Data Integrity Check
-    const [mainResult, integrityResult] = await Promise.all([
-      queryBuilder
-        .order("created_at", { ascending: false })
-        .range(from, to),
-      supabase
-        .from("crm_deal_commissions_v3")
-        .select("deal_id, amount"), // Ideally we'd limit this or filter by the deals in data, but for now we'll optimize the existing logic
-    ]);
-
-    const { data: rawData, error, count } = mainResult as {
+    // [PERFORMANCE & LOW-EGRESS] Step 1: Fetch paginated commission table data
+    const { data: rawData, error, count } = (await queryBuilder
+      .order("created_at", { ascending: false })
+      .range(from, to)) as {
       data: any;
       error: unknown;
       count: number | null;
@@ -640,6 +633,26 @@ export async function getPayoutQueueAction(filters?: {
 
     if (error) throw new Error(mapDbError(error));
     const data = (rawData as any[]) || [];
+
+    // [PERFORMANCE & LOW-EGRESS] Step 2: Fetch integrity check & adjustments ONLY for active page items
+    const pageDealIds = Array.from(new Set(data.map((c) => c.deal_id).filter(Boolean)));
+    const commissionIds = data.map((c) => c.id);
+
+    const [integrityResult, ledgerResult] = await Promise.all([
+      pageDealIds.length > 0
+        ? supabase
+            .from("crm_deal_commissions_v3")
+            .select("deal_id, amount")
+            .in("deal_id", pageDealIds)
+        : { data: [] },
+      commissionIds.length > 0
+        ? supabase
+            .from("financial_ledger_v3")
+            .select("id, reference_id, amount, entry_type, note, created_at")
+            .eq("reference_entity", "COMMISSION")
+            .in("reference_id", commissionIds)
+        : { data: [] },
+    ]);
 
     const commissionSumsByDeal = (integrityResult.data || []).reduce(
       (
@@ -654,16 +667,8 @@ export async function getPayoutQueueAction(filters?: {
       {} as Record<string, number>,
     );
 
-    const commissionIds = data.map((c) => c.id);
-    const { data: ledgerData } = commissionIds.length > 0
-      ? await supabase
-          .from("financial_ledger_v3")
-          .select("*")
-          .eq("reference_entity", "COMMISSION")
-          .in("reference_id", commissionIds)
-      : { data: [] };
-
-    const adjustmentsMap: Record<string, any[]> = (ledgerData || []).reduce((acc: Record<string, any[]>, curr: any) => {
+    const ledgerData = ledgerResult.data || [];
+    const adjustmentsMap: Record<string, any[]> = ledgerData.reduce((acc: Record<string, any[]>, curr: any) => {
       const refId = curr.reference_id;
       if (refId) {
         if (!acc[refId]) acc[refId] = [];

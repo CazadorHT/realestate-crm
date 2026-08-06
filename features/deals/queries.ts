@@ -295,7 +295,7 @@ export async function getInvoicesByDealId(dealId: string): Promise<InvoiceRow[]>
 
   const { data, error } = await supabase
     .from("invoices")
-    .select("*")
+    .select("id, deal_id, tenant_id, subtotal, total, vat_amount, wht_amount, status, created_at")
     .eq("deal_id", dealId)
     .eq("tenant_id", tenantId)
     .order("created_at", { ascending: false });

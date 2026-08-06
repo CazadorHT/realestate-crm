@@ -98,7 +98,7 @@ export async function createRentNotificationRule(
      if (!isUuid) {
        const { data: groupDetail } = await supabase
          .from("line_groups")
-         .select("*")
+         .select("group_id, group_name, picture_url")
          .eq("group_id", targetChannelId)
          .maybeSingle();
 
@@ -212,7 +212,7 @@ export async function updateRentNotificationRule(
        if (!isUuid && tenantId) {
          const { data: groupDetail } = await supabase
            .from("line_groups")
-           .select("*")
+           .select("group_id, group_name, picture_url")
            .eq("group_id", targetChannelId)
            .maybeSingle();
 

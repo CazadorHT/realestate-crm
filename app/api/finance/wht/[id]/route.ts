@@ -50,7 +50,7 @@ export async function GET(
     // Fetch adjustments explicitly from financial_ledger_v3
     const { data: adjustmentsData } = await supabase
       .from("financial_ledger_v3")
-      .select("*")
+      .select("amount, amount_net")
       .eq("reference_entity", "COMMISSION")
       .eq("reference_id", id);
     const adjustments = (adjustmentsData || []).map((a: any) => ({ amount: a.amount_net || a.amount || 0 }));

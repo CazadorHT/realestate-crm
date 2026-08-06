@@ -55,6 +55,8 @@ export async function exportLeadsAction(ids?: string[]) {
 
   if (ids && ids.length > 0) {
     query = query.in("id", ids);
+  } else {
+    query = query.limit(500); // 🛡️ Cap full exports to 500 rows max for Low-Egress safety
   }
 
   const { data, error } = await query;

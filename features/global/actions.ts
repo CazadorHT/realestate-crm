@@ -29,7 +29,7 @@ export async function searchGlobalAction(
       .from("properties")
       .select("id, title, address_line1, district, province, created_by")
       .or(
-        `title.ilike.%${query}%,address_line1.ilike.%${query}%,district.ilike.%${query}%,province.ilike.%${query}%`
+        `title.ilike.%${query}%,title_en.ilike.%${query}%,address_line1.ilike.%${query}%,address_line1_en.ilike.%${query}%,district.ilike.%${query}%,province.ilike.%${query}%`
       )
       .limit(5);
 
