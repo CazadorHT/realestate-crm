@@ -73,7 +73,10 @@ const nextConfig: NextConfig = {
         {
           protocol: "https",
           hostname: "cdn.vccasset.com",
-          pathname: "/storage/v1/object/public/**",
+        },
+        {
+          protocol: "https",
+          hostname: "vccasset.com",
         },
       ];
     })(),

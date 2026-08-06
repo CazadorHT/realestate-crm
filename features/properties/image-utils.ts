@@ -14,7 +14,7 @@ const BUCKET_NAME = "property-images";
  * @returns public URL (optimized if options provided)
  */
 export function getPublicImageUrl(
-  storagePath: string,
+  storagePath?: string | null,
   bucket: string = BUCKET_NAME,
   options?: {
     width?: number;
@@ -23,11 +23,26 @@ export function getPublicImageUrl(
     format?: "webp" | "origin";
   },
 ): string {
-  if (!storagePath) return "";
+  if (!storagePath || typeof storagePath !== "string" || !storagePath.trim()) return "";
 
-  // 0. If it's already a full URL, return as is
+  // Use dedicated CDN domain on Production, but fallback to Supabase URL in local development to avoid CORS/Proxy issues
+  const isDev = process.env.NODE_ENV === "development";
+  const explicitCdn = process.env.NEXT_PUBLIC_CDN_URL?.trim();
+  const cdnUrl = explicitCdn || (isDev ? "" : "https://cdn.vccasset.com");
+  let targetCdn = cdnUrl ? cdnUrl.replace(/\/+$/, "") : "";
+  if (targetCdn && !targetCdn.startsWith("http")) targetCdn = `https://${targetCdn}`;
+
+  // 0. If it's already a full URL
   if (storagePath.trim().startsWith("http")) {
-    return storagePath.trim();
+    const trimmed = storagePath.trim();
+    if (targetCdn && trimmed.includes(".supabase.co/storage/v1/object/public/")) {
+      return trimmed.replace(/https:\/\/[^/]+\.supabase\.co/, targetCdn);
+    }
+    if (!explicitCdn && (trimmed.includes("vccasset.com/storage/v1/object/public/") || trimmed.includes("cdn.vccasset.com"))) {
+      const supabaseBase = (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qaihjhvdwfafawezxivb.supabase.co").replace(/\/+$/, "");
+      return trimmed.replace(/https:\/\/[^/]+\.(vccasset\.com|supabase\.co)/, supabaseBase);
+    }
+    return trimmed;
   }
 
   // 1. Clean up SUPABASE_URL / site URL
@@ -37,8 +52,11 @@ export function getPublicImageUrl(
     baseUrl = `https://${baseUrl}`;
   }
 
-  // 2. Clean up storagePath (remove leading/trailing slashes and encode special chars)
-  const cleanPath = storagePath?.trim().replace(/^\/+|\/+$/g, "") || "";
+  // 2. Clean up storagePath (remove leading/trailing slashes, strip duplicate bucket name, and encode special chars)
+  let cleanPath = storagePath?.trim().replace(/^\/+|\/+$/g, "") || "";
+  if (cleanPath.startsWith(`${bucket}/`)) {
+    cleanPath = cleanPath.replace(new RegExp(`^${bucket}/`), "");
+  }
 
   if (!baseUrl || !cleanPath) return "";
 
@@ -48,9 +66,7 @@ export function getPublicImageUrl(
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  // Use dedicated CDN Proxy domain (https://cdn.vccasset.com) to bypass Supabase Egress
-  const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL || "https://cdn.vccasset.com";
-  let originUrl = cdnUrl ? cdnUrl.replace(/\/+$/, "") : baseUrl;
+  let originUrl = targetCdn || baseUrl;
   if (originUrl && !originUrl.startsWith("http")) {
     originUrl = `https://${originUrl}`;
   }

@@ -1,5 +1,6 @@
 import { PropertyImageMetadata, NearbyItem, NearbyTransitItem, TransitType } from "@/features/properties/types";
 import { Database } from "@/lib/database.types.generated";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 /**
  * 🛡️ Raw Object Guard for Images
@@ -23,19 +24,44 @@ function isRawImage(obj: unknown): obj is RawImage {
  * 🛡️ Hardened Image Extractor
  */
 export function getSafeImages(images: unknown): PropertyImageMetadata[] {
-  if (!images || !Array.isArray(images)) return [];
+  let parsedImages = images;
+  if (typeof images === "string" && images.trim().startsWith("[")) {
+    try {
+      parsedImages = JSON.parse(images);
+    } catch {
+      parsedImages = [];
+    }
+  }
+  if (!parsedImages || !Array.isArray(parsedImages)) return [];
 
-  const processed = (images as unknown[])
-    .filter(isRawImage)
-    .map((img) => ({
-      id: img.id || img.url || img.image_url || Math.random().toString(),
-      url: img.url || img.image_url || "",
-      storage_path: img.storage_path || null,
-      is_cover: !!img.is_cover,
-      sort_order: typeof img.sort_order === "number" ? img.sort_order : 999,
-      category: img.category || null,
-      alt_text: img.alt_text || null,
-    }));
+  const processed: PropertyImageMetadata[] = [];
+  for (const img of parsedImages as unknown[]) {
+    if (typeof img === "string") {
+      const finalUrl = getPublicImageUrl(img);
+      processed.push({
+        id: finalUrl || Math.random().toString(),
+        url: finalUrl,
+        storage_path: null,
+        is_cover: false,
+        sort_order: 999,
+        category: null,
+        alt_text: null,
+      });
+    } else if (isRawImage(img)) {
+      const rawUrl = img.url || img.image_url || "";
+      const pathOrUrl = rawUrl || img.storage_path || "";
+      const finalUrl = getPublicImageUrl(pathOrUrl);
+      processed.push({
+        id: img.id || finalUrl || Math.random().toString(),
+        url: finalUrl,
+        storage_path: img.storage_path || null,
+        is_cover: !!img.is_cover,
+        sort_order: typeof img.sort_order === "number" ? img.sort_order : 999,
+        category: img.category || null,
+        alt_text: img.alt_text || null,
+      });
+    }
+  }
 
   // 🛡️ Deduplicate by URL to prevent showing the same image twice in the gallery
   const unique = Array.from(new Map(processed.map((img) => [img.url, img])).values());

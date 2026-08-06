@@ -11,6 +11,7 @@ import {
   PropertyFacets,
   FacetRPCParams
 } from "@/features/properties/types/search";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { detectSearchIntent } from "../search-config";
 
 export type PropertyRow = {
@@ -455,7 +456,13 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
           
           const finalImages = (pi && pi.length > 0) 
-            ? pi.map((img: NonNullable<PropertyRow['property_images']>[number]) => ({ ...img, url: img.image_url })) 
+            ? pi.map((img: any) => {
+                const target = img.image_url || img.storage_path || "";
+                return {
+                  ...img,
+                  url: getPublicImageUrl(target),
+                };
+              }) 
             : getSafeImages(legacyImages);
 
           return {
@@ -513,7 +520,13 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
       }
 
       const finalImages = (typedRow.property_images && typedRow.property_images.length > 0) 
-        ? typedRow.property_images.map((img: NonNullable<PropertyRow['property_images']>[number]) => ({ ...img, url: img.image_url })) 
+        ? typedRow.property_images.map((img: any) => {
+            const target = img.image_url || img.storage_path || "";
+            return {
+              ...img,
+              url: getPublicImageUrl(target),
+            };
+          }) 
         : getSafeImages(typedRow.images);
 
       return {
