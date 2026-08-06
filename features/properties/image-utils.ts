@@ -30,8 +30,9 @@ export function getPublicImageUrl(
     return storagePath.trim();
   }
 
-  // 1. Clean up SUPABASE_URL (ensure no trailing slash and has protocol)
-  let baseUrl = SUPABASE_URL?.replace(/\/+$/, "");
+  // 1. Clean up SUPABASE_URL / site URL
+  const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  let baseUrl = rawSupabaseUrl.replace(/\/+$/, "");
   if (baseUrl && !baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;
   }
@@ -47,8 +48,15 @@ export function getPublicImageUrl(
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  // Always return standard public object URL (Free, direct CDN serving, no Supabase Image Transformation quota consumed)
-  return `${baseUrl}/storage/v1/object/public/${bucket}/${encodedPath}`;
+  // Use dedicated CDN Proxy domain (https://cdn.vccasset.com) to bypass Supabase Egress
+  const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL || "https://cdn.vccasset.com";
+  let originUrl = cdnUrl ? cdnUrl.replace(/\/+$/, "") : baseUrl;
+  if (originUrl && !originUrl.startsWith("http")) {
+    originUrl = `https://${originUrl}`;
+  }
+
+  // Return public object URL routed via Cloudflare Worker CDN domain
+  return `${originUrl}/storage/v1/object/public/${bucket}/${encodedPath}`;
 }
 
 /**

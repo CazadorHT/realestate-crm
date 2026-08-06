@@ -72,7 +72,8 @@ const nextConfig: NextConfig = {
         },
         {
           protocol: "https",
-          hostname: "**.instagram.com",
+          hostname: "cdn.vccasset.com",
+          pathname: "/storage/v1/object/public/**",
         },
       ];
     })(),
