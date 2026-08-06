@@ -317,6 +317,9 @@ export function PropertyCardImage({
               >
                 {shouldRender ? (
                   <>
+                    {!loadedImages[index] && (
+                      <div className="absolute inset-0 bg-slate-200 animate-pulse z-10 pointer-events-none" />
+                    )}
                     <Image
                       src={img}
                       alt={`${
@@ -332,8 +335,8 @@ export function PropertyCardImage({
                       } - Image ${index + 1}`}
                       fill
                       sizes="(max-width: 640px) 95vw, (max-width: 768px) 45vw, (max-width: 1280px) 300px, 320px"
-                      className={`object-cover object-center transition-[filter] duration-500 ${
-                        loadedImages[index] ? "blur-0" : "blur-sm"
+                      className={`object-cover object-center transition-[filter,opacity] duration-500 ${
+                        loadedImages[index] ? "blur-0 opacity-100" : "blur-sm opacity-90"
                       }`}
                       priority={priority && index === 0}
                       {...(!(priority && index === 0) && { loading: "lazy" })}
@@ -341,7 +344,7 @@ export function PropertyCardImage({
                     />
                   </>
                 ) : (
-                  <div className="absolute inset-0 bg-slate-100 animate-pulse" />
+                  <div className="absolute inset-0 bg-slate-200 animate-pulse" />
                 )}
               </Link>
             );

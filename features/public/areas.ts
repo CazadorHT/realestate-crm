@@ -1,6 +1,7 @@
 "use server";
 import { unstable_cache } from "next/cache";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import type { PublicPropertyNearStation } from "./stations";
 
 // ============================================================
@@ -19,19 +20,18 @@ export interface PublicAreaDetail {
   isAiGenerated: boolean;
 }
 
+export interface PropertyTypeStat {
+  type: string;
+  saleMedian: number | null;
+  rentMedian: number | null;
+  priceSqmMedian: number | null;
+  count: number;
+}
+
 export interface AreaMarketInsights {
-  condo: {
-    saleMedian: number | null;
-    rentMedian: number | null;
-    priceSqmMedian: number | null;
-    count: number;
-  };
-  house: {
-    saleMedian: number | null;
-    rentMedian: number | null;
-    priceSqmMedian: number | null;
-    count: number;
-  };
+  condo: PropertyTypeStat;
+  house: PropertyTypeStat;
+  byType: PropertyTypeStat[];
   hasEnoughData: boolean;
 }
 
@@ -137,7 +137,7 @@ export async function getAreaBySlug(slug: string): Promise<PublicAreaDetail | nu
         },
         slug: data.slug || "",
         province: data.province,
-        imageUrl: data.image_url,
+        imageUrl: getPublicImageUrl(data.image_url) || null,
         description: data.description as PublicAreaDetail["description"],
         seoTitle: data.seo_title as PublicAreaDetail["seoTitle"],
         seoDescription: data.seo_description as PublicAreaDetail["seoDescription"],
@@ -163,64 +163,72 @@ export async function getAreaMarketInsights(areaNameTh: string): Promise<AreaMar
 
       if (error || !data) {
         console.error("Error fetching properties for market insights:", error?.message);
+        const emptyStat = { type: "CONDO", saleMedian: null, rentMedian: null, priceSqmMedian: null, count: 0 };
         return {
-          condo: { saleMedian: null, rentMedian: null, priceSqmMedian: null, count: 0 },
-          house: { saleMedian: null, rentMedian: null, priceSqmMedian: null, count: 0 },
+          condo: emptyStat,
+          house: { ...emptyStat, type: "HOUSE" },
+          byType: [],
           hasEnoughData: false,
         };
       }
 
-      const condoSales: number[] = [];
-      const condoRents: number[] = [];
-      const condoPriceSqms: number[] = [];
-
-      const houseSales: number[] = [];
-      const houseRents: number[] = [];
-      const housePriceSqms: number[] = [];
+      const typeBuckets: Record<string, { sales: number[]; rents: number[]; sqms: number[] }> = {};
 
       for (const item of data) {
-        const pType = item.property_type || "CONDO";
+        const pType = (item.property_type || "OTHER").toUpperCase();
         const size = Number(item.size_sqm) || 0;
         const saleVal = Number(item.price) || 0;
         const rentVal = Number(item.rental_price) || 0;
 
-        const isCondo = pType === "CONDO";
+        if (!typeBuckets[pType]) {
+          typeBuckets[pType] = { sales: [], rents: [], sqms: [] };
+        }
 
         if (saleVal > 0) {
-          if (isCondo) {
-            condoSales.push(saleVal);
-            if (size > 0) condoPriceSqms.push(saleVal / size);
-          } else {
-            houseSales.push(saleVal);
-            if (size > 0) housePriceSqms.push(saleVal / size);
-          }
+          typeBuckets[pType].sales.push(saleVal);
+          if (size > 0) typeBuckets[pType].sqms.push(saleVal / size);
         }
 
         if (rentVal > 0) {
-          if (isCondo) {
-            condoRents.push(rentVal);
-          } else {
-            houseRents.push(rentVal);
-          }
+          typeBuckets[pType].rents.push(rentVal);
         }
       }
 
-      const totalCount = data.length;
+      const byType: PropertyTypeStat[] = Object.entries(typeBuckets)
+        .map(([pType, bucket]) => {
+          const totalCount = Math.max(bucket.sales.length, bucket.rents.length, bucket.sqms.length);
+          return {
+            type: pType,
+            saleMedian: getMedian(bucket.sales),
+            rentMedian: getMedian(bucket.rents),
+            priceSqmMedian: getMedian(bucket.sqms),
+            count: totalCount,
+          };
+        })
+        .filter((stat) => stat.count > 0)
+        .sort((a, b) => b.count - a.count);
+
+      const condoStat = byType.find((s) => s.type === "CONDO") || {
+        type: "CONDO",
+        saleMedian: null,
+        rentMedian: null,
+        priceSqmMedian: null,
+        count: 0,
+      };
+
+      const houseStat = byType.find((s) => ["HOUSE", "TOWNHOME", "VILLA", "POOL_VILLA"].includes(s.type)) || {
+        type: "HOUSE",
+        saleMedian: null,
+        rentMedian: null,
+        priceSqmMedian: null,
+        count: 0,
+      };
 
       return {
-        condo: {
-          saleMedian: getMedian(condoSales),
-          rentMedian: getMedian(condoRents),
-          priceSqmMedian: getMedian(condoPriceSqms),
-          count: condoSales.length + condoRents.length,
-        },
-        house: {
-          saleMedian: getMedian(houseSales),
-          rentMedian: getMedian(houseRents),
-          priceSqmMedian: getMedian(housePriceSqms),
-          count: houseSales.length + houseRents.length,
-        },
-        hasEnoughData: totalCount >= 3,
+        condo: condoStat,
+        house: houseStat,
+        byType,
+        hasEnoughData: data.length >= 2,
       };
     },
     ["public-area-market-insights", areaNameTh],
@@ -443,7 +451,7 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
           id: item.id,
           name: { th: nameTh, en: nameObj.en || "" },
           slug: item.slug || "",
-          imageUrl: imageUrl || null,
+          imageUrl: getPublicImageUrl(imageUrl) || null,
           province: item.province,
         });
       }
@@ -524,7 +532,7 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
           id: item.id,
           name: { th: nameTh, en: nameObj.en || "" },
           slug: item.slug || "",
-          imageUrl: imageUrl || null,
+          imageUrl: getPublicImageUrl(imageUrl) || null,
           province: item.province,
         });
       }

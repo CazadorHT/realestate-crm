@@ -1,6 +1,7 @@
 "use server";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 export type PopularAreaItem = {
   key: string;
@@ -263,7 +264,7 @@ export const getPopularAreasAction = unstable_cache(
           name_ru: area.nameRu, // Legacy Support
           province: area.province,
           count: area.count,
-          cover: coverImage,
+          cover: getPublicImageUrl(coverImage) || null,
           slug: area.slug,
         };
       });

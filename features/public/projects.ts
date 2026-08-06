@@ -1,6 +1,7 @@
 "use server";
 import { unstable_cache } from "next/cache";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import type { PublicPropertyNearStation } from "./stations";
 
 // ============================================================
@@ -133,8 +134,8 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
           yearCompleted: p.year_completed,
           totalUnits: p.total_units,
           description: p.description,
-          imageUrl: coverImage,
-          galleryUrls: p.gallery_urls || [],
+          imageUrl: getPublicImageUrl(coverImage) || null,
+          galleryUrls: (p.gallery_urls || []).map((url: string) => getPublicImageUrl(url)).filter(Boolean),
           facilities: p.facilities || [],
           nearestStationCode: p.nearest_station_code,
           nearestStationDistance: p.nearest_station_distance,
@@ -205,8 +206,8 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         yearCompleted: p.year_completed,
         totalUnits: p.total_units,
         description: p.description,
-        imageUrl: p.image_url || null,
-        galleryUrls: p.gallery_urls || [],
+        imageUrl: getPublicImageUrl(p.image_url) || null,
+        galleryUrls: (p.gallery_urls || []).map((url: string) => getPublicImageUrl(url)).filter(Boolean),
         facilities: p.facilities || [],
         nearestStationCode: p.nearest_station_code,
         nearestStationDistance: p.nearest_station_distance,
@@ -280,7 +281,7 @@ export async function getPropertiesInProject(
       return {
         properties: (data || []).map((p: any) => ({
           ...p,
-          image_url: p.main_image,
+          image_url: getPublicImageUrl(p.main_image) || null,
         })) as unknown as PublicPropertyNearStation[],
         total: count || 0,
       };

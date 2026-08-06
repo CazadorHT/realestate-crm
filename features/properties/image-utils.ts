@@ -45,8 +45,7 @@ export function getPublicImageUrl(
     return trimmed;
   }
 
-  // 1. Clean up SUPABASE_URL / site URL
-  const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qaihjhvdwfafawezxivb.supabase.co";
   let baseUrl = rawSupabaseUrl.replace(/\/+$/, "");
   if (baseUrl && !baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;
@@ -58,7 +57,7 @@ export function getPublicImageUrl(
     cleanPath = cleanPath.replace(new RegExp(`^${bucket}/`), "");
   }
 
-  if (!baseUrl || !cleanPath) return "";
+  if (!cleanPath) return "";
 
   // Encode the path to handle spaces and special characters correctly
   const encodedPath = cleanPath

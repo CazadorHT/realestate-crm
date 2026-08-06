@@ -33,6 +33,7 @@ import { MdOutlinePets } from "react-icons/md";
 import { FaAirbnb } from "react-icons/fa6";
 
 import { type Language } from "@/lib/i18n";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 export interface GalleryImage {
   id?: string;
@@ -79,7 +80,8 @@ const ImageWithFallback = ({
   failedImages: Set<string>;
   showFallback?: boolean;
 }) => {
-  const srcUrl = img.url || img.image_url;
+  const rawTarget = img.url || img.image_url || img.storage_path || "";
+  const srcUrl = getPublicImageUrl(rawTarget);
   const imgId = img.id || img.storage_path || srcUrl || "unknown";
 
   // If URL is empty, show fallback immediately

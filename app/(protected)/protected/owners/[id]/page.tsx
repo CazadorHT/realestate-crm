@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getOwnerById } from "@/features/owners/queries";
 import { createClient } from "@/lib/supabase/server";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 // Components
 import { OwnerHeader } from "@/features/owners/components/OwnerHeader";
@@ -21,7 +22,11 @@ async function getOwnerProperties(ownerId: string) {
     .select("id, title, property_type, listing_type, status, price, original_price, rental_price, original_rental_price, bedrooms, bathrooms, size_sqm, district, subdistrict, province, popular_area, created_at, tenant_id, main_image_url:main_image")
     .eq("owner_id", ownerId)
     .order("created_at", { ascending: false });
-  return data || [];
+  
+  return (data || []).map((p: any) => ({
+    ...p,
+    main_image_url: getPublicImageUrl(p.main_image_url) || null,
+  }));
 }
 
 export default async function OwnerPage({ params }: PageProps) {

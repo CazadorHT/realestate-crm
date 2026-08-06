@@ -1,6 +1,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { PropertyStatus, PropertyType, ListingType, PropertyImageMetadata } from "../types";
+import { getPublicImageUrl } from "../image-utils";
 
 /**
  * Return minimal properties for select inputs in protected CRM
@@ -28,7 +29,7 @@ export async function getPropertiesForSelect() {
   if (error) throw error;
 
   return (data ?? []).map((p) => {
-    const coverUrl = p.main_image || null;
+    const coverUrl = getPublicImageUrl(p.main_image) || null;
     return {
       ...p,
       id: p.id!,

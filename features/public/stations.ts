@@ -1,6 +1,7 @@
 "use server";
 import { unstable_cache } from "next/cache";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 // ============================================================
 // Types
@@ -442,6 +443,7 @@ export async function getPropertiesNearStation(
         const { property_features, ...rest } = row;
         return {
           ...rest,
+          main_image: getPublicImageUrl(row.main_image) || null,
           features: (property_features || []).map((pf: any) => pf.features).filter((f: any) => !!f),
         };
       });

@@ -72,7 +72,16 @@ export async function generateMetadata(
 
 const LOCALIZATION: Record<string, Record<string, string>> = {
   condo: { th: "คอนโดมิเนียม", en: "Condominiums", cn: "公寓房产", ru: "Кондоминиумы" },
-  house: { th: "บ้านเดี่ยว & ทาวน์โฮม", en: "Houses & Townhomes", cn: "别墅与联排", ru: "Дома и таунхаусы" },
+  house: { th: "บ้านเดี่ยว", en: "Houses", cn: "独栋别墅", ru: "Дома" },
+  townhome: { th: "ทาวน์โฮม", en: "Townhomes", cn: "联排别墅", ru: "Таунхаусы" },
+  villa: { th: "วิลล่า", en: "Villas", cn: "度假别墅", ru: "Виллы" },
+  pool_villa: { th: "พูลวิลล่า", en: "Pool Villas", cn: "泳池别墅", ru: "Виллы с бассейном" },
+  office_building: { th: "สำนักงาน/ออฟฟิศ", en: "Office Space", cn: "写字楼", ru: "Офисы" },
+  commercial_building: { th: "อาคารพาณิชย์/อาคารเช่า", en: "Commercial Building", cn: "商业楼宇", ru: "Коммерческая недвижимость" },
+  land: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земельные участки" },
+  warehouse: { th: "โกดัง/โรงงาน", en: "Warehouse/Factory", cn: "仓库/厂房", ru: "Склады" },
+  home_office: { th: "โฮมออฟฟิศ", en: "Home Office", cn: "商住两用", ru: "Хоум-офисы" },
+  other: { th: "อสังหาริมทรัพย์อื่นๆ", en: "Other Properties", cn: "其他房产", ru: "Другое" },
   sale_median: { th: "ราคากลางซื้อขาย", en: "Median Sale Price", cn: "售价中位数", ru: "Медиана цены продажи" },
   rent_median: { th: "ราคากลางเช่ารายเดือน", en: "Median Rent Price", cn: "月租金中位数", ru: "Медиана стоимости аренды" },
   sqm_median: { th: "ราคากลางต่อ ตร.ม.", en: "Median Price / Sqm", cn: "平米单价中位数", ru: "มัธยฐานราคาต่อ ตร.ม." },
@@ -274,55 +283,40 @@ export default async function AreaDetailPage(
                 </h3>
               </div>
               
-              {insights.hasEnoughData ? (
+              {insights.hasEnoughData && (insights.byType?.length > 0 || insights.condo.count > 0 || insights.house.count > 0) ? (
                 <div className="space-y-4">
-                  {/* Condo Stats */}
-                  <div className="space-y-2 pb-3 border-b border-slate-100">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-slate-700">{t("condo")}</span>
-                      <span className="text-[10px] font-bold text-indigo-600">
-                        {insights.condo.count} {t("units")}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1 bg-slate-50 p-2.5 rounded-xl text-center text-slate-600">
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 block uppercase">{t("sale_median")}</span>
-                        <span className="text-xs font-extrabold text-slate-850">{formatPrice(insights.condo.saleMedian, language)}</span>
-                      </div>
-                      <div className="border-x border-slate-200/50">
-                        <span className="text-[9px] font-bold text-slate-400 block uppercase">{t("rent_median")}</span>
-                        <span className="text-xs font-extrabold text-slate-850">{formatPrice(insights.condo.rentMedian, language, true)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 block uppercase">{t("sqm_median")}</span>
-                        <span className="text-xs font-extrabold text-slate-850">{formatPrice(insights.condo.priceSqmMedian, language)}/㎡</span>
-                      </div>
-                    </div>
-                  </div>
+                  {(insights.byType && insights.byType.length > 0
+                    ? insights.byType
+                    : [insights.condo, insights.house].filter((s) => s.count > 0)
+                  ).map((stat) => {
+                    const labelKey = stat.type.toLowerCase();
+                    const typeLabel = t(labelKey) || stat.type.replace(/_/g, " ");
 
-                  {/* House Stats */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-slate-700">{t("house")}</span>
-                      <span className="text-[10px] font-bold text-emerald-600">
-                        {insights.house.count} {t("units")}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1 bg-slate-50 p-2.5 rounded-xl text-center text-slate-600">
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 block uppercase">{t("sale_median")}</span>
-                        <span className="text-xs font-extrabold text-slate-855">{formatPrice(insights.house.saleMedian, language)}</span>
+                    return (
+                      <div key={stat.type} className="space-y-2 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-slate-700 capitalize">{typeLabel}</span>
+                          <span className="text-[10px] font-bold text-indigo-600">
+                            {stat.count} {t("units")}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1 bg-slate-50 p-2.5 rounded-xl text-center text-slate-600">
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-400 block uppercase">{t("sale_median")}</span>
+                            <span className="text-xs font-extrabold text-slate-850">{formatPrice(stat.saleMedian, language)}</span>
+                          </div>
+                          <div className="border-x border-slate-200/50">
+                            <span className="text-[9px] font-bold text-slate-400 block uppercase">{t("rent_median")}</span>
+                            <span className="text-xs font-extrabold text-slate-850">{formatPrice(stat.rentMedian, language, true)}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-400 block uppercase">{t("sqm_median")}</span>
+                            <span className="text-xs font-extrabold text-slate-850">{formatPrice(stat.priceSqmMedian, language)}/㎡</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="border-x border-slate-200/50">
-                        <span className="text-[9px] font-bold text-slate-400 block uppercase">{t("rent_median")}</span>
-                        <span className="text-xs font-extrabold text-slate-855">{formatPrice(insights.house.rentMedian, language, true)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 block uppercase">{t("sqm_median")}</span>
-                        <span className="text-xs font-extrabold text-slate-855">{formatPrice(insights.house.priceSqmMedian, language)}/㎡</span>
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100/80 text-center flex items-center justify-center gap-2 text-slate-450 text-[11px] font-semibold">
