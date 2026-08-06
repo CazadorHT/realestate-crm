@@ -332,7 +332,9 @@ export function PropertyCardImage({
                       } - Image ${index + 1}`}
                       fill
                       sizes="(max-width: 640px) 95vw, (max-width: 768px) 45vw, (max-width: 1280px) 300px, 320px"
-                      className="object-cover object-center"
+                      className={`object-cover object-center transition-[filter] duration-500 ${
+                        loadedImages[index] ? "blur-0" : "blur-sm"
+                      }`}
                       priority={priority && index === 0}
                       {...(!(priority && index === 0) && { loading: "lazy" })}
                       onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
