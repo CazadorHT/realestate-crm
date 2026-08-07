@@ -15,7 +15,7 @@ import {
 } from "@/features/public/popular-areas";
 import { getPublicProperties } from "@/lib/services/properties";
 import { getBlogPosts } from "@/lib/services/blog";
-import { getPartners } from "@/features/admin/partners-actions";
+import { getPublicPartnersCached } from "@/features/admin/partners-actions";
 import { getServerFAQs, type FAQItem } from "@/lib/services/faqs";
 import { getLocalizedField } from "@/lib/i18n";
 import { getPublicProjects } from "@/features/public/projects";
@@ -145,7 +145,7 @@ export default async function LandingPage() {
     initialPropertiesData,
     hotDealsData,
     initialPosts,
-    partnersRes,
+    partners,
     serverFaqs,
     transitLines,
     projects
@@ -154,13 +154,11 @@ export default async function LandingPage() {
     getPublicProperties({ limit: 12, sort: "NEWEST" }),
     getPublicProperties({ filter: 'hot_deals', limit: 4 }),
     getBlogPosts(undefined, 4),
-    getPartners({ activeOnly: true }),
+    getPublicPartnersCached(),
     getServerFAQs(),
     getTransitLinesWithStations(),
     getPublicProjects()
   ]);
-
-  const partners = partnersRes.success ? partnersRes.data : [];
 
   // 2. Resolve Initial Province (Prefer BKK)
   const bkkIndex = provinces.findIndex(p => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร");

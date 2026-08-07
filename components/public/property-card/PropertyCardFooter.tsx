@@ -291,11 +291,11 @@ export function PropertyCardFooter({
           
 
         {/* Update Date (Right) */}
-        <div className="text-[10px] md:text-[11px] text-stone-400 italic flex ml-auto">
+        <div className="text-[10px] md:text-[11px]  text-stone-400 italic flex ml-auto">
           {property.updated_at ? (
             <>
               <Clock className="h-3 w-3 mr-1" />
-              <span className="text-slate-400 font-normal min-w-[60px]">
+              <span className="text-slate-400 font-normal ">
                 {mounted && property.updated_at
                   ? getRelativeDateString(property.updated_at, language)
                   : ""}

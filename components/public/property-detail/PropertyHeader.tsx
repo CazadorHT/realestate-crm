@@ -295,57 +295,57 @@ export function PropertyHeader({
 
             <div className="flex flex-col lg:items-start gap-4 lg:gap-0">
               <div className="flex lg:flex-row flex-col gap-4 w-full justify-between lg:items-end items-start">
-                <div className="space-y-3 grow min-w-0 w-full xl:max-w-[1000px]">
-                  <div className="flex items-center gap-1 md:gap-2 overflow-x-auto no-scrollbar flex-nowrap py-1">
-                    <Badge
-                      className={`rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
-                        property.listing_type === "SALE"
-                          ? "bg-emerald-600 text-white"
-                          : property.listing_type === "RENT"
-                            ? "bg-linear-to-r from-sky-500 to-blue-600 text-white"
-                            : "bg-linear-to-r from-emerald-500 via-teal-500 to-blue-600 text-white"
-                      }`}
-                    >
-                      {property.listing_type === "SALE"
-                        ? t("common.for_sale")
-                        : property.listing_type === "RENT"
-                          ? t("common.for_rent")
-                          : t("common.for_sale_rent")}
-                    </Badge>
+                <div className="space-y-3 grow min-w-0  xl:max-w-[1000px]">
+                  <div className="flex w-full items-center gap-1.5 md:gap-2 overflow-x-auto no-scrollbar flex-nowrap py-1">
+  <Badge
+    className={`shrink-0 rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
+      property.listing_type === "SALE"
+        ? "bg-emerald-600 text-white"
+        : property.listing_type === "RENT"
+          ? "bg-linear-to-r from-sky-500 to-blue-600 text-white"
+          : "bg-linear-to-r from-emerald-500 via-teal-500 to-blue-600 text-white"
+    }`}
+  >
+    {property.listing_type === "SALE"
+      ? t("common.for_sale")
+      : property.listing_type === "RENT"
+        ? t("common.for_rent")
+        : t("common.for_sale_rent")}
+  </Badge>
 
-                    {property.property_type && (
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "rounded-full px-3 md:px-4 py-1.5 md:py-2 text-white text-[11px] md:text-sm font-bold border-transparent shadow-sm whitespace-nowrap",
-                          typeColor.bg,
-                          typeColor.text,
-                        )}
-                      >
-                        {t(
-                          `property_types.${property.property_type.toLowerCase()}`,
-                        )}
-                      </Badge>
-                    )}
+  {property.property_type && (
+    <Badge
+      variant="outline"
+      className={cn(
+        "shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-white text-[11px] md:text-sm font-bold border-transparent shadow-sm whitespace-nowrap",
+        typeColor.bg,
+        typeColor.text,
+      )}
+    >
+      {t(
+        `property_types.${property.property_type.toLowerCase()}`,
+      )}
+    </Badge>
+  )}
 
-                    {property.is_fully_furnished && (
-                      <Badge
-                        variant="outline"
-                        className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
-                      >
-                        ✨ {t("property.specs.fully_furnished")}
-                      </Badge>
-                    )}
+  {property.is_fully_furnished && (
+    <Badge
+      variant="outline"
+      className="shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
+    >
+      ✨ {t("property.specs.fully_furnished")}
+    </Badge>
+  )}
 
-                    {property.is_bare_shell && (
-                      <Badge
-                        variant="outline"
-                        className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
-                      >
-                        🏗️ {t("property.specs.bare_shell")}
-                      </Badge>
-                    )}
-                  </div>
+  {property.is_bare_shell && (
+    <Badge
+      variant="outline"
+      className="shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
+    >
+      🏗️ {t("property.specs.bare_shell")}
+    </Badge>
+  )}
+</div>
 
                   {property.project && (() => {
                     const typeKey = property.property_type?.toLowerCase() || "other";
@@ -356,11 +356,11 @@ export function PropertyHeader({
                       <div className="mb-3">
                         <Link 
                           href={`/projects/${property.project.slug}`}
-                          className="group/proj  inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
+                          className="group/proj h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
                           title={`ดูโครงการ ${projectName}`}
                         >
-                          <ProjectIcon className="w-4 h-4 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
-                          <span className="font-semibold">{projectName}</span>
+                          <div className="flex items-center gap-2"><ProjectIcon className="w-5 h-5 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
+                          <span className="font-semibold">{projectName}</span></div>
                           <ChevronRight className="w-3.5 h-3.5 text-blue-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform" />
                         </Link>
                       </div>

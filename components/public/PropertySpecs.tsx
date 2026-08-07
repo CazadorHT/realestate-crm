@@ -137,8 +137,8 @@ export function PropertySpecs({
   const getGridColsClass = (count: number) => {
     if (count <= 2) return "grid-cols-2 lg:grid-cols-4";
     if (count === 3) return "grid-cols-3 lg:grid-cols-4";
-    if (count === 4) return "grid-cols-2 sm:grid-cols-4";
-    if (count === 5) return "grid-cols-2 sm:grid-cols-5";
+    if (count === 4) return "grid-cols-2 sm:grid-cols-4 ";
+    if (count === 5) return "grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 ";
     if (count === 6) return "grid-cols-2 sm:grid-cols-3";
     if (count === 7) return "grid-cols-2 sm:grid-cols-4";
     if (count === 8) return "grid-cols-2 sm:grid-cols-4";

@@ -991,7 +991,7 @@
     "specs": {
       "bedrooms": "ห้องนอน",
       "bathrooms": "ห้องน้ำ",
-      "fully_furnished": "แต่งครบ / Fully Furnished",
+      "fully_furnished": "แต่งครบพร้อมอยู่",
       "bare_shell": "ห้องเปล่า / Bare Shell",
       "size_sqm": "พื้นที่ใช้สอย",
       "land_size": "ขนาดที่ดิน",

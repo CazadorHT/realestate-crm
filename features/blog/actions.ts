@@ -1094,3 +1094,16 @@ export async function fetchPublicBlogPostsAction(limit = 4): Promise<BlogPost[]>
     return [];
   }
 }
+
+/**
+ * Server Action: Fetches cached public FAQs for front-facing components
+ */
+export async function fetchPublicFaqsAction() {
+  try {
+    const { getServerFAQs } = await import("@/lib/services/faqs");
+    return await getServerFAQs();
+  } catch (error) {
+    console.error("[fetchPublicFaqsAction] Error:", error);
+    return [];
+  }
+}

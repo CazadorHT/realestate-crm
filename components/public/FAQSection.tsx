@@ -2,7 +2,6 @@
 
 import { m } from "framer-motion";
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import {
   Accordion,
   AccordionContent,
@@ -15,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { type FAQItem } from "@/lib/services/faqs";
+import { fetchPublicFaqsAction } from "@/features/blog/actions";
 
 export function FAQSection({ initialFaqs = [] }: { initialFaqs?: FAQItem[] }) {
   const { t, language } = useLanguage();
@@ -30,41 +30,20 @@ export function FAQSection({ initialFaqs = [] }: { initialFaqs?: FAQItem[] }) {
       return;
     }
     async function fetchFAQs() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("cms_content_v3")
-        .select("id, title, content, meta_data, status")
-        .eq("content_type", "FAQ")
-        .eq("status", "published")
-        .order("meta_data->sort_order", { ascending: true })
-        .limit(5);
-
-      if (data) {
-        const mapped: FAQItem[] = data.map((item) => {
-          const titleObj = (typeof item.title === "object" && item.title !== null && !Array.isArray(item.title) ? item.title : { th: String(item.title || "") }) as Record<string, string>;
-          const contentObj = (typeof item.content === "object" && item.content !== null && !Array.isArray(item.content) ? item.content : { th: String(item.content || "") }) as Record<string, string>;
-          const metaObj = (typeof item.meta_data === "object" && item.meta_data !== null && !Array.isArray(item.meta_data) ? item.meta_data : {}) as Record<string, unknown>;
-          return {
-            id: item.id,
-            question: titleObj.th || "",
-            question_en: titleObj.en || "",
-            question_cn: titleObj.cn || "",
-            question_ru: titleObj.ru || "",
-            answer: contentObj.th || "",
-            answer_en: contentObj.en || "",
-            answer_cn: contentObj.cn || "",
-            answer_ru: contentObj.ru || "",
-            category: typeof metaObj.category === "string" ? metaObj.category : "ทั่วไป",
-            view_count: typeof metaObj.view_count === "number" ? metaObj.view_count : (typeof metaObj.view_count === "string" ? Number(metaObj.view_count) : 0),
-          };
-        });
-        setFaqs(mapped);
+      try {
+        const data = await fetchPublicFaqsAction();
+        if (data && data.length > 0) {
+          setFaqs(data as FAQItem[]);
+        }
+      } catch (err) {
+        console.error("Error fetching fallback FAQs:", err);
+      } finally {
+        setLoading(false);
+        setIsMounted(true);
       }
-      setLoading(false);
-      setIsMounted(true);
     }
     fetchFAQs();
-  }, [initialFaqs.length]);
+  }, [initialFaqs]);
 
   // if (loading) return null; // Removed to prevent layout shift
   if (!loading && faqs.length === 0) return null;

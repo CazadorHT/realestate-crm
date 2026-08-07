@@ -1,8 +1,8 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
 import { requireAuthContext, assertSystemAdmin } from "@/lib/authz";
 import { calculateNewSortOrders } from "./partners-utils";
@@ -660,4 +660,51 @@ export async function seedDefaultPartners() {
     console.error("seedDefaultPartners error:", error);
     return { success: false, message: mapDbError(error) };
   }
+}
+
+/**
+ * Public cached fetch for Partners (1-year TTL with on-demand purge)
+ */
+export async function getPublicPartnersCached(): Promise<PartnerRow[]> {
+  return unstable_cache(
+    async () => {
+      try {
+        const supabase = createPublicClient();
+        const { data } = await supabase
+          .from("cms_content_v3")
+          .select("id, title, cover_image, meta_data, status, created_at, updated_at")
+          .eq("content_type", "PARTNER")
+          .eq("status", "published")
+          .order("meta_data->sort_order", { ascending: true })
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (!data) return [];
+
+        return data.map((item: any) => {
+          const titleObj = (typeof item.title === "object" && item.title !== null && !Array.isArray(item.title) ? item.title : {}) as Record<string, string>;
+          const metaObj = (typeof item.meta_data === "object" && item.meta_data !== null && !Array.isArray(item.meta_data) ? item.meta_data : {}) as Record<string, unknown>;
+          return {
+            id: item.id,
+            name: titleObj.th || titleObj.en || String(item.title || ""),
+            name_en: titleObj.en || null,
+            name_cn: titleObj.cn || null,
+            name_ru: titleObj.ru || null,
+            logo_url: item.cover_image || null,
+            website_url: typeof metaObj.website_url === "string" ? metaObj.website_url : null,
+            status: item.status,
+            is_active: item.status === "published",
+            sort_order: typeof metaObj.sort_order === "number" ? metaObj.sort_order : 0,
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+          };
+        });
+      } catch (err) {
+        console.error("getPublicPartnersCached error:", err);
+        return [];
+      }
+    },
+    ["public-partners-list-v1"],
+    { revalidate: 31536000, tags: ["cms", "partners", "public-data"] }
+  )();
 }

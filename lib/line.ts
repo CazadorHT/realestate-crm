@@ -167,12 +167,19 @@ export async function broadcastLineMessage(
       const supabase = createAdminClient();
       const textContent = typeof message === "string" ? message : JSON.stringify(message);
       
+      let defaultTenantId: string | null = null;
+      try {
+        const { data: defaultTenant } = await supabase.from("tenants_v3").select("id").limit(1).maybeSingle();
+        defaultTenantId = defaultTenant?.id || null;
+      } catch (_) {}
+
       await supabase.from("communications_hub_v3").insert({
         identity_id: null,
         platform: "LINE",
         content: textContent,
         direction: 1,
-        payload: { is_broadcast: true, global: true }
+        payload: { is_broadcast: true, global: true },
+        tenant_id: defaultTenantId,
       });
     } catch (logErr) {
       console.error("Error logging broadcast:", logErr);
@@ -237,12 +244,19 @@ export async function multicastLineMessage(
       const supabase = createAdminClient();
       const textContent = typeof message === "string" ? message : JSON.stringify(message);
       
+      let defaultTenantId: string | null = null;
+      try {
+        const { data: defaultTenant } = await supabase.from("tenants_v3").select("id").limit(1).maybeSingle();
+        defaultTenantId = defaultTenant?.id || null;
+      } catch (_) {}
+
       const insertRows = userIds.map(uid => ({
         identity_id: null, // We can resolve this if we do a lookup, but null works as a fallback
         platform: "LINE" as const,
         content: textContent,
         direction: 1,
-        payload: { is_multicast: true, target_line_user_id: uid }
+        payload: { is_multicast: true, target_line_user_id: uid },
+        tenant_id: defaultTenantId,
       }));
 
       await supabase.from("communications_hub_v3").insert(insertRows);

@@ -75,7 +75,7 @@ export function PropertyCardInfo({
   const projectSlug = projectsObj?.slug || (property as any).project_slug || null;
 
   return (
-    <div className="space-y-2 mb-3">
+    <div className="space-y-2 mb-1">
       {/* Top row: Badge and Compare button (outside detail links) */}
       <div className="flex justify-between items-center gap-4 mb-2">
         <span
@@ -116,37 +116,37 @@ export function PropertyCardInfo({
         <h3 className="text-sm sm:text-base md:text-base font-semibold tracking-wide text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-800 transition-all duration-300 ease-in-out">
           {localizedTitle}
         </h3>
-      </Link>
-
-      {/* Project Link Badge */}
-      {projectName && (
-        <div className="flex items-center my-1">
-          <Link
-            href={projectSlug ? `/projects/${projectSlug}` : `/properties/${property.slug || property.id}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (handleCardClick) handleCardClick();
-            }}
-            className="group/proj inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-semibold text-blue-700 bg-gradient-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white rounded-lg border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 touch-manipulation max-w-full"
-            title={`ดูโครงการ ${projectName}`}
-          >
-            <ProjectIconComponent className="w-3.5 h-3.5 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
-            <span className="truncate max-w-[160px] sm:max-w-[220px] md:max-w-none font-semibold">
-              {projectName}
-            </span>
-            <ChevronRight className="w-3 h-3 text-blue-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform" />
-          </Link>
-        </div>
-      )}
+      </Link>      
 
       {/* Location block link below the title */}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 pt-1">
+        {/* Row 1: Project Link (ถ้ามี) */}
+         {projectName && (
+          <div className="flex items-center min-w-0">
+            <Link
+              href={projectSlug ? `/projects/${projectSlug}` : `/properties/${property.slug || property.id}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (handleCardClick) handleCardClick();
+              }}
+              className="group/proj inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors min-w-0 max-w-full"
+              title={`ดูโครงการ ${projectName}`}
+            >
+              <ProjectIconComponent className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <span className="truncate hover:underline">
+                {projectName}
+              </span>
+              <ChevronRight className="w-3 h-3 text-blue-400 group-hover/proj:translate-x-0.5 shrink-0 transition-transform" />
+            </Link>
+          </div>
+        )}
+        {/* row2 location */}
         <Link
           href={`/properties/${property.slug || property.id}`}
-          className="flex items-center gap-1 text-stone-600 min-w-0"
+          className="flex items-center gap-1.5 text-stone-600 min-w-0"
           onClick={handleCardClick}
         >
-          <HiMapPin className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+          <HiMapPin className="h-3.5 w-3.5 text-slate-500 shrink-0" />
           <span className="text-xs truncate whitespace-nowrap hover:text-blue-600 transition-colors">
             {getSafeText(
               areaProvince,
@@ -283,7 +283,7 @@ export function PropertyCardInfo({
           return (
             <div className="flex items-center gap-1 text-stone-500 min-w-0 mt-0.5 ml-0.5">
               {/* <FaTrainSubway className="h-3 w-3 text-blue-500 shrink-0" /> */}
-              <span className="text-[11px] flex items-center gap-1 truncate">
+              <span className="text-[11px] flex items-center gap-1.5 truncate">
                 <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0 ${badgeClass}`}>
                   {transitType}
                 </span>
