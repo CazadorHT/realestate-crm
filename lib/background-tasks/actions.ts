@@ -153,7 +153,7 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
 
     let query = adminSupabase
       .from("system_task_queue")
-      .select("id, task_type, payload, status, result, error_message, run_at, attempts, created_at, updated_at");
+      .select("id, task_name, payload, status, error_log, run_at, completed_at");
 
     const { data, error } = await query
       .order("run_at", { ascending: false })
