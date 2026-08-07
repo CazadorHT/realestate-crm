@@ -50,7 +50,14 @@ export function FeaturedStoryCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Client-side refresh: fetch latest properties to ensure new ones appear immediately
+  // Sync state whenever initialProperties changes from parent re-renders/revalidation
+  useEffect(() => {
+    if (initialProperties && initialProperties.length > 0) {
+      setProperties(initialProperties);
+    }
+  }, [initialProperties]);
+
+  // Client-side refresh: fetch latest properties if initialProperties was empty
   useEffect(() => {
     if (initialProperties && initialProperties.length > 0) return;
 
@@ -70,7 +77,7 @@ export function FeaturedStoryCarousel({
         // Silently fall back to server-rendered initialProperties
       });
     return () => controller.abort();
-  }, []);
+  }, [initialProperties]);
 
   const totalItems = properties.length;
   const currentProperty = properties[currentIndex] || properties[0];

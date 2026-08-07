@@ -1,4 +1,6 @@
 "use server";
+import { join as joinPath } from "path";
+import { readFile } from "fs/promises";
 import { randomUUID } from "crypto";
 import { requireAuthContext, assertStaff, authzFail } from "@/lib/authz";
 import { validateImageFile } from "@/lib/file-validation";
@@ -103,23 +105,51 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
         });
 
       if (watermark === "true") {
-        const svgWatermark = Buffer.from(
-          `<svg width="150" height="48" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100%" height="100%" rx="8" fill="#000000" fill-opacity="0.35"/>
-            <g transform="translate(10, 8)">
-              <!-- Isometric VCC Logo Icon -->
-              <path d="M0 16l16-8v24l-16 8z" fill="#ffffff" fill-opacity="0.9"/>
-              <path d="M16 8l16 8v24l-16-8z" fill="#3b82f6" fill-opacity="0.9"/>
-              <path d="M0 16l16-8 16 8-16 8z" fill="#60a5fa" fill-opacity="0.9"/>
-            </g>
-          </svg>`
-        );
-        sharpImg = sharpImg.composite([
-          {
-            input: svgWatermark,
-            gravity: "southeast",
-          },
-        ]);
+        try {
+          const watermarkPath = joinPath(
+            process.cwd(),
+            "public/images/branding/vcc-asset/png/logo-light.png"
+          );
+          const logoBuffer = await readFile(watermarkPath);
+          const base64Logo = logoBuffer.toString("base64");
+
+          const svgWatermark = Buffer.from(
+            `<svg width="240" height="64" viewBox="0 0 240 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+              <rect width="240" height="64" rx="14" fill="#000000" fill-opacity="0.45"/>
+              <image href="data:image/png;base64,${base64Logo}" x="16" y="10" width="208" height="44" preserveAspectRatio="xMidYMid meet"/>
+            </svg>`
+          );
+
+          sharpImg = sharpImg.composite([
+            {
+              input: svgWatermark,
+              gravity: "center",
+            },
+          ]);
+        } catch (logoErr) {
+          console.error(
+            "Failed to load logo-light.png for watermark, using fallback SVG:",
+            logoErr
+          );
+          const svgWatermark = Buffer.from(
+            `<svg width="200" height="54" viewBox="0 0 200 54" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="54" rx="12" fill="#000000" fill-opacity="0.45"/>
+              <g transform="translate(14, 11) scale(0.65)">
+                <!-- Isometric VCC Logo Icon -->
+                <path d="M0 16l16-8v24l-16 8z" fill="#ffffff" fill-opacity="0.9"/>
+                <path d="M16 8l16 8v24l-16-8z" fill="#3b82f6" fill-opacity="0.9"/>
+                <path d="M0 16l16-8 16 8-16 8z" fill="#60a5fa" fill-opacity="0.9"/>
+              </g>
+              <text x="56" y="32" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" letter-spacing="1">VCC ASSET</text>
+            </svg>`
+          );
+          sharpImg = sharpImg.composite([
+            {
+              input: svgWatermark,
+              gravity: "center",
+            },
+          ]);
+        }
       }
 
       processedBuffer = await sharpImg

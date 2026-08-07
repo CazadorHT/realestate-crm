@@ -661,7 +661,7 @@ export function PropertyImageUploader({
             disabled={disabled}
             className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer disabled:cursor-not-allowed"
           />
-          <span>ใส่ลายน้ำ "VC CONNECT ASSET" ที่มุมขวาล่างอัตโนมัติ</span>
+          <span>ใส่ลายน้ำโลโก้ VCC ASSET ที่กึ่งกลางภาพอัตโนมัติ</span>
         </label>
       </div>
 
