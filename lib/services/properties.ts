@@ -118,9 +118,6 @@ const PUBLIC_LIST_COLUMNS = `
   is_pet_friendly, is_foreigner_quota, is_tax_registered,
   property_images (
     image_url, storage_path, is_cover, sort_order
-  ),
-  property_features (
-    features (id, name, name_en, name_cn, name_ru, icon_key)
   )
 `;
 
