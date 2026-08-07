@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { CheckSquare, Square } from "lucide-react";
+import { CheckSquare, Square, ChevronRight } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { 
   HiMapPin, 
   HiHome, 
   HiBriefcase, 
   HiBuildingStorefront,
-  HiCircleStack
+  HiCircleStack,
+  HiBuildingOffice2
 } from "react-icons/hi2";
 import { 
   MdWarehouse, 
@@ -63,8 +64,15 @@ export function PropertyCardInfo({
   const typeKey = property.property_type?.toLowerCase() || "other";
   const typeLabel = t(`property_types.${typeKey}`);
   const IconComponent = PROPERTY_TYPE_ICONS[typeKey] || HiCircleStack;
+  const ProjectIconComponent = PROPERTY_TYPE_ICONS[typeKey] || HiBuildingOffice2;
 
   const localizedTitle = getLocaleValue(property, "title", language);
+
+  const projectsObj = (property as any).projects;
+  const projectName = projectsObj
+    ? (language === "en" ? projectsObj.name_en || projectsObj.name_th : projectsObj.name_th || projectsObj.name_en)
+    : (property as any).project_name || null;
+  const projectSlug = projectsObj?.slug || (property as any).project_slug || null;
 
   return (
     <div className="space-y-2 mb-3">
@@ -109,6 +117,27 @@ export function PropertyCardInfo({
           {localizedTitle}
         </h3>
       </Link>
+
+      {/* Project Link Badge */}
+      {projectName && (
+        <div className="flex items-center my-1">
+          <Link
+            href={projectSlug ? `/projects/${projectSlug}` : `/properties/${property.slug || property.id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (handleCardClick) handleCardClick();
+            }}
+            className="group/proj inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs font-semibold text-blue-700 bg-gradient-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white rounded-lg border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 touch-manipulation max-w-full"
+            title={`ดูโครงการ ${projectName}`}
+          >
+            <ProjectIconComponent className="w-3.5 h-3.5 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
+            <span className="truncate max-w-[160px] sm:max-w-[220px] md:max-w-none font-semibold">
+              {projectName}
+            </span>
+            <ChevronRight className="w-3 h-3 text-blue-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform" />
+          </Link>
+        </div>
+      )}
 
       {/* Location block link below the title */}
       <div className="flex flex-col gap-1">

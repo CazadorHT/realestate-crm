@@ -1,13 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeHelp, MapPin, Building2 } from "lucide-react";
+import { 
+  BadgeHelp, 
+  MapPin, 
+  Building2, 
+  Home, 
+  Warehouse, 
+  Briefcase, 
+  Factory, 
+  Store,
+  ChevronRight
+} from "lucide-react";
+import { MdApartment, MdVilla, MdPool, MdLandscape } from "react-icons/md";
 import { Badge } from "@/components/ui/badge";
 import {
   KeySellingPoints,
 } from "@/components/public/KeySellingPoints";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { cn } from "@/lib/utils";
+
+const PROPERTY_TYPE_ICONS: Record<string, any> = {
+  house: Home,
+  condo: MdApartment,
+  townhome: Warehouse,
+  land: MdLandscape,
+  office: Briefcase,
+  office_building: Briefcase,
+  warehouse: Factory,
+  factory: Factory,
+  villa: MdVilla,
+  pool_villa: MdPool,
+  commercial: Store,
+  commercial_building: Store,
+};
 import {
   getOfficePrice,
   getTypeColor,
@@ -321,17 +347,25 @@ export function PropertyHeader({
                     )}
                   </div>
 
-                  {property.project && (
-                    <div className="mb-3">
-                      <Link 
-                        href={`/projects/${property.project.slug}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs md:text-sm font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100/60 shadow-2xs transition-all duration-200 cursor-pointer"
-                      >
-                        <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-500" />
-                        <span>{getLocaleValue(property.project, "name", language)}</span>
-                      </Link>
-                    </div>
-                  )}
+                  {property.project && (() => {
+                    const typeKey = property.property_type?.toLowerCase() || "other";
+                    const ProjectIcon = PROPERTY_TYPE_ICONS[typeKey] || Building2;
+                    const projectName = getLocaleValue(property.project, "name", language);
+
+                    return (
+                      <div className="mb-3">
+                        <Link 
+                          href={`/projects/${property.project.slug}`}
+                          className="group/proj  inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
+                          title={`ดูโครงการ ${projectName}`}
+                        >
+                          <ProjectIcon className="w-4 h-4 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
+                          <span className="font-semibold">{projectName}</span>
+                          <ChevronRight className="w-3.5 h-3.5 text-blue-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform" />
+                        </Link>
+                      </div>
+                    );
+                  })()}
 
                   <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
                     {localizedTitle}
