@@ -331,6 +331,19 @@ export async function saveOmniMessage(data: {
     }
   }
 
+  if (!tenant_id) {
+    try {
+      const { data: defaultTenant } = await supabase
+        .from("tenants_v3")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+      if (defaultTenant) {
+        tenant_id = defaultTenant.id;
+      }
+    } catch (_) {}
+  }
+
   const { error } = await supabase.from("communications_hub_v3").insert({
     identity_id,
     platform: data.source,

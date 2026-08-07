@@ -1081,3 +1081,16 @@ export async function refineBlogPostAction(
     };
   }
 }
+
+/**
+ * Server Action: Fetches cached public blog posts for front-facing components
+ */
+export async function fetchPublicBlogPostsAction(limit = 4): Promise<BlogPost[]> {
+  try {
+    const { getBlogPosts } = await import("@/lib/services/blog");
+    return await getBlogPosts(undefined, limit);
+  } catch (error) {
+    console.error("[fetchPublicBlogPostsAction] Error:", error);
+    return [];
+  }
+}

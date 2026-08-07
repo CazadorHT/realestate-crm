@@ -546,17 +546,21 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
 /**
  * Get all popular area slugs for static generation
  */
-export async function getAllAreaSlugs(): Promise<string[]> {
-  const supabase = await createClient();
+export const getAllAreaSlugs = unstable_cache(
+  async (): Promise<string[]> => {
+    const supabase = createPublicClient();
 
-  const { data, error } = await supabase
-    .from("popular_areas_v3")
-    .select("slug")
-    .eq("is_active", true);
+    const { data, error } = await supabase
+      .from("popular_areas_v3")
+      .select("slug")
+      .eq("is_active", true);
 
-  if (error || !data) return [];
-  return data.map((item: any) => item.slug).filter(Boolean);
-}
+    if (error || !data) return [];
+    return data.map((item: any) => item.slug).filter(Boolean);
+  },
+  ["all-area-slugs-v1"],
+  { revalidate: 31536000, tags: ["popular-areas", "area-slugs", "public-data"] }
+);
 
 /**
  * Fetch all active properties in this area

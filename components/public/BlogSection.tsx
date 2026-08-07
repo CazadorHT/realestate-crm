@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar, ArrowRight, User, BookOpen } from "lucide-react";
@@ -11,8 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
-// Removed date-fns imports to reduce bundle size. Using native Intl API instead.
 import { siteConfig } from "@/lib/site-config";
+import { fetchPublicBlogPostsAction } from "@/features/blog/actions";
 
 import type { BlogPost } from "@/features/blog/types";
 import { m } from "framer-motion";
@@ -43,44 +42,9 @@ export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }
       }
       
       try {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("cms_content_v3")
-          .select("id, slug, title, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score")
-          .eq("content_type", "BLOG")
-          .eq("status", "PUBLISHED")
-          .order("published_at", { ascending: false })
-          .limit(4);
-
-        if (data) {
-          const mapped: BlogPost[] = data.map((item: any) => {
-            const titleObj = typeof item.title === "object" && item.title !== null ? item.title : {};
-            const metaObj = typeof item.meta_data === "object" && item.meta_data !== null ? item.meta_data : {};
-            return {
-              id: item.id,
-              slug: item.slug,
-              title: titleObj.th || "",
-              title_en: titleObj.en || null,
-              title_cn: titleObj.cn || null,
-              title_ru: titleObj.ru || null,
-              content: "",
-              excerpt: metaObj.excerpt || "",
-              excerpt_en: metaObj.excerpt_en || null,
-              excerpt_cn: metaObj.excerpt_cn || null,
-              excerpt_ru: metaObj.excerpt_ru || null,
-              category: metaObj.category || null,
-              cover_image: item.cover_image || null,
-              is_published: item.status === "PUBLISHED",
-              published_at: item.published_at || null,
-              tags: [],
-              author_id: item.author_id,
-              view_count: metaObj.view_count || 0,
-              created_at: item.created_at || null,
-              updated_at: item.updated_at || null,
-              profiles: null,
-            } as unknown as BlogPost;
-          });
-          setPosts(mapped);
+        const data = await fetchPublicBlogPostsAction(4);
+        if (data && data.length > 0) {
+          setPosts(data);
         }
       } catch (err) {
         console.error("Error fetching fallback blog posts:", err);

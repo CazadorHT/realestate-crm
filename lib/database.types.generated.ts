@@ -1939,6 +1939,10 @@ export type Database = {
           is_active: boolean | null
           is_ai_generated: boolean | null
           name: Json
+          name_th?: string | null
+          name_en?: string | null
+          name_cn?: string | null
+          name_ru?: string | null
           province: string | null
           seo_description: Json | null
           seo_title: Json | null

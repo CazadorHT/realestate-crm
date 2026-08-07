@@ -275,7 +275,7 @@ export const getPopularAreasAction = unstable_cache(
     }
   },
   ["popular-areas-cache-v9"],
-  { revalidate: 604800, tags: ["popular-areas", "public-data"] }
+  { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
 );
 
 export type DynamicSuggestionItem = {
@@ -411,6 +411,6 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
     }
   },
   ["dynamic-search-suggestions-v2"],
-  { revalidate: 3600, tags: ["suggestions", "master-data", "projects", "public-data"] }
+  { revalidate: 31536000, tags: ["suggestions", "master-data", "projects", "public-data"] }
 );
 

@@ -134,146 +134,150 @@ function generateSlug(code: string): string {
  * Get all transit lines with their stations for the hub page
  * [OPTIMIZED: ดึงข้อมูลสรุปรวบยอดผ่าน Materialized View เพื่อเซฟท่อ Egress 99%]
  */
-export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
-  const supabase = createPublicClient();
+export const getTransitLinesWithStations = unstable_cache(
+  async (): Promise<TransitLine[]> => {
+    const supabase = createPublicClient();
 
-  // 1. ดึงข้อมูลสรุปสถานีรถไฟฟ้าจาก Materialized View (คิวรีเสร็จใน 0.01 วินาที)
-  const { data: statsData, error: statsError } = await supabase
-    .from("mv_station_property_stats")
-    .select("station_name, property_count, min_price, min_rental_price");
+    // 1. ดึงข้อมูลสรุปสถานีรถไฟฟ้าจาก Materialized View (คิวรีเสร็จใน 0.01 วินาที)
+    const { data: statsData, error: statsError } = await supabase
+      .from("mv_station_property_stats")
+      .select("station_name, property_count, min_price, min_rental_price");
 
-  if (statsError) {
-    console.error("Error fetching Materialized View stats:", statsError.message);
-    return [];
-  }
-
-  // แปลงข้อมูลสถิติให้อยู่ในรูป Map เพื่อความรวดเร็วสูงสุด (O(1)) ในการสืบค้นจับคู่ด้านล่าง
-  const statsMap = new Map<string, { property_count: number; min_price: number | null; min_rental_price: number | null }>();
-  (statsData || []).forEach((row: any) => {
-    if (row.station_name) {
-      statsMap.set(row.station_name.toLowerCase().trim(), {
-        property_count: Number(row.property_count || 0),
-        min_price: row.min_price ? Number(row.min_price) : null,
-        min_rental_price: row.min_rental_price ? Number(row.min_rental_price) : null,
-      });
+    if (statsError) {
+      console.error("Error fetching Materialized View stats:", statsError.message);
+      return [];
     }
-  });
 
-  // 2. ดึงข้อมูล Master Data ของรายชื่อสถานีรถไฟฟ้าทั้งหมด (ref_master_data)
-  const { data: masterStations, error: masterError } = await supabase
-    .from("ref_master_data")
-    .select("code, label, metadata, sort_order")
-    .eq("type", "TRANSIT_STATION")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-
-  if (masterError) {
-    console.error("Error fetching transit stations master data:", masterError.message);
-    return [];
-  }
-
-  if (!masterStations || masterStations.length === 0) return [];
-
-  // Map โครงสร้าง Default ของสายรถไฟฟ้าแต่ละประเภท
-  const lineInfoMap = new Map<string, {
-    label: { th: string; en: string; cn?: string; ru?: string };
-    color: string;
-  }>();
-
-  for (const type of Object.keys(LINE_LABELS)) {
-    lineInfoMap.set(type, {
-      label: LINE_LABELS[type],
-      color: LINE_COLORS[type] || "#6B7280"
+    // แปลงข้อมูลสถิติให้อยู่ในรูป Map เพื่อความรวดเร็วสูงสุด (O(1)) ในการสืบค้นจับคู่ด้านล่าง
+    const statsMap = new Map<string, { property_count: number; min_price: number | null; min_rental_price: number | null }>();
+    (statsData || []).forEach((row: any) => {
+      if (row.station_name) {
+        statsMap.set(row.station_name.toLowerCase().trim(), {
+          property_count: Number(row.property_count || 0),
+          min_price: row.min_price ? Number(row.min_price) : null,
+          min_rental_price: row.min_rental_price ? Number(row.min_rental_price) : null,
+        });
+      }
     });
-  }
 
-  const grouped = new Map<string, StationForSEO[]>();
+    // 2. ดึงข้อมูล Master Data ของรายชื่อสถานีรถไฟฟ้าทั้งหมด (ref_master_data)
+    const { data: masterStations, error: masterError } = await supabase
+      .from("ref_master_data")
+      .select("code, label, metadata, sort_order")
+      .eq("type", "TRANSIT_STATION")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
 
-  // 3. วนลูปแมปข้อมูล Master Data เข้ากับสถิติจริงที่ดึงมาจาก Materialized View
-  for (const item of masterStations) {
-    const metadata = item.metadata as Record<string, unknown> | null;
-    const label = item.label as { th: string; en: string; cn?: string; ru?: string } | null;
-    const transitType = (metadata?.transit_type as string) || "OTHER";
-    const slug = (metadata?.slug as string) || generateSlug(item.code);
+    if (masterError) {
+      console.error("Error fetching transit stations master data:", masterError.message);
+      return [];
+    }
 
-    if (!lineInfoMap.has(transitType) || metadata?.line_name || metadata?.line_name_th || metadata?.line_color) {
-      const existing = lineInfoMap.get(transitType);
-      lineInfoMap.set(transitType, {
-        label: {
-          th: (metadata?.line_name_th as string) || (metadata?.line_name as string) || existing?.label.th || transitType,
-          en: (metadata?.line_name_en as string) || (metadata?.line_name as string) || existing?.label.en || transitType,
-          cn: (metadata?.line_name_cn as string) || existing?.label.cn,
-          ru: (metadata?.line_name_ru as string) || existing?.label.ru,
-        },
-        color: (metadata?.line_color as string) || existing?.color || "#6B7280"
+    if (!masterStations || masterStations.length === 0) return [];
+
+    // Map โครงสร้าง Default ของสายรถไฟฟ้าแต่ละประเภท
+    const lineInfoMap = new Map<string, {
+      label: { th: string; en: string; cn?: string; ru?: string };
+      color: string;
+    }>();
+
+    for (const type of Object.keys(LINE_LABELS)) {
+      lineInfoMap.set(type, {
+        label: LINE_LABELS[type],
+        color: LINE_COLORS[type] || "#6B7280"
       });
     }
 
-    const info = lineInfoMap.get(transitType)!;
+    const grouped = new Map<string, StationForSEO[]>();
 
-    const nameThKey = label?.th?.trim().toLowerCase() || "";
-    const nameEnKey = label?.en?.trim().toLowerCase() || "";
-    const codeLowerKey = item.code.trim().toLowerCase();
+    // 3. วนลูปแมปข้อมูล Master Data เข้ากับสถิติจริงที่ดึงมาจาก Materialized View
+    for (const item of masterStations) {
+      const metadata = item.metadata as Record<string, unknown> | null;
+      const label = item.label as { th: string; en: string; cn?: string; ru?: string } | null;
+      const transitType = (metadata?.transit_type as string) || "OTHER";
+      const slug = (metadata?.slug as string) || generateSlug(item.code);
 
-    // ดึงค่าสถิติจาก Map ด้วย Key ภาษาไทย, ภาษาอังกฤษ หรือรหัสสถานี (ความเร็ว O(1))
-    const stat = statsMap.get(nameThKey) || statsMap.get(nameEnKey) || statsMap.get(codeLowerKey);
+      if (!lineInfoMap.has(transitType) || metadata?.line_name || metadata?.line_name_th || metadata?.line_color) {
+        const existing = lineInfoMap.get(transitType);
+        lineInfoMap.set(transitType, {
+          label: {
+            th: (metadata?.line_name_th as string) || (metadata?.line_name as string) || existing?.label.th || transitType,
+            en: (metadata?.line_name_en as string) || (metadata?.line_name as string) || existing?.label.en || transitType,
+            cn: (metadata?.line_name_cn as string) || existing?.label.cn,
+            ru: (metadata?.line_name_ru as string) || existing?.label.ru,
+          },
+          color: (metadata?.line_color as string) || existing?.color || "#6B7280"
+        });
+      }
 
-    // ถ้าสถานีนี้ไม่มีทรัพย์สินแสดงอยู่เลย (หรือ stat เป็น null) ให้ข้ามไปเพื่อประหยัดหน้าเว็บบอร์ด
-    if (!stat || stat.property_count === 0) {
-      continue; 
+      const info = lineInfoMap.get(transitType)!;
+
+      const nameThKey = label?.th?.trim().toLowerCase() || "";
+      const nameEnKey = label?.en?.trim().toLowerCase() || "";
+      const codeLowerKey = item.code.trim().toLowerCase();
+
+      // ดึงค่าสถิติจาก Map ด้วย Key ภาษาไทย, ภาษาอังกฤษ หรือรหัสสถานี (ความเร็ว O(1))
+      const stat = statsMap.get(nameThKey) || statsMap.get(nameEnKey) || statsMap.get(codeLowerKey);
+
+      // ถ้าสถานีนี้ไม่มีทรัพย์สินแสดงอยู่เลย (หรือ stat เป็น null) ให้ข้ามไปเพื่อประหยัดหน้าเว็บบอร์ด
+      if (!stat || stat.property_count === 0) {
+        continue; 
+      }
+
+      const station: StationForSEO = {
+        code: item.code,
+        slug,
+        label: label || { th: item.code, en: item.code },
+        transitType,
+        lineName: info.label.en,
+        lineColor: info.color,
+        latitude: metadata?.latitude as number | undefined,
+        longitude: metadata?.longitude as number | undefined,
+        propertyCount: stat.property_count,
+        minPrice: stat.min_price,
+        minRentalPrice: stat.min_rental_price,
+      };
+
+      if (!grouped.has(transitType)) {
+        grouped.set(transitType, []);
+      }
+      grouped.get(transitType)!.push(station);
     }
 
-    const station: StationForSEO = {
-      code: item.code,
-      slug,
-      label: label || { th: item.code, en: item.code },
-      transitType,
-      lineName: info.label.en,
-      lineColor: info.color,
-      latitude: metadata?.latitude as number | undefined,
-      longitude: metadata?.longitude as number | undefined,
-      propertyCount: stat.property_count,
-      minPrice: stat.min_price,
-      minRentalPrice: stat.min_rental_price,
-    };
-
-    if (!grouped.has(transitType)) {
-      grouped.set(transitType, []);
+    // ประกอบโครงสร้างอาเรย์ส่งกลับตามลำดับหมวดสายรถไฟฟ้า (LINE_ORDER)
+    const lines: TransitLine[] = [];
+    for (const type of LINE_ORDER) {
+      const stations = grouped.get(type);
+      if (stations && stations.length > 0) {
+        stations.sort((a, b) => (b.propertyCount || 0) - (a.propertyCount || 0));
+        const info = lineInfoMap.get(type) || { label: { th: type, en: type }, color: "#6B7280" };
+        lines.push({
+          type,
+          label: info.label,
+          color: info.color,
+          stations,
+        });
+      }
     }
-    grouped.get(transitType)!.push(station);
-  }
 
-  // ประกอบโครงสร้างอาเรย์ส่งกลับตามลำดับหมวดสายรถไฟฟ้า (LINE_ORDER)
-  const lines: TransitLine[] = [];
-  for (const type of LINE_ORDER) {
-    const stations = grouped.get(type);
-    if (stations && stations.length > 0) {
-      stations.sort((a, b) => (b.propertyCount || 0) - (a.propertyCount || 0));
-      const info = lineInfoMap.get(type) || { label: { th: type, en: type }, color: "#6B7280" };
-      lines.push({
-        type,
-        label: info.label,
-        color: info.color,
-        stations,
-      });
+    for (const [type, stations] of grouped) {
+      if (!LINE_ORDER.includes(type) && stations.length > 0) {
+        stations.sort((a, b) => (b.propertyCount || 0) - (a.propertyCount || 0));
+        const info = lineInfoMap.get(type) || { label: { th: type, en: type }, color: "#6B7280" };
+        lines.push({
+          type,
+          label: info.label,
+          color: info.color,
+          stations,
+        });
+      }
     }
-  }
 
-  for (const [type, stations] of grouped) {
-    if (!LINE_ORDER.includes(type) && stations.length > 0) {
-      stations.sort((a, b) => (b.propertyCount || 0) - (a.propertyCount || 0));
-      const info = lineInfoMap.get(type) || { label: { th: type, en: type }, color: "#6B7280" };
-      lines.push({
-        type,
-        label: info.label,
-        color: info.color,
-        stations,
-      });
-    }
-  }
-
-  return lines;
-}
+    return lines;
+  },
+  ["transit-lines-with-stations-v3"],
+  { revalidate: 31536000, tags: ["transit-lines", "stations", "master-data"] }
+);
 
 /**
  * Get a single station by its slug for the detail page
@@ -462,56 +466,60 @@ export async function getPropertiesNearStation(
  * Get all active station slugs for generateStaticParams()
  * [OPTIMIZED: ดึงผ่าน Materialized View ข้อมูลเหลือไม่กี่ KB แก้ปัญหาท่อรั่วตอน Build]
  */
-export async function getAllStationSlugs(): Promise<string[]> {
-  const supabase = await createClient();
+export const getAllStationSlugs = unstable_cache(
+  async (): Promise<string[]> => {
+    const supabase = createPublicClient();
 
-  // 1. ดึงข้อมูลสถานีทั้งหมดที่เป็น Active จาก Master Data
-  const { data: stations, error } = await supabase
-    .from("ref_master_data")
-    .select("code, label, metadata")
-    .eq("type", "TRANSIT_STATION")
-    .eq("is_active", true);
+    // 1. ดึงข้อมูลสถานีทั้งหมดที่เป็น Active จาก Master Data
+    const { data: stations, error } = await supabase
+      .from("ref_master_data")
+      .select("code, label, metadata")
+      .eq("type", "TRANSIT_STATION")
+      .eq("is_active", true);
 
-  if (error || !stations) {
-    console.error("Error fetching station slugs:", error?.message);
-    return [];
-  }
-
-  // 2. ดึงเฉพาะรายชื่อสถานีที่มีทรัพย์สินจริงจาก Materialized View (เบาหวิวระดับกิโลไบต์!)
-  const { data: activeStats, error: statsError } = await supabase
-    .from("mv_station_property_stats")
-    .select("station_name");
-
-  if (statsError) {
-    console.error("Error fetching active station names from view:", statsError.message);
-    return [];
-  }
-
-  // แปลงรายชื่อสถานีที่มีทรัพย์สินให้อยู่ใน Set เพื่อคิวรีหาได้เร็ว O(1)
-  const activeStationNames = new Set<string>();
-  (activeStats || []).forEach((row: any) => {
-    if (row.station_name) {
-      activeStationNames.add(row.station_name.trim().toLowerCase());
+    if (error || !stations) {
+      console.error("Error fetching station slugs:", error?.message);
+      return [];
     }
-  });
 
-  // 3. กรองและส่งกลับเฉพาะสลัก (Slugs) ของสถานีที่มีทรัพย์สินอยู่จริงบนหน้าร้าน
-  return stations
-    .filter((item: any) => {
-      const label = item.label as { th: string; en: string } | null;
-      const nameTh = label?.th?.trim().toLowerCase() || "";
-      const nameEn = label?.en?.trim().toLowerCase() || "";
-      const codeLower = item.code.trim().toLowerCase();
-      
-      return activeStationNames.has(nameTh) || 
-             activeStationNames.has(nameEn) || 
-             activeStationNames.has(codeLower);
-    })
-    .map((item: any) => {
-      const metadata = item.metadata as Record<string, unknown> | null;
-      return (metadata?.slug as string) || generateSlug(item.code);
+    // 2. ดึงเฉพาะรายชื่อสถานีที่มีทรัพย์สินจริงจาก Materialized View (เบาหวิวระดับกิโลไบต์!)
+    const { data: activeStats, error: statsError } = await supabase
+      .from("mv_station_property_stats")
+      .select("station_name");
+
+    if (statsError) {
+      console.error("Error fetching active station names from view:", statsError.message);
+      return [];
+    }
+
+    // แปลงรายชื่อสถานีที่มีทรัพย์สินให้อยู่ใน Set เพื่อคิวรีหาได้เร็ว O(1)
+    const activeStationNames = new Set<string>();
+    (activeStats || []).forEach((row: any) => {
+      if (row.station_name) {
+        activeStationNames.add(row.station_name.trim().toLowerCase());
+      }
     });
-}
+
+    // 3. กรองและส่งกลับเฉพาะสลัก (Slugs) ของสถานีที่มีทรัพย์สินอยู่จริงบนหน้าร้าน
+    return stations
+      .filter((item: any) => {
+        const label = item.label as { th: string; en: string } | null;
+        const nameTh = label?.th?.trim().toLowerCase() || "";
+        const nameEn = label?.en?.trim().toLowerCase() || "";
+        const codeLower = item.code.trim().toLowerCase();
+        
+        return activeStationNames.has(nameTh) || 
+               activeStationNames.has(nameEn) || 
+               activeStationNames.has(codeLower);
+      })
+      .map((item: any) => {
+        const metadata = item.metadata as Record<string, unknown> | null;
+        return (metadata?.slug as string) || generateSlug(item.code);
+      });
+  },
+  ["all-station-slugs-v2"],
+  { revalidate: 31536000, tags: ["station-slugs", "stations", "master-data"] }
+);
 
 /**
  * Get the count of properties near a station (lightweight query for hub page)
