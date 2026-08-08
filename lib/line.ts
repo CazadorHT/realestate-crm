@@ -350,12 +350,18 @@ export async function saveOmniMessage(data: {
       const { data: defaultTenant } = await supabase
         .from("tenants_v3")
         .select("id")
+        .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
       if (defaultTenant) {
         tenant_id = defaultTenant.id;
       }
     } catch (_) {}
+  }
+
+  if (!identity_id || !tenant_id) {
+    console.warn("[saveOmniMessage] Skipped insert into communications_hub_v3 due to missing identity_id or tenant_id", { identity_id, tenant_id });
+    return;
   }
 
   const { error } = await supabase.from("communications_hub_v3").insert({

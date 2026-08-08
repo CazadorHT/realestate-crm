@@ -379,7 +379,7 @@ export async function getTransitAndProjectsInArea(
       };
     },
     ["public-transit-and-projects-in-area", areaNameTh],
-    { revalidate: 604800, tags: ["popular-areas", "public-data"] }
+    { revalidate: 2592000, tags: ["popular-areas", "public-data"] }
   )();
 }
 
@@ -388,19 +388,28 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
     async () => {
       const supabase = await createClient();
 
-      // 1. Fetch the set of popular_area names that have active properties
-      const { data: propAreas } = await supabase
+      // 1. Fetch active properties with popular_area and main_image in 1 single query (Batch)
+      const { data: propData } = await supabase
         .from("properties")
-        .select("popular_area")
+        .select("popular_area, main_image")
         .eq("status", "ACTIVE")
         .is("deleted_at", null)
         .not("popular_area", "is", null);
 
-      const activeAreaNames = new Set<string>(
-        (propAreas || []).map((p: any) => (p.popular_area as string)?.trim()).filter(Boolean)
-      );
+      const activeAreaNames = new Set<string>();
+      const areaImageMap = new Map<string, string>();
 
-      // 2. Fetch candidate areas (fetch more so we can filter to the requested limit)
+      (propData || []).forEach((p: any) => {
+        const areaName = (p.popular_area as string)?.trim();
+        if (areaName) {
+          activeAreaNames.add(areaName);
+          if (p.main_image && !areaImageMap.has(areaName)) {
+            areaImageMap.set(areaName, p.main_image);
+          }
+        }
+      });
+
+      // 2. Fetch candidate areas
       const { data, error } = await supabase
         .from("popular_areas_v3")
         .select("id, name, slug, image_url, province")
@@ -414,38 +423,12 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
       for (const item of data) {
         if (result.length >= limit) break;
 
-        const nameObj = item.name as Record<string, string> | null || {};
+        const nameObj = (item.name as Record<string, string> | null) || {};
         const nameTh = (nameObj.th || "").trim();
 
-        // Skip areas with no active properties
         if (!activeAreaNames.has(nameTh)) continue;
 
-        let imageUrl = item.image_url;
-
-        if (!imageUrl) {
-          const { data: propImg } = await supabase
-            .from("properties")
-            .select("main_image")
-            .eq("popular_area", nameTh)
-            .eq("status", "ACTIVE")
-            .is("deleted_at", null)
-            .limit(1)
-            .maybeSingle();
-
-          if (propImg) {
-            imageUrl = propImg.main_image;
-            if (!imageUrl && propImg.images) {
-              try {
-                const imgs = typeof propImg.images === "string"
-                  ? JSON.parse(propImg.images)
-                  : propImg.images;
-                if (Array.isArray(imgs) && imgs.length > 0) {
-                  imageUrl = imgs[0]?.image_url || imgs[0] || "";
-                }
-              } catch (e) {}
-            }
-          }
-        }
+        const imageUrl = item.image_url || areaImageMap.get(nameTh) || null;
 
         result.push({
           id: item.id,
@@ -458,7 +441,7 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
       return result;
     },
     ["public-popular-areas", String(limit)],
-    { revalidate: 604800, tags: ["popular-areas", "public-data"] }
+    { revalidate: 2592000, tags: ["popular-areas", "public-data"] } // 30 days cache
   )();
 }
 
@@ -467,26 +450,35 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
     async () => {
       const supabase = await createClient();
 
-      // 1. Fetch the set of popular_area names that have active properties
-      const { data: propAreas } = await supabase
+      // 1. Fetch active properties with popular_area and main_image in 1 single query (Batch)
+      const { data: propData } = await supabase
         .from("properties")
-        .select("popular_area")
+        .select("popular_area, main_image")
         .eq("status", "ACTIVE")
         .is("deleted_at", null)
         .not("popular_area", "is", null);
 
-      const activeAreaNames = new Set<string>(
-        (propAreas || []).map((p: any) => (p.popular_area as string)?.trim()).filter(Boolean)
-      );
+      const activeAreaNames = new Set<string>();
+      const areaImageMap = new Map<string, string>();
 
-      // 2. Fetch all candidate areas (excluding current)
+      (propData || []).forEach((p: any) => {
+        const areaName = (p.popular_area as string)?.trim();
+        if (areaName) {
+          activeAreaNames.add(areaName);
+          if (p.main_image && !areaImageMap.has(areaName)) {
+            areaImageMap.set(areaName, p.main_image);
+          }
+        }
+      });
+
+      // 2. Fetch candidate areas (excluding current)
       const { data, error } = await supabase
         .from("popular_areas_v3")
         .select("id, name, slug, image_url, province")
         .eq("is_active", true)
         .neq("id", excludeId)
         .order("sort_order")
-        .limit(200); // fetch more then filter in-memory
+        .limit(200);
 
       if (error || !data) return [];
 
@@ -494,39 +486,12 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
       for (const item of data) {
         if (result.length >= limit) break;
 
-        const nameObj = item.name as Record<string, string> | null || {};
+        const nameObj = (item.name as Record<string, string> | null) || {};
         const nameTh = (nameObj.th || "").trim();
 
-        // Skip areas with no active properties
         if (!activeAreaNames.has(nameTh)) continue;
 
-        let imageUrl = item.image_url;
-
-        if (!imageUrl) {
-          // Fetch fallback cover image from active properties in this popular area
-          const { data: propImg } = await supabase
-            .from("properties")
-            .select("main_image")
-            .eq("popular_area", nameTh)
-            .eq("status", "ACTIVE")
-            .is("deleted_at", null)
-            .limit(1)
-            .maybeSingle();
-
-          if (propImg) {
-            imageUrl = propImg.main_image;
-            if (!imageUrl && propImg.images) {
-              try {
-                const imgs = typeof propImg.images === "string" 
-                  ? JSON.parse(propImg.images) 
-                  : propImg.images;
-                if (Array.isArray(imgs) && imgs.length > 0) {
-                  imageUrl = imgs[0]?.image_url || imgs[0] || "";
-                }
-              } catch (e) {}
-            }
-          }
-        }
+        const imageUrl = item.image_url || areaImageMap.get(nameTh) || null;
 
         result.push({
           id: item.id,
@@ -539,7 +504,7 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
       return result;
     },
     ["public-related-areas", excludeId, String(limit)],
-    { revalidate: 604800, tags: ["popular-areas", "public-data"] }
+    { revalidate: 2592000, tags: ["popular-areas", "public-data"] } // 30 days cache
   )();
 }
 

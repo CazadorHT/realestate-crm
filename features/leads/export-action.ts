@@ -50,7 +50,7 @@ export async function exportLeadsAction(ids?: string[]) {
 
   let query = supabase
     .from("leads")
-    .select("id, full_name, phone, email, lead_type, source, stage, budget_min, budget_max, nationality, note, created_at, updated_at, tenant_id")
+    .select("id, full_name, phone, email, source, stage, budget_max, created_at, tenant_id")
     .order("created_at", { ascending: false });
 
   if (ids && ids.length > 0) {

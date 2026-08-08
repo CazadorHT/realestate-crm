@@ -366,8 +366,8 @@ async function verifyDocumentAccess(supabase: any, user: any, role: string, owne
     const { data: prop } = await supabase.from("properties_core").select("created_by, assigned_to").eq("id", ownerId).single();
     return !!prop && (prop.created_by === user.id || prop.assigned_to === user.id);
   } else if (ownerType === "LEAD") {
-    const { data: lead } = await supabase.from("leads").select("created_by, assigned_to").eq("id", ownerId).single();
-    return !!lead && (lead.created_by === user.id || lead.assigned_to === user.id);
+    const { data: lead } = await supabase.from("crm_leads_v3").select("assigned_to").eq("id", ownerId).single();
+    return !!lead && lead.assigned_to === user.id;
   } else if (ownerType === "DEAL" || ownerType === "RENTAL_CONTRACT") {
     const { data: deal } = await supabase.from("crm_deals_v3").select("created_by, agent_id").eq("id", ownerId).single();
     return !!deal && (deal.created_by === user.id || deal.agent_id === user.id);
@@ -523,8 +523,8 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
           return { success: false, message: "คุณไม่มีสิทธิ์ลบเอกสารของทรัพย์สินผู้อื่น" };
         }
       } else if (doc.owner_type === "LEAD") {
-        const { data: lead } = await supabase.from("leads").select("created_by, assigned_to").eq("id", doc.owner_id).single();
-        const isOwner = lead && (lead.created_by === user.id || lead.assigned_to === user.id);
+        const { data: lead } = await supabase.from("crm_leads_v3").select("assigned_to").eq("id", doc.owner_id).single();
+        const isOwner = lead && lead.assigned_to === user.id;
         if (!isOwner) {
           return { success: false, message: "คุณไม่มีสิทธิ์ลบเอกสารของลีดผู้อื่น" };
         }
