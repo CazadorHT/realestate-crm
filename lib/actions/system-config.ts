@@ -8,27 +8,35 @@ export type SystemConfig = {
 };
 
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 
 /**
  * Fetches the global system configuration from site_settings.
- * Memoized per request to prevent DB waterfalls.
+ * Cached cross-request (30 days) with tag invalidation.
  */
 export const getSystemConfig = cache(async (): Promise<SystemConfig> => {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("site_settings")
-    .select("value")
-    .eq("key", "system_config")
-    .maybeSingle();
+  return unstable_cache(
+    async () => {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const supabase = await createAdminClient();
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "system_config")
+        .maybeSingle();
 
-  if (error || !data) {
-    return {
-      multi_tenant_enabled: false,
-      default_tenant_id: null,
-    };
-  }
+      if (error || !data) {
+        return {
+          multi_tenant_enabled: false,
+          default_tenant_id: null,
+        };
+      }
 
-  return data.value as SystemConfig;
+      return data.value as SystemConfig;
+    },
+    ["global-system-config"],
+    { revalidate: 2592000, tags: ["system-config", "site-settings"] }
+  )();
 });
 
 import type { Json } from "@/lib/database.types.generated";

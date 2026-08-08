@@ -208,36 +208,47 @@ export interface MasterDataTransitStation {
   };
 }
 
+import { unstable_cache } from "next/cache";
+
 /**
- * Fetch all active transit stations from ref_master_data
+ * Fetch all active transit stations from ref_master_data (Cached cross-request 1 year)
  */
 export async function getTransitStationsAction(): Promise<MasterDataTransitStation[]> {
-  const supabase = await createClient();
-  
-  const { data, error } = await supabase
-    .from("ref_master_data")
-    .select("code, label, metadata")
-    .eq("type", "TRANSIT_STATION")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+  return unstable_cache(
+    async () => {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const supabase = await createAdminClient();
+      
+      const { data, error } = await supabase
+        .from("ref_master_data")
+        .select("code, label, metadata")
+        .eq("type", "TRANSIT_STATION")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching transit stations:", error);
-    return [];
-  }
+      if (error) {
+        console.error("Error fetching transit stations:", error);
+        return [];
+      }
 
-  type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
+      type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
 
-  return (data as MasterDataRow[] || []).map((item: MasterDataRow) => ({
-    code: item.code,
-    label: (item.label as MasterDataTransitStation["label"]) || { 
-      th: item.code, 
-      en: item.code, 
-      cn: item.code, 
-      ru: item.code 
+      return (data as MasterDataRow[] || []).map((item: MasterDataRow) => ({
+        code: item.code,
+        label: (item.label as MasterDataTransitStation["label"]) || { 
+          th: item.code, 
+          en: item.code, 
+        },
+        metadata: (item.metadata as MasterDataTransitStation["metadata"]) || {
+          transit_type: "OTHER",
+          line_name: "",
+          line_color: "#6B7280",
+        },
+      }));
     },
-    metadata: item.metadata as MasterDataTransitStation["metadata"]
-  }));
+    ["transit-stations-master-data"],
+    { revalidate: 31536000, tags: ["master-data", "transit-stations"] }
+  )();
 }
 
 /**
