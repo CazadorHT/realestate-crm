@@ -257,10 +257,16 @@ async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> 
 export async function getSiteSettings() {
   let tenantId = "global";
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.app_metadata?.tenant_id) {
-      tenantId = user.app_metadata.tenant_id;
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const hasAuthCookie = cookieStore.getAll().some((c) => c.name.includes("-auth-token"));
+    
+    if (hasAuthCookie) {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.app_metadata?.tenant_id) {
+        tenantId = user.app_metadata.tenant_id;
+      }
     }
   } catch (e) {
     // Ignore error for public/anonymous access
