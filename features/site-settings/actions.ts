@@ -271,7 +271,7 @@ export async function getSiteSettings() {
       async () => getSiteSettingsInternal(tenantId),
       ["site-settings", tenantId],
       {
-        revalidate: process.env.NODE_ENV === "development" ? 1 : 3600, // 1 second in dev, 1 hour in prod
+        revalidate: 2592000, // 30 days cache (tag-invalidated on update)
         tags: [`site-settings-${tenantId}`, "site-settings"],
       }
     )();

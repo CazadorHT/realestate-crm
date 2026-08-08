@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import {
   DndContext,
@@ -57,6 +58,10 @@ export function PropertyImageUploader({
   } | null>(null);
 
   const [isWatermarkEnabled, setIsWatermarkEnabled] = useState(true);
+  const [watermarkPosition, setWatermarkPosition] = useState<
+    "southeast" | "center" | "southwest" | "northeast" | "northwest"
+  >("southeast");
+  const [watermarkScale, setWatermarkScale] = useState<"sm" | "md" | "lg">("md");
   const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
 
   const [images, setImages] = useState<ImageItem[]>(() => {
@@ -340,6 +345,8 @@ export function PropertyImageUploader({
           formData.append("file", fileToUpload);
           formData.append("sessionId", sessionId);
           formData.append("watermark", isWatermarkEnabled ? "true" : "false");
+          formData.append("watermarkPosition", watermarkPosition);
+          formData.append("watermarkScale", watermarkScale);
 
           const result = await uploadPropertyImageAction(formData);
 
@@ -651,18 +658,205 @@ export function PropertyImageUploader({
 
   return (
     <div className="space-y-4">
-      {/* Premium Watermark Toggle */}
-      <div className="flex items-center justify-between px-1 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-        <label className="flex items-center gap-2.5 cursor-pointer text-xs sm:text-sm font-semibold text-slate-700 select-none">
-          <input
-            type="checkbox"
-            checked={isWatermarkEnabled}
-            onChange={(e) => setIsWatermarkEnabled(e.target.checked)}
-            disabled={disabled}
-            className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer disabled:cursor-not-allowed"
-          />
-          <span>ใส่ลายน้ำโลโก้ VCC ASSET ที่กึ่งกลางภาพอัตโนมัติ</span>
-        </label>
+      {/* Premium Watermark Settings Panel */}
+      <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 space-y-3 shadow-2xs">
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2.5 cursor-pointer text-xs sm:text-sm font-semibold text-slate-800 select-none">
+            <input
+              type="checkbox"
+              checked={isWatermarkEnabled}
+              onChange={(e) => setIsWatermarkEnabled(e.target.checked)}
+              disabled={disabled}
+              className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer disabled:cursor-not-allowed"
+            />
+            <span>ใส่ลายน้ำโลโก้ VCC ASSET บนภาพถ่าย</span>
+          </label>
+        </div>
+
+        {isWatermarkEnabled && (
+          <div className="pt-2 border-t border-slate-200/70 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            {/* Position Selector */}
+            <div className="space-y-1">
+              <span className="font-semibold text-slate-600 block">ตำแหน่งลายน้ำ</span>
+              <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-slate-200 text-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setWatermarkPosition("northwest")}
+                  disabled={disabled}
+                  className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer ${
+                    watermarkPosition === "northwest"
+                      ? "bg-blue-600 text-white shadow-xs font-semibold"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  ↖ ซ้ายบน
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWatermarkPosition("northeast")}
+                  disabled={disabled}
+                  className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer ${
+                    watermarkPosition === "northeast"
+                      ? "bg-blue-600 text-white shadow-xs font-semibold"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  ↗ ขวาบน
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWatermarkPosition("center")}
+                  disabled={disabled}
+                  className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer ${
+                    watermarkPosition === "center"
+                      ? "bg-blue-600 text-white shadow-xs font-semibold"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  🎯 ตรงกลาง
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWatermarkPosition("southwest")}
+                  disabled={disabled}
+                  className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer ${
+                    watermarkPosition === "southwest"
+                      ? "bg-blue-600 text-white shadow-xs font-semibold"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  ↙ ซ้ายล่าง
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWatermarkPosition("southeast")}
+                  disabled={disabled}
+                  className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer col-span-2 ${
+                    watermarkPosition === "southeast"
+                      ? "bg-blue-600 text-white shadow-xs font-semibold"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  ↘ ขวาล่าง (แนะนำ)
+                </button>
+              </div>
+            </div>
+
+            {/* Size Selector */}
+            <div className="space-y-1">
+              <span className="font-semibold text-slate-600 block">ขนาดลายน้ำ</span>
+              <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-slate-200 text-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setWatermarkScale("sm")}
+                  disabled={disabled}
+                  className={`py-1.5 px-2 rounded-lg text-center font-medium transition-all cursor-pointer ${
+                    watermarkScale === "sm"
+                      ? "bg-blue-600 text-white shadow-xs font-semibold"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  เล็ก
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWatermarkScale("md")}
+                  disabled={disabled}
+                  className={`py-1.5 px-2 rounded-lg text-center font-medium transition-all cursor-pointer ${
+                    watermarkScale === "md"
+                      ? "bg-blue-600 text-white shadow-xs font-semibold"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  ปานกลาง
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWatermarkScale("lg")}
+                  disabled={disabled}
+                  className={`py-1.5 px-2 rounded-lg text-center font-medium transition-all cursor-pointer ${
+                    watermarkScale === "lg"
+                      ? "bg-blue-600 text-white shadow-xs font-semibold"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  ใหญ่
+                </button>
+              </div>
+            </div>
+
+            {/* Live Watermark Preview Box */}
+            <div className="sm:col-span-2 pt-2 border-t border-slate-200/60">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-semibold text-slate-700 text-xs flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  ตัวอย่างลายน้ำบนรูปจริง (Live Preview)
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  ตำแหน่ง: {
+                    {
+                      southeast: "มุมขวาล่าง ↘",
+                      center: "ตรงกลาง 🎯",
+                      southwest: "มุมซ้ายล่าง ↙",
+                      northeast: "มุมขวาบน ↗",
+                      northwest: "มุมซ้ายบน ↖",
+                    }[watermarkPosition]
+                  } | ขนาด: {
+                    {
+                      sm: "เล็ก",
+                      md: "ปานกลาง",
+                      lg: "ใหญ่",
+                    }[watermarkScale]
+                  }
+                </span>
+              </div>
+              
+              <div className="relative w-full h-32 sm:h-36 rounded-xl overflow-hidden bg-slate-900 border border-slate-200/90 shadow-inner flex items-center justify-center group/prev">
+                {/* Background image mockup */}
+                <Image
+                  src="/images/properties-hero.webp"
+                  alt="Watermark preview mockup"
+                  fill
+                  className="object-cover opacity-80 transition-transform duration-500 group-hover/prev:scale-105"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-black/20 pointer-events-none" />
+
+                {/* Simulated Watermark Overlay Badge */}
+                <div
+                  className={`absolute transition-all duration-300 ease-out z-20 ${
+                    watermarkPosition === "northwest"
+                      ? "top-3 left-3"
+                      : watermarkPosition === "northeast"
+                      ? "top-3 right-3"
+                      : watermarkPosition === "center"
+                      ? "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                      : watermarkPosition === "southwest"
+                      ? "bottom-3 left-3"
+                      : "bottom-3 right-3"
+                  }`}
+                >
+                  <div
+                    className={`bg-black/55 backdrop-blur-xs px-2.5 py-1 rounded-xl border border-white/20 shadow-lg flex items-center justify-center transition-all duration-300 ease-out ${
+                      watermarkScale === "sm"
+                        ? "scale-80 origin-center"
+                        : watermarkScale === "md"
+                        ? "scale-100 origin-center"
+                        : "scale-120 origin-center"
+                    }`}
+                  >
+                    <Image
+                      src="/images/branding/vcc-asset/png/logo-light.png"
+                      alt="VCC ASSET Logo"
+                      width={100}
+                      height={24}
+                      className="h-4 sm:h-5 w-auto object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {images.length < maxFiles && (

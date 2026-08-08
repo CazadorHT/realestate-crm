@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+// 🚀 In-memory cache for user active status (5-minute TTL) to prevent DB query spam in middleware
+const activeUserCache = new Map<string, boolean>();
+
 /**
  * 🔑 Auth MiddleWare Wrapper: Refreshes session and returns User context
  * Returns { response, user } to avoid redundant calls in main middleware.
@@ -64,18 +67,30 @@ export async function updateSession(request: NextRequest) {
     };
   }
 
-  // 🛡️ [PHASE 1.2] Block inactive users (Pending Approval)
+  // 🛡️ [PHASE 1.2] Block inactive users (Pending Approval) with 5-minute In-Memory Cache
   if (user && request.nextUrl.pathname.startsWith("/protected")) {
-    // ข้ามการตรวจหน้า pending เพื่อไม่ให้เกิด redirect loop
     const isPendingPage = request.nextUrl.pathname.startsWith("/auth/pending");
     if (!isPendingPage) {
-      const { data: identity } = await supabase
-        .from("identities_v3")
-        .select("is_active")
-        .eq("id", user.id)
-        .maybeSingle();
+      const now = Date.now();
+      const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-      if (identity && !identity.is_active) {
+      let isActive = activeUserCache.get(user.id);
+
+      if (isActive === undefined) {
+        const { data: identity } = await supabase
+          .from("identities_v3")
+          .select("is_active")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        isActive = identity ? Boolean(identity.is_active) : true;
+        activeUserCache.set(user.id, isActive);
+
+        // Auto clean memory cache after TTL
+        setTimeout(() => activeUserCache.delete(user.id), CACHE_TTL_MS);
+      }
+
+      if (!isActive) {
         console.log(
           "[AUTH DEBUG] User is not active (pending approval), redirecting to pending page:",
           user.id

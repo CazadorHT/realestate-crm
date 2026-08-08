@@ -74,6 +74,106 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
     if (!file) throw new Error("No file provided");
 
     const watermark = formData.get("watermark") as string | null;
+    const watermarkPositionRaw =
+      (formData.get("watermarkPosition") as string | null) || "southeast";
+    const watermarkScaleRaw =
+      (formData.get("watermarkScale") as string | null) || "md";
+
+    const validPositions = [
+      "southeast",
+      "center",
+      "southwest",
+      "northeast",
+      "northwest",
+    ] as const;
+    type WatermarkPosition = (typeof validPositions)[number];
+    const watermarkPosition: WatermarkPosition = validPositions.includes(
+      watermarkPositionRaw as WatermarkPosition
+    )
+      ? (watermarkPositionRaw as WatermarkPosition)
+      : "southeast";
+
+    const validScales = ["sm", "md", "lg"] as const;
+    type WatermarkScale = (typeof validScales)[number];
+    const watermarkScale: WatermarkScale = validScales.includes(
+      watermarkScaleRaw as WatermarkScale
+    )
+      ? (watermarkScaleRaw as WatermarkScale)
+      : "md";
+
+    const scaleConfig = {
+      sm: {
+        svgW: 170,
+        svgH: 46,
+        imgW: 148,
+        imgH: 32,
+        x: 11,
+        y: 7,
+        rx: 10,
+        fontSize: 12,
+        textX: 46,
+        textY: 27,
+        iconScale: 0.5,
+      },
+      md: {
+        svgW: 220,
+        svgH: 58,
+        imgW: 192,
+        imgH: 40,
+        x: 14,
+        y: 9,
+        rx: 12,
+        fontSize: 14,
+        textX: 56,
+        textY: 34,
+        iconScale: 0.65,
+      },
+      lg: {
+        svgW: 280,
+        svgH: 74,
+        imgW: 248,
+        imgH: 52,
+        x: 16,
+        y: 11,
+        rx: 14,
+        fontSize: 17,
+        textX: 68,
+        textY: 44,
+        iconScale: 0.85,
+      },
+    }[watermarkScale];
+
+    const getMarginExtend = (pos: WatermarkPosition) => {
+      switch (pos) {
+        case "southeast":
+          return {
+            bottom: 20,
+            right: 20,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          };
+        case "southwest":
+          return {
+            bottom: 20,
+            left: 20,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          };
+        case "northeast":
+          return {
+            top: 20,
+            right: 20,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          };
+        case "northwest":
+          return {
+            top: 20,
+            left: 20,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          };
+        case "center":
+        default:
+          return null;
+      }
+    };
 
     // 1) Size limit
     if (file.size > IMAGE_UPLOAD_POLICY.maxBytes) {
@@ -97,12 +197,11 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       const inputBuffer = Buffer.from(arrayBuffer);
 
       // Resize to HD (max width 1400px) and compress to WebP (82% quality)
-      let sharpImg = sharp(inputBuffer)
-        .resize({
-          width: 1400,
-          withoutEnlargement: true,
-          fit: "inside",
-        });
+      let sharpImg = sharp(inputBuffer).resize({
+        width: 1400,
+        withoutEnlargement: true,
+        fit: "inside",
+      });
 
       if (watermark === "true") {
         try {
@@ -113,17 +212,24 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
           const logoBuffer = await readFile(watermarkPath);
           const base64Logo = logoBuffer.toString("base64");
 
+          const { svgW, svgH, imgW, imgH, x, y, rx } = scaleConfig;
+
           const svgWatermark = Buffer.from(
-            `<svg width="240" height="64" viewBox="0 0 240 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-              <rect width="240" height="64" rx="14" fill="#000000" fill-opacity="0.45"/>
-              <image href="data:image/png;base64,${base64Logo}" x="16" y="10" width="208" height="44" preserveAspectRatio="xMidYMid meet"/>
+            `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+              <rect width="${svgW}" height="${svgH}" rx="${rx}" fill="#000000" fill-opacity="0.45"/>
+              <image href="data:image/png;base64,${base64Logo}" x="${x}" y="${y}" width="${imgW}" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>
             </svg>`
           );
 
+          const marginExtend = getMarginExtend(watermarkPosition);
+          const watermarkOverlay = marginExtend
+            ? await sharp(svgWatermark).extend(marginExtend).toBuffer()
+            : svgWatermark;
+
           sharpImg = sharpImg.composite([
             {
-              input: svgWatermark,
-              gravity: "center",
+              input: watermarkOverlay,
+              gravity: watermarkPosition,
             },
           ]);
         } catch (logoErr) {
@@ -131,22 +237,30 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
             "Failed to load logo-light.png for watermark, using fallback SVG:",
             logoErr
           );
+          const { svgW, svgH, rx, textX, textY, fontSize, iconScale } =
+            scaleConfig;
           const svgWatermark = Buffer.from(
-            `<svg width="200" height="54" viewBox="0 0 200 54" xmlns="http://www.w3.org/2000/svg">
-              <rect width="200" height="54" rx="12" fill="#000000" fill-opacity="0.45"/>
-              <g transform="translate(14, 11) scale(0.65)">
+            `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">
+              <rect width="${svgW}" height="${svgH}" rx="${rx}" fill="#000000" fill-opacity="0.45"/>
+              <g transform="translate(14, 9) scale(${iconScale})">
                 <!-- Isometric VCC Logo Icon -->
                 <path d="M0 16l16-8v24l-16 8z" fill="#ffffff" fill-opacity="0.9"/>
                 <path d="M16 8l16 8v24l-16-8z" fill="#3b82f6" fill-opacity="0.9"/>
                 <path d="M0 16l16-8 16 8-16 8z" fill="#60a5fa" fill-opacity="0.9"/>
               </g>
-              <text x="56" y="32" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" letter-spacing="1">VCC ASSET</text>
+              <text x="${textX}" y="${textY}" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="${fontSize}" font-weight="700" letter-spacing="1">VCC ASSET</text>
             </svg>`
           );
+
+          const marginExtend = getMarginExtend(watermarkPosition);
+          const watermarkOverlay = marginExtend
+            ? await sharp(svgWatermark).extend(marginExtend).toBuffer()
+            : svgWatermark;
+
           sharpImg = sharpImg.composite([
             {
-              input: svgWatermark,
-              gravity: "center",
+              input: watermarkOverlay,
+              gravity: watermarkPosition,
             },
           ]);
         }

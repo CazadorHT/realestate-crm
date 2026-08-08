@@ -251,7 +251,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         if (options.fullyFurnished) query = query.eq("is_fully_furnished", true);
         if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
         if (options.companyRegistered) query = query.eq("is_tax_registered", true);
-        if (options.allowAirbnb) query = query.eq("amenities->allow_airbnb", true);
+        if (options.allowAirbnb) query = query.eq("amenities->>allow_airbnb" as any, "true");
 
         if (options.transitStation) {
           const [stationName, stationType] = options.transitStation.replace(/"/g, "").split("|");
@@ -340,7 +340,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           query = query.or(textConditions.join(","));
         }
 
-        const itemsPerPage = options.limit || 24;
+        const itemsPerPage = Math.min(options.limit || 24, 36);
 
         const effectiveSort = options.sort || "NEWEST";
 
