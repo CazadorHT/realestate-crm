@@ -379,7 +379,7 @@ export async function getTransitAndProjectsInArea(
       };
     },
     ["public-transit-and-projects-in-area", areaNameTh],
-    { revalidate: 2592000, tags: ["popular-areas", "public-data"] }
+    { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
   )();
 }
 
@@ -441,7 +441,7 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
       return result;
     },
     ["public-popular-areas", String(limit)],
-    { revalidate: 2592000, tags: ["popular-areas", "public-data"] } // 30 days cache
+    { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
   )();
 }
 
@@ -504,7 +504,7 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
       return result;
     },
     ["public-related-areas", excludeId, String(limit)],
-    { revalidate: 2592000, tags: ["popular-areas", "public-data"] } // 30 days cache
+    { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
   )();
 }
 

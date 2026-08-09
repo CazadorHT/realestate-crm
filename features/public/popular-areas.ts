@@ -54,7 +54,7 @@ export const getPublicProvincesAction = unstable_cache(
     }
   },
   ["public-provinces-list-v5"],
-  { revalidate: 2592000, tags: ["provinces", "popular-areas", "public-data"] }
+  { revalidate: 31536000, tags: ["provinces", "popular-areas", "public-data"] }
 );
 
 /**

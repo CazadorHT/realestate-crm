@@ -11,15 +11,15 @@ export async function sendLineNotification(
   let token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   let userId = process.env.LINE_ADMIN_USER_ID;
 
-  // Fetch settings if token or userId is missing
+  // Independent lazy fallbacks: only query site settings if token or userId is missing
   if (!token || !userId) {
     try {
       const settings = await getSiteSettings();
-      if (!token) {
-        token = settings.line_channel_access_token || undefined;
+      if (!token && settings?.line_channel_access_token) {
+        token = settings.line_channel_access_token;
       }
-      if (!userId) {
-        userId = (settings as any).line_admin_user_id || undefined;
+      if (!userId && (settings as any)?.line_admin_user_id) {
+        userId = (settings as any).line_admin_user_id;
       }
     } catch (e) {
       console.warn("Failed to fetch site settings for line notifications:", e);
@@ -27,44 +27,49 @@ export async function sendLineNotification(
   }
 
   if (!token) {
-    console.error("ไม่พบ LINE_CHANNEL_ACCESS_TOKEN หรือ line_channel_access_token ในการตั้งค่า");
+    console.error("ไม่พบ LINE_CHANNEL_ACCESS_TOKEN หรือ line_channel_channel_access_token ในการตั้งค่า");
     return;
   }
 
-  // ถ้าไม่มี ID ใน ENV หรือ Site Settings ให้ลองหาจากโปรไฟล์แอดมินในฐานข้อมูลแทน
+  // ถ้าไม่มี ID ใน ENV หรือ Site Settings ให้ดึงจากโปรไฟล์แอดมิน (ห่อด้วย unstable_cache 30 วัน กันยิง DB ซ้ำ)
   if (!userId) {
     try {
-      const supabase = createAdminClient();
-      
-      // 1. พยายามหาแอดมินที่มี line_user_id (ID จริงของ LINE)
-      const { data: adminUser } = await supabase
-        .from("profiles")
-        .select("line_user_id, line_id")
-        .eq("role", "ADMIN")
-        .not("line_user_id", "is", null)
-        .neq("line_user_id", "")
-        .limit(1)
-        .maybeSingle();
+      const { unstable_cache } = await import("next/cache");
+      userId = await unstable_cache(
+        async () => {
+          const supabase = createAdminClient();
+          
+          // 1. พยายามหาแอดมินที่มี line_user_id (ID จริงของ LINE)
+          const { data: adminUser } = await supabase
+            .from("profiles")
+            .select("line_user_id, line_id")
+            .eq("role", "ADMIN")
+            .not("line_user_id", "is", null)
+            .neq("line_user_id", "")
+            .limit(1)
+            .maybeSingle();
 
-      if (adminUser?.line_user_id) {
-        userId = adminUser.line_user_id;
-      } else if (adminUser?.line_id && adminUser.line_id.startsWith("U") && adminUser.line_id.length === 33) {
-        userId = adminUser.line_id;
-      } else {
-        // 2. แผนสำรอง: หา User คนไหนก็ได้ที่มี line_user_id (ID จริงของ LINE)
-        const { data: anyUser } = await supabase
-          .from("profiles")
-          .select("line_user_id, line_id")
-          .not("line_user_id", "is", null)
-          .neq("line_user_id", "")
-          .limit(1)
-          .maybeSingle();
+          if (adminUser?.line_user_id) {
+            return adminUser.line_user_id;
+          } else if (adminUser?.line_id && adminUser.line_id.startsWith("U") && adminUser.line_id.length === 33) {
+            return adminUser.line_id;
+          }
 
-        if (anyUser?.line_user_id) {
-          userId = anyUser.line_user_id;
-        } else if (anyUser?.line_id && anyUser.line_id.startsWith("U") && anyUser.line_id.length === 33) {
-          userId = anyUser.line_id;
-        } else {
+          // 2. แผนสำรอง: หา User คนไหนก็ได้ที่มี line_user_id (ID จริงของ LINE)
+          const { data: anyUser } = await supabase
+            .from("profiles")
+            .select("line_user_id, line_id")
+            .not("line_user_id", "is", null)
+            .neq("line_user_id", "")
+            .limit(1)
+            .maybeSingle();
+
+          if (anyUser?.line_user_id) {
+            return anyUser.line_user_id;
+          } else if (anyUser?.line_id && anyUser.line_id.startsWith("U") && anyUser.line_id.length === 33) {
+            return anyUser.line_id;
+          }
+
           // 3. แผนสำรองสุดท้าย: ลองเช็ค line_id ของ ADMIN เผื่อใส่สลับกัน
           const { data: adminIdOnly } = await supabase
             .from("profiles")
@@ -74,13 +79,14 @@ export async function sendLineNotification(
             .neq("line_id", "")
             .limit(1)
             .maybeSingle();
-          if (adminIdOnly?.line_id && adminIdOnly.line_id.startsWith("U") && adminIdOnly.line_id.length === 33) {
-            userId = adminIdOnly.line_id;
-          }
-        }
-      }
-    } catch (dbError) {
-      console.warn("ไม่สามารถดึง Line ID จากฐานข้อมูลได้:", dbError);
+
+          return adminIdOnly?.line_id || null;
+        },
+        ["line-admin-user-id-fallback"],
+        { revalidate: 31536000, tags: ["profiles", "line-admin-id"] }
+      )() || undefined;
+    } catch (err) {
+      console.error("Error looking up admin LINE user ID:", err);
     }
   }
 

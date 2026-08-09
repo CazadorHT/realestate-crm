@@ -277,7 +277,7 @@ export async function getSiteSettings() {
       async () => getSiteSettingsInternal(tenantId),
       ["site-settings", tenantId],
       {
-        revalidate: 2592000, // 30 days cache (tag-invalidated on update)
+        revalidate: 31536000, // 1 year cache (tag-invalidated on update)
         tags: [`site-settings-${tenantId}`, "site-settings"],
       }
     )();

@@ -35,7 +35,7 @@ export const getSystemConfig = cache(async (): Promise<SystemConfig> => {
       return data.value as SystemConfig;
     },
     ["global-system-config"],
-    { revalidate: 2592000, tags: ["system-config", "site-settings"] }
+    { revalidate: 31536000, tags: ["system-config", "site-settings"] }
   )();
 });
 

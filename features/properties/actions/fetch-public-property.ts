@@ -1,5 +1,6 @@
 "use server";
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { PropertyDetail, ListingType, PropertyType } from "../types";
@@ -242,33 +243,47 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
   if (assignedAgent) {
     const agentId = (assignedAgent as any).id || (rawData as any).assigned_to || (rawData as any).created_by;
     if (agentId) {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("full_name, display_name, phone, line_id, wechat_user_id, whatsapp_user_id")
-        .eq("id", agentId)
-        .maybeSingle();
-      if (prof) {
-        agentProfile = prof;
-      }
+      agentProfile = await unstable_cache(
+        async () => {
+          const { createAdminClient } = await import("@/lib/supabase/admin");
+          const adminClient = await createAdminClient();
+          const { data: prof } = await adminClient
+            .from("profiles")
+            .select("full_name, display_name, phone, line_id, wechat_user_id, whatsapp_user_id")
+            .eq("id", agentId)
+            .maybeSingle();
+          return prof || null;
+        },
+        [`agent-profile-${agentId}`],
+        { revalidate: 31536000, tags: ["profiles", `agent-profile-${agentId}`] }
+      )();
     }
   }
 
   let popularAreaSlug: string | null = null;
   const areaNameName = address.popular_area;
   if (areaNameName) {
-    try {
-      const { data: areaObj } = await supabase
-        .from("popular_areas_v3")
-        .select("slug")
-        .eq("name->>th", areaNameName.trim())
-        .eq("is_active", true)
-        .maybeSingle();
-      if (areaObj?.slug) {
-        popularAreaSlug = areaObj.slug;
-      }
-    } catch (err) {
-      console.error("Error looking up popular area slug in fetch-public-property:", err);
-    }
+    const trimmedArea = areaNameName.trim();
+    popularAreaSlug = await unstable_cache(
+      async () => {
+        try {
+          const { createAdminClient } = await import("@/lib/supabase/admin");
+          const adminClient = await createAdminClient();
+          const { data: areaObj } = await adminClient
+            .from("popular_areas_v3")
+            .select("slug")
+            .eq("name->>th", trimmedArea)
+            .eq("is_active", true)
+            .maybeSingle();
+          return areaObj?.slug || null;
+        } catch (err) {
+          console.error("Error looking up popular area slug in fetch-public-property:", err);
+          return null;
+        }
+      },
+      [`popular-area-slug-${trimmedArea}`],
+      { revalidate: 31536000, tags: ["popular-areas", `area-slug-${trimmedArea}`] }
+    )();
   }
 
   const data: PropertyDetail = {
