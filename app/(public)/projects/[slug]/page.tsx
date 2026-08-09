@@ -18,7 +18,7 @@ import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAre
 import { CategoryNavigationCards } from "@/components/public/CategoryNavigationCards";
 
 
-export const dynamic = "force-dynamic";
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 const DETAIL_LOCALIZATION: Record<string, Record<string, string>> = {
   breadcrumb_home: { th: "หน้าแรก", en: "Home", cn: "首页", ru: "Главная" },

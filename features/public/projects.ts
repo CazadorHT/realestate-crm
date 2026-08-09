@@ -155,7 +155,7 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
       }).filter((p: any) => p.propertyCount > 0); // กรองเอาเฉพาะโครงการที่มีอสังหาฯ พร้อมขายจริง
     },
     ["public-projects-list-v1"],
-    { revalidate: 604800, tags: ["projects", "properties", "public-data"] }
+    { revalidate: 31536000, tags: ["projects", "properties", "public-data"] }
   )();
 }
 
@@ -226,7 +226,7 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
       };
     },
     ["public-project-by-slug", slug],
-    { revalidate: 604800, tags: ["projects", "public-data"] }
+    { revalidate: 31536000, tags: ["projects", "public-data"] }
   )();
 }
 
@@ -287,7 +287,7 @@ export async function getPropertiesInProject(
       };
     },
     ["public-properties-in-project", projectId, JSON.stringify(filters || {})],
-    { revalidate: 604800, tags: ["properties", "public-data"] }
+    { revalidate: 31536000, tags: ["properties", "public-data"] }
   )();
 }
 
@@ -295,19 +295,25 @@ export async function getPropertiesInProject(
  * Get all active project slugs for generateStaticParams()
  */
 export async function getAllProjectSlugs(): Promise<string[]> {
-  const supabase = await createClient();
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
 
-  const { data, error } = await supabase
-    .from("projects")
-    .select("slug")
-    .eq("is_active", true);
+      const { data, error } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("is_active", true);
 
-  if (error || !data) {
-    console.error("Error fetching project slugs:", error?.message);
-    return [];
-  }
+      if (error || !data) {
+        console.error("Error fetching project slugs:", error?.message);
+        return [];
+      }
 
-  return data.map((p: { slug: string }) => p.slug);
+      return data.map((p: { slug: string }) => p.slug);
+    },
+    ["all-project-slugs-v1"],
+    { revalidate: 31536000, tags: ["projects", "project-slugs", "public-data"] }
+  )();
 }
 
 /**

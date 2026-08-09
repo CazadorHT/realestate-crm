@@ -20,7 +20,7 @@ import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAre
 import { getProvinceName } from "@/lib/utils/provinces";
 import { generateAreaFAQSchema } from "@/lib/seo-utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }

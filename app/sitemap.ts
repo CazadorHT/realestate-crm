@@ -2,8 +2,13 @@ import { MetadataRoute } from "next";
 
 import { createPublicClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/lib/site-config";
+import { getAllStationSlugs } from "@/features/public/stations";
+import { getAllProjectSlugs } from "@/features/public/projects";
+import { getAllAreaSlugs } from "@/features/public/areas";
+import { getAllPropertySlugs } from "@/lib/services/properties";
+import { getAllBlogSlugs, getAllServiceSlugs } from "@/lib/services/blog";
 
-export const revalidate = 86400; // Cache Sitemap generation for 24 hours (1 day)
+export const revalidate = 31536000; // Cache Sitemap generation for 1 year (tag-invalidated on update)
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
@@ -111,31 +116,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // 2. Fetch Active Properties
-  const { data: properties } = await supabase
-    .from("properties_core")
-    .select("slug, updated_at")
-    .eq("status", 1) // status 1 = Active/Available in v3
-    .not("slug", "is", null);
+  // 2. Fetch Active Properties (Cached 1 year)
+  const properties = await getAllPropertySlugs();
+  const propertyRoutes: MetadataRoute.Sitemap = properties.map((prop: { slug: string; updated_at: string }) => ({
+    url: `${baseUrl}/properties/${prop.slug}`,
+    lastModified: new Date(prop.updated_at),
+    changeFrequency: "weekly",
+    priority: 0.7,
+    alternates: getAlternates(`/properties/${prop.slug}`),
+  }));
 
-  const propertyRoutes: MetadataRoute.Sitemap = (properties || []).map(
-    (prop: any) => ({
-      url: `${baseUrl}/properties/${prop.slug}`,
-      lastModified: new Date(prop.updated_at),
-      changeFrequency: "weekly",
-      priority: 0.7,
-      alternates: getAlternates(`/properties/${prop.slug}`),
-    }),
-  );
-
-  // 3. Fetch Published Blogs
-  const { data: blogs } = await supabase
-    .from("blog_posts")
-    .select("slug, updated_at")
-    .eq("is_published", true)
-    .not("slug", "is", null);
-
-  const blogRoutes: MetadataRoute.Sitemap = (blogs || []).map((blog: any) => ({
+  // 3. Fetch Published Blogs (Cached 1 year)
+  const blogs = await getAllBlogSlugs();
+  const blogRoutes: MetadataRoute.Sitemap = blogs.map((blog: { slug: string; updated_at: string }) => ({
     url: `${baseUrl}/blog/${blog.slug}`,
     lastModified: blog.updated_at ? new Date(blog.updated_at) : new Date(),
     changeFrequency: "monthly",
@@ -143,75 +136,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     alternates: getAlternates(`/blog/${blog.slug}`),
   }));
 
-  // 4. Fetch Active Services
-  const { data: services } = await supabase
-    .from("cms_content_v3")
-    .select("slug, updated_at")
-    .eq("content_type", "service")
-    .eq("status", "PUBLISHED")
-    .not("slug", "is", null);
+  // 4. Fetch Active Services (Cached 1 year)
+  const services = await getAllServiceSlugs();
+  const serviceRoutes: MetadataRoute.Sitemap = services.map((service: { slug: string; updated_at: string }) => ({
+    url: `${baseUrl}/services/${service.slug}`,
+    lastModified: service.updated_at ? new Date(service.updated_at) : new Date(),
+    changeFrequency: "monthly",
+    priority: 0.6,
+    alternates: getAlternates(`/services/${service.slug}`),
+  }));
 
-  const serviceRoutes: MetadataRoute.Sitemap = (services || []).map(
-    (service: any) => ({
-      url: `${baseUrl}/services/${service.slug}`,
-      lastModified: service.updated_at
-        ? new Date(service.updated_at)
-        : new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
-      alternates: getAlternates(`/services/${service.slug}`),
-    }),
-  );
+  // 5. Fetch Active Transit Stations (Cached 1 year)
+  const stationSlugs = await getAllStationSlugs();
+  const stationRoutes: MetadataRoute.Sitemap = stationSlugs.map((slug: string) => ({
+    url: `${baseUrl}/near-station/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.8,
+    alternates: getAlternates(`/near-station/${slug}`),
+  }));
 
-  // 5. Fetch Active Transit Stations
-  const { data: stations } = await supabase
-    .from("ref_master_data")
-    .select("metadata")
-    .eq("type", "TRANSIT_STATION")
-    .eq("is_active", true);
+  // 6. Fetch Active Projects (Cached 1 year)
+  const projectSlugs = await getAllProjectSlugs();
+  const projectRoutes: MetadataRoute.Sitemap = projectSlugs.map((slug: string) => ({
+    url: `${baseUrl}/projects/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.8,
+    alternates: getAlternates(`/projects/${slug}`),
+  }));
 
-  const stationRoutes: MetadataRoute.Sitemap = (stations || [])
-    .filter((s: any) => s.metadata?.slug)
-    .map((s: any) => ({
-      url: `${baseUrl}/near-station/${s.metadata.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-      alternates: getAlternates(`/near-station/${s.metadata.slug}`),
-    }));
-
-  // 6. Fetch Active Projects
-  const { data: projects } = await supabase
-    .from("projects")
-    .select("slug, updated_at")
-    .eq("is_active", true);
-
-  const projectRoutes: MetadataRoute.Sitemap = (projects || []).map(
-    (proj: any) => ({
-      url: `${baseUrl}/projects/${proj.slug}`,
-      lastModified: proj.updated_at ? new Date(proj.updated_at) : new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-      alternates: getAlternates(`/projects/${proj.slug}`),
-    }),
-  );
-
-  // 7. Fetch Active Popular Areas
-  const { data: areas } = await supabase
-    .from("popular_areas_v3")
-    .select("slug, updated_at")
-    .eq("is_active", true)
-    .not("slug", "is", null);
-
-  const areaRoutes: MetadataRoute.Sitemap = (areas || []).map(
-    (area: any) => ({
-      url: `${baseUrl}/areas/${area.slug}`,
-      lastModified: area.updated_at ? new Date(area.updated_at) : new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-      alternates: getAlternates(`/areas/${area.slug}`),
-    }),
-  );
+  // 7. Fetch Active Popular Areas (Cached 1 year)
+  const areaSlugs = await getAllAreaSlugs();
+  const areaRoutes: MetadataRoute.Sitemap = areaSlugs.map((slug: string) => ({
+    url: `${baseUrl}/areas/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.8,
+    alternates: getAlternates(`/areas/${slug}`),
+  }));
 
   return [
     ...staticRoutes,

@@ -20,7 +20,7 @@ import { StationSeoContent } from "@/components/public/near-station/StationSeoCo
 import { NearbyStationsSection } from "@/components/public/near-station/NearbyStationsSection";
 import { generateStationFAQSchema } from "@/lib/seo-utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 const DETAIL_LOCALIZATION: Record<string, Record<string, string>> = {
   breadcrumb_home: {

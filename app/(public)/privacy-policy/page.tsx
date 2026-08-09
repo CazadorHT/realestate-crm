@@ -9,7 +9,7 @@ import Link from "next/link";
 
 // ✅ Optimized for Google OAuth Bot: Use static-ish rendering for 100% HTML compatibility
 // This prevents "improperly formatted" errors by ensuring a fast, stable response.
-export const revalidate = 86400; 
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 // ✅ Always use production URL — siteConfig.url returns localhost in dev mode
 const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";

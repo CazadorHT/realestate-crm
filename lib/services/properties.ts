@@ -546,3 +546,25 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
     { revalidate: 31536000, tags: ["properties", "public-data"] }
   )();
 });
+
+/**
+ * Get all active property slugs for sitemap generation (Cached 1 year)
+ */
+export const getAllPropertySlugs = unstable_cache(
+  async (): Promise<{ slug: string; updated_at: string }[]> => {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("properties_core")
+      .select("slug, updated_at")
+      .eq("status", 1)
+      .not("slug", "is", null);
+
+    if (error || !data) return [];
+    return (data || []).map((item: any) => ({
+      slug: item.slug,
+      updated_at: item.updated_at || new Date().toISOString(),
+    }));
+  },
+  ["all-property-slugs-v1"],
+  { revalidate: 31536000, tags: ["properties", "property-slugs", "public-data"] }
+);

@@ -225,3 +225,48 @@ export async function getRelatedPosts(
     { revalidate: 86400, tags: ["cms", "blog"] }
   )();
 }
+
+/**
+ * Get all blog slugs for sitemap generation (Cached 1 year)
+ */
+export const getAllBlogSlugs = unstable_cache(
+  async (): Promise<{ slug: string; updated_at: string }[]> => {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .select("slug, updated_at")
+      .eq("is_published", true)
+      .not("slug", "is", null);
+
+    if (error || !data) return [];
+    return (data || []).map((item: any) => ({
+      slug: item.slug,
+      updated_at: item.updated_at || new Date().toISOString(),
+    }));
+  },
+  ["all-blog-slugs-v1"],
+  { revalidate: 31536000, tags: ["cms", "blog", "public-data"] }
+);
+
+/**
+ * Get all service slugs for sitemap generation (Cached 1 year)
+ */
+export const getAllServiceSlugs = unstable_cache(
+  async (): Promise<{ slug: string; updated_at: string }[]> => {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("cms_content_v3")
+      .select("slug, updated_at")
+      .eq("content_type", "service")
+      .eq("status", "PUBLISHED")
+      .not("slug", "is", null);
+
+    if (error || !data) return [];
+    return (data || []).map((item: any) => ({
+      slug: item.slug,
+      updated_at: item.updated_at || new Date().toISOString(),
+    }));
+  },
+  ["all-service-slugs-v1"],
+  { revalidate: 31536000, tags: ["cms", "service", "public-data"] }
+);
