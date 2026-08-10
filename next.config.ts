@@ -125,7 +125,8 @@ export default withAnalyzer(
   silent: !process.env.CI,
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  tunnelRoute: "/monitoring",
+  // Disabled tunnelRoute to prevent routing telemetry/replays through Vercel Serverless Bandwidth
+  // tunnelRoute: "/monitoring",
 
   // For modern Sentry SDK options
   sourcemaps: {
