@@ -55,7 +55,7 @@ export async function generateMetaCatalogFeed() {
       return buildMetaCatalogXml(propertiesData || []);
     },
     ["meta-catalog-feed-v1"],
-    { revalidate: 31536000, tags: ["properties", "public-data", "meta-catalog"] }
+    { revalidate: 86400, tags: ["meta-catalog-feed"] }
   )();
 }
 
