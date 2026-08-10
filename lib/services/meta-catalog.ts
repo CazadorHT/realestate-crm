@@ -45,10 +45,6 @@ export async function generateMetaCatalogFeed() {
           media:property_media_v3!property_media_v3_property_id_fkey (
             url,
             is_cover
-          ),
-          assigned_agent:identities_v3!properties_core_assigned_to_fkey (
-            display_name,
-            phone
           )
         `,
         )
