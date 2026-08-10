@@ -301,8 +301,8 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
 
       // 2. Fetch Projects (Names & Address Info Nearby Places)
       const { data: projectsData } = await client
-        .from("projects_v3")
-        .select("name, address_info")
+        .from("projects")
+        .select("name")
         .eq("is_active", true);
 
       // 3. Fetch Popular Areas
