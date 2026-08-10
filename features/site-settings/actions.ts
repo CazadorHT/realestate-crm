@@ -254,6 +254,16 @@ async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> 
 /**
  * Get all site settings (Cached with revalidation tag scoped by tenant)
  */
+const getCachedSiteSettingsInternal = (tenantId: string) =>
+  unstable_cache(
+    async () => getSiteSettingsInternal(tenantId),
+    ["site-settings", tenantId],
+    {
+      revalidate: 31536000, // 1 year cache (tag-invalidated on update)
+      tags: [`site-settings-${tenantId}`, "site-settings"],
+    }
+  )();
+
 export async function getSiteSettings() {
   let tenantId = "global";
   try {
@@ -273,14 +283,7 @@ export async function getSiteSettings() {
   }
 
   try {
-    return await unstable_cache(
-      async () => getSiteSettingsInternal(tenantId),
-      ["site-settings", tenantId],
-      {
-        revalidate: 31536000, // 1 year cache (tag-invalidated on update)
-        tags: [`site-settings-${tenantId}`, "site-settings"],
-      }
-    )();
+    return await getCachedSiteSettingsInternal(tenantId);
   } catch (cacheError) {
     console.warn("[SITE-SETTINGS] unstable_cache failed, falling back to direct DB fetch:", cacheError);
     return getSiteSettingsInternal(tenantId);

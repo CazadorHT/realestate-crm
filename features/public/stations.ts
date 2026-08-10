@@ -525,29 +525,35 @@ export async function getPropertyCountNearStation(
   stationNameTh: string,
   stationNameEn: string
 ): Promise<number> {
-  const supabase = await createClient();
-  const cleanTh = stationNameTh.replace(/"/g, "");
-  const cleanEn = stationNameEn.replace(/"/g, "");
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
+      const cleanTh = stationNameTh.replace(/"/g, "");
+      const cleanEn = stationNameEn.replace(/"/g, "");
 
-  const jsonTh = `[{"station_name":"${cleanTh}"}]`;
-  const jsonEn = `[{"station_name_en":"${cleanEn}"}]`;
+      const jsonTh = `[{"station_name":"${cleanTh}"}]`;
+      const jsonEn = `[{"station_name_en":"${cleanEn}"}]`;
 
-  const { count, error } = await supabase
-    .from("properties")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "ACTIVE")
-    .is("deleted_at", null)
-    .or(
-      `nearby_transits.cs."${jsonTh.replace(/"/g, '\\"')}",` +
-      `nearby_transits.cs."${jsonEn.replace(/"/g, '\\"')}",` +
-      `transit_station_name.eq."${cleanTh}",` +
-      `transit_station_name_en.eq."${cleanEn}"`
-    );
+      const { count, error } = await supabase
+        .from("properties")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null)
+        .or(
+          `nearby_transits.cs."${jsonTh.replace(/"/g, '\\"')}",` +
+          `nearby_transits.cs."${jsonEn.replace(/"/g, '\\"')}",` +
+          `transit_station_name.eq."${cleanTh}",` +
+          `transit_station_name_en.eq."${cleanEn}"`
+        );
 
-  if (error) {
-    console.error("Error counting properties near station:", error.message);
-    return 0;
-  }
+      if (error) {
+        console.error("Error counting properties near station:", error.message);
+        return 0;
+      }
 
-  return count || 0;
+      return count || 0;
+    },
+    [`station-property-count-${stationNameTh}-${stationNameEn}`],
+    { revalidate: 31536000, tags: ["properties", "stations", "public-data"] }
+  )();
 }

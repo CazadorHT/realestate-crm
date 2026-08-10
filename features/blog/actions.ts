@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 import { BlogPostInput } from "./types";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { getServerTranslations } from "@/lib/i18n";
@@ -379,10 +379,25 @@ export async function getDeletedBlogPostsAction(): Promise<ActionResponse<BlogPo
     const authorIds = Array.from(new Set((data || []).map((r: any) => r.author_id).filter(Boolean))) as string[];
     let profilesMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
     if (authorIds.length > 0) {
-      const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", authorIds);
-      (profs || []).forEach((p: any) => {
-        profilesMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
-      });
+      const sortedIds = [...authorIds].sort();
+      profilesMap = await unstable_cache(
+        async () => {
+          const { createAdminClient } = await import("@/lib/supabase/admin");
+          const adminClient = await createAdminClient();
+          const { data: profs } = await adminClient
+            .from("profiles")
+            .select("id, full_name, avatar_url")
+            .in("id", sortedIds);
+
+          const map: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+          (profs || []).forEach((p: any) => {
+            map[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+          });
+          return map;
+        },
+        [`deleted-blog-authors-${sortedIds.join("-")}`],
+        { revalidate: 31536000, tags: ["profiles", "blog"] }
+      )();
     }
 
     const mappedData = (data || []).map((row: any) => {

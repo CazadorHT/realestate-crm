@@ -142,14 +142,11 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
   const { data: rawData, error } = await query.maybeSingle();
   if (error || !rawData) return null;
 
-  // Fetch active stations to resolve slugs for nearby transits
+  // Fetch active stations to resolve slugs for nearby transits (Cached 1 year)
   const stationSlugMap = new Map<string, string>();
   try {
-    const { data: stationsMaster } = await supabase
-      .from("ref_master_data")
-      .select("code, label, metadata")
-      .eq("type", "TRANSIT_STATION")
-      .eq("is_active", true);
+    const { getTransitStationsAction } = await import("@/features/properties/actions/fetch-master-data");
+    const stationsMaster = await getTransitStationsAction();
 
     if (stationsMaster) {
       for (const item of stationsMaster) {
