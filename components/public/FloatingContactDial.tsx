@@ -36,11 +36,8 @@ export function FloatingContactDial() {
   useEffect(() => {
     async function fetchContactInfo() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("profiles")
-          .select("id, full_name, nickname, phone")
-          .limit(5);
+        const { getPublicFloatingAgentsAction } = await import("@/features/properties/actions/fetch-public-property");
+        const data = await getPublicFloatingAgentsAction();
 
         if (data && data.length > 0) {
           const mappedAgents = data.map((d) => ({

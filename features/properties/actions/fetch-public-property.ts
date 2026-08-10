@@ -511,3 +511,27 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
 
   return data;
 }
+
+/**
+ * Cached agent list for floating contact dials / floating action menus (Cached 1 year)
+ */
+export async function getPublicFloatingAgentsAction() {
+  return unstable_cache(
+    async () => {
+      try {
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const adminClient = await createAdminClient();
+        const { data } = await adminClient
+          .from("profiles")
+          .select("id, full_name, nickname, phone, avatar_url, line_id, facebook_url, whatsapp_id, wechat_id")
+          .limit(5);
+        return data || [];
+      } catch (err) {
+        console.error("Error in getPublicFloatingAgentsAction:", err);
+        return [];
+      }
+    },
+    ["public-floating-agents-v1"],
+    { revalidate: 31536000, tags: ["profiles", "public-data"] }
+  )();
+}

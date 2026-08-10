@@ -316,28 +316,33 @@ export async function getTransitStationsWithCountsAction() {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
 
-    // 1. Fetch all transit stations
-    const { data: stations, error: stationsError } = await ctx.supabase
-      .from("ref_master_data")
-      .select("id, type, code, label, is_active, sort_order, metadata")
-      .eq("type", "TRANSIT_STATION")
-      .order("sort_order", { ascending: true });
+    return await unstable_cache(
+      async () => {
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const adminClient = await createAdminClient();
 
-    if (stationsError) throw stationsError;
+        // 1. Fetch all transit stations
+        const { data: stations, error: stationsError } = await adminClient
+          .from("ref_master_data")
+          .select("id, type, code, label, is_active, sort_order, metadata")
+          .eq("type", "TRANSIT_STATION")
+          .order("sort_order", { ascending: true });
 
-    // 2. Fetch count of properties grouped by transit_station_name and nearby_transits from properties view
-    const { data: counts, error: countsError } = await ctx.supabase
-      .from("properties")
-      .select("transit_station_name, nearby_transits")
-      .is("deleted_at", null)
-      .eq("status", "ACTIVE"); // only active properties
+        if (stationsError) throw stationsError;
 
-    if (countsError) throw countsError;
+        // 2. Fetch count of properties grouped by transit_station_name and nearby_transits from properties view
+        const { data: counts, error: countsError } = await adminClient
+          .from("properties")
+          .select("transit_station_name, nearby_transits")
+          .is("deleted_at", null)
+          .eq("status", "ACTIVE"); // only active properties
 
-    // 3. Map counts by matching station credentials (code, label.th, label.en) against property attributes
-    return (stations || []).map((station: any) => {
-      const code = (station.code || "").toLowerCase();
-      const thName = (station.label?.th || "").toLowerCase();
+        if (countsError) throw countsError;
+
+        // 3. Map counts by matching station credentials (code, label.th, label.en) against property attributes
+        return (stations || []).map((station: any) => {
+          const code = (station.code || "").toLowerCase();
+          const thName = (station.label?.th || "").toLowerCase();
       const enName = (station.label?.en || "").toLowerCase();
       
       let count = 0;
@@ -384,6 +389,10 @@ export async function getTransitStationsWithCountsAction() {
         property_count: count,
       };
     });
+      },
+      ["transit-stations-with-counts-v1"],
+      { revalidate: 31536000, tags: ["master-data", "transit-stations", "properties"] }
+    )();
   } catch (err) {
     console.error("Error in getTransitStationsWithCountsAction:", err);
     return [];

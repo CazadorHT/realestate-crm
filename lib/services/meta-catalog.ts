@@ -9,49 +9,61 @@ import { decrypt } from "@/lib/crypto";
  * Ref: https://www.facebook.com/business/help/127303027877345
  * Ref: https://developers.facebook.com/docs/marketing-api/catalog/reference/
  */
+import { unstable_cache } from "next/cache";
+
 export async function generateMetaCatalogFeed() {
-  const supabase = createAdminClient();
+  return unstable_cache(
+    async () => {
+      const supabase = createAdminClient();
 
-  // Fetch active properties directly from V3 Core tables
-  // Completely eliminates select(*) to save bandwidth and reduce payload size
-  const { data: propertiesData, error } = await supabase
-    .from("properties_core")
-    .select(
-      `
-      id,
-      listing_type,
-      property_type,
-      sale_price,
-      rent_price,
-      bedrooms,
-      bathrooms,
-      floor_area,
-      verified,
-      is_exclusive,
-      co_broker_id,
-      details:properties_details!properties_details_property_id_fkey (
-        title,
-        description,
-        address_info,
-        amenities,
-        pricing_details,
-        meta_data,
-        transit_info
-      ),
-      media:property_media_v3!property_media_v3_property_id_fkey (
-        url,
-        is_cover
-      ),
-      assigned_agent:identities_v3!properties_core_assigned_to_fkey (
-        display_name,
-        phone
-      )
-    `,
-    )
-    .eq("status", 1) // 1 = ACTIVE
-    .limit(500);
+      // Fetch active properties directly from V3 Core tables
+      // Completely eliminates select(*) to save bandwidth and reduce payload size
+      const { data: propertiesData, error } = await supabase
+        .from("properties_core")
+        .select(
+          `
+          id,
+          listing_type,
+          property_type,
+          sale_price,
+          rent_price,
+          bedrooms,
+          bathrooms,
+          floor_area,
+          verified,
+          is_exclusive,
+          co_broker_id,
+          details:properties_details!properties_details_property_id_fkey (
+            title,
+            description,
+            address_info,
+            amenities,
+            pricing_details,
+            meta_data,
+            transit_info
+          ),
+          media:property_media_v3!property_media_v3_property_id_fkey (
+            url,
+            is_cover
+          ),
+          assigned_agent:identities_v3!properties_core_assigned_to_fkey (
+            display_name,
+            phone
+          )
+        `,
+        )
+        .eq("status", 1) // 1 = ACTIVE
+        .limit(500);
 
-  if (error) throw error;
+      if (error) throw error;
+      return buildMetaCatalogXml(propertiesData || []);
+    },
+    ["meta-catalog-feed-v1"],
+    { revalidate: 31536000, tags: ["properties", "public-data", "meta-catalog"] }
+  )();
+}
+
+function buildMetaCatalogXml(propertiesData: any[]) {
 
   type PropertyFeedRow = {
     id: string;

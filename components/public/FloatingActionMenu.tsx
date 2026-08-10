@@ -40,19 +40,8 @@ export function FloatingActionMenu() {
   useEffect(() => {
     async function fetchAgents() {
       try {
-        const supabase = createClient();
-        // Assuming we want all profiles for now, or filter by role if possible
-        // If 'role' column exists: .eq('role', 'agent')
-        const { data, error } = await supabase
-          .from("profiles")
-          .select(
-            "id, full_name, avatar_url, phone, line_id, facebook_url, whatsapp_id, wechat_id",
-          );
-
-        if (error) {
-          console.error("Error fetching agents:", error);
-          return;
-        }
+        const { getPublicFloatingAgentsAction } = await import("@/features/properties/actions/fetch-public-property");
+        const data = await getPublicFloatingAgentsAction();
 
         if (data) {
           // valid fields are automatically typed
