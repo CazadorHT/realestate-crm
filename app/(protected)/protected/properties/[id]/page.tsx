@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { PropertyAdminHeader } from "./_components/PropertyAdminHeader";
 import { PropertyCRMDetails } from "./_components/PropertyCRMDetails";
 import { PropertyAdminSidebar } from "./_components/PropertyAdminSidebar";
@@ -116,11 +117,22 @@ export default async function PropertyDetailsPage({
   const [ownerData, popularAreaResponse, profilesResponse] = await Promise.all([
     ownerId ? getOwnerById(ownerId) : Promise.resolve(null),
     popularAreaIdFromAddress
-      ? supabase
-          .from("popular_areas_v3")
-          .select("id, name")
-          .eq("id", popularAreaIdFromAddress)
-          .single()
+      ? (async () => {
+          const cacheKey = `popular-area-id-${popularAreaIdFromAddress}`;
+          const getCachedAreaById = unstable_cache(
+            async () => {
+              const { data } = await supabase
+                .from("popular_areas_v3")
+                .select("id, name")
+                .eq("id", popularAreaIdFromAddress)
+                .single();
+              return { data };
+            },
+            [cacheKey],
+            { revalidate: 31536000, tags: ["popular-areas", `area-id-${popularAreaIdFromAddress}`] }
+          );
+          return getCachedAreaById();
+        })()
       : Promise.resolve({ data: null }),
     agentIds.length > 0
       ? supabase

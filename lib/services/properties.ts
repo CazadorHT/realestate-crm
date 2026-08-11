@@ -388,7 +388,21 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             p_property_type: options.propertyType || undefined,
             p_listing_type: options.listingType || undefined
           };
-          const { data: facetData } = await supabase.rpc('get_public_property_facets_v2', rpcParams);
+
+          const cacheKey = `facets-${JSON.stringify(rpcParams)}`;
+          const getCachedFacets = unstable_cache(
+            async () => {
+              const { data: facetData } = await supabase.rpc("get_public_property_facets_v2", rpcParams);
+              return facetData;
+            },
+            [cacheKey],
+            {
+              revalidate: 31536000, // 1 year cache
+              tags: ["property-facets", "public-properties"],
+            }
+          );
+
+          const facetData = await getCachedFacets();
           facets = (facetData as unknown) as PropertyFacets | null;
         }
 
@@ -407,10 +421,24 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         >();
 
         if (popularAreaNames.length > 0) {
-          const { data: areaData } = await supabase
-            .from("popular_areas")
-            .select("name, name_en, name_cn, name_ru")
-            .in("name", popularAreaNames);
+          const sortedNames = [...popularAreaNames].sort();
+          const cacheKey = `area-trans-${sortedNames.join(",")}`;
+          const getCachedAreaTranslations = unstable_cache(
+            async () => {
+              const { data: areaData } = await supabase
+                .from("popular_areas")
+                .select("name, name_en, name_cn, name_ru")
+                .in("name", sortedNames);
+              return areaData || [];
+            },
+            [cacheKey],
+            {
+              revalidate: 31536000, // 1 year cache
+              tags: ["popular-areas", "area-translations"],
+            }
+          );
+
+          const areaData = await getCachedAreaTranslations();
           (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null; name_ru: string | null }) =>
             areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru }),
           );
