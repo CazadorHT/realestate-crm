@@ -20,7 +20,9 @@ export async function GET(
   const GITHUB_RAW_URL = `https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/${fileName}`;
 
   try {
-    const response = await fetch(GITHUB_RAW_URL);
+    const response = await fetch(GITHUB_RAW_URL, {
+      next: { revalidate: 31536000 }, // 1 year cache
+    });
 
     if (!response.ok) {
       return NextResponse.json(

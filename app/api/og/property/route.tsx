@@ -80,7 +80,9 @@ export async function GET(req: NextRequest) {
       
       for (const url of fontUrls) {
         try {
-          const fontRes = await fetch(url);
+          const fontRes = await fetch(url, {
+            next: { revalidate: 31536000 }, // 1 year font cache
+          });
           if (fontRes.ok) {
             cachedFont = await fontRes.arrayBuffer();
             break;

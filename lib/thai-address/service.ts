@@ -60,7 +60,9 @@ export class ThaiAddressService {
     schema: z.ZodSchema<T>,
   ): Promise<T[]> {
     try {
-      const response = await fetch(`${GITHUB_BASE_URL}/${endpoint}`);
+      const response = await fetch(`${GITHUB_BASE_URL}/${endpoint}`, {
+        next: { revalidate: 31536000 }, // 1 year cache
+      });
       if (!response.ok) throw new Error("GitHub Direct Fetch Failed");
       const data = await response.json();
       
@@ -75,7 +77,9 @@ export class ThaiAddressService {
       );
 
       try {
-        const response = await fetch(`${PROXY_BASE_URL}/${endpoint}`);
+        const response = await fetch(`${PROXY_BASE_URL}/${endpoint}`, {
+          next: { revalidate: 31536000 }, // 1 year cache
+        });
         if (!response.ok) throw new Error("Proxy Fetch Failed");
         const data = await response.json();
         
