@@ -116,7 +116,9 @@ async function getImageBase64(
 
     // 4. If it's a full URL
     if (imageUrl.startsWith("http")) {
-      const res = await fetch(imageUrl);
+      const res = await fetch(imageUrl, {
+        next: { revalidate: 31536000 }, // 1 year cache for document image assets
+      });
       if (!res.ok) return imageUrl;
       const blob = await res.blob();
       const buffer = Buffer.from(await blob.arrayBuffer());
