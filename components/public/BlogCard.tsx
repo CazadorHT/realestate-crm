@@ -51,6 +51,7 @@ export function BlogCard({ post, className, language, t, priority = false }: Blo
   return (
     <Link
       href={`/blog/${post.slug}`}
+      prefetch={false}
       className={cn("group block h-full", className)}
     >
       <article className="flex flex-col h-full overflow-hidden rounded-3xl border border-slate-200 bg-white transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:-translate-y-2">

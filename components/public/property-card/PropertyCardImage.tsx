@@ -313,6 +313,7 @@ export function PropertyCardImage({
               <Link
                 key={index}
                 href={`/properties/${property.slug || property.id}`}
+                prefetch={false}
                 className="relative h-full w-full shrink-0 snap-start block"
               >
                 {shouldRender ? (

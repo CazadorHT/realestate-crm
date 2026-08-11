@@ -110,6 +110,7 @@ export function PropertyCardInfo({
       {/* Title block link */}
       <Link 
         href={`/properties/${property.slug || property.id}`}
+        prefetch={false}
         className="block group-hover:text-blue-600 transition-colors"
         onClick={handleCardClick}
       >
@@ -125,6 +126,7 @@ export function PropertyCardInfo({
           <div className="flex items-center min-w-0">
             <Link
               href={projectSlug ? `/projects/${projectSlug}` : `/properties/${property.slug || property.id}`}
+              prefetch={false}
               onClick={(e) => {
                 e.stopPropagation();
                 if (handleCardClick) handleCardClick();
@@ -143,6 +145,7 @@ export function PropertyCardInfo({
         {/* row2 location */}
         <Link
           href={`/properties/${property.slug || property.id}`}
+          prefetch={false}
           className="flex items-center gap-1.5 text-stone-600 min-w-0"
           onClick={handleCardClick}
         >
