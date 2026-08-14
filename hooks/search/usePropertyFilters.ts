@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 export interface DefaultPropertyFilters {
@@ -140,8 +140,14 @@ export function usePropertyFilters(
     setAiInsight(null);
   }, [searchParams, defaultTransitStation, defaultFilters]);
  
-  // Sync state to URL
+  // Sync state to URL without triggering infinite router re-renders
+  const isFirstMountRef = useRef(true);
   useEffect(() => {
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     if (keyword) params.set("keyword", keyword); else params.delete("keyword");
     if (type !== "ALL") params.set("property_type", type); else params.delete("property_type");
@@ -166,8 +172,14 @@ export function usePropertyFilters(
  
     const query = params.toString();
     const currentPath = basePath || (typeof window !== "undefined" ? window.location.pathname : "/properties");
-    const url = `${currentPath}${query ? `?${query}` : ""}`;
-    router.replace(url, { scroll: false });
+    const newSearch = query ? `?${query}` : "";
+    const currentSearch = typeof window !== "undefined" ? window.location.search : "";
+
+    // Only update URL if search string actually changed
+    if (newSearch !== currentSearch) {
+      const url = `${currentPath}${newSearch}`;
+      router.replace(url, { scroll: false });
+    }
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
