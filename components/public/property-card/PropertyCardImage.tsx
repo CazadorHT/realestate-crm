@@ -112,8 +112,17 @@ export function PropertyCardImage({
       return property.image_url ? [property.image_url] : [];
     })();
     
-    return rawImages
-      .filter((img): img is string | { url: string } => img !== null && img !== undefined)
+    const mapped = rawImages
+      .filter((img): img is string | { url?: string; image_url?: string; is_cover?: boolean; sort_order?: number } => img !== null && img !== undefined)
+      .slice()
+      .sort((a, b) => {
+        if (typeof a === 'object' && typeof b === 'object') {
+          if (a.is_cover && !b.is_cover) return -1;
+          if (!a.is_cover && b.is_cover) return 1;
+          return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+        }
+        return 0;
+      })
       .map(img => {
         if (typeof img === 'string') return img;
         if (img && typeof img === 'object') {
@@ -127,6 +136,12 @@ export function PropertyCardImage({
         return '';
       })
       .filter(url => typeof url === 'string' && url.trim() !== "");
+
+    if (property.image_url && mapped.includes(property.image_url) && mapped[0] !== property.image_url) {
+      return [property.image_url, ...mapped.filter(u => u !== property.image_url)];
+    }
+
+    return mapped;
   })();
 
   // Progressive loading: only render visibleCount images in DOM to reduce egress.

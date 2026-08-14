@@ -820,7 +820,7 @@ export async function getPropertySocialContent(
     .select(
       `
       *,
-      property_images ( image_url, storage_path ),
+      property_images ( image_url, storage_path, is_cover, sort_order ),
       property_agents ( agent_id, profiles:identities_v3 ( full_name:display_name, nickname, phone, line_id ) ),
       property_features ( features ( name, name_en, name_cn, name_ru, icon_key ) )
     `,
@@ -1120,7 +1120,13 @@ export async function getPropertySocialContent(
   );
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const rawImages =
-    ((property.property_images as { image_url: string; storage_path?: string }[])
+    ((property.property_images as { image_url: string; storage_path?: string; is_cover?: boolean; sort_order?: number }[])
+      ?.slice()
+      ?.sort((a, b) => {
+        if (a.is_cover && !b.is_cover) return -1;
+        if (!a.is_cover && b.is_cover) return 1;
+        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      })
       ?.map((img) => {
         const path = img.storage_path || img.image_url;
         if (!path) return null;

@@ -480,8 +480,16 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
           const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
           
-          const finalImages = (pi && pi.length > 0) 
-            ? pi.map((img: any) => {
+          const sortedPi = (pi && pi.length > 0)
+            ? [...pi].sort((a: any, b: any) => {
+                if (a.is_cover && !b.is_cover) return -1;
+                if (!a.is_cover && b.is_cover) return 1;
+                return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+              })
+            : [];
+
+          const finalImages = (sortedPi.length > 0) 
+            ? sortedPi.map((img: any) => {
                 const target = img.image_url || img.storage_path || "";
                 return {
                   ...img,

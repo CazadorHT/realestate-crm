@@ -601,12 +601,16 @@ export function PropertyImageUploader({
   };
 
   const handleSetCover = (imageId: string) => {
-    setImages((prev) =>
-      prev.map((img) => ({
-        ...img,
-        is_cover: img.id === imageId,
-      })),
-    );
+    setImages((prev) => {
+      const targetIndex = prev.findIndex((img) => img.id === imageId);
+      if (targetIndex === -1) return prev;
+
+      const target = { ...prev[targetIndex], is_cover: true };
+      const rest = prev
+        .filter((img) => img.id !== imageId)
+        .map((img) => ({ ...img, is_cover: false }));
+      return [target, ...rest];
+    });
     toast.success("ตั้งรูปปกสำเร็จ");
   };
 

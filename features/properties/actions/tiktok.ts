@@ -33,7 +33,7 @@ export async function postPropertyToTikTokAction(
       .from("properties")
       .select(`
         *,
-        property_images ( image_url, storage_path ),
+        property_images ( image_url, storage_path, is_cover, sort_order ),
         property_agents ( agent_id, profiles:identities_v3 ( full_name:display_name, phone, line_id ) ),
         property_features ( features ( name, name_en, name_cn, name_ru, icon_key ) )
       `)
@@ -98,7 +98,13 @@ export async function postPropertyToTikTokAction(
     // 4. เตรียมรูปภาพ (Standardized Logic using storage_path)
     const rawImagesCount = (property.property_images as unknown as any[])?.length || 0;
     
-    const rawImages = ((property.property_images as unknown as any[]) || [])
+    const rawImages = (((property.property_images as unknown as any[]) || [])
+      .slice()
+      .sort((a: any, b: any) => {
+        if (a.is_cover && !b.is_cover) return -1;
+        if (!a.is_cover && b.is_cover) return 1;
+        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      }))
       .map((img: any) => {
         // Prefer storage_path (absolute path in bucket) over raw image_url
         const path = img.storage_path || img.image_url;
