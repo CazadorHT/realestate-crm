@@ -72,30 +72,9 @@ const getActiveLocations = unstable_cache(
 export async function generateMetadata(): Promise<Metadata> {
   const { t, language } = await getServerTranslations();
   const settings = await getSiteSettings();
-
   const siteName = settings.site_name || siteConfig.name;
-  
-  // Smart Fallback: Use the database-configured description for Thai (th).
-  // For other languages (en, cn, ru), always fallback to the localized translation files (JSON) for SEO precision.
-  const siteDesc = language === "th"
-    ? (settings.site_description || t("metadata.default_description"))
-    : t("metadata.default_description");
-
-  const headersList = await headers();
-  const rawPathname = headersList.get("x-pathname") || "/";
-
-  // Strip locale prefix from rawPathname to get canonical clean path
-  let cleanPathname = rawPathname;
-  const parts = rawPathname.split("/");
-  if (parts.length > 1 && ["th", "en", "cn", "ru"].includes(parts[1])) {
-    cleanPathname = "/" + parts.slice(2).join("/");
-  }
-  if (cleanPathname === "") {
-    cleanPathname = "/";
-  }
-
-  // Ensure trailing slashes aren't doubled
-  const canonicalUrl = `${siteConfig.url}${cleanPathname === "/" ? "" : cleanPathname}`;
+  const siteDesc = settings.site_description || t("metadata.default_description");
+  const canonicalUrl = `${siteConfig.url}/`;
 
   // 🔄 Fetch and build dynamic keywords based on active DB listings
   const locations = await getActiveLocations();
@@ -163,13 +142,13 @@ export async function generateMetadata(): Promise<Metadata> {
     description: siteDesc,
     keywords: finalKeywords,
     alternates: {
-      canonical: canonicalUrl || `${siteConfig.url}/`,
+      canonical: `${siteConfig.url}/`,
       languages: {
-        th: `${siteConfig.url}/th${cleanPathname === "/" ? "" : cleanPathname}`,
-        en: `${siteConfig.url}/en${cleanPathname === "/" ? "" : cleanPathname}`,
-        "zh-Hans": `${siteConfig.url}/cn${cleanPathname === "/" ? "" : cleanPathname}`,
-        ru: `${siteConfig.url}/ru${cleanPathname === "/" ? "" : cleanPathname}`,
-        "x-default": canonicalUrl || `${siteConfig.url}/`,
+        th: `${siteConfig.url}/th`,
+        en: `${siteConfig.url}/en`,
+        "zh-Hans": `${siteConfig.url}/cn`,
+        ru: `${siteConfig.url}/ru`,
+        "x-default": `${siteConfig.url}/`,
       },
     },
     openGraph: {
@@ -217,16 +196,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const lang = cookieStore.get("app-language")?.value || "th";
+  const lang = "th";
   const settings = await getSiteSettings();
   const gtmId = settings.google_tag_manager_enabled ? settings.google_tag_manager_id : null;
-
-  // ✅ Suppress GTM iframe on legal pages — Google OAuth bot marks iframes as "improperly formatted"
-  const headersList = await headers();
-  const rawPathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
-  const pathname = rawPathname.toLowerCase();
-  const isLegalPage = pathname.includes("privacy-policy") || pathname.includes("terms");
 
   return (
     <html lang={lang}>
@@ -278,8 +250,8 @@ export default async function RootLayout({
         )}
         {/* End Google Tag Manager */}
 
-        {/* Google Tag Manager (noscript) — suppressed on legal pages to pass Google OAuth verification */}
-        {!isLegalPage && settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
+        {/* Google Tag Manager (noscript) */}
+        {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
           <noscript>
             <iframe
               src={`https://www.googletagmanager.com/ns.html?id=${settings.google_tag_manager_id}`}

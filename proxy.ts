@@ -106,54 +106,14 @@ export async function proxy(request: NextRequest) {
   const hasLangCookie = request.cookies.has("app-language");
   const currentCookieLang = request.cookies.get("app-language")?.value;
 
-  // Set detectedLang if not matching the current path prefix
-  if (!isPublicApi) {
-    if (isLocalePath && detectedLang !== currentCookieLang) {
-      response.cookies.set("app-language", detectedLang!, {
-        path: "/",
-        maxAge: 31536000,
-        sameSite: "lax",
-      });
-    } else if (!isLocalePath && !hasLangCookie) {
-      if (isCrawler) {
-        // Force Thai language for search crawlers/bots on root paths to ensure Google indexes the Thai version
-        detectedLang = "th";
-      } else {
-        // Auto-detect browser/IP language on default root paths
-        const acceptLang = request.headers.get("accept-language")?.toLowerCase();
-        const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
-
-        if (country) {
-          if (country === "CN" || country === "HK" || country === "TW") detectedLang = "cn";
-          else if (country === "RU") detectedLang = "ru";
-          else if (country === "TH") detectedLang = "th";
-          else detectedLang = "en";
-        }
-
-        if (!detectedLang && acceptLang) {
-          const primaryLang = acceptLang.split(',')[0];
-          if (primaryLang.startsWith("th")) detectedLang = "th";
-          else if (primaryLang.startsWith("en")) detectedLang = "en";
-          else if (primaryLang.startsWith("zh")) detectedLang = "cn";
-          else if (primaryLang.startsWith("ru")) detectedLang = "ru";
-          
-          if (!detectedLang) {
-            if (acceptLang.includes("th")) detectedLang = "th";
-            else if (acceptLang.includes("en")) detectedLang = "en";
-            else if (acceptLang.includes("zh")) detectedLang = "cn";
-            else if (acceptLang.includes("ru")) detectedLang = "ru";
-          }
-        }
-      }
-
-      if (detectedLang) {
-        response.cookies.set("app-language", detectedLang, {
-          path: "/",
-          maxAge: 31536000,
-          sameSite: "lax",
-        });
-      }
-    }
+  // Language detection without setting cookie automatically on public paths
+  // (Prevents Set-Cookie header from breaking static Edge CDN caching)
+  if (isLocalePath && detectedLang !== currentCookieLang && !isPublicApi) {
+    response.cookies.set("app-language", detectedLang!, {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+    });
   }
 
   // Active language for downstream routing

@@ -20,6 +20,8 @@ import { RealtimeProvider } from "@/components/providers/RealtimeProvider";
 import { ProcessProvider } from "@/components/providers/ProcessProvider";
 import { ProcessMonitor } from "@/components/common/ProcessMonitor";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProtectedLayout({
   children,
 }: {

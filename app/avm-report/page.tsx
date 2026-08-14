@@ -15,7 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
-export default function AvmReportPage() {
+function AvmReportContent() {
   const searchParams = useSearchParams();
   const [data, setData] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -343,5 +343,13 @@ export default function AvmReportPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AvmReportPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-500">กำลังสร้างรายงาน...</div>}>
+      <AvmReportContent />
+    </React.Suspense>
   );
 }
