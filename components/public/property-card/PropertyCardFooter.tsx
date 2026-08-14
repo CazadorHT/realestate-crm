@@ -290,14 +290,14 @@ export function PropertyCardFooter({
         )}
           
 
-        {/* Update Date (Right) */}
+        {/* Timestamp Display (Right) */}
         <div className="text-[10px] md:text-[11px]  text-stone-400 italic flex ml-auto">
-          {property.updated_at ? (
+          {property.bumped_at || property.created_at ? (
             <>
               <Clock className="h-3 w-3 mr-1" />
               <span className="text-slate-400 font-normal ">
-                {mounted && property.updated_at
-                  ? getRelativeDateString(property.updated_at, language)
+                {mounted
+                  ? getRelativeDateString(property.bumped_at || property.created_at, language)
                   : ""}
               </span>
             </>

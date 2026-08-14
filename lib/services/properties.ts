@@ -74,6 +74,8 @@ export type PropertyRow = {
   is_tax_registered: boolean | null;
   is_hot_deal: boolean | null;
   allow_airbnb: boolean | null;
+  meta_data?: Record<string, unknown> | null;
+  bumped_at?: string | null;
   amenities: unknown | null;
   nearby_places: unknown | null;
   nearby_transits: unknown | null;
@@ -109,6 +111,7 @@ const PUBLIC_LIST_COLUMNS = `
   property_type, price, rental_price, original_price, original_rental_price,
   verified, min_contract_months, bedrooms, meta_keywords, bathrooms,
   size_sqm, land_size_sqwah, parking_slots, floor, created_at, updated_at,
+  bumped_at:meta_data->>bumped_at,
   listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru, province, district, subdistrict,
   address_line1, address_line1_en,
   is_hot_deal,
@@ -346,7 +349,9 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         const effectiveSort = options.sort || "NEWEST";
 
         if (effectiveSort === "NEWEST") {
-          query = query.order("created_at", { ascending: false });
+          query = query
+            .order("meta_data->>bumped_at", { ascending: false, nullsFirst: false })
+            .order("created_at", { ascending: false });
         } else if (effectiveSort === "PRICE_ASC") {
           const effectivePriceType = options.priceType || options.listingType;
           if (effectivePriceType === "RENT") {
@@ -368,9 +373,11 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         } else {
           // Default fallbacks
           if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal") {
-            query = query.order("updated_at", { ascending: false });
+            query = query.order("updated_at", { ascending: false, nullsFirst: false });
           } else {
-            query = query.order("created_at", { ascending: false });
+            query = query
+              .order("meta_data->>bumped_at", { ascending: false, nullsFirst: false })
+              .order("created_at", { ascending: false });
           }
         }
 
@@ -498,14 +505,18 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
               }) 
             : getSafeImages(legacyImages);
 
+          const bumpedAt = ((row as any).meta_data?.bumped_at as string) || (row as any).bumped_at || null;
+          const effectiveTime = bumpedAt ? new Date(bumpedAt).getTime() : new Date(row.created_at).getTime();
+
           return {
             ...cardBase,
+            bumped_at: bumpedAt,
             project_name: finalProjectName,
             projects: projectsObj,
             popular_area_en: trans?.en ?? null,
             popular_area_cn: trans?.cn ?? null,
             popular_area_ru: trans?.ru ?? null,
-            created_at_time: new Date(row.created_at).getTime(),
+            created_at_time: effectiveTime,
             image_url: getCoverImage(finalImages),
             images: finalImages,
             location: buildLocation(row),

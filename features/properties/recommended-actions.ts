@@ -63,6 +63,7 @@ export async function getRecommendedProperties(
         `,
         )
         .eq("status", "ACTIVE")
+        .order("meta_data->>bumped_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
         .limit(limit);
 

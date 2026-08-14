@@ -199,6 +199,7 @@ export async function searchByTypeAndArea(propertyType: string, area: string, li
     .eq("status", "ACTIVE")
     .eq("property_type", propertyType as PropertyType)
     .ilike("popular_area", `%${area}%`)
+    .order("meta_data->>bumped_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -217,6 +218,7 @@ export async function getHotProperties(limit = 10) {
     .from("properties")
     .select(BOT_SELECT_FIELDS)
     .eq("status", "ACTIVE")
+    .order("meta_data->>bumped_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(limit);
 

@@ -56,6 +56,8 @@ export type PropertyCardProps = {
   province?: string | null;
   created_at: string;
   created_at_time?: number;
+  bumped_at?: string | null;
+  meta_data?: Record<string, unknown> | null;
   updated_at: string;
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   image_url?: string | null;

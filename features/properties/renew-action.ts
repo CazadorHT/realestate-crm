@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 
@@ -26,12 +26,35 @@ export async function renewPropertyAction(id: string) {
       throw new Error("คุณไม่มีสิทธิ์ดันประกาศทรัพย์สินของผู้อื่น");
     }
 
-    const { error } = await supabase
-      .from("properties_core")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", id);
+    const bumpIso = new Date().toISOString();
 
-    if (error) throw error;
+    // 1. Fetch current meta_data from properties_details
+    const { data: detailsData } = await supabase
+      .from("properties_details")
+      .select("meta_data")
+      .eq("property_id", id)
+      .maybeSingle();
+
+    const currentMeta = (detailsData?.meta_data as Record<string, unknown>) || {};
+    const updatedMeta = {
+      ...currentMeta,
+      bumped_at: bumpIso,
+    };
+
+    // 2. Update properties_details and properties_core
+    const [coreRes, detailsRes] = await Promise.all([
+      supabase
+        .from("properties_core")
+        .update({ updated_at: bumpIso })
+        .eq("id", id),
+      supabase
+        .from("properties_details")
+        .update({ meta_data: updatedMeta })
+        .eq("property_id", id),
+    ]);
+
+    if (coreRes.error) throw coreRes.error;
+    if (detailsRes.error) throw detailsRes.error;
 
     await logAudit(
       { supabase, user, role },
@@ -39,10 +62,14 @@ export async function renewPropertyAction(id: string) {
         action: "property.update",
         entity: "properties",
         entityId: id,
-        metadata: { field: "updated_at", type: "renewal" },
+        metadata: { field: "bumped_at", type: "renewal", timestamp: bumpIso },
       }
     );
 
+    revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidatePath("/");
+    revalidatePath("/properties");
     revalidatePath("/protected/properties");
     return { success: true };
   } catch (error) {

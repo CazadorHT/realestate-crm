@@ -326,8 +326,8 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
     }
 
     return [...items].sort((a, b) => {
-      const timeB = (b as any).created_at_time || new Date(b.created_at || b.updated_at || 0).getTime();
-      const timeA = (a as any).created_at_time || new Date(a.created_at || a.updated_at || 0).getTime();
+      const timeB = (b as any).created_at_time || new Date((b as any).bumped_at || b.created_at || 0).getTime();
+      const timeA = (a as any).created_at_time || new Date((a as any).bumped_at || a.created_at || 0).getTime();
       return timeB - timeA;
     });
   }, [filter, properties, areaFilter, provinceFilter]);
