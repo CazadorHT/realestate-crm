@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 
 // ============ TYPES ============
@@ -87,21 +87,26 @@ export async function getBudgetRanges(
 export async function getActiveBudgetRanges(
   purpose: "BUY" | "RENT" | "INVEST",
 ): Promise<BudgetRange[]> {
-  const supabase = await createClient();
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient();
+      const { data, error } = await (supabase as any)
+        .from("smart_match_budget_ranges")
+        .select("id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active")
+        .eq("purpose", purpose)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
 
-  const { data, error } = await (supabase as any)
-    .from("smart_match_budget_ranges")
-    .select("id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active")
-    .eq("purpose", purpose)
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+      if (error) {
+        console.error("Error fetching active budget ranges:", error);
+        return [];
+      }
 
-  if (error) {
-    console.error("Error fetching active budget ranges:", error);
-    return [];
-  }
-
-  return (data as BudgetRange[]) || [];
+      return (data as BudgetRange[]) || [];
+    },
+    [`smart-match-budget-ranges-${purpose}`],
+    { revalidate: 31536000, tags: ["smart-match", `smart-match-budget-${purpose}`] }
+  )();
 }
 
 export async function createBudgetRange(
@@ -278,20 +283,25 @@ export async function getOfficeSizes(): Promise<OfficeSizeOption[]> {
 }
 
 export async function getActiveOfficeSizes(): Promise<OfficeSizeOption[]> {
-  const supabase = await createClient();
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from("smart_match_office_sizes")
+        .select("id, label, label_en, label_cn, label_ru, min_sqm, max_sqm, sort_order, is_active")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
 
-  const { data, error } = await supabase
-    .from("smart_match_office_sizes")
-    .select("id, label, label_en, label_cn, label_ru, min_sqm, max_sqm, sort_order, is_active")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+      if (error) {
+        console.error("Error fetching active office sizes:", error);
+        return [];
+      }
 
-  if (error) {
-    console.error("Error fetching active office sizes:", error);
-    return [];
-  }
-
-  return (data as OfficeSizeOption[]) || [];
+      return (data as OfficeSizeOption[]) || [];
+    },
+    ["smart-match-active-office-sizes"],
+    { revalidate: 31536000, tags: ["smart-match", "smart-match-office-sizes"] }
+  )();
 }
 
 export async function createOfficeSize(
