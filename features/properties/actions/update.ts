@@ -310,10 +310,33 @@ export async function updatePropertyAction(
 
     // 4) --- V3 SMART ORCHESTRATOR: ATOMIC UPDATE ---
     
+    const hasSaleDiscount = !!(safeValues.price && safeValues.original_price && Number(safeValues.price) < Number(safeValues.original_price));
+    const hasRentDiscount = !!(safeValues.rental_price && safeValues.original_rental_price && Number(safeValues.rental_price) < Number(safeValues.original_rental_price));
+
+    const finalSalePrice = hasSaleDiscount
+      ? Number(safeValues.price)
+      : (safeValues.original_price != null && Number(safeValues.original_price) > 0
+          ? Number(safeValues.original_price)
+          : (safeValues.price != null ? Number(safeValues.price) : null));
+
+    const finalRentPrice = hasRentDiscount
+      ? Number(safeValues.rental_price)
+      : (safeValues.original_rental_price != null && Number(safeValues.original_rental_price) > 0
+          ? Number(safeValues.original_rental_price)
+          : (safeValues.rental_price != null ? Number(safeValues.rental_price) : null));
+
+    const finalOriginalSalePrice = hasSaleDiscount
+      ? Number(safeValues.original_price)
+      : finalSalePrice;
+
+    const finalOriginalRentPrice = hasRentDiscount
+      ? Number(safeValues.original_rental_price)
+      : finalRentPrice;
+
     // Calculate is_hot_deal status
     const isHotDeal = !!(
-      (safeValues.price && safeValues.original_price && Number(safeValues.price) < Number(safeValues.original_price)) ||
-      (safeValues.rental_price && safeValues.original_rental_price && Number(safeValues.rental_price) < Number(safeValues.original_rental_price)) ||
+      hasSaleDiscount ||
+      hasRentDiscount ||
       (mergedKeywords && mergedKeywords.some((k: string) => ["hot deal", "hotdeal", "hot_deal"].includes(k.toLowerCase().trim())))
     );
 
@@ -341,8 +364,8 @@ export async function updatePropertyAction(
         status: PROPERTY_STATUS_DB_VALUE[safeValues.status || "DRAFT"],
         listing_type: LISTING_TYPE_DB_VALUE[safeValues.listing_type || "SALE"],
         property_type: PROPERTY_TYPE_DB_VALUE[safeValues.property_type || "CONDO"],
-        sale_price: safeValues.price || safeValues.original_price,
-        rent_price: safeValues.rental_price || safeValues.original_rental_price,
+        sale_price: finalSalePrice,
+        rent_price: finalRentPrice,
         bedrooms: safeValues.bedrooms,
         bathrooms: safeValues.bathrooms,
         floor_area: safeValues.size_sqm,
@@ -454,8 +477,8 @@ export async function updatePropertyAction(
           water_charge: safeValues.water_charge,
           commission_sale: safeValues.commission_sale_percentage,
           commission_rent: safeValues.commission_rent_months,
-          original_price: safeValues.original_price,
-          original_rental_price: safeValues.original_rental_price,
+          original_price: finalOriginalSalePrice,
+          original_rental_price: finalOriginalRentPrice,
         },
         transit_info: (() => {
           const transits = safeValues.nearby_transits || [];

@@ -263,10 +263,33 @@ export async function createPropertyAction(
       new Set([...(seoData.metaKeywords || []), ...finalKeywords]),
     );
 
+    const hasSaleDiscount = !!(propertyData.price && propertyData.original_price && Number(propertyData.price) < Number(propertyData.original_price));
+    const hasRentDiscount = !!(propertyData.rental_price && propertyData.original_rental_price && Number(propertyData.rental_price) < Number(propertyData.original_rental_price));
+
+    const finalSalePrice = hasSaleDiscount
+      ? Number(propertyData.price)
+      : (propertyData.original_price != null && Number(propertyData.original_price) > 0
+          ? Number(propertyData.original_price)
+          : (propertyData.price != null ? Number(propertyData.price) : null));
+
+    const finalRentPrice = hasRentDiscount
+      ? Number(propertyData.rental_price)
+      : (propertyData.original_rental_price != null && Number(propertyData.original_rental_price) > 0
+          ? Number(propertyData.original_rental_price)
+          : (propertyData.rental_price != null ? Number(propertyData.rental_price) : null));
+
+    const finalOriginalSalePrice = hasSaleDiscount
+      ? Number(propertyData.original_price)
+      : finalSalePrice;
+
+    const finalOriginalRentPrice = hasRentDiscount
+      ? Number(propertyData.original_rental_price)
+      : finalRentPrice;
+
     // Calculate is_hot_deal status
     const isHotDeal = !!(
-      (propertyData.price && propertyData.original_price && Number(propertyData.price) < Number(propertyData.original_price)) ||
-      (propertyData.rental_price && propertyData.original_rental_price && Number(propertyData.rental_price) < Number(propertyData.original_rental_price)) ||
+      hasSaleDiscount ||
+      hasRentDiscount ||
       (mergedKeywords && mergedKeywords.some((k: string) => ["hot deal", "hotdeal", "hot_deal"].includes(k.toLowerCase().trim())))
     );
 
@@ -280,8 +303,8 @@ export async function createPropertyAction(
         status: PROPERTY_STATUS_DB_VALUE[propertyData.status || "DRAFT"],
         listing_type: LISTING_TYPE_DB_VALUE[propertyData.listing_type || "SALE"],
         property_type: PROPERTY_TYPE_DB_VALUE[propertyData.property_type || "CONDO"],
-        sale_price: propertyData.price ?? propertyData.original_price,
-        rent_price: propertyData.rental_price ?? propertyData.original_rental_price,
+        sale_price: finalSalePrice,
+        rent_price: finalRentPrice,
         currency: propertyData.currency || "THB",
         bedrooms: propertyData.bedrooms,
         bathrooms: propertyData.bathrooms,
@@ -400,8 +423,8 @@ export async function createPropertyAction(
           water_charge: propertyData.water_charge,
           commission_sale: propertyData.commission_sale_percentage,
           commission_rent: propertyData.commission_rent_months,
-          original_price: propertyData.original_price,
-          original_rental_price: propertyData.original_rental_price,
+          original_price: finalOriginalSalePrice,
+          original_rental_price: finalOriginalRentPrice,
         },
         transit_info: (() => {
           const transits = safeValues.nearby_transits || [];

@@ -1072,6 +1072,7 @@ export function PropertyForm({
           if (!open) {
             setSuccessData(null);
             router.push("/protected/properties?success=true#table");
+            router.refresh();
           }
         }}
         title={
@@ -1095,6 +1096,7 @@ export function PropertyForm({
                 setIsNavigating(true);
                 window.open(`/properties/${successData.slug}`, "_blank");
                 router.push("/protected/properties?success=true#table");
+                router.refresh();
               } else {
                 toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
               }
@@ -1123,6 +1125,7 @@ export function PropertyForm({
             onClick={() => {
               setIsNavigating(true);
               router.push("/protected/properties?success=true#table");
+              router.refresh();
             }}
           >
             <div className="bg-white/10 p-2 rounded-xl">

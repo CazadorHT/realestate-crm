@@ -179,8 +179,14 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       listing_type: getListingTypeFromDb(core.listing_type),
       property_type: getPropertyTypeFromDb(core.property_type),
 
-      price: core.sale_price,
-      rental_price: core.rent_price,
+      price:
+        price?.original_price && core.sale_price && Number(core.sale_price) < Number(price.original_price)
+          ? core.sale_price
+          : null,
+      rental_price:
+        price?.original_rental_price && core.rent_price && Number(core.rent_price) < Number(price.original_rental_price)
+          ? core.rent_price
+          : null,
       original_price: price?.original_price ?? core.sale_price ?? null,
       original_rental_price:
         price?.original_rental_price ?? core.rent_price ?? null,
