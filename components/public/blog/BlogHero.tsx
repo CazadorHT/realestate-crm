@@ -1,21 +1,30 @@
+"use client";
+
 import React from "react";
 import { BookOpen } from "lucide-react";
 import Image from "next/image";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface BlogHeroProps {
-  translations: {
-    title_main: string;
-    desc: string;
-    title_highlight: string;
-    title_badge: string;
+  translations?: {
+    title_main?: string;
+    desc?: string;
+    title_highlight?: string;
+    title_badge?: string;
   };
 }
 
-export function BlogHero({ translations }: BlogHeroProps) {
-  const { title_main, desc, title_highlight, title_badge } = translations;
+export function BlogHero({ translations: initialTranslations }: BlogHeroProps) {
+  const { t } = useLanguage();
+
+  const title_main = t("blog.title_main") || initialTranslations?.title_main || "บทความและสาระน่ารู้{highlight}";
+  const desc = t("blog.desc") || initialTranslations?.desc || "รวมข่าวสารและบทความน่าสนใจเกี่ยวกับ{bold} อัปเดตล่าสุด";
+  const title_highlight = t("blog.title_highlight") || initialTranslations?.title_highlight || "อสังหาริมทรัพย์";
+  const title_badge = t("blog.title_badge") || initialTranslations?.title_badge || "บทความและข่าวสาร";
 
   const mainParts = title_main.split("{highlight}");
   const descParts = desc.split("{bold}");
+
 
   return (
     <section className="relative pt-32 pb-20 overflow-hidden">

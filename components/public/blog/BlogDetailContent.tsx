@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { m, AnimatePresence } from "framer-motion";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface BlogDetailContentProps {
   post: {
     excerpt?: string | null;
@@ -32,31 +34,27 @@ interface BlogDetailContentProps {
     avatar?: string;
     bio?: string;
   };
-  dict: Record<string, any>;
-  language: string;
+  dict?: Record<string, any>;
+  language?: string;
 }
 
 export function BlogDetailContent({
   post,
   author,
-  dict,
-  language,
+  language: initialLanguage,
 }: BlogDetailContentProps) {
-  const t = (key: string, params?: Record<string, string | number>): string => {
-    let value = key.split(".").reduce((prev: any, curr: string) => prev?.[curr], dict as any) || key;
-    if (params && typeof value === "string") {
-      Object.entries(params).forEach(([k, v]) => {
-        value = (value as string).replace(`{${k}}`, String(v));
-      });
-    }
-    return value as string;
-  };
+  const { language: clientLanguage, t } = useLanguage();
+  const language = clientLanguage || initialLanguage || "th";
   const [contactOpen, setContactOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const title = getLocalizedField<string>(post, "title", language);
-  const excerpt = getLocalizedField<string>(post, "excerpt", language);
-  const content = getLocalizedField<string>(post, "content", language);
+  const title = getLocalizedField<string>(post, "title", language) || post.title;
+  const rawExcerpt = getLocalizedField<string>(post, "excerpt", language);
+  // If viewing in EN/CN/RU and no translated excerpt exists, don't show the Thai excerpt block
+  const excerpt = language === "th" ? (rawExcerpt || post.excerpt) : rawExcerpt;
+  const content = getLocalizedField<string>(post, "content", language) || post.content;
+
+
 
   const [sanitizedContent, setSanitizedContent] = useState<string>(
     content || "",

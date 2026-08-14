@@ -74,17 +74,54 @@ export function PropertySearchPage({
     return filtered.slice(0, displayCount);
   }, [filtered, displayCount]);
 
-  // Total count for current active area filter (or total server count)
-  const currentAreaFacetCount = filters.area && serverFacets?.availableAreas?.[filters.area]?.count !== undefined
-    ? serverFacets.availableAreas[filters.area].count
-    : null;
+  // Total count for current active filter state
+  const totalAvailableCount = useMemo(() => {
+    // 1. If we have multiple compound filters or active quick filters combined with landing filters,
+    // filtered.length represents the exact matching count in memory
+    const hasMultipleFilters = Boolean(
+      (filters.type && filters.type !== "ALL") ||
+      (filters.province && filters.province !== "ALL") ||
+      (filters.area && filters.area !== "ALL") ||
+      (filters.bedrooms && filters.bedrooms !== "ALL") ||
+      filters.minPrice || filters.maxPrice ||
+      filters.debouncedKeyword ||
+      (filters.petFriendly && (filters.companyRegistered || filters.nearTrain || filters.isForeigner || filters.fullyFurnished || filters.isHotDeal || filters.listingType !== "ALL")) ||
+      (filters.luxuryVilla)
+    );
 
-  const totalAvailableCount = currentAreaFacetCount !== null 
-    ? currentAreaFacetCount 
-    : (serverFacets?.availableListingTypes?.ALL || filtered.length);
-  
-  // Can load more if we haven't displayed all local filtered properties OR if server has more properties for this filter
-  const hasMore = displayCount < filtered.length || (currentAreaFacetCount === null && properties.length < totalAvailableCount);
+    if (hasMultipleFilters) {
+      return filtered.length;
+    }
+
+    if (filters.petFriendly && serverFacets?.availableQuickFilters?.petFriendly !== undefined) {
+      return serverFacets.availableQuickFilters.petFriendly;
+    }
+    if (filters.nearTrain && serverFacets?.availableQuickFilters?.nearTrain !== undefined) {
+      return serverFacets.availableQuickFilters.nearTrain;
+    }
+    if (filters.isForeigner && serverFacets?.availableQuickFilters?.isForeigner !== undefined) {
+      return serverFacets.availableQuickFilters.isForeigner;
+    }
+    if (filters.companyRegistered && serverFacets?.availableQuickFilters?.companyRegistered !== undefined) {
+      return serverFacets.availableQuickFilters.companyRegistered;
+    }
+    if (filters.isHotDeal && serverFacets?.availableQuickFilters?.isHotDeal !== undefined) {
+      return serverFacets.availableQuickFilters.isHotDeal;
+    }
+    if (filters.area && serverFacets?.availableAreas?.[filters.area]?.count !== undefined) {
+      return serverFacets.availableAreas[filters.area].count;
+    }
+    if (filters.listingType === "RENT" && serverFacets?.availableListingTypes?.RENT !== undefined) {
+      return serverFacets.availableListingTypes.RENT;
+    }
+    if (filters.listingType === "SALE" && serverFacets?.availableListingTypes?.SALE !== undefined) {
+      return serverFacets.availableListingTypes.SALE;
+    }
+    return serverFacets?.availableListingTypes?.ALL || filtered.length;
+  }, [filters, serverFacets, filtered.length]);
+
+  // Can load more if we haven't displayed all local filtered properties OR if server has more properties
+  const hasMore = visibleProperties.length < filtered.length || (properties.length < totalAvailableCount && filtered.length < totalAvailableCount);
 
   const loadMore = useCallback(() => {
     if (displayCount < filtered.length) {
@@ -127,55 +164,9 @@ export function PropertySearchPage({
     filters.isForeigner, filters.isHotDeal, filters.transitStation
   ]);
 
-  // 🛡️ Loop Protection Guard: Reset auto-fetch attempt tracker on filter change
-  const lastFetchedFilterRef = useRef<string>("");
   useEffect(() => {
     setDisplayCount(ITEMS_PER_PAGE);
-    lastFetchedFilterRef.current = ""; // Reset tracker when user changes filter
   }, [filterFingerprint]);
-
-  // 🛡️ Hardened Auto-Fetch Trigger (Guarded against Infinite Loops)
-  const hasNoFilteredResults = filtered.length === 0;
-  const hasMorePropertiesOnServer = properties.length < totalAvailableCount;
-
-  useEffect(() => {
-    if (
-      hasNoFilteredResults && 
-      !isLoading && 
-      !isFetchingMore && 
-      hasMorePropertiesOnServer &&
-      lastFetchedFilterRef.current !== filterFingerprint // 🛑 Prevent duplicate loops for same filter state
-    ) {
-      lastFetchedFilterRef.current = filterFingerprint;
-      loadMoreProperties();
-    }
-  }, [hasNoFilteredResults, isLoading, isFetchingMore, hasMorePropertiesOnServer, filterFingerprint, loadMoreProperties]);
-
-  // 5. Automatic Infinite Scroll Observer
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!hasMore || isLoading) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1, rootMargin: "200px" } // Load early before user hits the bottom
-    );
-
-    const currentSentinel = sentinelRef.current;
-    if (currentSentinel) {
-      observer.observe(currentSentinel);
-    }
-
-    return () => {
-      if (currentSentinel) {
-        observer.unobserve(currentSentinel);
-      }
-    };
-  }, [hasMore, isLoading, loadMore]);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -203,6 +194,7 @@ export function PropertySearchPage({
           totalFound={filtered.length}
           startIndex={0}
           endIndex={visibleProperties.length}
+          totalAvailableCount={totalAvailableCount}
         />
 
         {filters.aiInsight && (
@@ -239,6 +231,13 @@ export function PropertySearchPage({
               isFetchingMore={isFetchingMore}
               loadMore={loadMore}
               areaFilterName={filters.area || undefined}
+              filterLabel={
+                filters.petFriendly
+                  ? language === "en" ? "Pet-Friendly properties" : language === "cn" ? "允许养宠物的房源" : language === "ru" ? "объектов, разрешенных для животных" : "คอนโดเลี้ยงสัตว์ได้"
+                  : filters.luxuryVilla
+                  ? language === "en" ? "Luxury Villas" : language === "cn" ? "独栋奢华别墅" : language === "ru" ? "роскошных вилл" : "วิลล่าหรู"
+                  : undefined
+              }
             />
           </div>
 
@@ -285,9 +284,6 @@ export function PropertySearchPage({
                 </p>
               </div>
             )}
-
-            {/* 🛡️ Infinite Scroll Sentinel Element */}
-            <div ref={sentinelRef} className="h-10 w-full pointer-events-none" aria-hidden="true" />
           </>
         )}
       </div>

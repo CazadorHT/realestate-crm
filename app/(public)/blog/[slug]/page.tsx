@@ -26,8 +26,10 @@ export const revalidate = 31536000; // 1 year long-term cache (ISR with on-deman
 import { BlogDetailHero } from "@/components/public/blog/BlogDetailHero";
 import { BlogDetailContent } from "@/components/public/blog/BlogDetailContent";
 import { BlogDetailSidebar } from "@/components/public/blog/BlogDetailSidebar";
+import { BlogDetailBreadcrumbs } from "@/components/public/blog/BlogDetailBreadcrumbs";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { BlogViewCounter } from "@/components/public/blog/BlogViewCounter";
+
 import { siteConfig } from "@/lib/site-config";
 
 interface BlogPostPageProps {
@@ -203,23 +205,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       />
 
       <div className="container mx-auto px-4 md:px-6 py-4">
-        <AppBreadcrumbs
-          items={[
-            { label: t("breadcrumb.home"), href: "/" },
-            { label: t("breadcrumb.blog"), href: "/blog" },
-            ...(post.category
-              ? [
-                  {
-                    label: post.category,
-                    href: `/blog?category=${post.category}`,
-                  },
-                ]
-              : []),
-            {
-              label: getLocalizedField(post, "title", language),
-              href: `/blog/${slug}`,
-            },
-          ]}
+        <BlogDetailBreadcrumbs
+          post={post}
+          slug={decodedSlug}
+          initialLanguage={language}
         />
       </div>
 
@@ -229,14 +218,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         author={author}
         formattedDate={formattedDate}
         language={language}
-        t={t}
       />
 
       <div className="container px-4 md:px-6 -mt-16 relative z-20 max-w-screen-2xl mx-auto">
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-9 min-w-0">
-            <BlogDetailContent post={post} author={author} dict={dictionaries[language as Language]} language={language} />
+            <BlogDetailContent post={post} author={author} language={language} />
+
 
             {/* View Counter (Client-side) */}
             <BlogViewCounter id={post.id} />

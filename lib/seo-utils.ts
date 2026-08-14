@@ -576,21 +576,21 @@ export function generateMetaTitle(
   const province = getLocalizedField<string>(data, "province", language) || data.province;
   
   const locationStr = popular_area || district || province || "";
-  if (locationStr) parts.push(locationStr);
 
-  // High-CTR modifier (Update 2026 / Price value)
-  const ctrSuffix = lang === "en" ? "Updated 2026" : lang === "cn" ? "2026最新" : lang === "ru" ? "Обновлено 2026" : "อัปเดต 2026";
-  parts.push(ctrSuffix);
+  const actionStr = data.listing_type === "RENT" 
+    ? SEO_LABELS.FOR_RENT[lang] 
+    : data.listing_type === "SALE" 
+      ? SEO_LABELS.FOR_SALE[lang] 
+      : SEO_LABELS.FOR_SALE_RENT[lang];
 
-  const fullTitle = parts.join(" | ");
-  const suffix = ` - ${siteConfig.name}`;
-
-  // Truncate if too long (max 60)
-  if (fullTitle.length + suffix.length > 60) {
-    return fullTitle.slice(0, 60 - suffix.length - 3) + "..." + suffix;
-  }
-
-  return fullTitle + suffix;
+  return formatPrioritySeoTitle(
+    {
+      primarySubject: title,
+      prefix: locationStr ? locationStr : undefined,
+      action: actionStr,
+    },
+    siteConfig.name
+  );
 }
 
 /**

@@ -8,11 +8,13 @@ import { ChevronLeft, ChevronRight, Building2, ArrowRight, Sparkles, MapPin } fr
 import type { PublicProject } from "@/features/public/projects";
 import { SectionBackground } from "./SectionBackground";
 import { getProvinceName } from "@/lib/utils/provinces";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FeaturedProjectsSectionProps {
   projects: PublicProject[];
-  language: string;
+  language?: string;
 }
+
 
 const SECTION_LOCALIZATION: Record<string, Record<string, string>> = {
   badge: {
@@ -90,8 +92,10 @@ function formatPrice(amount: number, lang: string): string {
 
 export function FeaturedProjectsSection({
   projects,
-  language,
+  language: initialLanguage,
 }: FeaturedProjectsSectionProps) {
+  const { language: clientLanguage } = useLanguage();
+  const language = clientLanguage || initialLanguage || "th";
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);

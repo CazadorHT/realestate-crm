@@ -2,6 +2,7 @@
 
 import { m, AnimatePresence } from "framer-motion";
 import { PropertyCard, PropertyCardProps } from "../PropertyCard";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type ApiProperty = PropertyCardProps;
 
@@ -14,6 +15,7 @@ interface PropertyGridProps {
   isFetchingMore?: boolean;
   loadMore?: () => void;
   areaFilterName?: string;
+  filterLabel?: string;
 }
 
 /**
@@ -31,7 +33,10 @@ export function PropertyGrid({
   isFetchingMore,
   loadMore,
   areaFilterName,
+  filterLabel,
 }: PropertyGridProps) {
+  const { language } = useLanguage();
+
   return (
     <m.div
       layout
@@ -46,27 +51,26 @@ export function PropertyGrid({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{
-              duration: 0.3,
-              delay: i * 0.05,
-              ease: "easeOut",
+              duration: 0.25,
+              delay: Math.min(i * 0.03, 0.3),
+              ease: [0.25, 0.1, 0.25, 1],
             }}
           >
             <PropertyCard
               property={item}
-              // [S-Tier Boost] Prioritize 4 images for faster LCP
-              priority={currentPage === 1 && i < 4}
+              priority={i < 4 && currentPage === 1}
             />
           </m.div>
         ))}
 
+        {/* Load More Discovery Card for Desktop & Mobile Grid */}
         {hasMore && loadMore && (
           <m.div
-            key="load-more-dashed-card"
             layout
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
             className="flex h-full min-h-[380px]"
           >
             <button
@@ -86,31 +90,71 @@ export function PropertyGrid({
               </div>
 
               <h4 className="text-base sm:text-lg font-bold text-slate-800 group-hover:text-blue-700 transition-colors mb-1">
-                {areaFilterName 
-                  ? `ยังมีทรัพย์สินในทำเล "${areaFilterName}" อีก`
+                {filterLabel
+                  ? language === "en"
+                    ? `More ${filterLabel} available`
+                    : language === "cn"
+                    ? `更多${filterLabel}房源`
+                    : language === "ru"
+                    ? `Больше объектов (${filterLabel})`
+                    : `ยังมี${filterLabel}ในระบบอีก`
+                  : areaFilterName && areaFilterName.toLowerCase() !== "all"
+                  ? language === "en"
+                    ? `More properties in "${areaFilterName}"`
+                    : language === "cn"
+                    ? `"${areaFilterName}" 还有更多房源`
+                    : language === "ru"
+                    ? `Больше объектов в "${areaFilterName}"`
+                    : `ยังมีทรัพย์สินในทำเล "${areaFilterName}" อีก`
+                  : language === "en"
+                  ? "More properties matching your criteria"
+                  : language === "cn"
+                  ? "符合条件的更多房源"
+                  : language === "ru"
+                  ? "Больше объектов по вашим критериям"
                   : "ยังมีทรัพย์สินเพิ่มเติมที่ตรงตามเงื่อนไข"}
               </h4>
 
               <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3">
-                {areaFilterName && areaRemainingCount > 0 && (
+                {areaFilterName && areaFilterName.toLowerCase() !== "all" && areaRemainingCount > 0 ? (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white shadow-xs">
-                    +{areaRemainingCount} รายการในทำเลนี้
+                    {language === "en"
+                      ? `+${areaRemainingCount} in "${areaFilterName}"`
+                      : language === "cn"
+                      ? `"${areaFilterName}" 还有 +${areaRemainingCount} 套`
+                      : language === "ru"
+                      ? `+${areaRemainingCount} в "${areaFilterName}"`
+                      : `+${areaRemainingCount} รายการใน "${areaFilterName}"`}
                   </span>
-                )}
-                {totalRemainingCount > areaRemainingCount && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors">
-                    และโซนอื่นๆ อีก +{totalRemainingCount - areaRemainingCount} รายการ
+                ) : totalRemainingCount > 0 ? (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white shadow-xs">
+                    {language === "en"
+                      ? `+${totalRemainingCount} properties`
+                      : language === "cn"
+                      ? `+${totalRemainingCount} 套房源`
+                      : language === "ru"
+                      ? `+${totalRemainingCount} объектов`
+                      : `+${totalRemainingCount} รายการ`}
                   </span>
-                )}
-                {!areaFilterName && totalRemainingCount > 0 && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    +{totalRemainingCount} รายการ
-                  </span>
-                )}
+                ) : null}
               </div>
 
               <p className="text-xs sm:text-sm text-slate-500 group-hover:text-slate-700 transition-colors font-medium">
-                {isFetchingMore ? "กำลังดึงข้อมูลเพิ่มเติม..." : "กดที่นี่เพื่อโหลดดูทรัพย์ทั้งหมด"}
+                {isFetchingMore
+                  ? language === "en"
+                    ? "Loading more properties..."
+                    : language === "cn"
+                    ? "正在加载更多房源..."
+                    : language === "ru"
+                    ? "Загрузка объектов..."
+                    : "กำลังดึงข้อมูลเพิ่มเติม..."
+                  : language === "en"
+                  ? "Click here to load all properties"
+                  : language === "cn"
+                  ? "点击此处加载所有房源"
+                  : language === "ru"
+                  ? "Нажмите здесь, чтобы загрузить все объекты"
+                  : "กดที่นี่เพื่อโหลดดูทรัพย์ทั้งหมด"}
               </p>
             </button>
           </m.div>

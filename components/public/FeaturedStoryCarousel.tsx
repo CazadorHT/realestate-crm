@@ -7,6 +7,10 @@ import { m, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Bed, Bath, Maximize2, MapPin, Sparkles, ArrowUpRight, Pause, Play } from "lucide-react";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { getProvinceName } from "@/lib/utils/provinces";
+
 export interface StoryPropertyItem {
   id: string;
   title: string;
@@ -25,6 +29,10 @@ export interface StoryPropertyItem {
   usable_area?: number | null;
   size_sqm?: number | null;
   popular_area?: string | null;
+  popular_area_en?: string | null;
+  popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
+  province?: string | null;
   transit_station?: string | null;
   cover_image?: string | null;
   images?: string[] | { url?: string; image_url?: string }[] | null;
@@ -32,6 +40,8 @@ export interface StoryPropertyItem {
   projects?: {
     name_th?: string | null;
     name_en?: string | null;
+    name_cn?: string | null;
+    name_ru?: string | null;
   } | null;
 }
 
@@ -43,12 +53,16 @@ interface FeaturedStoryCarouselProps {
 
 export function FeaturedStoryCarousel({
   properties: initialProperties,
-  language = "th",
+  language: initialLanguage,
   autoPlayIntervalMs = 4500,
 }: FeaturedStoryCarouselProps) {
+  const { language: clientLanguage } = useLanguage();
+  const language = clientLanguage || initialLanguage || "th";
+
   const [properties, setProperties] = useState<StoryPropertyItem[]>(initialProperties);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+
 
   // Sync state whenever initialProperties changes from parent re-renders/revalidation
   useEffect(() => {
@@ -267,11 +281,14 @@ export function FeaturedStoryCarousel({
               <div className="flex items-center gap-1 text-xs text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100 shrink-0 shadow-2xs">
                 <MapPin className="w-3 h-3 text-indigo-600 shrink-0" />
                 <span className="truncate max-w-[120px]">
-                  {currentProperty.transit_station || currentProperty.popular_area}
+                  {getLocaleValue(currentProperty, "popular_area", language) ||
+                    currentProperty.transit_station ||
+                    currentProperty.popular_area}
                 </span>
               </div>
             )}
           </div>
+
 
           {/* Row 2: Price + Specs + Action Button */}
           <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-slate-100">

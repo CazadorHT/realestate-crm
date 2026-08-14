@@ -23,6 +23,11 @@ import { FaqAccordion } from "@/components/public/FaqAccordion";
 import Link from "next/link";
 import { ScrollToProperties } from "@/components/public/ScrollToProperties";
 import { PopularAreaTags } from "@/components/public/PopularAreaTags";
+import { OfficeForRentHeroContent } from "@/components/public/OfficeForRentHeroContent";
+import { OfficeForRentFeatureCards } from "@/components/public/OfficeForRentFeatureCards";
+import { FeaturedStoryCarousel } from "@/components/public/FeaturedStoryCarousel";
+
+
 
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
@@ -276,81 +281,25 @@ export default async function OfficeForRentPage(props: {
           </div>
 
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="max-w-3xl space-y-6">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-600/10 px-4 py-1.5 text-sm font-medium text-blue-800">
-                  <Briefcase className="h-3.5 w-3.5 text-blue-700" />
-                  <span>{t("silo_landing.office_for_rent.badge1")}</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600/10 px-4 py-1.5 text-sm font-medium text-emerald-800">
-                  <span>{t("silo_landing.office_for_rent.badge2")}</span>
-                </div>
-              </div>
+            <OfficeForRentHeroContent
+              totalCount={totalCount}
+              popularAreas={popularAreas}
+              initialLanguage={language}
+            />
 
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-5xl lg:text-6xl leading-tight">
-                {t("silo_landing.office_for_rent.title_line1")}{" "}
-                <br className="hidden md:inline" />
-                <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-700 to-indigo-700">
-                  {t("silo_landing.office_for_rent.title_line2")}
-                </span>
-              </h1>
-
-              <p className="text-base text-slate-600 md:text-lg leading-relaxed font-medium">
-                {t("silo_landing.office_for_rent.description")}
-                {" "}
-                <span className="text-blue-700 font-semibold whitespace-nowrap">
-                  {language === "en" 
-                    ? `(We found ${totalCount} premium spaces available)` 
-                    : language === "cn"
-                    ? `(共找到 ${totalCount} 间办公室出租)`
-                    : language === "ru"
-                    ? `(Найдено ${totalCount} офисных помещений в аренду)`
-                    : `(พบพื้นที่เช่าว่างทั้งหมดกว่า ${totalCount} รายการ)`}
-                </span>
-              </p>
-
-              <div className="flex flex-wrap gap-4 pt-2">
-                <div className="flex items-center gap-2 rounded-2xl bg-white border border-slate-100 px-4 py-2 text-sm font-medium text-slate-700 shadow-2xs">
-                  <Building className="h-4 w-4 text-indigo-600" />
-                  <span>{t("silo_landing.office_for_rent.feature1")}</span>
-                </div>
-                <div className="flex items-center gap-2 rounded-2xl bg-white border border-slate-100 px-4 py-2 text-sm font-medium text-slate-700 shadow-2xs">
-                  <Sparkles className="h-4 w-4 text-blue-500" />
-                  <span>{t("silo_landing.office_for_rent.feature2")}</span>
-                </div>
-              </div>
-
-              {/* Popular Areas Quick Links */}
-              <PopularAreaTags 
-                popularAreas={popularAreas} 
-                language={language} 
-                basePath="/properties/office-for-rent" 
-                targetId="offices-list" 
-                themeColor="blue" 
-              />
-            </div>
-
-            {/* Header Image with decorative blobs */}
-            <div className="relative shrink-0 w-full lg:w-[650px]">
-              {/* Blob glow behind the image */}
+            {/* Header Featured Story Carousel with decorative blobs */}
+            <div className="relative shrink-0 w-full lg:w-[580px] xl:w-[620px]">
+              {/* Blob glow behind the carousel */}
               <div className="absolute -inset-4 -z-10 rounded-[2.5rem]">
                 <div className="absolute -top-6 -right-6 h-48 w-48 rounded-full bg-blue-400/30 blur-[60px]" />
                 <div className="absolute -bottom-6 -left-6 h-40 w-40 rounded-full bg-indigo-500/25 blur-[50px]" />
                 <div className="absolute top-1/2 -right-8 h-32 w-32 rounded-full bg-cyan-400/20 blur-[40px]" />
                 <div className="absolute -top-4 left-1/3 h-24 w-24 rounded-full bg-violet-400/20 blur-[35px]" />
               </div>
-              {/* Image container */}
-              <div className="relative w-full h-[350px] lg:h-[420px] rounded-3xl overflow-hidden border border-white/60 shadow-2xl ring-1 ring-blue-200/50">
-                <Image
-                  src="/images/office-for-rent.webp"
-                  alt={language === "en" ? "Premium office space for rent in Bangkok" : "พื้นที่สำนักงานให้เช่าในกรุงเทพ"}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                {/* Subtle inner gradient overlay on image */}
-                <div className="absolute inset-0 bg-linear-to-tr from-blue-900/10 via-transparent to-white/5" />
-              </div>
+              <FeaturedStoryCarousel
+                properties={initialData.properties.slice(0, 6)}
+                language={language}
+              />
             </div>
           </div>
         </div>
@@ -360,85 +309,7 @@ export default async function OfficeForRentPage(props: {
       </section>
 
       {/* Feature Cards Grid (Compact & Premium) */}
-      <section className="max-w-screen-2xl mx-auto px-5 md:px-6 lg:px-8 mb-16 mt-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {/* Card 1: Prime CBD */}
-          <div className="group bg-white rounded-3xl border border-slate-100/80 p-6 flex flex-col shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600/10 flex items-center justify-center mb-4 shrink-0">
-              <MapPin className="h-5 w-5 text-blue-700" />
-            </div>
-            <h3 className="text-md font-bold text-slate-800 mb-2">
-              {language === "en" ? "Prime CBD Locations" :
-               language === "cn" ? "核心商业区黄金地段" :
-               language === "ru" ? "Престижные районы CBD" :
-               "ทำเลศักยภาพ (Prime CBD)"}
-            </h3>
-            <p className="text-xs font-semibold text-slate-500 leading-relaxed flex-1">
-              {language === "en" ? "Office spaces in premium business hubs like Sathorn, Silom, Asoke, and Ratchada near BTS/MRT stations." :
-               language === "cn" ? "位于沙吞、席隆、阿索克和拉差达等高端商业枢纽的写字楼，邻近 BTS/MRT 轨道交通站。" :
-               language === "ru" ? "Офисы в престижных деловых центрах, таких как Саторн, Силом, Асок и Рачада, рядом со станциями BTS/MRT." :
-               "ออฟฟิศให้เช่าในย่านธุรกิจหลัก เช่น สาทร, สีลม, อโศก, รัชดาภิเษก ติดรถไฟฟ้า BTS/MRT เดินทางสะดวกพนักงานแฮปปี้"}
-            </p>
-          </div>
-
-          {/* Card 2: Startup Home Office */}
-          <div className="group bg-white rounded-3xl border border-slate-100/80 p-6 flex flex-col shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-600/10 flex items-center justify-center mb-4 shrink-0">
-              <Briefcase className="h-5 w-5 text-indigo-700" />
-            </div>
-            <h3 className="text-md font-bold text-slate-800 mb-2">
-              {language === "en" ? "Startup Home Office" :
-               language === "cn" ? "创业首选商住两用楼" :
-               language === "ru" ? "Домашние офисы для стартапов" :
-               "โฮมออฟฟิศสร้างตัว (Home Office)"}
-            </h3>
-            <p className="text-xs font-semibold text-slate-500 leading-relaxed flex-1">
-              {language === "en" ? "Spacious home offices perfect for startups and SMEs looking for privacy, parking spaces, and corporate registration." :
-               language === "cn" ? "宽敞的商住两用楼（Home Office），非常适合需要私密性、停车位以及支持企业地址注册的初创公司和中小企业。" :
-               language === "ru" ? "Просторные домашние офисы для стартапов и малого бизнеса, требующих приватности, парковки и юр. адреса." :
-               "โฮมออฟฟิศให้เช่าพื้นที่กว้างขวาง เหมาะกับสตาร์ทอัพและ SMEs ที่ต้องการความเป็นส่วนตัว มีที่จอดรถ และจดทะเบียนบริษัทได้"}
-            </p>
-          </div>
-
-          {/* Card 3: 100% Registered Address */}
-          <div className="group bg-white rounded-3xl border border-slate-100/80 p-6 flex flex-col shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-600/10 flex items-center justify-center mb-4 shrink-0">
-              <ShieldCheck className="h-5 w-5 text-emerald-700" />
-            </div>
-            <h3 className="text-md font-bold text-slate-800 mb-2">
-              {language === "en" ? "100% Registered Address" :
-               language === "cn" ? "支持 100% 公司地址注册" :
-               language === "ru" ? "100% Регистрация юр. адреса" :
-               "จดทะเบียนบริษัทได้ 100%"}
-            </h3>
-            <p className="text-xs font-semibold text-slate-500 leading-relaxed flex-1">
-              {language === "en" ? "Carefully curated commercial spaces that support legal business address registration to kickstart your operations." :
-               language === "cn" ? "精心挑选的商业空间，支持合法企业营业执照地址注册，助力您的业务顺利起步。" :
-               language === "ru" ? "Тщательно подобранные коммерческие площади с возможностью законной регистрации юридического адреса." :
-               "คัดสรรอาคารพาณิชย์และออฟฟิศที่รองรับการจดทะเบียนบริษัท ช่วยให้คุณเริ่มต้นดำเนินธุรกิจได้อย่างถูกต้องตามกฎหมายอย่างไร้กังวล"}
-            </p>
-          </div>
-
-          {/* Card 4: Premium Facilities */}
-          <div className="group bg-white rounded-3xl border border-slate-100/80 p-6 flex flex-col shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-            <div className="w-10 h-10 rounded-2xl bg-amber-600/10 flex items-center justify-center mb-4 shrink-0">
-              <Sparkles className="h-5 w-5 text-amber-700" />
-            </div>
-            <h3 className="text-md font-bold text-slate-800 mb-2">
-              {language === "en" ? "Premium Facilities" :
-               language === "cn" ? "一流优质商务配套" :
-               language === "ru" ? "Премиум инфраструктура" :
-               "สิ่งอำนวยความสะดวกครบครัน"}
-            </h3>
-            <p className="text-xs font-semibold text-slate-500 leading-relaxed flex-1">
-              {language === "en" ? "Grade A buildings and business centers featuring 24/7 security, CCTV, visitor parking, and premium shared amenities." :
-               language === "cn" ? "甲级写字楼及高档商务中心，配有 24 小时全天候安防、CCTV监控、访客停车场和优质的共享设施。" :
-               language === "ru" ? "Здания класса А и бизнес-центры с круглосуточной охраной, видеонаблюдением, парковкой и общими зонами." :
-               "อาคารเกรด A และบีบิสซิเนสเซ็นเตอร์ที่มีระบบรักษาความปลอดภัย 24 ชม., กล้อง CCTV, พื้นที่จอดรถรองรับลูกค้า และพื้นที่ส่วนกลางระดับพรีเมียม"}
-            </p>
-          </div>
-        </div>
-      </section>
+      <OfficeForRentFeatureCards initialLanguage={language} />
 
       {/* Main Search Component */}
       <div id="offices-list" className="scroll-mt-20">
@@ -456,48 +327,54 @@ export default async function OfficeForRentPage(props: {
       {/* Visible FAQ Accordion Section for SEO Content Richness */}
       <div className="mt-12">
         <FaqAccordion
-          title={
-            language === "en" ? "Office & Home Office Rental FAQ" :
-            language === "cn" ? "办公室与商住两用楼租赁常见问题" :
-            language === "ru" ? "Часто задаваемые вопросы об аренде офисов" :
-            "คำถามที่พบบ่อยเกี่ยวกับการเช่าออฟฟิศและโฮมออฟฟิศ"
-          }
+          title={{
+            en: "Office & Home Office Rental FAQ",
+            cn: "办公室与商住两用楼租赁常见问题",
+            ru: "Часто задаваемые вопросы об аренде офисов",
+            th: "คำถามที่พบบ่อยเกี่ยวกับการเช่าออฟฟิศและโฮมออฟฟิศ",
+          }}
           items={[
             {
-              q:
-                language === "en" ? "Do you have home offices for rent?" :
-                language === "cn" ? "你们有商住两用楼（Home Office）出租吗？" :
-                language === "ru" ? "Есть ли у вас в аренду домашние офисы?" :
-                "มีโฮมออฟฟิศให้เช่าด้วยหรือไม่?",
-              a:
-                language === "en" ? "Yes, we list home offices, commercial buildings, and corporate office spaces of various sizes and prime locations in Bangkok." :
-                language === "cn" ? "是的，我们提供曼谷各大黄金地段、不同面积的商住两用楼、商业大厦以及企业办公空间。" :
-                language === "ru" ? "Да, мы предлагаем домашние офисы, коммерческие здания и корпоративные офисные помещения различных размеров и в престижных районах Бангкока." :
-                "ใช่ครับ เรามีทั้งโฮมออฟฟิศ อาคารพาณิชย์ และสำนักงานให้เช่าหลากหลายขนาดและทำเล เพื่อตอบโจทย์ทุกขนาดธุรกิจ",
+              q: {
+                en: "Do you have home offices for rent?",
+                cn: "你们有商住两用楼（Home Office）出租吗？",
+                ru: "Есть ли у вас в аренду домашние офисы?",
+                th: "มีโฮมออฟฟิศให้เช่าด้วยหรือไม่?",
+              },
+              a: {
+                en: "Yes, we list home offices, commercial buildings, and corporate office spaces of various sizes and prime locations in Bangkok.",
+                cn: "是的，我们提供曼谷各大黄金地段、不同面积的商住两用楼、商业大厦以及企业办公空间。",
+                ru: "Да, мы предлагаем домашние офисы, коммерческие здания и корпоративные офисные помещения различных размеров и в престижных районах Бангкока.",
+                th: "ใช่ครับ เรามีทั้งโฮมออฟฟิศ อาคารพาณิชย์ และสำนักงานให้เช่าหลากหลายขนาดและทำเล เพื่อตอบโจทย์ทุกขนาดธุรกิจ",
+              },
             },
             {
-              q:
-                language === "en" ? "Can I register my company using these rental offices?" :
-                language === "cn" ? "我可以使用这些租赁的办公室注册公司吗？" :
-                language === "ru" ? "Могу ли я зарегистрировать компанию, используя эти арендуемые офисы?" :
-                "มีสำนักงานที่สามารถจดทะเบียนบริษัทได้ไหม?",
-              a:
-                language === "en" ? "Many of our office and home office spaces for rent support company registration. You can filter by 'Company Registered' in our filters." :
-                language === "cn" ? "我们出租的大多数写字楼和商住两用楼都支持公司注册。您可以在搜索过滤器中勾选“可注册公司”进行筛选。" :
-                language === "ru" ? "Многие из наших офисов и домашних офисов поддерживают регистрацию компании. Вы можете отфильтровать их по параметру «Регистрация компании»." :
-                "มีครับ ออฟฟิศและโฮมออฟฟิศหลายแห่งในระบบของเรา รองรับการจดทะเบียนจัดตั้งบริษัท โดยผู้ใช้สามารถกดฟิลเตอร์เลือกคุณสมบัติ 'จดทะเบียนบริษัทได้' ในระบบกรองค้นหาเพื่อความสะดวกได้เลยครับ",
+              q: {
+                en: "Can I register my company using these rental offices?",
+                cn: "我可以使用这些租赁的办公室注册公司吗？",
+                ru: "Могу ли я зарегистрировать компанию, используя эти арендуемые офисы?",
+                th: "มีสำนักงานที่สามารถจดทะเบียนบริษัทได้ไหม?",
+              },
+              a: {
+                en: "Many of our office and home office spaces for rent support company registration. You can filter by 'Company Registered' in our filters.",
+                cn: "我们出租的大多数写字楼和商住两用楼都支持公司注册。您可以在搜索过滤器中勾选“可注册公司”进行筛选。",
+                ru: "Многие из наших офисов и домашних офисов поддерживают регистрацию компании. Вы можете отфильтровать их по параметру «Регистрация компании».",
+                th: "มีครับ ออฟฟิศและโฮมออฟฟิศหลายแห่งในระบบของเรา รองรับการจดทะเบียนจัดตั้งบริษัท โดยผู้ใช้สามารถกดฟิลเตอร์เลือกคุณสมบัติ 'จดทะเบียนบริษัทได้' ในระบบกรองค้นหาเพื่อความสะดวกได้เลยครับ",
+              },
             },
             {
-              q:
-                language === "en" ? "What are the typical lease terms for office rentals?" :
-                language === "cn" ? "办公室租赁的典型租期条款是怎样的？" :
-                language === "ru" ? "Каковы типичные условия аренды офиса?" :
-                "เงื่อนไขและระยะเวลาเช่าสำนักงานออฟฟิศเป็นอย่างไร?",
-              a:
-                language === "en" ? "Lease contracts typically start at 1 to 3 years, with a security deposit of 2 to 3 months plus 1 month rent in advance." :
-                language === "cn" ? "租赁合同通常为 1 至 3 年起，需缴纳 2 至 3 个月的押金并预付 1 个月租金。" :
-                language === "ru" ? "Договоры аренды обычно заключаются на срок от 1 до 3 лет с гарантийным депозитом в размере 2-3 месяцев плюс 1 месяц предоплаты." :
-                "ระยะเวลาสัญญาเช่ามาตรฐานส่วนใหญ่จะเริ่มต้นที่ 1-3 ปี โดยมีเงื่อนไขการวางเงินประกันความเสียหาย 2-3 เดือน และชำระค่าเช่าล่วงหน้า 1 เดือนก่อนเข้าใช้งานครับ",
+              q: {
+                en: "What are the typical lease terms for office rentals?",
+                cn: "办公室租赁的典型租期条款是怎样的？",
+                ru: "Каковы типичные условия аренды офиса?",
+                th: "เงื่อนไขและระยะเวลาเช่าสำนักงานออฟฟิศเป็นอย่างไร?",
+              },
+              a: {
+                en: "Lease contracts typically start at 1 to 3 years, with a security deposit of 2 to 3 months plus 1 month rent in advance.",
+                cn: "租赁合同通常为 1 至 3 年起，需缴纳 2 至 3 个月的押金并预付 1 个月租金。",
+                ru: "Договоры аренды обычно заключаются на срок от 1 до 3 лет с гарантийным депозитом в размере 2-3 месяцев плюс 1 месяц предоплаты.",
+                th: "ระยะเวลาสัญญาเช่ามาตรฐานส่วนใหญ่จะเริ่มต้นที่ 1-3 ปี โดยมีเงื่อนไขการวางเงินประกันความเสียหาย 2-3 เดือน และชำระค่าเช่าล่วงหน้า 1 เดือนก่อนเข้าใช้งานครับ",
+              },
             },
           ]}
         />

@@ -354,42 +354,144 @@ export function PublicFooter() {
           </div>
 
           {/* SEO Category & Popular Station Landing Pages Links */}
-          <div className="pt-8 pb-4 border-t border-slate-800/30">
-            <h4 className="text-sm font-semibold text-white mb-3 tracking-wider uppercase">
-              {language === "th" ? "หมวดหมู่อสังหาฯ & ทำเลติดรถไฟฟ้ายอดนิยม" : "Featured Categories & Popular Stations"}
-            </h4>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400">
-              <Link href="/properties/pet-friendly-condo" className="hover:text-blue-400 transition-colors">
-                {language === "th" ? "คอนโดเลี้ยงสัตว์ได้" : "Pet-Friendly Condos"}
-              </Link>
-              <span className="text-slate-700">|</span>
-              <Link href="/properties/office-for-rent" className="hover:text-blue-400 transition-colors">
-                {language === "th" ? "สำนักงานออฟฟิศให้เช่า" : "Offices for Rent"}
-              </Link>
-              <span className="text-slate-700">|</span>
-              <Link href="/properties/luxury-villa" className="hover:text-blue-400 transition-colors">
-                {language === "th" ? "พูลวิลล่าและบ้านเดี่ยวหรู" : "Luxury Villas & Houses"}
-              </Link>
-              <span className="text-slate-700">|</span>
-              <Link href="/near-station/wongwian-yai" className="hover:text-blue-400 transition-colors">
-                {language === "th" ? "คอนโด BTS วงเวียนใหญ่" : "Condos near BTS Wongwian Yai"}
-              </Link>
-              <span className="text-slate-700">|</span>
-              <Link href="/near-station/bang-chak" className="hover:text-blue-400 transition-colors">
-                {language === "th" ? "คอนโด BTS บางจาก" : "Condos near BTS Bang Chak"}
-              </Link>
-              <span className="text-slate-700">|</span>
-              <Link href="/near-station/udom-suk" className="hover:text-blue-400 transition-colors">
-                {language === "th" ? "คอนโด BTS อุดมสุข" : "Condos near BTS Udom Suk"}
-              </Link>
-              <span className="text-slate-700">|</span>
-              <Link href="/near-station/bang-na" className="hover:text-blue-400 transition-colors">
-                {language === "th" ? "คอนโด BTS บางนา" : "Condos near BTS Bang Na"}
-              </Link>
-              <span className="text-slate-700">|</span>
-              <Link href="/near-station/asok" className="hover:text-blue-400 transition-colors">
-                {language === "th" ? "คอนโด BTS อโศก" : "Condos near BTS Asok"}
-              </Link>
+          <div className="pt-8 pb-4 border-t border-slate-800/30 space-y-4">
+            <div>
+              <h4 className="text-xs font-bold text-slate-300 mb-2.5 tracking-wider uppercase">
+                {language === "th"
+                  ? "หมวดหมู่อสังหาฯ ยอดนิยม"
+                  : language === "cn"
+                    ? "特色房产分类"
+                    : language === "ru"
+                      ? "Популярные категории недвижимости"
+                      : "Featured Categories"}
+              </h4>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400">
+                <Link href="/properties/pet-friendly-condo" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "คอนโด & บ้านเลี้ยงสัตว์ได้" : language === "cn" ? "允许养宠物的住宅与公寓" : language === "ru" ? "Дома и кондо с животными" : "Pet-Friendly House & Condos"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties/luxury-villa" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "บ้านเดี่ยวหรู & พูลวิลล่า" : language === "cn" ? "豪宅与独栋泳池别墅" : language === "ru" ? "Элитные виллы и резиденции" : "Luxury Villas & Estates"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties/office-for-rent" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "สำนักงาน & ออฟฟิศให้เช่า" : language === "cn" ? "写字楼与办公室出租" : language === "ru" ? "Офисы и коммерческие помещения" : "Offices & Commercial Spaces"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?near_train=true" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "คอนโดใกล้รถไฟฟ้า BTS/MRT" : language === "cn" ? "靠近 BTS/MRT 的公寓" : language === "ru" ? "Кондоминиумы у метро BTS/MRT" : "Condos near BTS/MRT"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?hot_deal=true" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "ทรัพย์ราคาพิเศษ (Hot Deals)" : language === "cn" ? "特价特惠房源 (Hot Deals)" : language === "ru" ? "Горячие предложения (Hot Deals)" : "Hot Deals & Special Offers"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?foreigner=true" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "โควต้าต่างชาติซื้อได้ 100%" : language === "cn" ? "外籍人士可购买配额 (100%)" : language === "ru" ? "Иностранная квота (100%)" : "Foreigner Freehold Quota (100%)"}
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-bold text-slate-300 mb-2.5 tracking-wider uppercase">
+                {language === "th"
+                  ? "ทำเลยอดนิยมในกรุงเทพฯ"
+                  : language === "cn"
+                    ? "曼谷热门区域"
+                    : language === "ru"
+                      ? "Популярные районы Бангкока"
+                      : "Popular Bangkok Locations"}
+              </h4>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400">
+                <Link href="/properties?popular_area=บางนา" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "บางนา" : language === "cn" ? "曼那 (Bang Na)" : language === "ru" ? "Банг На (Bang Na)" : "Bang Na"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?popular_area=อโศก" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "อโศก" : language === "cn" ? "阿速 (Asoke)" : language === "ru" ? "Асок (Asoke)" : "Asoke"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?popular_area=สุขุมวิท" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "สุขุมวิท" : language === "cn" ? "素坤逸 (Sukhumvit)" : language === "ru" ? "Сукхумвит (Sukhumvit)" : "Sukhumvit"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?popular_area=พระราม 9" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "พระราม 9" : language === "cn" ? "拉玛九 (Rama 9)" : language === "ru" ? "Рама 9 (Rama 9)" : "Rama 9"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?popular_area=กรุงเทพกรีฑา" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "กรุงเทพกรีฑา" : language === "cn" ? "空堤克里塔 (Krungthep Kreetha)" : language === "ru" ? "Крунгтеп Крита (Krungthep Kreetha)" : "Krungthep Kreetha"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?popular_area=ทองหล่อ" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "ทองหล่อ" : language === "cn" ? "通罗 (Thong Lo)" : language === "ru" ? "Тхонг Ло (Thong Lo)" : "Thong Lo"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?popular_area=ประชาชื่น" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "ประชาชื่น" : language === "cn" ? "普拉查春 (Prachachuen)" : language === "ru" ? "Прачачуен (Prachachuen)" : "Prachachuen"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?popular_area=สามย่าน" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "สามย่าน" : language === "cn" ? "三燕 (Sam Yan)" : language === "ru" ? "Сам Ян (Sam Yan)" : "Sam Yan"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/properties?popular_area=ศรีนครินทร์" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "ศรีนครินทร์" : language === "cn" ? "席纳卡琳 (Srinakarin)" : language === "ru" ? "Сринакарин (Srinakarin)" : "Srinakarin"}
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-bold text-slate-300 mb-2.5 tracking-wider uppercase">
+                {language === "th"
+                  ? "ทำเลติดสถานีรถไฟฟ้ายอดนิยม"
+                  : language === "cn"
+                    ? "热门地铁/轻轨站附近房产"
+                    : language === "ru"
+                      ? "Недвижимость у популярных станций"
+                      : "Popular Transit Stations"}
+              </h4>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400">
+                <Link href="/near-station/thong-lo" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "BTS ทองหล่อ" : language === "cn" ? "BTS 通罗 (Thong Lo)" : language === "ru" ? "BTS Тонг Ло" : "BTS Thong Lo"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/near-station/phra-ram-9" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "MRT พระราม 9" : language === "cn" ? "MRT 帕蓝9 (Phra Ram 9)" : language === "ru" ? "MRT Пхра Рам 9" : "MRT Phra Ram 9"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/near-station/asok" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "BTS อโศก" : language === "cn" ? "BTS 阿速 (Asok)" : language === "ru" ? "BTS Асок" : "BTS Asok"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/near-station/phrom-phong" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "BTS พร้อมพงษ์" : language === "cn" ? "BTS 鹏蓬 (Phrom Phong)" : language === "ru" ? "BTS Промпхонг" : "BTS Phrom Phong"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/near-station/ekkamai" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "BTS เอกมัย" : language === "cn" ? "BTS 亿甲迈 (Ekkamai)" : language === "ru" ? "BTS Эккамай" : "BTS Ekkamai"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/near-station/udom-suk" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "BTS อุดมสุข" : language === "cn" ? "BTS 乌东苏 (Udom Suk)" : language === "ru" ? "BTS Удом Сук" : "BTS Udom Suk"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/near-station/bang-na" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "BTS บางนา" : language === "cn" ? "BTS 曼那 (Bang Na)" : language === "ru" ? "BTS Банг На" : "BTS Bang Na"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/near-station/huai-khwang" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "MRT ห้วยขวาง" : language === "cn" ? "MRT 惠恭王 (Huai Khwang)" : language === "ru" ? "MRT Хуайкхванг" : "MRT Huai Khwang"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/near-station/sam-yan" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "MRT สามย่าน" : language === "cn" ? "MRT 三养 (Sam Yan)" : language === "ru" ? "MRT Сам Ян" : "MRT Sam Yan"}
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link href="/near-station/si-iam" className="hover:text-blue-400 transition-colors">
+                  {language === "th" ? "MRT ศรีเอี่ยม (สายสีเหลือง)" : language === "cn" ? "MRT 西安站 (Si Iam)" : language === "ru" ? "MRT Си Лам (Si Iam)" : "MRT Si Iam"}
+                </Link>
+              </div>
             </div>
           </div>
 

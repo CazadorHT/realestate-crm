@@ -1,7 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
 import { getLocalizedField } from "@/lib/i18n";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { format } from "date-fns";
+import { th, enUS as en, zhCN as zh, ru } from "date-fns/locale";
+import type { Locale } from "date-fns";
 
 interface BlogDetailHeroProps {
   post: {
@@ -11,24 +17,35 @@ interface BlogDetailHeroProps {
     title_en?: string | null;
     title_cn?: string | null;
     title_ru?: string | null;
+    published_at?: string | null;
   };
   author: {
     name: string;
     avatar?: string;
   };
-  formattedDate: string;
-  language: string;
-  t: (key: string, options?: any) => string;
+  formattedDate?: string;
+  language?: string;
+  t?: (key: string, options?: any) => string;
 }
 
 export function BlogDetailHero({
   post,
   author,
-  formattedDate,
-  language,
-  t,
+  formattedDate: initialFormattedDate,
+  language: initialLanguage,
 }: BlogDetailHeroProps) {
-  const title = getLocalizedField<string>(post, "title", language);
+  const { language: clientLanguage, t } = useLanguage();
+  const language = clientLanguage || initialLanguage || "th";
+
+  const dateLocales: Record<string, Locale> = { th, en, zh, ru };
+  const locale = dateLocales[language === "cn" ? "zh" : language] || th;
+
+  const formattedDate = post.published_at
+    ? format(new Date(post.published_at), "d MMMM yyyy", { locale })
+    : initialFormattedDate || "";
+
+  const title = getLocalizedField<string>(post, "title", language) || post.title;
+
 
   return (
     <div className="relative h-[350px] md:h-[450px] w-full">

@@ -71,22 +71,31 @@ export function useSmartMatchWizard() {
   >([]);
   const [availablePropertyTypes, setAvailablePropertyTypes] = useState<
     string[]
-  >([]);
+  >(["HOUSE", "CONDO", "VILLA", "POOL_VILLA", "OFFICE_BUILDING", "TOWNHOME", "LAND", "WAREHOUSE", "COMMERCIAL_BUILDING"]);
   const [availableSizes, setAvailableSizes] = useState<Record<string, number>>(
     {},
   );
-  const [availableBudgetIds, setAvailableBudgetIds] = useState<string[]>([]);
+  const [availableBudgetIds, setAvailableBudgetIds] = useState<string[]>([
+    "rent_1", "rent_2", "rent_3", "rent_4",
+    "buy_1", "buy_2", "buy_3", "buy_4",
+  ]);
   const [availableTransitOptions, setAvailableTransitOptions] = useState<
     string[]
-  >([]);
-  const [availablePurposes, setAvailablePurposes] = useState<string[]>([]);
+  >(["NEAR_TRANSIT", "ANY_LOCATION"]);
+  const [availablePurposes, setAvailablePurposes] = useState<string[]>([
+    "RENT", "OFFICE", "BUY", "INVEST"
+  ]);
 
   // Load property type availability based on purpose
   useEffect(() => {
     if (step === 1.5) {
       setIsInventoryLoading(true);
       checkPropertyTypeAvailability(purpose as "RENT" | "BUY")
-        .then(setAvailablePropertyTypes)
+        .then((res) => {
+          if (res && res.length > 0) {
+            setAvailablePropertyTypes(res);
+          }
+        })
         .catch(console.error)
         .finally(() => setIsInventoryLoading(false));
     }
@@ -101,7 +110,11 @@ export function useSmartMatchWizard() {
         officeSize: officeSize || undefined,
         budget: selectedBudget || undefined,
       })
-        .then(setAvailableTransitOptions)
+        .then((res) => {
+          if (res && res.length > 0) {
+            setAvailableTransitOptions(res);
+          }
+        })
         .catch(console.error)
         .finally(() => setIsInventoryLoading(false));
     }
@@ -113,9 +126,11 @@ export function useSmartMatchWizard() {
       setIsInventoryLoading(true);
       checkOfficeSizeAvailability(purpose as "RENT" | "BUY")
         .then((res) => {
-          const map: Record<string, number> = {};
-          res.forEach((r) => (map[r.size] = r.count));
-          setAvailableSizes(map);
+          if (res && res.length > 0) {
+            const map: Record<string, number> = {};
+            res.forEach((r) => (map[r.size] = r.count));
+            setAvailableSizes(map);
+          }
         })
         .catch(console.error)
         .finally(() => setIsInventoryLoading(false));
@@ -143,7 +158,11 @@ export function useSmartMatchWizard() {
           max: r.max_value,
         })),
       })
-        .then(setAvailableBudgetIds)
+        .then((res) => {
+          if (res && res.length > 0) {
+            setAvailableBudgetIds(res);
+          }
+        })
         .catch(console.error)
         .finally(() => setIsInventoryLoading(false));
     }
@@ -249,7 +268,11 @@ export function useSmartMatchWizard() {
     if (step === 1) {
       setIsInventoryLoading(true);
       checkPurposeAvailability()
-        .then(setAvailablePurposes)
+        .then((res) => {
+          if (res && res.length > 0) {
+            setAvailablePurposes(res);
+          }
+        })
         .catch(console.error)
         .finally(() => setIsInventoryLoading(false));
     }

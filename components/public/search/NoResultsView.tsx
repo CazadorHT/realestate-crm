@@ -32,13 +32,31 @@ export function NoResultsView({
 
       <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-2">
         {areaFilterName 
-          ? `มีทรัพย์สินในทำเล "${areaFilterName}" ในระบบ (${serverAreaTotal > 0 ? serverAreaTotal : "หลาย"} รายการ)`
+          ? language === "en"
+            ? `Properties available in "${areaFilterName}" (${serverAreaTotal > 0 ? serverAreaTotal : "Multiple"} items)`
+            : language === "cn"
+            ? `"${areaFilterName}" 共有 (${serverAreaTotal > 0 ? serverAreaTotal : "多"} 套) 房源`
+            : language === "ru"
+            ? `Объекты в "${areaFilterName}" (${serverAreaTotal > 0 ? serverAreaTotal : "несколько"})`
+            : `มีทรัพย์สินในทำเล "${areaFilterName}" ในระบบ (${serverAreaTotal > 0 ? serverAreaTotal : "หลาย"} รายการ)`
           : t("search.no_results") || "ไม่พบผลลัพธ์การค้นหา"}
       </h3>
 
       <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
         {areaFilterName
-          ? `กดปุ่มด้านล่างเพื่อโหลดแสดงรายการทรัพย์สินทำเล "${areaFilterName}" ได้ทันที`
+          ? language === "en"
+            ? `Click the button below to load listings in "${areaFilterName}" immediately`
+            : language === "cn"
+            ? `点击下方按钮立即加载 "${areaFilterName}" 房源`
+            : language === "ru"
+            ? `Нажмите кнопку ниже, чтобы загрузить объекты в "${areaFilterName}"`
+            : `กดปุ่มด้านล่างเพื่อโหลดแสดงรายการทรัพย์สินทำเล "${areaFilterName}" ได้ทันที`
+          : language === "en"
+          ? "Try adjusting your search criteria or clear filters"
+          : language === "cn"
+          ? "尝试调整搜索条件或清除筛选"
+          : language === "ru"
+          ? "Попробуйте изменить параметры поиска или очистить фильтры"
           : "ลองปรับเปลี่ยนเงื่อนไขการค้นหา หรือกดปุ่มล้างตัวกรอง"}
       </p>
 
@@ -52,12 +70,29 @@ export function NoResultsView({
             {isFetchingMore ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>กำลังโหลดข้อมูลทรัพย์จากเซิร์ฟเวอร์...</span>
+                <span>
+                  {language === "en" ? "Loading from server..." :
+                   language === "cn" ? "正在从服务器加载..." :
+                   language === "ru" ? "Загрузка с сервера..." :
+                   "กำลังโหลดข้อมูลทรัพย์จากเซิร์ฟเวอร์..."}
+                </span>
               </div>
             ) : (
               <span>
                 {areaFilterName
-                  ? `👉 กดดึงข้อมูลทำเล "${areaFilterName}" ${serverAreaTotal > 0 ? `(+${serverAreaTotal} รายการ)` : ""}`
+                  ? language === "en"
+                    ? `👉 Load properties in "${areaFilterName}" ${serverAreaTotal > 0 ? `(+${serverAreaTotal})` : ""}`
+                    : language === "cn"
+                    ? `👉 获取 "${areaFilterName}" 房源 ${serverAreaTotal > 0 ? `(+${serverAreaTotal})` : ""}`
+                    : language === "ru"
+                    ? `👉 Загрузить объекты в "${areaFilterName}" ${serverAreaTotal > 0 ? `(+${serverAreaTotal})` : ""}`
+                    : `👉 กดดึงข้อมูลทำเล "${areaFilterName}" ${serverAreaTotal > 0 ? `(+${serverAreaTotal} รายการ)` : ""}`
+                  : language === "en"
+                  ? "Search more properties in system"
+                  : language === "cn"
+                  ? "在系统中搜索更多房源"
+                  : language === "ru"
+                  ? "Найти больше объектов"
                   : `ค้นหาทรัพย์สินเพิ่มเติมในระบบ`}
               </span>
             )}
@@ -75,3 +110,4 @@ export function NoResultsView({
     </div>
   );
 }
+

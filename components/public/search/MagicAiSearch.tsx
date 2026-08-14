@@ -129,13 +129,19 @@ export function MagicAiSearch({
           const map = new Map<string, SuggestionItem>();
           // Put DB items first
           for (const item of dynamicItems) {
-            map.set(item.text.toLowerCase().trim(), item);
+            const txt = typeof item?.text === "string" ? item.text : (item?.text ? String(item.text) : "");
+            if (txt) {
+              map.set(txt.toLowerCase().trim(), { ...item, text: txt });
+            }
           }
           // Put defaults as fallback
           for (const item of DEFAULT_SUGGESTIONS) {
-            const key = item.text.toLowerCase().trim();
-            if (!map.has(key)) {
-              map.set(key, item);
+            const txt = typeof item?.text === "string" ? item.text : (item?.text ? String(item.text) : "");
+            if (txt) {
+              const key = txt.toLowerCase().trim();
+              if (!map.has(key)) {
+                map.set(key, item);
+              }
             }
           }
           setAllSuggestions(Array.from(map.values()));

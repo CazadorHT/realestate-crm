@@ -41,13 +41,28 @@ export function getLocalizedField<T>(
   return data[field] || "";
 }
 
+const SUPPORTED_LANGS = ["th", "en", "cn", "ru"] as const;
+
 /**
  * Server-side language detection.
- * Optimized for Static Generation / ISR (avoids dynamic opt-out unless explicitly needed).
+ * Reads the `app-language` cookie set by LanguageProvider on the client.
+ * Falls back to "th" for static pre-rendering or when no cookie is present.
  */
 export async function getServerLanguage(explicitLocale?: string): Promise<Language> {
-  if (explicitLocale && ["th", "en", "cn", "ru"].includes(explicitLocale)) {
+  if (explicitLocale && (SUPPORTED_LANGS as readonly string[]).includes(explicitLocale)) {
     return explicitLocale as Language;
+  }
+
+  // Try reading the cookie from the request (dynamic import to avoid breaking client bundles)
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const langCookie = cookieStore.get("app-language")?.value;
+    if (langCookie && (SUPPORTED_LANGS as readonly string[]).includes(langCookie)) {
+      return langCookie as Language;
+    }
+  } catch {
+    // cookies() throws during static generation — that's fine, fall through
   }
 
   // Default fallback for SSG/ISR static pre-rendering

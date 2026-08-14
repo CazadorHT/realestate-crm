@@ -204,8 +204,9 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         if (options.province && options.province !== "ALL") {
           query = query.eq("province", options.province);
         }
-        if (options.area && options.area !== "ALL") {
-          query = query.or(`subdistrict.ilike.%${options.area}%,popular_area.ilike.%${options.area}%`);
+        const targetArea = options.area || options.popular_area;
+        if (targetArea && targetArea !== "ALL") {
+          query = query.or(`subdistrict.ilike.%${targetArea}%,popular_area.ilike.%${targetArea}%,popular_area_en.ilike.%${targetArea}%,popular_area_cn.ilike.%${targetArea}%,popular_area_ru.ilike.%${targetArea}%`);
         }
 
         if (options.propertyType && options.propertyType !== "ALL") {

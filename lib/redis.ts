@@ -101,6 +101,11 @@ export function isInternalBypass(req: NextRequest): boolean {
  */
 export function isWhitelisted(ip: string | null): boolean {
   if (!ip) return false;
+  // Automatically whitelist localhost loopback in development & local testing
+  if (ip === "::1" || ip === "127.0.0.1" || ip === "localhost") return true;
+  if (process.env.NODE_ENV === "development") return true;
+
   const whitelist = process.env.WHITELIST_IPS?.split(",").map(i => i.trim());
   return whitelist?.includes(ip) ?? false;
 }
+

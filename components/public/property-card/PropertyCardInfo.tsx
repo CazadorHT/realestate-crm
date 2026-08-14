@@ -70,7 +70,9 @@ export function PropertyCardInfo({
 
   const projectsObj = (property as any).projects;
   const projectName = projectsObj
-    ? (language === "en" ? projectsObj.name_en || projectsObj.name_th : projectsObj.name_th || projectsObj.name_en)
+    ? (language !== "th"
+        ? getLocaleValue(projectsObj, "name", language) || projectsObj.name_en || projectsObj.name_th
+        : projectsObj.name_th || projectsObj.name_en)
     : (property as any).project_name || null;
   const projectSlug = projectsObj?.slug || (property as any).project_slug || null;
 

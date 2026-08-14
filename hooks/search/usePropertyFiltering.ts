@@ -342,14 +342,20 @@ export function usePropertyFiltering(
       name_ru: val.name_ru
     })).sort((a, b) => b.count - a.count);
 
+    // If we have active category/quick/landing filters, the local quickCounts accurately reflect this subset.
+    // Use serverFacets only when no restrictive filters are applied.
+    const hasActiveRestrictions = Boolean(
+      petFriendly || luxuryVilla || (type && type !== "ALL") || (province && province !== "ALL") || (area && area !== "ALL") || searchIntent
+    );
+
     return {
       ...results,
-      availableProvinces: serverProvinces.length > 0 ? serverProvinces : results.availableProvinces,
-      availableAreas: serverAreas.length > 0 ? serverAreas : results.availableAreas,
-      availableStations: serverStations.length > 0 ? serverStations : results.availableStations,
-      availableTypes: serverFacets.availableTypes || results.availableTypes,
-      availableListingTypes: serverFacets.availableListingTypes || results.availableListingTypes,
-      availableQuickFilters: serverFacets.availableQuickFilters
+      availableProvinces: serverProvinces.length > 0 && !hasActiveRestrictions ? serverProvinces : results.availableProvinces,
+      availableAreas: serverAreas.length > 0 && !hasActiveRestrictions ? serverAreas : results.availableAreas,
+      availableStations: serverStations.length > 0 && !hasActiveRestrictions ? serverStations : results.availableStations,
+      availableTypes: !hasActiveRestrictions && serverFacets.availableTypes ? serverFacets.availableTypes : results.availableTypes,
+      availableListingTypes: !hasActiveRestrictions && serverFacets.availableListingTypes ? serverFacets.availableListingTypes : results.availableListingTypes,
+      availableQuickFilters: !hasActiveRestrictions && serverFacets.availableQuickFilters
         ? {
             ...results.availableQuickFilters,
             ...serverFacets.availableQuickFilters,
@@ -358,7 +364,7 @@ export function usePropertyFiltering(
       availablePrices: serverFacets.availablePrices || undefined,
       availableSizes: serverFacets.availableSizes || undefined,
     };
-  }, [results, serverFacets]);
+  }, [results, serverFacets, petFriendly, luxuryVilla, type, province, area, searchIntent]);
 
   return {
     ...finalFacets,

@@ -1,16 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Star } from "lucide-react";
 import { MdOutlinePets } from "react-icons/md";
 import { FaBuilding } from "react-icons/fa6";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface CategoryNavigationCardsProps {
-  language: string;
+  language?: string;
 }
 
 export function CategoryNavigationCards({
-  language,
+  language: initialLanguage,
 }: CategoryNavigationCardsProps) {
+  const { language: clientLanguage } = useLanguage();
+  const language = clientLanguage || initialLanguage || "th";
+
   return (
     <section className="max-w-screen-2xl mx-auto px-5 md:px-6 lg:px-8 mb-12 mt-4">
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -80,32 +86,32 @@ export function CategoryNavigationCards({
             <div>
               <h3 className="text-base font-bold text-slate-800">
                 {language === "en"
-                  ? "Pet-Friendly Condos"
+                  ? "Pet-Friendly House & Condos"
                   : language === "cn"
-                    ? "允许养宠物的公寓"
+                    ? "允许养宠物的住宅与公寓"
                     : language === "ru"
-                      ? "Кондо с разрешением на животных"
-                      : "คอนโดเลี้ยงสัตว์ได้"}
+                      ? "Дома и кондо с животными"
+                      : "คอนโด & บ้านเลี้ยงสัตว์ได้"}
               </h3>
               <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
                 {language === "en"
-                  ? "Buildings that welcome your beloved dogs and cats in Bangkok."
+                  ? "Homes and condos that welcome your beloved dogs and cats in Bangkok."
                   : language === "cn"
-                    ? "为您和您的爱猫、爱犬在曼谷寻找温馨的家。"
+                    ? "为您和您的爱犬、爱猫在曼谷寻找温馨的家与独立花园住宅。"
                     : language === "ru"
-                      ? "Кондоминиумы в Бангкоке, где рады вашим любимым кошкам и собакам."
-                      : "พบคอนโดมิเนียมที่อนุญาตและมีพื้นที่เพื่อสัตว์เลี้ยงแสนรักของคุณ"}
+                      ? "Дома и кондоминиумы в Бангкоке, где рады собакам и кошкам."
+                      : "พบบ้านและคอนโดมิเนียมที่อนุญาตและมีพื้นที่เพื่อสัตว์เลี้ยงแสนรักของคุณ"}
               </p>
             </div>
             <div className="text-[11px] font-bold text-orange-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform pt-1">
               <span>
                 {language === "en"
-                  ? "Explore Pet-Friendly Condos"
+                  ? "Explore Pet-Friendly Properties"
                   : language === "cn"
-                    ? "浏览宠物友好公寓"
+                    ? "浏览所有宠物友好房源"
                     : language === "ru"
-                      ? "Посмотреть все кондо"
-                      : "ดูคอนโดเลี้ยงสัตว์ทั้งหมด"}
+                      ? "Посмотреть все объекты"
+                      : "ดูที่พักเลี้ยงสัตว์ทั้งหมด"}
               </span>
               <span>→</span>
             </div>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Prompt, Noto_Sans_Thai } from "next/font/google";
+import localFont from "next/font/local";
 import dynamic from "next/dynamic";
 import Script from "next/script";
 import "./globals.css";
@@ -20,18 +20,48 @@ import { getSiteSettings } from "@/features/site-settings/actions";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
 import { getProvinceName } from "@/lib/utils/provinces";
-// Removed force-dynamic to allow Next.js to optimize routing and enable SSG where possible.
-// Next.js will still dynamically render where cookies() or other dynamic functions are used.
-const prompt = Prompt({
-  weight: ["400", "600", "700"],
-  subsets: ["thai", "latin"],
+
+// High performance zero-network local fonts
+const prompt = localFont({
+  src: [
+    {
+      path: "../public/fonts/Prompt/Prompt-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Prompt/Prompt-SemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Prompt/Prompt-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   display: "swap",
   variable: "--font-prompt",
 });
 
-const notoThai = Noto_Sans_Thai({
-  weight: ["400", "600", "700"],
-  subsets: ["thai", "latin"],
+const notoThai = localFont({
+  src: [
+    {
+      path: "../public/fonts/Noto_Sans_Thai/static/NotoSansThai-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Noto_Sans_Thai/static/NotoSansThai-SemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Noto_Sans_Thai/static/NotoSansThai-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   display: "swap",
   variable: "--font-noto-thai",
 });

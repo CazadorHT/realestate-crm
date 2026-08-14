@@ -6,32 +6,26 @@ import { useState, useEffect } from "react";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { getLocalizedField } from "@/lib/i18n";
 import { siteConfig } from "@/lib/site-config";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface BlogDetailSidebarProps {
   slug: string;
   title: string;
   relatedPosts: any[];
-  dict: Record<string, any>;
-  language: string;
+  dict?: Record<string, any>;
+  language?: string;
 }
 
 export function BlogDetailSidebar({
   slug,
   title,
   relatedPosts,
-  dict,
-  language,
+  language: initialLanguage,
 }: BlogDetailSidebarProps) {
-  const t = (key: string, params?: Record<string, string | number>): string => {
-    let value = key.split(".").reduce((prev: any, curr: string) => prev?.[curr], dict as any) || key;
-    if (params && typeof value === "string") {
-      Object.entries(params).forEach(([k, v]) => {
-        value = (value as string).replace(`{${k}}`, String(v));
-      });
-    }
-    return value as string;
-  };
+  const { language: clientLanguage, t } = useLanguage();
+  const language = clientLanguage || initialLanguage || "th";
   const [currentUrl, setCurrentUrl] = useState("");
+
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
