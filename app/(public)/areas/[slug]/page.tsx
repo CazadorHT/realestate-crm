@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Train, Building2, ChevronRight, BarChart3, HelpCircle, Compass } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
+import { formatPrioritySeoTitle, generateAreaFAQSchema } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import {
   getAreaBySlug,
@@ -18,7 +19,6 @@ import { AreaPropertiesClient } from "@/components/public/AreaPropertiesClient";
 import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 import { getProvinceName } from "@/lib/utils/provinces";
-import { generateAreaFAQSchema } from "@/lib/seo-utils";
 
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
@@ -34,24 +34,35 @@ export async function generateMetadata(
 
   const { language } = await getServerTranslations();
   const nameText = area.name[language as keyof typeof area.name] || area.name.en || area.name.th;
+  const thName = area.name.th;
+  const enName = area.name.en;
+  const isBilingual = thName && enName && thName.trim() !== enName.trim();
 
   const title = (area.seoTitle as any)?.[language] ||
-    (language === "en"
-      ? `Properties & Condos for Sale/Rent in ${nameText} | Updated 2026 | ${siteConfig.name}`
-      : language === "cn"
-        ? `${nameText} 房屋公寓出租出售 | 2026最新 | ${siteConfig.name}`
-        : language === "ru"
-          ? `Недвижимость и кондо в районе ${nameText} | 2026 | ${siteConfig.name}`
-          : `รวมคอนโด-บ้าน ย่าน ${nameText} เช่า-ขาย ราคาดี อัปเดต 2026 | ${siteConfig.name}`);
+    formatPrioritySeoTitle(
+      language === "en"
+        ? { primarySubject: enName || nameText, prefix: "Properties & Condos in", action: "for Sale & Rent" }
+        : language === "cn"
+          ? { primarySubject: nameText, action: "房屋公寓出租出售" }
+          : language === "ru"
+            ? { primarySubject: nameText, prefix: "Недвижимость и кондо в районе" }
+            : {
+                primarySubject: thName || nameText,
+                secondaryInfo: isBilingual ? enName : undefined,
+                prefix: "คอนโด-บ้าน ย่าน",
+                action: "เช่า-ขาย",
+              },
+      siteConfig.name
+    );
 
   const description = (area.seoDescription as any)?.[language] ||
     (language === "en"
-      ? `Discover active residential listings and market pricing indexes in ${nameText}. Find top condos, houses, and townhomes for rent and sale updated for 2026.`
+      ? `Discover active residential listings and market pricing in ${nameText}. Top condos and houses for rent and sale.`
       : language === "cn"
-        ? `在 ${nameText} 寻找适合您的住宅。查看该区域的市场行情价格指数、热门项目及轨道交通路线，2026最新更新。`
+        ? `在 ${nameText} 寻找适合您的住宅。查看该区域的市场行情价格指数、热门项目及轨道交通。`
         : language === "ru"
-          ? `Объявления о продаже и аренде жилья в ${nameText}. Медианные цены, популярные проекты и доступный транспорт в 2026 году.`
-          : `รวมประกาศเช่าและขาย คอนโด บ้านเดี่ยว ทาวน์โฮม ย่าน ${nameText} เปรียบเทียบราคา สรุปสถิติมัธยฐาน และข้อมูลทำเลอยู่อาศัย อัปเดตล่าสุดปี 2026 | VCC Asset`);
+          ? `Объявления о продаже и аренде жилья в ${nameText}. Медианные цены и популярные проекты.`
+          : `รวมประกาศเช่า-ขาย คอนโด บ้านเดี่ยว ทาวน์โฮม ย่าน ${nameText} เปรียบเทียบราคา สรุปสถิติทำเลน่าอยู่บน VCC Asset`);
 
   return {
     title,

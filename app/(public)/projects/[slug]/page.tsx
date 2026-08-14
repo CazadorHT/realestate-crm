@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, MapPin, Building2, Calendar, LayoutGrid, CheckCircle } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
+import { formatPrioritySeoTitle } from "@/lib/seo-utils";
 import { getServerTranslations, getLocalizedField } from "@/lib/i18n";
 import { getProjectBySlug, getPropertiesInProject, getAllProjectSlugs, getRelatedProjects } from "@/features/public/projects";
 const getProjectBySlugCached = cache(getProjectBySlug);
@@ -57,24 +58,35 @@ export async function generateMetadata(
   }
 
   const nameText = project.name[language as keyof typeof project.name] || project.name.en || project.name.th;
+  const thName = project.name.th;
+  const enName = project.name.en;
+  const isBilingual = thName && enName && thName.trim() !== enName.trim();
+  const bilingualName = isBilingual ? `${thName} (${enName})` : nameText;
 
   const title = project.seoTitle?.[language as keyof typeof project.seoTitle] || 
-    (language === "en"
-      ? `Condos for Sale & Rent at ${nameText} | Updated 2026 | ${siteConfig.name}`
-      : language === "cn"
-        ? `${nameText} 公寓出租/出售 | 2026最新 | ${siteConfig.name}`
-        : language === "ru"
-          ? `Аренда и продажа в ЖК ${nameText} | 2026 | ${siteConfig.name}`
-          : `รวมห้องว่าง เช่า-ขาย โครงการ ${nameText} ราคาดี อัปเดต 2026 | ${siteConfig.name}`);
+    formatPrioritySeoTitle(
+      language === "en"
+        ? { primarySubject: enName || nameText, prefix: "Condos at", action: "for Sale & Rent" }
+        : language === "cn"
+          ? { primarySubject: nameText, action: "公寓出租/出售" }
+          : language === "ru"
+            ? { primarySubject: nameText, prefix: "ЖК", action: "Аренда и продажа" }
+            : {
+                primarySubject: thName || nameText,
+                secondaryInfo: isBilingual ? enName : undefined,
+                action: "เช่า-ขาย",
+              },
+      siteConfig.name
+    );
 
   const description = project.seoDescription?.[language as keyof typeof project.seoDescription] ||
     (language === "en"
-      ? `Compare prices and view available condo listings for rent and sale at ${nameText}. Checked and updated for 2026.`
+      ? `Compare prices and view available condo listings for rent and sale at ${nameText}. Verified listings with real photos.`
       : language === "cn"
-        ? `在 ${nameText} 对比价格并浏览全部在租/在售房源。提供项目竣工时间、公用配套设施及地图定位，2026最新。`
+        ? `在 ${nameText} 对比价格并浏览全部在租/在售房源。提供项目设施及地图定位。`
         : language === "ru"
-          ? `Сравнивайте цены и просматривайте объявления в ЖК ${nameText}. Полная информация о комплексе, удобствах и ценах 2026 года.`
-          : `รวมประกาศเช่า-ขายห้องว่างในโครงการ ${nameText} คัดสรรห้องสวย แต่งครบ มีรูปจริง สภาพจริง เช็กราคาเช่าและขายล่าสุดปี 2026 บน VCC Asset`);
+          ? `Сравнивайте цены и просматривайте объявления в ЖК ${nameText}. Полная информация о комплексе и ценах.`
+          : `รวมประกาศเช่า-ขายห้องว่างในโครงการ ${bilingualName} คัดสรรห้องสวย แต่งครบ มีรูปจริง สภาพจริง เช็กราคาเช่าและขายล่าสุดบน VCC Asset`);
 
   return {
     title,

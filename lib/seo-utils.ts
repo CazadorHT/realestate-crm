@@ -1178,3 +1178,77 @@ export function generateAreaFAQSchema(
   };
 }
 
+export interface SeoTitleSegments {
+  /** The core subject (e.g. Project Name, Station Name, Area Name) - NEVER truncated unless strictly impossible */
+  primarySubject: string;
+  /** Action/Intent modifier (e.g. "เช่า-ขาย", "for Rent & Sale") */
+  action?: string;
+  /** Prefix descriptor (e.g. "คอนโดติด", "คอนโด-บ้าน ย่าน") */
+  prefix?: string;
+  /** Optional secondary info (e.g. English name in parenthesis) */
+  secondaryInfo?: string;
+}
+
+/**
+ * Priority-Based SEO Title Formatter (v3)
+ * Guarantees brand presence (`| siteName`) and protects primary keywords.
+ * If too long, drops optional/prefix/secondary parts before ever touching core subject or brand.
+ */
+export function formatPrioritySeoTitle(
+  segments: SeoTitleSegments,
+  siteName: string,
+  maxLen: number = 60
+): string {
+  const brandSuffix = ` | ${siteName}`;
+  const subject = segments.primarySubject.trim();
+  const action = segments.action?.trim();
+  const prefix = segments.prefix?.trim();
+  const secondary = segments.secondaryInfo?.trim();
+
+  // Tier 1: Everything included
+  // e.g. "คอนโดติด BTS อุดมสุข (Udom Suk) เช่า-ขาย | VC Connect Asset"
+  let parts = [prefix, subject, secondary ? `(${secondary})` : undefined, action].filter(Boolean);
+  let candidate = `${parts.join(" ")}${brandSuffix}`;
+  if (candidate.length <= maxLen) return candidate;
+
+  // Tier 2: Drop secondary info (e.g. Drop English parenthesis)
+  // e.g. "คอนโดติด BTS อุดมสุข เช่า-ขาย | VC Connect Asset"
+  parts = [prefix, subject, action].filter(Boolean);
+  candidate = `${parts.join(" ")}${brandSuffix}`;
+  if (candidate.length <= maxLen) return candidate;
+
+  // Tier 3: Drop prefix (e.g. Drop "คอนโดติด", "คอนโด-บ้าน ย่าน")
+  // e.g. "BTS อุดมสุข เช่า-ขาย | VC Connect Asset"
+  parts = [subject, action].filter(Boolean);
+  candidate = `${parts.join(" ")}${brandSuffix}`;
+  if (candidate.length <= maxLen) return candidate;
+
+  // Tier 4: Core Subject only + Brand
+  // e.g. "BTS อุดมสุข | VC Connect Asset"
+  candidate = `${subject}${brandSuffix}`;
+  if (candidate.length <= maxLen) return candidate;
+
+  // Tier 5: Extreme Case (Subject alone is >= 45 chars) -> Truncate subject safely
+  const availableForSubject = maxLen - brandSuffix.length - 3;
+  if (availableForSubject > 10) {
+    return `${subject.slice(0, availableForSubject)}...${brandSuffix}`;
+  }
+
+  // Fallback
+  return `${candidate.slice(0, maxLen - 3)}...`;
+}
+
+/**
+ * Smart SEO Title Formatter (Backward compatible wrapper)
+ */
+export function formatSeoTitle(coreText: string, siteName: string, maxLen: number = 60): string {
+  const cleanCore = coreText.trim();
+  const fullTitle = `${cleanCore} | ${siteName}`;
+
+  if (fullTitle.length <= maxLen) {
+    return fullTitle;
+  }
+
+  return formatPrioritySeoTitle({ primarySubject: cleanCore }, siteName, maxLen);
+}
+

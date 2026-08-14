@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Train, ChevronRight, ChevronLeft, MapPin, Building2, ArrowRight, Home, DollarSign } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
+import { formatPrioritySeoTitle } from "@/lib/seo-utils";
 import { getServerTranslations, getLocalizedField } from "@/lib/i18n";
 import {
   getStationBySlug,
@@ -145,25 +146,32 @@ export async function generateMetadata(
 
   const localizedName = (station.label as Record<string, string>)[language] || station.label.th;
   const stationNameFormatted = formatStationName(localizedName, language);
+  const isBilingual = station.label.th && station.label.en && station.label.th.trim() !== station.label.en.trim();
 
-  const title = station.seoTitle || (
+  const title = station.seoTitle || formatPrioritySeoTitle(
     language === "en"
-      ? `Condos & Properties near ${stationNameFormatted} | Rent & Sale Updated 2026 | ${siteConfig.name}`
+      ? { primarySubject: stationNameFormatted, prefix: "Condos near", action: "for Rent & Sale" }
       : language === "cn"
-        ? `${stationNameFormatted}附近公寓出租出售 | 2026最新 | ${siteConfig.name}`
+        ? { primarySubject: stationNameFormatted, prefix: "靠近", action: "公寓出租/出售" }
         : language === "ru"
-          ? `Недвижимость และ кондо рядом с ${stationNameFormatted} | 2026 | ${siteConfig.name}`
-          : `รวมคอนโดติด ${stationNameFormatted} เช่า-ขาย ราคาดี อัปเดต 2026 | ${siteConfig.name}`
+          ? { primarySubject: stationNameFormatted, prefix: "Кондо рядом со ст.", action: "Аренда и продажа" }
+          : {
+              primarySubject: stationNameFormatted,
+              secondaryInfo: isBilingual ? station.label.en : undefined,
+              prefix: "คอนโดติด",
+              action: "เช่า-ขาย",
+            },
+    siteConfig.name
   );
   
   const description = station.seoDescription || (
     language === "en"
-      ? `Find condos, houses, and townhomes near ${stationNameFormatted}. Verified premium listings for rent & sale with pictures, details, and price updated for 2026.`
+      ? `Find condos, houses, and townhomes near ${stationNameFormatted}. Verified premium listings for rent & sale.`
       : language === "cn"
-        ? `寻找${stationNameFormatted}附近的公寓、别墅和联排别墅。经过验证的高端房源，配有实景图、详细信息和2026最新价格。`
+        ? `寻找 ${stationNameFormatted} 附近的优质公寓与住宅。经过验证的高端房源，包含实景图及最新租售价格。`
         : language === "ru"
-          ? `Найдите кондоминиумы, дома и таунхаусы рядом с ${stationNameFormatted}. Проверенные объявления с фотографиями, подробностями и ценами 2026 года.`
-          : `รวมคอนโดใกล้${stationNameFormatted} (${station.label.en}) ทั้งเช่าและขาย คัดสรรห้องสวย แต่งครบ พร้อมเข้าอยู่ ดูรูปจริง สภาพจริง อัปเดตราคาล่าสุดปี 2026 | VCC Asset`
+          ? `Найдите кондоминиумы и дома рядом со станцией ${stationNameFormatted}. Проверенные объявления с фото и ценами.`
+          : `รวมคอนโดใกล้ ${stationNameFormatted} (${station.label.en}) ทั้งเช่าและขาย คัดสรรห้องสวย แต่งครบ พร้อมเข้าอยู่ ดูรูปจริง เช็กราคาล่าสุดบน VCC Asset`
   );
 
   return {

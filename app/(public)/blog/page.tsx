@@ -28,8 +28,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
 
   return {
-    title: t("blog.schema_name"),
-    description: t("blog.schema_desc"),
+    title: t("metadata.blog_title", { siteName: siteConfig.name }),
+    description: t("metadata.blog_description"),
   };
 }
 
