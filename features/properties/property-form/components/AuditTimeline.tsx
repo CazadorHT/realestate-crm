@@ -185,7 +185,47 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
     });
   }, [debouncedSearch, filterAction, filterModifier, fetchLogs]);
 
-  const filteredLogs = logs; // Server-side does the filtering now
+  // Helper to count meaningful changes in a log entry
+  const getMeaningfulDiffCount = (log: AuditLogEntry) => {
+    const meta = log.metadata || {};
+    if (meta.is_restore === true) return 1;
+
+    const meaningfulDiffs = (meta.diff || []).filter((change: string) => {
+      if (!change) return false;
+      const parts = change.split(":");
+      if (parts.length >= 2) {
+        const valPart = parts.slice(1).join(":").trim();
+        const arrowParts = valPart.split("→").map((s: string) => s.trim());
+        if (arrowParts.length === 2 && arrowParts[0] === arrowParts[1]) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    const meaningfulChanges = Object.entries(
+      (meta.changes as Record<string, { old: any; new: any }>) || {},
+    ).filter(([_, vals]) => {
+      if (!vals) return false;
+      const oldVal = vals.old;
+      const newVal = vals.new;
+      if (!oldVal && !newVal) return false;
+      if (oldVal === newVal) return false;
+      if (String(oldVal ?? "N/A") === String(newVal ?? "N/A")) return false;
+      return true;
+    });
+
+    if (meta.image_changes && ((meta.image_changes.added?.length || 0) > 0 || (meta.image_changes.removed?.length || 0) > 0)) {
+      return (meaningfulChanges.length || meaningfulDiffs.length || 0) + 1;
+    }
+
+    return meaningfulChanges.length > 0 ? meaningfulChanges.length : meaningfulDiffs.length;
+  };
+
+  // Only show log items that actually have at least 1 meaningful change
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => getMeaningfulDiffCount(log) > 0);
+  }, [logs]);
 
   const handleLoadMore = () => {
     if (hasMore && !loadingMore) {
@@ -518,8 +558,36 @@ function LogItem({
   onRestoreSuccess: () => void;
 }) {
   const meta = log.metadata || {};
-  const diffCount = meta.diff?.length || 0;
   const isRestore = meta.is_restore === true;
+
+  // Filter out redundant / no-op diff chips (e.g. "ไม่ใช่ → ไม่ใช่", "N/A → N/A")
+  const meaningfulDiffs = (meta.diff || []).filter((change: string) => {
+    if (!change) return false;
+    const parts = change.split(":");
+    if (parts.length >= 2) {
+      const valPart = parts.slice(1).join(":").trim();
+      const arrowParts = valPart.split("→").map((s: string) => s.trim());
+      if (arrowParts.length === 2 && arrowParts[0] === arrowParts[1]) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  // Filter out redundant table changes (e.g. null -> false, unchanged defaults)
+  const meaningfulChanges = Object.entries(
+    (meta.changes as Record<string, { old: any; new: any }>) || {},
+  ).filter(([_, vals]) => {
+    if (!vals) return false;
+    const oldVal = vals.old;
+    const newVal = vals.new;
+    if (!oldVal && !newVal) return false;
+    if (oldVal === newVal) return false;
+    if (String(oldVal ?? "N/A") === String(newVal ?? "N/A")) return false;
+    return true;
+  });
+
+  const displayCount = meaningfulChanges.length > 0 ? meaningfulChanges.length : meaningfulDiffs.length;
 
   return (
     <AccordionItem
@@ -563,8 +631,8 @@ function LogItem({
           </div>
 
           <div className="mr-4 text-right">
-            <Badge variant="secondary" className="bg-slate-50 text-slate-600">
-              {diffCount} รายการที่เปลี่ยน
+            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border border-blue-100 font-semibold text-xs px-2.5 py-0.5 rounded-full">
+              {displayCount} รายการที่เปลี่ยน
             </Badge>
           </div>
         </div>
@@ -573,39 +641,50 @@ function LogItem({
       <AccordionContent className="border-t border-slate-50 bg-slate-50/30 px-5 pb-5 pt-4">
         <div className="space-y-6">
           {/* Summary Chips */}
-          <div className="flex flex-wrap gap-2">
-            {meta.diff?.map((change: string, idx: number) => {
-              const deltaMatch = change.match(/\(([+-]\d+ words)\)/);
-              const deltaText = deltaMatch ? deltaMatch[1] : null;
-              const cleanChange = deltaMatch
-                ? change.replace(deltaMatch[0], "").trim()
-                : change;
+          {meaningfulDiffs.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {meaningfulDiffs.map((change: string, idx: number) => {
+                const deltaMatch = change.match(/\(([+-]\d+ words)\)/);
+                const deltaText = deltaMatch ? deltaMatch[1] : null;
+                const cleanChange = deltaMatch
+                  ? change.replace(deltaMatch[0], "").trim()
+                  : change;
 
-              return (
-                <div
-                  key={idx}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium shadow-sm transition-transform hover:scale-105",
-                    change.includes("เพิ่ม")
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                      : change.includes("ลบ")
-                        ? "bg-rose-50 text-rose-700 border border-rose-100"
-                        : "bg-white text-blue-700 border border-blue-100",
-                  )}
-                >
-                  {change.includes("ราคา") && (
-                    <TrendingDown className="h-3 w-3" />
-                  )}
-                  {cleanChange}
-                  {deltaText && (
-                    <span className="text-[10px] opacity-70 font-bold ml-1">
-                      {deltaText}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                const isPrice = change.includes("ราคา") || change.includes("ค่าเช่า");
+                const isMedia = change.includes("รูปภาพ");
+                const isBoolean = change.includes("ใช่") || change.includes("ไม่ใช่");
+
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium shadow-xs transition-all hover:scale-105",
+                      isPrice
+                        ? "bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold"
+                        : isMedia
+                          ? "bg-purple-50 text-purple-700 border border-purple-200 font-semibold"
+                          : isBoolean
+                            ? "bg-amber-50 text-amber-800 border border-amber-200"
+                            : "bg-white text-slate-700 border border-slate-200",
+                    )}
+                  >
+                    {isPrice && (
+                      <TrendingDown className="h-3 w-3 text-emerald-600 shrink-0" />
+                    )}
+                    {isMedia && (
+                      <ImageIcon className="h-3 w-3 text-purple-600 shrink-0" />
+                    )}
+                    <span>{cleanChange}</span>
+                    {deltaText && (
+                      <span className="text-[10px] opacity-70 font-bold ml-1">
+                        {deltaText}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Visual Asset Section (Super-Premium Imaging) */}
           {meta.image_changes && (
@@ -656,27 +735,25 @@ function LogItem({
           )}
 
           {/* Detailed Diff Table */}
-          {meta.changes && (
-            <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
+          {meaningfulChanges.length > 0 && (
+            <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-slate-50/50 text-slate-400 border-b">
-                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider">
+                  <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
+                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider w-1/3">
                       ฟิลด์
                     </th>
-                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider">
+                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider w-1/3">
                       ค่าเดิม
                     </th>
                     <th className="px-0 py-2.5 text-center w-8"></th>
-                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider">
+                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider w-1/3">
                       ค่าใหม่
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {Object.entries(
-                    meta.changes as Record<string, { old: any; new: any }>,
-                  ).map(([key, vals]) => (
+                <tbody className="divide-y divide-slate-100">
+                  {meaningfulChanges.map(([key, vals]) => (
                     <ChangeRow
                       key={key}
                       label={key}
@@ -719,12 +796,12 @@ function ChangeRow({
 
   const keyToLabel = (key: string) => {
     const mapping: Record<string, string> = {
-      price: "ราคาขาย",
+      price: "ราคาขายพิเศษ",
       original_price: "ราคาตั้งขาย",
-      rental_price: "ราคาเช่า",
+      rental_price: "ราคาเช่าพิเศษ",
       original_rental_price: "ราคาตั้งเช่า",
       status: "สถานะ",
-      listing_type: "ประกาศ",
+      listing_type: "ประเภทประกาศ",
       property_type: "ชนิดทรัพย์",
       title: "ชื่อทรัพย์",
       title_en: "ชื่อทรัพย์ (EN)",
@@ -733,18 +810,20 @@ function ChangeRow({
       owner_id: "เจ้าของ",
       assigned_to: "ผู้ดูแล",
       commission_sale_percentage: "คอมฯ ขาย (%)",
-      commission_rent_months: "คอมฯ เช่าย (เดือน)",
+      commission_rent_months: "คอมฯ เช่า (เดือน)",
       total_units: "ยูนิตทั้งหมด",
       sold_units: "ขายออกแล้ว",
       bedrooms: "ห้องนอน",
       bathrooms: "ห้องน้ำ",
       size_sqm: "พื้นที่ (ตร.ม.)",
+      land_size_sqwah: "พื้นที่ดิน (ตร.ว.)",
       floor: "ชั้น",
+      parking_slots: "ที่จอดรถ",
       address_line1: "ที่อยู่/โครงการ",
       google_maps_link: "ลิงก์แผนที่",
       images: "รูปภาพ",
       feature_ids: "ฟีเจอร์",
-      agent_ids: "ทีทีมเอเจนท์",
+      agent_ids: "ทีมเอเจนท์",
       is_exclusive: "Exclusive",
       requires_ai_review: "รอ AI ตรวจ",
       is_pet_friendly: "เลี้ยงสัตว์ได้",
@@ -753,6 +832,16 @@ function ChangeRow({
       verified: "ยืนยันแล้ว",
       province: "จังหวัด",
       district: "เขต/อำเภอ",
+      is_co_agent: "รับ Co-Agent",
+      has_private_pool: "สระว่ายน้ำส่วนตัว",
+      is_selling_with_tenant: "ขายพร้อมผู้เช่า",
+      is_bare_shell: "ห้องเปล่า (Bare Shell)",
+      has_garden_view: "วิวสวน",
+      has_pool_view: "วิวสระว่ายน้ำ",
+      has_city_view: "วิวเมือง",
+      has_river_view: "วิวแม่น้ำ",
+      is_cbd: "ทำเล CBD",
+      is_smart_home: "ระบบ Smart Home",
     };
     return mapping[key] || key;
   };
@@ -771,23 +860,31 @@ function ChangeRow({
     }
     if (typeof val === "boolean")
       return val ? (
-        <Badge className="bg-emerald-50 text-emerald-600 border-none">
+        <Badge className="bg-emerald-100 text-emerald-700 font-bold border-none px-2 py-0.5">
           ใช่
         </Badge>
       ) : (
-        "ไม่ใช่"
+        <Badge className="bg-slate-100 text-slate-500 font-normal border-none px-2 py-0.5">
+          ไม่ใช่
+        </Badge>
       );
+
+    if (typeof val === "number" && val >= 1000) {
+      return <span className="font-semibold">{val.toLocaleString()}</span>;
+    }
 
     const str = String(val);
     if (str.length > 50) return str.slice(0, 50) + "...";
     return str;
   };
 
+  const isPrice = label.includes("price");
+
   return (
     <tr className="hover:bg-slate-50/50 transition-colors">
-      <td className="px-4 py-3 font-medium text-slate-700 w-1/4">
+      <td className="px-4 py-3 font-medium text-slate-700">
         <div className="flex items-center gap-2">
-          {keyToLabel(label)}
+          <span className="font-semibold text-slate-800">{keyToLabel(label)}</span>
           {isDescription && (
             <button
               onClick={() => setShowModal(true)}
@@ -799,13 +896,16 @@ function ChangeRow({
           )}
         </div>
       </td>
-      <td className="px-4 py-3 text-slate-500 truncate max-w-[150px]">
+      <td className="px-4 py-3 text-slate-400 font-normal">
         {formatVal(oldValue)}
       </td>
       <td className="py-3 text-center px-0">
-        <ArrowRight className="h-3 w-3 text-slate-300" />
+        <ArrowRight className="h-3.5 w-3.5 text-slate-300 mx-auto" />
       </td>
-      <td className="px-4 py-3 text-blue-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+      <td className={cn(
+        "px-4 py-3 font-semibold",
+        isPrice ? "text-emerald-700 font-bold" : "text-blue-600"
+      )}>
         {formatVal(newValue)}
         {isDescription && showModal && (
           <DiffModal

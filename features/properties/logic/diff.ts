@@ -43,12 +43,27 @@ export function getPropertyDiff(
     const oldVal = (oldData as Record<string, unknown>)[key];
     const newVal = (newData as Record<string, unknown>)[key];
 
-    // Loose equality check for numeric strings vs numbers
+    // Normalize empty values (null, undefined, empty string)
+    const isOldEmpty = oldVal === null || oldVal === undefined || oldVal === "";
+    const isNewEmpty = newVal === null || newVal === undefined || newVal === "";
+    if (isOldEmpty && isNewEmpty) return;
+
+    // Normalize numeric values
+    if (typeof oldVal === "number" || typeof newVal === "number") {
+      const oldNum = oldVal !== null && oldVal !== undefined && oldVal !== "" ? Number(oldVal) : null;
+      const newNum = newVal !== null && newVal !== undefined && newVal !== "" ? Number(newVal) : null;
+      if (oldNum === newNum) return;
+    }
+
+    // Standard equality check
     if (oldVal != newVal) {
-      diff.changed_fields.push(key);
       const oldFormatted = formatter ? formatter(oldVal) : String(oldVal ?? "N/A");
       const newFormatted = formatter ? formatter(newVal) : String(newVal ?? "N/A");
       
+      // If formatted strings are identical, skip
+      if (oldFormatted === newFormatted) return;
+
+      diff.changed_fields.push(key);
       let summaryText = `${label}: ${oldFormatted} → ${newFormatted}`;
       
       if (isLongText && oldVal && newVal) {
@@ -64,6 +79,18 @@ export function getPropertyDiff(
 
       diff.summary.push(summaryText);
       diff.details[key] = { old: oldVal, new: newVal };
+    }
+  };
+
+  const trackBooleanField = (key: keyof PropertyFormValues, label: string) => {
+    const oldBool = Boolean((oldData as Record<string, unknown>)[key]);
+    const newBool = Boolean((newData as Record<string, unknown>)[key]);
+
+    if (oldBool !== newBool) {
+      diff.changed_fields.push(key);
+      const summaryText = `${label}: ${oldBool ? "ใช่" : "ไม่ใช่"} → ${newBool ? "ใช่" : "ไม่ใช่"}`;
+      diff.summary.push(summaryText);
+      diff.details[key] = { old: oldBool, new: newBool };
     }
   };
 
@@ -117,13 +144,28 @@ export function getPropertyDiff(
   trackField("district", "เขต/อำเภอ");
 
   // --- 6. BOOLEAN FLAGS (TAGS) ---
-  const booleanFields: (keyof PropertyFormValues)[] = [
-    "is_exclusive", "is_pet_friendly", "is_fully_furnished", "is_renovated", 
-    "verified", "requires_ai_review", "is_co_agent", "has_private_pool",
-    "is_selling_with_tenant", "is_bare_shell", "has_garden_view", "has_pool_view",
-    "has_city_view", "has_river_view", "is_cbd", "is_smart_home"
-  ];
-  booleanFields.forEach(f => trackField(f, String(f), (v) => v ? "ใช่" : "ไม่ใช่"));
+  const booleanFieldsMap: Record<string, string> = {
+    is_exclusive: "สัญญา Exclusive",
+    is_pet_friendly: "เลี้ยงสัตว์ได้",
+    is_fully_furnished: "เฟอร์นิเจอร์ครบ",
+    is_renovated: "ตกแต่ง/รีโนเวทใหม่",
+    verified: "ยืนยันแล้ว",
+    requires_ai_review: "รอ AI ตรวจสอบ",
+    is_co_agent: "รับ Co-Agent",
+    has_private_pool: "สระว่ายน้ำส่วนตัว",
+    is_selling_with_tenant: "ขายพร้อมผู้เช่า",
+    is_bare_shell: "ห้องเปล่า (Bare Shell)",
+    has_garden_view: "วิวสวน",
+    has_pool_view: "วิวสระว่ายน้ำ",
+    has_city_view: "วิวเมือง",
+    has_river_view: "วิวแม่น้ำ",
+    is_cbd: "ทำเล CBD",
+    is_smart_home: "ระบบ Smart Home",
+  };
+  
+  Object.entries(booleanFieldsMap).forEach(([fieldKey, fieldLabel]) => {
+    trackBooleanField(fieldKey as keyof PropertyFormValues, fieldLabel);
+  });
 
   // --- 7. JUNCTION: IMAGES (Visual Tracking) ---
   const oldImgs = oldData.images || [];
