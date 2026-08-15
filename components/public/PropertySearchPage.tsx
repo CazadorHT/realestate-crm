@@ -209,8 +209,11 @@ export function PropertySearchPage({
         ) : filtered.length === 0 ? (
           <NoResultsView
             onClearFilters={filters.clearFilters}
-            areaFilterName={filters.area || undefined}
-            serverAreaTotal={filters.area && serverFacets?.availableAreas?.[filters.area]?.count ? serverFacets.availableAreas[filters.area].count : 0}
+            keyword={filters.keyword}
+            onClearKeyword={() => filters.setKeyword("")}
+            areaFilterName={filters.area && filters.area !== "ALL" ? filters.area : undefined}
+            onSelectSuggestion={(text) => filters.setKeyword(text)}
+            serverAreaTotal={filters.area && filters.area !== "ALL" && serverFacets?.availableAreas?.[filters.area]?.count ? serverFacets.availableAreas[filters.area].count : 0}
             serverGrandTotal={totalAvailableCount}
             onFetchMoreServer={loadMoreProperties}
             isFetchingMore={isFetchingMore}

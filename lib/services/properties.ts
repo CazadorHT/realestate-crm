@@ -311,9 +311,23 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             `province.ilike.${pctTerm}`,
             `district.ilike.${pctTerm}`,
             `address_line1.ilike.${pctTerm}`,
-            `address_line1_en.ilike.${pctTerm}`,
-            `meta_keywords.cs.{"${searchTerm}"}`
+            `address_line1_en.ilike.${pctTerm}`
           ];
+
+          // Search matching project IDs from `projects` table (both Thai and English)
+          try {
+            const { data: matchedProjects } = await supabase
+              .from("projects")
+              .select("id")
+              .or(`name->>th.ilike.${pctTerm},name->>en.ilike.${pctTerm},slug.ilike.${pctTerm}`)
+              .limit(100);
+            if (matchedProjects && matchedProjects.length > 0) {
+              const matchedProjectIds = matchedProjects.map((p: any) => p.id);
+              textConditions.push(`project_id.in.(${matchedProjectIds.join(",")})`);
+            }
+          } catch (e) {
+            console.warn("Error finding matching projects for search:", e);
+          }
 
           // [Diamond-Tier] Unified Intent Detection
           const { 
@@ -533,7 +547,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         return { properties: finalProperties, facets };
       },
-      [`public-properties-${JSON.stringify(options)}`],
+      [`public-properties-v3-${JSON.stringify(options)}`],
       {
         revalidate: 31536000, // 1 year long-term cache (tag-invalidated)
         tags: ["properties", "public-data"],

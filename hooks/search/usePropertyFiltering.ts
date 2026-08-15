@@ -97,12 +97,16 @@ export function usePropertyFiltering(
       // 4. Remaining Text Token Match (AND logic)
       if (remainingTokens.length > 0) {
         const allMatch = remainingTokens.every(token => {
+          const projNameTh = (p as any).projects?.name_th || (p as any).project_name || "";
+          const projNameEn = (p as any).projects?.name_en || "";
           return p.title.toLowerCase().includes(token) || 
                  (p.title_en || "").toLowerCase().includes(token) ||
                  (p.title_cn || "").toLowerCase().includes(token) ||
                  (p.title_ru || "").toLowerCase().includes(token) ||
                  (p.description || "").toLowerCase().includes(token) || 
                  (p.description_en || "").toLowerCase().includes(token) ||
+                 projNameTh.toLowerCase().includes(token) ||
+                 projNameEn.toLowerCase().includes(token) ||
                  (p.popular_area || "").toLowerCase().includes(token) || 
                  (p.province || "").toLowerCase().includes(token) ||
                  (p.meta_keywords || []).some(mk => mk.toLowerCase().includes(token)) ||

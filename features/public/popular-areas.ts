@@ -291,7 +291,7 @@ export type DynamicSuggestionItem = {
 export const getDynamicSearchSuggestionsAction = unstable_cache(
   async (): Promise<DynamicSuggestionItem[]> => {
     try {
-      const client = await createClient();
+      const client = createPublicClient();
 
       // 1. Fetch Transit Stations & Master Data
       const { data: masterData } = await client
@@ -299,16 +299,16 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
         .select("type, code, label")
         .eq("is_active", true);
 
-      // 2. Fetch Projects (Names & Address Info Nearby Places)
+      // 2. Fetch Projects (All active projects with Thai and English names)
       const { data: projectsData } = await client
         .from("projects")
-        .select("name")
-        .eq("is_active", true);
+        .select("id, name, slug, developer, district, province, is_active")
+        .or("is_active.eq.true,is_active.is.null");
 
       // 3. Fetch Popular Areas
       const { data: areasData } = await client
         .from("popular_areas_v3")
-        .select("name_th")
+        .select("name, name_th")
         .eq("is_active", true);
 
       const itemsSet = new Map<string, DynamicSuggestionItem>();
@@ -319,16 +319,17 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
           if (item.type === "TRANSIT_STATION") {
             const labelObj = item.label as any;
             const thName = labelObj?.th || item.code;
-            if (thName) {
-              const textWithNear = thName.startsWith("ใกล้") ? thName : `ใกล้ ${thName}`;
+            if (thName && typeof thName === "string") {
+              const cleanStation = thName.trim();
+              const textWithNear = cleanStation.startsWith("ใกล้") ? cleanStation : `ใกล้ ${cleanStation}`;
               itemsSet.set(textWithNear, {
                 text: textWithNear,
                 type: "transit",
                 label: "รถไฟฟ้า",
               });
-              if (!thName.startsWith("ใกล้")) {
-                itemsSet.set(thName, {
-                  text: thName,
+              if (!cleanStation.startsWith("ใกล้")) {
+                itemsSet.set(cleanStation, {
+                  text: cleanStation,
                   type: "transit",
                   label: "สถานีรถไฟฟ้า",
                 });
@@ -338,48 +339,28 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
         }
       }
 
-      // Add Master/Step 3 Nearby Places from Projects
+      // Add Projects (Thai and English names)
       if (projectsData) {
         for (const proj of projectsData) {
           if (proj.name) {
-            itemsSet.set(proj.name, {
-              text: proj.name,
-              type: "area",
-              label: "โครงการ",
-            });
-          }
+            const projNameTh = typeof proj.name === "string" ? proj.name : (proj.name as any)?.th;
+            const projNameEn = typeof proj.name === "string" ? null : (proj.name as any)?.en;
 
-          const addressInfo = proj.address_info as any;
-          if (addressInfo) {
-            // Extract nearby_places array from Step 3
-            if (Array.isArray(addressInfo.nearby_places)) {
-              for (const place of addressInfo.nearby_places) {
-                const placeName = place.name || place.label || place.place_name || place.name_th;
-                if (placeName && typeof placeName === "string") {
-                  const cleanName = placeName.trim();
-                  const textWithNear = cleanName.startsWith("ใกล้") ? cleanName : `ใกล้ ${cleanName}`;
-                  itemsSet.set(textWithNear, {
-                    text: textWithNear,
-                    type: "landmark",
-                    label: "สถานที่ใกล้เคียง",
-                  });
-                }
-              }
+            if (projNameTh && typeof projNameTh === "string" && projNameTh.trim()) {
+              const cleanTh = projNameTh.trim();
+              itemsSet.set(cleanTh.toLowerCase(), {
+                text: cleanTh,
+                type: "area",
+                label: "โครงการ",
+              });
             }
-            // Extract nearby_transits array from Step 3
-            if (Array.isArray(addressInfo.nearby_transits)) {
-              for (const transit of addressInfo.nearby_transits) {
-                const stationName = transit.station_name || transit.name || transit.label;
-                if (stationName && typeof stationName === "string") {
-                  const cleanStation = stationName.trim();
-                  const textWithNear = cleanStation.startsWith("ใกล้") ? cleanStation : `ใกล้ ${cleanStation}`;
-                  itemsSet.set(textWithNear, {
-                    text: textWithNear,
-                    type: "transit",
-                    label: "รถไฟฟ้า",
-                  });
-                }
-              }
+            if (projNameEn && typeof projNameEn === "string" && projNameEn.trim() && projNameEn.trim() !== projNameTh) {
+              const cleanEn = projNameEn.trim();
+              itemsSet.set(cleanEn.toLowerCase(), {
+                text: cleanEn,
+                type: "area",
+                label: "โครงการ",
+              });
             }
           }
         }
@@ -388,17 +369,29 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
       // Add Popular Areas
       if (areasData) {
         for (const area of areasData) {
-          if (area.name_th) {
-            itemsSet.set(area.name_th, {
-              text: area.name_th,
+          const areaNameTh = area.name_th || (typeof area.name === "string" ? area.name : (area.name as any)?.th);
+          const areaNameEn = typeof area.name === "string" ? null : (area.name as any)?.en;
+
+          if (areaNameTh && typeof areaNameTh === "string" && areaNameTh.trim()) {
+            const cleanTh = areaNameTh.trim();
+            itemsSet.set(cleanTh.toLowerCase(), {
+              text: cleanTh,
               type: "area",
               label: "ย่านยอดนิยม",
             });
-            const nearArea = `ใกล้ ${area.name_th}`;
-            itemsSet.set(nearArea, {
+            const nearArea = `ใกล้ ${cleanTh}`;
+            itemsSet.set(nearArea.toLowerCase(), {
               text: nearArea,
               type: "landmark",
               label: "ทำเลใกล้เคียง",
+            });
+          }
+          if (areaNameEn && typeof areaNameEn === "string" && areaNameEn.trim() && areaNameEn.trim() !== areaNameTh) {
+            const cleanEn = areaNameEn.trim();
+            itemsSet.set(cleanEn.toLowerCase(), {
+              text: cleanEn,
+              type: "area",
+              label: "ย่านยอดนิยม",
             });
           }
         }
@@ -410,7 +403,7 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
       return [];
     }
   },
-  ["dynamic-search-suggestions-v2"],
+  ["dynamic-search-suggestions-v5"],
   { revalidate: 31536000, tags: ["suggestions", "master-data", "projects", "public-data"] }
 );
 

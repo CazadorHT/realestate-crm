@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useId, useRef } from "react";
+import { useState, useEffect, useId, useRef, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Building2, Sparkles, TrainTrack, Compass, X } from "lucide-react";
@@ -129,15 +129,21 @@ export function MagicAiSearch({
           const map = new Map<string, SuggestionItem>();
           // Put DB items first
           for (const item of dynamicItems) {
-            const txt = typeof item?.text === "string" ? item.text : (item?.text ? String(item.text) : "");
-            if (txt) {
+            const rawText = item?.text;
+            const txt = typeof rawText === "string" 
+              ? rawText 
+              : (rawText as any)?.th || (rawText as any)?.en || (rawText ? String(rawText) : "");
+            if (txt && txt !== "[object Object]") {
               map.set(txt.toLowerCase().trim(), { ...item, text: txt });
             }
           }
           // Put defaults as fallback
           for (const item of DEFAULT_SUGGESTIONS) {
-            const txt = typeof item?.text === "string" ? item.text : (item?.text ? String(item.text) : "");
-            if (txt) {
+            const rawText = item?.text;
+            const txt = typeof rawText === "string" 
+              ? rawText 
+              : (rawText as any)?.th || (rawText as any)?.en || (rawText ? String(rawText) : "");
+            if (txt && txt !== "[object Object]") {
               const key = txt.toLowerCase().trim();
               if (!map.has(key)) {
                 map.set(key, item);
@@ -174,30 +180,77 @@ export function MagicAiSearch({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter suggestions dynamically
-  const filteredSuggestions = (() => {
+  // Filter suggestions dynamically (Balanced showcase when empty, full search when typing)
+  const filteredSuggestions = useMemo(() => {
     const q = inputValue.trim().toLowerCase();
+    
     if (!q) {
-      return allSuggestions.slice(0, 7);
+      // 🌟 Balanced showcase across diverse categories when input is empty
+      const projects = allSuggestions.filter((s) => s.label === "โครงการ").slice(0, 4);
+      const areas = allSuggestions.filter((s) => s.type === "area" && s.label !== "โครงการ").slice(0, 4);
+      const landmarks = allSuggestions.filter((s) => s.type === "landmark").slice(0, 3);
+      const transits = allSuggestions.filter((s) => s.type === "transit").slice(0, 4);
+      const features = allSuggestions.filter((s) => s.type === "feature").slice(0, 2);
+
+      const combined = [...projects, ...areas, ...landmarks, ...transits, ...features];
+      
+      // If we don't have enough categorized items, fallback to top slice
+      if (combined.length === 0) {
+        return allSuggestions.slice(0, 15);
+      }
+      return combined;
     }
     
-    // Filter matching suggestions
-    const matches = allSuggestions.filter((s) =>
-      s.text.toLowerCase().includes(q)
-    );
+    // Filter & rank matching suggestions by relevance when searching
+    const scoredMatches = allSuggestions
+      .map((item: SuggestionItem) => {
+        const textLower = item.text.toLowerCase();
+        if (!textLower.includes(q)) return null;
+
+        let score = 0;
+        // 1. Starts with query (Top Priority, e.g. "Chaiyapruek" for "cha") -> 100 pts
+        if (textLower.startsWith(q)) {
+          score += 100;
+        } 
+        // 2. Word boundary starts with query (e.g. "The Palm Chaengwattana" or "ใกล้ Chai...") -> 80 pts
+        else if (textLower.includes(` ${q}`) || textLower.includes(`-${q}`) || textLower.includes(`(${q}`)) {
+          score += 80;
+        } 
+        // 3. Middle match (e.g. "Phetchaburi" or "Ratchada") -> 20 pts
+        else {
+          score += 20;
+        }
+
+        // 4. Boost โครงการ (Projects) -> +35 pts
+        if (item.label === "โครงการ") {
+          score += 35;
+        }
+        // 5. Boost สถานีรถไฟฟ้า / ย่าน when exact prefix -> +10 pts
+        if (item.type === "transit") {
+          score += 15;
+        }
+
+        // Shorter texts get a slight boost over very long sentences
+        score -= Math.min(item.text.length * 0.2, 10);
+
+        return { item, score };
+      })
+      .filter((s): s is { item: SuggestionItem; score: number } => s !== null)
+      .sort((a, b) => b.score - a.score)
+      .map((s) => s.item);
 
     // If query starts with "ใกล้" or custom search, build dynamic prompt suggestion if not present
-    if (q.startsWith("ใกล้") && !matches.some((m) => m.text.toLowerCase() === q)) {
+    if (q.startsWith("ใกล้") && !scoredMatches.some((m) => m.text.toLowerCase() === q)) {
       const customPrompt: SuggestionItem = {
         text: inputValue.trim(),
         type: "landmark",
         label: "ค้นหาทำเลนี้",
       };
-      return [customPrompt, ...matches].slice(0, 8);
+      return [customPrompt, ...scoredMatches].slice(0, 25);
     }
 
-    return matches.slice(0, 8);
-  })();
+    return scoredMatches.slice(0, 25);
+  }, [allSuggestions, inputValue]);
 
   const handleSelectSuggestion = (selectedText: string) => {
     setInputValue(selectedText);
@@ -205,19 +258,106 @@ export function MagicAiSearch({
     setIsOpen(false);
   };
 
-  const getIcon = (type: SuggestionItem["type"]) => {
+  const getIcon = (type: SuggestionItem["type"], label: string) => {
+    if (label === "โครงการ") {
+      return <Building2 className="h-3.5 w-3.5 text-indigo-500 shrink-0" />;
+    }
     switch (type) {
       case "landmark":
         return <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />;
       case "transit":
         return <TrainTrack className="h-3.5 w-3.5 text-emerald-500 shrink-0" />;
       case "area":
-        return <Building2 className="h-3.5 w-3.5 text-indigo-500 shrink-0" />;
+        return <Compass className="h-3.5 w-3.5 text-blue-500 shrink-0" />;
       case "feature":
         return <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />;
       default:
-        return <Compass className="h-3.5 w-3.5 text-slate-400 shrink-0" />;
+        return <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />;
     }
+  };
+
+  const getBadgeStyle = (type: SuggestionItem["type"], label: string) => {
+    if (label === "โครงการ") {
+      return "bg-indigo-50 text-indigo-700 group-hover/item:bg-indigo-100";
+    }
+    switch (type) {
+      case "landmark":
+        return "bg-rose-50 text-rose-700 group-hover/item:bg-rose-100";
+      case "transit":
+        return "bg-emerald-50 text-emerald-700 group-hover/item:bg-emerald-100";
+      case "area":
+        return "bg-blue-50 text-blue-700 group-hover/item:bg-blue-100";
+      case "feature":
+        return "bg-amber-50 text-amber-700 group-hover/item:bg-amber-100";
+      default:
+        return "bg-slate-100 text-slate-600 group-hover/item:bg-slate-200";
+    }
+  };
+
+  const getLocalizedBadge = (label: string, lang: string) => {
+    if (label === "โครงการ") {
+      if (lang === "en") return "Project";
+      if (lang === "cn") return "项目";
+      if (lang === "ru") return "Проект";
+      return "โครงการ";
+    }
+    if (label === "ย่านยอดนิยม") {
+      if (lang === "en") return "Popular Area";
+      if (lang === "cn") return "热门区域";
+      if (lang === "ru") return "Популярный район";
+      return "ย่านยอดนิยม";
+    }
+    if (label === "ทำเลใกล้เคียง" || label === "สถานที่ใกล้เคียง") {
+      if (lang === "en") return "Nearby";
+      if (lang === "cn") return "附近地标";
+      if (lang === "ru") return "Рядом";
+      return "สถานที่ใกล้เคียง";
+    }
+    if (label === "รถไฟฟ้า") {
+      if (lang === "en") return "Transit";
+      if (lang === "cn") return "轨道交通";
+      if (lang === "ru") return "Метро";
+      return "รถไฟฟ้า";
+    }
+    if (label === "สถานีรถไฟฟ้า") {
+      if (lang === "en") return "Station";
+      if (lang === "cn") return "地铁站";
+      if (lang === "ru") return "Станция";
+      return "สถานีรถไฟฟ้า";
+    }
+    if (label === "เงื่อนไขพิเศษ") {
+      if (lang === "en") return "Feature";
+      if (lang === "cn") return "特色";
+      if (lang === "ru") return "Особенность";
+      return "เงื่อนไขพิเศษ";
+    }
+    if (label === "ค้นหาทำเลนี้") {
+      if (lang === "en") return "Search Location";
+      if (lang === "cn") return "搜索此地点";
+      if (lang === "ru") return "Искать локацию";
+      return "ค้นหาทำเลนี้";
+    }
+    return label;
+  };
+
+  const getHeaderTitle = (hasInput: boolean, lang: string) => {
+    if (hasInput) {
+      if (lang === "en") return "Search Suggestions";
+      if (lang === "cn") return "搜索建议";
+      if (lang === "ru") return "Рекомендации";
+      return "คำแนะนำการค้นหา";
+    }
+    if (lang === "en") return "Popular Searches & Projects";
+    if (lang === "cn") return "热门搜索与项目";
+    if (lang === "ru") return "Популярные районы и проекты";
+    return "ทำเลยอดนิยม และโครงการแนะนำ";
+  };
+
+  const getClickToSelectText = (lang: string) => {
+    if (lang === "en") return "Click to select";
+    if (lang === "cn") return "点击选择";
+    if (lang === "ru") return "Нажмите для выбора";
+    return "คลิกเพื่อเลือก";
   };
 
   return (
@@ -239,12 +379,12 @@ export function MagicAiSearch({
           name="keyword"
           placeholder={
             language === "th" 
-              ? "ค้นหาทำเล, ใกล้เซ็นทรัลบางนา, BTS อารีย์..." 
+              ? "ค้นหาทำเล, โครงการ, ใกล้เซ็นทรัลบางนา, BTS อารีย์..." 
               : language === "cn"
-                ? "搜索地点 (例如: ใกล้ เซนทรัลบางนา, 阿里公寓)"
+                ? "搜索地点、项目 (例如: ใกล้ เซนทรัลบางนา, 阿里公寓)"
                 : language === "ru"
-                  ? "Поиск по местоположению (например: ใกล้ เซนทรัลบางนา)"
-                  : "Search location, e.g. near Central Bangna, BTS Ari..."
+                  ? "Поиск по местоположению, проекту (например: ใกล้ เซนทรัลบางนา)"
+                  : "Search location, project, e.g. near Central Bangna, BTS Ari..."
           }
           className="border-none shadow-none focus-visible:ring-0 h-10! text-xs bg-transparent w-full font-medium placeholder:text-[12px] placeholder:text-slate-400/80"
           value={inputValue}
@@ -280,32 +420,34 @@ export function MagicAiSearch({
         </div>
       </div>
 
-      {/* 🌟 Autocomplete Suggestions Dropdown */}
+      {/* 🌟 Autocomplete Suggestions Dropdown (Scrollable & Categorized) */}
       {isOpen && filteredSuggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200/80 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 p-1.5 space-y-0.5">
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between border-b border-slate-100 mb-1">
-            <span>{inputValue ? "คำแนะนำการค้นหา" : "ทำเลยอดนิยม / คำค้นแนะนำ"}</span>
-            <span className="text-indigo-600 font-normal">คลิกเพื่อเลือก</span>
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200/80 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 p-1.5 flex flex-col">
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between gap-2 border-b border-slate-100 mb-1 shrink-0 whitespace-nowrap">
+            <span className="truncate">{getHeaderTitle(Boolean(inputValue), language)}</span>
+            <span className="text-indigo-600 font-normal shrink-0 whitespace-nowrap">{getClickToSelectText(language)}</span>
           </div>
 
-          {filteredSuggestions.map((item, idx) => (
-            <button
-              key={`${item.text}-${idx}`}
-              type="button"
-              className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl hover:bg-indigo-50/70 text-slate-700 hover:text-indigo-900 transition-all text-left font-medium group/item"
-              onClick={() => handleSelectSuggestion(item.text)}
-            >
-              <div className="flex items-center gap-2.5 truncate">
-                {getIcon(item.type)}
-                <span className="truncate group-hover/item:font-semibold">
-                  {item.text}
+          <div className="max-h-[340px] overflow-y-auto overscroll-contain pr-0.5 space-y-0.5">
+            {filteredSuggestions.map((item: SuggestionItem, idx: number) => (
+              <button
+                key={`${item.text}-${item.type}-${idx}`}
+                type="button"
+                className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl hover:bg-indigo-50/70 text-slate-700 hover:text-indigo-900 transition-all text-left font-medium group/item"
+                onClick={() => handleSelectSuggestion(item.text)}
+              >
+                <div className="flex items-center gap-2.5 truncate mr-2">
+                  {getIcon(item.type, item.label)}
+                  <span className="truncate group-hover/item:font-semibold">
+                    {item.text}
+                  </span>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold transition-colors shrink-0 ${getBadgeStyle(item.type, item.label)}`}>
+                  {getLocalizedBadge(item.label, language)}
                 </span>
-              </div>
-              <span className="text-[10px] text-slate-400 bg-slate-100 group-hover/item:bg-indigo-100/70 group-hover/item:text-indigo-700 px-2 py-0.5 rounded-md font-semibold transition-colors shrink-0">
-                {item.label}
-              </span>
-            </button>
-          ))}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
