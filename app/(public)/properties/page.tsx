@@ -125,15 +125,23 @@ export async function generateMetadata(props: { searchParams: Promise<any> }): P
     const actionEN = options.listingType === "RENT" ? "for Rent" : options.listingType === "SALE" ? "for Sale" : "for Sale & Rent";
     const locEN = options.province ? ` in ${options.province}` : " in Thailand";
 
+    const typeCN = options.propertyType === "CONDO" ? "公寓" : options.propertyType === "HOUSE" ? "别墅" : options.propertyType === "OFFICE_BUILDING" ? "写字楼" : options.propertyType === "TOWNHOME" ? "联排别墅" : "精选房产 公寓 别墅 写字楼";
+    const actionCN = options.listingType === "RENT" ? "出租" : options.listingType === "SALE" ? "出售" : "买卖与租赁";
+    const locCN = options.province ? ` · ${options.province}` : " · 泰国";
+
+    const typeRU = options.propertyType === "CONDO" ? "Квартиры и Кондо" : options.propertyType === "HOUSE" ? "Дома и Виллы" : options.propertyType === "OFFICE_BUILDING" ? "Офисы" : options.propertyType === "TOWNHOME" ? "Таунхаусы" : "Недвижимость, Кондо, Дома";
+    const actionRU = options.listingType === "RENT" ? "в Аренду" : options.listingType === "SALE" ? "на Продажу" : "Купить и Снять";
+    const locRU = options.province ? ` в ${options.province}` : " в Таиланде";
+
     if (language === "en") {
       title = `${typeEN} ${actionEN}${locEN}`;
       description = `Find handpicked ${typeEN.toLowerCase()} ${actionEN.toLowerCase()}${locEN}. Verified prices and instant support.`;
     } else if (language === "cn") {
-      title = `泰国 ${typeTH} ${actionTH} 最新房源`;
-      description = `为您精选泰国${locTH}的${typeTH}，提供买卖与租赁服务，最新真实房源。`;
+      title = `${typeCN} ${actionCN}${locCN} | 真实房源`;
+      description = `为您精选${locCN}的高端${typeCN}，提供${actionCN}服务，100%最新真实房源。`;
     } else if (language === "ru") {
-      title = `${typeEN} ${actionEN}${locEN}`;
-      description = `Каталог недвижимости ${locEN}. Проверенные цены и фото.`;
+      title = `${typeRU} ${actionRU}${locRU}`;
+      description = `Каталог недвижимости ${locRU}. Проверенные цены, фото и планировки.`;
     } else {
       title = `${typeTH} ${actionTH}${locTH} ห้องว่างพร้อมอยู่`;
       description = `รวมประกาศ${typeTH} ${actionTH}${locTH} ทรัพย์คุณภาพผ่านการตรวจสอบแล้ว 100% อัปเดตเรียลไทม์ทุกวัน`;

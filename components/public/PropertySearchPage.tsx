@@ -48,7 +48,11 @@ export function PropertySearchPage({
   const filters = usePropertyFilters(initialTransitStation, basePath, defaultFilters);
   
   // 1. Data Access Layer (Fortress Tier)
-  const { properties, facets: serverFacets, isLoading, isRefetching, isFetchingMore, loadMoreProperties } = usePropertyData(initialProperties, initialFacets);
+  const { properties, facets: serverFacets, isLoading, isRefetching, isFetchingMore, loadMoreProperties } = usePropertyData(
+    initialProperties,
+    initialFacets,
+    filters.queryString
+  );
 
   // 2. Optimized Analysis Logic
   const {

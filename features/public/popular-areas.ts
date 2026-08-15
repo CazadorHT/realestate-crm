@@ -282,120 +282,232 @@ export type DynamicSuggestionItem = {
   text: string;
   type: "landmark" | "transit" | "area" | "feature";
   label: string;
+  translations?: {
+    th?: string;
+    en?: string;
+    cn?: string;
+    ru?: string;
+  };
 };
 
 /**
  * [S-Tier] Fetch all active search suggestions dynamically from master data,
- * nearby places saved in Step 3 (projects/properties), stations, and popular areas.
+ * nearby places saved in Step 3 (projects/properties), stations, and popular areas with full i18n support.
  */
 export const getDynamicSearchSuggestionsAction = unstable_cache(
   async (): Promise<DynamicSuggestionItem[]> => {
     try {
       const client = createPublicClient();
 
-      // 1. Fetch Transit Stations & Master Data
-      const { data: masterData } = await client
+      // 1. Fetch active properties metadata to ensure 100% suggestions have available listings
+      const { data: activeProps, error: propErr } = await client
+        .from("properties")
+        .select("project_id, popular_area, nearby_transits, property_type")
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null);
+
+      if (propErr || !activeProps) {
+        console.error("Error fetching active properties for suggestions:", propErr);
+        return [];
+      }
+
+      const activeProjectIds = Array.from(
+        new Set(activeProps.map((p) => p.project_id).filter((id): id is string => typeof id === "string" && id.length > 0))
+      );
+      const activeAreaNames = new Set(
+        activeProps.map((p) => p.popular_area).filter((a): a is string => typeof a === "string" && a.length > 0)
+      );
+
+      // 2. Fetch Projects for ONLY projects that have active properties
+      let projectsData: any[] = [];
+      if (activeProjectIds.length > 0) {
+        const { data: pData } = await client
+          .from("projects")
+          .select("id, name, slug, developer, district, province")
+          .in("id", activeProjectIds);
+        if (pData) projectsData = pData;
+      }
+
+      // 3. Fetch Master Stations for full multilingual translations
+      const { data: masterStations } = await client
         .from("ref_master_data")
-        .select("type, code, label")
+        .select("code, label, type")
+        .eq("type", "TRANSIT_STATION")
         .eq("is_active", true);
 
-      // 2. Fetch Projects (All active projects with Thai and English names)
-      const { data: projectsData } = await client
-        .from("projects")
-        .select("id, name, slug, developer, district, province, is_active")
-        .or("is_active.eq.true,is_active.is.null");
+      const stationMap = new Map<string, { th?: string; en?: string; cn?: string; ru?: string }>();
+      masterStations?.forEach((s) => {
+        const l = s.label as any;
+        if (l?.th && typeof l.th === "string") {
+          const fullTh = l.th.trim();
+          stationMap.set(fullTh.toLowerCase(), l);
+          stationMap.set(fullTh, l);
 
-      // 3. Fetch Popular Areas
+          // Strip brackets e.g. "มักกะสัน (ARL)" -> "มักกะสัน"
+          const baseTh = fullTh.replace(/\s*\([^)]*\)/g, "").trim();
+          if (baseTh) {
+            stationMap.set(baseTh.toLowerCase(), l);
+            stationMap.set(baseTh, l);
+          }
+        }
+        if (l?.en && typeof l.en === "string") {
+          const fullEn = l.en.trim();
+          stationMap.set(fullEn.toLowerCase(), l);
+          const baseEn = fullEn.replace(/\s*\([^)]*\)/g, "").trim();
+          if (baseEn) {
+            stationMap.set(baseEn.toLowerCase(), l);
+          }
+        }
+      });
+
+      // 4. Fetch Popular Areas metadata with full multilingual names
       const { data: areasData } = await client
         .from("popular_areas_v3")
-        .select("name, name_th")
+        .select("name, name_th, name_en, name_cn, name_ru")
         .eq("is_active", true);
 
       const itemsSet = new Map<string, DynamicSuggestionItem>();
 
-      // Add Master Stations
-      if (masterData) {
-        for (const item of masterData) {
-          if (item.type === "TRANSIT_STATION") {
-            const labelObj = item.label as any;
-            const thName = labelObj?.th || item.code;
-            if (thName && typeof thName === "string") {
-              const cleanStation = thName.trim();
-              const textWithNear = cleanStation.startsWith("ใกล้") ? cleanStation : `ใกล้ ${cleanStation}`;
-              itemsSet.set(textWithNear, {
-                text: textWithNear,
-                type: "transit",
-                label: "รถไฟฟ้า",
-              });
-              if (!cleanStation.startsWith("ใกล้")) {
-                itemsSet.set(cleanStation, {
-                  text: cleanStation,
-                  type: "transit",
-                  label: "สถานีรถไฟฟ้า",
-                });
-              }
-            }
-          }
-        }
-      }
-
-      // Add Projects (Thai and English names)
+      // Add Projects that actually have active properties
       if (projectsData) {
         for (const proj of projectsData) {
           if (proj.name) {
-            const projNameTh = typeof proj.name === "string" ? proj.name : (proj.name as any)?.th;
-            const projNameEn = typeof proj.name === "string" ? null : (proj.name as any)?.en;
+            const names = proj.name as any;
+            const th = (typeof names === "string" ? names : names?.th || names?.en || "").trim();
+            const en = (typeof names === "object" ? names?.en || names?.th : names || "").trim();
+            const cn = (typeof names === "object" ? names?.cn || names?.en || names?.th : names || "").trim();
+            const ru = (typeof names === "object" ? names?.ru || names?.en || names?.th : names || "").trim();
 
-            if (projNameTh && typeof projNameTh === "string" && projNameTh.trim()) {
-              const cleanTh = projNameTh.trim();
-              itemsSet.set(cleanTh.toLowerCase(), {
-                text: cleanTh,
+            if (th) {
+              itemsSet.set(th.toLowerCase(), {
+                text: th,
                 type: "area",
                 label: "โครงการ",
+                translations: { th, en, cn, ru },
               });
             }
-            if (projNameEn && typeof projNameEn === "string" && projNameEn.trim() && projNameEn.trim() !== projNameTh) {
-              const cleanEn = projNameEn.trim();
-              itemsSet.set(cleanEn.toLowerCase(), {
-                text: cleanEn,
+            if (en && en.toLowerCase() !== th.toLowerCase()) {
+              itemsSet.set(en.toLowerCase(), {
+                text: en,
                 type: "area",
                 label: "โครงการ",
+                translations: { th, en, cn, ru },
               });
             }
           }
         }
       }
 
-      // Add Popular Areas
+      // Add Transit Stations that exist in active properties
+      activeProps.forEach((p) => {
+        if (Array.isArray(p.nearby_transits)) {
+          p.nearby_transits.forEach((t: any) => {
+            const rawStation = typeof t === "string" ? t : (t?.station_name || t?.name || t?.label?.th || t?.label);
+            if (rawStation && typeof rawStation === "string") {
+              const cleanStation = rawStation.replace(/^(ใกล้|near)\s*/i, "").trim();
+              if (cleanStation && cleanStation.length < 50) {
+                const baseStation = cleanStation.replace(/\s*\([^)]*\)/g, "").trim();
+                const m =
+                  stationMap.get(cleanStation.toLowerCase()) ||
+                  stationMap.get(cleanStation) ||
+                  stationMap.get(baseStation.toLowerCase()) ||
+                  stationMap.get(baseStation);
+
+                const isExpressway = /ทางด่วน|ทางพิเศษ|มอเตอร์เวย์|วงแหวน/i.test(cleanStation);
+
+                const th = m?.th || cleanStation;
+                const en = m?.en || cleanStation;
+                const cn = m?.cn || en;
+                const ru = m?.ru || en;
+
+                const itemType: DynamicSuggestionItem["type"] = isExpressway ? "landmark" : "transit";
+                const itemLabel = isExpressway ? "สถานที่ใกล้เคียง" : "สถานีรถไฟฟ้า";
+
+                itemsSet.set(cleanStation.toLowerCase(), {
+                  text: th,
+                  type: itemType,
+                  label: itemLabel,
+                  translations: { th, en, cn, ru },
+                });
+
+                const nearKey = `ใกล้ ${cleanStation}`.toLowerCase();
+                itemsSet.set(nearKey, {
+                  text: `ใกล้ ${th}`,
+                  type: itemType,
+                  label: isExpressway ? "ทำเลใกล้เคียง" : "รถไฟฟ้า",
+                  translations: {
+                    th: `ใกล้ ${th}`,
+                    en: `Near ${en}`,
+                    cn: `近 ${cn}`,
+                    ru: `Рядом с ${ru}`,
+                  },
+                });
+              }
+            }
+          });
+        }
+      });
+
+      // Add Popular Areas that actually have active properties
       if (areasData) {
         for (const area of areasData) {
-          const areaNameTh = area.name_th || (typeof area.name === "string" ? area.name : (area.name as any)?.th);
-          const areaNameEn = typeof area.name === "string" ? null : (area.name as any)?.en;
+          const th = (area.name_th || (typeof area.name === "string" ? area.name : (area.name as any)?.th) || "").trim();
+          const en = (area.name_en || (typeof area.name === "string" ? area.name : (area.name as any)?.en) || th).trim();
+          const cn = (area.name_cn || en).trim();
+          const ru = (area.name_ru || en).trim();
+          const rawName = typeof area.name === "string" ? area.name : null;
 
-          if (areaNameTh && typeof areaNameTh === "string" && areaNameTh.trim()) {
-            const cleanTh = areaNameTh.trim();
-            itemsSet.set(cleanTh.toLowerCase(), {
-              text: cleanTh,
+          const hasProperties =
+            (th && activeAreaNames.has(th)) ||
+            (rawName && activeAreaNames.has(rawName)) ||
+            (en && activeAreaNames.has(en));
+
+          if (hasProperties && th) {
+            itemsSet.set(th.toLowerCase(), {
+              text: th,
               type: "area",
               label: "ย่านยอดนิยม",
+              translations: { th, en, cn, ru },
             });
-            const nearArea = `ใกล้ ${cleanTh}`;
-            itemsSet.set(nearArea.toLowerCase(), {
-              text: nearArea,
+            const nearAreaKey = `ใกล้ ${th}`.toLowerCase();
+            itemsSet.set(nearAreaKey, {
+              text: `ใกล้ ${th}`,
               type: "landmark",
               label: "ทำเลใกล้เคียง",
-            });
-          }
-          if (areaNameEn && typeof areaNameEn === "string" && areaNameEn.trim() && areaNameEn.trim() !== areaNameTh) {
-            const cleanEn = areaNameEn.trim();
-            itemsSet.set(cleanEn.toLowerCase(), {
-              text: cleanEn,
-              type: "area",
-              label: "ย่านยอดนิยม",
+              translations: {
+                th: `ใกล้ ${th}`,
+                en: `Near ${en}`,
+                cn: `近 ${cn}`,
+                ru: `Рядом с ${ru}`,
+              },
             });
           }
         }
       }
+
+      // Add Special Features with full multilingual labels
+      itemsSet.set("คอนโด เลี้ยงสัตว์ได้", {
+        text: "คอนโด เลี้ยงสัตว์ได้",
+        type: "feature",
+        label: "เงื่อนไขพิเศษ",
+        translations: {
+          th: "คอนโด เลี้ยงสัตว์ได้",
+          en: "Pet Friendly Condo",
+          cn: "可养宠物公寓",
+          ru: "Дог/Кэт френдли кондо",
+        },
+      });
+      itemsSet.set("คอนโดติดรถไฟฟ้า", {
+        text: "คอนโดติดรถไฟฟ้า",
+        type: "feature",
+        label: "เงื่อนไขพิเศษ",
+        translations: {
+          th: "คอนโดติดรถไฟฟ้า",
+          en: "Condo Near BTS/MRT",
+          cn: "轻轨/地铁旁公寓",
+          ru: "Кондо рядом с метро",
+        },
+      });
 
       return Array.from(itemsSet.values());
     } catch (err) {
@@ -403,7 +515,7 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
       return [];
     }
   },
-  ["dynamic-search-suggestions-v5"],
+  ["dynamic-search-suggestions-v8"],
   { revalidate: 31536000, tags: ["suggestions", "master-data", "projects", "public-data"] }
 );
 

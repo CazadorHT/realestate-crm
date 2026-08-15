@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useId, useRef, useMemo } from "react";
+import { useState, useEffect, useId, useRef, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Building2, Sparkles, TrainTrack, Compass, X } from "lucide-react";
@@ -18,95 +18,140 @@ interface SuggestionItem {
   text: string;
   type: "landmark" | "transit" | "area" | "feature";
   label: string;
+  translations?: {
+    th?: string;
+    en?: string;
+    cn?: string;
+    ru?: string;
+  };
 }
 
 const DEFAULT_SUGGESTIONS: SuggestionItem[] = [
-  // 📍 Landmarks & Major Shopping Malls ("ใกล้...")
-  { text: "ใกล้ เซ็นทรัลบางนา", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ เมกาบางนา", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ ไอคอนสยาม", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ เซ็นทรัลพระราม 9", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ เซ็นทรัลลาดพร้าว", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ เซ็นทรัลเวิลด์", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ สยามพารากอน", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ เอ็มควอเทียร์", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ เอ็มสเฟียร์", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ เทอร์มินอล 21", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ สามย่านมิตรทาวน์", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ ทรู ดิจิทัล พาร์ค", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ สิงห์ คอมเพล็กซ์", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ สวนหลวง ร.9", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ สนามบินสุวรรณภูมิ", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ สนามบินดอนเมือง", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ รพ.บำรุงราษฎร์", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ รพ.สมิติเวช", type: "landmark", label: "แลนด์มาร์ก" },
-  { text: "ใกล้ รพ.จุฬาลงกรณ์", type: "landmark", label: "แลนด์มาร์ก" },
+  // 🏢 Popular Areas (Active with Listings)
+  {
+    text: "สุขุมวิท",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "สุขุมวิท", en: "Sukhumvit", cn: "素坤逸", ru: "Сукхумвит" },
+  },
+  {
+    text: "พระราม 9",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "พระราม 9", en: "Rama 9", cn: "拉玛九", ru: "Рама 9" },
+  },
+  {
+    text: "บางนา",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "บางนา", en: "Bangna", cn: "邦纳", ru: "Банг На" },
+  },
+  {
+    text: "อารีย์",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "อารีย์", en: "Ari", cn: "阿里", ru: "Ари" },
+  },
+  {
+    text: "ทองหล่อ",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "ทองหล่อ", en: "Thong Lo", cn: "通罗", ru: "Тхонг Ло" },
+  },
+  {
+    text: "เอกมัย",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "เอกมัย", en: "Ekkamai", cn: "伊卡迈", ru: "Эккамай" },
+  },
+  {
+    text: "อ่อนนุช",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "อ่อนนุช", en: "On Nut", cn: "安努", ru: "Он Нут" },
+  },
+  {
+    text: "รัชดา",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "รัชดา", en: "Ratchada", cn: "拉差达", ru: "Ратчада" },
+  },
+  {
+    text: "ปุณณวิถี",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "ปุณณวิถี", en: "Punnawithi", cn: "普纳威提", ru: "Пуннавити" },
+  },
+  {
+    text: "อุดมสุข",
+    type: "area",
+    label: "ย่านยอดนิยม",
+    translations: { th: "อุดมสุข", en: "Udom Suk", cn: "乌多姆苏克", ru: "Удом Сук" },
+  },
 
-  // 🚆 BTS Stations
-  { text: "ใกล้ BTS อุดมสุข", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS อโศก", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS ทองหล่อ", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS พร้อมพงษ์", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS อารีย์", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS บางนา", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS แบริ่ง", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS อ่อนนุช", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS ปุณณวิถี", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS เอกมัย", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS พระโขนง", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS พญาไท", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS สยาม", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS ชิดลม", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS เพลินจิต", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS สะพานควาย", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS หมอชิต", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS ช่องนนทรี", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS บางหว้า", type: "transit", label: "รถไฟฟ้า BTS" },
-  { text: "ใกล้ BTS ห้าแยกลาดพร้าว", type: "transit", label: "รถไฟฟ้า BTS" },
+  // 🚆 Active BTS & MRT Stations
+  {
+    text: "ใกล้ BTS อารีย์",
+    type: "transit",
+    label: "รถไฟฟ้า BTS",
+    translations: { th: "ใกล้ BTS อารีย์", en: "Near BTS Ari", cn: "近 BTS 阿里", ru: "Рядом с BTS Ари" },
+  },
+  {
+    text: "ใกล้ BTS ทองหล่อ",
+    type: "transit",
+    label: "รถไฟฟ้า BTS",
+    translations: { th: "ใกล้ BTS ทองหล่อ", en: "Near BTS Thong Lo", cn: "近 BTS 通罗", ru: "Рядом с BTS Тхонг Ло" },
+  },
+  {
+    text: "ใกล้ BTS อ่อนนุช",
+    type: "transit",
+    label: "รถไฟฟ้า BTS",
+    translations: { th: "ใกล้ BTS อ่อนนุช", en: "Near BTS On Nut", cn: "近 BTS 安努", ru: "Рядом с BTS Он Нут" },
+  },
+  {
+    text: "ใกล้ BTS ปุณณวิถี",
+    type: "transit",
+    label: "รถไฟฟ้า BTS",
+    translations: { th: "ใกล้ BTS ปุณณวิถี", en: "Near BTS Punnawithi", cn: "近 BTS 普纳威提", ru: "Рядом с BTS Пуннавити" },
+  },
+  {
+    text: "ใกล้ BTS อุดมสุข",
+    type: "transit",
+    label: "รถไฟฟ้า BTS",
+    translations: { th: "ใกล้ BTS อุดมสุข", en: "Near BTS Udom Suk", cn: "近 BTS 乌多姆苏克", ru: "Рядом с BTS Удом Сук" },
+  },
+  {
+    text: "ใกล้ MRT พระราม 9",
+    type: "transit",
+    label: "รถไฟฟ้า MRT",
+    translations: { th: "ใกล้ MRT พระราม 9", en: "Near MRT Rama 9", cn: "近 MRT 拉玛九", ru: "Рядом с MRT Рама 9" },
+  },
+  {
+    text: "ใกล้ MRT เพชรบุรี",
+    type: "transit",
+    label: "รถไฟฟ้า MRT",
+    translations: { th: "ใกล้ MRT เพชรบุรี", en: "Near MRT Phetchaburi", cn: "近 MRT 碧武里", ru: "Рядом с MRT Пхетчабури" },
+  },
+  {
+    text: "ใกล้ MRT สามย่าน",
+    type: "transit",
+    label: "รถไฟฟ้า MRT",
+    translations: { th: "ใกล้ MRT สามย่าน", en: "Near MRT Sam Yan", cn: "近 MRT 三养", ru: "Рядом с MRT Сам Ян" },
+  },
 
-  // 🚇 MRT Stations
-  { text: "ใกล้ MRT พระราม 9", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT ห้วยขวาง", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT สุขุมวิท", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT สุทธิสาร", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT ลาดพร้าว", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT พหลโยธิน", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT สีลม", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT สามย่าน", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT เพชรบุรี", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT ศูนย์สิริกิติ์", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT ศรีเอี่ยม", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT ศรีอุดม", type: "transit", label: "รถไฟฟ้า MRT" },
-  { text: "ใกล้ MRT ศรีนครินทร์ 38", type: "transit", label: "รถไฟฟ้า MRT" },
-
-  // 🏢 Popular Areas
-  { text: "บางนา", type: "area", label: "ย่านยอดนิยม" },
-  { text: "อารีย์", type: "area", label: "ย่านยอดนิยม" },
-  { text: "สุขุมวิท", type: "area", label: "ย่านยอดนิยม" },
-  { text: "ทองหล่อ", type: "area", label: "ย่านยอดนิยม" },
-  { text: "เอกมัย", type: "area", label: "ย่านยอดนิยม" },
-  { text: "พระราม 9", type: "area", label: "ย่านยอดนิยม" },
-  { text: "สาทร", type: "area", label: "ย่านยอดนิยม" },
-  { text: "สีลม", type: "area", label: "ย่านยอดนิยม" },
-  { text: "รัชดา", type: "area", label: "ย่านยอดนิยม" },
-  { text: "พญาไท", type: "area", label: "ย่านยอดนิยม" },
-  { text: "ห้วยขวาง", type: "area", label: "ย่านยอดนิยม" },
-  { text: "ลาดพร้าว", type: "area", label: "ย่านยอดนิยม" },
-  { text: "อ่อนนุช", type: "area", label: "ย่านยอดนิยม" },
-  { text: "ปุณณวิถี", type: "area", label: "ย่านยอดนิยม" },
-  { text: "อุดมสุข", type: "area", label: "ย่านยอดนิยม" },
-  { text: "ลาซาล", type: "area", label: "ย่านยอดนิยม" },
-  { text: "แบริ่ง", type: "area", label: "ย่านยอดนิยม" },
-  { text: "เชียงใหม่", type: "area", label: "ย่านยอดนิยม" },
-  { text: "ภูเก็ต", type: "area", label: "ย่านยอดนิยม" },
-  { text: "พัทยา", type: "area", label: "ย่านยอดนิยม" },
-
-  // ✨ Property Features & Types
-  { text: "คอนโด เลี้ยงสัตว์ได้", type: "feature", label: "เงื่อนไขพิเศษ" },
-  { text: "คอนโดติดรถไฟฟ้า", type: "feature", label: "เงื่อนไขพิเศษ" },
-  { text: "คอนโด 2 ห้องนอน", type: "feature", label: "เงื่อนไขพิเศษ" },
-  { text: "บ้านเดี่ยว พร้อมอยู่", type: "feature", label: "เงื่อนไขพิเศษ" },
-  { text: "ทาวน์โฮม บางนา", type: "feature", label: "เงื่อนไขพิเศษ" },
+  // ✨ Verified Features
+  {
+    text: "คอนโด เลี้ยงสัตว์ได้",
+    type: "feature",
+    label: "เงื่อนไขพิเศษ",
+    translations: { th: "คอนโด เลี้ยงสัตว์ได้", en: "Pet Friendly Condo", cn: "可养宠物公寓", ru: "Дог/Кэт френдли кондо" },
+  },
+  {
+    text: "คอนโดติดรถไฟฟ้า",
+    type: "feature",
+    label: "เงื่อนไขพิเศษ",
+    translations: { th: "คอนโดติดรถไฟฟ้า", en: "Condo Near BTS/MRT", cn: "轻轨/地铁旁公寓", ru: "Кондо рядом с метро" },
+  },
 ];
 
 export function MagicAiSearch({
@@ -121,33 +166,29 @@ export function MagicAiSearch({
   const [allSuggestions, setAllSuggestions] = useState<SuggestionItem[]>(DEFAULT_SUGGESTIONS);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch dynamic suggestions from DB (Step 3 nearby places + projects + master data)
+  const getSuggestionDisplayText = useCallback((item: SuggestionItem, lang: string) => {
+    if (item.translations) {
+      if (lang === "en" && item.translations.en) return item.translations.en;
+      if (lang === "cn" && (item.translations.cn || item.translations.en)) return item.translations.cn || item.translations.en!;
+      if (lang === "ru" && (item.translations.ru || item.translations.en)) return item.translations.ru || item.translations.en!;
+      if (lang === "th" && item.translations.th) return item.translations.th;
+    }
+    return item.text;
+  }, []);
+
+  // Fetch verified suggestions from DB (strictly only projects, transits, areas with active properties)
   useEffect(() => {
     getDynamicSearchSuggestionsAction()
       .then((dynamicItems) => {
         if (dynamicItems && dynamicItems.length > 0) {
           const map = new Map<string, SuggestionItem>();
-          // Put DB items first
           for (const item of dynamicItems) {
             const rawText = item?.text;
             const txt = typeof rawText === "string" 
               ? rawText 
               : (rawText as any)?.th || (rawText as any)?.en || (rawText ? String(rawText) : "");
-            if (txt && txt !== "[object Object]") {
-              map.set(txt.toLowerCase().trim(), { ...item, text: txt });
-            }
-          }
-          // Put defaults as fallback
-          for (const item of DEFAULT_SUGGESTIONS) {
-            const rawText = item?.text;
-            const txt = typeof rawText === "string" 
-              ? rawText 
-              : (rawText as any)?.th || (rawText as any)?.en || (rawText ? String(rawText) : "");
-            if (txt && txt !== "[object Object]") {
-              const key = txt.toLowerCase().trim();
-              if (!map.has(key)) {
-                map.set(key, item);
-              }
+            if (txt && txt !== "[object Object]" && txt.trim()) {
+              map.set(txt.toLowerCase().trim(), { ...item, text: txt.trim() });
             }
           }
           setAllSuggestions(Array.from(map.values()));
@@ -156,18 +197,16 @@ export function MagicAiSearch({
       .catch((e) => console.warn("Failed to load dynamic suggestions:", e));
   }, []);
 
-  // Auto-search with 500ms debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setKeyword(inputValue);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [inputValue, setKeyword]);
-
   // Sync internal state if external keyword changes (e.g. clear filters)
   useEffect(() => {
     setInputValue(keyword);
   }, [keyword]);
+
+  const handleExecuteSearch = (valToSearch?: string) => {
+    const finalVal = typeof valToSearch === "string" ? valToSearch : inputValue;
+    setIsOpen(false);
+    setKeyword(finalVal.trim());
+  };
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -201,19 +240,29 @@ export function MagicAiSearch({
       return combined;
     }
     
-    // Filter & rank matching suggestions by relevance when searching
+    // Filter & rank matching suggestions across all localized names
     const scoredMatches = allSuggestions
       .map((item: SuggestionItem) => {
-        const textLower = item.text.toLowerCase();
-        if (!textLower.includes(q)) return null;
+        const textCandidates = [
+          item.text,
+          item.translations?.th,
+          item.translations?.en,
+          item.translations?.cn,
+          item.translations?.ru,
+        ]
+          .filter((t): t is string => Boolean(t))
+          .map((t) => t.toLowerCase());
+
+        const isMatch = textCandidates.some((t) => t.includes(q));
+        if (!isMatch) return null;
 
         let score = 0;
         // 1. Starts with query (Top Priority, e.g. "Chaiyapruek" for "cha") -> 100 pts
-        if (textLower.startsWith(q)) {
+        if (textCandidates.some((t) => t.startsWith(q))) {
           score += 100;
         } 
         // 2. Word boundary starts with query (e.g. "The Palm Chaengwattana" or "ใกล้ Chai...") -> 80 pts
-        else if (textLower.includes(` ${q}`) || textLower.includes(`-${q}`) || textLower.includes(`(${q}`)) {
+        else if (textCandidates.some((t) => t.includes(` ${q}`) || t.includes(`-${q}`) || t.includes(`(${q}`))) {
           score += 80;
         } 
         // 3. Middle match (e.g. "Phetchaburi" or "Ratchada") -> 20 pts
@@ -239,12 +288,18 @@ export function MagicAiSearch({
       .sort((a, b) => b.score - a.score)
       .map((s) => s.item);
 
-    // If query starts with "ใกล้" or custom search, build dynamic prompt suggestion if not present
-    if (q.startsWith("ใกล้") && !scoredMatches.some((m) => m.text.toLowerCase() === q)) {
+    // If query starts with "ใกล้" or "near" or custom search, build dynamic prompt suggestion if not present
+    if ((q.startsWith("ใกล้") || q.startsWith("near") || q.startsWith("近")) && !scoredMatches.some((m) => m.text.toLowerCase() === q)) {
       const customPrompt: SuggestionItem = {
         text: inputValue.trim(),
         type: "landmark",
         label: "ค้นหาทำเลนี้",
+        translations: {
+          th: inputValue.trim(),
+          en: inputValue.trim(),
+          cn: inputValue.trim(),
+          ru: inputValue.trim(),
+        },
       };
       return [customPrompt, ...scoredMatches].slice(0, 25);
     }
@@ -252,10 +307,10 @@ export function MagicAiSearch({
     return scoredMatches.slice(0, 25);
   }, [allSuggestions, inputValue]);
 
-  const handleSelectSuggestion = (selectedText: string) => {
-    setInputValue(selectedText);
-    setKeyword(selectedText);
-    setIsOpen(false);
+  const handleSelectSuggestion = (item: SuggestionItem) => {
+    const localizedText = getSuggestionDisplayText(item, language);
+    setInputValue(localizedText);
+    handleExecuteSearch(localizedText);
   };
 
   const getIcon = (type: SuggestionItem["type"], label: string) => {
@@ -360,9 +415,16 @@ export function MagicAiSearch({
     return "คลิกเพื่อเลือก";
   };
 
+  const getSearchButtonLabel = (lang: string) => {
+    if (lang === "en") return "Search";
+    if (lang === "cn") return "搜索";
+    if (lang === "ru") return "Поиск";
+    return "ค้นหา";
+  };
+
   return (
     <div ref={containerRef} className="relative group w-full">
-      <div className="relative flex items-center bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400">
+      <div className="relative flex items-center bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 p-1 pl-3.5">
         {/* [PREMIUM LOADING BAR] */}
         {globalLoading && (
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-indigo-100 overflow-hidden z-50">
@@ -370,7 +432,7 @@ export function MagicAiSearch({
           </div>
         )}
 
-        <div className="pl-3.5 text-slate-400">
+        <div className="text-slate-400 shrink-0">
           <Search className="h-4 w-4" />
         </div>
         
@@ -381,12 +443,12 @@ export function MagicAiSearch({
             language === "th" 
               ? "ค้นหาทำเล, โครงการ, ใกล้เซ็นทรัลบางนา, BTS อารีย์..." 
               : language === "cn"
-                ? "搜索地点、项目 (例如: ใกล้ เซนทรัลบางนา, 阿里公寓)"
+                ? "搜索地点、项目 (例如: 近 素坤逸, 阿里, Oka Haus)"
                 : language === "ru"
-                  ? "Поиск по местоположению, проекту (например: ใกล้ เซนทรัลบางนา)"
-                  : "Search location, project, e.g. near Central Bangna, BTS Ari..."
+                  ? "Поиск по местоположению, проекту (например: Рядом с Сукхумвит)"
+                  : "Search location, project, e.g. Near Sukhumvit, BTS Ari, Oka Haus..."
           }
-          className="border-none shadow-none focus-visible:ring-0 h-10! text-xs bg-transparent w-full font-medium placeholder:text-[12px] placeholder:text-slate-400/80"
+          className="border-none shadow-none focus-visible:ring-0 h-9! text-xs bg-transparent w-full font-medium placeholder:text-[12px] placeholder:text-slate-400/80 px-2"
           value={inputValue}
           onFocus={() => setIsOpen(true)}
           onChange={(e) => {
@@ -395,28 +457,41 @@ export function MagicAiSearch({
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              setIsOpen(false);
-              setKeyword(inputValue);
+              e.preventDefault();
+              handleExecuteSearch();
             }
           }}
           disabled={false}
         />
 
-        <div className="pr-1.5 flex items-center">
+        <div className="flex items-center gap-1 shrink-0">
           {inputValue && (
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
+              className="h-7 w-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
               onClick={() => {
                 setInputValue("");
-                setKeyword("");
-                setIsOpen(false);
+                handleExecuteSearch("");
               }}
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </Button>
           )}
+
+          {/* 🔍 Dedicated Search Button */}
+          <button
+            type="button"
+            onClick={() => handleExecuteSearch()}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition-all duration-200 cursor-pointer shrink-0 ${
+              inputValue.trim()
+                ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white shadow-sm shadow-blue-500/25 ring-2 ring-indigo-500/20"
+                : "bg-slate-100/90 hover:bg-slate-200/80 text-slate-400 hover:text-slate-600 border border-slate-200/60 shadow-none"
+            }`}
+          >
+            <Search className={`h-3 w-3 ${inputValue.trim() ? "text-white" : "text-slate-400"}`} />
+            <span>{getSearchButtonLabel(language)}</span>
+          </button>
         </div>
       </div>
 
@@ -429,24 +504,27 @@ export function MagicAiSearch({
           </div>
 
           <div className="max-h-[340px] overflow-y-auto overscroll-contain pr-0.5 space-y-0.5">
-            {filteredSuggestions.map((item: SuggestionItem, idx: number) => (
-              <button
-                key={`${item.text}-${item.type}-${idx}`}
-                type="button"
-                className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl hover:bg-indigo-50/70 text-slate-700 hover:text-indigo-900 transition-all text-left font-medium group/item"
-                onClick={() => handleSelectSuggestion(item.text)}
-              >
-                <div className="flex items-center gap-2.5 truncate mr-2">
-                  {getIcon(item.type, item.label)}
-                  <span className="truncate group-hover/item:font-semibold">
-                    {item.text}
+            {filteredSuggestions.map((item: SuggestionItem, idx: number) => {
+              const displayTitle = getSuggestionDisplayText(item, language);
+              return (
+                <button
+                  key={`${item.text}-${item.type}-${idx}`}
+                  type="button"
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl hover:bg-indigo-50/70 text-slate-700 hover:text-indigo-900 transition-all text-left font-medium group/item"
+                  onClick={() => handleSelectSuggestion(item)}
+                >
+                  <div className="flex items-center gap-2.5 truncate mr-2">
+                    {getIcon(item.type, item.label)}
+                    <span className="truncate group-hover/item:font-semibold">
+                      {displayTitle}
+                    </span>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold transition-colors shrink-0 ${getBadgeStyle(item.type, item.label)}`}>
+                    {getLocalizedBadge(item.label, language)}
                   </span>
-                </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold transition-colors shrink-0 ${getBadgeStyle(item.type, item.label)}`}>
-                  {getLocalizedBadge(item.label, language)}
-                </span>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

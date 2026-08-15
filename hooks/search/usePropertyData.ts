@@ -14,7 +14,11 @@ type ApiProperty = PropertyCardProps;
  * 🛡️ Fortress-Ready Data Hook
  * Performs server-side searching, filtering, and pagination.
  */
-export function usePropertyData(initialProperties?: ApiProperty[], initialFacets?: PropertyFacets | null) {
+export function usePropertyData(
+  initialProperties?: ApiProperty[],
+  initialFacets?: PropertyFacets | null,
+  activeQueryString?: string
+) {
   const { t } = useLanguage();
   const searchParams = useSearchParams();
   const [properties, setProperties] = useState<ApiProperty[]>(initialProperties || []);
@@ -27,10 +31,13 @@ export function usePropertyData(initialProperties?: ApiProperty[], initialFacets
   const abortControllerRef = useRef<AbortController | null>(null);
   const isFirstLoadRef = useRef(true);
 
-  // Reset limit when search parameters change
+  // Effective query string (active state query or URL search params)
+  const effectiveQuery = activeQueryString !== undefined ? activeQueryString : searchParams.toString();
+
+  // Reset limit when query changes
   useEffect(() => {
     setLimit(36);
-  }, [searchParams]);
+  }, [effectiveQuery]);
 
   useEffect(() => {
     if (isFirstLoadRef.current && initialProperties && initialProperties.length > 0 && limit === 36) {
@@ -59,7 +66,7 @@ export function usePropertyData(initialProperties?: ApiProperty[], initialFacets
           setIsRefetching(true);
         }
 
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(effectiveQuery);
         params.set("limit", String(limit));
         const query = params.toString();
         const url = `/api/public/properties${query ? `?${query}` : ""}`;
@@ -133,7 +140,7 @@ export function usePropertyData(initialProperties?: ApiProperty[], initialFacets
         }
       }
     };
-  }, [searchParams, limit, t]);
+  }, [effectiveQuery, limit, t]);
 
   const loadMoreProperties = () => {
     setLimit((prev) => prev + 36);

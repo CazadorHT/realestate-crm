@@ -92,7 +92,7 @@ export function LanguageProvider({
 
     const pathname = window.location.pathname;
     const dict = dictionaries[language];
-    const siteName = "VCC ASSET";
+    const siteName = "VC Connect Asset";
 
     if (pathname === "/" || pathname === "") {
       const homeTitle = getNestedValue(dict, "metadata.home_title");
@@ -118,7 +118,10 @@ export function LanguageProvider({
         ? `${l1} ${l2 || ""} | ${siteName}`
         : getNestedValue(dict, "metadata.office_for_rent_title")?.replace("{siteName}", siteName) || document.title;
     } else if (pathname === "/properties" || pathname.startsWith("/properties/")) {
-      const propTitle = getNestedValue(dict, "metadata.properties_title") || getNestedValue(dict, "metadata.default_title");
+      const propTitle =
+        getNestedValue(dict, "metadata.search_title") ||
+        getNestedValue(dict, "metadata.properties_title") ||
+        getNestedValue(dict, "metadata.default_title");
       if (propTitle && !propTitle.includes("metadata.")) {
         document.title = propTitle.replace("{siteName}", siteName);
       }
@@ -137,6 +140,9 @@ export function LanguageProvider({
       const projectsTitle = getNestedValue(dict, "metadata.projects_title") || `${getNestedValue(dict, "nav.projects") || "Projects"} | ${siteName}`;
       if (projectsTitle) document.title = projectsTitle.replace("{siteName}", siteName);
     }
+
+    // Synchronize html lang attribute dynamically
+    document.documentElement.lang = language;
   }, [language, mounted]);
 
 

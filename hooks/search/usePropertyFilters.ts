@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 export interface DefaultPropertyFilters {
@@ -178,13 +178,15 @@ export function usePropertyFilters(
     // Only update URL if search string actually changed
     if (newSearch !== currentSearch) {
       const url = `${currentPath}${newSearch}`;
-      router.replace(url, { scroll: false });
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", url);
+      }
     }
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
     companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, minSize, maxSize, transitStation,
-    basePath, router
+    basePath
   ]);
 
   const clearFilters = useCallback(() => {
@@ -201,15 +203,45 @@ export function usePropertyFilters(
     setNearTrain(false);
     setPetFriendly(!!defaultFilters?.petFriendly);
     setFullyFurnished(false);
-    setBedrooms("ALL");
     setIsForeigner(false);
     setCompanyRegistered(false);
     setIsHotDeal(false);
     setAllowAirbnb(false);
     setLuxuryVilla(!!defaultFilters?.luxuryVilla);
-    setTransitStation("");
+    setBedrooms("ALL");
+    setTransitStation(defaultTransitStation);
     setAiInsight(null);
-  }, [defaultFilters]);
+  }, [defaultFilters, defaultTransitStation]);
+
+  // Compute current serialized query string for instant data fetching
+  const queryString = useMemo(() => {
+    const p = new URLSearchParams();
+    if (keyword) p.set("keyword", keyword);
+    if (type !== "ALL") p.set("property_type", type);
+    if (listingType !== "ALL") p.set("listing_type", listingType);
+    if (minPrice) p.set("min_price", minPrice);
+    if (maxPrice) p.set("max_price", maxPrice);
+    if (area !== "ALL") p.set("popular_area", area);
+    if (province !== "ALL") p.set("province", province);
+    if (nearTrain) p.set("near_train", "true");
+    if (petFriendly) p.set("pet_friendly", "true");
+    if (fullyFurnished) p.set("fully_furnished", "true");
+    if (bedrooms !== "ALL") p.set("bedrooms", bedrooms);
+    if (isForeigner) p.set("foreigner", "true");
+    if (companyRegistered) p.set("company_registered", "true");
+    if (isHotDeal) p.set("hot_deal", "true");
+    if (allowAirbnb) p.set("airbnb", "true");
+    if (luxuryVilla) p.set("luxury_villa", "true");
+    if (transitStation) p.set("transit_station", transitStation);
+    if (minSize) p.set("min_size", minSize);
+    if (maxSize) p.set("max_size", maxSize);
+    if (priceType && (minPrice || maxPrice)) p.set("price_type", priceType);
+    return p.toString();
+  }, [
+    keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
+    nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
+    companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, minSize, maxSize, transitStation
+  ]);
 
   /**
    * [S-Tier] Bulk Filter Update
@@ -260,5 +292,6 @@ export function usePropertyFilters(
     aiInsight, setAiInsight,
     clearFilters,
     setBulkFilters,
+    queryString,
   };
 }

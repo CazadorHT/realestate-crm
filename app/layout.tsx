@@ -226,12 +226,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Pure Static RootLayout (0 Dynamic Cookies) to ensure 100% Cloudflare Edge Caching & Zero Fast Origin Egress
   const lang = "th";
   const settings = await getSiteSettings();
   const gtmId = settings.google_tag_manager_enabled ? settings.google_tag_manager_id : null;
 
   return (
-    <html lang={lang}>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         {/* Resource Hinting: S-Tier Performance Optimization */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
