@@ -55,6 +55,7 @@ import { PropertyFormStepper } from "./property-form/components/PropertyFormStep
 import { PropertyFormNavigation } from "./property-form/components/PropertyFormNavigation";
 import { ErrorSummary } from "./property-form/components/ErrorSummary";
 import { TikTokPostButton } from "./components/TikTokPostButton";
+import { SocialPostDialog } from "./components/SocialPostDialog";
 import { FaTiktok } from "react-icons/fa";
 import { TopLoader } from "@/components/ui/top-loader";
 import { AiReviewBanner } from "@/components/shared/AiReviewBanner";
@@ -242,7 +243,12 @@ export function PropertyForm({
   const [shareStatus, setShareStatus] = React.useState<
     Record<string, { loading: boolean; success: boolean; url?: string | null }>
   >({});
-  const [isNavigating, setIsNavigating] = React.useState(false);
+  const [isNavigatingWeb, setIsNavigatingWeb] = React.useState(false);
+  const [isNavigatingBack, setIsNavigatingBack] = React.useState(false);
+  const [isSocialDialogOpen, setIsSocialDialogOpen] = React.useState(false);
+  const [selectedSocialPlatform, setSelectedSocialPlatform] = React.useState<
+    "FACEBOOK" | "INSTAGRAM" | "LINE" | "TIKTOK"
+  >("FACEBOOK");
 
   // Redirect if not staff
   const [currentStep, setCurrentStep] = React.useState(1);
@@ -1090,10 +1096,10 @@ export function PropertyForm({
           <Button
             variant="outline"
             className="w-full justify-start gap-4 h-16 text-base font-medium border-slate-200 rounded-2xl hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group"
-            disabled={successData?.status !== "ACTIVE" || isNavigating}
+            disabled={successData?.status !== "ACTIVE" || isNavigatingWeb || isNavigatingBack}
             onClick={() => {
               if (successData?.slug) {
-                setIsNavigating(true);
+                setIsNavigatingWeb(true);
                 window.open(`/properties/${successData.slug}`, "_blank");
                 router.push("/protected/properties?success=true#table");
                 router.refresh();
@@ -1103,7 +1109,7 @@ export function PropertyForm({
             }}
           >
             <div className="bg-slate-100 p-2 rounded-xl group-hover:bg-emerald-100 group-hover:text-emerald-600! transition-colors">
-              {isNavigating ? (
+              {isNavigatingWeb ? (
                 <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
               ) : (
                 <ExternalLink className="w-5 h-5" />
@@ -1114,22 +1120,22 @@ export function PropertyForm({
               <span className="text-[11px] font-normal text-slate-500">
                 {successData?.status !== "ACTIVE"
                   ? "ปุ่มนี้เปิดได้เฉพาะทรัพย์ที่มีสถานะใช้งาน (Active) เท่านั้น"
-                  : "เปิดแท็บใหม่เพื่อดูตัวอย่าง"}
+                  : "เปิดแท็บใหม่เพื่อดูตัวอย่าง และกลับหน้ารายการ"}
               </span>
             </div>
           </Button>
 
           <Button
             className="w-full justify-start gap-4 h-16 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-2xl shadow-lg shadow-slate-200"
-            disabled={isNavigating}
+            disabled={isNavigatingBack || isNavigatingWeb}
             onClick={() => {
-              setIsNavigating(true);
+              setIsNavigatingBack(true);
               router.push("/protected/properties?success=true#table");
               router.refresh();
             }}
           >
             <div className="bg-white/10 p-2 rounded-xl">
-              {isNavigating ? (
+              {isNavigatingBack ? (
                 <Loader2 className="w-5 h-5 animate-spin text-white" />
               ) : (
                 <List className="w-5 h-5 text-white" />
@@ -1158,60 +1164,10 @@ export function PropertyForm({
                     : "text-blue-600! border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50!",
                 )}
                 disabled={shareStatus["FACEBOOK"]?.loading}
-                onClick={async () => {
+                onClick={() => {
                   if (!successData?.id) return;
-                  setShareStatus((prev) => ({
-                    ...prev,
-                    FACEBOOK: { loading: true, success: false },
-                  }));
-                  try {
-                    const res = await postPropertyToMetaAction(successData.id);
-                    if (res.success) {
-                      setShareStatus((prev) => ({
-                        ...prev,
-                        FACEBOOK: {
-                          loading: false,
-                          success: true,
-                          url: res.data?.id
-                            ? `https://facebook.com/${res.data.id}`
-                            : null,
-                        },
-                      }));
-                      toast.success("โพสต์ลง Facebook สำเร็จ!");
-                      router.refresh();
-                    } else {
-                      setShareStatus((prev) => ({
-                        ...prev,
-                        FACEBOOK: { loading: false, success: false },
-                      }));
-                      toast.error(res.message || "เกิดข้อผิดพลาด");
-                    }
-                  } catch (error: any) {
-                    console.error("[PropertyForm] Facebook share error:", error);
-                    const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
-                    
-                    if (errorMessage.toLowerCase().includes("unexpected response") || errorMessage.toLowerCase().includes("server action")) {
-                      // Fallback: Update database timestamp directly via a fast, non-timeout query
-                      try {
-                        await updateSocialPostTimestampAction(successData.id, "FACEBOOK");
-                      } catch (dbErr) {
-                        console.error("[PropertyForm] Failed to update Facebook post timestamp fallback:", dbErr);
-                      }
-                      
-                      setShareStatus((prev) => ({
-                        ...prev,
-                        FACEBOOK: { loading: false, success: true, url: null },
-                      }));
-                      toast.success("ส่งข้อมูลไปยัง Facebook สำเร็จแล้ว (กำลังอัปโหลดรูปภาพบนเพจ) ✨");
-                      router.refresh();
-                    } else {
-                      setShareStatus((prev) => ({
-                        ...prev,
-                        FACEBOOK: { loading: false, success: false },
-                      }));
-                      toast.error(`เกิดข้อผิดพลาด: ${errorMessage}`);
-                    }
-                  }
+                  setSelectedSocialPlatform("FACEBOOK");
+                  setIsSocialDialogOpen(true);
                 }}
               >
                 {shareStatus["FACEBOOK"]?.loading ? (
@@ -1239,55 +1195,44 @@ export function PropertyForm({
               </Button>
 
               {/* TikTok */}
-              <TikTokPostButton
-                propertyId={successData?.id || ""}
-                onLoading={(loading) =>
-                  setShareStatus((prev) => ({
-                    ...prev,
-                    TIKTOK: { ...prev["TIKTOK"], loading },
-                  }))
-                }
-                onSuccess={(url) =>
-                  setShareStatus((prev) => ({
-                    ...prev,
-                    TIKTOK: { loading: false, success: true, url },
-                  }))
-                }
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
+                  shareStatus["TIKTOK"]?.success
+                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50!"
+                    : "text-slate-900! border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50!",
+                )}
+                disabled={shareStatus["TIKTOK"]?.loading}
+                onClick={() => {
+                  if (!successData?.id) return;
+                  setSelectedSocialPlatform("TIKTOK");
+                  setIsSocialDialogOpen(true);
+                }}
               >
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
-                    shareStatus["TIKTOK"]?.success
-                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50!"
-                      : "text-slate-900! border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50!",
+                {shareStatus["TIKTOK"]?.loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : shareStatus["TIKTOK"]?.success ? (
+                  <CheckCircle2 className="w-6 h-6" />
+                ) : (
+                  <FaTiktok className="w-6 h-6" />
+                )}
+                <span className="leading-tight">
+                  {shareStatus["TIKTOK"]?.success ? "แชร์แล้ว" : "TikTok"}
+                </span>
+                {shareStatus["TIKTOK"]?.success &&
+                  shareStatus["TIKTOK"]?.url && (
+                    <div
+                      className="absolute -top-1 -right-1 p-1 bg-emerald-500 rounded-full text-white shadow-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(shareStatus["TIKTOK"]!.url!, "_blank");
+                      }}
+                    >
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </div>
                   )}
-                  disabled={shareStatus["TIKTOK"]?.loading}
-                >
-                  {shareStatus["TIKTOK"]?.loading ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : shareStatus["TIKTOK"]?.success ? (
-                    <CheckCircle2 className="w-6 h-6" />
-                  ) : (
-                    <FaTiktok className="w-6 h-6" />
-                  )}
-                  <span className="leading-tight">
-                    {shareStatus["TIKTOK"]?.success ? "แชร์แล้ว" : "TikTok"}
-                  </span>
-                  {shareStatus["TIKTOK"]?.success &&
-                    shareStatus["TIKTOK"]?.url && (
-                      <div
-                        className="absolute -top-1 -right-1 p-1 bg-emerald-500 rounded-full text-white shadow-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(shareStatus["TIKTOK"]!.url!, "_blank");
-                        }}
-                      >
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </div>
-                    )}
-                </Button>
-              </TikTokPostButton>
+              </Button>
 
               {/* Instagram */}
               <Button
@@ -1299,57 +1244,10 @@ export function PropertyForm({
                     : "text-pink-600! border-slate-200 bg-white hover:border-pink-200 hover:bg-pink-50/50!",
                 )}
                 disabled={shareStatus["INSTAGRAM"]?.loading}
-                onClick={async () => {
+                onClick={() => {
                   if (!successData?.id) return;
-                  setShareStatus((prev) => ({
-                    ...prev,
-                    INSTAGRAM: { loading: true, success: false },
-                  }));
-                  try {
-                    const res = await postPropertyToMetaAction(
-                      successData.id,
-                      "INSTAGRAM",
-                    );
-                    if (res.success) {
-                      setShareStatus((prev) => ({
-                        ...prev,
-                        INSTAGRAM: { loading: false, success: true, url: null },
-                      }));
-                      toast.success("โพสต์ลง Instagram สำเร็จ!");
-                      router.refresh();
-                    } else {
-                      setShareStatus((prev) => ({
-                        ...prev,
-                        INSTAGRAM: { loading: false, success: false },
-                      }));
-                      toast.error(res.message);
-                    }
-                  } catch (error: any) {
-                    console.error("[PropertyForm] Instagram share error:", error);
-                    const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
-                    
-                    if (errorMessage.toLowerCase().includes("unexpected response") || errorMessage.toLowerCase().includes("server action")) {
-                      // Fallback: Update database timestamp directly via a fast, non-timeout query
-                      try {
-                        await updateSocialPostTimestampAction(successData.id, "INSTAGRAM");
-                      } catch (dbErr) {
-                        console.error("[PropertyForm] Failed to update Instagram post timestamp fallback:", dbErr);
-                      }
-                      
-                      setShareStatus((prev) => ({
-                        ...prev,
-                        INSTAGRAM: { loading: false, success: true, url: null },
-                      }));
-                      toast.success("ส่งข้อมูลไปยัง Instagram สำเร็จแล้ว (กำลังอัปโหลดรูปภาพบนเพจ) ✨");
-                      router.refresh();
-                    } else {
-                      setShareStatus((prev) => ({
-                        ...prev,
-                        INSTAGRAM: { loading: false, success: false },
-                      }));
-                      toast.error(`เกิดข้อผิดพลาด: ${errorMessage}`);
-                    }
-                  }
+                  setSelectedSocialPlatform("INSTAGRAM");
+                  setIsSocialDialogOpen(true);
                 }}
               >
                 {shareStatus["INSTAGRAM"]?.loading ? (
@@ -1374,26 +1272,10 @@ export function PropertyForm({
                     : "text-emerald-600! border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/50!",
                 )}
                 disabled={shareStatus["LINE"]?.loading}
-                onClick={async () => {
+                onClick={() => {
                   if (!successData?.id) return;
-                  setShareStatus((prev) => ({
-                    ...prev,
-                    LINE: { loading: true, success: false },
-                  }));
-                  const res = await postPropertyToLineAction(successData.id);
-                  if (res.success) {
-                    setShareStatus((prev) => ({
-                      ...prev,
-                      LINE: { loading: false, success: true, url: null },
-                    }));
-                    toast.success("บรอดแคสต์ Line OA สำเร็จ!");
-                  } else {
-                    setShareStatus((prev) => ({
-                      ...prev,
-                      LINE: { loading: false, success: false },
-                    }));
-                    toast.error(res.message || "เกิดข้อผิดพลาด");
-                  }
+                  setSelectedSocialPlatform("LINE");
+                  setIsSocialDialogOpen(true);
                 }}
               >
                 {shareStatus["LINE"]?.loading ? (
@@ -1411,6 +1293,22 @@ export function PropertyForm({
           </div>
         </div>
       </ResponsiveDialog>
+
+      {successData && (
+        <SocialPostDialog
+          propertyId={successData.id}
+          propertyTitle={successData.title}
+          platform={selectedSocialPlatform}
+          isOpen={isSocialDialogOpen}
+          onOpenChange={setIsSocialDialogOpen}
+          onSuccess={() => {
+            setShareStatus((prev) => ({
+              ...prev,
+              [selectedSocialPlatform]: { loading: false, success: true },
+            }));
+          }}
+        />
+      )}
     </div>
   );
 }

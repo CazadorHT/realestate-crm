@@ -61,7 +61,7 @@ export function PropertyImageUploader({
   const [watermarkPosition, setWatermarkPosition] = useState<
     "southeast" | "center" | "southwest" | "northeast" | "northwest"
   >("southeast");
-  const [watermarkScale, setWatermarkScale] = useState<"sm" | "md" | "lg">("md");
+  const [watermarkScale, setWatermarkScale] = useState<"sm" | "md" | "lg">("sm");
   const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
 
   const [images, setImages] = useState<ImageItem[]>(() => {

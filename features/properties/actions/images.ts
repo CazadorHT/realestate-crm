@@ -77,7 +77,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
     const watermarkPositionRaw =
       (formData.get("watermarkPosition") as string | null) || "southeast";
     const watermarkScaleRaw =
-      (formData.get("watermarkScale") as string | null) || "md";
+      (formData.get("watermarkScale") as string | null) || "sm";
 
     const validPositions = [
       "southeast",
