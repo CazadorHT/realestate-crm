@@ -115,21 +115,55 @@ export async function postPropertyToTikTokAction(
       })
       .filter(Boolean) as string[];
 
-    // TikTok Photo Mode API strictly requires JPEG (.jpg / .jpeg) or PNG images.
-    // Convert WebP images to optimized JPEG via proxy endpoint hosted on verified domain vccasset.com
-    const baseUrl = "https://vccasset.com";
-    const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qaihjhvdwfafawezxivb.supabase.co";
-    
-    const imagesToPost = rawImages.map((url, idx) => {
-      // Ensure target URL uses Supabase endpoint for backend proxy fetching
-      let targetSourceUrl = url;
-      if (targetSourceUrl.includes("cdn.vccasset.com")) {
-        targetSourceUrl = targetSourceUrl.replace(/https?:\/\/cdn\.vccasset\.com/, supabaseBase);
-      }
-      return `${baseUrl}/api/proxy/image?url=${encodeURIComponent(targetSourceUrl)}&ext=.jpg&f=image_${idx + 1}.jpg`;
-    });
+    // TikTok Photo Mode API strictly requires direct JPEG (.jpg / .jpeg) or PNG images hosted on verified domain.
+    // Convert WebP images to optimized JPEG and upload directly to Supabase Storage CDN (cdn.vccasset.com)
+    const sharp = (await import("sharp")).default;
+    const imagesToPost: string[] = [];
 
-    console.log(`[TikTok Post] Sending ${imagesToPost.length} JPEG-compliant images via vccasset.com to TikTok:`, imagesToPost);
+    for (let i = 0; i < rawImages.length; i++) {
+      const srcUrl = rawImages[i];
+      try {
+        if (!/\.webp(\?|$)/i.test(srcUrl)) {
+          // Already JPEG/PNG
+          imagesToPost.push(srcUrl);
+          continue;
+        }
+
+        // Fetch original WebP
+        const fetchRes = await fetch(srcUrl);
+        if (!fetchRes.ok) continue;
+        const webpBuf = await fetchRes.arrayBuffer();
+
+        // Convert to standard JPEG (1080x1350 vertical safe fit)
+        const jpegBuf = await sharp(Buffer.from(webpBuf))
+          .resize(1080, 1350, {
+            fit: 'contain',
+            background: { r: 255, g: 255, b: 255, alpha: 1 }
+          })
+          .flatten({ background: { r: 255, g: 255, b: 255 } })
+          .jpeg({ quality: 88 })
+          .toBuffer();
+
+        // Upload as a real static .jpg file to property-images bucket
+        const tempPath = `tiktok-cache/${propertyId}/img_${i + 1}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from("property-images")
+          .upload(tempPath, jpegBuf, {
+            contentType: "image/jpeg",
+            upsert: true
+          });
+
+        if (!uploadError) {
+          imagesToPost.push(`https://cdn.vccasset.com/storage/v1/object/public/property-images/${tempPath}`);
+        } else {
+          console.error("[TikTok Image Upload Error]:", uploadError);
+        }
+      } catch (convErr) {
+        console.error(`[TikTok Image Convert Error for ${srcUrl}]:`, convErr);
+      }
+    }
+
+    console.log(`[TikTok Post] Sending ${imagesToPost.length} direct CDN JPEG images to TikTok:`, imagesToPost);
 
     // 5. Verify image accessibility
     if (imagesToPost.length === 0) {
