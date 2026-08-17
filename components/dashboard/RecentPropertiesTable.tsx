@@ -78,9 +78,12 @@ export function RecentPropertiesTable({
   const view = searchParams.get("view") || (isAdminOrManager ? "company" : "personal");
 
   const handleViewChange = (newView: string) => {
+    if (typeof window !== "undefined" && window.location.pathname !== "/protected") {
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.set("view", newView);
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   return (
@@ -410,6 +413,8 @@ export function RecentPropertiesTable({
                   </TableCell>
                   <TableCell className="px-2 py-4">
                     <SocialStatusBadges
+                      propertyId={property.id}
+                      propertyTitle={property.title}
                       facebookAt={property.posted_to_facebook_at}
                       instagramAt={property.posted_to_instagram_at}
                       lineAt={property.posted_to_line_at}
@@ -609,6 +614,8 @@ export function RecentPropertiesTable({
                         {property.view_count || 0}
                       </div>
                       <SocialStatusBadges
+                        propertyId={property.id}
+                        propertyTitle={property.title}
                         facebookAt={property.posted_to_facebook_at}
                         instagramAt={property.posted_to_instagram_at}
                         lineAt={property.posted_to_line_at}

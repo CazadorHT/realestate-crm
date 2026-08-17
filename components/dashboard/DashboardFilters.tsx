@@ -89,7 +89,14 @@ export function DashboardFilters({
       });
       
       startTransition(() => {
-        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+        // 🛡️ Route Guard: ป้องกันไม่ให้ดีดกลับถ้าผู้ใช้กดคลิกหนีไปหน้าอื่นแล้ว
+        if (typeof window !== "undefined" && window.location.pathname !== "/protected") {
+          setPendingFilters({});
+          setIsUpdating(false);
+          return;
+        }
+
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
         setPendingFilters({}); // Clear pending after push
         setIsUpdating(false);
         setTimeout(() => window.dispatchEvent(new CustomEvent("dashboard:updated")), 50);

@@ -4,6 +4,7 @@ import { getSystemConfig } from "@/lib/actions/system-config";
 import { decrypt } from "@/lib/crypto";
 import { PropertyTableData, PropertyStatus, PropertyType, ListingType } from "../types";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { cache } from "react";
 
 interface TableQueryResult {
   id: string;
@@ -39,10 +40,11 @@ interface TableQueryResult {
   agent: { full_name: string | null; role: string | null; email: string | null }[] | { full_name: string | null; role: string | null; email: string | null } | null;
   tenant_id: string | null;
   tenants: { name: string } | null;
+  projects: { name: { th?: string; en?: string } | string | null } | null;
   requires_ai_review: boolean | null;
 }
 
-export async function getPropertiesTableData(params: {
+export const getPropertiesTableData = cache(async (params: {
   q?: string;
   status?: string;
   type?: string;
@@ -67,7 +69,7 @@ export async function getPropertiesTableData(params: {
   tableData: PropertyTableData[];
   count: number;
   filterMetadata: Partial<TableQueryResult>[];
-}> {
+}> => {
   const { supabase, role, tenantId, user } = await requireAuthContext();
   assertStaff(role);
 
@@ -113,7 +115,7 @@ export async function getPropertiesTableData(params: {
       sold_units, posted_to_facebook_at, posted_to_instagram_at, 
       posted_to_line_at, posted_to_tiktok_at, assigned_to, created_by,
       agent:profiles(full_name, role, email),
-      tenant_id, tenants(name), requires_ai_review
+      tenant_id, tenants(name), projects(name), requires_ai_review
       `,
       {
         count: "exact",
@@ -140,12 +142,20 @@ export async function getPropertiesTableData(params: {
       .replace(/\s+/g, "%");
     const isHexFragment = /^[0-9a-fA-F-]{4,}$/.test(searchTerm);
 
-    // [AGENT LOOKUP] - Pre-fetch matching agent IDs for precise filtering
-    const { data: matchingAgents } = await supabase
-      .from("profiles")
-      .select("id")
-      .ilike("full_name", `%${fuzzyQuery}%`);
-    const agentIds = matchingAgents?.map(a => a.id) || [];
+    // [AGENT & PROJECT LOOKUP] - Pre-fetch matching agent IDs and project IDs for precise filtering
+    const [matchingAgentsResult, matchingProjectsResult] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id")
+        .ilike("full_name", `%${fuzzyQuery}%`),
+      supabase
+        .from("projects")
+        .select("id")
+        .or(`name->>th.ilike.%${fuzzyQuery}%,name->>en.ilike.%${fuzzyQuery}%,slug.ilike.%${fuzzyQuery}%`),
+    ]);
+
+    const agentIds = matchingAgentsResult.data?.map((a) => a.id) || [];
+    const projectIds = matchingProjectsResult.data?.map((p) => p.id) || [];
     
     // 1. Text Search Conditions (Base OR)
     const textConditions = [
@@ -158,7 +168,10 @@ export async function getPropertiesTableData(params: {
     ];
     if (isHexFragment) textConditions.unshift(`id.ilike.%${searchTerm}%`);
     if (agentIds.length > 0) {
-      textConditions.push(`assigned_to.in.(${agentIds.map(id => `"${id}"`).join(",")})`);
+      textConditions.push(`assigned_to.in.(${agentIds.map((id) => `"${id}"`).join(",")})`);
+    }
+    if (projectIds.length > 0) {
+      textConditions.push(`project_id.in.(${projectIds.map((id) => `"${id}"`).join(",")})`);
     }
 
     // 2. Intelligent Mapping Conditions
@@ -471,6 +484,14 @@ export async function getPropertiesTableData(params: {
       created_by: (p as any).created_by || null,
       tenant_id: p.tenant_id,
       tenant_name: p.tenants?.name || null,
+      project_name: (() => {
+        if (!p.projects?.name) return null;
+        if (typeof p.projects.name === "string") return p.projects.name;
+        if (typeof p.projects.name === "object") {
+          return (p.projects.name as any).th || (p.projects.name as any).en || null;
+        }
+        return null;
+      })(),
       province: p.province,
       district: p.district,
       subdistrict: p.subdistrict,
@@ -482,4 +503,4 @@ export async function getPropertiesTableData(params: {
     count: count || 0,
     filterMetadata: (filterMetadataResult.data as unknown as Partial<TableQueryResult>[]) || [],
   };
-}
+});

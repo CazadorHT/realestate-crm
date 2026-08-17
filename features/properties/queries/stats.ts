@@ -2,10 +2,11 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { getScopedRevenueClient } from "@/features/deals/logic/scoped-client";
 import { PropertyStats } from "./types";
+import { cache } from "react";
 
-export async function getPropertiesDashboardStatsQuery(
+export const getPropertiesDashboardStatsQuery = cache(async (
   allBranches?: string,
-): Promise<PropertyStats> {
+): Promise<PropertyStats> => {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
@@ -141,7 +142,7 @@ export async function getPropertiesDashboardStatsQuery(
     byStatus: Array.from(statusMap.entries()).map(([name, value]) => ({ name, value })),
     aiReviewCount: aiReviewCount || 0,
   };
-}
+});
 
 /**
  * ⚡ FAST COUNT: Returns only the total number of properties for the header.

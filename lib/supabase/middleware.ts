@@ -1,8 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-// 🚀 In-memory cache for user active status (5-minute TTL) to prevent DB query spam in middleware
-const activeUserCache = new Map<string, boolean>();
+// 🚀 In-memory cache for user active status and role (5-minute TTL) to prevent DB query spam in middleware
+const activeUserCache = new Map<string, { isActive: boolean; role: string }>();
 
 /**
  * 🔑 Auth MiddleWare Wrapper: Refreshes session and returns User context
@@ -67,57 +67,52 @@ export async function updateSession(request: NextRequest) {
     };
   }
 
-  // 🛡️ [PHASE 1.2] Block inactive users (Pending Approval) with 5-minute In-Memory Cache
+  // 🚀 In-memory cache for user identity status (5-minute TTL) to prevent DB query spam in middleware
+  // 🛡️ [PHASE 1.2 & 1.5] Single-query User Status & Admin Route Protection with 5-minute Memory Cache
   if (user && request.nextUrl.pathname.startsWith("/protected")) {
     const isPendingPage = request.nextUrl.pathname.startsWith("/auth/pending");
-    if (!isPendingPage) {
-      const now = Date.now();
-      const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+    const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-      let isActive = activeUserCache.get(user.id);
+    let userState = activeUserCache.get(user.id);
 
-      if (isActive === undefined) {
-        const { data: identity } = await supabase
-          .from("identities_v3")
-          .select("is_active")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        isActive = identity ? Boolean(identity.is_active) : true;
-        activeUserCache.set(user.id, isActive);
-
-        // Auto clean memory cache after TTL
-        setTimeout(() => activeUserCache.delete(user.id), CACHE_TTL_MS);
-      }
-
-      if (!isActive) {
-        console.log(
-          "[AUTH DEBUG] User is not active (pending approval), redirecting to pending page:",
-          user.id
-        );
-        return {
-          response: NextResponse.redirect(new URL("/auth/pending", request.url)),
-          user,
-        };
-      }
-    }
-  }
-
-  // 1.5 🛡️ Admin Route Access Control: Protect restricted admin paths from AGENT roles
-  if (user && request.nextUrl.pathname.startsWith("/protected/admin")) {
-    const isAllowedPath =
-      request.nextUrl.pathname.startsWith("/protected/admin/popular-areas") ||
-      request.nextUrl.pathname.startsWith("/protected/admin/master-data");
-
-    if (!isAllowedPath) {
-      // Query the role from DB to be certain of the role
+    if (!userState) {
       const { data: identity } = await supabase
         .from("identities_v3")
-        .select("role")
+        .select("is_active, role")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (identity?.role === "AGENT") {
+      userState = {
+        isActive: identity ? Boolean(identity.is_active) : true,
+        role: identity?.role || (user.app_metadata?.role as string) || "AGENT",
+      };
+
+      // 🛡️ Smart Cache: แคชเฉพาะ User ที่ Active แล้ว (5 นาที)
+      // ส่วน User ที่ยัง Pending (isActive: false) จะไม่จำแคชค้างไว้ เพื่อให้เมื่อได้รับอนุมัติแล้ว สามารถเข้าสู่ระบบได้ทันที!
+      if (userState.isActive) {
+        activeUserCache.set(user.id, userState);
+        setTimeout(() => activeUserCache.delete(user.id), CACHE_TTL_MS);
+      }
+    }
+
+    if (!isPendingPage && !userState.isActive) {
+      console.log(
+        "[AUTH DEBUG] User is not active (pending approval), redirecting to pending page:",
+        user.id
+      );
+      return {
+        response: NextResponse.redirect(new URL("/auth/pending", request.url)),
+        user,
+      };
+    }
+
+    // 1.5 🛡️ Admin Route Access Control: Protect restricted admin paths from AGENT roles
+    if (request.nextUrl.pathname.startsWith("/protected/admin")) {
+      const isAllowedPath =
+        request.nextUrl.pathname.startsWith("/protected/admin/popular-areas") ||
+        request.nextUrl.pathname.startsWith("/protected/admin/master-data");
+
+      if (!isAllowedPath && userState.role === "AGENT") {
         console.log(
           "[AUTH DEBUG] AGENT role blocked from accessing admin path:",
           request.nextUrl.pathname,

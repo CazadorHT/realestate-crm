@@ -38,6 +38,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info } from "lucide-react";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { useTenant } from "@/components/providers/TenantProvider";
 
 export function PropertyImageUploader({
   sessionId,
@@ -56,6 +57,9 @@ export function PropertyImageUploader({
     description: string;
     errors?: string[];
   } | null>(null);
+
+  const { activeTenant } = useTenant();
+  const currentTenantId = activeTenant?.id && activeTenant.id !== "ALL" ? activeTenant.id : undefined;
 
   const [isWatermarkEnabled, setIsWatermarkEnabled] = useState(true);
   const [watermarkPosition, setWatermarkPosition] = useState<
@@ -344,6 +348,9 @@ export function PropertyImageUploader({
           const formData = new FormData();
           formData.append("file", fileToUpload);
           formData.append("sessionId", sessionId);
+          if (currentTenantId) {
+            formData.append("tenantId", currentTenantId);
+          }
           formData.append("watermark", isWatermarkEnabled ? "true" : "false");
           formData.append("watermarkPosition", watermarkPosition);
           formData.append("watermarkScale", watermarkScale);

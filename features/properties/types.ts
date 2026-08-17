@@ -157,6 +157,7 @@ export interface PropertyTableData {
   posted_to_tiktok_at?: string | null;
   tenant_id?: string | null;
   tenant_name?: string | null;
+  project_name?: string | null;
   version?: number;
   ai_reviewed_at?: string | null;
   ai_reviewed_by?: string | null;

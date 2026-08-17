@@ -66,7 +66,7 @@ export function PropertyTypeSection({
         name="property_type"
         render={({ field }) => (
           <FormItem>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-10 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-11 gap-3 sm:gap-4">
               {PROPERTY_TYPE_ORDER.map((type) => {
                 const Icon = PROPERTY_TYPE_ICONS[type];
                 const gradient = PROPERTY_TYPE_GRADIENTS[type];

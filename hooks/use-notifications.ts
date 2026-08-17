@@ -25,20 +25,52 @@ export interface GroupedNotification extends DBNotification {
   isGroup?: boolean;
 }
 
+// 🚀 Global client cache for notifications to avoid re-fetching on every page navigation
+let globalNotificationsCache: {
+  tenantId?: string;
+  data: DBNotification[];
+  cachedAt: number;
+} | null = null;
+const NOTIFICATION_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes (Realtime WebSocket handles instant updates)
+
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<DBNotification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { activeTenant } = useTenant();
+  const tenantId = activeTenant?.id === "ALL" ? undefined : activeTenant?.id;
+
+  const [notifications, setNotifications] = useState<DBNotification[]>(() => {
+    if (globalNotificationsCache && globalNotificationsCache.tenantId === tenantId) {
+      return globalNotificationsCache.data;
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (globalNotificationsCache && globalNotificationsCache.tenantId === tenantId) {
+      return false;
+    }
+    return true;
+  });
   const [userId, setUserId] = useState<string | null>(null);
   const supabase = createClient();
   const { subscribe, status } = useRealtime();
-  const { activeTenant } = useTenant();
-  const tenantId = activeTenant?.id === "ALL" ? undefined : activeTenant?.id;
 
   const lastFetchRef = useRef<number>(0);
   const FETCH_THROTTLE = 3000; // 3 seconds
 
   const fetchNotifications = useCallback(async (force = false) => {
     const now = Date.now();
+    
+    // Use cached data if available and fresh, unless forced
+    if (
+      !force &&
+      globalNotificationsCache &&
+      globalNotificationsCache.tenantId === tenantId &&
+      now - globalNotificationsCache.cachedAt < NOTIFICATION_CACHE_TTL_MS
+    ) {
+      setNotifications(globalNotificationsCache.data);
+      setLoading(false);
+      return;
+    }
+
     if (!force && now - lastFetchRef.current < FETCH_THROTTLE) {
       return;
     }
@@ -48,7 +80,13 @@ export function useNotifications() {
     try {
       const data = await getNotificationsAction(tenantId);
       if (Array.isArray(data)) {
-        setNotifications(data as DBNotification[]);
+        const typedData = data as DBNotification[];
+        globalNotificationsCache = {
+          tenantId,
+          data: typedData,
+          cachedAt: Date.now(),
+        };
+        setNotifications(typedData);
       }
     } catch (error: unknown) {
       // Avoid logging full Error objects in production-like environments if they are too verbose

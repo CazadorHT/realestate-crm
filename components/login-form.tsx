@@ -147,33 +147,35 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
           throw error;
         }
 
-        // 🛡️ Record Login Activity in Profile
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser) {
-           await supabase.from("profiles").update({
-             last_login_at: new Date().toISOString(),
-             last_ip: "CLIENT_SIDE_FETCH"
-           }).eq("id", authUser.id);
-        }
+        // 🚀 Instant Transition: Navigate to CRM immediately without waiting for auxiliary DB tasks
+        router.replace("/protected");
 
-        try {
-          await logActivityAction("LOGIN", "user", undefined, {
-            email: data.email,
-            remember: data.rememberMe
-          });
+        // 🛡️ Background Auxiliary Tasks (Non-blocking): Update last_login, log activity, and notify admins
+        (async () => {
+          try {
+            const { data: { user: authUser } } = await supabase.auth.getUser();
+            if (authUser) {
+              await supabase.from("profiles").update({
+                last_login_at: new Date().toISOString(),
+                last_ip: "CLIENT_SIDE_FETCH"
+              }).eq("id", authUser.id);
+            }
 
-          // 🔔 Notify Admins about the login
-          await notifyAdminsAction({
-            type: "INFO",
-            title: "มีการเข้าสู่ระบบ 🔑",
-            message: `ผู้ใช้ ${data.email} เข้าสู่ระบบแล้ว (Remember: ${data.rememberMe ? 'Yes' : 'No'})`,
-            link: "/protected/settings/users", // Link to user management
-          });
-        } catch (e) {
-          console.error("Auxiliary login actions failed:", e);
-        }
+            await logActivityAction("LOGIN", "user", undefined, {
+              email: data.email,
+              remember: data.rememberMe
+            });
 
-        router.push("/protected");
+            await notifyAdminsAction({
+              type: "INFO",
+              title: "มีการเข้าสู่ระบบ 🔑",
+              message: `ผู้ใช้ ${data.email} เข้าสู่ระบบแล้ว (Remember: ${data.rememberMe ? 'Yes' : 'No'})`,
+              link: "/protected/settings/users",
+            });
+          } catch (e) {
+            console.error("Auxiliary background login actions failed:", e);
+          }
+        })();
       } else if (view === "signup") {
         const { error } = await supabase.auth.signUp({
           email: data.email,

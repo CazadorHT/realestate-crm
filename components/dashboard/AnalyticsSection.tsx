@@ -112,12 +112,15 @@ export function AnalyticsSection({
   };
 
   const updateFilter = (updates: Record<string, string | null>) => {
+    if (typeof window !== "undefined" && window.location.pathname !== "/protected") {
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
       if (value === null || value === "all") params.delete(key);
       else params.set(key, value);
     });
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   useEffect(() => {

@@ -88,7 +88,9 @@ export default async function PropertiesPage({
     <div className="space-y-4 md:space-y-6 pb-24 lg:pb-0 animate-fade-in">
       <InventoryListTour />
       <SuccessAnimation />
-      <PropertiesHeaderWrapper params={params} />
+      <Suspense fallback={<div className="h-20 animate-pulse bg-slate-100/80 rounded-2xl" />}>
+        <PropertiesHeaderWrapper params={params} />
+      </Suspense>
 
       {/* DASHBOARD STREAMING */}
       <Suspense fallback={<div className="h-32 animate-pulse bg-slate-100 rounded-2xl" />}>

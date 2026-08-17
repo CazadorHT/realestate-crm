@@ -29,10 +29,11 @@ export type UploadImageActionResponse =
 
 export async function uploadPropertyImageAction(formData: FormData): Promise<UploadImageActionResponse> {
   try {
-    const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
+    const formTenantId = (formData.get("tenantId") as string | null) || undefined;
+    const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext(formTenantId);
     assertStaff(role);
 
-    let tenantId = contextTenantId;
+    let tenantId = formTenantId || contextTenantId;
     // Fallback if tenantId is undefined (e.g. cookie is set to "ALL")
     if (!tenantId) {
       const { data: firstMember } = await supabase

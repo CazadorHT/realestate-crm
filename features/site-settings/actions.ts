@@ -376,21 +376,10 @@ async function updateSiteSettingAdmin(
 
     const encryptedValue = await encryptValue(key, value);
 
-    // Query existing row to preserve tenant_id and category
-    const { data: existing } = await supabase
-      .from("site_settings")
-      .select("tenant_id, category")
-      .eq("key", key)
-      .limit(1)
-      .maybeSingle();
-
-    const tenant_id = existing?.tenant_id || null;
-    const category = existing?.category || "general";
-
     const { error } = await (supabase as any).from("system_settings_v3").upsert(
       {
-        tenant_id,
-        category,
+        tenant_id: null,
+        category: "general",
         key,
         value: (encryptedValue ?? "") as Json,
         updated_at: new Date().toISOString(),

@@ -1,6 +1,8 @@
 import type { User, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
+import { getSystemConfig } from "@/lib/actions/system-config";
 
 import { type UserRole, isAdmin, isStaff } from "./auth-shared";
 import { cookies } from "next/headers";
@@ -57,8 +59,17 @@ async function getRole(
   return data.role as UserRole;
 }
 
-import { cache } from "react";
-import { getSystemConfig } from "@/lib/actions/system-config";
+// 🚀 In-memory cache for user identity context (5-minute TTL) to prevent DB queries across server actions
+const authContextCache = new Map<
+  string,
+  {
+    role: UserRole;
+    tenantId?: string;
+    category?: number;
+    cachedAt: number;
+  }
+>();
+const AUTH_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes (Aligned with middleware cache)
 
 export const getAuthContextOrNull = cache(async (
   injectedSupabase?: SupabaseClient<Database>,
@@ -70,7 +81,41 @@ export const getAuthContextOrNull = cache(async (
   // 🛡️ Server-side Identity Linking
   if (error || !data?.user) return null;
 
-  // Fetch identity details (Source of Truth)
+  const now = Date.now();
+  const cached = authContextCache.get(data.user.id);
+
+  if (cached && now - cached.cachedAt < AUTH_CACHE_TTL_MS) {
+    return {
+      supabase,
+      user: data.user,
+      role: cached.role,
+      tenantId: cached.tenantId,
+      category: cached.category,
+    };
+  }
+
+  // 1. Fast-path: Check if claims already exist in app_metadata
+  const statelessRole = getRoleStateless(data.user);
+  const statelessTenantId = data.user.app_metadata?.tenant_id as string | undefined;
+  const statelessCategory = data.user.app_metadata?.category as number | undefined;
+
+  if (statelessRole) {
+    authContextCache.set(data.user.id, {
+      role: statelessRole,
+      tenantId: statelessTenantId,
+      category: statelessCategory,
+      cachedAt: now,
+    });
+    return {
+      supabase,
+      user: data.user,
+      role: statelessRole,
+      tenantId: statelessTenantId,
+      category: statelessCategory,
+    };
+  }
+
+  // 2. Fetch identity details (Source of Truth Fallback)
   const { data: identity } = await supabase
     .from("identities_v3")
     .select("role, tenant_id, category")
@@ -79,12 +124,23 @@ export const getAuthContextOrNull = cache(async (
 
   if (!identity?.role) return null;
 
+  const resolvedRole = identity.role as UserRole;
+  const resolvedTenantId = identity.tenant_id ?? undefined;
+  const resolvedCategory = identity.category ?? undefined;
+
+  authContextCache.set(data.user.id, {
+    role: resolvedRole,
+    tenantId: resolvedTenantId,
+    category: resolvedCategory,
+    cachedAt: now,
+  });
+
   return { 
     supabase, 
     user: data.user, 
-    role: identity.role as UserRole,
-    tenantId: identity.tenant_id ?? undefined,
-    category: identity.category ?? undefined
+    role: resolvedRole,
+    tenantId: resolvedTenantId,
+    category: resolvedCategory,
   };
 });
 
@@ -148,7 +204,11 @@ export const requireAuthContext = cache(async (
     }
   }
 
-  // Rule 3: If still no tenant (or switch failed), pick the first one from their membership
+  // Rule 3: If still no tenant (or switch failed), pick from context or first one from their membership
+  if (ctx.tenantId) {
+    return ctx;
+  }
+
   const { data: firstMember } = await ctx.supabase
     .from("tenant_members_v3")
     .select("tenant_id")
@@ -157,6 +217,11 @@ export const requireAuthContext = cache(async (
     .maybeSingle();
 
   if (firstMember?.tenant_id) {
+    // Update memory cache so next actions don't query tenant_members_v3 again
+    const existing = authContextCache.get(ctx.user.id);
+    if (existing) {
+      existing.tenantId = firstMember.tenant_id;
+    }
     return { ...ctx, tenantId: firstMember.tenant_id };
   }
 

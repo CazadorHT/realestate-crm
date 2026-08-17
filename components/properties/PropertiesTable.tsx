@@ -676,10 +676,16 @@ export function PropertiesTable({
                           {navigatingId === property.id && (
                             <Loader2 className="h-4 w-4 animate-spin text-blue-600 absolute -left-6 top-1/2 -translate-y-1/2" />
                           )}
-                          <span className="line-clamp-2 overflow-hidden w-[310px] ">
+                          <span className="line-clamp-1 overflow-hidden w-[310px] text-slate-900 font-semibold" title={property.title || "ไม่ระบุชื่อ"}>
                             {property.title || "ไม่ระบุชื่อ"}
                           </span>
                         </div>
+                        {property.project_name ? (
+                          <div className="flex items-center gap-1 text-[11.5px] font-bold text-indigo-600 line-clamp-1 leading-tight">
+                            <Building2 className="h-3 w-3 shrink-0 text-indigo-500" />
+                            <span className="truncate">{property.project_name}</span>
+                          </div>
+                        ) : null}
                         <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
                           {[property.popular_area, property.province]
                             .filter(Boolean)
@@ -897,6 +903,8 @@ export function PropertiesTable({
                   {/* SOCIAL */}
                   <TableCell className="px-2">
                     <SocialStatusBadges
+                      propertyId={property.id}
+                      propertyTitle={property.title}
                       facebookAt={property.posted_to_facebook_at}
                       instagramAt={property.posted_to_instagram_at}
                       lineAt={property.posted_to_line_at}
@@ -1160,6 +1168,8 @@ export function PropertiesTable({
 
                       {/* Social Badges for Mobile */}
                       <SocialStatusBadges
+                        propertyId={property.id}
+                        propertyTitle={property.title}
                         facebookAt={property.posted_to_facebook_at}
                         instagramAt={property.posted_to_instagram_at}
                         lineAt={property.posted_to_line_at}
