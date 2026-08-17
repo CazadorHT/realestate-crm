@@ -131,17 +131,7 @@ export async function postPropertyToTikTokAction(
 
     console.log(`[TikTok Post] Sending ${imagesToPost.length} JPEG-compliant images via vccasset.com to TikTok:`, imagesToPost);
 
-    // 5. Self-Test: Verify image accessibility before sending to TikTok
-    if (imagesToPost.length > 0) {
-      try {
-        const testRes = await fetch(imagesToPost[0], { method: 'HEAD' });
-        console.log(`[TikTok Self-Test] First image check: ${testRes.status} ${testRes.statusText}`);
-        // Note: Proxy might return 200 even if TikTok has issues, but it's a good start.
-      } catch (e) {
-        console.error("[TikTok Self-Test] Error checking image:", e);
-      }
-    }
-
+    // 5. Verify image accessibility
     if (imagesToPost.length === 0) {
       return { 
         success: false, 

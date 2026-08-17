@@ -6,6 +6,14 @@ import sharp from "sharp";
  * TikTok API v2 only supports JPEG and PNG for PULL_FROM_URL
  */
 export async function GET(req: NextRequest) {
+  return handleImageProxy(req);
+}
+
+export async function HEAD(req: NextRequest) {
+  return handleImageProxy(req);
+}
+
+async function handleImageProxy(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const imageUrl = searchParams.get("url");
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
