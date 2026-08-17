@@ -82,7 +82,7 @@ async function handleImageProxy(req: NextRequest) {
         "Accept-Ranges": "bytes",
         "ETag": etag,
         "Last-Modified": new Date().toUTCString(),
-        "Cache-Control": "public, max-age=2678400, must-revalidate",
+        "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=86400",
         "Access-Control-Allow-Origin": "*",
       },
     });
