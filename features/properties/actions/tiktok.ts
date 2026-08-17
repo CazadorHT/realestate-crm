@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { getPropertySocialContent, renderPropertySocialTemplate, populateAgentProfiles } from "./social";
 import { refreshTikTokTokenIfNeeded, publishTikTokPhotoPost, getTikTokPublishStatus } from "@/lib/tiktok";
@@ -144,9 +145,10 @@ export async function postPropertyToTikTokAction(
           .jpeg({ quality: 88 })
           .toBuffer();
 
-        // Upload as a real static .jpg file to property-images bucket
+        // Upload as a real static .jpg file to property-images bucket using admin client to ensure permissions
+        const adminSupabase = createAdminClient();
         const tempPath = `tiktok-cache/${propertyId}/img_${i + 1}.jpg`;
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await adminSupabase.storage
           .from("property-images")
           .upload(tempPath, jpegBuf, {
             contentType: "image/jpeg",
