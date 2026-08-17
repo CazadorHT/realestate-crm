@@ -73,14 +73,16 @@ async function handleImageProxy(req: NextRequest) {
       .toBuffer();
 
     // 3. Return the JPEG binary (Converted to Uint8Array for Next.js compatibility)
+    const etag = `"${Buffer.from(jpegBuffer.slice(0, 32)).toString("hex")}"`;
     return new NextResponse(new Uint8Array(jpegBuffer), {
       headers: {
         "Content-Type": "image/jpeg",
         "Content-Length": String(jpegBuffer.byteLength),
         "Content-Disposition": 'inline; filename="image.jpg"',
         "Accept-Ranges": "bytes",
-        // Keep a long CDN cache for converted images to avoid repeat egress
-        "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=86400",
+        "ETag": etag,
+        "Last-Modified": new Date().toUTCString(),
+        "Cache-Control": "public, max-age=2678400, must-revalidate",
         "Access-Control-Allow-Origin": "*",
       },
     });
