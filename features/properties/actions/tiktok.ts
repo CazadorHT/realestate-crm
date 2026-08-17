@@ -120,13 +120,13 @@ export async function postPropertyToTikTokAction(
     const baseUrl = "https://vccasset.com";
     const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qaihjhvdwfafawezxivb.supabase.co";
     
-    const imagesToPost = rawImages.map((url) => {
+    const imagesToPost = rawImages.map((url, idx) => {
       // Ensure target URL uses Supabase endpoint for backend proxy fetching
       let targetSourceUrl = url;
       if (targetSourceUrl.includes("cdn.vccasset.com")) {
         targetSourceUrl = targetSourceUrl.replace(/https?:\/\/cdn\.vccasset\.com/, supabaseBase);
       }
-      return `${baseUrl}/api/proxy/image?url=${encodeURIComponent(targetSourceUrl)}`;
+      return `${baseUrl}/api/proxy/image?url=${encodeURIComponent(targetSourceUrl)}&ext=.jpg&f=image_${idx + 1}.jpg`;
     });
 
     console.log(`[TikTok Post] Sending ${imagesToPost.length} JPEG-compliant images via vccasset.com to TikTok:`, imagesToPost);
