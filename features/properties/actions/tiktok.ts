@@ -119,35 +119,33 @@ export async function postPropertyToTikTokAction(
     // TikTok Photo Mode API strictly requires direct JPEG (.jpg / .jpeg) or PNG images hosted on verified domain.
     // Convert WebP images to optimized JPEG and upload directly to Supabase Storage CDN (cdn.vccasset.com)
     const sharp = (await import("sharp")).default;
-    const imagesToPost: string[] = [];
+    const adminSupabase = createAdminClient();
 
-    for (let i = 0; i < rawImages.length; i++) {
-      const srcUrl = rawImages[i];
+    // Process all images in parallel for maximum speed and efficiency
+    const uploadTasks = rawImages.map(async (srcUrl, idx) => {
       try {
         if (!/\.webp(\?|$)/i.test(srcUrl)) {
-          // Already JPEG/PNG
-          imagesToPost.push(srcUrl);
-          continue;
+          return srcUrl; // Already JPEG/PNG, no conversion needed
         }
 
-        // Fetch original WebP
+        const tempPath = `tiktok-cache/${propertyId}/img_${idx + 1}.jpg`;
+
+        // 1. Fetch original WebP
         const fetchRes = await fetch(srcUrl);
-        if (!fetchRes.ok) continue;
+        if (!fetchRes.ok) return null;
         const webpBuf = await fetchRes.arrayBuffer();
 
-        // Convert to standard JPEG (1080x1350 vertical safe fit)
+        // 2. Convert to standard JPEG (1080x1350 vertical safe fit, Quality 85)
         const jpegBuf = await sharp(Buffer.from(webpBuf))
           .resize(1080, 1350, {
             fit: 'contain',
             background: { r: 255, g: 255, b: 255, alpha: 1 }
           })
           .flatten({ background: { r: 255, g: 255, b: 255 } })
-          .jpeg({ quality: 88 })
+          .jpeg({ quality: 85 })
           .toBuffer();
 
-        // Upload as a real static .jpg file to property-images bucket using admin client to ensure permissions
-        const adminSupabase = createAdminClient();
-        const tempPath = `tiktok-cache/${propertyId}/img_${i + 1}.jpg`;
+        // 3. Upload to property-images bucket (upsert: true)
         const { error: uploadError } = await adminSupabase.storage
           .from("property-images")
           .upload(tempPath, jpegBuf, {
@@ -156,14 +154,19 @@ export async function postPropertyToTikTokAction(
           });
 
         if (!uploadError) {
-          imagesToPost.push(`https://cdn.vccasset.com/storage/v1/object/public/property-images/${tempPath}`);
+          return `https://cdn.vccasset.com/storage/v1/object/public/property-images/${tempPath}`;
         } else {
           console.error("[TikTok Image Upload Error]:", uploadError);
+          return null;
         }
       } catch (convErr) {
         console.error(`[TikTok Image Convert Error for ${srcUrl}]:`, convErr);
+        return null;
       }
-    }
+    });
+
+    const convertedResults = await Promise.all(uploadTasks);
+    const imagesToPost = convertedResults.filter(Boolean) as string[];
 
     console.log(`[TikTok Post] Sending ${imagesToPost.length} direct CDN JPEG images to TikTok:`, imagesToPost);
 
