@@ -334,11 +334,13 @@ function mapMetaPropertyType(typeInt: number): string {
 /**
  * Strips HTML tags and decodes basic HTML entities to produce clean plain text
  */
-function stripHtml(html: string): string {
+function stripHtml(html: any): string {
   if (!html) return "";
+  const inputStr = typeof html === "string" ? html : String(html?.text || html?.value || JSON.stringify(html) || "");
+  if (!inputStr) return "";
   
   // 1. Replace block elements/breaks with newlines to preserve readability
-  let text = html
+  let text = inputStr
     .replace(/<\/p>/g, "\n")
     .replace(/<br\s*\/?>/g, "\n")
     .replace(/<\/li>/g, "\n")
