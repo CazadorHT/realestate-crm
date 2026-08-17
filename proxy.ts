@@ -48,6 +48,7 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/_next") || 
     path.startsWith("/fonts") ||
     path.startsWith("/api/og") ||
+    path.startsWith("/api/proxy") ||
     path.startsWith("/monitoring") ||
     path.includes("/blocking") ||
     path === "/robots.txt" ||
