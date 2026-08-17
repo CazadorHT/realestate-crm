@@ -21,7 +21,7 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Upload, Image as ImageIcon, Loader2, Trash2 } from "lucide-react";
+import { Upload, Image as ImageIcon, Loader2, Trash2, ArrowUpWideNarrow, ArrowDownWideNarrow } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   uploadPropertyImageAction,
@@ -107,6 +107,8 @@ export function PropertyImageUploader({
             preview_url: preview_url,
             is_cover: matchingInitial.is_cover ?? index === 0,
             origin: "initial" as const,
+            originalIndex: index,
+            timestamp: Date.now() - (valuePaths.length - index) * 1000,
           };
         }
 
@@ -116,6 +118,8 @@ export function PropertyImageUploader({
           preview_url: getPublicImageUrl(path),
           is_cover: index === 0,
           origin: "temp" as const,
+          originalIndex: index,
+          timestamp: Date.now() - (valuePaths.length - index) * 1000,
         };
       });
     }
@@ -143,6 +147,8 @@ export function PropertyImageUploader({
             preview_url: preview_url,
             is_cover: img.is_cover ?? index === 0,
             origin: "initial",
+            originalIndex: index,
+            timestamp: Date.now() - (initialImages.length - index) * 1000,
           };
         },
       );
@@ -289,6 +295,7 @@ export function PropertyImageUploader({
       isUploadingRef.current = true;
       const uploadErrors: string[] = [];
 
+      const startIdx = images.length;
       const newItems: ImageItem[] = acceptedFiles.map((file, index) => ({
         id: `new-${Date.now()}-${index}`,
         storage_path: "",
@@ -297,6 +304,8 @@ export function PropertyImageUploader({
         is_uploading: true,
         file,
         origin: "temp",
+        originalIndex: startIdx + index,
+        timestamp: file.lastModified || Date.now(),
       }));
 
       // Update state immediately to show skeletons/placeholders
@@ -621,6 +630,26 @@ export function PropertyImageUploader({
     toast.success("ตั้งรูปปกสำเร็จ");
   };
 
+  const handleSortImages = (order: "newest" | "oldest") => {
+    if (disabled || images.length <= 1) return;
+
+    setImages((prev) => {
+      const sorted = [...prev].sort((a, b) => {
+        const timeA = a.timestamp ?? (a.originalIndex !== undefined ? 1000000000 + a.originalIndex : 0);
+        const timeB = b.timestamp ?? (b.originalIndex !== undefined ? 1000000000 + b.originalIndex : 0);
+        return order === "newest" ? timeB - timeA : timeA - timeB;
+      });
+
+      // Maintain the first image as cover
+      return sorted.map((img, idx) => ({
+        ...img,
+        is_cover: idx === 0,
+      }));
+    });
+
+    toast.success(order === "newest" ? "เรียงลำดับรูปภาพ: ใหม่ไปเก่า ✨" : "เรียงลำดับรูปภาพ: เก่าไปใหม่ ✨");
+  };
+
   // @dnd-kit sensors
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -898,11 +927,43 @@ export function PropertyImageUploader({
 
       {images.length > 0 && (
         <div className="pt-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 px-1">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 px-1">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <p className="text-xs sm:text-sm font-semibold text-slate-800">
                 รูปภาพทั้งหมด ({images.length}/{maxFiles})
               </p>
+
+              {/* Sorting Buttons */}
+              {images.length > 1 && (
+                <div className="flex items-center gap-1 bg-slate-100/90 p-0.5 rounded-lg border border-slate-200/80">
+                  <Button
+                    type="button"
+                    onClick={() => handleSortImages("newest")}
+                    disabled={disabled || images.some((img) => img.is_uploading)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-[11px] font-medium text-slate-700 hover:text-blue-600 hover:bg-white rounded-md flex items-center gap-1 transition-all"
+                    title="เรียงจากรูปที่เพิ่มล่าสุดไปหารูปแรก"
+                  >
+                    <ArrowDownWideNarrow className="w-3 h-3 text-blue-500" />
+                    <span>ใหม่ไปเก่า</span>
+                  </Button>
+                  <div className="w-[1px] h-3.5 bg-slate-300 my-auto" />
+                  <Button
+                    type="button"
+                    onClick={() => handleSortImages("oldest")}
+                    disabled={disabled || images.some((img) => img.is_uploading)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-[11px] font-medium text-slate-700 hover:text-blue-600 hover:bg-white rounded-md flex items-center gap-1 transition-all"
+                    title="เรียงจากรูปแรกไปหารูปที่เพิ่มล่าสุด"
+                  >
+                    <ArrowUpWideNarrow className="w-3 h-3 text-blue-500" />
+                    <span>เก่าไปใหม่</span>
+                  </Button>
+                </div>
+              )}
+
               {images.length > 0 && (
                 <Button
                   type="button"
@@ -910,10 +971,10 @@ export function PropertyImageUploader({
                   disabled={disabled || images.some((img) => img.is_uploading)}
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-[11px] font-bold text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg flex items-center gap-1.5 transition-all"
+                  className="h-7 text-[11px] font-bold text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg flex items-center gap-1 transition-all"
                 >
                   <Trash2 className="w-3 h-3" />
-                  ล้างรูปภาพทั้งหมด
+                  ล้างทั้งหมด
                 </Button>
               )}
             </div>

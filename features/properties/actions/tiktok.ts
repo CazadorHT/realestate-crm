@@ -109,15 +109,27 @@ export async function postPropertyToTikTokAction(
         // Prefer storage_path (absolute path in bucket) over raw image_url
         const path = img.storage_path || img.image_url;
         if (!path) return null;
-        if (path.startsWith("http")) return path;
         
-        return getPublicImageUrl(path);
+        let url = path.startsWith("http") ? path : getPublicImageUrl(path);
+        return url;
       })
       .filter(Boolean) as string[];
-    
-    const imagesToPost = rawImages;
 
-    console.log(`[TikTok Post] Sending ${imagesToPost.length} images to TikTok (with Proxy if WebP):`, imagesToPost);
+    // TikTok Photo Mode API strictly requires JPEG (.jpg / .jpeg) or PNG images.
+    // Convert WebP images to optimized JPEG via proxy endpoint hosted on verified domain vccasset.com
+    const baseUrl = "https://vccasset.com";
+    const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qaihjhvdwfafawezxivb.supabase.co";
+    
+    const imagesToPost = rawImages.map((url) => {
+      // Ensure target URL uses Supabase endpoint for backend proxy fetching
+      let targetSourceUrl = url;
+      if (targetSourceUrl.includes("cdn.vccasset.com")) {
+        targetSourceUrl = targetSourceUrl.replace(/https?:\/\/cdn\.vccasset\.com/, supabaseBase);
+      }
+      return `${baseUrl}/api/proxy/image?url=${encodeURIComponent(targetSourceUrl)}`;
+    });
+
+    console.log(`[TikTok Post] Sending ${imagesToPost.length} JPEG-compliant images via vccasset.com to TikTok:`, imagesToPost);
 
     // 5. Self-Test: Verify image accessibility before sending to TikTok
     if (imagesToPost.length > 0) {

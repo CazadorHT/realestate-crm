@@ -314,6 +314,26 @@ export async function getExistingProjectLocationAction(params: {
   }
 }
 
+async function resolveShortGoogleMapsUrl(url: string): Promise<string> {
+  if (!url || !url.startsWith("http")) return url;
+  if (
+    url.includes("goo.gl") ||
+    url.includes("maps.app.goo.gl") ||
+    url.includes("share.google")
+  ) {
+    try {
+      const res = await fetch(url, {
+        method: "HEAD",
+        redirect: "follow",
+      });
+      return res.url || url;
+    } catch {
+      return url;
+    }
+  }
+  return url;
+}
+
 export async function suggestNearbyPlacesAndTransitAction(params: {
   title?: string;
   addressLine1?: string;
@@ -329,79 +349,107 @@ export async function suggestNearbyPlacesAndTransitAction(params: {
     throw new Error("กรุณากรอกข้อมูลที่ตั้ง จังหวัด หรือลิงก์แผนที่ก่อนดำเนินการ");
   }
 
-  // 1. Check if we can reuse transit/nearby places from another property in the same project or matching name
-  const existingLoc = await getExistingProjectLocationAction({ projectId, addressLine1 });
-  if (existingLoc.success && existingLoc.data) {
-    const { transits = [], places = [] } = existingLoc.data;
-    if (transits.length > 0 || places.length > 0) {
-      return {
-        success: true,
-        data: {
-          transits,
-          places,
-        },
-        cached: true,
-      };
+  // 1. If Google Maps link is provided, resolve any shortened URL to reveal real coordinates/place names
+  let resolvedMapUrl = googleMapsLink ? googleMapsLink.trim() : "";
+  let extractedMapQuery = "";
+  if (resolvedMapUrl) {
+    try {
+      resolvedMapUrl = await resolveShortGoogleMapsUrl(resolvedMapUrl);
+      const placeMatch = resolvedMapUrl.match(/\/place\/([^\/@]+)/);
+      const coordMatch = resolvedMapUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      
+      const parts: string[] = [];
+      if (placeMatch && placeMatch[1]) {
+        parts.push(`Place Name: "${decodeURIComponent(placeMatch[1]).replace(/\+/g, " ")}"`);
+      }
+      if (coordMatch) {
+        parts.push(`Coordinates: [Latitude: ${coordMatch[1]}, Longitude: ${coordMatch[2]}]`);
+      }
+      if (parts.length > 0) {
+        extractedMapQuery = parts.join(" | ");
+      }
+    } catch (e) {
+      console.warn("Error parsing google maps url:", e);
+    }
+  }
+
+  // 2. Check if we can reuse transit/nearby places from a project ID
+  if (projectId) {
+    const existingLoc = await getExistingProjectLocationAction({ projectId });
+    if (existingLoc.success && existingLoc.data) {
+      const { transits = [], places = [] } = existingLoc.data;
+      if (transits.length > 0 || places.length > 0) {
+        return {
+          success: true,
+          data: {
+            transits,
+            places,
+          },
+          cached: true,
+        };
+      }
     }
   }
 
   const prompt = `
-You are a real estate search assistant. Find the nearest transit stations and nearby key places for the following property in Thailand:
-- Project/Address/Village Name: ${addressLine1}
-- Subdistrict: ${subdistrict}
-- District: ${district}
-- Province: ${province}
-- Property Title: ${title}
-- Google Maps Link: ${googleMapsLink || "Not provided"}
+You are an expert real estate location assistant with live web search. Find the exact nearest transit stations and key nearby places for the property in Thailand.
+
+SEARCH STRATEGY (DUAL CROSS-REFERENCE):
+1. Combine BOTH the Google Maps pinpoint/link AND the Project Name / Address:
+   - Google Maps Info: ${resolvedMapUrl || "Not provided"} ${extractedMapQuery ? `[${extractedMapQuery}]` : ""}
+   - Project Name / Address: ${addressLine1 || "Not provided"}
+   - Sub-district (แขวง/ตำบล): ${subdistrict || "Not provided"}
+   - District (เขต/อำเภอ): ${district || "Not provided"}
+   - Province (จังหวัด): ${province || "Not provided"}
+   - Property Title: ${title || "Not provided"}
+
+2. Cross-reference the Google Maps coordinates/place with the Project Name to confirm the exact residential condominium/housing project location in Bangkok/Thailand. If there is a slight discrepancy, use the Google Maps pin as the ground truth coordinate while honoring the project's real context.
 
 Instructions:
-1. Identify the exact real-world location of this property. If a Google Maps Link is provided, prioritize parsing/identifying the location context or coordinates from this link.
+1. Accurately pinpoint the project entrance/location by combining Google Maps and Project Name.
+2. Find the nearest transit stations (BTS, MRT, ARL, BRT, SRT Red Line, Gold Line, etc.). Limit to at most 3 stations closest to this pinpoint. For each station:
+   - type: must be one of ["BTS", "MRT", "MRT_PURPLE", "MRT_YELLOW", "MRT_PINK", "ARL", "SRT_RED", "GOLD", "BRT", "OTHER"]
+   - station_name: in Thai (e.g. "อโศก", "ห้วยขวาง", "เตาปูน")
+   - distance_meters: real distance in meters (e.g. 350)
+   - time: estimated walking/travel time in minutes (e.g. "4")
+   - station_name_en: English name (e.g. "Asok")
+   - station_name_cn: Chinese name
+   - station_name_ru: Russian name
 
-2. Find nearest transit stations (BTS, MRT, ARL, BRT, etc.). Limit to at most 3 stations. For each station, find:
-   - type (must be one of: "BTS", "MRT", "MRT_PURPLE", "MRT_YELLOW", "MRT_PINK", "ARL", "SRT_RED", "GOLD", "BRT", "OTHER")
-   - station_name in Thai (e.g., "อโศก", "ห้วยขวาง")
-   - distance_meters (estimated walking/driving distance in meters, e.g., 500)
-   - time (estimated time in minutes as string, e.g., "5")
-   - station_name_en (English station name, e.g. "Asok")
-   - station_name_cn (Chinese station name, e.g. "阿索克")
-   - station_name_ru (Russian station name, e.g. "Асок")
+3. Find nearby landmark places (Shopping Malls, Hospitals, International Schools, Supermarkets, Parks, Airports). Limit to at most 5 places closest to this pinpoint. For each place:
+   - category: must be one of ["School", "Mall", "Hospital", "Airport", "Transport", "Park", "Office", "Other"]
+   - name: in Thai (e.g. "เอ็มควอเทียร์", "โรงพยาบาลสมิติเวช สุขุมวิท")
+   - distance_meters: real distance in meters (e.g. 1200)
+   - time: estimated time in minutes (e.g. "5")
+   - name_en: English name
+   - name_cn: Chinese name
+   - name_ru: Russian name
 
-3. Find nearby key landmark places (like Airports, Shopping Malls, Schools, Hospitals, Supermarkets, Parks, work offices, etc.). Limit to at most 5 places. For each place, find:
-   - category (must be one of: "School", "Mall", "Hospital", "Airport", "Transport", "Park", "Office", "Other")
-   - name in Thai (e.g. "เอ็มควอเทียร์", "โรงพยาบาลสมิติเวช สุขุมวิท")
-   - distance_meters (estimated walking/driving distance in meters, e.g. 1200)
-   - time (estimated time in minutes as string, e.g. "10")
-   - name_en (English place name, e.g. "EmQuartier")
-   - name_cn (Chinese place name)
-   - name_ru (Russian place name)
-
-Return ONLY a valid JSON object matching this TypeScript structure:
+Return ONLY a valid JSON object with the following structure (no markdown, no backticks):
 {
   "transits": [
     {
-      "type": string,
-      "station_name": string,
-      "distance_meters": number,
-      "time": string,
-      "station_name_en": string,
-      "station_name_cn": string,
-      "station_name_ru": string
+      "type": "BTS",
+      "station_name": "...",
+      "distance_meters": 400,
+      "time": "5",
+      "station_name_en": "...",
+      "station_name_cn": "...",
+      "station_name_ru": "..."
     }
   ],
   "places": [
     {
-      "category": string,
-      "name": string,
-      "distance_meters": number,
-      "time": string,
-      "name_en": string,
-      "name_cn": string,
-      "name_ru": string
+      "category": "Mall",
+      "name": "...",
+      "distance_meters": 1200,
+      "time": "5",
+      "name_en": "...",
+      "name_cn": "...",
+      "name_ru": "..."
     }
   ]
 }
-
-Ensure the response contains no markdown code blocks, just raw JSON.
 `;
 
   try {

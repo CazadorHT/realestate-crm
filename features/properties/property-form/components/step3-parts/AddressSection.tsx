@@ -416,7 +416,8 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                       value={field.value ?? ""}
                       onChange={(e) => {
                         field.onChange(e.target.value);
-                        if (!e.target.value.trim()) {
+                        // Clear project_id if the user modifies the text so stale project links don't persist
+                        if (form.getValues("project_id")) {
                           form.setValue("project_id", null, { shouldDirty: true });
                         }
                       }}

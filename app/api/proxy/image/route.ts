@@ -15,8 +15,13 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Missing URL parameter", { status: 400 });
   }
 
-  // Security Check: Only allow requests targeting our own Supabase domain
-  if (supabaseDomain && !imageUrl.includes(supabaseDomain)) {
+  // Security Check: Only allow requests targeting our own Supabase domain or CDN domain
+  const isAllowedDomain = 
+    (supabaseDomain && imageUrl.includes(supabaseDomain)) || 
+    imageUrl.includes("cdn.vccasset.com") || 
+    imageUrl.includes("vccasset.com");
+
+  if (!isAllowedDomain) {
     console.warn(`[Image Proxy Security] Blocked unauthorized URL: ${imageUrl}`);
     return new NextResponse("Unauthorized URL domain", { status: 403 });
   }
@@ -41,14 +46,10 @@ export async function GET(req: NextRequest) {
     }
 
     const buffer = await response.arrayBuffer();
-    console.log(`[Image Proxy State] Source fetched. Size: ${buffer.byteLength} bytes. Processing...`);
 
     // 2. Identify Metadata and Process using Sharp
     const image = sharp(Buffer.from(buffer));
-    const metadata = await image.metadata();
     
-    console.log(`[Image Proxy Metadata] Original: ${metadata.width}x${metadata.height}, Format: ${metadata.format}`);
-
     // TikTok Optimization Mode:
     // 1. Ensure min resolution 360x360
     // 2. Fit into a safe 1080x1350 box (standard high-quality vertical)
@@ -63,12 +64,13 @@ export async function GET(req: NextRequest) {
       .jpeg({ quality: 85 })
       .toBuffer();
 
-    console.log(`[Image Proxy State] Conversion & Resizing successful. Returning JPG buffer.`);
-
     // 3. Return the JPEG binary (Converted to Uint8Array for Next.js compatibility)
     return new NextResponse(new Uint8Array(jpegBuffer), {
       headers: {
         "Content-Type": "image/jpeg",
+        "Content-Length": String(jpegBuffer.byteLength),
+        "Content-Disposition": 'inline; filename="image.jpg"',
+        "Accept-Ranges": "bytes",
         // Keep a long CDN cache for converted images to avoid repeat egress
         "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=86400",
         "Access-Control-Allow-Origin": "*",

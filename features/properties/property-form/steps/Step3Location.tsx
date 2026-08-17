@@ -26,17 +26,15 @@ export function Step3Location({ mode }: Step3Props) {
   const form = useFormContext<PropertyFormValues>();
   const [isSearching, setIsSearching] = useState(false);
 
-  // Auto-fetch saved project transport & nearby places if empty
+  // Auto-fetch saved project transport & nearby places if empty (only when a verified projectId exists, e.g. on edit mode or project selection)
   useEffect(() => {
     const projectId = form.getValues("project_id");
-    const address = form.getValues("address_line1");
     const transits = form.getValues("nearby_transits") || [];
     const places = form.getValues("nearby_places") || [];
 
-    if ((projectId || address) && transits.length === 0 && places.length === 0) {
+    if (projectId && transits.length === 0 && places.length === 0) {
       getExistingProjectLocationAction({
-        projectId: projectId || undefined,
-        addressLine1: address || undefined,
+        projectId,
       }).then((res) => {
         if (res.success && res.data) {
           const { transits: fetchedTransits = [], places: fetchedPlaces = [] } = res.data;

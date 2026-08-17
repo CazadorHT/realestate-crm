@@ -9,6 +9,8 @@ export interface ImageItem {
   hasError?: boolean;
   is_error?: boolean;
   error_message?: string;
+  timestamp?: number; // Added for sorting by file modified/upload time
+  originalIndex?: number; // Added for initial insertion order
 }
 
 export interface PropertyImageUploaderProps {

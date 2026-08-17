@@ -22,16 +22,21 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   const [isTranslatingAll, setIsTranslatingAll] = useState(false);
 
   // 1. Translate Title
-  const translateTitle = async (silent = false, force = true) => {
+  const translateTitle = async (silent = false, force = false) => {
     const title = form.getValues("title");
     if (typeof title !== "string" || !title.trim()) {
       if (!silent) toast.error("กรุณากรอกชื่อภาษาไทยก่อนกดแปลครับ");
       return;
     }
 
-    const hasEn = isNonEmptyString(form.getValues("title_en"));
-    const hasCn = isNonEmptyString(form.getValues("title_cn"));
-    const hasRu = isNonEmptyString(form.getValues("title_ru"));
+    const currentEn = form.getValues("title_en");
+    const currentCn = form.getValues("title_cn");
+    const currentRu = form.getValues("title_ru");
+
+    const hasEn = isNonEmptyString(currentEn);
+    const hasCn = isNonEmptyString(currentCn);
+    const hasRu = isNonEmptyString(currentRu);
+
     if (!force && hasEn && hasCn && hasRu) {
       if (!silent) toast.success("ชื่อทรัพย์แปลครบถ้วนแล้ว ✨");
       return;
@@ -42,18 +47,24 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
 
     try {
       const result = await translateTextAction(title, "plain");
-      form.setValue("title_en", result.en, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      form.setValue("title_cn", result.cn, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      form.setValue("title_ru", result.ru, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
+      if (force || !hasEn) {
+        form.setValue("title_en", result.en, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+      if (force || !hasCn) {
+        form.setValue("title_cn", result.cn, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+      if (force || !hasRu) {
+        form.setValue("title_ru", result.ru, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
       if (processId) finishProcess(processId, "SUCCESS", "แปลชื่อทรัพย์เรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
@@ -67,16 +78,21 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   };
 
   // 2. Translate Description
-  const translateDescription = async (silent = false, force = true) => {
+  const translateDescription = async (silent = false, force = false) => {
     const desc = form.getValues("description");
     if (typeof desc !== "string" || desc.trim() === "" || desc === "<p></p>") {
       if (!silent) toast.error("กรุณากรอกคำบรรยายภาษาไทยก่อนกดแปลครับ");
       return;
     }
 
-    const hasEn = isNonEmptyString(form.getValues("description_en"));
-    const hasCn = isNonEmptyString(form.getValues("description_cn"));
-    const hasRu = isNonEmptyString(form.getValues("description_ru"));
+    const currentEn = form.getValues("description_en");
+    const currentCn = form.getValues("description_cn");
+    const currentRu = form.getValues("description_ru");
+
+    const hasEn = isNonEmptyString(currentEn);
+    const hasCn = isNonEmptyString(currentCn);
+    const hasRu = isNonEmptyString(currentRu);
+
     if (!force && hasEn && hasCn && hasRu) {
       if (!silent) toast.success("คำบรรยายแปลครบถ้วนแล้ว ✨");
       return;
@@ -91,18 +107,24 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
 
     try {
       const result = await translateTextAction(desc, "html");
-      form.setValue("description_en", result.en, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      form.setValue("description_cn", result.cn, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      form.setValue("description_ru", result.ru, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
+      if (force || !hasEn) {
+        form.setValue("description_en", result.en, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+      if (force || !hasCn) {
+        form.setValue("description_cn", result.cn, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+      if (force || !hasRu) {
+        form.setValue("description_ru", result.ru, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
       if (processId)
         finishProcess(processId, "SUCCESS", "แปลคำบรรยายเรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
@@ -167,7 +189,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   };
 
   // 3. Translate Transits (Batch)
-  const translateTransits = async (silent = false, force = true) => {
+  const translateTransits = async (silent = false, force = false) => {
     let transits = form.getValues("nearby_transits") || [];
     if (typeof transits === "string") {
       try {
@@ -184,7 +206,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     if (transits.length === 0) return;
 
     const needsTranslation = transits.filter(
-      (t: any) => t.station_name && (force || !t.station_name_en || !t.station_name_cn || !t.station_name_ru),
+      (t: any) => t.station_name && (force || !isNonEmptyString(t.station_name_en) || !isNonEmptyString(t.station_name_cn) || !isNonEmptyString(t.station_name_ru)),
     );
     if (!force && needsTranslation.length === 0) {
       if (!silent) toast.success("ข้อมูลสถานีรถไฟฟ้าแปลครบถ้วนแล้ว ✨");
@@ -205,9 +227,9 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
         if (idx !== -1 && results[idx]) {
           return {
             ...t,
-            station_name_en: (force ? results[idx].name_en : t.station_name_en) || results[idx].name_en,
-            station_name_cn: (force ? results[idx].name_cn : t.station_name_cn) || results[idx].name_cn,
-            station_name_ru: (force ? results[idx].name_ru : t.station_name_ru) || results[idx].name_ru,
+            station_name_en: (!force && isNonEmptyString(t.station_name_en)) ? t.station_name_en : (results[idx].name_en || t.station_name_en),
+            station_name_cn: (!force && isNonEmptyString(t.station_name_cn)) ? t.station_name_cn : (results[idx].name_cn || t.station_name_cn),
+            station_name_ru: (!force && isNonEmptyString(t.station_name_ru)) ? t.station_name_ru : (results[idx].name_ru || t.station_name_ru),
           };
         }
         return t;
@@ -229,7 +251,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   };
 
   // 4. Translate Nearby Places (Batch)
-  const translatePlaces = async (silent = false, force = true) => {
+  const translatePlaces = async (silent = false, force = false) => {
     let places = form.getValues("nearby_places") || [];
     if (typeof places === "string") {
       try {
@@ -246,7 +268,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     if (places.length === 0) return;
 
     const needsTranslation = places.filter(
-      (p: any) => p.name && (force || !p.name_en || !p.name_cn || !p.name_ru),
+      (p: any) => p.name && (force || !isNonEmptyString(p.name_en) || !isNonEmptyString(p.name_cn) || !isNonEmptyString(p.name_ru)),
     );
     if (!force && needsTranslation.length === 0) {
       if (!silent) toast.success("ข้อมูลสถานที่ใกล้เคียงแปลครบถ้วนแล้ว ✨");
@@ -266,9 +288,9 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
         if (idx !== -1 && results[idx]) {
           return {
             ...p,
-            name_en: (force ? results[idx].name_en : p.name_en) || results[idx].name_en,
-            name_cn: (force ? results[idx].name_cn : p.name_cn) || results[idx].name_cn,
-            name_ru: (force ? results[idx].name_ru : p.name_ru) || results[idx].name_ru,
+            name_en: (!force && isNonEmptyString(p.name_en)) ? p.name_en : (results[idx].name_en || p.name_en),
+            name_cn: (!force && isNonEmptyString(p.name_cn)) ? p.name_cn : (results[idx].name_cn || p.name_cn),
+            name_ru: (!force && isNonEmptyString(p.name_ru)) ? p.name_ru : (results[idx].name_ru || p.name_ru),
           };
         }
         return p;
@@ -290,16 +312,21 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   };
 
   // 4b. Translate Address
-  const translateAddress = async (silent = false, force = true) => {
+  const translateAddress = async (silent = false, force = false) => {
     const address = form.getValues("address_line1");
     if (typeof address !== "string" || !address.trim()) {
       if (!silent) toast.error("กรุณากรอกที่อยู่ภาษาไทยก่อนกดแปลครับ");
       return;
     }
 
-    const hasEn = isNonEmptyString(form.getValues("address_line1_en"));
-    const hasCn = isNonEmptyString(form.getValues("address_line1_cn"));
-    const hasRu = isNonEmptyString(form.getValues("address_line1_ru"));
+    const currentEn = form.getValues("address_line1_en");
+    const currentCn = form.getValues("address_line1_cn");
+    const currentRu = form.getValues("address_line1_ru");
+
+    const hasEn = isNonEmptyString(currentEn);
+    const hasCn = isNonEmptyString(currentCn);
+    const hasRu = isNonEmptyString(currentRu);
+
     if (!force && hasEn && hasCn && hasRu) {
       if (!silent) toast.success("ที่อยู่แปลครบถ้วนแล้ว ✨");
       return;
@@ -310,18 +337,24 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
 
     try {
       const result = await translateTextAction(address, "plain");
-      form.setValue("address_line1_en", result.en, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      form.setValue("address_line1_cn", result.cn, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      form.setValue("address_line1_ru", result.ru, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
+      if (force || !hasEn) {
+        form.setValue("address_line1_en", result.en, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+      if (force || !hasCn) {
+        form.setValue("address_line1_cn", result.cn, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+      if (force || !hasRu) {
+        form.setValue("address_line1_ru", result.ru, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
       if (processId) finishProcess(processId, "SUCCESS", "แปลที่อยู่เรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
@@ -333,22 +366,28 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       setIsTranslating(false);
     }
   };
+
   // 4c. Translate Popular Area
-  const translatePopularArea = async (silent = false, force = true) => {
+  const translatePopularArea = async (silent = false, force = false) => {
     const area = form.getValues("popular_area");
     if (typeof area !== "string" || !area.trim()) return;
 
-    const hasEn = isNonEmptyString(form.getValues("popular_area_en"));
-    const hasCn = isNonEmptyString(form.getValues("popular_area_cn"));
-    const hasRu = isNonEmptyString(form.getValues("popular_area_ru"));
+    const currentEn = form.getValues("popular_area_en");
+    const currentCn = form.getValues("popular_area_cn");
+    const currentRu = form.getValues("popular_area_ru");
+
+    const hasEn = isNonEmptyString(currentEn);
+    const hasCn = isNonEmptyString(currentCn);
+    const hasRu = isNonEmptyString(currentRu);
+
     if (!force && hasEn && hasCn && hasRu) return;
 
     setIsTranslating(true);
     try {
       const result = await translateTextAction(area, "plain");
-      form.setValue("popular_area_en", result.en, { shouldDirty: true });
-      form.setValue("popular_area_cn", result.cn, { shouldDirty: true });
-      form.setValue("popular_area_ru", result.ru, { shouldDirty: true });
+      if (force || !hasEn) form.setValue("popular_area_en", result.en, { shouldDirty: true });
+      if (force || !hasCn) form.setValue("popular_area_cn", result.cn, { shouldDirty: true });
+      if (force || !hasRu) form.setValue("popular_area_ru", result.ru, { shouldDirty: true });
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error) {
@@ -371,13 +410,13 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     try {
       finishProcess(processId, "PROCESSING", "กำลังเริ่มแปลข้อมูลทุกส่วน...");
 
-      // Run sequentially to prevent cascading re-renders from concurrent form.setValue calls
-      await translateTitle(true);
-      await translateDescription(true);
-      await translateAddress(true);
-      await translatePopularArea(true);
-      await translateTransits(true);
-      await translatePlaces(true);
+      // Run sequentially with force = false to protect already translated fields
+      await translateTitle(true, false);
+      await translateDescription(true, false);
+      await translateAddress(true, false);
+      await translatePopularArea(true, false);
+      await translateTransits(true, false);
+      await translatePlaces(true, false);
 
       finishProcess(processId, "SUCCESS", "แปลข้อมูลครบทุกส่วนเรียบร้อยแล้ว! ✨");
     } catch (error: unknown) {
