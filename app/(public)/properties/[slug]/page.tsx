@@ -100,24 +100,37 @@ export default async function PublicPropertyDetailPage(props: {
         property={{ ...data, popular_area: data.popular_area ?? null }}
       />
 
-      {/* 1. Header & Breadcrumb */}
-      <PropertyHeader property={data} features={features as any[]} />
+      {/* 1 & 2. Responsive Hero Section: On Mobile (<lg) Gallery comes first; On Desktop (lg+) Header comes first */}
+      <div className="flex flex-col">
+        {/* Header: order-2 on mobile, order-1 on desktop */}
+        <div className="order-2 lg:order-1">
+          <PropertyHeader
+            property={data}
+            features={features as any[]}
+            className="pt-3 lg:pt-24"
+          />
+        </div>
+
+        {/* Gallery: order-1 on mobile, order-2 on desktop */}
+        <div className="order-1 lg:order-2 pt-16 lg:pt-0">
+          <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8 mt-0 lg:mt-8">
+            <section className="mb-0 lg:mb-10">
+              <PropertyGallery
+                images={data.images}
+                title={getLocaleValue(data, "title", language)}
+                propertyId={data.id}
+                imageAlt={`${getLocaleValue(data, "title", language)} ${t("seo.in")} ${data.district || ""}, ${data.province || ""}`}
+                isHot={!!data.is_hot_deal}
+                verified={!!data.verified}
+                petFriendly={!!data.is_pet_friendly}
+                allowAirbnb={!!data.allow_airbnb}
+              />
+            </section>
+          </div>
+        </div>
+      </div>
 
       <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8 mt-4 lg:mt-8">
-        {/* 2. Gallery */}
-        <section className="mb-6 md:mb-10">
-          <PropertyGallery
-            images={data.images}
-            title={getLocaleValue(data, "title", language)}
-            propertyId={data.id}
-            imageAlt={`${getLocaleValue(data, "title", language)} ${t("seo.in")} ${data.district || ""}, ${data.province || ""}`}
-            isHot={!!data.is_hot_deal}
-            verified={!!data.verified}
-            petFriendly={!!data.is_pet_friendly}
-            allowAirbnb={!!data.allow_airbnb}
-          />
-        </section>
-
         <RecentPropertyTracker
           property={{
             ...data,

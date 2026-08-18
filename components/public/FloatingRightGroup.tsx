@@ -33,8 +33,8 @@ export function FloatingRightGroup() {
   
   // Decide bottom offset based on page (using transform to avoid CLS)
   const normalizedPath = pathname?.replace(/^\/(th|en|cn)/, "") || "/";
-  const isPropertyRelated = normalizedPath.startsWith("/properties/");
-  const transformClass = isPropertyRelated ? "-translate-y-22 xl:-translate-y-0" : "translate-y-0";
+  const isPropertyDetail = normalizedPath.startsWith("/properties/") && !normalizedPath.endsWith("/properties");
+  const transformClass = isPropertyDetail ? "-translate-y-22 xl:-translate-y-0" : "translate-y-0";
 
   if (isModalOpen) return null;
 
@@ -46,7 +46,10 @@ export function FloatingRightGroup() {
       )}
     >
       <FloatingActionMenu />
-      <ChatWidget />
+      {/* Hide ONLY ChatWidget on mobile in property detail pages */}
+      <div className={isPropertyDetail ? "hidden xl:block" : "block"}>
+        <ChatWidget />
+      </div>
       <FloatingContactDial />
     </div>
   );

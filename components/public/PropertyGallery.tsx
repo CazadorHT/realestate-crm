@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { m, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -17,6 +18,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
   Sparkles,
   PawPrint,
 } from "lucide-react";
@@ -154,6 +156,7 @@ export function PropertyGallery({
 }: PropertyGalleryProps) {
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
+  const router = useRouter();
 
   // Custom t function for language override
   const t = (key: string) => {
@@ -274,13 +277,13 @@ export function PropertyGallery({
   return (
     <>
       <div className="relative group/gallery">
-        {/* Badge Overlay Container */}
-        <div className="absolute top-3 left-0 md:top-6 md:left-6 flex flex-col gap-2 z-39">
+        {/* Desktop Badge Overlay Container (Hidden on Mobile) */}
+        <div className="hidden lg:flex absolute top-6 left-6 flex-col gap-2 z-30 pointer-events-none">
           {/* Hot Deal Badge */}
           {isHot && (
-            <div className={`flex items-center bg-linear-to-br from-red-500 to-orange-600 text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 pr-4 xl:pr-1.5  xl:group-hover/gallery:pr-4 cursor-default ${inlineActiveIndex !== 0 ? "pr-1.5!" : ""}`}>
-              <PiFireFill className="w-4 h-4 md:w-5 md:h-5 fill-yellow-200" />
-              <span className={`opacity-100 max-w-[150px] ml-2 xl:max-w-0 xl:opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 ${inlineActiveIndex !== 0 ? "max-w-0! opacity-0! ml-0!" : ""}`}>
+            <div className="flex items-center bg-linear-to-br from-red-500 to-orange-600 text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+              <PiFireFill className="w-5 h-5 fill-yellow-200" />
+              <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2">
                 HOT DEAL
               </span>
             </div>
@@ -288,9 +291,9 @@ export function PropertyGallery({
 
           {/* Verified Badge */}
           {verified && (
-            <div className={`flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 pr-4 xl:pr-1.5 xl:group-hover/gallery:pr-4 cursor-default ${inlineActiveIndex !== 0 ? "pr-1.5!" : ""}`}>
-              <IoShieldCheckmark className="w-4 h-4 md:w-5 md:h-5" />
-              <span className={`opacity-100 max-w-[150px] ml-2 xl:max-w-0 xl:opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 ${inlineActiveIndex !== 0 ? "max-w-0! opacity-0! ml-0!" : ""}`}>
+            <div className="flex items-center bg-blue-600/90 backdrop-blur-md text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+              <IoShieldCheckmark className="w-5 h-5" />
+              <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2">
                 VERIFIED
               </span>
             </div>
@@ -298,9 +301,9 @@ export function PropertyGallery({
 
           {/* Pet Friendly Badge */}
           {petFriendly && (
-            <div className={`flex items-center bg-white/90 backdrop-blur-md text-orange-600 p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 pr-4 xl:pr-1.5 xl:group-hover/gallery:pr-4  cursor-default ${inlineActiveIndex !== 0 ? "pr-1.5!" : ""}`}>
-              <MdOutlinePets className="w-4 h-4 md:w-5 md:h-5 rotate-25" />
-              <span className={`opacity-100 max-w-[150px] ml-2 xl:max-w-0 xl:opacity-0  overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase ${inlineActiveIndex !== 0 ? "max-w-0! opacity-0! ml-0!" : ""}`}>
+            <div className="flex items-center bg-white/90 backdrop-blur-md text-orange-600 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+              <MdOutlinePets className="w-5 h-5 rotate-25" />
+              <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 Pet Friendly
               </span>
             </div>
@@ -308,9 +311,9 @@ export function PropertyGallery({
 
           {/* Airbnb Allowed Badge */}
           {allowAirbnb && (
-            <div className={`flex items-center bg-[#FF5A5F]/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 pr-4 xl:pr-1.5 xl:group-hover/gallery:pr-4 cursor-default ${inlineActiveIndex !== 0 ? "pr-1.5!" : ""}`}>
-              <FaAirbnb className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-              <span className={`opacity-100 max-w-[150px] ml-2 xl:max-w-0 xl:opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase ${inlineActiveIndex !== 0 ? "max-w-0! opacity-0! ml-0!" : ""}`}>
+            <div className="flex items-center bg-[#FF5A5F]/90 backdrop-blur-md text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+              <FaAirbnb className="w-5 h-5 shrink-0" />
+              <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 Airbnb
               </span>
             </div>
@@ -319,11 +322,113 @@ export function PropertyGallery({
 
         {/* Mobile Carousel (Visible on Mobile and Small Tablets Only) */}
         <div className="lg:hidden relative h-[320px] sm:h-[320px] md:h-[450px] lg:h-[450px] -mx-4 xs:-mx-6 sm:mx-0 rounded-none sm:rounded-xl overflow-hidden">
-          <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
-            <Badge className="bg-black/40 text-white hover:bg-black/70 border-none backdrop-blur-md text-[10px] px-2 py-1">
-              <ImageIcon className="w-3 h-3 mr-1" />
-              {sortedImages.length} {t("common.images")}
-            </Badge>
+          {/* Top Left: Controls & Badges Container (100% Perfectly Aligned) */}
+          <div className="absolute top-3 left-3 z-35 flex flex-col items-start gap-1.5 pointer-events-none">
+            {/* Floating Back Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (typeof window !== "undefined" && window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push("/properties");
+                }
+              }}
+              className="h-7 w-7 rounded-full bg-black/40 hover:bg-black/60 active:scale-95 backdrop-blur-md text-white flex items-center justify-center shadow-md transition-all border border-white/15 cursor-pointer touch-manipulation pointer-events-auto"
+              aria-label={t("common.back") || "Back"}
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-white" />
+            </button>
+
+            {/* Mobile Badges (Directly stacked with Back Button, exact h-7 w-7 matching circles) */}
+            {isHot && (
+              <div
+                className={`h-7 flex items-center bg-linear-to-br from-red-500 to-orange-600 text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                  inlineActiveIndex !== 0
+                    ? "w-7 justify-center p-0"
+                    : "px-2 justify-start"
+                }`}
+              >
+                <PiFireFill className="w-3.5 h-3.5 fill-yellow-200 shrink-0" />
+                <span
+                  className={`overflow-hidden whitespace-nowrap text-[9px] font-bold transition-all duration-300 ${
+                    inlineActiveIndex !== 0
+                      ? "max-w-0 opacity-0 ml-0"
+                      : "max-w-[150px] opacity-100 ml-1"
+                  }`}
+                >
+                  HOT DEAL
+                </span>
+              </div>
+            )}
+            {verified && (
+              <div
+                className={`h-7 flex items-center bg-blue-600/90 backdrop-blur-md text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                  inlineActiveIndex !== 0
+                    ? "w-7 justify-center p-0"
+                    : "px-2 justify-start"
+                }`}
+              >
+                <IoShieldCheckmark className="w-3.5 h-3.5 shrink-0" />
+                <span
+                  className={`overflow-hidden whitespace-nowrap text-[9px] font-bold transition-all duration-300 ${
+                    inlineActiveIndex !== 0
+                      ? "max-w-0 opacity-0 ml-0"
+                      : "max-w-[150px] opacity-100 ml-1"
+                  }`}
+                >
+                  VERIFIED
+                </span>
+              </div>
+            )}
+            {petFriendly && (
+              <div
+                className={`h-7 flex items-center bg-white/90 backdrop-blur-md text-orange-600 rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                  inlineActiveIndex !== 0
+                    ? "w-7 justify-center p-0"
+                    : "px-2 justify-start"
+                }`}
+              >
+                <MdOutlinePets className="w-3.5 h-3.5 rotate-25 shrink-0" />
+                <span
+                  className={`overflow-hidden whitespace-nowrap text-[9px] font-bold transition-all duration-300 uppercase ${
+                    inlineActiveIndex !== 0
+                      ? "max-w-0 opacity-0 ml-0"
+                      : "max-w-[150px] opacity-100 ml-1"
+                  }`}
+                >
+                  Pet Friendly
+                </span>
+              </div>
+            )}
+            {allowAirbnb && (
+              <div
+                className={`h-7 flex items-center bg-[#FF5A5F]/90 backdrop-blur-md text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                  inlineActiveIndex !== 0
+                    ? "w-7 justify-center p-0"
+                    : "px-2 justify-start"
+                }`}
+              >
+                <FaAirbnb className="w-3.5 h-3.5 shrink-0" />
+                <span
+                  className={`overflow-hidden whitespace-nowrap text-[9px] font-bold transition-all duration-300 uppercase ${
+                    inlineActiveIndex !== 0
+                      ? "max-w-0 opacity-0 ml-0"
+                      : "max-w-[150px] opacity-100 ml-1"
+                  }`}
+                >
+                  Airbnb
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="absolute top-3 right-3 z-35 flex flex-col items-end gap-2">
+            <div className="h-7 px-2.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white flex items-center justify-center shadow-md transition-all border border-white/15 text-[10px] font-medium cursor-default select-none">
+              <ImageIcon className="w-3 h-3 mr-1 shrink-0" />
+              <span>{sortedImages.length} {t("common.images")}</span>
+            </div>
           </div>
 
           {/* Pagination Dots */}

@@ -4,12 +4,14 @@ import { Home, Mail, Phone, MapPin } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useState, useTransition, Suspense, useEffect } from "react";
 import { subscribeToLineAction } from "@/features/leads/public-actions";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import { getTransitLinesWithStations } from "@/features/public/stations";
+import { cn } from "@/lib/utils";
 
 interface DisplayStation {
   slug: string;
@@ -18,10 +20,14 @@ interface DisplayStation {
 }
 
 export function PublicFooter() {
+  const pathname = usePathname();
   const { language, t } = useLanguage();
   const settings = useSiteConfig();
   const [mounted, setMounted] = useState(false);
   const currentYear = mounted ? new Date().getFullYear() : 2026;
+
+  const normalizedPath = pathname?.replace(/^\/(th|en|cn)/, "") || "/";
+  const isPropertyDetail = normalizedPath.startsWith("/properties/") && !normalizedPath.endsWith("/properties");
 
   const [rawStations, setRawStations] = useState<DisplayStation[]>([
     { slug: "bts-asok", label: { th: "อโศก", en: "Asok", cn: "阿索克", ru: "Асок" }, prefix: "BTS" },
@@ -190,7 +196,10 @@ export function PublicFooter() {
 
 
 
-        <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-16 relative z-10">
+        <div className={cn(
+          "max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 pt-16 relative z-10",
+          isPropertyDetail ? "pb-36 lg:pb-16" : "pb-16"
+        )}>
           {/* Main Footer Content */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16 px-4">
             {/* 1. Brand & Contact (3 cols) */}
@@ -499,7 +508,7 @@ export function PublicFooter() {
             <p className="text-slate-400 text-sm">
               &copy; {currentYear} {companyMeta.name_th}. {t("footer.rights")}
             </p>
-            <div className="flex gap-6 text-sm font-medium text-slate-400">
+            <div className="flex flex-wrap gap-4 sm:gap-6 text-sm font-medium text-slate-400 items-center">
               <Link
                 href="/privacy-policy"
                 className="hover:text-blue-400 transition-colors"
@@ -512,6 +521,23 @@ export function PublicFooter() {
               >
                 {t("footer.terms_of_use")}
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("open-cookie-settings"));
+                  }
+                }}
+                className="hover:text-blue-400 transition-colors cursor-pointer text-left"
+              >
+                {language === "th"
+                  ? "ตั้งค่าคุกกี้"
+                  : language === "cn"
+                    ? "Cookie 设置"
+                    : language === "ru"
+                      ? "Настройки Cookie"
+                      : "Cookie Settings"}
+              </button>
             </div>
           </div>
         </div>

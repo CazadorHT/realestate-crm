@@ -118,7 +118,7 @@ export function PropertyAmenities({
                   return (
                     <div
                       key={i}
-                      className="flex items-center gap-2 lg:gap-3 text-sm lg:text-base text-slate-600 group/amenity transition-all duration-300 hover:translate-x-1"
+                      className="flex items-center gap-2 lg:gap-3 text-xs lg:text-base text-slate-600 group/amenity transition-all duration-300 hover:translate-x-1"
                     >
                       <div className="p-1.5 lg:p-2 rounded-full bg-blue-50 text-blue-600 transition-all duration-300 group-hover/amenity:bg-blue-600 group-hover/amenity:text-white group-hover/amenity:shadow-sm">
                         <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4 transition-transform duration-300 group-hover/amenity:scale-110" />

@@ -199,7 +199,7 @@ export function NearbyPlaces({
                       key={i}
                       className="flex justify-between items-start text-sm gap-2 p-1.5 -mx-1.5 rounded-lg transition-colors hover:bg-white/50 group/item"
                     >
-                      <span className="text-slate-600 mr-auto wrap-break-word leading-tight group-hover/item:text-slate-800 transition-colors">
+                      <span className="text-xs lg:text-sm text-slate-600 mr-auto wrap-break-word leading-tight group-hover/item:text-slate-800 transition-colors">
                         {getLocaleValue(item, "name", language)}
                       </span>
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -278,7 +278,7 @@ export function NearbyPlaces({
                       </span>
                       <Link
                         href={targetHref}
-                        className="text-slate-600 leading-tight hover:text-blue-600 hover:underline transition-colors decoration-blue-300 underline-offset-4"
+                        className="text-xs lg:text-sm text-slate-600 leading-tight hover:text-blue-600 hover:underline transition-colors decoration-blue-300 underline-offset-4"
                       >
                         {getLocaleValue(transit, "station_name", language)}
                       </Link>

@@ -108,6 +108,15 @@ export function CookieConsent() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleOpen = () => {
+      setShowSettings(true);
+      setIsVisible(true);
+    };
+    window.addEventListener("open-cookie-settings", handleOpen);
+    return () => window.removeEventListener("open-cookie-settings", handleOpen);
+  }, []);
+
   const handleOpenSettings = () => {
     setShowSettings(true);
     setIsVisible(true);
@@ -144,23 +153,6 @@ export function CookieConsent() {
 
   return (
     <>
-      {/* Floating Settings Button - Permanent way to withdraw/change consent */}
-      {!isVisible && !isModalOpen && (
-        <button
-          onClick={handleOpenSettings}
-          className={cn(
-            "fixed left-4 z-90 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md border border-slate-200 shadow-lg text-slate-600 hover:text-blue-600 hover:scale-110 transition-all duration-300 group",
-            bottomClass
-          )}
-          aria-label="Manage Cookie Settings"
-        >
-          <Cookie className="h-5 w-5" />
-          <div className="absolute left-12 bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap pointer-events-none uppercase tracking-wider">
-            {T("common.cookie_consent.settings")}
-          </div>
-        </button>
-      )}
-
       {isVisible && !isModalOpen && (
         <div className="fixed bottom-0 left-0 right-0 z-100 p-4 md:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] animate-in slide-in-from-bottom-full duration-700 ease-out">
           <div className="max-w-7xl px-0 md:px-6 lg:px-8 mx-auto">

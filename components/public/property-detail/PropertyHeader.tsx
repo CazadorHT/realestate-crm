@@ -1,22 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { 
-  BadgeHelp, 
-  MapPin, 
-  Building2, 
-  Home, 
-  Warehouse, 
-  Briefcase, 
-  Factory, 
+import {
+  BadgeHelp,
+  MapPin,
+  Building2,
+  Home,
+  Warehouse,
+  Briefcase,
+  Factory,
   Store,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { MdApartment, MdVilla, MdPool, MdLandscape } from "react-icons/md";
 import { Badge } from "@/components/ui/badge";
-import {
-  KeySellingPoints,
-} from "@/components/public/KeySellingPoints";
+import { KeySellingPoints } from "@/components/public/KeySellingPoints";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { cn } from "@/lib/utils";
 
@@ -34,10 +32,7 @@ const PROPERTY_TYPE_ICONS: Record<string, any> = {
   commercial: Store,
   commercial_building: Store,
 };
-import {
-  getOfficePrice,
-  getTypeColor,
-} from "@/lib/property-utils";
+import { getOfficePrice, getTypeColor } from "@/lib/property-utils";
 import {
   useLanguage,
   dictionaries,
@@ -239,7 +234,7 @@ export function PropertyHeader({
         <div>
           <div className="flex flex-col gap-3 md:gap-4">
             {!hideBreadcrumbs && (
-              <div className="mb-2">
+              <div className="mb-2 hidden lg:block">
                 <AppBreadcrumbs
                   items={[
                     { label: t("nav.home"), href: "/" },
@@ -275,7 +270,7 @@ export function PropertyHeader({
                               : `/properties?popular_area=${encodeURIComponent(
                                   typeof property.popular_area === "object"
                                     ? property.popular_area?.th || ""
-                                    : property.popular_area || ""
+                                    : property.popular_area || "",
                                 )}`,
                           },
                         ]
@@ -295,85 +290,96 @@ export function PropertyHeader({
 
             <div className="flex flex-col lg:items-start gap-4 lg:gap-0">
               <div className="flex lg:flex-row flex-col gap-4 w-full justify-between lg:items-end items-start">
-                <div className="space-y-3 grow min-w-0  xl:max-w-[1000px]">
+                <div className="space-y-2.5 lg:space-y-3 grow min-w-0 xl:max-w-[1000px]">
                   <div className="flex w-full items-center gap-1.5 md:gap-2 overflow-x-auto no-scrollbar flex-nowrap py-1">
-  <Badge
-    className={`shrink-0 rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
-      property.listing_type === "SALE"
-        ? "bg-emerald-600 text-white"
-        : property.listing_type === "RENT"
-          ? "bg-linear-to-r from-sky-500 to-blue-600 text-white"
-          : "bg-linear-to-r from-emerald-500 via-teal-500 to-blue-600 text-white"
-    }`}
-  >
-    {property.listing_type === "SALE"
-      ? t("common.for_sale")
-      : property.listing_type === "RENT"
-        ? t("common.for_rent")
-        : t("common.for_sale_rent")}
-  </Badge>
+                    <Badge
+                      className={`shrink-0 rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
+                        property.listing_type === "SALE"
+                          ? "bg-emerald-600 text-white"
+                          : property.listing_type === "RENT"
+                            ? "bg-linear-to-r from-sky-500 to-blue-600 text-white"
+                            : "bg-linear-to-r from-emerald-500 via-teal-500 to-blue-600 text-white"
+                      }`}
+                    >
+                      {property.listing_type === "SALE"
+                        ? t("common.for_sale")
+                        : property.listing_type === "RENT"
+                          ? t("common.for_rent")
+                          : t("common.for_sale_rent")}
+                    </Badge>
 
-  {property.property_type && (
-    <Badge
-      variant="outline"
-      className={cn(
-        "shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-white text-[11px] md:text-sm font-bold border-transparent shadow-sm whitespace-nowrap",
-        typeColor.bg,
-        typeColor.text,
-      )}
-    >
-      {t(
-        `property_types.${property.property_type.toLowerCase()}`,
-      )}
-    </Badge>
-  )}
+                    {property.property_type && (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-white text-[11px] md:text-sm font-bold border-transparent shadow-sm whitespace-nowrap",
+                          typeColor.bg,
+                          typeColor.text,
+                        )}
+                      >
+                        {t(
+                          `property_types.${property.property_type.toLowerCase()}`,
+                        )}
+                      </Badge>
+                    )}
 
-  {property.is_fully_furnished && (
-    <Badge
-      variant="outline"
-      className="shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
-    >
-      ✨ {t("property.specs.fully_furnished")}
-    </Badge>
-  )}
+                    {property.is_fully_furnished && (
+                      <Badge
+                        variant="outline"
+                        className="shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
+                      >
+                        ✨ {t("property.specs.fully_furnished")}
+                      </Badge>
+                    )}
 
-  {property.is_bare_shell && (
-    <Badge
-      variant="outline"
-      className="shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
-    >
-      🏗️ {t("property.specs.bare_shell")}
-    </Badge>
-  )}
-</div>
+                    {property.is_bare_shell && (
+                      <Badge
+                        variant="outline"
+                        className="shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
+                      >
+                        🏗️ {t("property.specs.bare_shell")}
+                      </Badge>
+                    )}
+                  </div>
 
-                  {property.project && (() => {
-                    const typeKey = property.property_type?.toLowerCase() || "other";
-                    const ProjectIcon = PROPERTY_TYPE_ICONS[typeKey] || Building2;
-                    const projectName = getLocaleValue(property.project, "name", language);
+                  {property.project &&
+                    (() => {
+                      const typeKey =
+                        property.property_type?.toLowerCase() || "other";
+                      const ProjectIcon =
+                        PROPERTY_TYPE_ICONS[typeKey] || Building2;
+                      const projectName = getLocaleValue(
+                        property.project,
+                        "name",
+                        language,
+                      );
 
-                    return (
-                      <div className="mb-3">
-                        <Link 
-                          href={`/projects/${property.project.slug}`}
-                          className="group/proj h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
-                          title={`ดูโครงการ ${projectName}`}
-                        >
-                          <div className="flex items-center gap-2"><ProjectIcon className="w-5 h-5 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
-                          <span className="font-semibold">{projectName}</span></div>
-                          <ChevronRight className="w-3.5 h-3.5 text-blue-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform" />
-                        </Link>
-                      </div>
-                    );
-                  })()}
+                      return (
+                        <div className="mb-2 lg:mb-3">
+                          <Link
+                            href={`/projects/${property.project.slug}`}
+                            className="group/proj h-9 lg:h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
+                            title={`ดูโครงการ ${projectName}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <ProjectIcon className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
+                              <span className="font-semibold">
+                                {projectName}
+                              </span>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-blue-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform" />
+                          </Link>
+                        </div>
+                      );
+                    })()}
 
-                  <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
+                  <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-snug line-clamp-2">
                     {localizedTitle}
                   </h1>
 
-                  <div className="flex items-center text-slate-600 gap-4 font-normal text-sm">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
+                  <div className="flex items-center text-slate-600 gap-3 sm:gap-4 font-normal text-xs sm:text-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 shrink-0" />
                       <span className="line-clamp-1">
                         {locationParts || t("common.no_location")}
                       </span>
@@ -394,12 +400,22 @@ export function PropertyHeader({
                       className="flex items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors group/copy cursor-pointer"
                       title="Copy Property ID"
                     >
-                      <Copy className="w-3.5 h-3.5 group-hover/copy:scale-110 transition-transform" />
-                      <span className="text-xs font-mono lowercase">
+                      <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover/copy:scale-110 transition-transform" />
+                      <span className="text-[11px] sm:text-xs font-mono lowercase">
                         ref: {property.id.slice(0, 8)}
                       </span>
                     </button>
                   </div>
+                  {/* MOBILE ONLY: Pricing Section right after Location */}
+                  <div className="block lg:hidden">
+                    <PropertyPricingSection
+                      property={property}
+                      language={language}
+                      t={t}
+                      officePrice={officePrice}
+                    />
+                  </div>
+
                   <KeySellingPoints
                     points={finalKeySellingPoints}
                     listingType={property.listing_type || "SALE"}
@@ -407,13 +423,16 @@ export function PropertyHeader({
                     propertyType={property.property_type}
                   />
                 </div>
-                
-                <PropertyPricingSection
-                  property={property}
-                  language={language}
-                  t={t}
-                  officePrice={officePrice}
-                />
+
+                {/* DESKTOP ONLY: Pricing Section on the right */}
+                <div className="hidden lg:block shrink-0">
+                  <PropertyPricingSection
+                    property={property}
+                    language={language}
+                    t={t}
+                    officePrice={officePrice}
+                  />
+                </div>
               </div>
             </div>
           </div>
