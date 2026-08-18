@@ -86,7 +86,7 @@ export function KeySellingPoints({
         {visiblePoints.map((point, index) => (
           <div
             key={index}
-            className="flex items-center gap-2 text-slate-700 text-sm py-1.5"
+            className="flex items-center gap-2 text-slate-700 text-xs lg:text-sm py-1.5"
           >
             {point.icon ? (
               <DynamicIcon
