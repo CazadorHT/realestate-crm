@@ -368,7 +368,7 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
 
       const itemsSet = new Map<string, DynamicSuggestionItem>();
 
-      // Add Projects that actually have active properties
+      // Add Projects that actually have active properties (1 suggestion item per unique project)
       if (projectsData) {
         for (const proj of projectsData) {
           if (proj.name) {
@@ -378,20 +378,14 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
             const cn = (typeof names === "object" ? names?.cn || names?.en || names?.th : names || "").trim();
             const ru = (typeof names === "object" ? names?.ru || names?.en || names?.th : names || "").trim();
 
-            if (th) {
-              itemsSet.set(th.toLowerCase(), {
-                text: th,
+            const primaryText = th || en;
+            if (primaryText) {
+              const projectKey = (proj.id || primaryText).toLowerCase();
+              itemsSet.set(`project-${projectKey}`, {
+                text: primaryText,
                 type: "area",
                 label: "โครงการ",
-                translations: { th, en, cn, ru },
-              });
-            }
-            if (en && en.toLowerCase() !== th.toLowerCase()) {
-              itemsSet.set(en.toLowerCase(), {
-                text: en,
-                type: "area",
-                label: "โครงการ",
-                translations: { th, en, cn, ru },
+                translations: { th: th || primaryText, en: en || primaryText, cn, ru },
               });
             }
           }
@@ -515,7 +509,7 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
       return [];
     }
   },
-  ["dynamic-search-suggestions-v8"],
+  ["dynamic-search-suggestions-v9"],
   { revalidate: 31536000, tags: ["suggestions", "master-data", "projects", "public-data"] }
 );
 

@@ -223,6 +223,8 @@ export function MagicAiSearch({
   const filteredSuggestions = useMemo(() => {
     const q = inputValue.trim().toLowerCase();
     
+    let rawList: SuggestionItem[] = [];
+
     if (!q) {
       // 🌟 Balanced showcase across diverse categories when input is empty
       const projects = allSuggestions.filter((s) => s.label === "โครงการ").slice(0, 4);
@@ -233,79 +235,90 @@ export function MagicAiSearch({
 
       const combined = [...projects, ...areas, ...landmarks, ...transits, ...features];
       
-      // If we don't have enough categorized items, fallback to top slice
-      if (combined.length === 0) {
-        return allSuggestions.slice(0, 15);
+      rawList = combined.length === 0 ? allSuggestions.slice(0, 15) : combined;
+    } else {
+      // Filter & rank matching suggestions across all localized names
+      const scoredMatches = allSuggestions
+        .map((item: SuggestionItem) => {
+          const textCandidates = [
+            item.text,
+            item.translations?.th,
+            item.translations?.en,
+            item.translations?.cn,
+            item.translations?.ru,
+          ]
+            .filter((t): t is string => Boolean(t))
+            .map((t) => t.toLowerCase());
+
+          const isMatch = textCandidates.some((t) => t.includes(q));
+          if (!isMatch) return null;
+
+          let score = 0;
+          // 1. Starts with query (Top Priority, e.g. "Chaiyapruek" for "cha") -> 100 pts
+          if (textCandidates.some((t) => t.startsWith(q))) {
+            score += 100;
+          } 
+          // 2. Word boundary starts with query (e.g. "The Palm Chaengwattana" or "ใกล้ Chai...") -> 80 pts
+          else if (textCandidates.some((t) => t.includes(` ${q}`) || t.includes(`-${q}`) || t.includes(`(${q}`))) {
+            score += 80;
+          } 
+          // 3. Middle match (e.g. "Phetchaburi" or "Ratchada") -> 20 pts
+          else {
+            score += 20;
+          }
+
+          // 4. Boost โครงการ (Projects) -> +35 pts
+          if (item.label === "โครงการ") {
+            score += 35;
+          }
+          // 5. Boost สถานีรถไฟฟ้า / ย่าน when exact prefix -> +10 pts
+          if (item.type === "transit") {
+            score += 15;
+          }
+
+          // Shorter texts get a slight boost over very long sentences
+          score -= Math.min(item.text.length * 0.2, 10);
+
+          return { item, score };
+        })
+        .filter((s): s is { item: SuggestionItem; score: number } => s !== null)
+        .sort((a, b) => b.score - a.score)
+        .map((s) => s.item);
+
+      // If query starts with "ใกล้" or "near" or custom search, build dynamic prompt suggestion if not present
+      if ((q.startsWith("ใกล้") || q.startsWith("near") || q.startsWith("近")) && !scoredMatches.some((m) => m.text.toLowerCase() === q)) {
+        const customPrompt: SuggestionItem = {
+          text: inputValue.trim(),
+          type: "landmark",
+          label: "ค้นหาทำเลนี้",
+          translations: {
+            th: inputValue.trim(),
+            en: inputValue.trim(),
+            cn: inputValue.trim(),
+            ru: inputValue.trim(),
+          },
+        };
+        rawList = [customPrompt, ...scoredMatches];
+      } else {
+        rawList = scoredMatches;
       }
-      return combined;
-    }
-    
-    // Filter & rank matching suggestions across all localized names
-    const scoredMatches = allSuggestions
-      .map((item: SuggestionItem) => {
-        const textCandidates = [
-          item.text,
-          item.translations?.th,
-          item.translations?.en,
-          item.translations?.cn,
-          item.translations?.ru,
-        ]
-          .filter((t): t is string => Boolean(t))
-          .map((t) => t.toLowerCase());
-
-        const isMatch = textCandidates.some((t) => t.includes(q));
-        if (!isMatch) return null;
-
-        let score = 0;
-        // 1. Starts with query (Top Priority, e.g. "Chaiyapruek" for "cha") -> 100 pts
-        if (textCandidates.some((t) => t.startsWith(q))) {
-          score += 100;
-        } 
-        // 2. Word boundary starts with query (e.g. "The Palm Chaengwattana" or "ใกล้ Chai...") -> 80 pts
-        else if (textCandidates.some((t) => t.includes(` ${q}`) || t.includes(`-${q}`) || t.includes(`(${q}`))) {
-          score += 80;
-        } 
-        // 3. Middle match (e.g. "Phetchaburi" or "Ratchada") -> 20 pts
-        else {
-          score += 20;
-        }
-
-        // 4. Boost โครงการ (Projects) -> +35 pts
-        if (item.label === "โครงการ") {
-          score += 35;
-        }
-        // 5. Boost สถานีรถไฟฟ้า / ย่าน when exact prefix -> +10 pts
-        if (item.type === "transit") {
-          score += 15;
-        }
-
-        // Shorter texts get a slight boost over very long sentences
-        score -= Math.min(item.text.length * 0.2, 10);
-
-        return { item, score };
-      })
-      .filter((s): s is { item: SuggestionItem; score: number } => s !== null)
-      .sort((a, b) => b.score - a.score)
-      .map((s) => s.item);
-
-    // If query starts with "ใกล้" or "near" or custom search, build dynamic prompt suggestion if not present
-    if ((q.startsWith("ใกล้") || q.startsWith("near") || q.startsWith("近")) && !scoredMatches.some((m) => m.text.toLowerCase() === q)) {
-      const customPrompt: SuggestionItem = {
-        text: inputValue.trim(),
-        type: "landmark",
-        label: "ค้นหาทำเลนี้",
-        translations: {
-          th: inputValue.trim(),
-          en: inputValue.trim(),
-          cn: inputValue.trim(),
-          ru: inputValue.trim(),
-        },
-      };
-      return [customPrompt, ...scoredMatches].slice(0, 25);
     }
 
-    return scoredMatches.slice(0, 25);
-  }, [allSuggestions, inputValue]);
+    // Deduplicate suggestions so items with the same display title and category aren't duplicated
+    const seenDisplayKeys = new Set<string>();
+    const deduplicatedSuggestions: SuggestionItem[] = [];
+
+    for (const item of rawList) {
+      const displayTitle = getSuggestionDisplayText(item, language).toLowerCase().trim();
+      const dedupKey = `${displayTitle}::${item.label}`;
+      if (!seenDisplayKeys.has(dedupKey)) {
+        seenDisplayKeys.add(dedupKey);
+        deduplicatedSuggestions.push(item);
+      }
+    }
+
+    return deduplicatedSuggestions.slice(0, 25);
+  }, [allSuggestions, inputValue, language, getSuggestionDisplayText]);
 
   const handleSelectSuggestion = (item: SuggestionItem) => {
     const localizedText = getSuggestionDisplayText(item, language);
