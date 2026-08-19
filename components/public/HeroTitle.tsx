@@ -41,7 +41,7 @@ export function HeroTitle({ initialWord }: { initialWord?: string }) {
                 duration: 0.4,
                 ease: [0.23, 1, 0.32, 1], // Premium ease-out
               }}
-              className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight whitespace-nowrap inline-block pb-2"
+              className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight whitespace-nowrap inline-block sm:pb-2"
             >
               {words[index] || words[0] || ""}
             </m.span>

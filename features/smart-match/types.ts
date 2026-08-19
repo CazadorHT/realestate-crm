@@ -25,6 +25,13 @@ export interface PropertyMatch {
   id: string;
   slug?: string | null;
   title: string;
+  title_en?: string | null;
+  title_cn?: string | null;
+  title_ru?: string | null;
+  project_name?: string | null;
+  project_name_en?: string | null;
+  project_name_cn?: string | null;
+  project_name_ru?: string | null;
   price: number;
   original_price?: number;
   secondary_price?: number;
@@ -36,6 +43,13 @@ export interface PropertyMatch {
   commute_time?: number;
   bedrooms?: number;
   bathrooms?: number;
+  size_sqm?: number | null;
+  popular_area?: string | null;
+  popular_area_en?: string | null;
+  popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
+  district?: string | null;
+  province?: string | null;
   near_transit?: boolean;
   transit_station_name?: string;
   transit_station_name_en?: string | null;

@@ -8,9 +8,12 @@ import {
   Search, 
   SlidersHorizontal, 
   ArrowUpDown, 
+  ArrowDownAZ,
+  ArrowDownWideNarrow,
   X, 
   ChevronLeft, 
   ChevronRight,
+  ArrowLeft,
   Home,
   Map as MapIcon,
   Store,
@@ -247,7 +250,9 @@ export function ProjectsHubClient({
   const [sortBy, setSortBy] = React.useState<"DEFAULT" | "PRICE_LOW" | "UNITS_HIGH" | "NAME_AZ">("DEFAULT");
   const [isTypeDialogOpen, setIsTypeDialogOpen] = React.useState(false);
   const [isProvinceDialogOpen, setIsProvinceDialogOpen] = React.useState(false);
+  const [isAreaDialogOpen, setIsAreaDialogOpen] = React.useState(false);
   const [isDeveloperDialogOpen, setIsDeveloperDialogOpen] = React.useState(false);
+  const [isSortDialogOpen, setIsSortDialogOpen] = React.useState(false);
 
   const getPageString = (key: string, params?: Record<string, string | number>) => {
     let val = translations[key]?.[language] || CLIENT_LOCALIZATION[key]?.[language] || translations[key]?.th || CLIENT_LOCALIZATION[key]?.th || "";
@@ -528,7 +533,7 @@ export function ProjectsHubClient({
   return (
     <>
       {/* Hero Section - Dynamically updates subtitle with province and project count */}
-      <section className="relative overflow-hidden pt-24 pb-20 md:pt-36 md:pb-32 text-white bg-slate-950">
+      <section className="relative overflow-hidden pt-20 pb-10 md:pt-32 md:pb-24 text-white bg-slate-950">
         {/* Background Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-80 blur-xs scale-105 duration-1000 select-none pointer-events-none"
@@ -541,23 +546,32 @@ export function ProjectsHubClient({
         <div className="absolute top-1/3 left-1/4 -translate-y-1/2 w-[350px] h-[350px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative max-w-screen-2xl mx-auto px-5 md:px-8 z-10">
-          <nav aria-label="breadcrumb" className="mb-6 md:mb-8">
-            <ol className="flex items-center gap-2 text-xs text-slate-400 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 w-fit">
+          <nav aria-label="breadcrumb" className="mb-4 md:mb-8">
+            <ol className="hidden lg:flex items-center gap-2 text-xs text-slate-400 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 w-fit">
               <li><Link href="/" className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
               <li><ChevronRight className="w-3.5 h-3.5 opacity-60 text-slate-500" /></li>
               <li className="text-slate-200 font-bold">{getPageString("breadcrumb_projects")}</li>
             </ol>
+            <div className="block lg:hidden">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md shadow-2xs active:scale-95 transition-all"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{getPageString("breadcrumb_home")}</span>
+              </Link>
+            </div>
           </nav>
 
-          <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
-            <div className="p-5 rounded-3xl bg-linear-to-tr from-blue-600/30 to-indigo-600/30 backdrop-blur-xl border border-white/10 shrink-0 shadow-2xl shadow-blue-500/5">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+            <div className="hidden md:flex p-5 rounded-3xl bg-linear-to-tr from-blue-600/30 to-indigo-600/30 backdrop-blur-xl border border-white/10 shrink-0 shadow-2xl shadow-blue-500/5">
               <Building2 className="w-12 h-12 text-blue-400" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white tracking-tight drop-shadow-md leading-none bg-linear-to-r from-white via-white to-slate-300 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white tracking-tight drop-shadow-md leading-tight md:leading-none bg-linear-to-r from-white via-white to-slate-300 bg-clip-text text-transparent">
                 {getPageString("title")}
               </h1>
-              <p className="text-base md:text-lg text-slate-300 mt-3.5 font-medium max-w-2xl leading-relaxed">
+              <p className="text-xs sm:text-sm md:text-lg text-slate-300 mt-2 md:mt-3.5 font-medium max-w-2xl leading-relaxed">
                 {getSubtitleText(filteredAndSortedProjects.length)}
               </p>
             </div>
@@ -567,160 +581,189 @@ export function ProjectsHubClient({
 
       {/* Controls Container - Sticky & Refined */}
       <section className="sticky top-[62px] z-30 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/85 shadow-xs">
-        <div className="max-w-screen-2xl mx-auto px-5 md:px-8 pt-5 pb-4">
-          <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-2.5">
+          
+          {/* Row 1: Search Bar + Sort Dropdown */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
             {/* Search Input */}
-            <div className="relative flex-1 max-w-xl group">
-              <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-450 group-focus-within:text-blue-600 transition-colors" />
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-450 group-focus-within:text-blue-600 transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={getPageString("search_placeholder")}
-                className="w-full h-11 pl-11 pr-10 rounded-2xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-blue-50/80 focus:border-blue-500 transition-all font-medium text-xs text-slate-800 placeholder:text-slate-400"
+                className="w-full h-11 pl-10 pr-9 rounded-2xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-blue-50/80 focus:border-blue-500 transition-all font-medium text-xs text-slate-800 placeholder:text-slate-400"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3.5 top-3.5 p-0.5 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-3 top-3.5 p-0.5 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Main Action Filters */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Province Selector Dialog */}
-              {provinces.length > 0 && (
-                <ResponsiveDialog
-                  open={isProvinceDialogOpen}
-                  onOpenChange={setIsProvinceDialogOpen}
-                  title={getPageString("filter_province")}
-                  trigger={
-                    <Button
-                      variant="outline"
-                      className="h-11 px-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
-                    >
-                      <div className={`p-1 rounded-md shrink-0 ${
-                        selectedProvince === "ALL" 
-                          ? "bg-red-50 text-red-550" 
-                          : `${getProvinceColor(selectedProvince).bg} ${getProvinceColor(selectedProvince).text}`
-                      }`}>
-                        <MapPin className="h-4 w-4" />
-                      </div>
-                      <span>
-                        {selectedProvince === "ALL" 
-                          ? getPageString("filter_all_provinces") 
-                          : getProvinceName(selectedProvince, language)}
-                      </span>
-                    </Button>
-                  }
-                >
-                  <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {/* All Provinces Option */}
-                      <button
-                        onClick={() => {
-                          setSelectedProvince("ALL");
-                          setSelectedArea("ALL");
-                          setIsProvinceDialogOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
-                          selectedProvince === "ALL"
-                            ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
-                            : "border-slate-100 hover:bg-slate-50 text-slate-600"
-                        }`}
+            {/* Sort By ResponsiveDialog */}
+            <div className="relative shrink-0">
+              {(() => {
+                const sortOptionConfigs = {
+                  DEFAULT: {
+                    icon: Sparkles,
+                    label: getPageString("sort_default"),
+                    bg: "bg-amber-50 text-amber-600",
+                  },
+                  PRICE_LOW: {
+                    icon: ArrowDownWideNarrow,
+                    label: getPageString("sort_price_low"),
+                    bg: "bg-emerald-50 text-emerald-600",
+                  },
+                  UNITS_HIGH: {
+                    icon: Building2,
+                    label: getPageString("sort_units_high"),
+                    bg: "bg-blue-50 text-blue-600",
+                  },
+                  NAME_AZ: {
+                    icon: ArrowDownAZ,
+                    label: getPageString("sort_name_az"),
+                    bg: "bg-purple-50 text-purple-600",
+                  },
+                } as const;
+
+                const currentSortConfig = sortOptionConfigs[sortBy] || sortOptionConfigs.DEFAULT;
+                const CurrentSortIcon = currentSortConfig.icon;
+
+                return (
+                  <ResponsiveDialog
+                    open={isSortDialogOpen}
+                    onOpenChange={setIsSortDialogOpen}
+                    title={getPageString("sort_by")}
+                    trigger={
+                      <Button
+                        variant="outline"
+                        aria-label={getPageString("sort_by")}
+                        className="h-11! w-11 sm:w-auto px-0 sm:px-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-350 hover:shadow-xs text-xs font-bold text-slate-700 flex items-center justify-center sm:justify-start gap-2 cursor-pointer shrink-0"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-red-50 text-red-500 shrink-0">
-                            <MapPin className="w-4 h-4" />
-                          </div>
-                          <span>
-                            {getPageString("filter_all_provinces")}
-                            <span className="text-[10px] opacity-60 font-medium ml-1">({initialProjects.length})</span>
-                          </span>
+                        <div className={`p-1 rounded-md shrink-0 transition-colors ${currentSortConfig.bg}`}>
+                          <CurrentSortIcon className="h-4 w-4" />
                         </div>
-                        {selectedProvince === "ALL" && (
-                          <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
-                        )}
-                      </button>
-
-                      {/* Individual Provinces */}
-                      {provinces.map((prov) => {
-                        const isSelected = selectedProvince === prov;
-                        const labelText = getProvinceName(prov, language);
-                        const provColor = getProvinceColor(prov);
-                        const count = provinceCounts[prov] || 0;
-                        const isDisabled = count === 0;
-                        return (
-                          <button
-                            key={prov}
-                            onClick={() => {
-                              setSelectedProvince(prov);
-                              setSelectedArea("ALL");
-                              setIsProvinceDialogOpen(false);
-                            }}
-                            disabled={isDisabled}
-                            className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
-                              isSelected
-                                ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
-                                : isDisabled
-                                  ? "border-slate-100 bg-slate-50/40 text-slate-350 cursor-not-allowed opacity-50 pointer-events-none"
+                        <span className="hidden sm:inline">
+                          {currentSortConfig.label}
+                        </span>
+                      </Button>
+                    }
+                  >
+                    <div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {(Object.keys(sortOptionConfigs) as Array<keyof typeof sortOptionConfigs>).map((key) => {
+                          const opt = sortOptionConfigs[key];
+                          const Icon = opt.icon;
+                          const isSelected = sortBy === key;
+                          return (
+                            <button
+                              key={key}
+                              onClick={() => {
+                                setSortBy(key as any);
+                                setIsSortDialogOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between cursor-pointer ${
+                                isSelected
+                                  ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
                                   : "border-slate-100 hover:bg-slate-50 text-slate-600"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg shrink-0 ${provColor.bg} ${provColor.text} ${isDisabled ? "opacity-40" : ""}`}>
-                                <MapPin className="w-4 h-4" />
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg shrink-0 ${opt.bg}`}>
+                                  <Icon className="w-4 h-4" />
+                                </div>
+                                <span>{opt.label}</span>
                               </div>
-                              <span>
-                                {labelText}
-                                <span className="text-[10px] opacity-60 font-medium ml-1">({count})</span>
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
-                            )}
-                          </button>
-                        );
-                      })}
+                              {isSelected && (
+                                <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                </ResponsiveDialog>
-              )}
+                  </ResponsiveDialog>
+                );
+              })()}
+            </div>
+          </div>
 
-              {/* Property Type Selector Dialog */}
+          {/* Row 2: Filter Pills (Horizontal Scroll on Mobile / Wrapped on Desktop) */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 w-full">
+            {/* 1. Province Selector Dialog */}
+            {provinces.length > 0 && (
               <ResponsiveDialog
-                open={isTypeDialogOpen}
-                onOpenChange={setIsTypeDialogOpen}
-                title={getPageString("filter_property_type")}
+                open={isProvinceDialogOpen}
+                onOpenChange={setIsProvinceDialogOpen}
+                title={getPageString("filter_province")}
                 trigger={
                   <Button
                     variant="outline"
-                    className="h-11 px-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
+                    className="h-9 px-3.5 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all shrink-0 whitespace-nowrap"
                   >
-                    <div className="p-1 bg-blue-50 text-blue-600 rounded-md shrink-0">
-                      <Building2 className="h-4 w-4" />
+                    <div className={`p-0.5 rounded shrink-0 ${
+                      selectedProvince === "ALL" 
+                        ? "text-red-550" 
+                        : `${getProvinceColor(selectedProvince).text}`
+                    }`}>
+                      <MapPin className="h-3.5 w-3.5" />
                     </div>
-                    <span>{selectedTypeLabel}</span>
+                    <span>
+                      {selectedProvince === "ALL" 
+                        ? getPageString("filter_all_provinces") 
+                        : getProvinceName(selectedProvince, language)}
+                    </span>
                   </Button>
                 }
               >
                 <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                    {sortedPropertyTypes.map((type) => {
-                      const isSelected = selectedType === type.value;
-                      const labelText = type.label[language as keyof typeof type.label] || type.label.th;
-                      const count = type.value === "ALL" ? totalProjectsInProvince : (typeCounts[type.value] || 0);
-                      const isDisabled = type.value !== "ALL" && count === 0;
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {/* All Provinces Option */}
+                    <button
+                      onClick={() => {
+                        setSelectedProvince("ALL");
+                        setSelectedArea("ALL");
+                        setIsProvinceDialogOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                        selectedProvince === "ALL"
+                          ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                          : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-red-50 text-red-500 shrink-0">
+                          <MapPin className="w-4 h-4" />
+                        </div>
+                        <span>
+                          {getPageString("filter_all_provinces")}
+                          <span className="text-[10px] opacity-60 font-medium ml-1">({initialProjects.length})</span>
+                        </span>
+                      </div>
+                      {selectedProvince === "ALL" && (
+                        <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                      )}
+                    </button>
 
+                    {/* Individual Provinces */}
+                    {provinces.map((prov) => {
+                      const isSelected = selectedProvince === prov;
+                      const labelText = getProvinceName(prov, language);
+                      const provColor = getProvinceColor(prov);
+                      const count = provinceCounts[prov] || 0;
+                      const isDisabled = count === 0;
                       return (
                         <button
-                          key={type.value}
+                          key={prov}
                           onClick={() => {
-                            setSelectedType(type.value);
-                            setIsTypeDialogOpen(false);
+                            setSelectedProvince(prov);
+                            setSelectedArea("ALL");
+                            setIsProvinceDialogOpen(false);
                           }}
                           disabled={isDisabled}
                           className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
@@ -732,14 +775,12 @@ export function ProjectsHubClient({
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg shrink-0 ${type.iconBg} ${isDisabled ? "opacity-40" : ""}`}>
-                              <type.icon className="w-4 h-4" />
+                            <div className={`p-2 rounded-lg shrink-0 ${provColor.bg} ${provColor.text} ${isDisabled ? "opacity-40" : ""}`}>
+                              <MapPin className="w-4 h-4" />
                             </div>
                             <span>
                               {labelText}
-                              <span className="text-[10px] opacity-60 font-medium ml-1">
-                                ({count})
-                              </span>
+                              <span className="text-[10px] opacity-60 font-medium ml-1">({count})</span>
                             </span>
                           </div>
                           {isSelected && (
@@ -751,175 +792,263 @@ export function ProjectsHubClient({
                   </div>
                 </div>
               </ResponsiveDialog>
+            )}
 
-              {/* Developer Selector Dialog */}
-              {developers.length > 0 && (
-                <ResponsiveDialog
-                  open={isDeveloperDialogOpen}
-                  onOpenChange={setIsDeveloperDialogOpen}
-                  title={getPageString("filter_developer")}
-                  trigger={
-                    <Button
-                      variant="outline"
-                      className="h-11 px-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
+            {/* 2. Area Selector Dialog */}
+            {popularAreas.length > 0 && (
+              <ResponsiveDialog
+                open={isAreaDialogOpen}
+                onOpenChange={setIsAreaDialogOpen}
+                title={getPageString("popular_areas_title")}
+                trigger={
+                  <Button
+                    variant="outline"
+                    className="h-9 px-3.5 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all shrink-0 whitespace-nowrap"
+                  >
+                    <div className="p-0.5 text-amber-600 shrink-0">
+                      <Compass className="h-3.5 w-3.5" />
+                    </div>
+                    <span>
+                      {selectedArea === "ALL"
+                        ? getPageString("filter_all_areas")
+                        : (popularAreas.find((a: any) => a.th === selectedArea)?.lang || selectedArea)}
+                    </span>
+                  </Button>
+                }
+              >
+                <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {/* All Areas Option */}
+                    <button
+                      onClick={() => {
+                        setSelectedArea("ALL");
+                        setIsAreaDialogOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                        selectedArea === "ALL"
+                          ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                          : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                      }`}
                     >
-                      <div className="p-1 bg-violet-50 text-violet-600 rounded-md shrink-0">
-                        <Building2 className="h-4 w-4" />
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-amber-50 text-amber-600 shrink-0">
+                          <Compass className="w-4 h-4" />
+                        </div>
+                        <span>
+                          {getPageString("filter_all_areas")}
+                          <span className="text-[10px] opacity-60 font-medium ml-1">({initialProjects.length})</span>
+                        </span>
                       </div>
-                      <span>
-                        {selectedDeveloper === "ALL" 
-                          ? getPageString("filter_all_developers") 
-                          : selectedDeveloper}
-                      </span>
-                    </Button>
-                  }
+                      {selectedArea === "ALL" && (
+                        <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                      )}
+                    </button>
+
+                    {/* Individual Areas */}
+                    {popularAreas.map((area: any) => {
+                      const isSelected = selectedArea === area.th;
+                      const count = area.count || 0;
+                      const isDisabled = count === 0;
+                      return (
+                        <button
+                          key={area.th}
+                          onClick={() => {
+                            setSelectedArea(area.th);
+                            setIsAreaDialogOpen(false);
+                          }}
+                          disabled={isDisabled}
+                          className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                            isSelected
+                              ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                              : isDisabled
+                                ? "border-slate-100 bg-slate-50/40 text-slate-350 cursor-not-allowed opacity-50 pointer-events-none"
+                                : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg shrink-0 bg-slate-50 text-slate-500 ${isDisabled ? "opacity-40" : ""}`}>
+                              <MapPin className="w-4 h-4" />
+                            </div>
+                            <span>
+                              {area.lang}
+                              <span className="text-[10px] text-blue-500 font-medium ml-1">({count})</span>
+                            </span>
+                          </div>
+                          {isSelected && (
+                            <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </ResponsiveDialog>
+            )}
+
+            {/* 3. Property Type Selector Dialog */}
+            <ResponsiveDialog
+              open={isTypeDialogOpen}
+              onOpenChange={setIsTypeDialogOpen}
+              title={getPageString("filter_property_type")}
+              trigger={
+                <Button
+                  variant="outline"
+                  className="h-9 px-3.5 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all shrink-0 whitespace-nowrap"
                 >
-                  <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 ">
-                      {/* All Developers Option */}
+                  <div className="p-0.5 text-blue-600 shrink-0">
+                    <Building2 className="h-3.5 w-3.5" />
+                  </div>
+                  <span>{selectedTypeLabel}</span>
+                </Button>
+              }
+            >
+              <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {sortedPropertyTypes.map((type) => {
+                    const isSelected = selectedType === type.value;
+                    const labelText = type.label[language as keyof typeof type.label] || type.label.th;
+                    const count = type.value === "ALL" ? totalProjectsInProvince : (typeCounts[type.value] || 0);
+                    const isDisabled = type.value !== "ALL" && count === 0;
+
+                    return (
                       <button
+                        key={type.value}
                         onClick={() => {
-                          setSelectedDeveloper("ALL");
-                          setIsDeveloperDialogOpen(false);
+                          setSelectedType(type.value);
+                          setIsTypeDialogOpen(false);
                         }}
+                        disabled={isDisabled}
                         className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
-                          selectedDeveloper === "ALL"
+                          isSelected
                             ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
-                            : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                            : isDisabled
+                              ? "border-slate-100 bg-slate-50/40 text-slate-350 cursor-not-allowed opacity-50 pointer-events-none"
+                              : "border-slate-100 hover:bg-slate-50 text-slate-600"
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-violet-50 text-violet-500 shrink-0">
-                            <Building2 className="w-4 h-4" />
+                          <div className={`p-2 rounded-lg shrink-0 ${type.iconBg} ${isDisabled ? "opacity-40" : ""}`}>
+                            <type.icon className="w-4 h-4" />
                           </div>
                           <span>
-                            {getPageString("filter_all_developers")}
-                            <span className="text-[10px] opacity-60 font-medium ml-1">({initialProjects.filter(p => p.developer).length})</span>
+                            {labelText}
+                            <span className="text-[10px] opacity-60 font-medium ml-1">
+                              ({count})
+                            </span>
                           </span>
                         </div>
-                        {selectedDeveloper === "ALL" && (
+                        {isSelected && (
                           <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
                         )}
                       </button>
-
-                      {/* Individual Developers */}
-                      {sortedDevelopers.map((dev) => {
-                        const isSelected = selectedDeveloper === dev;
-                        const count = developerCounts[dev] || 0;
-                        const isDisabled = count === 0;
-                        return (
-                          <button
-                            key={dev}
-                            onClick={() => {
-                              setSelectedDeveloper(dev);
-                              setIsDeveloperDialogOpen(false);
-                            }}
-                            disabled={isDisabled}
-                            className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
-                              isSelected
-                                ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
-                                : isDisabled
-                                  ? "border-slate-100 bg-slate-50/40 text-slate-350 cursor-not-allowed opacity-50 pointer-events-none"
-                                  : "border-slate-100 hover:bg-slate-50 text-slate-600"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg shrink-0 bg-slate-50 text-slate-500 ${isDisabled ? "opacity-40" : ""}`}>
-                                <Building2 className="w-4 h-4" />
-                              </div>
-                              <span>
-                                {dev}
-                                <span className="text-[10px] text-blue-500 font-medium ml-1">({count})</span>
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </ResponsiveDialog>
-              )}
-
-              {/* Sort By Dropdown */}
-              <div className="relative">
-                <Select value={sortBy} onValueChange={(val) => setSortBy(val as any)}>
-                  <SelectTrigger className="h-11! px-4 min-w-[160px] rounded-xl border border-slate-200 bg-white hover:border-slate-350 hover:shadow-xs focus:ring-0 focus:ring-offset-0 transition-all text-xs font-bold text-slate-700 flex items-center gap-2 cursor-pointer">
-                    <div className="p-1 bg-indigo-50 text-indigo-600 rounded-md shrink-0">
-                      <ArrowUpDown className="h-4 w-4" />
-                    </div>
-                    <SelectValue placeholder={getPageString("sort_default")} />
-                  </SelectTrigger>
-                  <SelectContent align="start" className="rounded-xl border-slate-200 shadow-lg">
-                    <SelectItem value="DEFAULT" className="font-bold text-xs">{getPageString("sort_default")}</SelectItem>
-                    <SelectItem value="PRICE_LOW" className="font-bold text-xs">{getPageString("sort_price_low")}</SelectItem>
-                    <SelectItem value="UNITS_HIGH" className="font-bold text-xs">{getPageString("sort_units_high")}</SelectItem>
-                    <SelectItem value="NAME_AZ" className="font-bold text-xs">{getPageString("sort_name_az")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Clear Filters Button */}
-              {(searchQuery || selectedType !== "ALL" || selectedProvince !== "ALL" || selectedArea !== "ALL" || selectedDeveloper !== "ALL" || sortBy !== "DEFAULT") && (
-                <button
-                  onClick={handleResetFilters}
-                  className="flex items-center gap-1 px-3 h-11 text-xs font-bold text-red-500 hover:text-red-650 hover:bg-red-50/50 rounded-xl transition-all"
-                >
-                  <X className="h-4 w-4" />
-                  <span>{getPageString("clear_filters")}</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Popular Areas Multi-Row Wrapper (ย่าน ใช้ 2 บรรทัดได้เลย) */}
-          {popularAreas.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col md:flex-row items-start gap-4">
-              {/* Prefix Badge */}
-              <div className="shrink-0 bg-slate-100 text-slate-650 text-[10px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
-                <div className="p-1 bg-red-50 text-red-500 rounded-md">
-                  <MapPin className="w-3.5 h-3.5" />
+                    );
+                  })}
                 </div>
-                <span>{getPageString("popular_areas_title")}</span>
               </div>
+            </ResponsiveDialog>
 
-              {/* Flex Wrapping Row Container (Wraps cleanly to 2 rows naturally) */}
-              <div className="flex flex-wrap gap-2.5 flex-1">
-                <button
-                  onClick={() => setSelectedArea("ALL")}
-                  className={`h-8 px-3 rounded-lg text-xs font-bold transition-all border ${
-                    selectedArea === "ALL"
-                      ? "bg-blue-50 border-blue-200 text-blue-600 shadow-xs"
-                      : "border-slate-200 bg-white hover:bg-slate-50 text-slate-500"
-                  }`}
-                >
-                  {getPageString("filter_all_areas")}
-                </button>
-                {popularAreas.map((area: any) => {
-                  const isSelected = selectedArea === area.th;
-                  return (
+            {/* 4. Developer Selector Dialog */}
+            {developers.length > 0 && (
+              <ResponsiveDialog
+                open={isDeveloperDialogOpen}
+                onOpenChange={setIsDeveloperDialogOpen}
+                title={getPageString("filter_developer")}
+                trigger={
+                  <Button
+                    variant="outline"
+                    className="h-9 px-3.5 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all shrink-0 whitespace-nowrap"
+                  >
+                    <div className="p-0.5 text-violet-600 shrink-0">
+                      <Building2 className="h-3.5 w-3.5" />
+                    </div>
+                    <span>
+                      {selectedDeveloper === "ALL" 
+                        ? getPageString("filter_all_developers") 
+                        : selectedDeveloper}
+                    </span>
+                  </Button>
+                }
+              >
+                <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 ">
+                    {/* All Developers Option */}
                     <button
-                      key={area.th}
-                      onClick={() => setSelectedArea(isSelected ? "ALL" : area.th)}
-                      className={`h-8 px-3.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
-                        isSelected
-                          ? "bg-blue-50 border-blue-200 text-blue-600 shadow-xs"
-                          : "border-slate-200 bg-white hover:bg-slate-50 text-slate-500"
+                      onClick={() => {
+                        setSelectedDeveloper("ALL");
+                        setIsDeveloperDialogOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                        selectedDeveloper === "ALL"
+                          ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                          : "border-slate-100 hover:bg-slate-50 text-slate-600"
                       }`}
                     >
-                      {isSelected && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 animate-pulse" />
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-violet-50 text-violet-600 shrink-0">
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <span>
+                          {getPageString("filter_all_developers")}
+                          <span className="text-[10px] opacity-60 font-medium ml-1">({initialProjects.length})</span>
+                        </span>
+                      </div>
+                      {selectedDeveloper === "ALL" && (
+                        <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
                       )}
-                      <span>{area.lang}</span>
-                      <span className="text-[10px] opacity-70">({area.count})</span>
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+
+                    {/* Individual Developers */}
+                    {sortedDevelopers.map((dev) => {
+                      const isSelected = selectedDeveloper === dev;
+                      const count = developerCounts[dev] || 0;
+                      const isDisabled = count === 0;
+                      return (
+                        <button
+                          key={dev}
+                          onClick={() => {
+                            setSelectedDeveloper(dev);
+                            setIsDeveloperDialogOpen(false);
+                          }}
+                          disabled={isDisabled}
+                          className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                            isSelected
+                              ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                              : isDisabled
+                                ? "border-slate-100 bg-slate-50/40 text-slate-350 cursor-not-allowed opacity-50 pointer-events-none"
+                                : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg shrink-0 bg-slate-50 text-slate-500 ${isDisabled ? "opacity-40" : ""}`}>
+                              <Building2 className="w-4 h-4" />
+                            </div>
+                            <span>
+                              {dev}
+                              <span className="text-[10px] text-blue-500 font-medium ml-1">({count})</span>
+                            </span>
+                          </div>
+                          {isSelected && (
+                            <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </ResponsiveDialog>
+            )}
+
+            {/* Clear Filters Button */}
+            {(searchQuery || selectedType !== "ALL" || selectedProvince !== "ALL" || selectedArea !== "ALL" || selectedDeveloper !== "ALL" || sortBy !== "DEFAULT") && (
+              <button
+                onClick={handleResetFilters}
+                className="flex items-center gap-1 px-2.5 h-9 text-xs font-bold text-red-500 hover:text-red-650 hover:bg-red-50/60 rounded-xl transition-all shrink-0 whitespace-nowrap cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+                <span>{getPageString("clear_filters")}</span>
+              </button>
+            )}
+          </div>
         </div>
       </section>
 

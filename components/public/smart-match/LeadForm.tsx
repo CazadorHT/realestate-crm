@@ -23,7 +23,7 @@ interface LeadFormProps {
 }
 
 export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -33,6 +33,18 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
   const [whatsapp, setWhatsapp] = useState("");
   const hasStartedRef = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const displayTitle =
+    (language === "en"
+      ? match.project_name_en || match.title_en
+      : language === "cn"
+        ? match.project_name_cn || match.title_cn
+        : language === "ru"
+          ? match.project_name_ru || match.title_ru
+          : null) ||
+    match.project_name ||
+    (language !== "th" ? match.title_en : null) ||
+    match.title;
 
   const formatPhoneNumber = (value: string) => {
     const hasPlus = value.startsWith("+");
@@ -56,7 +68,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_START, {
           subject: "Smart Match",
-          item_name: match.title,
+          item_name: displayTitle,
           item_id: match.id,
         });
         hasStartedRef.current = true;
@@ -188,7 +200,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
           <div className="w-16 h-16 rounded-lg bg-slate-200 overflow-hidden shrink-0">
             <Image
               src={match.image_url}
-              alt={match.title}
+              alt={displayTitle}
               fill
               sizes="64px"
               className="object-cover"
@@ -196,7 +208,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
           </div>
           <div>
             <h4 className="font-bold text-slate-900 text-sm line-clamp-1">
-              {match.title}
+              {displayTitle}
             </h4>
             {match.original_price && (
               <span className="text-xs text-slate-400 line-through block leading-none mt-0.5">

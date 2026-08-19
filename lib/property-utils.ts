@@ -146,6 +146,16 @@ export function getTypeColor(propertyType: string | null): {
       bg: "bg-indigo-50",
       gradient: "from-indigo-500 to-indigo-600",
     },
+    VILLA: {
+      text: "text-rose-700",
+      bg: "bg-rose-50",
+      gradient: "from-rose-500 to-rose-600",
+    },
+    POOL_VILLA: {
+      text: "text-cyan-700",
+      bg: "bg-cyan-50",
+      gradient: "from-cyan-500 to-blue-600",
+    },
   };
 
   return (

@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import {
   generateEmbedding,
@@ -13,6 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Database } from "@/lib/database.types.generated";
 import { mapDbError } from "@/lib/db-error";
 import { getOfficePrice } from "@/lib/property-utils";
+import { getDistrictName } from "@/lib/utils/provinces";
 
 type PropertyWithImages = any;
 
@@ -255,12 +257,93 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
   }
 }
 
+function extractProjectNames(projects: any, fallbackName?: string | null) {
+  const nameObj = Array.isArray(projects) ? projects[0]?.name : projects?.name;
+  if (!nameObj) {
+    return {
+      project_name: fallbackName || null,
+      project_name_en: fallbackName || null,
+      project_name_cn: fallbackName || null,
+      project_name_ru: fallbackName || null,
+    };
+  }
+  if (typeof nameObj === "string") {
+    return {
+      project_name: nameObj,
+      project_name_en: nameObj,
+      project_name_cn: nameObj,
+      project_name_ru: nameObj,
+    };
+  }
+  const th = nameObj.th || nameObj.name_th || nameObj.en || fallbackName || null;
+  const en = nameObj.en || nameObj.name_en || nameObj.th || fallbackName || null;
+  const cn = nameObj.cn || nameObj.name_cn || en || th || null;
+  const ru = nameObj.ru || nameObj.name_ru || en || th || null;
+  return {
+    project_name: th,
+    project_name_en: en,
+    project_name_cn: cn,
+    project_name_ru: ru,
+  };
+}
+// Cache the popular area master translations dictionary (1 year / on-demand purge)
+const getPopularAreaTranslationsMap = unstable_cache(
+  async () => {
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("popular_areas_v3")
+      .select("name, slug, province, is_active");
+
+    const map = new Map<
+      string,
+      { th: string; en: string; cn: string; ru: string }
+    >();
+    if (data) {
+      data.forEach((row: any) => {
+        const nameObj = row.name;
+        if (nameObj && typeof nameObj === "object") {
+          const th = (nameObj.th || nameObj.name_th || "").trim();
+          const en = (nameObj.en || nameObj.name_en || "").trim();
+          const cn = (nameObj.cn || nameObj.name_cn || "").trim();
+          const ru = (nameObj.ru || nameObj.name_ru || "").trim();
+          if (th) {
+            map.set(th.toLowerCase(), {
+              th,
+              en: en || th,
+              cn: cn || th,
+              ru: ru || th,
+            });
+          }
+          if (en) {
+            map.set(en.toLowerCase(), {
+              th: th || en,
+              en,
+              cn: cn || en,
+              ru: ru || en,
+            });
+          }
+        }
+      });
+    }
+    return Array.from(map.entries());
+  },
+  ["popular-areas-v3-translations-map"],
+  {
+    revalidate: 31536000,
+    tags: ["popular-areas", "properties", "public-data"],
+  },
+);
+
 /**
  * [PUBLIC] Search Properties for Wizard (FULL RESTORATION)
  * The legendary wizard search with sessions and heuristics.
  */
 export async function searchPropertiesAction(criteria: SearchCriteria) {
   const supabase = await createClient();
+
+  // Load master translation dictionary from popular_areas_v3
+  const popularAreaEntries = await getPopularAreaTranslationsMap();
+  const popularAreaMap = new Map(popularAreaEntries);
 
   // 1. Create Search Session for analytics
   const { data: session, error: sessionError } = await (supabase as any)
@@ -282,7 +365,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   let query = (supabase as any)
     .from("properties")
     .select(
-      "id, slug, title, title_en, title_cn, title_ru, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(image_url, is_cover, sort_order), amenities",
+      "id, slug, title, title_en, title_cn, title_ru, project_id, projects(id, name), price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, property_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru, district, province, property_images(image_url, is_cover, sort_order), amenities",
     )
     .eq("status", "ACTIVE")
     .is("deleted_at", null);
@@ -312,7 +395,13 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
 
   // Filter Type
   if (criteria.propertyType) {
-    query = query.eq("property_type", criteria.propertyType);
+    if (criteria.propertyType === "VILLA") {
+      query = query.or(
+        "property_type.in.(VILLA,POOL_VILLA),and(property_type.eq.HOUSE,or(price.gte.8000000,original_price.gte.8000000,rental_price.gte.60000,original_rental_price.gte.60000))",
+      );
+    } else {
+      query = query.eq("property_type", criteria.propertyType);
+    }
   }
 
   // Filter Size
@@ -413,10 +502,42 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
         originalDisplayPrice = rawOriginal;
       }
 
+      const projNames = extractProjectNames(prop.projects, prop.project_name);
+
+      const popularAreaKey = (prop.popular_area || "").trim().toLowerCase();
+      const v3Trans = popularAreaMap.get(popularAreaKey);
+      const cleanDistrict = (prop.district || "").replace(/^(เขต|อำเภอ|อ\.)/, "").trim();
+
+      const areaEn =
+        v3Trans?.en ||
+        prop.popular_area_en ||
+        getDistrictName(cleanDistrict, "en") ||
+        prop.popular_area ||
+        cleanDistrict;
+      const areaCn =
+        v3Trans?.cn ||
+        prop.popular_area_cn ||
+        getDistrictName(cleanDistrict, "cn") ||
+        prop.popular_area ||
+        cleanDistrict;
+      const areaRu =
+        v3Trans?.ru ||
+        prop.popular_area_ru ||
+        getDistrictName(cleanDistrict, "ru") ||
+        prop.popular_area ||
+        cleanDistrict;
+
       return {
         id: prop.id,
         slug: prop.slug,
         title: prop.title,
+        title_en: prop.title_en,
+        title_cn: prop.title_cn,
+        title_ru: prop.title_ru,
+        project_name: projNames.project_name,
+        project_name_en: projNames.project_name_en,
+        project_name_cn: projNames.project_name_cn,
+        project_name_ru: projNames.project_name_ru,
         price: primaryPrice || 0,
         original_price: originalDisplayPrice,
         secondary_price: secondaryPrice,
@@ -428,6 +549,13 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
         commute_time: commuteTime,
         bedrooms: prop.bedrooms,
         bathrooms: prop.bathrooms,
+        size_sqm: prop.size_sqm,
+        popular_area: prop.popular_area,
+        popular_area_en: areaEn,
+        popular_area_cn: areaCn,
+        popular_area_ru: areaRu,
+        district: prop.district,
+        province: prop.province,
         near_transit: prop.near_transit,
         transit_station_name: prop.transit_station_name,
         transit_station_name_en: prop.transit_station_name_en,

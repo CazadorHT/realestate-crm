@@ -11,6 +11,7 @@ import {
   Languages,
   Sparkles,
   Plus,
+  Compass,
 } from "lucide-react";
 import {
   FormField,
@@ -36,6 +37,8 @@ import { getProjectDefaultFeaturesAction } from "@/features/properties/actions/p
 import { toast } from "sonner";
 import { AddressSelectorField } from "./AddressSelectorField";
 import { QuickCreateProjectDialog } from "./QuickCreateProjectDialog";
+import { QuickCreateAreaDialog } from "./QuickCreateAreaDialog";
+import { checkPopularAreaExistsAction } from "@/features/properties/actions/popular-area-actions";
 
 interface AddressSectionProps {
   form?: UseFormReturn<PropertyFormValues>;
@@ -68,6 +71,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = React.useState(false);
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = React.useState(false);
+  const [isCreateAreaOpen, setIsCreateAreaOpen] = React.useState(false);
+  const [showAreaPrompt, setShowAreaPrompt] = React.useState(false);
+  const [areaPromptName, setAreaPromptName] = React.useState("");
 
   const watchedAddressLine1 = form.watch("address_line1") || "";
   const watchedAddressLine1En = form.watch("address_line1_en") || "";
@@ -261,6 +267,29 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     }
   }, [activeProvinceId, watchedSubdistrict, watchedDistrict, getDistricts, getSubDistricts, form]);
 
+  // Check if current district is in popular_areas_v3
+  React.useEffect(() => {
+    let isMounted = true;
+    if (watchedProvince && watchedDistrict) {
+      const cleanName = watchedDistrict.replace(/^(เขต|อำเภอ|อ\.)/, "").trim();
+      checkPopularAreaExistsAction(watchedProvince, cleanName).then((res) => {
+        if (isMounted) {
+          if (!res.exists && cleanName) {
+            setAreaPromptName(cleanName);
+            setShowAreaPrompt(true);
+          } else {
+            setShowAreaPrompt(false);
+          }
+        }
+      });
+    } else {
+      setShowAreaPrompt(false);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [watchedProvince, watchedDistrict]);
+
   const districtOptions = activeProvinceId
     ? getDistricts(activeProvinceId)
     : [];
@@ -282,21 +311,34 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           desc="ระบุพิกัดให้แม่นยำเพื่อการค้นหาที่ดีขึ้น"
           tone="blue"
           right={
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1.5 text-blue-600! border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold px-3 shadow-xs transition-all active:scale-95"
-              disabled={isTranslating}
-              onClick={() => translateAddress()}
-            >
-              {isTranslating ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="h-3.5 w-3.5" />
-              )}
-              <span>AI {isTranslating ? "กำลังแปล..." : "แปลที่อยู่"}</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-indigo-600! border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 font-bold px-3 shadow-xs transition-all active:scale-95 cursor-pointer"
+                onClick={() => setIsCreateAreaOpen(true)}
+              >
+                <Compass className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">เพิ่มย่าน 4 ภาษา</span>
+                <span className="sm:hidden">+ ย่าน</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-blue-600! border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold px-3 shadow-xs transition-all active:scale-95 cursor-pointer"
+                disabled={isTranslating}
+                onClick={() => translateAddress()}
+              >
+                {isTranslating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
+                <span>AI {isTranslating ? "กำลังแปล..." : "แปลที่อยู่"}</span>
+              </Button>
+            </div>
           }
         />
         <Separator className="bg-slate-200/70" />
@@ -398,6 +440,34 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               </FormItem>
             )}
           />
+
+          {/* New Area AI Prompt Banner */}
+          {showAreaPrompt && areaPromptName && (
+            <div className="col-span-full p-3.5 bg-gradient-to-r from-blue-50 via-indigo-50/70 to-blue-50 border border-blue-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-blue-600 text-white rounded-xl shrink-0 shadow-xs">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="font-bold text-slate-800 text-xs">
+                    พบทำเลใหม่: <span className="text-blue-600 font-extrabold">{areaPromptName}</span> ({watchedProvince})
+                  </p>
+                  <p className="text-slate-500 text-[11px]">
+                    ยังไม่มีในฐานข้อมูลย่าน 4 ภาษา สามารถให้ AI ช่วยแปล EN/CN/RU และบันทึกเป็นย่านยอดนิยมได้ทันที
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setIsCreateAreaOpen(true)}
+                className="h-8 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shrink-0 shadow-xs cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1" />
+                <span>ให้ AI แปล 4 ภาษา & บันทึกย่าน</span>
+              </Button>
+            </div>
+          )}
 
           {/* Address Line 1 / Project Name */}
           <FormField
@@ -661,6 +731,20 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           if (proj.googleMapsUrl) {
             form.setValue("google_maps_link", proj.googleMapsUrl, { shouldValidate: true, shouldDirty: true });
           }
+        }}
+      />
+
+      <QuickCreateAreaDialog
+        open={isCreateAreaOpen}
+        onOpenChange={setIsCreateAreaOpen}
+        defaultProvince={watchedProvince || "กรุงเทพมหานคร"}
+        defaultAreaName={areaPromptName || watchedDistrict.replace(/^(เขต|อำเภอ|อ\.)/, "").trim()}
+        onAreaCreated={(area) => {
+          form.setValue("popular_area", area.th, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+          form.setValue("popular_area_en", area.en, { shouldDirty: true });
+          form.setValue("popular_area_cn", area.cn, { shouldDirty: true });
+          form.setValue("popular_area_ru", area.ru, { shouldDirty: true });
+          setShowAreaPrompt(false);
         }}
       />
     </Card>

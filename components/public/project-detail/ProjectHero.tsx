@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, MapPin } from "lucide-react";
+import { ChevronRight, MapPin, ArrowLeft } from "lucide-react";
 import { getProvinceName, getDistrictName, getSubdistrictName } from "@/lib/utils/provinces";
 
 interface ProjectHeroProps {
@@ -29,15 +29,24 @@ export function ProjectHero({
       <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-slate-900/60 to-transparent" />
 
       <div className="relative max-w-screen-2xl mx-auto px-5 md:px-8 z-10">
-        {/* Breadcrumbs */}
+        {/* Breadcrumbs (Desktop lg+) & Back Button (Mobile < lg) */}
         <nav aria-label="breadcrumb" className="mb-6">
-          <ol className="flex items-center gap-2 text-sm text-slate-300 flex-wrap">
+          <ol className="hidden lg:flex items-center gap-2 text-sm text-slate-300 flex-wrap">
             <li><Link href="/" className="hover:text-white transition-colors">{getString("breadcrumb_home")}</Link></li>
             <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
             <li><Link href="/projects" className="hover:text-white transition-colors">{getString("breadcrumb_projects")}</Link></li>
             <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
             <li className="text-white font-medium">{nameText}</li>
           </ol>
+          <div className="block lg:hidden">
+            <Link
+              href="/projects"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md shadow-2xs active:scale-95 transition-all"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{getString("breadcrumb_projects")}</span>
+            </Link>
+          </div>
         </nav>
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

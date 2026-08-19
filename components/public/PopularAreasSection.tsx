@@ -358,7 +358,7 @@ export function PopularAreasSection({
                                   setIsNextHovered(true);
                                 }}
                                 onMouseLeave={() => setIsNextHovered(false)}
-                                className="absolute -top-4 md:-top-7 left-0 flex items-center gap-2 group/sup cursor-pointer"
+                                className="absolute -top-6 md:-top-7 left-2  flex items-center gap-2 group/sup cursor-pointer"
                               >
                                 <span
                                   className={cn(
@@ -396,7 +396,7 @@ export function PopularAreasSection({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 uppercase leading-tight block truncate transition-all duration-300 shadow-[0_4px_0_0_transparent] group-hover/label:shadow-[0_4px_0_0_#3b82f6]">
+                              <span className="text-4xl md:text-5xl font-bold text-slate-900 uppercase leading-tight block truncate transition-all duration-300 shadow-[0_4px_0_0_transparent] group-hover/label:shadow-[0_4px_0_0_#3b82f6]">
                                 {activeDisplay}
                               </span>
                             </TooltipTrigger>

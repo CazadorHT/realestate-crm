@@ -252,7 +252,7 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
           {/* Content Container */}
           <div className="relative z-10 max-w-screen-2xl mx-auto px-5 md:px-6 lg:px-8 pt-6 md:pt-12">
             {/* Breadcrumbs inside the header */}
-            <div className="">
+            <div className="mb-4">
               <AppBreadcrumbs />
             </div>
 

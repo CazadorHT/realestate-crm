@@ -202,7 +202,19 @@ export function calculateMatchScore(
 
   // 5. Property Type Match (Bonus/Penalty)
   if (criteria.propertyType) {
-    if (property.property_type === criteria.propertyType) {
+    const isVillaMatch =
+      criteria.propertyType === "VILLA" &&
+      (property.property_type === "VILLA" ||
+        property.property_type === "POOL_VILLA" ||
+        (property.property_type === "HOUSE" &&
+          ((property.price && property.price >= 8000000) ||
+           (property.original_price && property.original_price >= 8000000) ||
+           (property.rental_price && property.rental_price >= 60000) ||
+           (property.original_rental_price && property.original_rental_price >= 60000))));
+
+    const isMatch = property.property_type === criteria.propertyType || isVillaMatch;
+
+    if (isMatch) {
       score += SCORE_WEIGHTS.TYPE_BONUS;
       scoreBreakdown.push({ label: "type", points: SCORE_WEIGHTS.TYPE_BONUS });
       reasons.push("type_match");

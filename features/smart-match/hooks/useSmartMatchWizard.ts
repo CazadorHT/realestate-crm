@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import * as React from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { searchPropertiesAction } from "@/features/smart-match/actions";
@@ -15,7 +16,6 @@ import {
   checkOfficeSizeAvailability,
   checkBudgetAvailability,
   checkLocationAvailability,
-  checkPurposeAvailability,
   checkPropertyTypeAvailability,
   checkTransitAvailability,
 } from "@/features/smart-match/inventory-actions";
@@ -86,13 +86,23 @@ export function useSmartMatchWizard() {
     "RENT", "OFFICE", "BUY", "INVEST"
   ]);
 
-  // Load property type availability based on purpose
+  // In-memory request cache for zero redundant network calls
+  const cacheRef = React.useRef(new Map<string, any>());
+
+  // Load property type availability based on purpose (Memoized)
   useEffect(() => {
     if (step === 1.5) {
+      const cacheKey = `type_${purpose}`;
+      if (cacheRef.current.has(cacheKey)) {
+        setAvailablePropertyTypes(cacheRef.current.get(cacheKey));
+        return;
+      }
+
       setIsInventoryLoading(true);
       checkPropertyTypeAvailability(purpose as "RENT" | "BUY")
         .then((res) => {
           if (res && res.length > 0) {
+            cacheRef.current.set(cacheKey, res);
             setAvailablePropertyTypes(res);
           }
         })
@@ -101,9 +111,15 @@ export function useSmartMatchWizard() {
     }
   }, [step, purpose]);
 
-  // Load transit availability when entering transit step (2.5)
+  // Load transit availability when entering transit step (2.5) (Memoized)
   useEffect(() => {
     if (step === 2.5) {
+      const cacheKey = `transit_${purpose}_${propertyType || ""}_${officeSize?.min}_${officeSize?.max}_${selectedBudget?.min}_${selectedBudget?.max}`;
+      if (cacheRef.current.has(cacheKey)) {
+        setAvailableTransitOptions(cacheRef.current.get(cacheKey));
+        return;
+      }
+
       setIsInventoryLoading(true);
       checkTransitAvailability(purpose as "RENT" | "BUY", {
         propertyType: propertyType || undefined,
@@ -112,6 +128,7 @@ export function useSmartMatchWizard() {
       })
         .then((res) => {
           if (res && res.length > 0) {
+            cacheRef.current.set(cacheKey, res);
             setAvailableTransitOptions(res);
           }
         })
@@ -120,15 +137,22 @@ export function useSmartMatchWizard() {
     }
   }, [step, purpose, propertyType, officeSize, selectedBudget]);
 
-  // Load inventory for office sizes
+  // Load inventory for office sizes (Memoized)
   useEffect(() => {
     if (isOfficeMode && step === 1.7) {
+      const cacheKey = `office_${purpose}`;
+      if (cacheRef.current.has(cacheKey)) {
+        setAvailableSizes(cacheRef.current.get(cacheKey));
+        return;
+      }
+
       setIsInventoryLoading(true);
       checkOfficeSizeAvailability(purpose as "RENT" | "BUY")
         .then((res) => {
           if (res && res.length > 0) {
             const map: Record<string, number> = {};
             res.forEach((r) => (map[r.size] = r.count));
+            cacheRef.current.set(cacheKey, map);
             setAvailableSizes(map);
           }
         })
@@ -137,10 +161,9 @@ export function useSmartMatchWizard() {
     }
   }, [isOfficeMode, step, purpose]);
 
-  // Load inventory for budgets
+  // Load inventory for budgets (Memoized)
   useEffect(() => {
     if (step === 2) {
-      setIsInventoryLoading(true);
       const ranges = purpose === "RENT" ? rentBudgetRanges : buyBudgetRanges;
       const budgetOptions =
         ranges.length > 0
@@ -149,6 +172,13 @@ export function useSmartMatchWizard() {
             ? DEFAULT_RENT_RANGES
             : DEFAULT_BUY_RANGES;
 
+      const cacheKey = `budget_${purpose}_${propertyType || ""}_${officeSize?.min}_${officeSize?.max}_${budgetOptions.map(b => b.id).join(",")}`;
+      if (cacheRef.current.has(cacheKey)) {
+        setAvailableBudgetIds(cacheRef.current.get(cacheKey));
+        return;
+      }
+
+      setIsInventoryLoading(true);
       checkBudgetAvailability(purpose as "RENT" | "BUY", {
         propertyType: propertyType || undefined,
         officeSize: officeSize || undefined,
@@ -160,6 +190,7 @@ export function useSmartMatchWizard() {
       })
         .then((res) => {
           if (res && res.length > 0) {
+            cacheRef.current.set(cacheKey, res);
             setAvailableBudgetIds(res);
           }
         })
@@ -175,9 +206,15 @@ export function useSmartMatchWizard() {
     buyBudgetRanges,
   ]);
 
-  // Load inventory for locations
+  // Load inventory for locations (Memoized - only triggered on step 3)
   useEffect(() => {
-    if (step === 3 || step === 2.5) {
+    if (step === 3) {
+      const cacheKey = `loc_${purpose}_${propertyType || ""}_${officeSize?.min}_${officeSize?.max}_${selectedBudget?.min}_${selectedBudget?.max}_${nearTransit}`;
+      if (cacheRef.current.has(cacheKey)) {
+        setAvailableLocations(cacheRef.current.get(cacheKey));
+        return;
+      }
+
       setIsInventoryLoading(true);
       checkLocationAvailability(purpose as "RENT" | "BUY", {
         propertyType: propertyType || undefined,
@@ -186,12 +223,8 @@ export function useSmartMatchWizard() {
         nearTransit: nearTransit === null ? undefined : nearTransit,
       })
         .then((result) => {
-          // Map strings back to objects
-          const areaObjects = result.map((name) => {
-            const existing = popularAreas.find((a) => a.name === name);
-            return existing || { name, name_en: name, name_cn: name, name_ru: name };
-          });
-          setAvailableLocations(areaObjects);
+          cacheRef.current.set(cacheKey, result);
+          setAvailableLocations(result);
         })
         .catch(console.error)
         .finally(() => setIsInventoryLoading(false));
@@ -203,7 +236,6 @@ export function useSmartMatchWizard() {
     officeSize,
     selectedBudget,
     nearTransit,
-    popularAreas,
   ]);
 
   // Load config on mount
@@ -254,6 +286,9 @@ export function useSmartMatchWizard() {
         setPropertyTypes(config.propertyTypes);
         setOfficeSizes(config.officeSizes || []);
         setSettings(config.settings);
+        if (config.availablePurposes && config.availablePurposes.length > 0) {
+          setAvailablePurposes(config.availablePurposes);
+        }
       } catch (e) {
         console.error("Failed to load SmartMatch config:", e);
       } finally {
@@ -261,50 +296,6 @@ export function useSmartMatchWizard() {
       }
     }
     loadConfig();
-  }, []);
-
-  // Initial Load for step 1 purpose availability
-  useEffect(() => {
-    if (step === 1) {
-      setIsInventoryLoading(true);
-      checkPurposeAvailability()
-        .then((res) => {
-          if (res && res.length > 0) {
-            setAvailablePurposes(res);
-          }
-        })
-        .catch(console.error)
-        .finally(() => setIsInventoryLoading(false));
-    }
-  }, [step]);
-
-  // Load Popular Areas
-  useEffect(() => {
-    async function loadAreas() {
-      try {
-        const { getPopularAreasAction } =
-          await import("@/features/properties/actions");
-        const data = await getPopularAreasAction();
-        if (data.length > 0) {
-          setPopularAreas(data as any);
-        } else {
-          setPopularAreas([
-            { name: "อ่อนนุช", name_en: "On Nut", name_cn: "On Nut", name_ru: "Он Нут" },
-            { name: "บางนา", name_en: "Bang Na", name_cn: "Bang Na", name_ru: "Банг На" },
-            { name: "ลาดพร้าว", name_en: "Lat Phrao", name_cn: "Lat Phrao", name_ru: "Лат Пхрао" },
-            { name: "พระราม 9", name_en: "Rama 9", name_cn: "Rama 9", name_ru: "Рама 9" },
-          ]);
-        }
-      } catch (e) {
-        setPopularAreas([
-          { name: "อ่อนนุช", name_en: "On Nut", name_cn: "On Nut", name_ru: "Он Нут" },
-          { name: "บางนา", name_en: "Bang Na", name_cn: "Bang Na", name_ru: "Банг На" },
-          { name: "ลาดพร้าว", name_en: "Lat Phrao", name_cn: "Lat Phrao", name_ru: "Лат Пхрао" },
-          { name: "พระราม 9", name_en: "Rama 9", name_cn: "Rama 9", name_ru: "Рама 9" },
-        ]);
-      }
-    }
-    loadAreas();
   }, []);
 
   const handleBack = () => {

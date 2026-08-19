@@ -331,18 +331,37 @@ export function SmartMatchWizard() {
                   );
                 })}
                 onSelect={(val) => {
-                  const selected = popularAreas.find((a) => {
-                    const lang = language;
-                    const localized =
-                      (lang === "ru"
-                        ? a.name_ru
-                        : lang === "en"
-                        ? a.name_en
-                        : lang === "cn"
-                          ? a.name_cn
-                          : null) || a.name;
-                    return localized === val;
-                  });
+                  const selected =
+                    availableLocations.find((a) => {
+                      const lang = language;
+                      const localized =
+                        (lang === "ru"
+                          ? a.name_ru
+                          : lang === "en"
+                          ? a.name_en
+                          : lang === "cn"
+                            ? a.name_cn
+                            : null) || a.name;
+                      return (
+                        localized === val ||
+                        a.name === val ||
+                        a.name_en === val ||
+                        a.name_cn === val ||
+                        a.name_ru === val
+                      );
+                    }) ||
+                    popularAreas.find((a) => {
+                      const lang = language;
+                      const localized =
+                        (lang === "ru"
+                          ? a.name_ru
+                          : lang === "en"
+                          ? a.name_en
+                          : lang === "cn"
+                            ? a.name_cn
+                            : null) || a.name;
+                      return localized === val || a.name === val;
+                    });
                   setArea(selected?.name || val);
                   handleSearch();
                 }}

@@ -1,10 +1,12 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem } from "@/components/ui/breadcrumb";
 import { useMemo } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { cn } from "@/lib/utils";
 
 const routeLabels: Record<string, string> = {
   // Common
@@ -18,6 +20,7 @@ const routeLabels: Record<string, string> = {
 
   // Public Properties
   properties: "breadcrumb.properties",
+  projects: "breadcrumb.projects",
   rent: "breadcrumb.rent",
   sale: "breadcrumb.sale",
 
@@ -40,6 +43,7 @@ export function AppBreadcrumbs({
   items: customItems,
 }: AppBreadcrumbsProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useLanguage();
 
   const breadcrumbs = useMemo(() => {
@@ -106,13 +110,47 @@ export function AppBreadcrumbs({
     return null;
   }
 
+  const parentItem = breadcrumbs.length >= 2 ? breadcrumbs[breadcrumbs.length - 2] : null;
+  const parentHref = parentItem?.href || "/";
+  const parentLabel = parentItem?.label || t("common.back") || "ย้อนกลับ";
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
-      <Breadcrumb items={breadcrumbs} variant={variant} className={className} />
+      
+      {/* Desktop (lg+): Full Breadcrumbs */}
+      <div className="hidden lg:block">
+        <Breadcrumb items={breadcrumbs} variant={variant} className={className} />
+      </div>
+
+      {/* Mobile (< lg): App Native Back Button */}
+      <div className={cn("block lg:hidden", className)}>
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else if (parentHref) {
+              router.push(parentHref);
+            } else {
+              router.push("/");
+            }
+          }}
+          className={cn(
+            "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold shadow-2xs border transition-all active:scale-95 cursor-pointer touch-manipulation",
+            variant === "on-dark"
+              ? "bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md"
+              : "bg-white/90 hover:bg-slate-100 text-slate-700 border-slate-200/80 backdrop-blur-md"
+          )}
+          aria-label={t("common.back") || "Back"}
+        >
+          <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+          <span>{parentLabel}</span>
+        </button>
+      </div>
     </>
   );
 }

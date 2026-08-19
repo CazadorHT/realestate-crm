@@ -1,7 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { revalidatePath, unstable_cache } from "next/cache";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 
 // ============ TYPES ============
@@ -67,7 +67,9 @@ export async function getBudgetRanges(
 
   let query = (supabase as any)
     .from("smart_match_budget_ranges")
-    .select("id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active")
+    .select(
+      "id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active",
+    )
     .order("sort_order", { ascending: true });
 
   if (purpose) {
@@ -89,10 +91,12 @@ export async function getActiveBudgetRanges(
 ): Promise<BudgetRange[]> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data, error } = await (supabase as any)
         .from("smart_match_budget_ranges")
-        .select("id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active")
+        .select(
+          "id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active",
+        )
         .eq("purpose", purpose)
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
@@ -105,7 +109,10 @@ export async function getActiveBudgetRanges(
       return (data as BudgetRange[]) || [];
     },
     [`smart-match-budget-ranges-${purpose}`],
-    { revalidate: 31536000, tags: ["smart-match", `smart-match-budget-${purpose}`] }
+    {
+      revalidate: 31536000,
+      tags: ["smart-match", `smart-match-budget-${purpose}`, "site-settings"],
+    },
   )();
 }
 
@@ -124,6 +131,8 @@ export async function createBudgetRange(
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
@@ -145,6 +154,8 @@ export async function updateBudgetRange(
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
@@ -165,6 +176,8 @@ export async function deleteBudgetRange(
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
@@ -176,7 +189,9 @@ export async function getPropertyTypes(): Promise<PropertyTypeOption[]> {
 
   const { data, error } = await (supabase as any)
     .from("smart_match_property_types")
-    .select("id, label, label_en, label_cn, label_ru, value, sort_order, is_active")
+    .select(
+      "id, label, label_en, label_cn, label_ru, value, sort_order, is_active",
+    )
     .order("sort_order", { ascending: true });
 
   if (error) {
@@ -187,22 +202,31 @@ export async function getPropertyTypes(): Promise<PropertyTypeOption[]> {
   return data || [];
 }
 
-export async function getActivePropertyTypes(): Promise<PropertyTypeOption[]> {
-  const supabase = await createClient();
+export const getActivePropertyTypes = unstable_cache(
+  async (): Promise<PropertyTypeOption[]> => {
+    const supabase = createPublicClient();
 
-  const { data, error } = await (supabase as any)
-    .from("smart_match_property_types")
-    .select("id, label, label_en, label_cn, label_ru, value, sort_order, is_active")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+    const { data, error } = await (supabase as any)
+      .from("smart_match_property_types")
+      .select(
+        "id, label, label_en, label_cn, label_ru, value, sort_order, is_active",
+      )
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching active property types:", error);
-    return [];
-  }
+    if (error) {
+      console.error("Error fetching active property types:", error);
+      return [];
+    }
 
-  return data || [];
-}
+    return data || [];
+  },
+  ["smart-match-active-property-types"],
+  {
+    revalidate: 31536000,
+    tags: ["smart-match", "smart-match-property-types", "site-settings"],
+  },
+);
 
 export async function createPropertyType(
   input: Omit<PropertyTypeOption, "id">,
@@ -219,6 +243,8 @@ export async function createPropertyType(
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
@@ -240,6 +266,8 @@ export async function updatePropertyType(
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
@@ -260,6 +288,8 @@ export async function deletePropertyType(
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
@@ -271,7 +301,9 @@ export async function getOfficeSizes(): Promise<OfficeSizeOption[]> {
 
   const { data, error } = await supabase
     .from("smart_match_office_sizes")
-    .select("id, label, label_en, label_cn, label_ru, min_sqm, max_sqm, sort_order, is_active")
+    .select(
+      "id, label, label_en, label_cn, label_ru, min_sqm, max_sqm, sort_order, is_active",
+    )
     .order("sort_order", { ascending: true });
 
   if (error) {
@@ -285,10 +317,12 @@ export async function getOfficeSizes(): Promise<OfficeSizeOption[]> {
 export async function getActiveOfficeSizes(): Promise<OfficeSizeOption[]> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const { data, error } = await supabase
         .from("smart_match_office_sizes")
-        .select("id, label, label_en, label_cn, label_ru, min_sqm, max_sqm, sort_order, is_active")
+        .select(
+          "id, label, label_en, label_cn, label_ru, min_sqm, max_sqm, sort_order, is_active",
+        )
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
@@ -300,16 +334,20 @@ export async function getActiveOfficeSizes(): Promise<OfficeSizeOption[]> {
       return (data as OfficeSizeOption[]) || [];
     },
     ["smart-match-active-office-sizes"],
-    { revalidate: 31536000, tags: ["smart-match", "smart-match-office-sizes"] }
+    {
+      revalidate: 31536000,
+      tags: ["smart-match", "smart-match-office-sizes", "site-settings"],
+    },
   )();
 }
 
 export async function createOfficeSize(
   input: Omit<OfficeSizeOption, "id">,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("smart_match_office_sizes")
     .insert(input);
 
@@ -318,6 +356,8 @@ export async function createOfficeSize(
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
@@ -326,9 +366,10 @@ export async function updateOfficeSize(
   id: string,
   input: Partial<OfficeSizeOption>,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("smart_match_office_sizes")
     .update(input)
     .eq("id", id);
@@ -338,6 +379,8 @@ export async function updateOfficeSize(
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
@@ -345,9 +388,10 @@ export async function updateOfficeSize(
 export async function deleteOfficeSize(
   id: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("smart_match_office_sizes")
     .delete()
     .eq("id", id);
@@ -357,6 +401,8 @@ export async function deleteOfficeSize(
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
@@ -379,36 +425,43 @@ const DEFAULT_SETTINGS: SmartMatchSettings = {
   pdpa_text_ru: "Ваши данные будут сохранены в тайне согласно политике PDPA",
 };
 
-export async function getSmartMatchSettings(): Promise<SmartMatchSettings> {
-  const supabase = await createClient();
+export const getSmartMatchSettings = unstable_cache(
+  async (): Promise<SmartMatchSettings> => {
+    const supabase = createPublicClient();
 
-  const { data, error } = await supabase
-    .from("smart_match_settings")
-    .select("key, value");
+    const { data, error } = await supabase
+      .from("smart_match_settings")
+      .select("key, value");
 
-  if (error || !data || data.length === 0) {
-    console.error("Error fetching settings:", error);
-    return DEFAULT_SETTINGS;
-  }
-
-  const settings: SmartMatchSettings = { ...DEFAULT_SETTINGS };
-
-  data.forEach((row: { key: string; value: any }) => {
-    const key = row.key as keyof SmartMatchSettings;
-    if (key in settings) {
-      // Parse JSON value
-      try {
-        const parsed = JSON.parse(row.value as string);
-        (settings as Record<string, unknown>)[key] = parsed;
-      } catch {
-        // Use raw value if not JSON
-        (settings as Record<string, unknown>)[key] = row.value;
-      }
+    if (error || !data || data.length === 0) {
+      console.error("Error fetching settings:", error);
+      return DEFAULT_SETTINGS;
     }
-  });
 
-  return settings;
-}
+    const settings: SmartMatchSettings = { ...DEFAULT_SETTINGS };
+
+    data.forEach((row: { key: string; value: any }) => {
+      const key = row.key as keyof SmartMatchSettings;
+      if (key in settings) {
+        // Parse JSON value
+        try {
+          const parsed = JSON.parse(row.value as string);
+          (settings as Record<string, unknown>)[key] = parsed;
+        } catch {
+          // Use raw value if not JSON
+          (settings as Record<string, unknown>)[key] = row.value;
+        }
+      }
+    });
+
+    return settings;
+  },
+  ["smart-match-public-settings"],
+  {
+    revalidate: 31536000,
+    tags: ["smart-match", "smart-match-settings", "site-settings"],
+  },
+);
 
 export async function updateSmartMatchSetting(
   key: string,
@@ -417,38 +470,72 @@ export async function updateSmartMatchSetting(
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { error } = await (supabase as any).from("smart_match_settings").upsert({
-    key,
-    value: JSON.stringify(value),
-    updated_at: new Date().toISOString(),
-  });
+  const { error } = await (supabase as any)
+    .from("smart_match_settings")
+    .upsert({
+      key,
+      value: JSON.stringify(value),
+      updated_at: new Date().toISOString(),
+    });
 
   if (error) {
     console.error("Error updating setting:", error);
     return { success: false, error: error.message };
   }
 
+  revalidateTag("smart-match", "seconds");
+  revalidateTag("site-settings", "seconds");
   revalidatePath("/protected/settings/smart-match");
   return { success: true };
 }
 
 // ============ PUBLIC API (for SmartMatchWizard) ============
 
-export async function getSmartMatchConfig() {
-  const [buyRanges, rentRanges, propertyTypes, officeSizes, settings] =
-    await Promise.all([
-      getActiveBudgetRanges("BUY"),
-      getActiveBudgetRanges("RENT"),
-      getActivePropertyTypes(),
-      getActiveOfficeSizes(),
-      getSmartMatchSettings(),
-    ]);
+export const getSmartMatchConfig = unstable_cache(
+  async () => {
+    const supabase = createPublicClient();
+    const [buyRanges, rentRanges, propertyTypes, officeSizes, settings, purposeRes] =
+      await Promise.all([
+        getActiveBudgetRanges("BUY"),
+        getActiveBudgetRanges("RENT"),
+        getActivePropertyTypes(),
+        getActiveOfficeSizes(),
+        getSmartMatchSettings(),
+        supabase
+          .from("properties")
+          .select("listing_type, property_type")
+          .eq("status", "ACTIVE")
+          .is("deleted_at", null),
+      ]);
 
-  return {
-    buyBudgetRanges: buyRanges,
-    rentBudgetRanges: rentRanges,
-    propertyTypes,
-    officeSizes,
-    settings,
-  };
-}
+    const availablePurposes = new Set<string>();
+    (purposeRes.data || []).forEach(
+      (p: { listing_type: string | null; property_type: string | null }) => {
+        if (p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT") {
+          availablePurposes.add("RENT");
+        }
+        if (p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT") {
+          availablePurposes.add("BUY");
+          availablePurposes.add("INVEST");
+        }
+        if (p.property_type === "OFFICE_BUILDING") {
+          availablePurposes.add("OFFICE");
+        }
+      },
+    );
+
+    return {
+      buyBudgetRanges: buyRanges,
+      rentBudgetRanges: rentRanges,
+      propertyTypes,
+      officeSizes,
+      settings,
+      availablePurposes: Array.from(availablePurposes),
+    };
+  },
+  ["smart-match-full-bundled-config-v2"],
+  {
+    revalidate: 31536000,
+    tags: ["smart-match", "properties", "site-settings"],
+  },
+);

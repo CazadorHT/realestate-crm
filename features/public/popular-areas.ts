@@ -2,6 +2,7 @@
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { getDistrictName, getSubdistrictName } from "@/lib/utils/provinces";
 
 export type PopularAreaItem = {
   key: string;
@@ -205,17 +206,24 @@ export const getPopularAreasAction = unstable_cache(
             }
           }
 
-          const fallbackList = Array.from(areaCountMap.entries()).map(([name, data]) => ({
-            id: name,
-            nameTh: name,
-            nameEn: null,
-            nameCn: null,
-            nameRu: null,
-            province: province,
-            count: data.count,
-            cover: data.cover || null,
-            slug: encodeURIComponent(name),
-          }));
+          const fallbackList = Array.from(areaCountMap.entries()).map(([name, data]) => {
+            const cleanName = name.replace(/^(เขต|อำเภอ|อ\.|แขวง|ตำบล|ต\.)/, "").trim();
+            const translatedEn = getDistrictName(cleanName, "en") || getSubdistrictName(cleanName, "en");
+            const translatedCn = getDistrictName(cleanName, "cn") || getSubdistrictName(cleanName, "cn");
+            const translatedRu = getDistrictName(cleanName, "ru") || getSubdistrictName(cleanName, "ru");
+
+            return {
+              id: name,
+              nameTh: name,
+              nameEn: translatedEn !== cleanName ? translatedEn : null,
+              nameCn: translatedCn !== cleanName ? translatedCn : null,
+              nameRu: translatedRu !== cleanName ? translatedRu : null,
+              province: province,
+              count: data.count,
+              cover: data.cover || null,
+              slug: encodeURIComponent(name),
+            };
+          });
 
           top16Areas = fallbackList
             .sort((a, b) => b.count - a.count)
@@ -274,7 +282,7 @@ export const getPopularAreasAction = unstable_cache(
       return [];
     }
   },
-  ["popular-areas-cache-v9"],
+  ["popular-areas-cache-v12"],
   { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
 );
 

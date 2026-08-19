@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Home, TrendingUp } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize2, Sparkles, Train } from "lucide-react";
 import { PropertyMatch, PropertyType } from "@/features/smart-match/types";
-import { getTypeColor, getTypeLabel } from "@/lib/property-utils";
+import { getTypeColor } from "@/lib/property-utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+
+import { getDistrictName } from "@/lib/utils/provinces";
 
 interface ResultCardProps {
   match: PropertyMatch;
@@ -17,162 +19,224 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
   const { t, language } = useLanguage();
 
   const PROPERTY_TYPE_NAMES: Partial<Record<PropertyType, string>> = {
-    CONDO: t("home.property_types.condo"),
-    HOUSE: t("home.property_types.house"),
-    TOWNHOME: t("home.property_types.townhome"),
-    OFFICE_BUILDING: t("home.property_types.office"),
-    HOME_OFFICE: t("home.property_types.home_office"),
-    LAND: t("home.property_types.land"),
-    WAREHOUSE: t("home.property_types.warehouse"),
+    CONDO: language === "th" ? "คอนโด" : "Condo",
+    HOUSE: language === "th" ? "บ้านเดี่ยว" : "House",
+    VILLA: language === "th" ? "วิลล่า" : "Villa",
+    POOL_VILLA: language === "th" ? "พูลวิลล่า" : "Pool Villa",
+    TOWNHOME: language === "th" ? "ทาวน์โฮม" : "Townhome",
+    OFFICE_BUILDING: language === "th" ? "ออฟฟิศ" : "Office",
+    HOME_OFFICE: language === "th" ? "โฮมออฟฟิศ" : "Home Office",
+    LAND: language === "th" ? "ที่ดิน" : "Land",
+    WAREHOUSE: language === "th" ? "โกดัง" : "Warehouse",
   };
+
+  // If single house > 8M, display as VILLA. POOL_VILLA displays as POOL_VILLA (private pool house).
+  const isLuxuryHouse =
+    match.property_type === "HOUSE" &&
+    ((!isRent && match.price >= 8000000) ||
+     (!isRent && match.original_price && match.original_price >= 8000000) ||
+     (isRent && match.price >= 60000));
+
+  const displayType = isLuxuryHouse ? "VILLA" : match.property_type;
+
+  const displayTitle =
+    (language === "en"
+      ? match.project_name_en || match.title_en
+      : language === "cn"
+        ? match.project_name_cn || match.title_cn
+        : language === "ru"
+          ? match.project_name_ru || match.title_ru
+          : null) ||
+    match.project_name ||
+    (language !== "th" ? match.title_en : null) ||
+    match.title;
+
+  const rawTransitName =
+    (language === "en"
+      ? match.transit_station_name_en
+      : language === "cn"
+        ? match.transit_station_name_cn
+        : language === "ru"
+          ? match.transit_station_name_ru
+          : null) || match.transit_station_name;
+
+  // Format clean transit display (e.g. MRT_YELLOW -> MRT Yellow)
+  const cleanTransitType = match.transit_type
+    ? match.transit_type
+        .replace(/_/g, " ")
+        .replace(/\b([A-Z])([A-Z]+)\b/g, (match, p1, p2) => p1 + p2.toLowerCase())
+    : "BTS/MRT";
+
+  const rawLocation =
+    (language === "en"
+      ? match.popular_area_en
+      : language === "cn"
+        ? match.popular_area_cn
+        : language === "ru"
+          ? match.popular_area_ru
+          : null) ||
+    match.popular_area ||
+    match.district ||
+    match.province;
+
+  const cleanRawLocation = rawLocation?.replace(/^(เขต|อำเภอ|อ\.)/, "").trim() || "";
+
+  const locationDisplay =
+    (language !== "th" && cleanRawLocation
+      ? (match.popular_area_en && language === "en" ? match.popular_area_en : null) ||
+        (match.popular_area_cn && language === "cn" ? match.popular_area_cn : null) ||
+        (match.popular_area_ru && language === "ru" ? match.popular_area_ru : null) ||
+        getDistrictName(cleanRawLocation, language) ||
+        getDistrictName(rawLocation || "", language) ||
+        cleanRawLocation
+      : cleanRawLocation) || null;
+
   return (
-    <div className="relative border border-slate-100 rounded-2xl overflow-visible hover:shadow-md transition-all duration-300 hover:z-30 bg-slate-50/50 p-4">
+    <div className="group relative bg-white border border-slate-200/90 hover:border-blue-400/80 rounded-2xl p-3 sm:p-3.5 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 overflow-hidden">
       <Link
         href={`/properties/${match.slug || match.id}`}
         target="_blank"
         className="block"
       >
-        <div className="flex gap-4">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shrink-0 bg-slate-200 relative">
+        <div className="flex gap-3 sm:gap-4 items-stretch">
+          {/* 1. Left Thumbnail with Badges Overlay */}
+          <div className="w-32 sm:w-36 min-h-[112px] sm:min-h-[120px] rounded-xl overflow-hidden shrink-0 bg-slate-100 relative shadow-inner">
             <Image
               src={match.image_url}
-              alt={match.title}
+              alt={displayTitle}
               fill
-              className="object-cover"
-              sizes="(max-width: 640px) 80px, 96px"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 640px) 128px, 144px"
             />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-start">
-              <h3 className="font-bold text-slate-900 truncate pr-2 hover:text-blue-600 transition-colors">
-                {match.title}
-              </h3>
-              <div className="relative group/score">
-                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded cursor-help transition-all hover:bg-blue-100 whitespace-nowrap">
-                  {t("smart_match.match_score_label")}
-                  {" " + match.match_score + "%"}
-                </span>
 
-                {/* Tooltip Breakdown */}
-                {match.score_breakdown && match.score_breakdown.length > 0 && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-3 z-50 opacity-0 invisible group-hover/score:opacity-100 group-hover/score:visible transition-all duration-200 origin-top-right scale-95 group-hover/score:scale-100 pointer-events-none">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-50 pb-1">
-                      {t("smart_match.score_details")}
-                    </div>
-                    <div className="space-y-1.5">
-                      {match.score_breakdown.map(
-                        (
-                          item: { label: string; points: number },
-                          i: number,
-                        ) => (
-                          <div
-                            key={i}
-                            className="flex justify-between items-center text-xs"
-                          >
-                            <span className="text-slate-600">
-                              {t(`smart_match.breakdown.${item.label}`)}
-                            </span>
-                            <span className="font-bold text-blue-600">
-                              {item.points > 0
-                                ? `+${item.points}`
-                                : item.points}
-                            </span>
-                          </div>
-                        ),
-                      )}
-                      <div className="pt-1 mt-1 border-t border-slate-50 flex justify-between items-center font-bold text-xs text-slate-900 uppercase">
-                        <span>{t("smart_match.score_total")}</span>
-                        <span className="text-blue-600">
-                          {match.match_score} %
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-2 mt-1">
-              <div>
-                {match.original_price && (
-                  <div className="text-xs text-slate-400 line-through leading-none mb-0.5">
-                    {t("common.baht_symbol")}{" "}
-                    {match.original_price.toLocaleString()}
-                  </div>
-                )}
-                <div className="text-sm font-bold text-blue-600">
-                  {match.price > 0 ? (
-                    <div className="flex flex-wrap items-baseline gap-1">
-                      <span>
-                        {t("common.baht_symbol")} {match.price.toLocaleString()}
-                      </span>
-                      {match.is_sqm_price ? (
-                        <span className="text-[10px] font-medium">
-                          / {t("common.sqm")}
-                        </span>
-                      ) : (
-                        isRent && (
-                          <span className="text-[10px] font-medium">
-                            / {t("common.per_month")}
-                          </span>
-                        )
-                      )}
-
-                      {match.secondary_price && (
-                        <span className="text-[10px] text-slate-400 font-normal ml-1">
-                          ({t("common.baht_symbol")}{" "}
-                          {match.secondary_price.toLocaleString()} /{" "}
-                          {t("common.sqm")})
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    t("common.contact_for_price")
-                  )}
-                </div>
-              </div>
-              {match.property_type && (
+            {/* Top-Left: Property Type Pill */}
+            {displayType && (
+              <div className="absolute top-1.5 left-1.5 z-10">
                 <span
-                  className={`text-xs font-bold ${
-                    getTypeColor(match.property_type).text
-                  } ${
-                    getTypeColor(match.property_type).bg
-                  } px-2 py-0.5 rounded-full uppercase tracking-wide`}
+                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-md shadow-xs uppercase tracking-wider ${
+                    getTypeColor(displayType).bg
+                  } ${getTypeColor(displayType).text}`}
                 >
-                  {match.property_type
-                    ? PROPERTY_TYPE_NAMES[match.property_type] ||
-                      t(
-                        `home.property_types.${match.property_type.toLowerCase()}`,
-                      )
-                    : t("common.all")}
+                  {PROPERTY_TYPE_NAMES[displayType] ||
+                    t(`home.property_types.${displayType.toLowerCase()}`)}
                 </span>
-              )}
+              </div>
+            )}
+
+            {/* Bottom-Left: Match Score Pill on Image */}
+            <div className="absolute bottom-1.5 left-1.5 z-10">
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-blue-800 bg-white/95 backdrop-blur-md px-1.5 py-0.5 rounded-md shadow-xs border border-blue-100">
+                <Sparkles className="h-2.5 w-2.5 text-blue-600 fill-blue-500/20" />
+                {match.match_score}% {t("smart_match.match_score_label")}
+              </span>
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+          </div>
+
+          {/* 2. Right Content (Refined typography and compact layout) */}
+          <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+            {/* Title */}
+            <div>
+              <h3
+                className="font-bold text-slate-900 text-xs sm:text-[13px] leading-snug line-clamp-1 group-hover:text-blue-600 transition-colors"
+                title={displayTitle}
+              >
+                {displayTitle}
+              </h3>
+
+              {/* Price Row */}
+              <div className="mt-0.5 flex items-baseline flex-wrap gap-1">
+                {match.original_price && (
+                  <span className="text-[10px] text-slate-400 line-through leading-none">
+                    {t("common.baht_symbol")} {match.original_price.toLocaleString()}
+                  </span>
+                )}
+
+                {match.price > 0 ? (
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="text-sm sm:text-base font-extrabold text-blue-600 tracking-tight leading-none">
+                      {t("common.baht_symbol")} {match.price.toLocaleString()}
+                    </span>
+                    {match.is_sqm_price ? (
+                      <span className="text-[10px] font-medium text-slate-500">
+                        / {t("common.sqm")}
+                      </span>
+                    ) : (
+                      isRent && (
+                        <span className="text-[10px] font-medium text-slate-500">
+                          / {t("common.per_month")}
+                        </span>
+                      )
+                    )}
+
+                    {match.secondary_price && (
+                      <span className="text-[9px] text-slate-400 font-normal ml-0.5">
+                        ({t("common.baht_symbol")}{" "}
+                        {match.secondary_price.toLocaleString()} /{" "}
+                        {t("common.sqm")})
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-xs font-bold text-slate-700">
+                    {t("common.contact_for_price")}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom Row: Compact Specs & Location Badges */}
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+              {/* Bedroom & Bathroom */}
               {(match.bedrooms || match.bathrooms) && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium bg-slate-100 px-1.5 py-0.5 rounded">
-                  <Home className="h-3 w-3" />
-                  {match.bedrooms || 0} {t("smart_match.bed_short")} •{" "}
-                  {match.bathrooms || 0} {t("smart_match.bath_short")}
+                <div className="flex items-center gap-0.5 text-[10px] text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+                  {match.bedrooms ? (
+                    <span className="flex items-center gap-0.5">
+                      <Bed className="h-2.5 w-2.5 text-slate-500" />
+                      {match.bedrooms} {t("smart_match.bed_short")}
+                    </span>
+                  ) : null}
+                  {match.bedrooms && match.bathrooms ? (
+                    <span className="text-slate-300">•</span>
+                  ) : null}
+                  {match.bathrooms ? (
+                    <span className="flex items-center gap-0.5">
+                      <Bath className="h-2.5 w-2.5 text-slate-500" />
+                      {match.bathrooms} {t("smart_match.bath_short")}
+                    </span>
+                  ) : null}
                 </div>
               )}
-              <div className="flex items-center gap-1 text-[10px] text-green-700 font-bold bg-green-50 border border-green-200 px-2 py-1 rounded-md">
-                <MapPin className="h-3 w-3" />
-                {match.commute_time} {t("smart_match.mins_to_work")}
-              </div>
-              {match.near_transit && (match.transit_station_name || match.transit_station_name_en || match.transit_station_name_cn || match.transit_station_name_ru) && (
-                <div className="flex items-center gap-1 text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                  <TrendingUp className="h-3 w-3" />
-                  {match.transit_type || "BTS"}{" "}
-                  {(language === "en"
-                    ? match.transit_station_name_en
-                    : language === "cn"
-                      ? match.transit_station_name_cn
-                      : language === "ru"
-                        ? match.transit_station_name_ru
-                        : null) || match.transit_station_name}
-                  {match.transit_distance_meters
-                    ? ` (${match.transit_distance_meters} ${t("common.meters_short")})`
-                    : ""}
+
+              {/* Floor Area */}
+              {match.size_sqm && match.size_sqm > 0 ? (
+                <div className="flex items-center gap-0.5 text-[10px] text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+                  <Maximize2 className="h-2.5 w-2.5 text-slate-500" />
+                  {match.size_sqm} {t("common.sqm")}
+                </div>
+              ) : null}
+
+              {/* Location Tag */}
+              {locationDisplay && (
+                <div className="flex items-center gap-0.5 text-[10px] text-slate-700 font-medium bg-slate-100 border border-slate-200/60 px-1.5 py-0.5 rounded truncate max-w-[130px] shrink-0">
+                  <MapPin className="h-2.5 w-2.5 text-slate-500 shrink-0" />
+                  <span className="truncate">{locationDisplay}</span>
+                </div>
+              )}
+
+              {/* Transit Tag */}
+              {match.near_transit && rawTransitName && (
+                <div className="flex items-center gap-0.5 text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded truncate max-w-[160px] sm:max-w-[200px] shrink-0">
+                  <Train className="h-2.5 w-2.5 text-emerald-600 shrink-0" />
+                  <span className="truncate">
+                    {cleanTransitType} {rawTransitName}
+                  </span>
+                  {match.transit_distance_meters ? (
+                    <span className="text-[9px] text-emerald-600/80 font-normal shrink-0">
+                      ({match.transit_distance_meters > 1000
+                        ? `${(match.transit_distance_meters / 1000).toFixed(1)}km`
+                        : `${match.transit_distance_meters}m`})
+                    </span>
+                  ) : null}
                 </div>
               )}
             </div>
