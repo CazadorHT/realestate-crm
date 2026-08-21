@@ -20,7 +20,7 @@ import { getProvinceName } from "@/lib/utils/provinces";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { PropertyListingSkeleton } from "./PropertyListingSkeleton";
 import { useSectionTracking } from "@/hooks/use-section-tracking";
-import type { PropertySearchResponse } from "@/features/properties/types/search";
+import type { PropertyFacets, PropertySearchResponse } from "@/features/properties/types/search";
 import { m } from "framer-motion";
 
 type FilterType =
@@ -68,22 +68,41 @@ type PopularArea = {
   province?: string;
 };
 
+export interface PropertyListingSectionProps {
+  initialProperties?: PropertyCardProps[];
+  initialFacets?: PropertyFacets | null;
+}
+
 // Inside component:
-export function PropertyListingSection({ initialProperties }: { initialProperties?: PropertyCardProps[] }) {
+export function PropertyListingSection({
+  initialProperties,
+  initialFacets,
+}: PropertyListingSectionProps) {
   return (
     <Suspense fallback={<PropertyListingSkeleton />}>
-      <PropertyListingContent initialProperties={initialProperties} />
+      <PropertyListingContent
+        initialProperties={initialProperties}
+        initialFacets={initialFacets}
+      />
     </Suspense>
   );
 }
 
-function PropertyListingContent({ initialProperties }: { initialProperties?: PropertyCardProps[] }) {
+function PropertyListingContent({
+  initialProperties,
+  initialFacets,
+}: PropertyListingSectionProps) {
   const { t, language } = useLanguage();
   const [properties, setProperties] = useState<PropertyCardProps[]>(initialProperties || []);
-  const [isLoading, setIsLoading] = useState(!initialProperties);
+  const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isIOS, setIsIOS] = useState(false);
+
+  // In-memory cache by category to guarantee ZERO redundant network requests
+  const categoryCache = useRef<Record<string, PropertyCardProps[]>>({
+    ALL: initialProperties || [],
+  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -225,23 +244,49 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
   // -- End Drag Logic --
 
 
-  // 3. Main Data Fetch (Hybrid Approach: Server renders 12 items instantly, client-side fetches 100 in background)
+  // 3. Lazy Data Fetch (Zero Egress: Use server initial properties for ALL, fetch only when clicking specific types)
   useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadProperties() {
-      const isInitialFetch = reloadKey === 0 && initialProperties && initialProperties.length > 0;
-      if (isInitialFetch) {
+    // If ALL and we already have initial properties from server, zero network fetch!
+    if (filter === "ALL" && !areaFilter && !provinceFilter) {
+      if (initialProperties && initialProperties.length > 0) {
+        setProperties(initialProperties);
         setIsLoading(false);
         return;
       }
-      
+    }
+
+    const cacheKey = `${filter}_${areaFilter}_${provinceFilter}`;
+    // If category properties are already in memory, switch instantly (0ms, 0 Network)!
+    if (categoryCache.current[cacheKey]) {
+      setProperties(categoryCache.current[cacheKey]);
+      setIsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function loadCategoryProperties() {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Fetch 24 properties to cover initial view with cache revalidation
-        const res = await fetch("/api/public/properties?sort=NEWEST&limit=24", {
+        const params = new URLSearchParams();
+        params.set("sort", "NEWEST");
+        params.set("limit", "12");
+
+        if (filter !== "ALL") {
+          const apiType =
+            filter === "OFFICE"
+              ? "OFFICE_BUILDING"
+              : filter === "COMMERCIAL"
+                ? "COMMERCIAL_BUILDING"
+                : filter;
+          params.set("property_type", apiType);
+        }
+        if (areaFilter) params.set("popular_area", areaFilter);
+        if (provinceFilter) params.set("province", provinceFilter);
+
+        const res = await fetch(`/api/public/properties?${params.toString()}`, {
           signal: controller.signal,
         });
 
@@ -251,35 +296,56 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
 
         const data = (await res.json()) as PropertySearchResponse;
         const propertiesArray = data.properties || [];
-        if (Array.isArray(propertiesArray) && propertiesArray.length > 0) {
-          setProperties(propertiesArray);
-        } else if (initialProperties && initialProperties.length > 0) {
-          setProperties(initialProperties);
-        }
+        categoryCache.current[cacheKey] = propertiesArray;
+        setProperties(propertiesArray);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
-        // Fallback to initialProperties if available
-        if (initialProperties && initialProperties.length > 0) {
-          setProperties(initialProperties);
-        } else {
-          setError(t("common.error_loading") || "Failed to load properties. Please try again.");
-        }
+        setError(t("common.error_loading") || "Failed to load properties. Please try again.");
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadProperties();
+    loadCategoryProperties();
     return () => controller.abort();
-  }, [reloadKey, t, initialProperties]);
+  }, [filter, areaFilter, provinceFilter, reloadKey, initialProperties, t]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<FilterType, number> = {
-      ALL: 0, HOUSE: 0, CONDO: 0, VILLA: 0, POOL_VILLA: 0, TOWNHOME: 0, LAND: 0, OFFICE: 0, WAREHOUSE: 0, COMMERCIAL: 0, OTHER: 0
+      ALL: 0,
+      HOUSE: 0,
+      CONDO: 0,
+      VILLA: 0,
+      POOL_VILLA: 0,
+      TOWNHOME: 0,
+      LAND: 0,
+      OFFICE: 0,
+      WAREHOUSE: 0,
+      COMMERCIAL: 0,
+      OTHER: 0,
     };
 
-    // Filter properties ONLY by geography to determine which categories have ANY results
-    const geoFiltered = properties.filter(item => {
+    // ⚡️ Zero Egress: Use True Database Facet Counts from 1-Year Cache
+    if (initialFacets?.availableTypes) {
+      const types = initialFacets.availableTypes;
+      counts.CONDO = types["CONDO"] || 0;
+      counts.HOUSE = types["HOUSE"] || 0;
+      counts.VILLA = types["VILLA"] || 0;
+      counts.POOL_VILLA = types["POOL_VILLA"] || 0;
+      counts.TOWNHOME = types["TOWNHOME"] || 0;
+      counts.LAND = types["LAND"] || 0;
+      counts.WAREHOUSE = types["WAREHOUSE"] || 0;
+      counts.OFFICE = (types["OFFICE_BUILDING"] || 0) + (types["OFFICE"] || 0);
+      counts.COMMERCIAL = (types["COMMERCIAL_BUILDING"] || 0) + (types["COMMERCIAL"] || 0);
+      counts.OTHER = types["OTHER"] || 0;
+      counts.ALL =
+        initialFacets.availableListingTypes?.ALL ||
+        Object.values(types).reduce((acc, c) => acc + c, 0);
+      return counts;
+    }
+
+    // Fallback if no facets provided
+    const geoFiltered = properties.filter((item) => {
       let matches = true;
       if (areaFilter) matches = matches && (item.popular_area ?? "").includes(areaFilter);
       if (provinceFilter) matches = matches && (item.province ?? "").includes(provinceFilter);
@@ -287,7 +353,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
     });
 
     counts.ALL = geoFiltered.length;
-    geoFiltered.forEach(item => {
+    geoFiltered.forEach((item) => {
       const pt = item.property_type ?? "";
       if (OFFICE_TYPES.has(pt)) counts.OFFICE++;
       else if (COMMERCIAL_TYPES.has(pt)) counts.COMMERCIAL++;
@@ -299,7 +365,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
       }
     });
     return counts;
-  }, [properties, areaFilter, provinceFilter]);
+  }, [initialFacets, properties, areaFilter, provinceFilter]);
 
   const sortedFilterTypes = useMemo(() => {
     const types = Object.keys(FILTER_LABELS) as FilterType[];
@@ -332,20 +398,13 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
     });
   }, [filter, properties, areaFilter, provinceFilter]);
   
-  // Removed AOS refresh effect as we migrated to Framer Motion
-  useEffect(() => {
-    if (!isLoading) {
-      // No-op
-    }
-  }, [isLoading, filteredProperties.length]);
-
   const visibleProperties = useMemo(
     () => filteredProperties.slice(0, MAX_VISIBLE),
     [filteredProperties],
   );
 
   const hasMore = filteredProperties.length > MAX_VISIBLE;
-  const resultCount = filteredProperties.length;
+  const resultCount = typeCounts[filter] || filteredProperties.length;
 
   const schemaData = useMemo(() => {
     // สร้าง priceSpecification: object เดียวถ้าไม่มีส่วนลด, array ถ้ามีราคาเต็ม

@@ -95,6 +95,12 @@ export default async function PublicPropertyDetailPage(props: {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(seo.faqSchema) }}
         />
       )}
+      {seo.breadcrumbSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(seo.breadcrumbSchema) }}
+        />
+      )}
 
       <GTMPropertyPageView
         property={{ ...data, popular_area: data.popular_area ?? null }}

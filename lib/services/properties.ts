@@ -613,20 +613,29 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
  * Get all active property slugs for sitemap generation (Cached 1 year)
  */
 export const getAllPropertySlugs = unstable_cache(
-  async (): Promise<{ slug: string; updated_at: string }[]> => {
+  async (): Promise<{ slug: string; updated_at: string; image_url?: string }[]> => {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("properties_core")
-      .select("slug, updated_at")
+      .select("slug, updated_at, property_images(image_url, storage_path, is_cover, sort_order)")
       .eq("status", 1)
       .not("slug", "is", null);
 
     if (error || !data) return [];
-    return (data || []).map((item: any) => ({
-      slug: item.slug,
-      updated_at: item.updated_at || new Date().toISOString(),
-    }));
+    return ((data as any[]) || []).map((item: any) => {
+      const coverImg =
+        (item.property_images || []).find((img: any) => img.is_cover) ||
+        item.property_images?.[0];
+      const imgTarget = coverImg?.storage_path || coverImg?.image_url;
+      const imageUrl = imgTarget ? getPublicImageUrl(imgTarget) : undefined;
+
+      return {
+        slug: item.slug,
+        updated_at: item.updated_at || new Date().toISOString(),
+        image_url: imageUrl,
+      };
+    });
   },
-  ["all-property-slugs-v1"],
+  ["all-property-slugs-v2"],
   { revalidate: 31536000, tags: ["properties", "property-slugs", "public-data"] }
 );

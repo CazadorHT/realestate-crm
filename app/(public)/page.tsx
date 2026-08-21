@@ -322,7 +322,10 @@ export default async function LandingPage() {
       {/* BELOW THE FOLD: Dynamic / Lazy with realistic height placeholders */}
       <div className={initialProperties && initialProperties.length > 0 ? "min-h-[1000px] md:min-h-[1100px] flex flex-col" : "py-12 flex flex-col"}>
         {initialProperties && initialProperties.length > 0 ? (
-          <PropertyListingSection initialProperties={initialProperties} />
+          <PropertyListingSection
+            initialProperties={initialProperties}
+            initialFacets={initialPropertiesData.facets}
+          />
         ) : (
           <div className="flex flex-col items-center justify-center p-8 text-center bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-100 mx-4 md:mx-8">
             <div className="w-16 h-16 mb-4 rounded-full bg-slate-100 flex items-center justify-center">

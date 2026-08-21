@@ -118,12 +118,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 2. Fetch Active Properties (Cached 1 year)
   const properties = await getAllPropertySlugs();
-  const propertyRoutes: MetadataRoute.Sitemap = properties.map((prop: { slug: string; updated_at: string }) => ({
+  const propertyRoutes: MetadataRoute.Sitemap = properties.map((prop: { slug: string; updated_at: string; image_url?: string }) => ({
     url: `${baseUrl}/properties/${prop.slug}`,
     lastModified: new Date(prop.updated_at),
     changeFrequency: "weekly",
     priority: 0.7,
     alternates: getAlternates(`/properties/${prop.slug}`),
+    images: prop.image_url ? [prop.image_url] : undefined,
   }));
 
   // 3. Fetch Published Blogs (Cached 1 year)
