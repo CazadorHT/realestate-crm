@@ -5,15 +5,18 @@ import { useRouter } from "next/navigation";
 
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertCircle, ImageIcon, Settings, Zap, X, Copy, Edit } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, ImageIcon, Settings, Zap, X, Copy, Edit, Sparkles, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Link from "next/link";
+import { SocialStudioModal, type SocialStudioProperty } from "@/components/social-studio/SocialStudioModal";
 import {
   getPropertySocialContent,
   postPropertyToMetaAction,
   updateSocialPostTimestampAction,
+  uploadCoverBannerAction,
 } from "@/features/properties/actions/social";
 import { postPropertyToLineAction } from "@/features/properties/actions/line";
 import { postPropertyToTikTokAction, getTikTokPostStatusAction } from "@/features/properties/actions/tiktok";
@@ -21,6 +24,38 @@ import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+
+async function ensurePublicCoverUrl(
+  propertyId: string,
+  coverUrl: string | null
+): Promise<string | undefined> {
+  if (!coverUrl || !coverUrl.trim()) return undefined;
+  const url = coverUrl.trim();
+
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+
+  if (url.startsWith("data:image/")) {
+    try {
+      const response = await fetch("/api/upload-cover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ propertyId, base64DataUrl: url }),
+      });
+      const data = await response.json();
+      if (data.success && data.url) {
+        return data.url;
+      } else {
+        console.error("[ensurePublicCoverUrl] API upload error:", data.message);
+      }
+    } catch (err) {
+      console.error("[ensurePublicCoverUrl] Failed to fetch /api/upload-cover:", err);
+    }
+  }
+
+  return undefined;
+}
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { v4 as uuidv4 } from "uuid";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -51,6 +86,7 @@ interface SocialPostDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   className?: string;
+  initialCoverUrl?: string;
 }
 
 const PLATFORM_CONFIG = {
@@ -80,7 +116,7 @@ const PLATFORM_CONFIG = {
     icon: FaTiktok,
     color: "text-slate-900",
     bgColor: "bg-slate-100",
-    btnColor: "bg-slate-900 hover:bg-slate-800",
+    btnColor: "bg-slate-900 hover:bg-black",
   },
 };
 
@@ -92,6 +128,7 @@ export function SocialPostDialog({
   onOpenChange,
   onSuccess,
   className,
+  initialCoverUrl,
 }: SocialPostDialogProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
@@ -110,6 +147,70 @@ export function SocialPostDialog({
   const [publishId, setPublishId] = useState<string | null>(null);
   const [tiktokStatus, setTiktokStatus] = useState<Record<string, any> | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+
+  // Social Studio Cover Banner Integration State
+  const [isStudioOpen, setIsStudioOpen] = useState(false);
+  const [customCoverUrl, setCustomCoverUrl] = useState<string | null>(initialCoverUrl || null);
+
+  useEffect(() => {
+    if (initialCoverUrl) {
+      setCustomCoverUrl(initialCoverUrl);
+    }
+  }, [initialCoverUrl]);
+
+  const displayImages = React.useMemo(() => {
+    const realImages = images.filter((u) => typeof u === "string" && !u.startsWith("data:image/"));
+    if (customCoverUrl) {
+      return [customCoverUrl, ...realImages.filter((u) => u !== customCoverUrl)];
+    }
+    return realImages.length > 0 ? realImages : images;
+  }, [customCoverUrl, images]);
+
+  const studioProperty: SocialStudioProperty = React.useMemo(() => {
+    const p = previewData?.property || previewData || {};
+    const priceVal = p.price ?? p.sale_price ?? p.selling_price;
+    const rentVal = p.rental_price ?? p.rent_price ?? p.price_rent;
+    const origPriceVal = p.original_price ?? p.original_sale_price;
+    const origRentVal = p.original_rental_price ?? p.original_rent_price;
+
+    return {
+      id: propertyId,
+      slug: p.slug || propertyId,
+      title: propertyTitle || p.title || "",
+      title_en: p.title_en,
+      project_name: p.project_name || (typeof p.project?.name === "string" ? p.project.name : null),
+      project: p.project,
+      property_type: p.property_type || p.propertyType || "CONDO",
+      listing_type: p.listing_type || p.listingType || "SALE",
+      price: priceVal !== undefined && priceVal !== null ? Number(priceVal) : null,
+      rental_price: rentVal !== undefined && rentVal !== null ? Number(rentVal) : null,
+      original_price: origPriceVal !== undefined && origPriceVal !== null ? Number(origPriceVal) : null,
+      original_rental_price: origRentVal !== undefined && origRentVal !== null ? Number(origRentVal) : null,
+      popular_area: p.popular_area,
+      popular_area_en: p.popular_area_en,
+      popular_area_cn: p.popular_area_cn,
+      popular_area_ru: p.popular_area_ru,
+      province: p.province,
+      bedrooms: p.bedrooms,
+      bathrooms: p.bathrooms,
+      size_sqm: p.size_sqm || p.floor_area,
+      floor: p.floor,
+      transit_type: p.transit_type,
+      transit_station_name: p.transit_station_name,
+      transit_station_name_en: p.transit_station_name_en,
+      transit_station_name_cn: p.transit_station_name_cn,
+      transit_station_name_ru: p.transit_station_name_ru,
+      transit_distance_meters: p.transit_distance_meters,
+      images: displayImages.length > 0 ? displayImages : p.images || [],
+      assigned_agent: p.property_agents?.[0]?.profiles
+        ? {
+            full_name: p.property_agents[0].profiles.full_name || p.property_agents[0].profiles.display_name,
+            phone: p.property_agents[0].profiles.phone,
+            line_id: p.property_agents[0].profiles.line_id,
+          }
+        : null,
+    };
+  }, [previewData, propertyId, propertyTitle, displayImages]);
 
   const activeContent = isCustomContent ? customContent : content;
 
@@ -134,7 +235,12 @@ export function SocialPostDialog({
         throw new Error("Unable to load property dynamic content");
       }
 
-      setImages(validContents[0].images || []);
+      const fetchedImages = validContents[0].images || [];
+      if (customCoverUrl) {
+        setImages([customCoverUrl, ...fetchedImages.filter((u: string) => u !== customCoverUrl)]);
+      } else {
+        setImages(fetchedImages);
+      }
       setPreviewData(validContents[0]);
       
       const mergedContent = validContents.map((c) => c.content).join("\n\n---\n\n").trim();
@@ -210,24 +316,38 @@ export function SocialPostDialog({
     try {
       let res: any;
 
+      // Ensure custom cover URL is converted to public CDN URL before calling Server Action with fallback
+      let activeCoverUrl: string | undefined = customCoverUrl || undefined;
+      if (customCoverUrl && customCoverUrl.startsWith("data:image/")) {
+        const uploaded = await ensurePublicCoverUrl(propertyId, customCoverUrl);
+        if (uploaded) {
+          activeCoverUrl = uploaded;
+          setCustomCoverUrl(uploaded);
+        }
+      }
+
       if (platform === "FACEBOOK" || platform === "INSTAGRAM") {
         res = await postPropertyToMetaAction(
           propertyId,
           platform,
           activeContent,
-          selectedLangs[0] || "th"
+          selectedLangs[0] || "th",
+          activeCoverUrl
         );
       } else if (platform === "LINE") {
         res = await postPropertyToLineAction(
           propertyId,
           activeContent,
-          selectedLangs[0] || "th"
+          selectedLangs[0] || "th",
+          activeCoverUrl
         );
       } else if (platform === "TIKTOK") {
         res = await postPropertyToTikTokAction(
           propertyId,
           activeContent,
-          selectedLangs[0] || "th"
+          selectedLangs[0] || "th",
+          "DIRECT_POST",
+          activeCoverUrl
         );
       }
 
@@ -458,13 +578,13 @@ export function SocialPostDialog({
                   ) : (
                     <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-1 min-h-[300px]">
                       {platform === "LINE" && previewData ? (
-                        <LinePreview images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
+                        <LinePreview images={displayImages} previewData={previewData} lang={selectedLangs[0] || "th"} />
                       ) : platform === "FACEBOOK" ? (
-                        <FacebookPreview content={activeContent} images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
+                        <FacebookPreview content={activeContent} images={displayImages} previewData={previewData} lang={selectedLangs[0] || "th"} />
                       ) : platform === "INSTAGRAM" ? (
-                        <InstagramPreview content={activeContent} images={images} previewData={previewData} />
+                        <InstagramPreview content={activeContent} images={displayImages} previewData={previewData} />
                       ) : (
-                        <GenericPreview content={activeContent} images={images} />
+                        <GenericPreview content={activeContent} images={displayImages} />
                       )}
                     </div>
                   )}
@@ -548,7 +668,8 @@ export function SocialPostDialog({
 
   // --- DESKTOP VIEW ---
   return (
-    <ResponsiveDialog
+    <>
+      <ResponsiveDialog
       open={isOpen}
       onOpenChange={onOpenChange}
       className={cn(
@@ -720,6 +841,78 @@ export function SocialPostDialog({
                 />
               </div>
             )}
+
+            {/* Social Studio Banner Option */}
+            <div className="p-3.5 rounded-2xl border border-amber-200/80 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent space-y-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {customCoverUrl ? (
+                    <div className="relative w-14 h-14 shrink-0">
+                      <Image
+                        src={customCoverUrl}
+                        alt="ภาพปกสไตล์โปร"
+                        fill
+                        unoptimized
+                        className="rounded-xl object-cover border-2 border-emerald-500 shadow-md animate-in zoom-in-75 duration-200"
+                      />
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center border border-white z-10">
+                        ✓
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold shadow-xs shrink-0">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-sm font-bold text-slate-900">
+                        ภาพปกสไตล์โปร (Social Studio Banner)
+                      </p>
+                      {customCoverUrl && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-xs">
+                          ✨ มีภาพปกใหม่แล้ว
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                      {customCoverUrl
+                        ? "ภาพปกนี้ถูกตั้งเป็นภาพแรก (Image #1) เรียบร้อยแล้ว สำหรับทุกช่องทาง (Facebook, IG, LINE, TikTok)"
+                        : "สร้างหรือใส่ภาพปกแบนเนอร์ไฮไลท์เป็นภาพแรกของโพสต์ (ใช้ได้กับทุกช่องทางรวมถึง TikTok)"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsStudioOpen(true)}
+                  className="flex-1 h-9 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 hover:text-amber-800 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                  <span>{customCoverUrl ? "🎨 แก้ไข/สร้างภาพปกใหม่" : "✨ + เพิ่ม/สร้างภาพปกด้วย AI Social Studio"}</span>
+                </Button>
+                {customCoverUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setImages((prev) => prev.filter((u) => u !== customCoverUrl));
+                      setCustomCoverUrl(null);
+                      toast.info("ถอดภาพปก Social Studio ออกแล้ว");
+                    }}
+                    className="h-9 px-3 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 text-xs font-bold cursor-pointer"
+                    title="ถอดภาพปกออก"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    <span>ถอดภาพปก</span>
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -773,7 +966,7 @@ export function SocialPostDialog({
                     <ImageIcon className="h-3.5 w-3.5" />
                     <span>
                       {platform === "TIKTOK" ? "วิดีโอ (Photo Mode) " : "รูปภาพ "}
-                      {images.length} รูป
+                      {displayImages.length} รูป
                     </span>
                   </div>
                   <div className={cn(
@@ -788,13 +981,13 @@ export function SocialPostDialog({
                 </div>
               </div>
               {platform === "LINE" && previewData ? (
-                <LinePreview images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
+                <LinePreview images={displayImages} previewData={previewData} lang={selectedLangs[0] || "th"} />
               ) : platform === "FACEBOOK" ? (
-                <FacebookPreview content={activeContent} images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
+                <FacebookPreview content={activeContent} images={displayImages} previewData={previewData} lang={selectedLangs[0] || "th"} />
               ) : platform === "INSTAGRAM" ? (
-                <InstagramPreview content={activeContent} images={images} previewData={previewData} />
+                <InstagramPreview content={activeContent} images={displayImages} previewData={previewData} />
               ) : (
-                <GenericPreview content={activeContent} images={images} />
+                <GenericPreview content={activeContent} images={displayImages} />
               )}
 
             </div>
@@ -802,5 +995,22 @@ export function SocialPostDialog({
         </div>
       </div>
     </ResponsiveDialog>
+
+    {/* AI Social Media Studio Modal */}
+    {isStudioOpen && (
+      <SocialStudioModal
+        isOpen={isStudioOpen}
+        onClose={() => setIsStudioOpen(false)}
+        property={studioProperty}
+        onApplyCoverToPost={async (coverDataUrl) => {
+          // Immediately convert Base64 cover to public CDN URL so all social channels (TikTok draft/publish) get the cover banner
+          const publicUrl = await ensurePublicCoverUrl(propertyId, coverDataUrl);
+          const finalCoverUrl = publicUrl || coverDataUrl;
+          setCustomCoverUrl(finalCoverUrl);
+          setImages((prev) => [finalCoverUrl, ...prev.filter((u) => u !== finalCoverUrl)]);
+        }}
+      />
+    )}
+    </>
   );
 }

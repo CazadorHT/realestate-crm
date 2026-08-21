@@ -372,12 +372,11 @@ export function PropertyHeader({
                         </div>
                       );
                     })()}
-
                   <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-snug line-clamp-2">
                     {localizedTitle}
                   </h1>
 
-                  <div className="flex items-center text-slate-600 gap-3 sm:gap-4 font-normal text-xs sm:text-sm">
+                  <div className="flex flex-wrap items-center text-slate-600 gap-3 sm:gap-4 font-normal text-xs sm:text-sm">
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 shrink-0" />
                       <span className="line-clamp-1">

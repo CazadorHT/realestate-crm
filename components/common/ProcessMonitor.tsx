@@ -40,9 +40,41 @@ import {
 } from "./ProcessIcons";
 import { Checkbox } from "@/components/ui/checkbox";
 
-// 🔊 Premium Sound Assets (Public CDN)
-const SUCCESS_SOUND = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"; 
-const ERROR_SOUND = "https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3";
+function playWebAudioTone(type: "SUCCESS" | "ERROR") {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    if (type === "SUCCESS") {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+      osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15); // E5
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    } else {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(300, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch {
+    // Ignore audio policy errors
+  }
+}
 
 export function ProcessMonitor() {
   const { processes, activeCount, errorCount, clearFinished, deleteMultiple } = useProcess();
@@ -63,12 +95,7 @@ export function ProcessMonitor() {
     });
 
     if (latestFinished) {
-      const audio = new Audio(latestFinished.status === "SUCCESS" ? SUCCESS_SOUND : ERROR_SOUND);
-      audio.volume = 0.4;
-      audio.play().catch(() => {
-        // Autoplay policy might block sound until user interacts
-        console.log("Sound blocked by browser policy");
-      });
+      playWebAudioTone(latestFinished.status === "SUCCESS" ? "SUCCESS" : "ERROR");
     }
   }, [processes, soundEnabled]);
 

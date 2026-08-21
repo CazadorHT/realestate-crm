@@ -129,7 +129,7 @@ export function NoResultsView({
   })();
 
   return (
-    <div className="py-12 px-6 sm:px-10 bg-gradient-to-b from-white via-slate-50/70 to-blue-50/20 rounded-3xl border border-slate-200/80 shadow-sm max-w-2xl mx-auto my-8 animate-in fade-in zoom-in-95 duration-300">
+    <div className="py-12 px-6 sm:px-10 bg-linear-to-b from-white via-slate-50/70 to-blue-50/20 rounded-3xl border border-slate-200/80 shadow-sm max-w-2xl mx-auto my-8 animate-in fade-in zoom-in-95 duration-300">
       {/* Icon Badge */}
       <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-5 shadow-inner border border-indigo-100/60">
         <Search className="w-8 h-8 text-indigo-600" />
@@ -220,7 +220,7 @@ export function NoResultsView({
 
         <Button
           onClick={onClearFilters}
-          className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs h-10 px-5 shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+          className="rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs h-10 px-5 shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>{clearAllFiltersText}</span>

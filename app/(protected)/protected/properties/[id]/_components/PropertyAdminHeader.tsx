@@ -2,14 +2,17 @@
 
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Copy, Edit, Eye, Layers, Loader2, MoreVertical, ShieldCheck, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Copy, Edit, Eye, Layers, Loader2, MoreVertical, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { QuickShareButton } from "@/features/properties/components/QuickShareButton";
 import { FacebookPostButton } from "@/features/properties/components/FacebookPostButton";
 import { InstagramPostButton } from "@/features/properties/components/InstagramPostButton";
 import { LinePostButton } from "@/features/properties/components/LinePostButton";
 import { TikTokPostButton } from "@/features/properties/components/TikTokPostButton";
+import { DownloadAllImagesButton } from "@/features/properties/components/DownloadAllImagesButton";
+import { SocialStudioModal } from "@/components/social-studio/SocialStudioModal";
+import { SocialPostDialog } from "@/features/properties/components/SocialPostDialog";
 import { type Language } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -52,6 +55,69 @@ export function PropertyAdminHeader({
       property.owner_id === currentUserId ||
       (property.agents && property.agents.some((a: any) => a.identity?.id === currentUserId))
     ));
+
+  const [isStudioOpen, setIsStudioOpen] = useState(false);
+  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+  const [appliedCoverUrl, setAppliedCoverUrl] = useState<string | null>(null);
+
+  const studioProperty = useMemo(() => {
+    const primaryAgent = (property.agents as any)?.[0]?.identity;
+    return {
+      id: property.id,
+      slug: property.slug,
+      title: property.title || "",
+      project_id: (property as any).project_id ?? (property as any).project?.id ?? null,
+      project_name: (() => {
+        const pName = (property as any).project_name;
+        if (typeof pName === "string" && pName.trim()) return pName.trim();
+        const proj = (property as any).project;
+        if (proj?.name) {
+          if (typeof proj.name === "object") {
+            return proj.name.th || proj.name.en || proj.name.cn || proj.name.ru || null;
+          }
+          if (typeof proj.name === "string" && proj.name.trim()) return proj.name.trim();
+        }
+        return (property as any).details?.meta_data?.project_name ?? null;
+      })(),
+      project: (property as any).project ?? null,
+      property_type: property.property_type,
+      listing_type: property.listing_type,
+      price: (property as any).price ?? (property as any).sale_price,
+      rental_price: (property as any).rental_price ?? (property as any).rent_price,
+      popular_area: (property as any).popular_area,
+      popular_area_en: (property as any).popular_area_en ?? null,
+      popular_area_cn: (property as any).popular_area_cn ?? null,
+      popular_area_ru: (property as any).popular_area_ru ?? null,
+      province: (property as any).province,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      size_sqm: (property as any).size_sqm ?? (property as any).floor_area,
+      floor: (property as any).floor,
+      transit_type: (property as any).transit_type ?? (property as any).transit?.type ?? null,
+      transit_station_name: (property as any).transit_station_name,
+      transit_station_name_en: (property as any).transit_station_name_en ?? null,
+      transit_station_name_cn: (property as any).transit_station_name_cn ?? null,
+      transit_station_name_ru: (property as any).transit_station_name_ru ?? null,
+      images: [...images]
+        .sort((a, b) => {
+          if (a.is_cover && !b.is_cover) return -1;
+          if (!a.is_cover && b.is_cover) return 1;
+          return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+        })
+        .map((img) => ({
+          url: img.url,
+          is_cover: img.is_cover,
+          sort_order: img.sort_order,
+        })),
+      assigned_agent: primaryAgent
+        ? {
+            full_name: primaryAgent.display_name,
+            phone: primaryAgent.phone,
+            line_id: primaryAgent.line_id,
+          }
+        : null,
+    };
+  }, [property, images]);
 
   return (
     <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-xs">
@@ -166,6 +232,21 @@ export function PropertyAdminHeader({
               }}
               className="h-9 px-5 rounded-full shadow-sm hover:shadow-md transition-all font-bold text-xs"
             />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsStudioOpen(true)}
+              className="h-9 px-4 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-800 hover:text-amber-800 border-amber-200 shadow-xs transition-all font-bold text-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-600! animate-pulse" />
+              <span>สร้างภาพ Social Story</span>
+            </Button>
+            <DownloadAllImagesButton
+              images={images}
+              propertyId={property.id}
+              propertyTitle={property.title || undefined}
+              className="h-9 px-4 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-200 shadow-xs font-bold text-xs"
+            />
             <div className="w-px h-4 bg-slate-200 mx-1 hidden sm:block" />
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden lg:block">Social Posting</p>
           </div>
@@ -196,6 +277,31 @@ export function PropertyAdminHeader({
           </m.div>
         </div>
       </div>
+
+      {/* AI Social Media Studio Modal */}
+      {isStudioOpen && (
+        <SocialStudioModal
+          isOpen={isStudioOpen}
+          onClose={() => setIsStudioOpen(false)}
+          property={studioProperty}
+          onApplyCoverToPost={(coverDataUrl) => {
+            setIsStudioOpen(false);
+            setAppliedCoverUrl(coverDataUrl);
+            setIsPostDialogOpen(true);
+          }}
+        />
+      )}
+
+      {isPostDialogOpen && (
+        <SocialPostDialog
+          isOpen={isPostDialogOpen}
+          onOpenChange={setIsPostDialogOpen}
+          propertyId={property.id}
+          propertyTitle={property.title || ""}
+          platform="FACEBOOK"
+          initialCoverUrl={appliedCoverUrl || undefined}
+        />
+      )}
     </div>
   );
 }

@@ -29,8 +29,8 @@ export function LinePreview({ images, previewData, lang }: LinePreviewProps) {
           <div className="p-5 pb-0">
             <div className="grid grid-cols-2 gap-1 bg-slate-200 h-[180px] rounded-sm overflow-hidden">
               {images.slice(0, 4).map((img, i) => (
-                <div key={i} className="relative w-full h-full bg-slate-100">
-                  <Image src={img} alt="preview" fill className="object-cover" />
+                <div key={i} className="relative w-full h-full bg-slate-100 overflow-hidden">
+                  <Image src={img} alt="preview" fill unoptimized className="object-cover" />
                 </div>
               ))}
             </div>

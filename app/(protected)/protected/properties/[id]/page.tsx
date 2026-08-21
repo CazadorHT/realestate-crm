@@ -52,7 +52,10 @@ export default async function PropertyDetailsPage({
       .select(
         `
         id, status, listing_type, property_type, sale_price, rent_price, currency, bedrooms, bathrooms, floor_area, land_area, location, owner_id, assigned_to, created_at, updated_at,
-        is_hot_deal, verified,
+        is_hot_deal, verified, project_id,
+        project:projects!properties_core_project_id_fkey (
+          id, slug, name, developer
+        ),
         tenant:tenants_v3 (id, name, slug),
         branch:branches_v3 (id, name),
         details:properties_details (
@@ -181,6 +184,22 @@ export default async function PropertyDetailsPage({
     status: STATUS_MAP[rawData.status || 0] || "DRAFT",
     listing_type: LISTING_TYPE_MAP[rawData.listing_type || 0] || "SALE",
     property_type: PROPERTY_TYPE_MAP[rawData.property_type || 0] || "OTHER",
+
+    // Project Info
+    project_id: rawData.project_id || null,
+    project_name: (() => {
+      const proj = rawData.project as any;
+      if (proj?.name) {
+        if (typeof proj.name === "object" && proj.name !== null) {
+          return proj.name.th || proj.name.en || proj.name.cn || proj.name.ru || null;
+        }
+        if (typeof proj.name === "string" && proj.name.trim()) return proj.name.trim();
+      }
+      if ((metaData as any)?.project_name) return (metaData as any).project_name;
+      if ((addressInfo as any)?.project_name) return (addressInfo as any).project_name;
+      return null;
+    })(),
+    project: (rawData.project as any) || null,
 
     // Unroll details (Strict Mapping & Localization Extraction)
     title: titleObj?.th || titleObj?.en || "-",

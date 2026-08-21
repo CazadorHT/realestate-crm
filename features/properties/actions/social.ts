@@ -1144,6 +1144,7 @@ export async function getPropertySocialContent(
     template,
     templates,
     images,
+    property,
     title: tTitle,
     priceDisplay: priceText,
     location: `${tDistrict} ${tProvince}`.trim(),
@@ -1174,6 +1175,7 @@ export async function postPropertyToMetaAction(
   platform: "FACEBOOK" | "INSTAGRAM" = "FACEBOOK",
   customContent?: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
+  customCoverUrl?: string,
 ) {
   try {
     const { supabase, user, role } = await requireAuthContext();
@@ -1196,7 +1198,47 @@ export async function postPropertyToMetaAction(
       lang,
       platform,
     );
-    const rawImages = contentData.images;
+    let rawImages = contentData.images || [];
+
+    // Process Custom Cover URL if provided (Base64 or HTTP URL)
+    if (customCoverUrl && customCoverUrl.trim()) {
+      const cleanCoverUrl = customCoverUrl.trim();
+      if (cleanCoverUrl.startsWith("data:image/")) {
+        try {
+          const sharp = (await import("sharp")).default;
+          const { createAdminClient } = await import("@/lib/supabase/admin");
+          const adminSupabase = createAdminClient();
+
+          const base64Data = cleanCoverUrl.split(",")[1];
+          if (base64Data) {
+            const buffer = Buffer.from(base64Data, "base64");
+            const tempCoverPath = `social-covers/${propertyId}/cover_${Date.now()}.jpg`;
+
+            const jpegBuf = await sharp(buffer)
+              .jpeg({ quality: 90 })
+              .toBuffer();
+
+            const { error: coverUploadErr } = await adminSupabase.storage
+              .from("property-images")
+              .upload(tempCoverPath, jpegBuf, {
+                contentType: "image/jpeg",
+                upsert: true,
+              });
+
+            if (!coverUploadErr) {
+              const cdnCoverUrl = `https://cdn.vccasset.com/storage/v1/object/public/property-images/${tempCoverPath}`;
+              rawImages = [cdnCoverUrl, ...rawImages.filter((u) => u !== cdnCoverUrl)];
+            } else {
+              console.error("[Meta Custom Cover Upload Error]:", coverUploadErr);
+            }
+          }
+        } catch (coverErr) {
+          console.error("[Meta Custom Cover Convert Error]:", coverErr);
+        }
+      } else if (cleanCoverUrl.startsWith("http://") || cleanCoverUrl.startsWith("https://")) {
+        rawImages = [cleanCoverUrl, ...rawImages.filter((u) => u !== cleanCoverUrl)];
+      }
+    }
 
     const images = rawImages
       .map((url) => {
@@ -1354,5 +1396,162 @@ export async function updateSocialPostTimestampAction(
   } catch (err: any) {
     console.error("updateSocialPostTimestampAction error:", err);
     return { success: false, error: err.message };
+  }
+}
+
+export interface BannerContentInput {
+  title: string;
+  projectName?: string | null;
+  propertyType?: string | null;
+  listingType?: string | null;
+  price?: number | null;
+  rentalPrice?: number | null;
+  popularArea?: string | null;
+  province?: string | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  sizeSqm?: number | null;
+  transitStationName?: string | null;
+  transitDistanceMeters?: number | null;
+  language?: string;
+}
+
+export interface BannerContentResult {
+  headline: string;
+  translatedTitle?: string;
+  highlights: string[];
+  caption: string;
+  hashtags: string[];
+}
+
+/**
+ * AI-Powered Social Story / Banner Content Generator
+ * Generates punchy hooks, highlights, and ready-to-post captions
+ */
+export async function generateSocialBannerContentAction(
+  input: BannerContentInput,
+): Promise<BannerContentResult> {
+  const lang = input.language || "th";
+  const prompt = `
+    You are an expert real estate copywriter and social media growth marketer.
+    Create ultra-high-converting social media content for this property:
+
+    Property Information:
+    - Project Name: ${input.projectName || "N/A"}
+    - Title: ${input.title}
+    - Type: ${input.propertyType || "Condo/House"}
+    - Listing: ${input.listingType || "Sale/Rent"}
+    - Price: ${input.price ? input.price.toLocaleString() + " THB" : ""} ${input.rentalPrice ? "Rent: " + input.rentalPrice.toLocaleString() + " THB/mo" : ""}
+    - Location: ${input.popularArea || ""} ${input.province || ""}
+    - Specs: ${input.bedrooms ? input.bedrooms + " Bed" : ""} ${input.bathrooms ? input.bathrooms + " Bath" : ""} ${input.sizeSqm ? input.sizeSqm + " Sqm" : ""}
+    - Near Transit: ${input.transitStationName ? input.transitStationName + (input.transitDistanceMeters ? ` (${input.transitDistanceMeters}m)` : "") : "N/A"}
+
+    Language requested: ${lang === "en" ? "English" : lang === "cn" ? "Chinese" : lang === "ru" ? "Russian" : "Thai"}
+
+    Generate a JSON response with:
+    1. "translatedTitle": Translated title of the property in the requested language (clean, without brackets, concise).
+    2. "headline": A punchy, eye-catching 1-sentence hook suitable for a visual banner in requested language (maximum 8-12 words, bold, emotional, no markdown).
+    3. "highlights": An array of exactly 3 short bullet highlights in requested language.
+    4. "caption": A persuasive, engaging social media post caption in requested language (1-2 paragraphs with tasteful emojis, call to action to contact agent or scan QR).
+    5. "hashtags": Array of 5-8 trending relevant hashtags in requested language.
+
+    Respond ONLY in valid JSON format:
+    {
+      "translatedTitle": "...",
+      "headline": "...",
+      "highlights": ["...", "...", "..."],
+      "caption": "...",
+      "hashtags": ["...", "..."]
+    }
+  `;
+
+  try {
+    const result = await generateText(prompt, "gemini-flash-lite-latest");
+    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        translatedTitle: parsed.translatedTitle || undefined,
+        headline: parsed.headline || input.title,
+        highlights: Array.isArray(parsed.highlights) ? parsed.highlights : [],
+        caption: parsed.caption || "",
+        hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : [],
+      };
+    }
+  } catch (err) {
+    console.warn("[SocialStudio] AI generation fallback:", err);
+  }
+
+  // Fallback if AI fails or times out
+  const fallbackHeadline =
+    lang === "en"
+      ? `✨ Stunning ${input.propertyType || "Property"} in Prime ${input.popularArea || "Bangkok"}`
+      : `✨ ${input.title}`;
+
+  return {
+    headline: fallbackHeadline,
+    highlights: [
+      input.bedrooms ? `${input.bedrooms} ห้องนอน ${input.bathrooms || 1} ห้องน้ำ` : "ตกแต่งสวยพร้อมเข้าอยู่",
+      input.sizeSqm ? `พื้นที่ใช้สอย ${input.sizeSqm} ตร.ม.` : "ทำเลศักยภาพสูง",
+      input.transitStationName ? `ใกล้ ${input.transitStationName}` : "เดินทางสะดวกสบาย",
+    ],
+    caption: `🏡 ${input.title}\n📍 ทำเล: ${input.popularArea || ""} ${input.province || ""}\n💰 ราคา: ${input.rentalPrice ? `฿${input.rentalPrice.toLocaleString()}/เดือน` : input.price ? `฿${input.price.toLocaleString()}` : "ติดต่อสอบถาม"}\n\n📲 สแกน QR Code ในรูปภาพเพื่อดูรูปเพิ่มเติมและติดต่อ Agent ได้เลยครับ!`,
+    hashtags: ["#อสังหาริมทรัพย์", "#คอนโด", "#บ้านเดี่ยว", "#VCCAsset"],
+  };
+}
+
+/**
+ * Upload AI Studio Cover Banner to Supabase Storage CDN using Admin Client (bypassing Storage RLS)
+ */
+export async function uploadCoverBannerAction(
+  propertyId: string,
+  base64DataUrl: string
+): Promise<{ success: boolean; url?: string; message?: string }> {
+  try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
+    if (!base64DataUrl || !base64DataUrl.startsWith("data:image/")) {
+      return { success: false, message: "รูปภาพปกไม่ถูกต้อง" };
+    }
+
+    const base64Data = base64DataUrl.split(",")[1];
+    if (!base64Data) {
+      return { success: false, message: "รหัสภาพ Base64 ไม่ถูกต้อง" };
+    }
+
+    const sharp = (await import("sharp")).default;
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminSupabase = createAdminClient();
+
+    const buffer = Buffer.from(base64Data, "base64");
+    const tempCoverPath = `social-covers/${propertyId}/cover_${Date.now()}.jpg`;
+
+    const jpegBuf = await sharp(buffer)
+      .resize(1080, 1350, {
+        fit: "contain",
+        background: { r: 255, g: 255, b: 255, alpha: 1 },
+      })
+      .flatten({ background: { r: 255, g: 255, b: 255 } })
+      .jpeg({ quality: 90 })
+      .toBuffer();
+
+    const { error: coverUploadErr } = await adminSupabase.storage
+      .from("property-images")
+      .upload(tempCoverPath, jpegBuf, {
+        contentType: "image/jpeg",
+        upsert: true,
+      });
+
+    if (coverUploadErr) {
+      console.error("[uploadCoverBannerAction] Admin Storage upload error:", coverUploadErr);
+      return { success: false, message: `อัปโหลดภาพปกไม่สำเร็จ: ${coverUploadErr.message}` };
+    }
+
+    const cdnUrl = `https://cdn.vccasset.com/storage/v1/object/public/property-images/${tempCoverPath}`;
+    return { success: true, url: cdnUrl };
+  } catch (err: any) {
+    console.error("[uploadCoverBannerAction] Exception:", err);
+    return { success: false, message: err?.message || "เกิดข้อผิดพลาดในการอัปโหลดภาพปก" };
   }
 }

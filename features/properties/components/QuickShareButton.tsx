@@ -123,7 +123,7 @@ ${L.link} ${publicUrl}
         <Button
           variant="outline"
           className={cn(
-            "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 rounded-xl gap-2 font-semibold shadow-sm transition-all hover:shadow-md h-12",
+            "bg-blue-50 hover:bg-blue-100 text-blue-700! border-blue-200 rounded-xl gap-2 font-semibold shadow-sm transition-all hover:shadow-md h-12",
             className,
           )}
         >

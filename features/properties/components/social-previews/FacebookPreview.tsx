@@ -103,7 +103,7 @@ export function FacebookPreview({
               images.length === 3 && i === 0 ? "row-span-2 h-full" : "",
             )}
           >
-            <Image src={img} alt="preview" fill className="object-cover" />
+            <Image src={img} alt="preview" fill unoptimized className="object-cover" />
 
             {/* Overlay Pills - Only on primary image */}
             

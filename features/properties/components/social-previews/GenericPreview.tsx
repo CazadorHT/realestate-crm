@@ -30,6 +30,7 @@ export function GenericPreview({
                 src={img}
                 alt="preview"
                 fill
+                unoptimized
                 className="object-cover"
               />
             </div>

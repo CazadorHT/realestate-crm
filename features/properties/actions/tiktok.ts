@@ -15,6 +15,7 @@ export async function postPropertyToTikTokAction(
   caption?: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
   postMode: "DIRECT_POST" | "MEDIA_UPLOAD" = "DIRECT_POST",
+  customCoverUrl?: string,
 ) {
   try {
     const { supabase, role } = await requireAuthContext();
@@ -99,7 +100,7 @@ export async function postPropertyToTikTokAction(
     // 4. เตรียมรูปภาพ (Standardized Logic using storage_path)
     const rawImagesCount = (property.property_images as unknown as any[])?.length || 0;
     
-    const rawImages = (((property.property_images as unknown as any[]) || [])
+    let rawImages = (((property.property_images as unknown as any[]) || [])
       .slice()
       .sort((a: any, b: any) => {
         if (a.is_cover && !b.is_cover) return -1;
@@ -116,11 +117,52 @@ export async function postPropertyToTikTokAction(
       })
       .filter(Boolean) as string[];
 
-    // TikTok Photo Mode API strictly requires direct JPEG (.jpg / .jpeg) or PNG images hosted on verified domain.
-    // Convert WebP images to optimized JPEG and upload directly to Supabase Storage CDN (cdn.vccasset.com)
     const sharp = (await import("sharp")).default;
     const adminSupabase = createAdminClient();
 
+    // 4.1 Process Custom Cover URL if provided (Base64 or HTTP URL)
+    if (customCoverUrl && customCoverUrl.trim()) {
+      const cleanCoverUrl = customCoverUrl.trim();
+      if (cleanCoverUrl.startsWith("data:image/")) {
+        try {
+          const base64Data = cleanCoverUrl.split(",")[1];
+          if (base64Data) {
+            const buffer = Buffer.from(base64Data, "base64");
+            const tempCoverPath = `tiktok-cache/${propertyId}/cover_${Date.now()}.jpg`;
+
+            const jpegBuf = await sharp(buffer)
+              .resize(1080, 1350, {
+                fit: "contain",
+                background: { r: 255, g: 255, b: 255, alpha: 1 },
+              })
+              .flatten({ background: { r: 255, g: 255, b: 255 } })
+              .jpeg({ quality: 90 })
+              .toBuffer();
+
+            const { error: coverUploadErr } = await adminSupabase.storage
+              .from("property-images")
+              .upload(tempCoverPath, jpegBuf, {
+                contentType: "image/jpeg",
+                upsert: true,
+              });
+
+            if (!coverUploadErr) {
+              const cdnCoverUrl = `https://cdn.vccasset.com/storage/v1/object/public/property-images/${tempCoverPath}`;
+              rawImages = [cdnCoverUrl, ...rawImages.filter((u) => u !== cdnCoverUrl)];
+            } else {
+              console.error("[TikTok Custom Cover Upload Error]:", coverUploadErr);
+            }
+          }
+        } catch (coverErr) {
+          console.error("[TikTok Custom Cover Convert Error]:", coverErr);
+        }
+      } else if (cleanCoverUrl.startsWith("http://") || cleanCoverUrl.startsWith("https://")) {
+        rawImages = [cleanCoverUrl, ...rawImages.filter((u) => u !== cleanCoverUrl)];
+      }
+    }
+
+    // TikTok Photo Mode API strictly requires direct JPEG (.jpg / .jpeg) or PNG images hosted on verified domain.
+    // Convert WebP images to optimized JPEG and upload directly to Supabase Storage CDN (cdn.vccasset.com)
     // Process all images in parallel for maximum speed and efficiency
     const uploadTasks = rawImages.map(async (srcUrl, idx) => {
       try {

@@ -15,6 +15,7 @@ export async function postPropertyToLineAction(
   propertyId: string,
   customMessage?: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
+  customCoverUrl?: string,
 ) {
   try {
     const { supabase, role } = await requireAuthContext();
@@ -70,7 +71,12 @@ export async function postPropertyToLineAction(
 
     // 3. เตรียมรูปภาพและเนื้อหา (ใช้ Line Template เฉพาะ)
     const contentData = await getPropertySocialContent(propertyId, lang, "LINE");
-    const images = contentData.images;
+    let images = contentData.images || [];
+
+    if (customCoverUrl && customCoverUrl.trim()) {
+      const cleanUrl = customCoverUrl.trim();
+      images = [cleanUrl, ...images.filter((u) => u !== cleanUrl)];
+    }
 
     // หากมีการแก้ไขข้อความ (customMessage) ให้ลอง Render Tags ใหม่
     const finalContent = customMessage 

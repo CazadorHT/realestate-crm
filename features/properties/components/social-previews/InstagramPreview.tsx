@@ -64,7 +64,7 @@ export function InstagramPreview({
       {/* Main Media (Carousel type) */}
       <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden group">
         {images.length > 0 ? (
-          <Image src={images[0]} alt="preview" fill className="object-cover" />
+          <Image src={images[0]} alt="preview" fill unoptimized className="object-cover" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-slate-300">
             <ImageIcon className="h-10 w-10 opacity-20" />

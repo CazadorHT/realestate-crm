@@ -443,7 +443,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
 
           {/* New Area AI Prompt Banner */}
           {showAreaPrompt && areaPromptName && (
-            <div className="col-span-full p-3.5 bg-gradient-to-r from-blue-50 via-indigo-50/70 to-blue-50 border border-blue-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="col-span-full p-3.5 bg-linear-to-r from-blue-50 via-indigo-50/70 to-blue-50 border border-blue-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-blue-600 text-white rounded-xl shrink-0 shadow-xs">
                   <Sparkles className="w-4 h-4" />
@@ -505,7 +505,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     />
 
                     {showDropdown && (suggestions.length > 0 || isLoadingSuggestions || (watchedAddressLine1.trim().length >= 2 && !form.getValues("project_id"))) && (
-                      <div className="absolute z-[999] w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto divide-y divide-slate-100">
+                      <div className="absolute z-999 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto divide-y divide-slate-100">
                         {isLoadingSuggestions && suggestions.length === 0 ? (
                           <div className="px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
                             <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
