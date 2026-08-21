@@ -244,7 +244,7 @@ export async function getTransitAndProjectsInArea(
 ): Promise<{ projects: RelatedProjectInArea[]; stations: RelatedStationInArea[] }> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
 
       // Fetch properties matching this popular area name
       const { data: props, error } = await supabase
@@ -299,11 +299,11 @@ export async function getTransitAndProjectsInArea(
               for (const pi of propImages) {
                 if (pi.project_id && !propertyImageMap.has(pi.project_id)) {
                   let imgUrl = pi.main_image;
-                  if (!imgUrl && pi.images) {
+                  if (!imgUrl && (pi as any).images) {
                     try {
-                      const imgs = typeof pi.images === "string" 
-                        ? JSON.parse(pi.images) 
-                        : pi.images;
+                      const imgs = typeof (pi as any).images === "string" 
+                        ? JSON.parse((pi as any).images) 
+                        : (pi as any).images;
                       if (Array.isArray(imgs) && imgs.length > 0) {
                         imgUrl = imgs[0]?.image_url || imgs[0] || "";
                       }
@@ -386,7 +386,7 @@ export async function getTransitAndProjectsInArea(
 export async function getPopularAreas(limit = 6): Promise<any[]> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
 
       // 1. Fetch active properties with popular_area and main_image in 1 single query (Batch)
       const { data: propData } = await supabase
@@ -448,7 +448,7 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
 export async function getRelatedAreas(excludeId: string, limit = 50): Promise<any[]> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
 
       // 1. Fetch active properties with popular_area and main_image in 1 single query (Batch)
       const { data: propData } = await supabase
@@ -535,7 +535,7 @@ export async function getPropertiesInArea(
 ): Promise<PublicPropertyNearStation[]> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
 
       const { data, error } = await supabase
         .from("properties")

@@ -162,7 +162,7 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
 export async function getProjectBySlug(slug: string): Promise<PublicProject | null> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
 
       const { data: p, error } = await supabase
         .from("projects")
@@ -194,7 +194,7 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
 
       return {
         id: p.id,
-        name: p.name || { th: "", en: "" },
+        name: typeof p.name === "object" && p.name !== null ? (p.name as { th: string; en: string }) : { th: String(p.name || ""), en: String(p.name || "") },
         slug: p.slug,
         developer: p.developer,
         propertyType: p.property_type,
@@ -205,14 +205,14 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         longitude: p.longitude,
         yearCompleted: p.year_completed,
         totalUnits: p.total_units,
-        description: p.description,
+        description: p.description as PublicProject["description"],
         imageUrl: getPublicImageUrl(p.image_url) || null,
-        galleryUrls: (p.gallery_urls || []).map((url: string) => getPublicImageUrl(url)).filter(Boolean),
-        facilities: p.facilities || [],
+        galleryUrls: (Array.isArray(p.gallery_urls) ? p.gallery_urls : []).map((url: any) => getPublicImageUrl(String(url))).filter(Boolean),
+        facilities: (Array.isArray(p.facilities) ? p.facilities : []) as any[],
         nearestStationCode: p.nearest_station_code,
         nearestStationDistance: p.nearest_station_distance,
-        seoTitle: p.seo_title,
-        seoDescription: p.seo_description,
+        seoTitle: p.seo_title as PublicProject["seoTitle"],
+        seoDescription: p.seo_description as PublicProject["seoDescription"],
         propertyCount: stat ? Number(stat.property_count || 0) : 0,
         priceMin: stat ? stat.price_min : null,
         priceMax: stat ? stat.price_max : null,
@@ -244,7 +244,7 @@ export async function getPropertiesInProject(
 ): Promise<{ properties: PublicPropertyNearStation[]; total: number }> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const limit = filters?.limit || 12;
       const offset = filters?.offset || 0;
 

@@ -23,9 +23,8 @@ async function mapCmsRowsToBlogPosts(
     const sortedIds = [...authorIds].sort();
     profilesMap = await unstable_cache(
       async () => {
-        const { createAdminClient } = await import("@/lib/supabase/admin");
-        const adminClient = await createAdminClient();
-        const { data: profs } = await adminClient
+        const publicClient = createPublicClient();
+        const { data: profs } = await publicClient
           .from("profiles")
           .select("id, full_name, avatar_url")
           .in("id", sortedIds);

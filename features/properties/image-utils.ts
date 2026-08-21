@@ -25,10 +25,9 @@ export function getPublicImageUrl(
 ): string {
   if (!storagePath || typeof storagePath !== "string" || !storagePath.trim()) return "";
 
-  // Use dedicated CDN domain on Production, but fallback to Supabase URL in local development to avoid CORS/Proxy issues
-  const isDev = process.env.NODE_ENV === "development";
+  // Use dedicated Cloudflare CDN domain to maximize Edge Caching and eliminate Supabase Storage Egress
   const explicitCdn = process.env.NEXT_PUBLIC_CDN_URL?.trim();
-  const cdnUrl = explicitCdn || (isDev ? "" : "https://cdn.vccasset.com");
+  const cdnUrl = explicitCdn && explicitCdn !== "none" ? explicitCdn : (explicitCdn === "none" ? "" : "https://cdn.vccasset.com");
   let targetCdn = cdnUrl ? cdnUrl.replace(/\/+$/, "") : "";
   if (targetCdn && !targetCdn.startsWith("http")) targetCdn = `https://${targetCdn}`;
 
@@ -37,10 +36,6 @@ export function getPublicImageUrl(
     const trimmed = storagePath.trim();
     if (targetCdn && trimmed.includes(".supabase.co/storage/v1/object/public/")) {
       return trimmed.replace(/https:\/\/[^/]+\.supabase\.co/, targetCdn);
-    }
-    if (!explicitCdn && (trimmed.includes("vccasset.com/storage/v1/object/public/") || trimmed.includes("cdn.vccasset.com"))) {
-      const supabaseBase = (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qaihjhvdwfafawezxivb.supabase.co").replace(/\/+$/, "");
-      return trimmed.replace(/https:\/\/[^/]+\.(vccasset\.com|supabase\.co)/, supabaseBase);
     }
     return trimmed;
   }

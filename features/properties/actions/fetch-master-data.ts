@@ -1,9 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { type Database, type Json } from "@/lib/database.types.generated";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { mapDbError } from "@/lib/db-error";
+
+import { unstable_cache, revalidateTag, revalidatePath } from "next/cache";
 
 export interface MasterDataTransitType {
   code: string;
@@ -21,35 +23,41 @@ export interface MasterDataTransitType {
 }
 
 /**
- * Fetch all active transit types from ref_master_data
+ * Fetch all active transit types from ref_master_data (Cached 1 year)
  */
 export async function getTransitTypesAction(): Promise<MasterDataTransitType[]> {
-  const supabase = await createClient();
-  
-  const { data, error } = await supabase
-    .from("ref_master_data")
-    .select("code, label, metadata")
-    .eq("type", "TRANSIT_TYPE")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
+      
+      const { data, error } = await supabase
+        .from("ref_master_data")
+        .select("code, label, metadata")
+        .eq("type", "TRANSIT_TYPE")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching transit types:", error);
-    return [];
-  }
+      if (error) {
+        console.error("Error fetching transit types:", error);
+        return [];
+      }
 
-  type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
+      type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
 
-  return (data as MasterDataRow[] || []).map((item: MasterDataRow) => ({
-    code: item.code,
-    label: (item.label as MasterDataTransitType["label"]) || { 
-      th: item.code, 
-      en: item.code, 
-      cn: item.code, 
-      ru: item.code 
+      return (data as MasterDataRow[] || []).map((item: MasterDataRow) => ({
+        code: item.code,
+        label: (item.label as MasterDataTransitType["label"]) || { 
+          th: item.code, 
+          en: item.code, 
+          cn: item.code, 
+          ru: item.code 
+        },
+        metadata: item.metadata as MasterDataTransitType["metadata"]
+      }));
     },
-    metadata: item.metadata as MasterDataTransitType["metadata"]
-  }));
+    ["transit-types-master-data"],
+    { revalidate: 31536000, tags: ["master-data", "transit-types"] }
+  )();
 }
 
 export async function upsertMasterDataAction(input: {
@@ -88,11 +96,20 @@ export async function upsertMasterDataAction(input: {
       description: `อัปเดต Master Data: ${input.type} [${input.code}]`
     });
 
-    const { revalidatePath } = await import("next/cache");
+    revalidateTag("master-data", "seconds");
+    revalidateTag("transit-types", "seconds");
+    revalidateTag("transit-stations", "seconds");
+    revalidateTag("nearby-places", "seconds");
+
     revalidatePath("/protected/admin/master-data");
     revalidatePath("/protected/admin/transit-stations");
     revalidatePath("/(public)/areas/[slug]", "layout");
     revalidatePath("/(public)/properties", "layout");
+
+    const { purgeCloudflareCache } = await import("@/lib/cloudflare");
+    purgeCloudflareCache(["/", "/properties", "/projects"]).catch((e) =>
+      console.error("[Cloudflare] Master data purge failed:", e)
+    );
 
     return { success: true, message: "บันทึกข้อมูล Master Data สำเร็จ ✨" };
   } catch (err: any) {
@@ -127,11 +144,20 @@ export async function deleteMasterDataAction(type: string, code: string) {
       description: `ลบ Master Data: ${type} [${code}]`
     });
 
-    const { revalidatePath } = await import("next/cache");
+    revalidateTag("master-data", "seconds");
+    revalidateTag("transit-types", "seconds");
+    revalidateTag("transit-stations", "seconds");
+    revalidateTag("nearby-places", "seconds");
+
     revalidatePath("/protected/admin/master-data");
     revalidatePath("/protected/admin/transit-stations");
     revalidatePath("/(public)/areas/[slug]", "layout");
     revalidatePath("/(public)/properties", "layout");
+
+    const { purgeCloudflareCache } = await import("@/lib/cloudflare");
+    purgeCloudflareCache(["/", "/properties", "/projects"]).catch((e) =>
+      console.error("[Cloudflare] Master data purge failed:", e)
+    );
 
     return { success: true, message: "ลบข้อมูล Master Data สำเร็จ 🗑️" };
   } catch (err: any) {
@@ -141,35 +167,41 @@ export async function deleteMasterDataAction(type: string, code: string) {
 }
 
 /**
- * Fetch all active nearby place categories from ref_master_data
+ * Fetch all active nearby place categories from ref_master_data (Cached 1 year)
  */
 export async function getNearbyPlaceCategoriesAction(): Promise<MasterDataTransitType[]> {
-  const supabase = await createClient();
-  
-  const { data, error } = await supabase
-    .from("ref_master_data")
-    .select("code, label, metadata")
-    .eq("type", "NEARBY_PLACE_CATEGORY")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
+      
+      const { data, error } = await supabase
+        .from("ref_master_data")
+        .select("code, label, metadata")
+        .eq("type", "NEARBY_PLACE_CATEGORY")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching nearby place categories:", error);
-    return [];
-  }
+      if (error) {
+        console.error("Error fetching nearby place categories:", error);
+        return [];
+      }
 
-  type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
+      type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
 
-  return (data as MasterDataRow[] || []).map((item: MasterDataRow) => ({
-    code: item.code,
-    label: (item.label as MasterDataTransitType["label"]) || { 
-      th: item.code, 
-      en: item.code, 
-      cn: item.code, 
-      ru: item.code 
+      return (data as MasterDataRow[] || []).map((item: MasterDataRow) => ({
+        code: item.code,
+        label: (item.label as MasterDataTransitType["label"]) || { 
+          th: item.code, 
+          en: item.code, 
+          cn: item.code, 
+          ru: item.code 
+        },
+        metadata: item.metadata as MasterDataTransitType["metadata"]
+      }));
     },
-    metadata: item.metadata as MasterDataTransitType["metadata"]
-  }));
+    ["nearby-place-categories-master-data"],
+    { revalidate: 31536000, tags: ["master-data", "nearby-places"] }
+  )();
 }
 
 /**
@@ -208,7 +240,6 @@ export interface MasterDataTransitStation {
   };
 }
 
-import { unstable_cache } from "next/cache";
 
 /**
  * Fetch all active transit stations from ref_master_data (Cached cross-request 1 year)
@@ -216,8 +247,7 @@ import { unstable_cache } from "next/cache";
 export async function getTransitStationsAction(): Promise<MasterDataTransitStation[]> {
   return unstable_cache(
     async () => {
-      const { createAdminClient } = await import("@/lib/supabase/admin");
-      const supabase = await createAdminClient();
+      const supabase = createPublicClient();
       
       const { data, error } = await supabase
         .from("ref_master_data")
@@ -318,11 +348,10 @@ export async function getTransitStationsWithCountsAction() {
 
     return await unstable_cache(
       async () => {
-        const { createAdminClient } = await import("@/lib/supabase/admin");
-        const adminClient = await createAdminClient();
+        const publicClient = createPublicClient();
 
         // 1. Fetch all transit stations
-        const { data: stations, error: stationsError } = await adminClient
+        const { data: stations, error: stationsError } = await publicClient
           .from("ref_master_data")
           .select("id, type, code, label, is_active, sort_order, metadata")
           .eq("type", "TRANSIT_STATION")
@@ -331,7 +360,7 @@ export async function getTransitStationsWithCountsAction() {
         if (stationsError) throw stationsError;
 
         // 2. Fetch count of properties grouped by transit_station_name and nearby_transits from properties view
-        const { data: counts, error: countsError } = await adminClient
+        const { data: counts, error: countsError } = await publicClient
           .from("properties")
           .select("transit_station_name, nearby_transits")
           .is("deleted_at", null)

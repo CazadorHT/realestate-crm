@@ -543,7 +543,7 @@ export async function createPropertyAction(
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache([`/properties/${seoData.slug}`, "/properties", "/", "/api/public/properties"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
@@ -782,7 +782,7 @@ export async function duplicatePropertyAction(
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache(["/properties", "/", "/api/public/properties"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");

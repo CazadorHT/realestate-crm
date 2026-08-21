@@ -373,7 +373,7 @@ export async function getStationBySlug(slug: string): Promise<StationDetail | nu
       };
     },
     ["public-station-by-slug", slug],
-    { revalidate: 604800, tags: ["stations", "public-data"] }
+    { revalidate: 31536000, tags: ["stations", "master-data", "public-data"] }
   )();
 }
 
@@ -392,7 +392,7 @@ export async function getPropertiesNearStation(
 ): Promise<{ properties: PublicPropertyNearStation[]; total: number }> {
   return unstable_cache(
     async () => {
-      const supabase = await createClient();
+      const supabase = createPublicClient();
       const limit = filters?.limit || 12;
       const offset = filters?.offset || 0;
 

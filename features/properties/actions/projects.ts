@@ -195,6 +195,11 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
       revalidatePath(`/projects/${input.slug}`);
     }
 
+    const { purgeCloudflareCache } = await import("@/lib/cloudflare");
+    purgeCloudflareCache(input.slug ? [`/projects/${input.slug}`, "/projects", "/"] : ["/projects", "/"]).catch((e) =>
+      console.error("[Cloudflare] Project purge failed:", e)
+    );
+
     return { success: true, message: "บันทึกข้อมูลโครงการสำเร็จ ✨", id: data.id };
   } catch (err: any) {
     console.error("upsertProjectAction error:", err);
@@ -232,6 +237,11 @@ export async function deleteProjectAction(id: string) {
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/protected/admin/projects");
     revalidatePath("/projects");
+
+    const { purgeCloudflareCache } = await import("@/lib/cloudflare");
+    purgeCloudflareCache(["/projects", "/"]).catch((e) =>
+      console.error("[Cloudflare] Project delete purge failed:", e)
+    );
 
     return { success: true, message: "ลบข้อมูลโครงการสำเร็จ 🗑️" };
   } catch (err: any) {

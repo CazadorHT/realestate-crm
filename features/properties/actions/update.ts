@@ -659,7 +659,7 @@ export async function updatePropertyAction(
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache([`/properties/${seoData.slug}`, "/properties", "/", "/api/public/properties"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {

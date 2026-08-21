@@ -158,7 +158,7 @@ export async function deletePropertyAction(formData: FormData) {
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
-    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache(["/properties", "/", "/api/public/properties"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePropertyAction → error:", error);

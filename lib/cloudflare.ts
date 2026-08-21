@@ -4,7 +4,7 @@ import { siteConfig } from "./site-config";
  * [S-Tier] Cloudflare Cache Purge Utility
  * Automatically clears Cloudflare edge cache when properties, projects, or content are updated.
  */
-export async function purgeCloudflareCache() {
+export async function purgeCloudflareCache(pathsOrUrls?: string[]) {
   const zoneId = process.env.CLOUDFLARE_ZONE_ID;
   const token = process.env.CLOUDFLARE_API_TOKEN;
 
@@ -14,19 +14,30 @@ export async function purgeCloudflareCache() {
   }
 
   try {
-    console.log(`[Cloudflare] Initiating cache purge for Zone: ${zoneId}`);
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || siteConfig.url || "https://vccasset.com").replace(/\/+$/, "");
     
-    // For Cloudflare Free/Pro plans, purging everything is the most reliable way 
-    // to clear sitemaps, API endpoints with query parameters, and dynamic listing pages at once.
+    let body: Record<string, unknown>;
+    if (pathsOrUrls && pathsOrUrls.length > 0) {
+      // Normalize relative paths into full absolute URLs (Cloudflare requires full URLs)
+      const fullUrls = pathsOrUrls.map((p) => {
+        if (p.startsWith("http://") || p.startsWith("https://")) return p;
+        return `${baseUrl}${p.startsWith("/") ? "" : "/"}${p}`;
+      });
+      console.log(`[Cloudflare] Initiating targeted cache purge for ${fullUrls.length} URLs:`, fullUrls);
+      // Cloudflare allows up to 30 URLs per batch on all plans for free
+      body = { files: fullUrls.slice(0, 30) };
+    } else {
+      console.log(`[Cloudflare] Initiating full cache purge for Zone: ${zoneId}`);
+      body = { purge_everything: true };
+    }
+
     const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        purge_everything: true,
-      }),
+      body: JSON.stringify(body),
     });
 
     const data = await res.json();

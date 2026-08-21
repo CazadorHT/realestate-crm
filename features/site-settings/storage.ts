@@ -43,12 +43,34 @@ export async function uploadSiteAsset(
   const date = new Date();
   const timestamp = date.getTime();
   const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, "");
-  const path = `site-assets/${folder}/${timestamp}-${safeName}`;
+  let path = `site-assets/${folder}/${timestamp}-${safeName}`;
+
+  let uploadPayload: Buffer | File = file;
+  let finalContentType = fileType;
+
+  // Convert raster images (PNG/JPEG/WebP) to crystal-clear lossless/high-quality WebP
+  if (
+    file instanceof File &&
+    (file.type === "image/jpeg" || file.type === "image/png" || file.type === "image/webp")
+  ) {
+    try {
+      const sharp = (await import("sharp")).default;
+      const arrayBuffer = await file.arrayBuffer();
+      uploadPayload = await sharp(Buffer.from(arrayBuffer))
+        .resize({ width: 1200, withoutEnlargement: true, fit: "inside" })
+        .webp({ quality: 90, lossless: file.type === "image/png" })
+        .toBuffer();
+      finalContentType = "image/webp";
+      path = path.replace(/\.[^.]+$/, "") + ".webp";
+    } catch (e) {
+      console.warn("[SiteAsset] Sharp WebP conversion fallback:", e);
+    }
+  }
 
   const { error: uploadError } = await supabase.storage
     .from("property-images") // Reusing property-images bucket or you can create "site-assets"
-    .upload(path, file, {
-      contentType: fileType,
+    .upload(path, uploadPayload, {
+      contentType: finalContentType,
       cacheControl: "31536000",
       upsert: true,
     });

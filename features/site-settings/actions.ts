@@ -355,6 +355,11 @@ export async function updateSiteSetting(
     revalidateTag(`site-settings-${ctx.tenantId || "global"}`, "hours");
     revalidateTag("site-settings", "hours");
 
+    const { purgeCloudflareCache } = await import("@/lib/cloudflare");
+    purgeCloudflareCache().catch((e) =>
+      console.error("[Cloudflare] Site settings purge failed:", e)
+    );
+
     return { success: true };
   } catch (error) {
     console.error("Error in updateSiteSetting:", error);
@@ -498,6 +503,11 @@ export async function updateSiteSettings(
     revalidatePath("/protected/settings");
     revalidateTag(`site-settings-${ctx.tenantId || "global"}`, "hours");
     revalidateTag("site-settings", "hours");
+
+    const { purgeCloudflareCache } = await import("@/lib/cloudflare");
+    purgeCloudflareCache().catch((e) =>
+      console.error("[Cloudflare] Site settings purge failed:", e)
+    );
 
     return { success: true };
   } catch (error) {

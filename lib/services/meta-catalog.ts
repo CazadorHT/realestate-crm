@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createPublicClient } from "@/lib/supabase/server";
 import { Database, Json } from "../database.types.generated";
 import { siteConfig } from "@/lib/site-config";
 import { decrypt } from "@/lib/crypto";
@@ -14,7 +14,7 @@ import { unstable_cache } from "next/cache";
 export async function generateMetaCatalogFeed() {
   return unstable_cache(
     async () => {
-      const supabase = createAdminClient();
+      const supabase = createPublicClient();
 
       // Fetch active properties directly from V3 Core tables
       // Completely eliminates select(*) to save bandwidth and reduce payload size

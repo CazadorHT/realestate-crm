@@ -189,22 +189,30 @@ export async function uploadAvatarAction(
     }
   }
 
-  // 2. เตรียมไฟล์ใหม่
-  const originalName = file.name || "avatar.jpg";
-  const fileNameParts = originalName.split(".");
-  const ext =
-    fileNameParts.length > 1 ? fileNameParts.pop()?.toLowerCase() : "jpg";
+  // 2. แปลงรูปเป็น WebP ความละเอียดสูงขนาดพอเหมาะ (400x400) เพื่อความคมชัดสูงสุดและประหยัดเนื้อที่ (< 30KB)
+  let uploadPayload: Buffer | File = file;
+  let finalContentType = file.type;
+  const fileName = `${Date.now()}_${randomUUID()}.webp`;
+  const filePath = `user-profiles/${ctx.user.id}/${fileName}`;
 
-  // ใช้ Timestamp + UUID เพื่อความ unique และป้องกันปัญหา Browser Cache (Cache Busting)
-  const fileName = `${Date.now()}_${randomUUID()}.${ext || "jpg"}`;
-  const filePath = `user-profiles/${ctx.user.id}/${fileName}`; // จัดกลุ่มตาม User ID เพื่อ RLS
+  try {
+    const sharp = (await import("sharp")).default;
+    const arrayBuffer = await file.arrayBuffer();
+    uploadPayload = await sharp(Buffer.from(arrayBuffer))
+      .resize(400, 400, { fit: "cover", position: "center" })
+      .webp({ quality: 85 })
+      .toBuffer();
+    finalContentType = "image/webp";
+  } catch (convErr) {
+    console.warn("Avatar WebP conversion fallback to original:", convErr);
+  }
 
-  // 3. อัปโหลดรูปใหม่
+  // 3. อัปโหลดรูปใหม่ (พร้อม Cache-Control 1 ปี)
   const { error: uploadError } = await ctx.supabase.storage
     .from("user-assets")
-    .upload(filePath, file, {
-      contentType: file.type,
-      cacheControl: "3600",
+    .upload(filePath, uploadPayload, {
+      contentType: finalContentType,
+      cacheControl: "31536000",
       upsert: true,
     });
 
