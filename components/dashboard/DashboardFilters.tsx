@@ -23,28 +23,29 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DashboardFiltersProps {
   role?: string;
   multiTenantEnabled?: boolean;
 }
 
-const rangeLabels = {
-  today: "วันนี้",
-  week: "สัปดาห์นี้",
-  month: "เดือนนี้",
-  "6months": "6 เดือนล่าสุด",
-  q1: "ไตรมาส 1 (Q1)",
-  q2: "ไตรมาส 2 (Q2)",
-  q3: "ไตรมาส 3 (Q3)",
-  q4: "ไตรมาส 4 (Q4)",
-  year: "ปีนี้",
-  lastYear: "ปีที่แล้ว",
-  year2024: "ปี 2024",
-  year2023: "ปี 2023",
-  year2022: "ปี 2022",
-  all: "ทั้งหมด",
-};
+const getRangeLabels = (isEn: boolean): Record<string, string> => ({
+  today: isEn ? "Today" : "วันนี้",
+  week: isEn ? "This Week" : "สัปดาห์นี้",
+  month: isEn ? "This Month" : "เดือนนี้",
+  "6months": isEn ? "Last 6 Months" : "6 เดือนล่าสุด",
+  q1: isEn ? "Quarter 1 (Q1)" : "ไตรมาส 1 (Q1)",
+  q2: isEn ? "Quarter 2 (Q2)" : "ไตรมาส 2 (Q2)",
+  q3: isEn ? "Quarter 3 (Q3)" : "ไตรมาส 3 (Q3)",
+  q4: isEn ? "Quarter 4 (Q4)" : "ไตรมาส 4 (Q4)",
+  year: isEn ? "This Year" : "ปีนี้",
+  lastYear: isEn ? "Last Year" : "ปีที่แล้ว",
+  year2024: isEn ? "Year 2024" : "ปี 2024",
+  year2023: isEn ? "Year 2023" : "ปี 2023",
+  year2022: isEn ? "Year 2022" : "ปี 2022",
+  all: isEn ? "All Time" : "ทั้งหมด",
+});
 
 export function DashboardFilters({
   role,
@@ -53,6 +54,9 @@ export function DashboardFilters({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const rangeLabels = getRangeLabels(isEn);
   const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
 
   // Dialog states
@@ -201,16 +205,16 @@ export function DashboardFilters({
                         : "text-slate-500 hover:text-blue-600",
                     )}
                   >
-                    <Building2 size={14} /> บริษัท
+                    <Building2 size={14} /> {isEn ? "Company" : "บริษัท"}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
                   className="bg-slate-900 text-white border-slate-800"
                 >
-                  <p className="font-bold">มุมมองบริษัท</p>
+                  <p className="font-bold">{isEn ? "Company Overview" : "มุมมองบริษัท"}</p>
                   <p className="text-[10px] opacity-70">
-                    ดูภาพรวมยอดขายและสถิติทั้งองค์กร
+                    {isEn ? "View all branches and company-wide metrics" : "ดูภาพรวมยอดขายและสถิติทั้งองค์กร"}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -236,16 +240,16 @@ export function DashboardFilters({
                             : "text-slate-500 hover:text-blue-600",
                         )}
                       >
-                        <MapPin size={14} /> สาขา
+                        <MapPin size={14} /> {isEn ? "Branch" : "สาขา"}
                       </button>
                     </TooltipTrigger>
                     <TooltipContent
                       side="bottom"
                       className="bg-slate-900 text-white border-slate-800"
                     >
-                      <p className="font-bold">มุมมองสาขา</p>
+                      <p className="font-bold">{isEn ? "Branch Overview" : "มุมมองสาขา"}</p>
                       <p className="text-[10px] opacity-70">
-                        เจาะลึกข้อมูลแยกตามสาขาต่างๆ
+                        {isEn ? "Detailed metrics breakdown by branch" : "เจาะลึกข้อมูลแยกตามสาขาต่างๆ"}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -269,16 +273,16 @@ export function DashboardFilters({
                             : "text-slate-500 hover:text-blue-600",
                         )}
                       >
-                        <Users2 size={14} /> ทีม
+                        <Users2 size={14} /> {isEn ? "Team" : "ทีม"}
                       </button>
                     </TooltipTrigger>
                     <TooltipContent
                       side="bottom"
                       className="bg-slate-900 text-white border-slate-800"
                     >
-                      <p className="font-bold">มุมมองทีม</p>
+                      <p className="font-bold">{isEn ? "Team Overview" : "มุมมองทีม"}</p>
                       <p className="text-[10px] opacity-70">
-                        วิเคราะห์ผลงานแยกตามทีมขาย
+                        {isEn ? "Performance analytics by sales team" : "วิเคราะห์ผลงานแยกตามทีมขาย"}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -304,16 +308,16 @@ export function DashboardFilters({
                         : "text-slate-500 hover:text-blue-600",
                     )}
                   >
-                    <User size={14} /> พนักงาน
+                    <User size={14} /> {isEn ? "Staff" : "พนักงาน"}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
                   className="bg-slate-900 text-white border-slate-800"
                 >
-                  <p className="font-bold">มุมมองพนักงาน</p>
+                  <p className="font-bold">{isEn ? "Staff Overview" : "มุมมองพนักงาน"}</p>
                   <p className="text-[10px] opacity-70">
-                    ติดตามผลงานรายบุคคลของ Agent ทุกคน
+                    {isEn ? "Track individual agent performances" : "ติดตามผลงานรายบุคคลของ Agent ทุกคน"}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -337,16 +341,16 @@ export function DashboardFilters({
                         : "text-slate-500 hover:text-blue-600",
                     )}
                   >
-                    <User size={14} /> ส่วนตัว
+                    <User size={14} /> {isEn ? "Personal" : "ส่วนตัว"}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
                   className="bg-slate-900 text-white border-slate-800"
                 >
-                  <p className="font-bold">ผลงานส่วนตัว</p>
+                  <p className="font-bold">{isEn ? "Personal Performance" : "ผลงานส่วนตัว"}</p>
                   <p className="text-[10px] opacity-70">
-                    สรุปข้อมูลเฉพาะของคุณเอง
+                    {isEn ? "Your own individual metrics summary" : "สรุปข้อมูลเฉพาะของคุณเอง"}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -372,16 +376,16 @@ export function DashboardFilters({
                         : "text-slate-500 hover:text-blue-600",
                     )}
                   >
-                    <Building2 size={14} /> บริษัท
+                    <Building2 size={14} /> {isEn ? "Company" : "บริษัท"}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
                   className="bg-slate-900 text-white border-slate-800"
                 >
-                  <p className="font-bold">มุมมองบริษัท</p>
+                  <p className="font-bold">{isEn ? "Company Overview" : "มุมมองบริษัท"}</p>
                   <p className="text-[10px] opacity-70">
-                    ดูภาพรวมแยกตามสาขาที่คุณเป็นสมาชิก
+                    {isEn ? "Overview by branch membership" : "ดูภาพรวมแยกตามสาขาที่คุณเป็นสมาชิก"}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -405,16 +409,16 @@ export function DashboardFilters({
                         : "text-slate-500 hover:text-blue-600",
                     )}
                   >
-                    <User size={14} /> ส่วนตัว
+                    <User size={14} /> {isEn ? "Personal" : "ส่วนตัว"}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
                   className="bg-slate-900 text-white border-slate-800"
                 >
-                  <p className="font-bold">ผลงานส่วนตัว</p>
+                  <p className="font-bold">{isEn ? "Personal Performance" : "ผลงานส่วนตัว"}</p>
                   <p className="text-[10px] opacity-70">
-                    สรุปข้อมูลเฉพาะของคุณเอง
+                    {isEn ? "Your own individual metrics summary" : "สรุปข้อมูลเฉพาะของคุณเอง"}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -425,17 +429,17 @@ export function DashboardFilters({
         {/* 🔵 Range Picker (Rich Dialog) */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-            ช่วงเวลา:{" "}
+            {isEn ? "Time Range:" : "ช่วงเวลา:"}{" "}
             <span className="font-semibold text-blue-600 underline decoration-slate-300 underline-offset-4">
-              {rangeLabels[range as keyof typeof rangeLabels] || "เดือนนี้"}
+              {rangeLabels[range as keyof typeof rangeLabels] || (isEn ? "This Month" : "เดือนนี้")}
             </span>
           </div>
           <ResponsiveDialog
             open={isRangeOpen}
             onOpenChange={setIsRangeOpen}
             className="sm:max-w-2xl!"
-            title="เลือกช่วงเวลา"
-            description="เลือกช่วงเวลาที่คุณต้องการดูข้อมูลทั้งหน้า Dashboard"
+            title={isEn ? "Select Time Range" : "เลือกช่วงเวลา"}
+            description={isEn ? "Choose date range to view dashboard metrics across all widgets" : "เลือกช่วงเวลาที่คุณต้องการดูข้อมูลทั้งหน้า Dashboard"}
             trigger={
               <Button
                 variant="secondary"
@@ -451,7 +455,7 @@ export function DashboardFilters({
                 ) : (
                   <Calendar size={14} className="mr-2" />
                 )}
-                เลือกช่วงเวลา
+                {isEn ? "Select Range" : "เลือกช่วงเวลา"}
               </Button>
             }
           >

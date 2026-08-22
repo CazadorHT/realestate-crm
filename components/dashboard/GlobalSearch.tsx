@@ -26,6 +26,7 @@ import {
 import { useDebounce } from "use-debounce";
 import { cn } from "@/lib/utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface GlobalSearchProps {
   className?: string;
@@ -36,6 +37,9 @@ export function GlobalSearch({
   className,
   variant = "auto",
 }: GlobalSearchProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<SearchResult[]>([]);
@@ -116,7 +120,7 @@ export function GlobalSearch({
           id="tour-search"
         >
           <Search className="mr-2.5 h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
-          <span className="truncate">ค้นชื่อทรัพย์, ลูกค้า, เบอร์โทร...</span>
+          <span className="truncate">{isEn ? "Search properties, leads, phone..." : "ค้นชื่อทรัพย์, ลูกค้า, เบอร์โทร..."}</span>
           <kbd className="pointer-events-none absolute right-1.5 top-2.5 hidden h-6 select-none items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 font-mono text-[10px] font-bold text-slate-400 shadow-xs lg:flex group-hover:border-blue-100 group-hover:text-blue-400 transition-all">
             <span className="text-[10px]">⌘</span>K
           </kbd>
@@ -134,7 +138,7 @@ export function GlobalSearch({
             className,
           )}
           onClick={() => setOpen(true)}
-          aria-label="ค้นหา"
+          aria-label={isEn ? "Search" : "ค้นหา"}
         >
           <Search className="h-5 w-5" />
         </Button>
@@ -161,7 +165,7 @@ export function GlobalSearch({
             
             <Search className="h-5 w-5 text-slate-400 shrink-0" />
             <CommandInput
-              placeholder="ค้นหาทรัพย์, ลูกค้า, เบอร์โทร, ดีล..."
+              placeholder={isEn ? "Search properties, leads, phone, deals..." : "ค้นหาทรัพย์, ลูกค้า, เบอร์โทร, ดีล..."}
               value={query}
               onValueChange={setQuery}
               className="h-16 text-base border-none focus:ring-0 w-full bg-transparent"
@@ -174,7 +178,7 @@ export function GlobalSearch({
                 className="h-8 px-2 mr-6 text-xs font-bold text-slate-400 hover:text-slate-600"
                 onClick={() => setQuery("")}
               >
-                ล้างข้อมูล
+                {isEn ? "Clear" : "ล้างข้อมูล"}
               </Button>
             )}
           </div>
@@ -189,10 +193,10 @@ export function GlobalSearch({
                 </div>
                 <div className="text-center space-y-1">
                   <p className="text-sm font-bold text-slate-600">
-                    ไม่พบข้อมูลที่ตรงกับ "{query}"
+                    {isEn ? `No results found for "${query}"` : `ไม่พบข้อมูลที่ตรงกับ "${query}"`}
                   </p>
                   <p className="text-xs text-slate-400 px-10">
-                    ลองค้นหาด้วยคำอื่น หรือตรวจสอบตัวสะกดอีกครั้ง
+                    {isEn ? "Try searching with different keywords or check spelling" : "ลองค้นหาด้วยคำอื่น หรือตรวจสอบตัวสะกดอีกครั้ง"}
                   </p>
                 </div>
               </div>
@@ -205,11 +209,10 @@ export function GlobalSearch({
                 </div>
                 <div className="text-center space-y-1">
                   <p className="text-sm font-bold text-slate-500">
-                    ระบบค้นหาอัจฉริยะ
+                    {isEn ? "Intelligent Global Search" : "ระบบค้นหาอัจฉริยะ"}
                   </p>
                   <p className="text-xs text-slate-400 px-10 leading-relaxed max-w-[280px]">
-                    พิมพ์รหัสทรัพย์ (REF), ชื่อลูกค้า, เบอร์โทร <br />{" "}
-                    หรือชื่อเอเจนท์เพื่อเริ่มต้น
+                    {isEn ? "Type property REF, lead name, phone number or agent name to start" : "พิมพ์รหัสทรัพย์ (REF), ชื่อลูกค้า, เบอร์โทร หรือชื่อเอเจนท์เพื่อเริ่มต้น"}
                   </p>
                 </div>
               </div>
@@ -219,7 +222,7 @@ export function GlobalSearch({
               <CommandGroup
                 heading={
                   <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-blue-600 mb-2 px-2 mt-4">
-                    ทรัพย์สิน (Properties){" "}
+                    {isEn ? "Properties" : "ทรัพย์สิน (Properties)"}{" "}
                     <span className="h-px flex-1 bg-blue-100" />
                   </span>
                 }
@@ -274,7 +277,7 @@ export function GlobalSearch({
               <CommandGroup
                 heading={
                   <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-emerald-600 mb-2 px-2 mt-4">
-                    ผู้สนใจ (Leads){" "}
+                    {isEn ? "Leads & Inquiries" : "ผู้สนใจ (Leads)"}{" "}
                     <span className="h-px flex-1 bg-emerald-100" />
                   </span>
                 }
@@ -329,7 +332,7 @@ export function GlobalSearch({
               <CommandGroup
                 heading={
                   <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-purple-600 mb-2 px-2 mt-4">
-                    ดีลการขาย (Deals){" "}
+                    {isEn ? "Deals & Pipeline" : "ดีลการขาย (Deals)"}{" "}
                     <span className="h-px flex-1 bg-purple-100" />
                   </span>
                 }
@@ -384,7 +387,7 @@ export function GlobalSearch({
               <CommandGroup
                 heading={
                   <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-indigo-600 mb-2 px-2 mt-4">
-                    เอเจนท์ / ทีมงาน (Agents){" "}
+                    {isEn ? "Team & Agents" : "เอเจนท์ / ทีมงาน (Agents)"}{" "}
                     <span className="h-px flex-1 bg-indigo-100" />
                   </span>
                 }
@@ -439,7 +442,7 @@ export function GlobalSearch({
               <CommandGroup
                 heading={
                   <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-amber-600 mb-2 px-2 mt-4">
-                    เจ้าของทรัพย์ (Owners){" "}
+                    {isEn ? "Property Owners" : "เจ้าของทรัพย์ (Owners)"}{" "}
                     <span className="h-px flex-1 bg-amber-100" />
                   </span>
                 }

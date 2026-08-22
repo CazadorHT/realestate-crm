@@ -56,6 +56,7 @@ import type { Profile } from "@/lib/supabase/getCurrentProfile";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { RiTeamLine } from "react-icons/ri";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function MobileNav({
   role,
@@ -67,6 +68,9 @@ export function MobileNav({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>(["crm"]);
 
@@ -112,56 +116,56 @@ export function MobileNav({
   // Same configuration as SidebarNav
   const crmItems: NavItem[] = [
     {
-      title: "ทรัพย์สิน",
+      title: isEn ? "Properties" : "ทรัพย์สิน",
       href: "/protected/properties",
       icon: Building2,
       active: pathname?.startsWith("/protected/properties") ?? false,
     },
     {
-      title: "เจ้าของทรัพย์",
+      title: isEn ? "Property Owners" : "เจ้าของทรัพย์",
       href: "/protected/owners",
       icon: User,
       active: pathname?.startsWith("/protected/owners") ?? false,
     },
     {
-      title: "ลีด",
+      title: isEn ? "Leads" : "ลีด",
       href: "/protected/leads",
       icon: Users,
       active: pathname?.startsWith("/protected/leads") ?? false,
     },
     {
-      title: "เครือข่ายคู่ค้า",
+      title: isEn ? "Co-Brokers" : "เครือข่ายคู่ค้า",
       href: "/protected/co-brokers",
       icon: RiTeamLine,
       active: pathname?.startsWith("/protected/co-brokers") ?? false,
     },
     {
-      title: "กล่องข้อความ",
+      title: isEn ? "Inbox" : "กล่องข้อความ",
       href: "/protected/inbox",
       icon: MessageSquare,
       active: pathname === "/protected/inbox",
     },
     {
-      title: "ดีล",
+      title: isEn ? "Deals" : "ดีล",
       href: "/protected/deals",
       icon: Handshake,
       active: pathname?.startsWith("/protected/deals") ?? false,
     },
     {
-      title: "ปฏิทิน",
+      title: isEn ? "Calendar" : "ปฏิทิน",
       href: "/protected/calendar",
       icon: CalendarDays,
       active: pathname?.startsWith("/protected/calendar") ?? false,
     },
     {
-      title: "ข้อมูลวิเคราะห์",
+      title: isEn ? "Analytics" : "ข้อมูลวิเคราะห์",
       href: "/protected/admin/analytics",
       icon: BarChart3,
       active: pathname?.startsWith("/protected/admin/analytics") ?? false,
       roles: ["ADMIN"],
     },
     {
-      title: "แจ้งเตือนค่าเช่า",
+      title: isEn ? "Rent Reminders" : "แจ้งเตือนค่าเช่า",
       href: "/protected/rent-notifications",
       icon: Bell,
       active: pathname?.startsWith("/protected/rent-notifications") ?? false,
@@ -171,13 +175,13 @@ export function MobileNav({
   // Finance Group (Agent Payouts & Commission Management)
   const financeItems: NavItem[] = [
     {
-      title: "กระเป๋าเงินของฉัน",
+      title: isEn ? "My Wallet" : "กระเป๋าเงินของฉัน",
       href: "/protected/wallet",
       icon: Wallet,
       active: pathname?.startsWith("/protected/wallet") ?? false,
     },
     {
-      title: "เบิกจ่ายเอเยนต์",
+      title: isEn ? "Agent Payouts" : "เบิกจ่ายเอเยนต์",
       href: "/protected/finance/payouts",
       icon: BadgeDollarSign,
       active: pathname?.startsWith("/protected/finance/payouts") ?? false,
@@ -187,13 +191,13 @@ export function MobileNav({
 
   const documentsItems: NavItem[] = [
     {
-      title: "สัญญาเช่า",
+      title: isEn ? "Smart Contracts" : "สัญญาเช่า",
       href: "/protected/contracts",
       icon: FileText,
       active: pathname?.startsWith("/protected/contracts") ?? false,
     },
     {
-      title: "เอกสาร",
+      title: isEn ? "Document Vault" : "เอกสาร",
       href: "/protected/documents",
       icon: FolderOpen,
       active: pathname?.startsWith("/protected/documents") ?? false,
@@ -202,53 +206,53 @@ export function MobileNav({
 
   const publicItems: NavItem[] = [
     {
-      title: "บทความและข่าวสาร",
+      title: isEn ? "Articles & News" : "บทความและข่าวสาร",
       href: "/protected/blogs",
       icon: LayoutTemplate,
       active: pathname?.startsWith("/protected/blogs") ?? false,
     },
     {
-      title: "การบริการและโซลูชัน",
+      title: isEn ? "Services & Solutions" : "การบริการและโซลูชัน",
       href: "/protected/services",
       icon: Layout,
       active: pathname?.startsWith("/protected/services") ?? false,
-      roles: ["ADMIN","MANAGER"],
+      roles: ["ADMIN", "MANAGER"],
     },
     {
-      title: "คำถามที่พบบ่อย",
+      title: isEn ? "FAQ Management" : "คำถามที่พบบ่อย",
       href: "/protected/faqs",
       icon: CircleHelp,
       active: pathname?.startsWith("/protected/faqs") ?? false,
     },
     {
-      title: "ช่องทางการตลาด",
+      title: isEn ? "Marketing Portals" : "ช่องทางการตลาด",
       href: "/protected/partners",
       icon: Users,
       active: pathname?.startsWith("/protected/partners") ?? false,
     },
     {
-      title: "จัดการทำเล",
+      title: isEn ? "Popular Areas" : "จัดการทำเล",
       href: "/protected/admin/popular-areas",
       icon: MapPin,
       active: pathname?.startsWith("/protected/admin/popular-areas") ?? false,
-      roles: ["ADMIN","MANAGER", "AGENT"],
+      roles: ["ADMIN", "MANAGER", "AGENT"],
     },
     {
-      title: "ข้อมูลการเดินทางและสถานที่",
+      title: isEn ? "Transit & Master Data" : "ข้อมูลการเดินทางและสถานที่",
       href: "/protected/admin/master-data",
       icon: Database,
       active: pathname?.startsWith("/protected/admin/master-data") ?? false,
       roles: ["ADMIN", "MANAGER", "AGENT"],
     },
     {
-      title: "SEO สถานีรถไฟฟ้า",
+      title: isEn ? "Station SEO" : "SEO สถานีรถไฟฟ้า",
       href: "/protected/admin/transit-stations",
       icon: Train,
       active: pathname?.startsWith("/protected/admin/transit-stations") ?? false,
       roles: ["ADMIN", "MANAGER"],
     },
     {
-      title: "จัดการโครงการ",
+      title: isEn ? "Projects" : "จัดการโครงการ",
       href: "/protected/admin/projects",
       icon: Building2,
       active: pathname?.startsWith("/protected/admin/projects") ?? false,
@@ -259,13 +263,13 @@ export function MobileNav({
   // Settings Group
   const settingsItems: NavItem[] = [
     {
-      title: "โปรไฟล์",
+      title: isEn ? "My Profile" : "โปรไฟล์",
       href: "/protected/profile",
       icon: UserCircle,
       active: pathname === "/protected/profile",
     },
     {
-      title: "ตั้งค่าระบบ",
+      title: isEn ? "System Settings" : "ตั้งค่าระบบ",
       href: "/protected/settings",
       icon: Settings,
       active: pathname === "/protected/settings",
@@ -276,55 +280,55 @@ export function MobileNav({
   const groups: NavGroup[] = [
     {
       id: "crm",
-      title: "ระบบ CRM",
+      title: isEn ? "CRM & Sales" : "ระบบ CRM",
       icon: Briefcase,
       items: crmItems,
     },
     {
       id: "finance",
-      title: "การเงิน",
+      title: isEn ? "Finance & Payouts" : "การเงิน",
       icon: BadgeDollarSign,
       items: financeItems,
     },
     {
       id: "documents",
-      title: "เอกสาร",
+      title: isEn ? "Legal & Contracts" : "เอกสาร",
       icon: FileStack,
       items: documentsItems,
     },
     {
       id: "public",
-      title: "เนื้อหาสาธารณะ",
+      title: isEn ? "Public Portal" : "เนื้อหาสาธารณะ",
       icon: Globe,
       items: publicItems,
     },
     {
       id: "settings",
-      title: "ตั้งค่า",
+      title: isEn ? "Settings" : "ตั้งค่า",
       icon: Settings,
       items: settingsItems,
     },
     {
       id: "executive",
-      title: "รายงานผู้บริหาร",
+      title: isEn ? "Executive Reports" : "รายงานผู้บริหาร",
       icon: BarChart3,
       items: [
         {
-          title: "รายงานและข้อมูลวิเคราะห์",
+          title: isEn ? "BI & Analytics Dashboard" : "รายงานและข้อมูลวิเคราะห์",
           href: "/protected/dashboard/executive",
           icon: Sparkles,
           active: pathname === "/protected/dashboard/executive",
           roles: ["ADMIN", "MANAGER"],
         },
         {
-          title: "ภาพรวมทุกสาขา",
+          title: isEn ? "Multi-Branch Overview" : "ภาพรวมทุกสาขา",
           href: "/protected/admin/executive",
           icon: Globe,
           active: pathname === "/protected/admin/executive",
           roles: ["ADMIN"],
         },
         {
-          title: "คลังทรัพย์สินรวม",
+          title: isEn ? "Global Inventory Vault" : "คลังทรัพย์สินรวม",
           href: "/protected/admin/inventory",
           icon: Box,
           active: pathname === "/protected/admin/inventory",

@@ -29,37 +29,41 @@ import {
   Shield,
 } from "lucide-react";
 import { FaBuilding, FaUser } from "react-icons/fa";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
-const roleMapping: Record<string, { label: string; color: string; icon: any }> =
-  {
-    OWNER: {
-      label: "เจ้าของ",
-      color: "text-purple-600 bg-purple-50 border-purple-100",
-      icon: ShieldCheck,
-    },
-    ADMIN: {
-      label: "แอดมิน",
-      color: "text-blue-600 bg-blue-50 border-blue-100",
-      icon: ShieldAlert,
-    },
-    MANAGER: {
-      label: "ผู้จัดการ",
-      color: "text-indigo-600 bg-indigo-50 border-indigo-100",
-      icon: Shield,
-    },
-    AGENT: {
-      label: "พนักงานขาย",
-      color: "text-green-600 bg-green-50 border-green-100",
-      icon: User,
-    },
-    VIEWER: {
-      label: "ผู้เข้าชม",
-      color: "text-slate-500 bg-slate-50 border-slate-100",
-      icon: User,
-    },
-  };
+const getRoleMapping = (isEn: boolean): Record<string, { label: string; color: string; icon: any }> => ({
+  OWNER: {
+    label: isEn ? "Owner" : "เจ้าของ",
+    color: "text-purple-600 bg-purple-50 border-purple-100",
+    icon: ShieldCheck,
+  },
+  ADMIN: {
+    label: isEn ? "Admin" : "แอดมิน",
+    color: "text-blue-600 bg-blue-50 border-blue-100",
+    icon: ShieldAlert,
+  },
+  MANAGER: {
+    label: isEn ? "Manager" : "ผู้จัดการ",
+    color: "text-indigo-600 bg-indigo-50 border-indigo-100",
+    icon: Shield,
+  },
+  AGENT: {
+    label: isEn ? "Agent" : "พนักงานขาย",
+    color: "text-green-600 bg-green-50 border-green-100",
+    icon: User,
+  },
+  VIEWER: {
+    label: isEn ? "Viewer" : "ผู้เข้าชม",
+    color: "text-slate-500 bg-slate-50 border-slate-100",
+    icon: User,
+  },
+});
 
 export function TenantSwitcher() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const roleMapping = getRoleMapping(isEn);
+
   const {
     activeTenant,
     tenants,
@@ -79,7 +83,7 @@ export function TenantSwitcher() {
     return (
       <Button variant="outline" className="w-[200px] justify-start" disabled>
         <Building2 className="mr-2 h-4 w-4 animate-pulse" />
-        <span className="truncate">กำลังโหลด...</span>
+        <span className="truncate">{isEn ? "Loading..." : "กำลังโหลด..."}</span>
       </Button>
     );
   }
@@ -99,7 +103,7 @@ export function TenantSwitcher() {
             <FaUser className="h-4 w-4 shrink-0 text-blue-400" />
             <div className="flex flex-col items-start min-w-0 leading-tight truncate">
               <span className="truncate text-xs font-medium text-slate-900">
-                {activeTenant?.name || "เลือกสาขา"}
+                {activeTenant?.name || (isEn ? "Select Branch" : "เลือกสาขา")}
               </span>
               {activeTenant?.userRole && (
                 <span className="text-[11px] font-normal text-blue-400 uppercase tracking-tighter">
@@ -114,7 +118,7 @@ export function TenantSwitcher() {
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-[200px]" align="start">
             <DropdownMenuLabel className="text-xs text-slate-500">
-              สาขาของฉัน
+              {isEn ? "My Branches" : "สาขาของฉัน"}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             {tenants.map((tenant) => {

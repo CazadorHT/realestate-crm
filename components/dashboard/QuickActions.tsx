@@ -1,8 +1,14 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { PlusCircle, UserPlus, CalendarDays } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function QuickActions() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="grid grid-cols-3 gap-2 sm:grid-cols-3">
       <Button
@@ -12,7 +18,7 @@ export function QuickActions() {
       >
         <Link href="/protected/properties/new">
           <PlusCircle className="h-6 w-6" />
-          <span className="text-xs font-semibold">เพิ่มทรัพย์</span>
+          <span className="text-xs font-semibold">{isEn ? "Add Property" : "เพิ่มทรัพย์"}</span>
         </Link>
       </Button>
 
@@ -23,7 +29,7 @@ export function QuickActions() {
       >
         <Link href="/protected/leads/new">
           <UserPlus className="h-6 w-6" />
-          <span className="text-xs font-semibold">เพิ่มลูกค้า</span>
+          <span className="text-xs font-semibold">{isEn ? "Add Lead" : "เพิ่มลูกค้า"}</span>
         </Link>
       </Button>
 
@@ -34,7 +40,7 @@ export function QuickActions() {
       >
         <Link href="/protected/calendar">
           <CalendarDays className="h-6 w-6" />
-          <span className="text-xs font-semibold">นัดหมาย</span>
+          <span className="text-xs font-semibold">{isEn ? "Schedule" : "นัดหมาย"}</span>
         </Link>
       </Button>
     </div>

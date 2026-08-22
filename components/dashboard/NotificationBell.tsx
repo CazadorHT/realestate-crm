@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn, formatDistanceToNowThai } from "@/lib/utils";
 import { useNotifications } from "@/hooks/use-notifications";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
   LEAD_TRANSFER: { icon: UserPlus, color: "text-blue-600", bg: "bg-blue-50" },
@@ -18,6 +19,9 @@ const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
 };
 
 export function NotificationBell() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const {
     stackedNotifications: initialStacked,
     unreadCount: initialUnread,
@@ -41,8 +45,8 @@ export function NotificationBell() {
         if (values && (values.title || values.price || values.description)) {
           setDraftNotif({
             id: "draft-recovery",
-            title: "📝 แบบร่างที่ยังไม่บันทึก",
-            message: `โครงการ: "${values.title || 'ไม่มีชื่อโครงการ'}"`,
+            title: isEn ? "📝 Unsaved Property Draft" : "📝 แบบร่างที่ยังไม่บันทึก",
+            message: `${isEn ? "Project" : "โครงการ"}: "${values.title || (isEn ? 'Untitled Project' : 'ไม่มีชื่อโครงการ')}"`,
             type: "WARNING",
             created_at: new Date(timestamp).toISOString(),
             is_read: false,
@@ -53,7 +57,7 @@ export function NotificationBell() {
     } catch (e) {
       console.error("Failed to parse draft for notification bell", e);
     }
-  }, []);
+  }, [isEn]);
 
   const stackedNotifications = draftNotif ? [draftNotif, ...initialStacked] : initialStacked;
   const unreadCount = initialUnread + (draftNotif && !draftNotif.is_read ? 1 : 0);
@@ -63,7 +67,7 @@ export function NotificationBell() {
       open={isOpen}
       onOpenChange={setIsOpen}
       isLoading={isNavigating}
-      loadingText="กำลังพากลับไปทำแบบร่างต่อ..."
+      loadingText={isEn ? "Restoring property draft..." : "กำลังพากลับไปทำแบบร่างต่อ..."}
       trigger={
         <Button
           variant="ghost"
@@ -79,10 +83,12 @@ export function NotificationBell() {
           )}
         </Button>
       }
-      title="การแจ้งเตือน"
+      title={isEn ? "Notifications" : "การแจ้งเตือน"}
       description={
         <div className="flex items-center justify-between w-full">
-          <span className="font-medium text-slate-500 text-sm">{unreadCount} รายการที่ยังไม่ได้อ่าน</span>
+          <span className="font-medium text-slate-500 text-sm">
+            {isEn ? `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}` : `${unreadCount} รายการที่ยังไม่ได้อ่าน`}
+          </span>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -91,7 +97,7 @@ export function NotificationBell() {
               onClick={markAllAsRead}
             >
               <CheckCheck className="h-3.5 w-3.5 mr-1.5" />
-              อ่านทั้งหมด
+              {isEn ? "Mark all read" : "อ่านทั้งหมด"}
             </Button>
           )}
         </div>
@@ -105,7 +111,7 @@ export function NotificationBell() {
           asChild
         >
           <Link href="/protected/notifications">
-            ดูการแจ้งเตือนทั้งหมด
+            {isEn ? "View all notifications" : "ดูการแจ้งเตือนทั้งหมด"}
             <ExternalLink className="h-3.5 w-3.5 ml-2 opacity-50" />
           </Link>
         </Button>
@@ -115,7 +121,7 @@ export function NotificationBell() {
         {loading ? (
           <div className="p-12 text-center text-sm text-slate-400 animate-pulse flex flex-col items-center gap-3">
             <div className="h-10 w-10 rounded-full border-2 border-slate-100 border-t-blue-500 animate-spin" />
-            <p className="font-bold text-slate-500">กำลังโหลดความเคลื่อนไหว...</p>
+            <p className="font-bold text-slate-500">{isEn ? "Loading notifications..." : "กำลังโหลดความเคลื่อนไหว..."}</p>
           </div>
         ) : stackedNotifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
@@ -123,8 +129,8 @@ export function NotificationBell() {
               <Bell className="h-10 w-10 text-slate-200" />
             </div>
             <div className="space-y-1">
-              <p className="font-semibold text-slate-900 text-lg">เงียบสงบ...</p>
-              <p className="text-sm text-slate-500">ยังไม่มีการแจ้งเตือนใหม่ในขณะนี้</p>
+              <p className="font-semibold text-slate-900 text-lg">{isEn ? "All Caught Up!" : "เงียบสงบ..."}</p>
+              <p className="text-sm text-slate-500">{isEn ? "No new notifications right now" : "ยังไม่มีการแจ้งเตือนใหม่ในขณะนี้"}</p>
             </div>
           </div>
         ) : (

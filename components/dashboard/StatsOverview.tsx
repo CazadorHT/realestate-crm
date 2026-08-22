@@ -29,6 +29,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface StatsOverviewProps {
   initialStats: DashboardStats;
@@ -41,22 +42,22 @@ interface StatsOverviewProps {
   initialTeamId?: string;
 }
 
-const timeRangeLabels: Record<string, string> = {
-  today: "วันนี้",
-  week: "สัปดาห์นี้",
-  month: "เดือนนี้",
-  "6months": "6 เดือนล่าสุด",
-  q1: "ไตรมาส 1 (Q1)",
-  q2: "ไตรมาส 2 (Q2)",
-  q3: "ไตรมาส 3 (Q3)",
-  q4: "ไตรมาส 4 (Q4)",
-  year: "ปีนี้",
-  lastYear: "ปีที่แล้ว",
-  year2024: "ปี 2024",
-  year2023: "ปี 2023",
-  year2022: "ปี 2022",
-  all: "ทั้งหมด",
-};
+const getTimeRangeLabels = (isEn: boolean): Record<string, string> => ({
+  today: isEn ? "Today" : "วันนี้",
+  week: isEn ? "This Week" : "สัปดาห์นี้",
+  month: isEn ? "This Month" : "เดือนนี้",
+  "6months": isEn ? "Last 6 Months" : "6 เดือนล่าสุด",
+  q1: isEn ? "Quarter 1 (Q1)" : "ไตรมาส 1 (Q1)",
+  q2: isEn ? "Quarter 2 (Q2)" : "ไตรมาส 2 (Q2)",
+  q3: isEn ? "Quarter 3 (Q3)" : "ไตรมาส 3 (Q3)",
+  q4: isEn ? "Quarter 4 (Q4)" : "ไตรมาส 4 (Q4)",
+  year: isEn ? "This Year" : "ปีนี้",
+  lastYear: isEn ? "Last Year" : "ปีที่แล้ว",
+  year2024: isEn ? "Year 2024" : "ปี 2024",
+  year2023: isEn ? "Year 2023" : "ปี 2023",
+  year2022: isEn ? "Year 2022" : "ปี 2022",
+  all: isEn ? "All Time" : "ทั้งหมด",
+});
 
 interface MetadataItem {
   id: string;
@@ -73,6 +74,9 @@ export function StatsOverview({
   initialBranchId = "all",
   initialTeamId = "all"
 }: StatsOverviewProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const timeRangeLabels = getTimeRangeLabels(isEn);
   const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
   const searchParams = useSearchParams();
   
@@ -148,20 +152,19 @@ export function StatsOverview({
 
         const res = await fetch(`/api/dashboard/stats${params}`);
         if (res.ok) {
-          const result = await res.json();
-          setCompareStats(result.data);
+          const data = await res.json();
+          setCompareStats(data.stats);
         }
       } catch (err) {
-        console.error("Failed to fetch compare stats", err);
+        console.error("Comparison fetch failed:", err);
       }
     };
 
     fetchCompareStats();
-  }, [isCompareMode, compareId, context, timeRange, userId]);
+  }, [isCompareMode, compareId, timeRange, context, userId]);
 
+  // Helper dynamic labels
   const getContextLabel = () => {
-    if (context === "personal") return "ส่วนตัว";
-    
     if (context === "staff") {
       // searchParams agentId might be what's active
       const activeAgentId = searchParams.get("agentId") || "all";
@@ -219,40 +222,40 @@ export function StatsOverview({
 
   const statItems = [
     {
-      title: `รายได้${getContextLabel()}${getTitleSuffix()}`,
+      title: isEn ? `Revenue${getContextLabel()}${getTitleSuffix()}` : `รายได้${getContextLabel()}${getTitleSuffix()}`,
       value: stats.revenueThisMonth,
       compareValue: compareStats?.revenueThisMonth,
       change: stats.revenueChange,
-      context: `ยอดขาย + เช่าสุทธิ (${stats.dealsWon} ดีล)`,
+      context: isEn ? `Gross Sales & Leases (${stats.dealsWon} deals)` : `ยอดขาย + เช่าสุทธิ (${stats.dealsWon} ดีล)`,
       icon: DollarSign,
       isCurrency: true,
       color: "blue",
     },
     {
-      title: `ลีดใหม่${getContextLabel()}${getTitleSuffix()}`,
+      title: isEn ? `New Leads${getContextLabel()}${getTitleSuffix()}` : `ลีดใหม่${getContextLabel()}${getTitleSuffix()}`,
       value: stats.leadsThisMonth,
       compareValue: compareStats?.leadsThisMonth,
       change: stats.leadsChange,
-      context: `รวมสะสม ${stats.leadsTotal} ราย`,
+      context: isEn ? `Cumulative: ${stats.leadsTotal} total` : `รวมสะสม ${stats.leadsTotal} ราย`,
       icon: Briefcase,
       color: "indigo",
     },
     {
-      title: `คอมมิชชั่นรวม${getTitleSuffix()}`,
+      title: isEn ? `Total Commission${getTitleSuffix()}` : `คอมมิชชั่นรวม${getTitleSuffix()}`,
       value: stats.totalCommission,
       compareValue: compareStats?.totalCommission,
       change: stats.revenueChange,
-      context: "ค่าคอมฯ ทุกดีลในองค์กร (ก่อนหัก)",
+      context: isEn ? "All deals commission (gross)" : "ค่าคอมฯ ทุกดีลในองค์กร (ก่อนหัก)",
       icon: DollarSign,
       isCurrency: true,
       color: "amber",
     },
     {
-      title: `ปิดการขาย${getTitleSuffix()}`,
+      title: isEn ? `Deals Closed${getTitleSuffix()}` : `ปิดการขาย${getTitleSuffix()}`,
       value: stats.dealsWon,
       compareValue: compareStats?.dealsWon,
       change: stats.dealsWonChange,
-      context: `เป้าหมาย: ${stats.dealsTarget}`,
+      context: isEn ? `Target: ${stats.dealsTarget}` : `เป้าหมาย: ${stats.dealsTarget}`,
       icon: CheckCircle2,
       color: "emerald",
     },

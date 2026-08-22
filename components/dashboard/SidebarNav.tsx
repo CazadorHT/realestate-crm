@@ -57,6 +57,7 @@ import {
 import { isFeatureEnabled } from "@/lib/features";
 import { RiTeamLine } from "react-icons/ri";
 import { m, AnimatePresence, LayoutGroup } from "framer-motion";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function SidebarNav({
   role,
@@ -68,6 +69,9 @@ export function SidebarNav({
   aiReviewCount?: number;
 }) {
   const pathname = usePathname();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [openGroups, setOpenGroups] = useState<string[]>(["crm"]);
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
   const [isHovered, setIsHovered] = useState(false);
@@ -125,270 +129,321 @@ export function SidebarNav({
   // Core CRM Group
   const crmItems: NavItem[] = [
     {
-      title: "ทรัพย์สิน",
+      title: isEn ? "Properties" : "ทรัพย์สิน",
       href: "/protected/properties",
       icon: Building2,
       active: pathname?.startsWith("/protected/properties") ?? false,
       badge: aiReviewCount > 0 ? aiReviewCount : undefined,
-      description: "จัดการรายการอสังหาริมทรัพย์และสถานะการประกาศขาย",
+      description: isEn
+        ? "Manage property listings and publication status"
+        : "จัดการรายการอสังหาริมทรัพย์และสถานะการประกาศขาย",
     },
     {
-      title: "เจ้าของทรัพย์",
+      title: isEn ? "Property Owners" : "เจ้าของทรัพย์",
       href: "/protected/owners",
       icon: User,
       active: pathname?.startsWith("/protected/owners") ?? false,
-      description: "ฐานข้อมูลติดต่อและประวัติทรัพย์สินของเจ้าของ",
+      description: isEn
+        ? "Owner contact database and asset portfolio history"
+        : "ฐานข้อมูลติดต่อและประวัติทรัพย์สินของเจ้าของ",
     },
     {
-      title: "ลีด",
+      title: isEn ? "Leads" : "ลีด",
       href: "/protected/leads",
       icon: Users,
       active: pathname?.startsWith("/protected/leads") ?? false,
-      description: "ติดตามลูกค้ามุ่งหวังและการบันทึกความสนใจ",
+      description: isEn
+        ? "Track prospective buyers and AI match scoring"
+        : "ติดตามลูกค้ามุ่งหวังและการบันทึกความสนใจ",
     },
     {
-      title: "เครือข่ายคู่ค้า",
+      title: isEn ? "Co-Brokers" : "เครือข่ายคู่ค้า",
       href: "/protected/co-brokers",
       icon: RiTeamLine,
       active: pathname?.startsWith("/protected/co-brokers") ?? false,
-      description: "ประสานงานร่วมกับ Co-Broker และพาร์ทเนอร์รายย่อย",
+      description: isEn
+        ? "Collaborate with external broker network and agencies"
+        : "ประสานงานร่วมกับ Co-Broker และพาร์ทเนอร์รายย่อย",
     },
     {
-      title: "กล่องข้อความ",
+      title: isEn ? "Inbox" : "กล่องข้อความ",
       href: "/protected/inbox",
       icon: MessageSquare,
       active: pathname === "/protected/inbox",
-      description: "ศูนย์รวมการแชทและการสื่อสารทุกช่องทางแบบ Real-time",
+      description: isEn
+        ? "Omnichannel chat hub and real-time messaging center"
+        : "ศูนย์รวมการแชทและการสื่อสารทุกช่องทางแบบ Real-time",
     },
     {
-      title: "ดีล",
+      title: isEn ? "Deals" : "ดีล",
       href: "/protected/deals",
       icon: Handshake,
       active: pathname?.startsWith("/protected/deals") ?? false,
-      description: "บริหารจัดการสัญญาขาย เช่า และความคืบหน้าของดีล",
+      description: isEn
+        ? "Manage sales & rental deals pipeline and milestones"
+        : "บริหารจัดการสัญญาขาย เช่า และความคืบหน้าของดีล",
     },
     {
-      title: "ปฏิทิน",
+      title: isEn ? "Calendar" : "ปฏิทิน",
       href: "/protected/calendar",
       icon: CalendarDays,
       active: pathname?.startsWith("/protected/calendar") ?? false,
-      description: "ตารางนัดหมายชมทรัพย์สินและการจัดกิจกรรมทีม",
+      description: isEn
+        ? "Viewing appointments schedule and team activities"
+        : "ตารางนัดหมายชมทรัพย์สินและการจัดกิจกรรมทีม",
     },
     {
-      title: "ข้อมูลวิเคราะห์",
+      title: isEn ? "Analytics" : "ข้อมูลวิเคราะห์",
       href: "/protected/admin/analytics",
       icon: BarChart3,
       active: pathname?.startsWith("/protected/admin/analytics") ?? false,
       roles: ["ADMIN"],
-      description: "รายงานภาพรวมและสถิติสำคัญสำหรับการตัดสินใจระดับบริหาร",
+      description: isEn
+        ? "Executive KPI reports and business intelligence"
+        : "รายงานภาพรวมและสถิติสำคัญสำหรับการตัดสินใจระดับบริหาร",
     },
     {
-      title: "แจ้งเตือนค่าเช่า",
+      title: isEn ? "Rent Reminders" : "แจ้งเตือนค่าเช่า",
       href: "/protected/rent-notifications",
       icon: Bell,
       active: pathname?.startsWith("/protected/rent-notifications") ?? false,
-      description: "ตรวจสอบและแจ้งเตือนยอดค้างชำระตามกำหนดสัญญาเช่า",
+      description: isEn
+        ? "Track upcoming rental dues and automated payment notices"
+        : "ตรวจสอบและแจ้งเตือนยอดค้างชำระตามกำหนดสัญญาเช่า",
     },
   ];
 
   // Documents Group
   const documentsItems: NavItem[] = [
     {
-      title: "สัญญาเช่า",
+      title: isEn ? "Smart Contracts" : "สัญญาเช่า",
       href: "/protected/contracts",
       icon: FileText,
       active: pathname?.startsWith("/protected/contracts") ?? false,
-      description: "คลังข้อมูลสัญญาเช่าที่ลงนามแล้วและรอตรวจสอบ",
+      description: isEn
+        ? "Digital lease agreements, signatures, and compliance"
+        : "คลังข้อมูลสัญญาเช่าที่ลงนามแล้วและรอตรวจสอบ",
     },
     {
-      title: "เอกสาร",
+      title: isEn ? "Document Vault" : "เอกสาร",
       href: "/protected/documents",
       icon: FolderOpen,
       active: pathname?.startsWith("/protected/documents") ?? false,
-      description: "จัดการไฟล์และฐานข้อมูลเอกสารประกอบการทำดีล",
+      description: isEn
+        ? "Secure file storage, title deeds, and deal documents"
+        : "จัดการไฟล์และฐานข้อมูลเอกสารประกอบการทำดีล",
     },
   ];
 
   // Public Content Group
   const publicItems: NavItem[] = [
     {
-      title: "บทความและข่าวสาร",
+      title: isEn ? "Articles & News" : "บทความและข่าวสาร",
       href: "/protected/blogs",
       icon: LayoutTemplate,
       active: pathname?.startsWith("/protected/blogs") ?? false,
-      description: "จัดการเนื้อหาข่าวสารและบทความบนหน้าเว็บไซต์หลัก",
+      description: isEn
+        ? "Manage public blog posts, news, and insights"
+        : "จัดการเนื้อหาข่าวสารและบทความบนหน้าเว็บไซต์หลัก",
     },
     {
-      title: "การบริการและโซลูชัน",
+      title: isEn ? "Services & Solutions" : "การบริการและโซลูชัน",
       href: "/protected/services",
       icon: Layout,
       active: pathname?.startsWith("/protected/services") ?? false,
       roles: ["ADMIN", "MANAGER"],
-      description: "ปรับแต่งข้อมูลบริการและโซลูชันเพื่อดึงดูดลูกค้า",
+      description: isEn
+        ? "Configure service packages and client offerings"
+        : "ปรับแต่งข้อมูลบริการและโซลูชันเพื่อดึงดูดลูกค้า",
     },
     {
-      title: "คำถามที่พบบ่อย",
+      title: isEn ? "FAQ Management" : "คำถามที่พบบ่อย",
       href: "/protected/faqs",
       icon: CircleHelp,
       active: pathname?.startsWith("/protected/faqs") ?? false,
-      description: "ฐานข้อมูลคำถามที่พบบ่อยสำหรับบริการตนเองของลูกค้า",
+      description: isEn
+        ? "Manage customer self-service knowledge base"
+        : "ฐานข้อมูลคำถามที่พบบ่อยสำหรับบริการตนเองของลูกค้า",
     },
     {
-      title: "ช่องทางการตลาด",
+      title: isEn ? "Marketing Portals" : "ช่องทางการตลาด",
       href: "/protected/partners",
       icon: Globe,
       active: pathname?.startsWith("/protected/partners") ?? false,
-      description: "จัดการช่องทางการตลาดและลงประกาศทรัพย์",
+      description: isEn
+        ? "Manage syndication channels and property ads"
+        : "จัดการช่องทางการตลาดและลงประกาศทรัพย์",
     },
     {
-      title: "จัดการทำเล",
+      title: isEn ? "Popular Areas" : "จัดการทำเล",
       href: "/protected/admin/popular-areas",
       icon: MapPin,
       active: pathname?.startsWith("/protected/admin/popular-areas") ?? false,
       roles: ["ADMIN", "MANAGER", "AGENT"],
-      description: "กำหนดจุดทำเลทองและพื้นที่ยอดนิยมในคลังข้อมูลแบรนด์",
+      description: isEn
+        ? "Configure hotspot zones and neighborhood tags"
+        : "กำหนดจุดทำเลทองและพื้นที่ยอดนิยมในคลังข้อมูลแบรนด์",
     },
     {
-      title: "ข้อมูลการเดินทางและสถานที่",
+      title: isEn ? "Transit & Master Data" : "ข้อมูลการเดินทางและสถานที่",
       href: "/protected/admin/master-data",
       icon: Database,
       active: pathname?.startsWith("/protected/admin/master-data") ?? false,
       roles: ["ADMIN", "MANAGER", "AGENT"],
-      description: "จัดการสายรถไฟฟ้าและหมวดหมู่สถานที่ใกล้เคียงแบบเรียลไทม์",
+      description: isEn
+        ? "Manage transit stations and nearby landmarks"
+        : "จัดการสายรถไฟฟ้าและหมวดหมู่สถานที่ใกล้เคียงแบบเรียลไทม์",
     },
     {
-      title: "SEO สถานีรถไฟฟ้า",
+      title: isEn ? "Station SEO" : "SEO สถานีรถไฟฟ้า",
       href: "/protected/admin/transit-stations",
       icon: Train,
       active:
         pathname?.startsWith("/protected/admin/transit-stations") ?? false,
       roles: ["ADMIN", "MANAGER"],
-      description: "จัดการ URL Slug และข้อมูล SEO ของแต่ละสถานีรถไฟฟ้า",
+      description: isEn
+        ? "Configure station landing pages and SEO slugs"
+        : "จัดการ URL Slug และข้อมูล SEO ของแต่ละสถานีรถไฟฟ้า",
     },
     {
-      title: "จัดการโครงการ",
+      title: isEn ? "Projects" : "จัดการโครงการ",
       href: "/protected/admin/projects",
       icon: Building2,
       active: pathname?.startsWith("/protected/admin/projects") ?? false,
       roles: ["ADMIN", "MANAGER"],
-      description:
-        "จัดการข้อมูลโครงการ อสังหาริมทรัพย์ สิ่งอำนวยความสะดวก และ SEO",
+      description: isEn
+        ? "Manage developer projects, amenities, and units"
+        : "จัดการข้อมูลโครงการ อสังหาริมทรัพย์ สิ่งอำนวยความสะดวก และ SEO",
     },
   ];
 
   // Finance Group (Agent Payouts & Commission Management)
   const financeItems: NavItem[] = [
     {
-      title: "กระเป๋าเงินของฉัน",
+      title: isEn ? "My Wallet" : "กระเป๋าเงินของฉัน",
       href: "/protected/wallet",
       icon: Wallet,
       active: pathname?.startsWith("/protected/wallet") ?? false,
-      description: "ตรวจสอบรายได้สะสม คอมมิชชัน และยอดเงินที่เบิกได้ทันที",
+      description: isEn
+        ? "Track earnings, pending commissions, and payouts"
+        : "ตรวจสอบรายได้สะสม คอมมิชชัน และยอดเงินที่เบิกได้ทันที",
     },
     {
-      title: "เบิกจ่ายเอเยนต์",
+      title: isEn ? "Agent Payouts" : "เบิกจ่ายเอเยนต์",
       href: "/protected/finance/payouts",
       icon: BadgeDollarSign,
       active: pathname?.startsWith("/protected/finance/payouts") ?? false,
       roles: ["ADMIN", "MANAGER"],
-      description: "อนุมัติและจัดการการจ่ายค่าคอมมิชชันให้ทีมงานระดับบริหาร",
+      description: isEn
+        ? "Approve and manage staff commission payouts"
+        : "อนุมัติและจัดการการจ่ายค่าคอมมิชชันให้ทีมงานระดับบริหาร",
     },
   ];
 
   const settingsItems: NavItem[] = [
     {
-      title: "โปรไฟล์",
+      title: isEn ? "My Profile" : "โปรไฟล์",
       href: "/protected/profile",
       icon: UserCircle,
       active: pathname === "/protected/profile",
-      description: "จัดการข้อมูลส่วนตัวของผู้ใช้งานและรูปโปรไฟล์ที่แสดงผล",
+      description: isEn
+        ? "Manage personal profile and avatar"
+        : "จัดการข้อมูลส่วนตัวของผู้ใช้งานและรูปโปรไฟล์ที่แสดงผล",
     },
     {
-      title: "ตั้งค่าระบบ",
+      title: isEn ? "System Settings" : "ตั้งค่าระบบ",
       href: "/protected/settings",
       icon: Settings,
       active: pathname === "/protected/settings",
       roles: ["ADMIN", "MANAGER"],
-      description: "ปรับแต่งการทำงานของระบบและสิทธิ์การเข้าถึงข้อมูลสาขา",
+      description: isEn
+        ? "Configure enterprise settings and permissions"
+        : "ปรับแต่งการทำงานของระบบและสิทธิ์การเข้าถึงข้อมูลสาขา",
     },
   ];
 
   const supportItems: NavItem[] = [
     {
-      title: "ฝ่ายสนับสนุน LINE",
+      title: isEn ? "LINE Support" : "ฝ่ายสนับสนุน LINE",
       href: siteConfig.links.line,
       icon: FaLine,
       active: false,
-      description: "ติดต่อทีมงานฝ่ายเทคนิคผ่านแอป LINE ได้รวดเร็วที่สุด",
+      description: isEn
+        ? "Fast technical support via LINE application"
+        : "ติดต่อทีมงานฝ่ายเทคนิคผ่านแอป LINE ได้รวดเร็วที่สุด",
     },
     {
-      title: "โทรแจ้งปัญหา",
+      title: isEn ? "Phone Support" : "โทรแจ้งปัญหา",
       href: `tel:${siteConfig.contact.phone}`,
       icon: Phone,
       active: false,
-      description: "ช่องทางติดต่อด่วนผ่านโทรศัพท์เพื่อแจ้งปัญหาฉุกเฉิน",
+      description: isEn
+        ? "Emergency phone support hotline"
+        : "ช่องทางติดต่อด่วนผ่านโทรศัพท์เพื่อแจ้งปัญหาฉุกเฉิน",
     },
     {
-      title: "ข้อตกลงการให้บริการ (SLA)",
+      title: isEn ? "Service Agreement (SLA)" : "ข้อตกลงการให้บริการ (SLA)",
       href: "/protected/support/sla",
       icon: ShieldCheck,
       active: pathname === "/protected/support/sla",
-      description: "รายละเอียดเงื่อนไขการให้บริการและการรับประกันคุณภาพ",
+      description: isEn
+        ? "Enterprise SLA terms and uptime guarantees"
+        : "รายละเอียดเงื่อนไขการให้บริการและการรับประกันคุณภาพ",
     },
   ];
 
   const groups: NavGroup[] = [
     {
       id: "crm",
-      title: "ระบบ CRM",
+      title: isEn ? "CRM & Sales" : "ระบบ CRM",
       icon: Briefcase,
       items: crmItems,
     },
     {
       id: "finance",
-      title: "การเงิน",
+      title: isEn ? "Finance & Payouts" : "การเงิน",
       icon: BadgeDollarSign,
       items: financeItems,
     },
     {
       id: "documents",
-      title: "เอกสาร",
+      title: isEn ? "Legal & Contracts" : "เอกสาร",
       icon: FileStack,
       items: documentsItems,
     },
     {
       id: "public",
-      title: "เนื้อหาสาธารณะ",
+      title: isEn ? "Public Portal" : "เนื้อหาสาธารณะ",
       icon: Globe,
       items: publicItems,
     },
     {
       id: "settings",
-      title: "ตั้งค่า",
+      title: isEn ? "Settings" : "ตั้งค่า",
       icon: Settings,
       items: settingsItems,
     },
     {
       id: "executive",
-      title: "รายงานผู้บริหาร",
+      title: isEn ? "Executive Reports" : "รายงานผู้บริหาร",
       icon: BarChart3,
       items: [
         {
-          title: "รายงานและข้อมูลวิเคราะห์",
+          title: isEn ? "BI & Analytics Dashboard" : "รายงานและข้อมูลวิเคราะห์",
           href: "/protected/dashboard/executive",
           icon: Sparkles,
           active: pathname === "/protected/dashboard/executive",
           roles: ["ADMIN", "MANAGER"],
         },
         {
-          title: "ภาพรวมทุกสาขา",
+          title: isEn ? "Multi-Branch Overview" : "ภาพรวมทุกสาขา",
           href: "/protected/admin/executive",
           icon: Globe,
           active: pathname === "/protected/admin/executive",
           roles: ["ADMIN"],
         },
         {
-          title: "คลังทรัพย์สินรวม",
+          title: isEn ? "Global Inventory Vault" : "คลังทรัพย์สินรวม",
           href: "/protected/admin/inventory",
           icon: Box,
           active: pathname === "/protected/admin/inventory",
@@ -399,7 +454,7 @@ export function SidebarNav({
     },
     {
       id: "support",
-      title: "ความช่วยเหลือ",
+      title: isEn ? "Help & Support" : "ความช่วยเหลือ",
       icon: Headset,
       items: supportItems,
     },

@@ -3,6 +3,7 @@
 import { GlobalSearch } from "@/components/dashboard/GlobalSearch";
 import { MdWavingHand } from "react-icons/md";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DashboardHeaderProps {
   email?: string | null;
@@ -10,6 +11,9 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ email, name }: DashboardHeaderProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [mounted, setMounted] = useState(false);
   const [greeting, setGreeting] = useState("");
   const [currentDate, setCurrentDate] = useState("");
@@ -20,30 +24,51 @@ export function DashboardHeader({ email, name }: DashboardHeaderProps) {
     const updateTime = () => {
       const now = new Date();
       const hour = now.getHours();
-      setGreeting(
-        hour < 12 ? "สวัสดีตอนเช้า" : hour < 18 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น"
-      );
-      setCurrentDate(
-        now.toLocaleDateString("th-TH", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-      );
-      setLastUpdated(
-        now.toLocaleTimeString("th-TH", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })
-      );
+      if (isEn) {
+        setGreeting(
+          hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
+        );
+        setCurrentDate(
+          now.toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        );
+        setLastUpdated(
+          now.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })
+        );
+      } else {
+        setGreeting(
+          hour < 12 ? "สวัสดีตอนเช้า" : hour < 18 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น"
+        );
+        setCurrentDate(
+          now.toLocaleDateString("th-TH", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        );
+        setLastUpdated(
+          now.toLocaleTimeString("th-TH", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })
+        );
+      }
     };
 
     updateTime();
     const intervalId = setInterval(updateTime, 1000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [isEn]);
 
   return (
     <div id="tour-header" className="relative overflow-hidden flex flex-col lg:flex-row md:items-center justify-between gap-6 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-10 rounded-3xl shadow-xl">
@@ -68,7 +93,9 @@ export function DashboardHeader({ email, name }: DashboardHeaderProps) {
               </span>
               <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest">Live Monitoring</span>
               <span className="w-px h-2.5 bg-white/20" />
-              <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">ข้อมูลล่าสุด: {lastUpdated}</span>
+              <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">
+                {isEn ? "Last updated:" : "ข้อมูลล่าสุด:"} {lastUpdated}
+              </span>
             </div>
           )}
         </div>
@@ -76,11 +103,13 @@ export function DashboardHeader({ email, name }: DashboardHeaderProps) {
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white drop-shadow-md flex flex-wrap items-center gap-2 min-h-[40px]">
           {mounted ? greeting : <span className="h-8 w-40 bg-white/20 rounded-md animate-pulse inline-block" />}
           <span className="text-white/60 font-medium">,</span>
-          <span>{name || email?.split("@")[0] || "คุณ"}</span>
+          <span>{name || email?.split("@")[0] || (isEn ? "Partner" : "คุณ")}</span>
           <MdWavingHand className="text-yellow-300 animate-wave inline-block ml-1" />
         </h2>
         <p className="text-blue-100/80 max-w-lg text-sm md:text-base leading-relaxed">
-          จัดการทรัพย์ ลีด และงานขายของคุณได้ง่ายๆ ในที่เดียว
+          {isEn
+            ? "Manage properties, leads, deals, and operations seamlessly in one unified platform."
+            : "จัดการทรัพย์ ลีด และงานขายของคุณได้ง่ายๆ ในที่เดียว"}
         </p>
       </div>
 

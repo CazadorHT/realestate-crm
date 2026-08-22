@@ -1,18 +1,24 @@
+"use client";
+
 import type { PipelineData } from "@/features/dashboard/queries";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import { TrendingUp } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PipelineSummaryProps {
   data: PipelineData[];
 }
 
 export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (!data || data.length === 0) {
     return (
       <DashboardEmptyState
         icon={TrendingUp}
-        title="ยังไม่มีข้อมูล Pipeline"
-        description="ไม่พบข้อมูลขั้นตอนงานในช่วงเวลานี้ ข้อมูลจะเริ่มแสดงเมื่อมีการบันทึกสถานะงาน"
+        title={isEn ? "No Pipeline Data" : "ยังไม่มีข้อมูล Pipeline"}
+        description={isEn ? "No active pipeline stages found. Metrics will appear once deals progress." : "ไม่พบข้อมูลขั้นตอนงานในช่วงเวลานี้ ข้อมูลจะเริ่มแสดงเมื่อมีการบันทึกสถานะงาน"}
       />
     );
   }
@@ -46,7 +52,7 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
                     {stage.count}
                   </span>
                   <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-tight">
-                    รายการ
+                    {isEn ? "deals" : "รายการ"}
                   </span>
                 </div>
               </div>
@@ -64,12 +70,12 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
 
       <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
         <div className="flex flex-col">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">สถานะปัจจุบัน</span>
-          <span className="text-xs font-semibold text-slate-500">ข้อมูลอัปเดตเรียลไทม์</span>
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{isEn ? "Current Pipeline" : "สถานะปัจจุบัน"}</span>
+          <span className="text-xs font-semibold text-slate-500">{isEn ? "Real-time updates" : "ข้อมูลอัปเดตเรียลไทม์"}</span>
         </div>
         <div className="flex items-center gap-2 text-sm font-semibold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100 shadow-sm shadow-indigo-100/50">
-           <span className="text-[10px] text-indigo-400 uppercase font-semibold">รวม</span>
-           {total.toLocaleString()} รายการ
+           <span className="text-[10px] text-indigo-400 uppercase font-semibold">{isEn ? "Total" : "รวม"}</span>
+           {total.toLocaleString()} {isEn ? "deals" : "รายการ"}
         </div>
       </div>
     </div>
