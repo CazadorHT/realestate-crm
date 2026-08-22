@@ -13,6 +13,7 @@ import { getAiReviewCountQuery } from "@/features/properties/queries/stats";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
 import { TenantSwitcher } from "@/components/common/TenantSwitcher";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { GlobalSearch } from "@/components/dashboard/GlobalSearch";
 import { TenantProvider } from "@/components/providers/TenantProvider";

@@ -45,7 +45,7 @@ export function SocialAuthButtons({ isLogin }: SocialAuthButtonsProps) {
               isLogin ? "" : "bg-slate-950",
             )}
           >
-            หรือทางเลือกอื่น
+            Or continue with
           </span>
         </div>
       </div>

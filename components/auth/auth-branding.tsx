@@ -66,7 +66,7 @@ export function AuthBranding({ isLogin }: AuthBrandingProps) {
             className={cn("h-5 w-5", isLogin ? "text-blue-500" : "text-blue-400")}
           />
           <span className="text-sm font-semibold hidden sm:inline">
-            <span>กลับไปหน้าแรก</span>
+            <span>Back to Home</span>
           </span>
         </Link>
       </div>

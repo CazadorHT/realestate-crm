@@ -57,10 +57,10 @@ export function AuthHeader({ view, direction, variants }: AuthHeaderProps) {
               <HelpCircle className="h-3 w-3" />
             )}
             {isLogin
-              ? "ยินดีต้อนรับกลับมา"
+              ? "Welcome Back"
               : isSignUp
-                ? "เข้าร่วมกับเราวันนี้"
-                : "กู้คืนรหัสผ่าน"}
+                ? "Join Us Today"
+                : "Account Recovery"}
           </div>
           <h1
             className={cn(
@@ -69,10 +69,10 @@ export function AuthHeader({ view, direction, variants }: AuthHeaderProps) {
             )}
           >
             {isLogin
-              ? "หวัดดี! มาจอยกัน"
+              ? "Sign In to Your Workspace"
               : isSignUp
-                ? "สร้างบัญชีใหม่"
-                : "ลืมรหัสหรอ?"}
+                ? "Create an Account"
+                : "Reset Your Password"}
           </h1>
           <p
             className={cn(
@@ -81,10 +81,10 @@ export function AuthHeader({ view, direction, variants }: AuthHeaderProps) {
             )}
           >
             {isLogin
-              ? "เข้าสู่ระบบเพื่อจัดการทรัพย์สินของคุณ"
+              ? "Enter your credentials to access the CRM platform"
               : isSignUp
-                ? "กรอกข้อมูลสั้นๆ เพื่อเริ่มต้นใช้งานระบบ"
-                : "กรอกอีเมลเพื่อรับลิงก์รีเซ็ตรหัสผ่านใหม่"}
+                ? "Fill in your details to get started with the system"
+                : "Enter your email to receive a password reset link"}
           </p>
         </m.div>
       </AnimatePresence>

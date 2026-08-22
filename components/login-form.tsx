@@ -37,26 +37,26 @@ export type AuthView = "login" | "signup" | "forgot-password";
 
 // --- Validation Schemas ---
 const loginSchema = z.object({
-  email: z.string().email("กรุณากรอกอีเมลให้ถูกต้อง"),
-  password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   rememberMe: z.boolean().default(true),
   honeypot: z.string().max(0).optional(), // Bot trap
 });
 
 const signupSchema = z
   .object({
-    email: z.string().email("กรุณากรอกอีเมลให้ถูกต้อง"),
-    password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
-    confirmPassword: z.string().min(6, "กรุณายืนยันรหัสผ่าน"),
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Please confirm your password"),
     honeypot: z.string().max(0).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "รหัสผ่านไม่ตรงกัน",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
 const forgotSchema = z.object({
-  email: z.string().email("กรุณากรอกอีเมลให้ถูกต้อง"),
+  email: z.string().email("Please enter a valid email address"),
   honeypot: z.string().max(0).optional(),
 });
 
@@ -86,7 +86,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
     if (!password) return;
     navigator.clipboard.writeText(password);
     setCopied(true);
-    toast.success("ก๊อปปี้รหัสผ่านแล้ว!");
+    toast.success("Password copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -311,7 +311,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                   <CheckCircle2 className="h-8 w-8" />
                 </m.div>
                 <div className="space-y-2">
-                  <h3 className="text-lg font-bold text-white">ดำเนินการสำเร็จ</h3>
+                  <h3 className="text-lg font-bold text-white">Operation Successful</h3>
                   <p className="text-sm text-slate-400 leading-relaxed px-4">
                     {success}
                   </p>
@@ -324,7 +324,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                   className="w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] bg-linear-to-r from-blue-700 via-blue-600 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  <span>กลับไปหน้าเข้าสู่ระบบ</span>
+                  <span>Back to Sign In</span>
                 </Button>
               </div>
             ) : (
@@ -351,7 +351,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                         isLogin ? "text-slate-400" : "text-slate-500",
                       )}
                     >
-                      อีเมล
+                      Email Address
                     </Label>
                     <div className="relative group">
                       <div
@@ -401,7 +401,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                             isLogin ? "text-slate-400" : "text-slate-500",
                           )}
                         >
-                          รหัสผ่าน
+                          Password
                         </Label>
                         {isLogin && (
                           <button
@@ -409,7 +409,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                             onClick={() => handleSetView("forgot-password")}
                             className="text-[11px] font-semibold text-blue-600 hover:text-blue-500 transition-colors underline decoration-blue-500/20 underline-offset-4"
                           >
-                            ลืมรหัสผ่าน?
+                            Forgot password?
                           </button>
                         )}
                       </div>
@@ -511,7 +511,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                         htmlFor="confirmPassword"
                         className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 ml-1"
                       >
-                        ยืนยันรหัสผ่าน
+                        Confirm Password
                       </Label>
                       <div className="relative group">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-purple-500 transition-all duration-300">
@@ -583,16 +583,16 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                     {isLoading ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        <span>แป๊บน้า...</span>
+                        <span>Please wait...</span>
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
                         <span>
                           {isLogin
-                            ? "เข้าสู่ระบบ"
+                            ? "Sign In"
                             : isSignUp
-                              ? "ลงทะเบียน"
-                              : "ส่งลิงก์กู้คืน"}
+                              ? "Create Account"
+                              : "Send Reset Link"}
                         </span>
                         <ArrowLeft className="h-4 w-4 rotate-180" />
                       </span>
@@ -632,10 +632,10 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                     )}
                   >
                     {isForgot
-                      ? "นึกรหัสออกแล้วหรอ?"
+                      ? "Remembered your password?"
                       : isLogin
-                        ? "ยังไม่มีบัญชีหรอ?"
-                        : "มีบัญชีอยู่แล้ว?"}{" "}
+                        ? "Don't have an account?"
+                        : "Already have an account?"}{" "}
                     <button
                       type="button"
                       onClick={() =>
@@ -653,28 +653,28 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                       )}
                     >
                       {isForgot
-                        ? "กลับไปเข้าสู่ระบบ"
+                        ? "Back to Sign In"
                         : isLogin
-                          ? "สมัครสมาชิกที่นี่"
-                          : "เข้าสู่ระบบเลย"}
+                          ? "Sign up here"
+                          : "Sign in here"}
                     </button>
                   </p>
 
                   {/* PDPA Notice */}
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed opacity-70">
-                    การเข้าสู่ระบบถือว่าคุณยอมรับ{" "}
+                    By signing in, you agree to our{" "}
                     <button
                       type="button"
                       className="underline hover:text-blue-500 transition-colors"
                     >
-                      ข้อกำหนดการใช้งาน
+                      Terms of Service
                     </button>{" "}
-                    และ{" "}
+                    and{" "}
                     <button
                       type="button"
                       className="underline hover:text-blue-500 transition-colors"
                     >
-                      นโยบายความเป็นส่วนตัว
+                      Privacy Policy
                     </button>
                   </p>
 
