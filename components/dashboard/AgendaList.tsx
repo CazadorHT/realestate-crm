@@ -14,6 +14,7 @@ import {
 import type { AgendaEvent } from "@/features/dashboard/queries";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface AgendaListProps {
   agenda?: AgendaEvent[];
@@ -28,14 +29,17 @@ const typeIcons = {
   deadline: <AlertCircle className="h-3 w-3" />,
 };
 
-const typeLabels = {
-  meeting: "นัดหมาย",
-  call: "โทรศัพท์",
-  task: "งานทั่วไป",
-  deadline: "กำหนดส่ง",
-};
+const getTypeLabels = (isEn: boolean) => ({
+  meeting: isEn ? "Meeting" : "นัดหมาย",
+  call: isEn ? "Phone Call" : "โทรศัพท์",
+  task: isEn ? "Task" : "งานทั่วไป",
+  deadline: isEn ? "Deadline" : "กำหนดส่ง",
+});
 
 export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const typeLabels = getTypeLabels(isEn);
   const isAdminView = (role === "ADMIN" || role === "MANAGER" || role === "OWNER") && view !== "personal";
 
   return (
@@ -46,10 +50,10 @@ export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListP
             <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
               <Calendar className="h-4 w-4" />
             </div>
-            วาระงานวันนี้
+            {isEn ? "Today's Agenda" : "วาระงานวันนี้"}
           </CardTitle>
           <div className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full uppercase tracking-wider">
-            {agenda.length} งาน
+            {agenda.length} {isEn ? "tasks" : "งาน"}
           </div>
         </div>
       </CardHeader>
@@ -61,7 +65,9 @@ export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListP
               <div className="p-3 bg-slate-50 rounded-full">
                 <Clock className="h-6 w-6 text-slate-300" />
               </div>
-              <p className="text-sm text-slate-400 font-medium italic">วันนี้ไม่มีวาระงานที่ต้องจัดการ</p>
+              <p className="text-sm text-slate-400 font-medium italic">
+                {isEn ? "No agenda tasks scheduled for today" : "วันนี้ไม่มีวาระงานที่ต้องจัดการ"}
+              </p>
             </div>
           ) : (
             <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
@@ -93,7 +99,7 @@ export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListP
                         </span>
                         {isHigh && (
                           <span className="flex items-center gap-1 text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded uppercase animate-pulse">
-                            <AlertCircle size={10} /> ด่วน
+                            <AlertCircle size={10} /> {isEn ? "Urgent" : "ด่วน"}
                           </span>
                         )}
                       </div>

@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface SetupProgress {
   hasBranchProfile: boolean;
@@ -60,6 +61,8 @@ interface Step {
 
 export function SetupChecklist({ progress, role }: { progress: SetupProgress, role?: string }) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isFullyComplete, setIsFullyComplete] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -84,40 +87,40 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
       return [
         {
           id: "profile",
-          title: "ตั้งค่าโปรไฟล์ส่วนตัว",
-          description: "ใส่รูปภาพและเบอร์โทรเพื่อให้ลูกค้าติดต่อคุณได้สะดวก",
+          title: isEn ? "Personal Profile" : "ตั้งค่าโปรไฟล์ส่วนตัว",
+          description: isEn ? "Add avatar and phone number for client contacts" : "ใส่รูปภาพและเบอร์โทรเพื่อให้ลูกค้าติดต่อคุณได้สะดวก",
           href: "/protected/settings/profile",
           isComplete: progress.hasPersonalProfile,
           icon: UserCheck,
         },
         {
           id: "property",
-          title: "ลงประกาศทรัพย์แรก",
-          description: "เพิ่มข้อมูลบ้าน คอนโด หรือที่ดินเข้าระบบเพื่อเริ่มงาน",
+          title: isEn ? "First Property Listing" : "ลงประกาศทรัพย์แรก",
+          description: isEn ? "Add house, condo, or land inventory to the system" : "เพิ่มข้อมูลบ้าน คอนโด หรือที่ดินเข้าระบบเพื่อเริ่มงาน",
           href: "/protected/properties/new",
           isComplete: progress.hasProperty,
           icon: Home,
         },
         {
           id: "lead",
-          title: "เพิ่มข้อมูลลูกค้าคนแรก",
-          description: "บันทึกรายชื่อผู้มุ่งหวังเพื่อไม่ให้พลาดทุกโอกาส",
+          title: isEn ? "First Prospective Lead" : "เพิ่มข้อมูลลูกค้าคนแรก",
+          description: isEn ? "Log buyer inquiries so you never miss an opportunity" : "บันทึกรายชื่อผู้มุ่งหวังเพื่อไม่ให้พลาดทุกโอกาส",
           href: "/protected/leads/new",
           isComplete: progress.hasLead,
           icon: Contact,
         },
         {
           id: "telegram",
-          title: "แจ้งเตือน Telegram",
-          description: "รับการแจ้งเตือนลูกค้าใหม่ทันทีผ่านมือถือ",
+          title: isEn ? "Telegram Alerts" : "แจ้งเตือน Telegram",
+          description: isEn ? "Receive instant new lead notifications on mobile" : "รับการแจ้งเตือนลูกค้าใหม่ทันทีผ่านมือถือ",
           href: "/protected/settings/profile",
           isComplete: progress.isTelegramConnected,
           icon: Send,
         },
         {
           id: "tiktok",
-          title: "เชื่อมต่อ TikTok",
-          description: "ตั้งค่าระบบโพสต์ทรัพย์อัตโนมัติลง TikTok",
+          title: isEn ? "TikTok Integration" : "เชื่อมต่อ TikTok",
+          description: isEn ? "Configure automated property video posting" : "ตั้งค่าระบบโพสต์ทรัพย์อัตโนมัติลง TikTok",
           href: "/protected/settings?tab=social",
           isComplete: progress.isTikTokConnected,
           icon: Video,
@@ -129,34 +132,34 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
       return [
         {
           id: "branch",
-          title: "ตรวจสอบข้อมูลสาขา",
-          description: "ยืนยันความถูกต้องของข้อมูลสาขาและโลโก้",
+          title: isEn ? "Verify Branch Profile" : "ตรวจสอบข้อมูลสาขา",
+          description: isEn ? "Confirm branch details and agency branding" : "ยืนยันความถูกต้องของข้อมูลสาขาและโลโก้",
           href: "/protected/settings/branches",
           isComplete: progress.hasBranchProfile,
           icon: Building2,
         },
         {
           id: "staff",
-          title: "เพิ่มพนักงานในทีม",
-          description: "เชิญทีมงานของคุณเข้ามาช่วยจัดการระบบ",
+          title: isEn ? "Invite Team Members" : "เพิ่มพนักงานในทีม",
+          description: isEn ? "Invite your agents to collaborate in this branch" : "เชิญทีมงานของคุณเข้ามาช่วยจัดการระบบ",
           href: "/protected/settings/users",
           isComplete: progress.hasStaff || progress.isStaffSkipped,
           icon: UserPlus,
           canSkip: true,
-          skipLabel: "ทำภายหลัง",
+          skipLabel: isEn ? "Skip for now" : "ทำภายหลัง",
         },
         {
           id: "tiktok",
-          title: "เชื่อมต่อ TikTok ",
-          description: "ตั้งค่าระบบโพสต์ทรัพย์อัตโนมัติของทีมลง TikTok",
+          title: isEn ? "Connect TikTok" : "เชื่อมต่อ TikTok ",
+          description: isEn ? "Set up automated team property promotion" : "ตั้งค่าระบบโพสต์ทรัพย์อัตโนมัติของทีมลง TikTok",
           href: "/protected/settings?tab=social",
           isComplete: progress.isTikTokConnected,
           icon: Video,
         },
         {
           id: "telegram",
-          title: "รายงาน Telegram",
-          description: "รับรายงานสรุปยอดขายของทีมผ่าน Telegram",
+          title: isEn ? "Telegram Reports" : "รายงาน Telegram",
+          description: isEn ? "Receive team sales and deal updates" : "รับรายงานสรุปยอดขายของทีมผ่าน Telegram",
           href: "/protected/settings/profile",
           isComplete: progress.isTelegramConnected,
           icon: Send,
@@ -168,55 +171,55 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
     return [
       {
         id: "branch",
-        title: "สร้างโปรไฟล์สาขา",
-        description: "ใส่โลโก้และข้อมูลติดต่อสาขาเพื่อความน่าเชื่อถือ",
+        title: isEn ? "Branch Setup" : "สร้างโปรไฟล์สาขา",
+        description: isEn ? "Add logo and company contact info for credibility" : "ใส่โลโก้และข้อมูลติดต่อสาขาเพื่อความน่าเชื่อถือ",
         href: "/protected/settings/branches",
         isComplete: progress.hasBranchProfile,
         icon: Building2,
       },
       {
         id: "staff",
-        title: "จัดการพนักงาน",
-        description: "เชิญทีมงานของคุณเข้ามาช่วยจัดการระบบ",
+        title: isEn ? "Team Management" : "จัดการพนักงาน",
+        description: isEn ? "Invite your sales agents and team managers" : "เชิญทีมงานของคุณเข้ามาช่วยจัดการระบบ",
         href: "/protected/settings/users",
         isComplete: progress.hasStaff || progress.isStaffSkipped,
         icon: Users,
         canSkip: true,
-        skipLabel: "ข้ามไปก่อน",
+        skipLabel: isEn ? "Skip for now" : "ข้ามไปก่อน",
       },
       {
         id: "property",
-        title: "ประกาศทรัพย์แรก",
-        description: "เพิ่มข้อมูลบ้าน คอนโด หรือที่ดินเข้าระบบ",
+        title: isEn ? "First Property" : "ประกาศทรัพย์แรก",
+        description: isEn ? "Add your first property listing to inventory" : "เพิ่มข้อมูลบ้าน คอนโด หรือที่ดินเข้าระบบ",
         href: "/protected/properties/new",
         isComplete: progress.hasProperty,
         icon: Home,
       },
       {
         id: "tiktok",
-        title: "เชื่อมต่อ TikTok",
-        description: "เปิดระบบ AI ช่วยโพสต์คลิปทรัพย์ลง TikTok",
+        title: isEn ? "Connect TikTok" : "เชื่อมต่อ TikTok",
+        description: isEn ? "Enable automated AI video syndication" : "เปิดระบบ AI ช่วยโพสต์คลิปทรัพย์ลง TikTok",
         href: "/protected/settings?tab=social",
         isComplete: progress.isTikTokConnected,
         icon: Video,
       },
       {
         id: "telegram",
-        title: "ตั้งค่า Telegram Bot",
-        description: "เชื่อมต่อ Bot เพื่อรายงานความเคลื่อนไหวบริษัท",
+        title: isEn ? "Telegram Bot" : "ตั้งค่า Telegram Bot",
+        description: isEn ? "Connect bot for real-time company deal activity" : "เชื่อมต่อ Bot เพื่อรายงานความเคลื่อนไหวบริษัท",
         href: "/protected/settings?tab=social",
         isComplete: progress.isTelegramConnected,
         icon: Send,
       },
       {
         id: "line",
-        title: "เชื่อมต่อ Line OA",
-        description: "เชื่อมต่อระบบตอบกลับอัตโนมัติและติดตามลูกค้า",
+        title: isEn ? "LINE OA Integration" : "เชื่อมต่อ Line OA",
+        description: isEn ? "Connect automated customer inquiry bot" : "เชื่อมต่อระบบตอบกลับอัตโนมัติและติดตามลูกค้า",
         href: "/protected/settings?tab=social",
         isComplete: progress.isLineConnected || progress.isLineSkipped,
         icon: MessageSquare,
         canSkip: true,
-        skipLabel: "ข้ามไปก่อน",
+        skipLabel: isEn ? "Skip for now" : "ข้ามไปก่อน",
       },
     ];
   };
@@ -282,12 +285,12 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl text-slate-800 flex items-center gap-2">
-                ยินดีต้อนรับสู่ Real Estate CRM 🚀
+                {isEn ? "Welcome to Real Estate CRM 🚀" : "ยินดีต้อนรับสู่ Real Estate CRM 🚀"}
               </CardTitle>
              
             </div>
             <CardDescription className="text-slate-500 mt-1">
-              ทำตามขั้นตอนเหล่านี้เพื่อเริ่มต้นใช้งานระบบให้เต็มประสิทธิภาพ
+              {isEn ? "Follow these essential onboarding steps to unlock your CRM workflow" : "ทำตามขั้นตอนเหล่านี้เพื่อเริ่มต้นใช้งานระบบให้เต็มประสิทธิภาพ"}
             </CardDescription>
           </div>
           <div className="flex items-center gap-3 bg-white p-2 md:pr-4 rounded-xl shadow-sm border border-slate-100 min-w-[200px]">
@@ -300,7 +303,7 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
               </div>
               <Progress
                 value={progressPercent}
-                aria-label="ความคืบหน้าการตั้งค่าระบบ"
+                aria-label={isEn ? "System Setup Progress" : "ความคืบหน้าการตั้งค่าระบบ"}
                 className="h-2 bg-slate-100"
                 indicatorClassName="bg-linear-to-r from-indigo-600 to-violet-600 transition-all duration-500"
               />
@@ -350,25 +353,16 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
                   </div>
                 )}
 
-                <div className="flex items-start justify-between w-full relative z-10">
+                <div className="flex items-center justify-between w-full">
                   <div
                     className={cn(
-                      "p-3 rounded-xl shadow-sm",
+                      "p-2.5 rounded-xl transition-colors",
                       step.isComplete
                         ? "bg-emerald-50 text-emerald-600"
-                        : "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300",
+                        : "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white",
                     )}
                   >
                     <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {step.isComplete ? (
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">
-                        {isSkipped ? "SKIPPED" : "DONE"}
-                      </div>
-                    ) : (
-                      <Circle className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 transition-colors" />
-                    )}
                   </div>
                 </div>
 
@@ -393,7 +387,7 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
                         href={step.href}
                         className="flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm"
                       >
-                        เริ่มเลย
+                        {isEn ? "Start Now" : "เริ่มเลย"}
                         <ArrowRight className="w-3 h-3" />
                       </Link>
                       {step.canSkip && (
@@ -401,7 +395,7 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
                           variant="ghost"
                           size="sm"
                           onClick={(e) => handleSkip(e, step.id)}
-                          className="text-[10px] h-8 text-slate-400 hover:text-slate-600 font-medium px-2"
+                          className="text-[10px] h-8 text-slate-400 hover:text-slate-600 font-medium px-2 cursor-pointer"
                         >
                           {step.skipLabel}
                         </Button>
@@ -411,7 +405,7 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
                     <div className="h-8 flex items-center">
                       <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" />
-                        เสร็จสมบูรณ์
+                        {isEn ? "Completed" : "เสร็จสมบูรณ์"}
                       </span>
                     </div>
                   )}
