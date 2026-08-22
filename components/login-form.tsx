@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -105,6 +105,16 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
     reset,
     getValues,
   } = form;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isDemoHost = window.location.hostname.startsWith("demo.") || window.location.search.includes("demo=true");
+      if (isDemoHost && view === "login") {
+        form.setValue("email", "demo@vccasset.com");
+        form.setValue("password", "Demo2026!");
+      }
+    }
+  }, [view, form]);
 
   const handleSetView = (newView: AuthView) => {
     const order: AuthView[] = ["forgot-password", "login", "signup"];
@@ -588,6 +598,21 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                       </span>
                     )}
                   </Button>
+
+                  {isLogin && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        form.setValue("email", "demo@vccasset.com");
+                        form.setValue("password", "Demo2026!");
+                        toast.success("กรอกข้อมูลบัญชีทดสอบ Sandbox Demo เรียบร้อย!");
+                      }}
+                      className="w-full mt-3 py-2.5 px-3 rounded-xl border border-dashed border-blue-200 hover:border-blue-400 bg-blue-50/50 hover:bg-blue-50 text-blue-700 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    >
+                      <span>🧪</span>
+                      <span>คลิกเพื่อกรอกบัญชีทดสอบ Sandbox Demo (demo@vccasset.com)</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Social Login Options - Hidden in Forgot View */}
