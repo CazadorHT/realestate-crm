@@ -20,6 +20,7 @@ import {
 
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import { BarChart3 } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FunnelChartProps {
   data: FunnelData[];
@@ -42,6 +43,8 @@ const stepTranslation: Record<string, string> = {
 
 export function FunnelChart({ data }: FunnelChartProps) {
   const [mounted, setMounted] = React.useState(false);
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   React.useEffect(() => {
     setMounted(true);
@@ -51,11 +54,16 @@ export function FunnelChart({ data }: FunnelChartProps) {
     return (
       <DashboardEmptyState
         icon={BarChart3}
-        title="ยังไม่มีกิจกรรมในระบบ"
-        description="ไม่พบข้อมูลลีดหรือความคืบหน้าในช่วงเวลานี้ ข้อมูลจะแสดงเมื่อมีการเพิ่มลีดหรือเปลี่ยนสถานะงาน"
+        title={isEn ? "No Funnel Activity" : "ยังไม่มีกิจกรรมในระบบ"}
+        description={isEn ? "No lead progression stages recorded for this period." : "ไม่พบข้อมูลลีดหรือความคืบหน้าในช่วงเวลานี้ ข้อมูลจะแสดงเมื่อมีการเพิ่มลีดหรือเปลี่ยนสถานะงาน"}
       />
     );
   }
+
+  const getStepLabel = (step: string) => {
+    if (isEn) return step;
+    return stepTranslation[step] || step;
+  };
 
   return (
     <div className="h-[350px] w-full flex gap-4 relative">
@@ -72,7 +80,7 @@ export function FunnelChart({ data }: FunnelChartProps) {
                 dataKey="step"
                 type="category"
                 width={85}
-                tickFormatter={(value) => stepTranslation[value] || value}
+                tickFormatter={(value) => getStepLabel(value)}
                 tick={{ fontSize: 11, fill: "#64748b", fontWeight: 500 }}
                 axisLine={false}
                 tickLine={false}
@@ -87,8 +95,8 @@ export function FunnelChart({ data }: FunnelChartProps) {
                   padding: "12px",
                 }}
                 formatter={(value: any, name: any, props: any) => [
-                  <span key="count" className="font-black text-indigo-600">{value} รายการ</span>,
-                  <span key="label" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{stepTranslation[props.payload.step] || props.payload.step}</span>,
+                  <span key="count" className="font-black text-indigo-600">{value} {isEn ? "leads" : "รายการ"}</span>,
+                  <span key="label" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{getStepLabel(props.payload.step)}</span>,
                 ]}
               />
               <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={35}>
@@ -116,7 +124,7 @@ export function FunnelChart({ data }: FunnelChartProps) {
               {data[0].count}
             </span>
             <span className="opacity-70 text-[9px] mt-1 font-medium text-right leading-tight">
-              ★ ลีดใหม่
+              ★ {isEn ? "New Leads" : "ลีดใหม่"}
             </span>
           </div>
         </div>
@@ -140,13 +148,13 @@ export function FunnelChart({ data }: FunnelChartProps) {
                         {dropRate === 0 ? "0%" : `-${dropRate}%`}
                       </span>
                       <span className="opacity-70 text-[9px] mt-1 font-medium truncate max-w-full text-right leading-tight">
-                        ↓ {stepTranslation[step.step] || step.step}
+                        ↓ {getStepLabel(step.step)}
                       </span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="left" className="bg-rose-900 text-white border-rose-800">
-                    <p className="font-bold text-rose-100">อัตราการหลุดออก (Drop-off)</p>
-                    <p className="text-[10px] opacity-80">มีลูกค้า {drop} ราย ไม่ได้ไปต่อในขั้นตอนนี้</p>
+                    <p className="font-bold text-rose-100">{isEn ? "Drop-off Rate" : "อัตราการหลุดออก (Drop-off)"}</p>
+                    <p className="text-[10px] opacity-80">{isEn ? `${drop} leads did not advance past this stage` : `มีลูกค้า ${drop} ราย ไม่ได้ไปต่อในขั้นตอนนี้`}</p>
                   </TooltipContent>
                 </ShcnTooltip>
               </TooltipProvider>

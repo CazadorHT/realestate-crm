@@ -21,6 +21,7 @@ import type { RevenueChartData } from "@/features/dashboard/queries";
 
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import { Wallet } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface RevenueChartProps {
   data: RevenueChartData[];
@@ -28,6 +29,8 @@ interface RevenueChartProps {
 
 export function RevenueChart({ data }: RevenueChartProps) {
   const [mounted, setMounted] = useState(false);
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   useEffect(() => {
     setMounted(true);
@@ -37,8 +40,8 @@ export function RevenueChart({ data }: RevenueChartProps) {
     return (
       <DashboardEmptyState
         icon={Wallet}
-        title="ยังไม่มีข้อมูลรายได้"
-        description="ไม่พบข้อมูลยอดขายหรือเช่าที่ปิดงานได้ในช่วงเวลานี้ ข้อมูลจะแสดงเมื่อมีการบันทึกดีลสำเร็จ"
+        title={isEn ? "No Revenue Data" : "ยังไม่มีข้อมูลรายได้"}
+        description={isEn ? "No closed deals recorded for this period." : "ไม่พบข้อมูลยอดขายหรือเช่าที่ปิดงานได้ในช่วงเวลานี้ ข้อมูลจะแสดงเมื่อมีการบันทึกดีลสำเร็จ"}
       />
     );
   }
@@ -97,17 +100,15 @@ export function RevenueChart({ data }: RevenueChartProps) {
                       ฿{value.toLocaleString()}
                     </span>,
                     <span key="label" className="text-slate-500">
-                      รายได้
+                      {isEn ? "Revenue" : "รายได้"}
                     </span>,
                   ]}
                 />
                 <Bar
                   dataKey="total"
                   fill="url(#revenueBarGradient)"
-                  radius={[6, 6, 0, 0]}
-                  barSize={data.length > 15 ? 12 : data.length > 7 ? 20 : 35}
-                  animationDuration={1000}
-                  animationEasing="ease-out"
+                  radius={[8, 8, 0, 0]}
+                  maxBarSize={48}
                 />
               </BarChart>
             </ResponsiveContainer>

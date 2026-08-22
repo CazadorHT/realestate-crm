@@ -9,6 +9,13 @@ interface PipelineSummaryProps {
   data: PipelineData[];
 }
 
+const STAGE_LABELS: Record<string, { en: string; th: string }> = {
+  ACTIVE: { en: "Active Listings", th: "ประกาศขาย" },
+  UNDER_OFFER: { en: "Under Negotiation", th: "กำลังเจรจา" },
+  RESERVED: { en: "Reserved / Deposit", th: "ติดจอง" },
+  SOLD: { en: "Closed & Won", th: "ปิดการขาย" },
+};
+
 export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
@@ -36,12 +43,16 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
             ? stage.color
             : `bg-${stage.color}`;
 
+          const displayLabel = isEn
+            ? STAGE_LABELS[stage.stage]?.en || stage.label
+            : STAGE_LABELS[stage.stage]?.th || stage.label;
+
           return (
             <div key={stage.stage} className="space-y-2.5 group cursor-default">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">
-                    {stage.label}
+                    {displayLabel}
                   </span>
                   <span className="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100 shadow-xs">
                     {percentage}%

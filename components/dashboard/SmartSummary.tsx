@@ -15,9 +15,12 @@ interface SmartSummaryProps {
 type InsightScope = "company" | "branch" | "team" | "personal";
 
 import { useSearchParams } from "next/navigation";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function SmartSummary({ initialStats, role, userId, multiTenantEnabled = true }: SmartSummaryProps) {
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
   
   // --- Sync from URL ---
@@ -35,16 +38,20 @@ export function SmartSummary({ initialStats, role, userId, multiTenantEnabled = 
     setStats(initialStats);
 
     // Update Label based on context
-    if (view === "company") setIdentityName("ภาพรวมบริษัท");
-    else if (view === "branch") setIdentityName(branchId && branchId !== "all" ? "สาขาที่เลือก" : "ทุกสาขา");
-    else if (view === "team") setIdentityName(teamId && teamId !== "all" ? "ทีมที่เลือก" : "ทุกทีม");
-    else setIdentityName("ผลงานส่วนตัว");
+    if (view === "company") setIdentityName(isEn ? "Company Overview" : "ภาพรวมบริษัท");
+    else if (view === "branch") setIdentityName(branchId && branchId !== "all" ? (isEn ? "Selected Branch" : "สาขาที่เลือก") : (isEn ? "All Branches" : "ทุกสาขา"));
+    else if (view === "team") setIdentityName(teamId && teamId !== "all" ? (isEn ? "Selected Team" : "ทีมที่เลือก") : (isEn ? "All Teams" : "ทุกทีม"));
+    else setIdentityName(isEn ? "Personal Performance" : "ผลงานส่วนตัว");
 
-  }, [initialStats, view, branchId, teamId]);
+  }, [initialStats, view, branchId, teamId, isEn]);
 
   const getInsightText = () => {
-    if (loading) return "กำลังวิเคราะห์ข้อมูลเชิงลึก...";
-    if (!stats) return "ไม่พบข้อมูลสำหรับช่วงเวลานี้";
+    if (loading) return isEn ? "Analyzing AI insights..." : "กำลังวิเคราะห์ข้อมูลเชิงลึก...";
+    if (!stats) return isEn ? "No performance data found for this period" : "ไม่พบข้อมูลสำหรับช่วงเวลานี้";
+
+    if (isEn) {
+      return `This month for ${identityName}, total revenue is ฿${stats.revenueThisMonth.toLocaleString()}, generated from ${stats.leadsThisMonth} new prospective leads with ${stats.dealsWon} successfully closed deals.`;
+    }
 
     return `เดือนนี้ในส่วนของ ${identityName} มีรายได้รวม ${stats.revenueThisMonth.toLocaleString()} บาท มีลีดใหม่ ${stats.leadsThisMonth} คน และปิดการขายไปแล้ว ${stats.dealsWon} ดีล`;
   };
