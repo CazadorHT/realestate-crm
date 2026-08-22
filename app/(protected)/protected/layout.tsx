@@ -77,8 +77,9 @@ export default async function ProtectedLayout({
               </div>
               <div className="flex flex-1 items-center justify-end gap-1 sm:gap-3 shrink-0">
                 <GlobalSearch />
-                <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+                <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
                   <TenantSwitcher />
+                  <LanguageSwitcher />
                   <NotificationBell />
                 </div>
                 <div className="h-6 w-px bg-slate-200 mx-0.5 hidden md:block shrink-0" />

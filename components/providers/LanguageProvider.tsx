@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import th from "@/i18n/locales/th.json";
 import en from "@/i18n/locales/en.json";
 import cn from "@/i18n/locales/cn.json";
@@ -35,14 +35,18 @@ export function LanguageProvider({
   initialLanguage?: Language;
 }) {
   const router = useRouter();
+  const pathname = usePathname() || "";
+  const isCrm = pathname.startsWith("/protected") || pathname.startsWith("/auth");
+  const storageKey = isCrm ? "crm-language" : "public-language";
+
   const [language, setLanguageState] = useState<Language>(initialLanguage);
   const [mounted, setMounted] = useState(false);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     try {
-      localStorage.setItem("app-language", lang);
-      document.cookie = `app-language=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+      localStorage.setItem(storageKey, lang);
+      document.cookie = `${storageKey}=${lang}; path=/; max-age=31536000; SameSite=Lax`;
     } catch {
       // Ignore in private mode
     }
@@ -51,7 +55,7 @@ export function LanguageProvider({
     router.refresh();
   };
 
-  // Mount recovery: check localStorage/cookie once on initial mount
+  // Sync language state when switching between CRM and Public routes
   useEffect(() => {
     setMounted(true);
 
@@ -64,26 +68,34 @@ export function LanguageProvider({
     };
 
     try {
-      const savedLang = (localStorage.getItem("app-language") || getCookie("app-language")) as Language;
-      if (savedLang && ["th", "en", "cn", "ru"].includes(savedLang)) {
-        if (savedLang !== language) {
-          setLanguageState(savedLang);
+      if (isCrm) {
+        // CRM Workspace Language (Independent from Public)
+        const savedCrmLang = (localStorage.getItem("crm-language") || getCookie("crm-language")) as Language;
+        if (savedCrmLang && ["th", "en", "cn", "ru"].includes(savedCrmLang)) {
+          setLanguageState(savedCrmLang);
+          return;
         }
-        return;
-      }
+      } else {
+        // Public Portal Language
+        const savedPublicLang = (localStorage.getItem("public-language") || getCookie("public-language") || localStorage.getItem("app-language") || getCookie("app-language")) as Language;
+        if (savedPublicLang && ["th", "en", "cn", "ru"].includes(savedPublicLang)) {
+          setLanguageState(savedPublicLang);
+          return;
+        }
 
-      // Auto-detect browser language only if NO user preference has ever been set
-      const browserLang = navigator.language?.split("-")[0];
-      const supportedLangs: Language[] = ["th", "en", "cn", "ru"];
-      if (supportedLangs.includes(browserLang as Language)) {
-        setLanguageState(browserLang as Language);
-        localStorage.setItem("app-language", browserLang);
-        document.cookie = `app-language=${browserLang}; path=/; max-age=31536000; SameSite=Lax`;
+        // Auto-detect browser language for public portal if no preference is saved
+        const browserLang = navigator.language?.split("-")[0];
+        const supportedLangs: Language[] = ["th", "en", "cn", "ru"];
+        if (supportedLangs.includes(browserLang as Language)) {
+          setLanguageState(browserLang as Language);
+          localStorage.setItem("public-language", browserLang);
+          document.cookie = `public-language=${browserLang}; path=/; max-age=31536000; SameSite=Lax`;
+        }
       }
     } catch {
       // Fallback
     }
-  }, []);
+  }, [pathname, isCrm]);
 
 
   // Synchronize browser document.title in real-time when language changes
