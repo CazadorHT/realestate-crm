@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -107,19 +108,20 @@ export function CoBrokerDetailDrawer({
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("co-broker-documents")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: "31536000",
+          upsert: true,
+        });
 
       if (uploadError) throw uploadError;
 
       // Sync metadata to DB
-      const { data: publicUrl } = supabase.storage
-        .from("co-broker-documents")
-        .getPublicUrl(filePath);
+      const cdnUrl = getPublicImageUrl(filePath, "co-broker-documents");
 
       const dbRes = await addCoBrokerDocumentAction({
         co_broker_id: broker.id,
         file_name: file.name,
-        file_url: publicUrl.publicUrl,
+        file_url: cdnUrl,
         file_type: file.type,
         file_size: file.size,
       });

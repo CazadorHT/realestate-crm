@@ -637,13 +637,11 @@ export async function uploadServiceImageAction(formData: FormData) {
 
     if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = ctx.supabase.storage
-      .from("service-images")
-      .getPublicUrl(filePath);
+    const cdnUrl = getPublicImageUrl(filePath, "service-images");
 
     return { 
       success: true, 
-      data: { publicUrl },
+      data: { publicUrl: cdnUrl },
       message: "อัปโหลดรูปภาพสำเร็จ ✨" 
     };
   } catch (err: unknown) {

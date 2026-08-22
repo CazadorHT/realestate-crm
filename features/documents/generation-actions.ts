@@ -838,7 +838,7 @@ export async function generateDocumentFromTemplateAction(
       .from("documents")
       .upload(storagePath, uint8Array, {
         contentType: "text/html",
-        cacheControl: "3600",
+        cacheControl: "31536000",
         upsert: false,
       });
 
@@ -1233,7 +1233,7 @@ export async function generateDocxDocumentFromTemplateAction(
       .upload(finalStoragePath, buf, {
         contentType:
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        cacheControl: "3600",
+        cacheControl: "31536000",
         upsert: false,
       });
 
@@ -1395,6 +1395,7 @@ export async function uploadDocumentToStorageAction(
       .from("documents")
       .upload(filePath, buffer, {
         contentType: file.type,
+        cacheControl: "31536000",
         upsert: true,
       });
 

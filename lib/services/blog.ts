@@ -69,7 +69,7 @@ async function mapCmsRowsToBlogPosts(
       excerpt_cn: metaObj.excerpt_cn || null,
       excerpt_ru: metaObj.excerpt_ru || null,
       category: metaObj.category || null,
-      cover_image: row.cover_image ? getPublicImageUrl(row.cover_image) : null,
+      cover_image: row.cover_image ? getPublicImageUrl(row.cover_image, "blog-images") : null,
       is_published: row.status === "PUBLISHED",
       published_at: row.published_at || null,
       tags: Array.isArray(metaObj.tags) ? metaObj.tags : [], // เช็กให้มั่นใจว่าเป็น Array

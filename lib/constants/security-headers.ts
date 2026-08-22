@@ -47,6 +47,8 @@ export const CSP_DIRECTIVES = {
   "connect-src": [
     "'self'",
     "https://*.supabase.co",
+    "https://cdn.vccasset.com",
+    "https://*.vccasset.com",
     "https://*.google-analytics.com",
     "https://analytics.google.com",
     "https://stats.g.doubleclick.net",

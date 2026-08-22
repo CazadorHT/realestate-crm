@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import sharp from "sharp";
 
 export type StorageResponse = {
@@ -66,14 +67,12 @@ export async function uploadBlogImage(
       return { success: false, message: "Failed to upload image" };
     }
 
-    const { data: publicUrlData } = supabase.storage
-      .from("blog-images")
-      .getPublicUrl(path);
+    const cdnUrl = getPublicImageUrl(path, "blog-images");
 
     return {
       success: true,
       message: "Image optimized and uploaded successfully",
-      data: { publicUrl: publicUrlData.publicUrl },
+      data: { publicUrl: cdnUrl },
     };
   } catch (error: any) {
     console.error("Image processing error:", error);

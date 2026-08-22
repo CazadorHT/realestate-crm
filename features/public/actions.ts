@@ -108,7 +108,7 @@ export async function uploadDepositPreviewAction(formData: FormData) {
       .from("property-images")
       .upload(fileName, compressedBuffer, {
         contentType: "image/webp",
-        cacheControl: "36000",
+        cacheControl: "31536000",
         upsert: true,
       });
 

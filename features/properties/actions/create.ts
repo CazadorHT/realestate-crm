@@ -720,14 +720,10 @@ export async function duplicatePropertyAction(
             .copy(img.storage_path, newPath);
 
           if (!copyErr) {
-            const { data: publicUrlData } = supabase.storage
-              .from(PROPERTY_IMAGES_BUCKET)
-              .getPublicUrl(newPath);
-
             newMedia.push({
               property_id: newPropertyId,
               storage_path: newPath,
-              url: publicUrlData.publicUrl,
+              url: getPublicImageUrl(newPath, PROPERTY_IMAGES_BUCKET),
               is_cover: img.is_cover,
               sort_order: img.sort_order,
               media_type: img.media_type,

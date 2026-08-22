@@ -48,8 +48,18 @@ export function getPublicImageUrl(
 
   // 2. Clean up storagePath (remove leading/trailing slashes, strip duplicate bucket name, and encode special chars)
   let cleanPath = storagePath?.trim().replace(/^\/+|\/+$/g, "") || "";
-  if (cleanPath.startsWith(`${bucket}/`)) {
-    cleanPath = cleanPath.replace(new RegExp(`^${bucket}/`), "");
+  let activeBucket = bucket;
+
+  if (cleanPath.startsWith("blog/")) {
+    activeBucket = "blog-images";
+  } else if (cleanPath.startsWith("services/") || cleanPath.startsWith("service/")) {
+    activeBucket = "service-images";
+  } else if (cleanPath.startsWith("avatars/") || cleanPath.startsWith("avatar/")) {
+    activeBucket = "avatars";
+  }
+
+  if (cleanPath.startsWith(`${activeBucket}/`)) {
+    cleanPath = cleanPath.replace(new RegExp(`^${activeBucket}/`), "");
   }
 
   if (!cleanPath) return "";
@@ -66,7 +76,7 @@ export function getPublicImageUrl(
   }
 
   // Return public object URL routed via Cloudflare Worker CDN domain
-  return `${originUrl}/storage/v1/object/public/${bucket}/${encodedPath}`;
+  return `${originUrl}/storage/v1/object/public/${activeBucket}/${encodedPath}`;
 }
 
 /**

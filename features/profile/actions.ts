@@ -344,7 +344,7 @@ export async function uploadSignatureAction(
     .from("user-assets")
     .upload(filePath, file, {
       contentType: file.type,
-      cacheControl: "3600",
+      cacheControl: "31536000",
       upsert: true,
     });
 
@@ -352,10 +352,8 @@ export async function uploadSignatureAction(
     throw new Error(`อัปโหลดลายเซ็นไม่สำเร็จ: ${uploadError.message}`);
   }
 
-  // 4. สร้าง public URL
-  const {
-    data: { publicUrl },
-  } = ctx.supabase.storage.from("user-assets").getPublicUrl(filePath);
+  // 4. สร้าง public URL ผ่าน CDN
+  const publicUrl = getPublicImageUrl(filePath, "user-assets");
 
   // 5. อัปเดต signature_url ในตาราง profiles
   const { error: updateError } = await ctx.supabase

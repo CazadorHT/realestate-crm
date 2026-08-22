@@ -186,7 +186,10 @@ export function DocumentUpload({
           // 1. Upload to Storage
           const { error: uploadError } = await supabase.storage
             .from("documents")
-            .upload(fileName, fileToUpload);
+            .upload(fileName, fileToUpload, {
+              cacheControl: "31536000",
+              upsert: true,
+            });
 
           if (uploadError) throw new Error(uploadError.message);
 

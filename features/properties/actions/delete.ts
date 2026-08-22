@@ -121,14 +121,21 @@ export async function deletePropertyAction(formData: FormData) {
         .filter((path): path is string => !!path);
 
       if (pathsToRemove.length > 0) {
-        const { inngest } = await import("@/lib/inngest/client");
-        await inngest.send({
-          name: "storage.cleanup.requested",
-          data: {
-            bucket: PROPERTY_IMAGES_BUCKET,
-            paths: pathsToRemove
-          }
-        }).catch(e => console.warn("Inngest storage cleanup skip:", e.message));
+        try {
+          const { inngest } = await import("@/lib/inngest/client");
+          await inngest.send({
+            name: "storage.cleanup.requested",
+            data: {
+              bucket: PROPERTY_IMAGES_BUCKET,
+              paths: pathsToRemove
+            }
+          });
+        } catch (e: any) {
+          console.warn("[Storage Cleanup] Inngest skipped, performing direct cleanup:", e?.message);
+          await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(pathsToRemove).catch((err) =>
+            console.error("[Storage Cleanup] Direct storage remove error:", err)
+          );
+        }
       }
     }
 

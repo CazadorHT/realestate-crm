@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { 
   Dialog, 
   DialogContent, 
@@ -92,15 +93,16 @@ export function PayoutCompletionDialog({
 
       const { data, error } = await supabase.storage
         .from("payout-slips")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: "31536000",
+          upsert: true,
+        });
 
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("payout-slips")
-        .getPublicUrl(filePath);
+      const cdnUrl = getPublicImageUrl(filePath, "payout-slips");
 
-      setSlipUrl(publicUrl);
+      setSlipUrl(cdnUrl);
       toast.success("อัปโหลดสลิปเรียบร้อยแล้ว");
     } catch (error: any) {
       toast.error(error.message || "เกิดข้อผิดพลาดในการอัปโหลด");

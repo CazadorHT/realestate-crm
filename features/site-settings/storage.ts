@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 export type StorageResponse = {
   success: boolean;
@@ -80,13 +81,11 @@ export async function uploadSiteAsset(
     return { success: false, message: "อัปโหลดรูปภาพไม่สำเร็จ" };
   }
 
-  const { data: publicUrlData } = supabase.storage
-    .from("property-images")
-    .getPublicUrl(path);
+  const cdnUrl = getPublicImageUrl(path, "property-images");
 
   return {
     success: true,
     message: "อัปโหลดเรียบร้อยแล้ว",
-    data: { publicUrl: publicUrlData.publicUrl },
+    data: { publicUrl: cdnUrl },
   };
 }
