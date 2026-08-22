@@ -22,18 +22,28 @@
 ## 2. ขุมทรัพย์ Environment Variables (ประตูห้องนิรภัย)
 
 ระบบมีการใช้ 3rd-Party ทรงพลังหลายตัว โปรดรักษารหัส Environment ให้ดี:
-- `UPSTASH_REDIS_REST_URL`: กุญแจควบคุม Rate Limit และ Webhook Idempotency (ถ้าหลุด แฮกเกอร์จะยิงแชทป่วนระบบได้)
-- `INNGEST_EVENT_KEY`: ช่องทางยิงคิว Background (ถ้าหลุด แฮกเกอร์จะยิงคำสั่งให้ AI แต่งโพสต์เล่นจนค่าไฟ Google เกลี้ยงข้ามคืน)
-- `CRON_SECRET`: กุญแจยืนยันตัวเองสำหรับตั้งเวลาเช็คสัญญาเช่าตี 3 ห้ามลบออกเด็ดขาด
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`: ควบคุม Rate Limit (IP throttling) ของแบบฟอร์ม Public และ Webhook Idempotency
+- `INNGEST_EVENT_KEY`: ช่องทางส่ง Event ประมวลผลเบื้องหลัง (AI Generation, Social Posting)
+- `CRON_SECRET`: รหัสสำหรับตารางตั้งเวลารัน Background Jobs
+- `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`: กุญแจเชื่อมต่อ Supabase Storage Buckets (`property-images`, `social-cards`)
 
 ---
 
-## 3. ขั้นตอนการตั้งศูนย์ (On-boarding Local Development)
+## 3. กฎระเบียบ Middleware & Image Proxy Bypass (`lib/supabase/middleware.ts`)
+
+- **Image Proxy Route (`/api/proxy`)**: ถูกยกเว้นจากการกรอง Session และ Rate Limit ของ Middleware เพื่อให้ TikTok Catalog API และ Meta Crawler ดึงไฟล์ภาพไปใช้งานได้โดยไม่ถูกบล็อก
+- **HTTP Header Control**: มีการบังคับใส่ `Cache-Control: public, max-age=31536000, immutable` ร่วมกับ `ETag` และ `Last-Modified` เพื่อลด Egress Bandwidth และความซ้ำซ้อนของการประมวลผลภาพ
+
+---
+
+## 4. ขั้นตอนการตั้งศูนย์ (On-boarding Local Development)
 
 **การรัน Dev Mode จะไม่สมบูรณ์หากคุณไม่ได้จำลองฐานข้อมูล:**
 1. ติดตั้ง Supabase CLI ในเครื่อง
-2. รันคำสั่ง `supabase start` เพื่อจำลอง Database + Trigger + RPC ลงใน Local Docker ก้อนกลมๆ ของคุณ
-3. เวลาคุณเขียน Unit Test ด้วย `vitest` หน้าบ้าน ให้ยิงพุ่งเป้าไปที่ Local DB ของตัวเอง เพื่อให้ RLS ทำงานสมบูรณ์
-4. ระบบได้ฝัง **Warning Flag** ไว้ใน Console โหมด Dev หากคุณทำผิดวิธี หน้าจอคอมมานด์จะสาดไฟแดงเตือนคุณเสมอ
+2. รันคำสั่ง `supabase start` เพื่อจำลอง Database + Trigger + RPC ลงใน Local Docker
+3. เวลาคุณเขียน Unit Test ด้วย `vitest` หน้าบ้าน ให้ยิงพุ่งเป้าไปที่ Local DB เพื่อให้ RLS ทำงานสมบูรณ์
+4. ระบบฝัง Warning Flag ไว้ใน Console โหมด Dev หากมีการเรียกใช้คำสั่งคิวรีตรงโดยไม่ผ่าน ES6 Proxy
 
-_จงเคารพสถาปัตยกรรม (Respect the Architecture) แล้วระบบตัวนี้จะทำเงินให้บริษัทคุณได้แบบแทบไม่ต้องออกแรงแก้บั๊กครับ_
+---
+
+_โปรดอ้างอิงและปฏิบัติตามมาตรฐานสถาปัตยกรรมเพื่อความปลอดภัยและเสถียรภาพสูงสุดของระบบ_

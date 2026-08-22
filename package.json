@@ -1,6 +1,12 @@
 {
+  "name": "realestate-crm",
+  "version": "4.0.0",
+  "description": "Enterprise Real Estate CRM (Diamond Edition)",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
@@ -51,8 +57,8 @@
     "@radix-ui/react-visually-hidden": "^1.2.4",
     "@react-pdf/renderer": "^4.5.1",
     "@sentry/nextjs": "^10.50.0",
-    "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "latest",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.105.1",
     "@tiptap/extension-character-count": "^3.22.5",
     "@tiptap/extension-color": "^3.22.5",
     "@tiptap/extension-image": "^3.22.5",

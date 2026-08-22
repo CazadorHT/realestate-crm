@@ -17,8 +17,11 @@ This is not just a CRM; it's an AI-driven platform for real estate giants. Built
 - **🤖 Agentic AI Search (10/10)**: Industry-leading search engine using Hybrid Scoring (70% Semantic + 30% Hard-Filter) with AI reasoning.
 - **🛡️ Diamond-Grade Hardening**: 100% RLS Isolation, **Internal Schema Isolation** for sensitive RPCs, and zero-trust Search Path configuration.
 - **⚡ Atomic Operations**: Mission-critical logic (Deals, Finance, Stock) moved to PostgreSQL RPC for 100% transactional integrity.
-- **💬 Omni-channel Social Studio**: Centralized, zero-latency inbox for LINE, Meta (FB/IG/WA), and TikTok.
+- **💬 Omni-channel Social Studio**: Interactive asset generator with live platform previews (LINE, Meta, TikTok), custom branding, canvas ratio controls, and direct asset syndication.
+- **⚡ TikTok Ingestion & Image Proxy Pipeline**: Direct conversion to JPEG, direct Supabase CDN ingestion, ETag/HEAD header handling, and immutable CDN caching.
+- **🛡️ Public Lead Security Isolation**: Multi-layered bot and spam protection (Honeypot, XSS sanitization via DOMPurify, Upstash IP rate limiting, and hash-based submission idempotency).
 - **📊 Process Monitor**: Centralized, audit-ready background task management with persistent database logging.
+- **📍 Popular Area Engine**: Dynamic regional hotspot management integrated into `MagicAiSearch` for real-time location discovery.
 - **🎨 Premium UI/UX**: State-of-the-art interface built with Next.js 16.2, React 19, and Tailwind 4.
 
 ## 🚀 Key Features
@@ -27,10 +30,17 @@ This is not just a CRM; it's an AI-driven platform for real estate giants. Built
 - **Agentic Listing**: Comprehensive details with **Property Audit Timeline** (Visual Diffing & Recovery).
 - **AI Content Studio**: Professional descriptions and SEO-optimized blogs in 3 languages (TH, EN, CN).
 - **AVM & Market Intel**: AI-powered valuation (Max Profit/Market/Quick Sale) with PDF report generation.
+- **Popular Area Engine**: Configurable regional hotspots integrated dynamically with natural language search.
 
-### 👥 CRM & Lead Intelligence
+### 🎨 Social Studio & Omni-channel Marketing
+- **Interactive Card Studio**: Real-time live previews for LINE, Facebook, Instagram, and TikTok formats.
+- **High-Reliability Asset Pipeline**: Proxy image delivery with 1-year immutable CDN headers, bypassing rate limit throttles for high-throughput image conversion.
+- **One-Click Syndication**: Post to Facebook, Instagram, and TikTok simultaneously with automated Comment-to-DM flows.
+
+### 👥 CRM & Lead Intelligence (Security-Hardened)
 - **Agentic Discovery**: Find the perfect property for any lead using natural language.
 - **Smart Match 2.0**: Automated property-to-lead matching with behavioral compatibility scores.
+- **Hardened Public Deposit**: Public seller/renter lead submission protected by Honeypot traps, DOMPurify XSS cleaning, IP rate limits, and drag-and-drop property image uploads.
 - **Lead Pipeline**: Kanban-style tracking with **Activity Summaries** powered by AI.
 
 ### 💼 Finance & Document Mastery
@@ -67,16 +77,12 @@ This is not just a CRM; it's an AI-driven platform for real estate giants. Built
 
 | Document                                                            | Description                                     |
 | :------------------------------------------------------------------ | :---------------------------------------------- |
-| [Business Strategy](./docs_enterprise_v2/01_Business_Strategy_Valuation.md) | **FMV: 35,000,000+ THB** (Enterprise v4.0)      |
+| [Business Strategy](./docs_enterprise_v2/01_Business_Strategy_Valuation.md) | **FMV: 38.3M - 53.2M THB** (Enterprise v4.0)   |
+| [Recent Updates](./docs_enterprise_v2/21_Recent_System_Updates.md) | **Social Studio, TikTok CDN, Public Security, Popular Areas** |
 | [Forensic Audit](./docs_enterprise_v2/19_System_Hardening_Forensic_Audit.md)| **Diamond-Grade Security Certification**      |
 | [Technical Manual](./docs_enterprise_v2/02_Technical_Manual.md)     | Architecture, RPC, and Agentic Setup            |
 | [Security Guide](./docs_enterprise_v2/07_Cron_Security_Setup.md)     | Hardening protocols & RLS Audit                 |
 | [Project Summary](./docs_enterprise_v2/สรุปโปรเจค_Enterprise.md)       | Comprehensive project assessment v4.0           |
-
----
-
-_Built for the future of Real Estate._
-
 
 ---
 

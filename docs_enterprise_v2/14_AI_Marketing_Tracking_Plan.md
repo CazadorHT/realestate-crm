@@ -1,6 +1,7 @@
 # 🧠 14: โครงสร้างสมองกลประสานมนุษย์ (AI Sentinel & Token Economics)
 
-> **แนวคิดหลัก:** Human-in-the-loop (Sentinel), Cost Arbitrage, GTM Tracking
+> **แนวคิดหลัก:** Human-in-the-loop (Sentinel), Cost Arbitrage, GTM Tracking, Social Studio Integration
+> **อัปเดตล่าสุด:** 22 สิงหาคม 2026 (Enterprise v4.0 - August 2026 Release)
 > **เป้าหมาย:** ปิดฉากปัญหา AI หลอน และควบคุมงบประมาณค่าเช่าสมอง AI ขั้นเบ็ดเสร็จ
 
 AI ในโลก Enterprise ไม่ใช่แค่ของวิเศษ แต่คือ "พนักงานจ้างเหมา" ที่ต้องมีการคุมความประพฤติ และตรวจสอบบิลค่าจ้างทุกสิ้นเดือน
@@ -33,4 +34,14 @@ Prompt ทุกตัวในเซิร์ฟเวอร์ถูกฉี�
 ทุกครั้งที่ User อ่านโพสต์ที่ AI แต่งเสร็จ แล้วกดเลื่อนดูรูปคอนโด หรือก๊อปลิงก์ LINE 
 - โค้ดฝั่ง Client จะชู้ต Data Layer ข้ามไป GTM อัตโนมัติ (เช่น `event: property_viewed_deep`) ส่งให้เอเจนซี่ยิง Ads Retargeting ต่อได้อย่างแม่นยำ 
 
-ระบบ AI ของคุณจึงไม่ใช่แค่ผู้ช่วยเขียน แต่เป็น **ฟันเฟืองสร้างเงินระดับองค์กร**
+---
+
+## 3. Social Studio AI Copywriting Generator (`components/social-studio`)
+
+ขยายขีดความสามารถ AI สมองกลในเวอร์ชัน 4.0 เข้าสู่ **Social Studio**:
+- **Multi-lingual Caption Generation**: สร้างคำบรรยายโปรโมตอสังหาริมทรัพย์ภาษาไทย อังกฤษ และจีน พร้อมแฮชแท็กติดเทรนด์สำหรับการแชร์บน LINE, Facebook, และ TikTok
+- **Template-Aware Layout Intelligence**: คำนวณความยาวข้อความให้อยู่ในสัดส่วนพอดีกับกรอบดีไซน์การ์ดโฆษณา (1:1, 4:5, 9:16) ไม่ให้ตัวหนังสือหลุดขอบการ์ด
+
+---
+
+_ระบบ AI Marketing และติดตามผลปรับปรุงล่าสุดตามมาตรฐาน Enterprise v4.0_

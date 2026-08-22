@@ -1,6 +1,7 @@
 # 🔐 11: ตำราคุมขัง API โซเชียล (Meta & TikTok Token Security Guide)
 
-> **เทคโนโลยีหลัก:** HMAC Webhook Authentication, Automatic Token Rotation
+> **เทคโนโลยีหลัก:** HMAC Webhook Authentication, Automatic Token Rotation, Supabase CDN Proxy
+> **อัปเดตล่าสุด:** 22 สิงหาคม 2026 (Enterprise v4.0 - August 2026 Release)
 > **เป้าหมาย:** สัญญาณเตือนภัยและวิธีรับมือ เมื่อบริษัทยักษ์ใหญ่ปรับเปลี่ยนกติกา
 
 การผูกชีวิตไว้กับ Facebook (Meta) และ TikTok API คือเรื่องน่าปวดหัวของทีม Developer เพราะ Token จะมีวันหมดอายุ หรือโดนระงับกะทันหันถ้าระบบเขาตรวจพบพฤติกรรมแปลกๆ
@@ -24,9 +25,21 @@
 
 ### 2.1 The Blame Shield (เกราะปัดความผิด)
 ระบบมีหน้าต่าง **Social Status Monitor** ที่ยิง Ping หาเซิร์ฟเวอร์ปลายทาง (เช่น Graph API หรือ TikTok API) 
-- ถ้า Facebook ล่ม หน้าเว็บจะขึ้นไฟ đỏพร้อมคำอธิบายว่า "Meta API กำลังประสบปัญหา" 
+- ถ้า Facebook ล่ม หน้าเว็บจะขึ้นไฟแดงพร้อมคำอธิบายว่า "Meta API กำลังประสบปัญหา" 
 - ถ้าโพสต์พังเพราะรหัสหมดอายุ จะขึ้นว่า "โปรดเชื่อมต่อเฟซบุ๊กใหม่"
 - ปิดจบปัญหากินแรงทีม Support ที่ต้องมานั่งรับสายลูกค้าองค์กร
 
 ### 2.2 วงแหวนแยกส่วน (Fallback Queue)
 การกดแชร์โพสต์จะถูกบรรจุในคิว หากโซเชียลล่ม โค้ด Inngest จะกักตุนโพสต์นั้นไว้และหน่วงเวลาการยิงซ้ำ (Exponential Backoff) เช่น รอ 1 นาที -> 5 นาที -> 30 นาที จนกว่าพายุจะสงบ ช่วยการันตีว่าโพสต์สิบหลังจะไม่หล่นร่วงไปแห่งหนใด
+
+---
+
+## 3. สถาปัตยกรรมส่งภาพความเสถียรสูง (TikTok & Meta CDN Asset Delivery)
+
+แก้ปัญหาการปฏิเสธการดึงรูปภาพของ TikTok Catalog และ Meta Catalog API (`features/properties/actions/tiktok.ts` & `/api/proxy`):
+- **Direct Supabase CDN Ingestion**: รูปภาพจะถูกบีบอัดเป็น JPEG และส่งขึ้น Supabase Storage Bucket `social-cards` โดยตรง เพื่อให้ได้ Public Static URL ที่ถาวร ไม่โดนล็อกสิทธิ์
+- **Image Proxy Hardening**: เส้นทาง `/api/proxy` ถูกปรับแต่ง HTTP Cache Headers (`Cache-Control: public, max-age=31536000, immutable`, `ETag`, `HEAD` request support) เพื่อให้ระบบของ Meta และ TikTok ดึงรูปภาพได้อย่างราบรื่น 100% โดยไม่ติดขัด
+
+---
+
+_เอกสารความปลอดภัย API โซเชียลปรับปรุงล่าสุดตามมาตรฐาน Enterprise v4.0_

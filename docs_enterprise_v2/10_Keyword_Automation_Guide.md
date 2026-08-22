@@ -1,6 +1,7 @@
 # 🤖 10: สถาปัตยกรรมแชทไร้รอยต่อ (Omnichannel Inbox & Keyword Automation)
 
-> **เทคโนโลยีหลัก:** Supabase Realtime, Intersection Observer (Infinite Scroll), Upstash Redis
+> **เทคโนโลยีหลัก:** Supabase Realtime, Intersection Observer (Infinite Scroll), Upstash Redis, Social Studio Generator
+> **อัปเดตล่าสุด:** 22 สิงหาคม 2026 (Enterprise v4.0 - August 2026 Release)
 > **เป้าหมาย:** สานต่อแชทจากทุกโซเชียลให้อยู่ในหน้าเดียวแบบ Zero-Latency
 
 นี่ไม่ใช่แค่ระบบตอบข้อความธรรมดา แต่คือหน้าต่างรบ (Command Center) สำหรับเซลล์อสังหาฯ ที่ออกแบบมาเพื่อขจัดปัญหาแชทเด้งช้าหรือโหลดไม่ขึ้นเมื่อข้อความสะสมเกินหมื่นบรรทัด
@@ -30,3 +31,15 @@
 - หลังจากข้อความถูกตอบไปแล้ว ระบบถึงจะค่อยนำประวัติมาดรอปลงตาราง `messages` เบื้องหลังแบบหลวมๆ (Asynchronous drop) ทำให้ UX ฝั่งลูกค้าที่พิมพ์หาเรา เร็วทะลุนรก!
 
 การทำ Auto-reply จึงกลายเป็นเกราะป้องกันไม่ให้โหลดบ้าคลั่งเข้ามาถึงฐานข้อมูลหน้าบ้านนั่นเอง!
+
+---
+
+## 3. การส่งสื่อการตลาดด้วย Social Studio (`components/social-studio`)
+
+เชื่อมต่อระบบแชท Omni-channel เข้ากับ **Social Studio**:
+- **Instant Card Attachment**: เซลล์สามารถสร้างการ์ดโฆษณาตามสเกล (1:1, 4:5, 9:16) ของแพลตฟอร์มปลายทาง (LINE / Facebook / TikTok) และแนบส่งทางแชทได้ในคลิกเดียว
+- **Automated Media Syndication**: ทำงานร่วมกับ Keyword Automation ในการแนบลิงก์รูปภาพสื่อการตลาดที่สร้างจาก Social Studio ส่งตอบกลับ Comment-to-DM โดยอัตโนมัติ
+
+---
+
+_เอกสารสถาปัตยกรรมแชทและออโตเมชันปรับปรุงล่าสุดตามมาตรฐาน Enterprise v4.0_

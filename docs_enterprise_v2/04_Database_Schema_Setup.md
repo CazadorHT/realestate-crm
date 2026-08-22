@@ -50,4 +50,19 @@ CREATE POLICY "Strict Tenant Isolation" ON deals
 **เราแก้ไขด้วย GIN (Generalized Inverted Index):**
 ฐานข้อมูลเปิดใช้ extension นามแฝง **Trigram Matching** (`pg_trgm`) ซึ่งจำแนกชุดข้อมูลตัวหนังสือออกเป็น 3 อักขระ ทำให้ระบบสามารถดึงบ้านที่สะกดคำ "ใกล้เคียง" ออกมาได้ในระดับ มิลลิวินาที (ms) แม้จะสะกดผิดเบาๆ 
 
-**นี่คือ Database ที่ผ่านการดัดแปลงและรีดประสิทธิภาพ (Hardened Tuning) ถึงขีดสุด**
+---
+
+## 4. โครงสร้างตารางและนโยบายจัดเก็บข้อมูลล่าสุด (v4.0 Schema & Storage Extensions)
+
+### 4.1 ตารางระบบย่อยใหม่ (New Enterprise Tables)
+- **`popular_areas`**: จัดเก็บทำเลทองยอดนิยม (ชื่อทำเล, พิกัด Lat/Lng, คำค้นหาอ้างอิง, ลำดับการแสดงผล, และสถานะการใช้งาน) เชื่อมโยงเข้ากับระบบ `MagicAiSearch`
+- **`system_configs`**: จัดเก็บการตั้งค่าระบบส่วนกลางและ Metadata ในรูปแบบ JSONB พร้อมระบบ Caching ในหน่วยความจำฝั่ง Node.js
+
+### 4.2 นโยบายการจัดเก็บรูปภาพ (Supabase Storage Buckets & Policies)
+- **`property-images`**: จัดเก็บภาพถ่ายอสังหาฯ และรูปภาพที่ผู้ฝากขายอัปโหลดผ่านแบบฟอร์มฝากขาย Public
+- **`social-cards`**: จัดเก็บภาพการ์ดโฆษณาที่ส่งออกผ่าน **Social Studio** สำหรับส่งต่อให้ TikTok Catalog & Meta API
+- **Public Read Access**: สิทธิ์การอ่านไฟล์ถูกกำหนดเป็น Public Read เพื่อรองรับ CDN HTTP Header Caching (`max-age=31536000`) โดยยังจำกัดสิทธิ์การ Write/Delete เฉพาะ Authenticated Users เท่านั้น
+
+---
+
+_เอกสารสถาปัตยกรรมฐานข้อมูลปรับปรุงล่าสุดตามมาตรฐาน Enterprise v4.0_

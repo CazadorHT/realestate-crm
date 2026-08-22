@@ -11,9 +11,9 @@
 
 | เฟสเอกสาร (Phase) | รายการเอกสาร | หัวใจสำคัญ (Core Concept) |
 | --- | --- | --- |
-| **Strategy Master** | [0. บทสรุปผู้บริหาร (Ultimate Business Summary)](./00_Ultimate_Business_Summary_Valuation.md) | **คัมภีร์ปิดการขาย 35-45 ล้านบาท (ครบทุกมิติ)** |
-| **Foundation** | [1. สรุปโปรเจคภาพรวม (Executive Summary)](./สรุปโปรเจค_Enterprise.md) | จุดเด่นด้าน Enterprise และภาพรวมระบบ v3.0 |
-| | [2. กลยุทธ์ประเมินมูลค่า (Valuation & Strategy)](./01_Business_Strategy_Valuation.md) | มูลค่า 35M+ ผ่าน Agentic AI และ Hardened Security |
+| **Strategy Master** | [0. บทสรุปผู้บริหาร (Ultimate Business Summary)](./00_Ultimate_Business_Summary_Valuation.md) | **คัมภีร์ปิดการขาย 38.3 - 53.2 ล้านบาท (ครบทุกมิติ)** |
+| **Foundation** | [1. สรุปโปรเจคภาพรวม (Executive Summary)](./สรุปโปรเจค_Enterprise.md) | จุดเด่นด้าน Enterprise และภาพรวมระบบ v4.0 |
+| | [2. กลยุทธ์ประเมินมูลค่า (Valuation & Strategy)](./01_Business_Strategy_Valuation.md) | มูลค่า 38.3M - 53.2M THB ผ่าน Agentic AI และ Hardened Security |
 | | [3. คู่มือเทคนิคัล (Technical Manual)](./02_Technical_Manual.md) | Next.js 16.2, Turbopack และ Agentic Search Engine |
 | **Security & DB** | [4. ระบบความปลอดภัย (Security & Maintenance)](./03_Security_Maintenance.md) | Hardened RLS, Database Proxy และ Audit Sentinel |
 | | [5. โครงสร้างฐานข้อมูล (Database Schema)](./04_Database_Schema_Setup.md) | PostgreSQL RPC, Atomic Transactions และ Full-text AI Search |
@@ -27,17 +27,18 @@
 | | [13. แผนการตลาด AI (AI Tracking Plan)](./14_AI_Marketing_Tracking_Plan.md) | Agentic Search Scoring และ ROI Analysis ของ AI Tokens |
 | **Financials & Contracts** | [14. สัญญาอัจฉริยะ (Smart Contracts)](./15_Smart_Contracts_Architecture.md) | ระบบสร้างสัญญาจาก Template และการจัดการ Versioning |
 | | [15. เครื่องยนต์การเงินขั้นสูง (Commission Engine)](./16_Advanced_Financials_Engine.md) | Advanced Commission Split (Listing/Closing/Agency) และ WHT 3% |
-| **Handover** | [16. เล่มขายงานผู้บริหาร (Pitch Deck Outline)](./13_Pitch_Deck_Outline.md) | วางโครงสร้างพรีเซนต์เพื่อปิดดีล 35-40 ล้านบาท (เน้น AI & Security) |
+| **Handover** | [16. เล่มขายงานผู้บริหาร (Pitch Deck Outline)](./13_Pitch_Deck_Outline.md) | วางโครงสร้างพรีเซนต์เพื่อปิดดีล 38.3 - 53.2 ล้านบาท (เน้น AI & Security) |
 | | [17. คู่มือส่งมอบโปรเจค (Technical Handover)](./06_Technical_Handover_Guide.md) | ระบบสืบทอดรหัสผ่านและโครงสร้าง Cloud Infrastructure |
 | | [18. คู่มือผู้ใช้งานแอดมิน (User Manual)](./08_User_Manual.md) | คู่มือการใช้งาน Agentic Search และ Dashboard อัจฉริยะ |
 | | [19. รายงานการตรวจสอบคุณภาพ (Hardening & Forensic Audit)](./19_System_Hardening_Forensic_Audit.md) | บันทึกการปฏิรูปความปลอดภัยและเสถียรภาพระดับ Diamond 💎 |
 | | [20. สถาปัตยกรรม Dynamic RPC (Elite Architecture)](./20_Atomic_RPC_Elite_Architecture.md) | ระบบจัดการข้อมูลระดับสูงที่ปลอดภัยและรองรับอนาคต 100% |
+| **Recent Updates** | [21. บันทึกอัปเดตฟีเจอร์ล่าสุด (Recent System Updates)](./21_Recent_System_Updates.md) | **Social Studio, TikTok Image Proxy, Public Security & Popular Area Engine** |
 
 ---
 
-## 🚀 วิวัฒนาการสู่ Agentic Era (What's New in v3.0)
+## 🚀 วิวัฒนาการสู่ Agentic Era (What's New in v4.0 & Latest Release)
 
-โปรเจคได้ก้าวข้ามจากระบบจัดการ (Management) สู่การเป็น **"ระบบอัจฉริยะที่ตัดสินใจได้ (Agentic System)"** ผ่านเสาหลัก 6 ประการ:
+โปรเจคได้ก้าวข้ามจากระบบจัดการ (Management) สู่การเป็น **"ระบบอัจฉริยะที่ตัดสินใจได้ (Agentic System)"** ผ่านเสาหลัก 8 ประการ:
 
 1. **Agentic AI Search (The Intelligence Leap):** 
    ระบบค้นหาที่ไม่เพียงแค่หาคำที่ตรง แต่ "เข้าใจความต้องการ" ผ่าน Hybrid Scoring (Semantic + Filtering) และสามารถอธิบายเหตุผล (Reasoning) ในการเลือกห้องให้เซลล์ฟังได้
@@ -47,10 +48,14 @@
    ย้ายลอจิกการเงินที่ซับซ้อนเข้าสู่ PostgreSQL RPC 100% เพื่อความแม่นยำสูงสุด ป้องกันปัญหาเงินหายหรือคอมมิชชันทับซ้อน (Race Condition)
 4. **Process Monitor & Background Resilience:**
    ระบบเฝ้าติดตามงานหลังบ้าน (AI, Social Posting) ที่ทนทานต่อความล้มเหลว สามารถ Resume งานที่ค้างอยู่ได้อัตโนมัติผ่าน Inngest
-5. **Zero-Latency Omni-channel Hub:**
-   Inbox กลางที่เชื่อมต่อทุก Social Media (LINE, FB, IG, WA, TikTok) ด้วยสถาปัตยกรรมที่รองรับการเลื่อนอ่านข้อมูลไม่จำกัด (Infinite Scroll) โดยไม่มีการหน่วง
+5. **Zero-Latency Omni-channel Hub & Social Studio:**
+   Inbox กลางที่เชื่อมต่อทุก Social Media (LINE, FB, IG, WA, TikTok) พร้อมระบบ **Social Studio** สร้างการ์ดพรีวิวสื่อโซเชียลมีเดียแบบพิกเซลต่อพิกเซล
 6. **Property Audit Timeline (Visual Time-Travel):**
    การบันทึกประวัติการเปลี่ยนแปลงทรัพย์สินแบบละเอียด (Field-level) ทำให้สามารถเปรียบเทียบข้อมูลเก่า-ใหม่ (Visual Diff) และกู้คืนข้อมูลได้ทันที
+7. **TikTok Ingestion & Image Proxy CDN Pipeline:**
+   ระบบแปลงภาพ JPEG และอัปโหลดตรงสู่ Supabase CDN พร้อม HTTP Header Caching (max-age 1 ปี, ETag) เพื่อความมั่นใจ 100% ในการแสดงผลบน TikTok & Meta Catalog
+8. **Public Lead Submission Security Isolation:**
+   ระบบดักจับสแปมฝากขาย/ฝากเช่าหลายชั้น (Honeypot, XSS DOMPurify, Upstash Rate Limiting, Submission Hash Idempotency)
 
 ---
 

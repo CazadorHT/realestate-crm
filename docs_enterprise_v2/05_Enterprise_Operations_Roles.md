@@ -1,6 +1,7 @@
-# 🏢 05: ปฏิบัติการระดับองค์กรและโครงสร้างสิทธิ์ (V3 Enterprise Roles & Permissions Matrix)
+# 🏢 05: ปฏิบัติการระดับองค์กรและโครงสร้างสิทธิ์ (Enterprise v4.0 Roles & Permissions Matrix)
 
 > **โครงสร้างสถาปัตยกรรม:** Multi-Tenant Architecture, Row-Level Security (RLS), Role-Based Access Control (RBAC)
+> **อัปเดตล่าสุด:** 22 สิงหาคม 2026 (Enterprise v4.0 - August 2026 Release)
 > **เป้าหมาย:** สานต่อรูปแบบบริษัทอสังหาริมทรัพย์ที่มีหลายสาขา (Multi-Branch) โดยควบคุมการแยกแยะข้อมูล (Branch Isolation) การป้องกันข้อมูลรั่วไหล (Data Leakage Prevention) และความยืดหยุ่นในการทำ Co-Broke ข้ามสาขาได้อย่างปลอดภัยและโปร่งใส
 
 ---
@@ -10,22 +11,26 @@
 ระบบใช้งานสถาปัตยกรรม **Tenant-first** ผ่านฐานข้อมูล PostgreSQL ที่ถูกติดตั้ง Row-Level Security (RLS) อย่างรัดกุม โดยทุกข้อมูลสำคัญจะมีฟิลด์ `tenant_id` สำหรับระบุความเป็นเจ้าของสาขา
 
 * **Intra-Branch Isolation:** ผู้ใช้ในสาขา A จะเข้าถึง ค้นหา หรือจัดการข้อมูลผู้ป่วย, ลีด, ทรัพย์ และดีลของสาขา A เท่านั้น หากพยายามยิง API หรือระบุ URL ข้ามไปยังสาขา B ระบบ RLS จะทำการกรองคิวรีออกทันที เสมือนไม่มีข้อมูลนั้นอยู่จริง (404 Not Found)
-* **Performance Hardening:** RLS ในเวอร์ชัน V3 ถูกออกแบบให้เรียกใช้ฟังก์ชันแบบ `STABLE` เช่น `public.is_tenant_member(tenant_id)` หรือ `public.is_system_admin()` ตรงๆ โดยไม่มีการคลุมด้วย Subquery Subplans ย่อย ช่วยให้ PostgreSQL Optimizer สามารถใช้ดัชนี (Indexes) ค้นหาได้อย่างรวดเร็วและใช้ CPU ทรัพยากรอย่างคุ้มค่าสูงสุด
+* **Performance Hardening:** RLS ในเวอร์ชัน 4.0 ถูกออกแบบให้เรียกใช้ฟังก์ชันแบบ `STABLE` เช่น `public.is_tenant_member(tenant_id)` หรือ `public.is_system_admin()` ตรงๆ โดยไม่มีการคลุมด้วย Subquery Subplans ย่อย ช่วยให้ PostgreSQL Optimizer สามารถใช้ดัชนี (Indexes) ค้นหาได้อย่างรวดเร็วและใช้ CPU ทรัพยากรอย่างคุ้มค่าสูงสุด
 
 ---
 
-## 2. ตารางสรุปสิทธิ์การเข้าใช้งาน (V3 Permission Matrix Table)
+## 2. ตารางสรุปสิทธิ์การเข้าใช้งาน (Enterprise v4.0 Permission Matrix Table)
 
 | ขอบเขตงาน / ฟังก์ชัน | ADMIN (SuperAdmin) | OWNER (Tenant Owner) | MANAGER (Tenant Manager) | AGENT (Tenant Agent) | USER (Public Client) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **สลับดูข้อมูลทุกสาขา (Global Switcher)** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **ตั้งค่าระบบส่วนกลาง (Global Settings)** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **ตั้งค่าพื้นที่ยอดนิยม (Popular Areas Config)** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **อนุมัติเปิดสาขาใหม่ (Approve Tenant)** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **จัดการทีมงานและตำแหน่งในสาขา** | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **ดูรายงานการเงินรวมของสาขา** | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **สร้างการ์ดโฆษณา (Social Studio Asset Generator)** | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **ตรวจสอบและอนุมัติ Public Deposit Leads** | ✅ | ✅ | ✅ | ❌ | ❌ |
 | **โอนย้ายทรัพย์/ลีดข้ามสาขาทันที (Instant Transfer)**| ✅ | ✅ | ✅ | ❌ | ❌ |
 | **ส่งคำขอโอนย้ายข้ามสาขา (Referral Request)** | - | - | - | ✅ | ❌ |
 | **จัดการทรัพย์/ลีด/ดีล ภายในสาขา** | ✅ | ✅ | ✅ | ✅ *(เฉพาะที่ได้รับมอบหมาย)*| ❌ |
+| **ยื่นฟอร์มฝากขาย/ฝากเช่า (Public Lead Deposit)** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **ดูข้อมูลหน้าบ้านสาธารณะ (Public Search)** | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---

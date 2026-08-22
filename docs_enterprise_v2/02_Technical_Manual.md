@@ -58,4 +58,34 @@
 
 ---
 
-_เอกสารฉบับนี้เป็นเพียงภาพรวมระดับสูง หากต้องการดูโค้ดตัวอย่างในแต่ละส่วน โปรดอ้างอิงจากบทที่ 4-6 ในสารบัญหลัก_
+## 6. 🎨 Social Studio & Live Asset Generator Engine
+
+สถาปัตยกรรมฝั่ง **Social Media Asset Generation** (`components/social-studio`):
+- **Dynamic Platform UI Overlays**: รองรับการพรีวิวเสมือนจริงบนหน้าจอโซเชียลมีเดียแต่ละค่าย (LINE, Facebook, Instagram, TikTok) แบบพิกเซลต่อพิกเซล
+- **Canvas Aspect Ratio Engine**: สลับอัตราส่วนรูปภาพ (1:1 Square, 4:5 Vertical, 9:16 Story/Reels) พร้อมระบบปรับแต่ง Branding, ราคา, จุดเด่น (Selling Points) แบบเรียลไทม์
+- **High-Resolution Export**: แปลง DOM Component เป็นไฟล์รูปภาพและส่งออกแบบไร้รอยต่อสำหรับเอเจนต์อสังหาฯ นำไปใช้ทำการตลาด
+
+---
+
+## 7. ⚡ TikTok Ingestion & High-Reliability Image Proxy Pipeline
+
+กลไกการส่งต่อรูปภาพทรัพย์สินไปยังโซเชียลมีเดีย API (โดยเฉพาะ TikTok Catalog & Meta API):
+- **Direct Supabase CDN Ingestion**: แปลงรูปภาพต้นฉบับให้เป็น JPEG พร้อมอัปโหลดขึ้น Supabase Public CDN โดยตรง ป้องกันปัญหาแพลตฟอร์มภายนอกโหลดภาพไม่สำเร็จจาก URL ชั่วคราว
+- **High-Throughput Image Proxy (`/api/proxy`)**:
+  - กำหนดแคชระดับ HTTP Proxy: `Cache-Control: public, max-age=31536000, immutable`
+  - รองรับ `ETag`, `Last-Modified` และ `HEAD` Request เพื่อลดภาระ Data Transfer (Egress)
+  - ข้ามผ่าน Middleware Security & Rate Limits เฉพาะส่วนภาพ CDN เพื่อรองรับการดึงภาพพร้อมกันจำนวนมากจาก TikTok/Meta Crawler
+
+---
+
+## 8. 🛡️ Public Lead Submission Security Isolation
+
+ระบบรับข้อมูลฝากขาย/ฝากเช่าจากประชาชนทั่วไป (`features/public/actions.ts`):
+- **Honeypot Trap**: ฝัง Field ซ่อนเพื่อดักจับ Bot อัตโนมัติโดยไม่กระทบ User จริง
+- **XSS Payload Sanitization**: กรองและทำความสะอาด Input ข้อความทั้งหมดด้วย `isomorphic-dompurify`
+- **Distributed IP Rate Limiting**: ควบคุมความถี่การส่งฟอร์มต่อ IP ผ่าน Upstash Redis Rate Limiter
+- **Submission Idempotency**: สร้าง Unique Request Hash จากข้อมูลการฝากขาย ป้องกันการกดส่งฟอร์มซ้ำ (Double Submission / Form Spamming)
+
+---
+
+_เอกสารฉบับนี้เป็นเพียงภาพรวมระดับสูง หากต้องการดูโค้ดตัวอย่างในแต่ละส่วน โปรดอ้างอิงจากบทที่ 4-6 ในสารบัญหลัก และ [21_Recent_System_Updates.md](./21_Recent_System_Updates.md)_

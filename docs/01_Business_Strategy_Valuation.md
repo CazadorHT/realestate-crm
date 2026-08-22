@@ -2,7 +2,7 @@
 
 เอกสารรวบรวมข้อมูลด้านการตลาด การประเมินราคาขาย และกลยุทธ์การสร้างรายได้จากโปรเจค VC Connect Asset CRM (Enterprise v4.0 - Diamond Edition)
 
-> **อัปเดตล่าสุด:** 29 เมษายน 2026 (Enterprise v4.0 - Diamond Hardened)
+> **อัปเดตล่าสุด:** 22 สิงหาคม 2026 (Enterprise v4.0 - Diamond Hardened & Social Studio Era)
 
 ---
 
@@ -15,24 +15,20 @@
 | **1. Agentic Search Engine** (Hybrid 70/30 Scoring, AI Reasoning)             | 5,500,000 - 8,000,000 | ✅ เสร็จสมบูรณ์ (S-Tier)   |
 | **2. Professional CRM Backend** (Hardened RLS, Internal Schema)                | 3,500,000 - 4,500,000 | ✅ เสร็จสมบูรณ์ (Diamond)  |
 | **3. AI-First Ecosystem** (Gemini 1.5, Sentinel AI, AVM, Content)               | 4,500,000 - 6,000,000 | ✅ เสร็จสมบูรณ์ (Verified) |
-| **4. Omni-channel Social Studio** (Zero-latency Inbox, Meta, TikTok)           | 3,000,000 - 4,500,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
+| **4. Omni-channel & Social Studio** (Live Platform Cards, Meta, TikTok, LINE) | 4,000,000 - 5,500,000 | ✅ เสร็จสมบูรณ์ (v4.0 🎨)  |
 | **5. Multi-Tenant Branch Ops** (Atomic RPC, Proxy-based Safety)                | 3,500,000 - 5,000,000 | ✅ เสร็จสมบูรณ์ (Audited)  |
 | **6. Diamond Security Hardening** (Linter Certified, Schema Isolation)         | 3,000,000 - 4,000,000 | ✅ เสร็จสมบูรณ์ (NEW 💎)   |
 | **7. AVM & Market Intel** (Market Drop Alerts, PDF Reporting)                  | 2,200,000 - 3,200,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
 | **8. Advanced Financials & Split** (Transactional Outbox, WHT 3%)              | 2,500,000 - 3,500,000 | ✅ เสร็จสมบูรณ์ (Verified) |
 | **9. Smart Contract Engine** (Dynamic .docx to PDF, Versioning)                | 1,500,000 - 2,000,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
 | **10. GTM & Conversion Analytics** (Predictive Lead Scoring, Funnel)           | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ (Verified) |
+| **11. TikTok Ingestion & Image Proxy CDN** (Immutable Headers, ETag, HEAD)     | 2,000,000 - 3,000,000 | ✅ เสร็จสมบูรณ์ (v4.0 ⚡)  |
+| **12. Public Lead Security Isolation** (Honeypot, XSS DOMPurify, Upstash Rate) | 2,500,000 - 3,500,000 | ✅ เสร็จสมบูรณ์ (v4.0 🛡️) |
+| **13. Popular Area Management Engine** (Hotspot Config, Dynamic AI Search)    | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ (v4.0 📍)  |
 
-## รวมมูลค่าโปรเจค (Fair Market Value): **31,000,000 – 43,200,000 บาท**
+## รวมมูลค่าโปรเจค (Fair Market Value): **38,300,000 – 53,200,000 บาท**
 
-*(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่เหนือกว่าคู่แข่งด้วยระบบ Agentic AI และความปลอดภัยระดับสูงสุด - **ราคายังไม่รวมภาษีมูลค่าเพิ่ม 7%**)*
-. Advanced Financials & Split** (Comm Engine, WHT 3%, Net Amount)           | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ (Verified) |
-| **9. Smart Contract Engine** (Dynamic .docx to PDF, Version Control)           | 1,500,000 - 2,000,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
-| **10. GTM & Conversion Analytics** (Image Engagement, Funnel tracking)         | 1,500,000 - 2,200,000 | ✅ เสร็จสมบูรณ์ (Verified) |
-
-## รวมมูลค่าโปรเจค (Fair Market Value): **19,800,000 – 29,900,000 บาท**
-
-_(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่ผ่านการ Hardened ความปลอดภัยและทดสอบความเสถียร (Unit Testing) 100% - **ราคายังไม่รวมภาษีมูลค่าเพิ่ม 7%**)_
+*(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่ผ่านการ Hardened ความปลอดภัย และฟีเจอร์ Social Studio / CDN Proxy ล่าสุด - **ราคายังไม่รวมภาษีมูลค่าเพิ่ม 7%**)*
 
 ---
 

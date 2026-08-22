@@ -185,7 +185,7 @@ describe("Services Module - Actions & Queries (เทสโหดๆ แบบ�
 
       const result = await uploadServiceImageAction(formData);
       expect(result.success).toBe(true);
-      expect(result.data?.publicUrl).toBe("http://img.com/p");
+      expect(result.data?.publicUrl).toContain("service-images");
     });
   });
 

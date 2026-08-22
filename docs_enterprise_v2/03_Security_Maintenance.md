@@ -1,6 +1,7 @@
 # 🛡️ 03: สถาปัตยกรรมความปลอดภัย (Enterprise Security & Maintenance)
 
-> **กลไกความปลอดภัยหลัก:** Diamond Hardening (Linter Certified), Internal Schema, HMAC SHA-256, Upstash Redis
+> **กลไกความปลอดภัยหลัก:** Diamond Hardening (Linter Certified), Internal Schema, HMAC SHA-256, Upstash Redis, Honeypot & DOMPurify XSS Protection
+> **อัปเดตล่าสุด:** 22 สิงหาคม 2026 (Enterprise v4.0 - August 2026 Release)
 > **เป้าหมาย:** สกัดกั้นการโจมตีระดับสูง ป้องกันข้อมูลรั่วไหลระหว่างสาขา และสร้างระบบที่น่าเชื่อถือระดับสถาบันการเงิน
 
 ในระบบ CRM เวอร์ชัน 4.0 เราก้าวข้ามจากการป้องกันทั่วไปสู่การทำ **Diamond-Grade Hardening** ที่ผ่านการ Audit ทุกจุดในฐานข้อมูล เพื่อให้มั่นใจว่าข้อมูลของลูกค้าจะปลอดภัยที่สุดในตลาด PropTech
@@ -15,6 +16,7 @@
 เพื่อป้องกันไม่ให้แบน User จริงที่เพียงแค่เน็ตกระตุก ระบบจึงใช้กลไกการนับแบบ Token Bucket Algorithm โดยแบ่งเป็น:
 - **Public Endpoints (เช่น ค้นหาบ้าน):** 100 requests / 10 วินาที / IP
 - **Auth Endpoints (เช่น Login):** 5 requests / นาที ป้องกันการทำ Brute-force สุ่มรหัสผ่านพนักงาน
+- **Public Deposit Form:** ควบคุมการส่งฟอร์มรับฝากขายต่อ IP ป้องกันการส่งสแปมข้อมูล
 - **Heavy Data APIs:** การสั่งดึงสถิติใหญ่ที่มีผลต่อ CPU จะดรอป Limit ลงเหลือ 10 Req/min
 หากระบบพบว่า IP ใดล้ำเส้น ตัว Middleware ที่ฝังอยู่ที่ขอบข่ายขอบเซิร์ฟเวอร์ (Vercel Edge Network) จะตอกกลับด้วยรหัส **429 Too Many Requests** อัตโนมัติ โดยไม่ต้องรบกวน CPU ของเรา 
 
@@ -54,5 +56,23 @@
 - **Zero Public Vulnerabilities**: ไม่มีการเปิดเผยฟังก์ชันสำคัญใน Schema สาธารณะ (Public Schema)
 - **Hardened RLS Policies**: ทุกตารางในฐานข้อมูล (รวมถึงตารางระบบและ Storage) ถูกล็อคด้วยนโยบาย Row-Level Security ที่รัดกุมที่สุด
 - **Immutable Search Path**: กำจัดจุดอ่อนของการ Hijack ฟังก์ชันผ่านการล็อคเส้นทางการค้นหา (Search Path) ในทุกจุดที่มีการใช้สิทธิ์ SECURITY DEFINER
+
+---
+
+## 5. 🛡️ Public Lead Security Isolation (`features/public/actions.ts`)
+
+การรับข้อมูลฟอร์มฝากขาย/ฝากเช่าจากหน้าเว็บสาธารณะ มีมาตรการความปลอดภัยหลากชั้น:
+- **Honeypot Trap**: ฝัง Hidden Inputs เพื่อดักจับ Automated Scraping Bots
+- **DOMPurify XSS Sanitization**: ทำความสะอาดข้อความ Input ด้วย `isomorphic-dompurify` ก่อนบันทึกลงฐานข้อมูล ป้องกัน Cross-Site Scripting (XSS)
+- **Lead Idempotency Hashing**: คำนวณ SHA-256 Hash จาก payload การฝากขาย ป้องกันการกดส่งฟอร์มซ้ำจากหน้าบ้าน
+
+---
+
+## 6. ⚡ Middleware Route Isolation & Image Proxy Security (`lib/supabase/middleware.ts`)
+
+- **Proxy Route Exemption (`/api/proxy`)**: ยกเว้นการเช็ค Session สำหรับเส้นทางดึงภาพ CDN เพื่อเปิดทางให้ TikTok / Meta Catalog API เข้าถึงภาพได้โดยตรง
+- **Header Hardening**: บังคับใช้ `Cache-Control: public, max-age=31536000, immutable` และสนับสนุน `ETag`, `Last-Modified`, `HEAD` Request เพื่อป้องกันการสุ่มดึงข้อมูลและลด Egress Overhead
+
+---
 
 _บันทึกสำหรับดูแลระบบ: ห้ามตั้งค่า Redis Token หรือ Secret Keys เหล่านี้ลงไปในไฟล์โค้ดเด็ดขาด ต้องฝังผ่าน Environment Variables ในเซิร์ฟเวอร์ Hosting เสมอ_
