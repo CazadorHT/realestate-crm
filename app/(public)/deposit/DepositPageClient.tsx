@@ -317,7 +317,7 @@ export default function DepositPageClient() {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-50 relative overflow-hidden pt-16 pb-20">
+    <main className="min-h-screen bg-slate-50 relative overflow-x-clip pt-16 pb-20">
       {/* Background Decorations */}
       <div className="absolute top-0 left-0 w-full h-[500px] bg-linear-to-b from-blue-50 via-indigo-50/30 to-slate-50 -z-10" />
       <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-blue-100/30 rounded-full blur-[100px] -z-10 translate-x-1/3" />
@@ -376,263 +376,200 @@ export default function DepositPageClient() {
             </div>
           </div>
 
-          {/* Wrapper for Section 2 & Section 3 (Centered Layout) */}
+          {/* Wrapper for Section 2: Form + Benefits + SEO Content (2-Column Sticky Layout) */}
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="space-y-16 lg:space-y-20">
-              {/* ─── Section 2: Form + Benefits Side-by-Side ─── */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-                {/* Left: Benefits + Steps (Sidebar) */}
-                <m.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className="lg:col-span-4 space-y-8 order-2 lg:order-1"
-                >
-                  {/* Benefits */}
-                  <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8 space-y-5">
-                    <h2 className="text-xl lg:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                      <Award className="h-6 w-6 text-indigo-600 shrink-0" />
-                      {copy.benefitTitle}
-                    </h2>
-                    <div className="space-y-3">
-                      {copy.benefits.map((b, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100/80 hover:bg-blue-50/50 hover:border-blue-100 transition-all duration-200"
-                        >
-                          <Shield className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-                          <span className="text-slate-700 text-sm leading-relaxed font-medium">
-                            {b}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Steps */}
-                  <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8 space-y-5">
-                    <h2 className="text-xl lg:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                      <Clock className="h-6 w-6 text-purple-600 shrink-0" />
-                      {copy.stepsTitle}
-                    </h2>
-                    <div className="space-y-1">
-                      {[
-                        { title: copy.step1Title, desc: copy.step1Desc },
-                        { title: copy.step2Title, desc: copy.step2Desc },
-                        { title: copy.step3Title, desc: copy.step3Desc },
-                      ].map((step, idx) => (
-                        <div key={idx} className="flex gap-4">
-                          <div className="flex flex-col items-center">
-                            <div className="w-9 h-9 rounded-full bg-linear-to-br from-indigo-50 to-blue-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-sm font-bold shadow-xs">
-                              {idx + 1}
-                            </div>
-                            {idx < 2 && (
-                              <div className="w-0.5 flex-1 bg-linear-to-b from-indigo-200 to-slate-200 my-1" />
-                            )}
-                          </div>
-                          <div className="pb-5 space-y-1">
-                            <h4 className="font-bold text-slate-800 text-sm lg:text-base">
-                              {step.title}
-                            </h4>
-                            <p className="text-slate-500 text-sm leading-relaxed font-light">
-                              {step.desc}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </m.div>
-
-                {/* Right: Deposit Form Card */}
-                <div className="lg:col-span-8 order-1 lg:order-2 lg:sticky lg:top-24">
-                  <m.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <Card className="relative shadow-2xl shadow-indigo-900/10 border-white/80 bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 bg-transparent backdrop-blur-xl overflow-hidden rounded-3xl p-1 md:p-2 border">
-                      <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80" />
-                      <CardContent className="p-4 sm:p-6 md:p-8">
-                        {isSuccess ? (
-                          <div className="text-center py-12 px-4 space-y-6">
-                            <div className="w-20 h-20 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner mb-4">
-                              <CheckCircle className="h-10 w-10" />
-                            </div>
-                            <div className="space-y-2">
-                              <h3 className="text-2xl font-bold text-slate-900 leading-tight">
-                                {t("deposit.success.title") || "ส่งข้อมูลสำเร็จ!"}
-                              </h3>
-                              <p className="text-slate-500 text-sm max-w-sm mx-auto">
-                                {t("deposit.success.message") || "ข้อมูลทรัพย์สินของท่านถูกบันทึกเรียบร้อยแล้ว ทีมงานจะติดต่อกลับโดยเร็วที่สุด"}
-                              </p>
-                            </div>
-                            <div className="flex justify-center gap-3 pt-4">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setIsSuccess(false)}
-                                className="border-slate-200 hover:bg-slate-50! text-blue-500! rounded-xl px-6"
-                              >
-                                {t("deposit.success.more_info_btn") || "ส่งข้อมูลเพิ่มเติม"}
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => router.push("/")}
-                                className="bg-blue-600 hover:bg-blue-700 text-white! rounded-xl px-6"
-                              >
-                                {t("breadcrumb.home") || "หน้าแรก"}
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="mb-6 space-y-2">
-                              <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-                                {t("deposit.dialog.title") || "ฝากข้อมูลทรัพย์สิน"}
-                              </h2>
-                              <p className="text-slate-500 text-xs md:text-sm font-light">
-                                {t("deposit.dialog.subtitle") ||
-                                  "บริการฝากขาย-เช่า บ้าน คอนโด และออฟฟิศ"}
-                              </p>
-                            </div>
-                            <DepositWizard
-                              onSuccessAction={() => setIsSuccess(true)}
-                              onCancelAction={() => router.push("/")}
-                              location="Landing Page"
-                            />
-                          </>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </m.div>
-                </div>
-              </div>
-
-              {/* ─── Section 3: SEO Articles ─── */}
-              {/* {copy.seoArticles && (
-                <m.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="pt-16 border-t border-slate-200/60"
-                >
-                  <div className="space-y-10">
-                    <h2 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight text-center">
-                      {copy.seoArticlesTitle}
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {copy.seoArticles.map((art, idx) => (
-                        <article
-                          key={idx}
-                          className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200/80 transition-all duration-300 group"
-                        >
-                          <h3 className="text-lg font-bold text-slate-800 mb-3 tracking-tight group-hover:text-blue-700 transition-colors">
-                            {art.title}
-                          </h3>
-                          <p className="text-slate-600 text-sm leading-relaxed font-light">
-                            {art.content}
-                        </p>
-                      </article>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+              {/* Left Column: Benefits + Steps + SEO Articles */}
+              <m.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="lg:col-span-5 space-y-8 order-2 lg:order-1"
+              >
+                {/* Benefits */}
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8 space-y-5">
+                  <h2 className="text-xl lg:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <Award className="h-6 w-6 text-indigo-600 shrink-0" />
+                    {copy.benefitTitle}
+                  </h2>
+                  <div className="space-y-3">
+                    {copy.benefits.map((b, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100/80 hover:bg-blue-50/50 hover:border-blue-100 transition-all duration-200"
+                      >
+                        <Shield className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-sm leading-relaxed font-medium">
+                          {b}
+                        </span>
+                      </div>
                     ))}
                   </div>
                 </div>
-              </m.div> */}
-              {copy.seoArticles && (
-                <m.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.4 }}
-                  className="pt-20 border-t border-slate-200/70"
-                >
-                  <div className="space-y-12 max-w-6xl mx-auto">
-                    {/* Section Header */}
-                    <div className="text-center space-y-3">
-                      <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+
+                {/* Steps */}
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8 space-y-5">
+                  <h2 className="text-xl lg:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <Clock className="h-6 w-6 text-purple-600 shrink-0" />
+                    {copy.stepsTitle}
+                  </h2>
+                  <div className="space-y-1">
+                    {[
+                      { title: copy.step1Title, desc: copy.step1Desc },
+                      { title: copy.step2Title, desc: copy.step2Desc },
+                      { title: copy.step3Title, desc: copy.step3Desc },
+                    ].map((step, idx) => (
+                      <div key={idx} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className="w-9 h-9 rounded-full bg-linear-to-br from-indigo-50 to-blue-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-sm font-bold shadow-xs">
+                            {idx + 1}
+                          </div>
+                          {idx < 2 && (
+                            <div className="w-0.5 flex-1 bg-linear-to-b from-indigo-200 to-slate-200 my-1" />
+                          )}
+                        </div>
+                        <div className="pb-5 space-y-1">
+                          <h4 className="font-bold text-slate-800 text-sm lg:text-base">
+                            {step.title}
+                          </h4>
+                          <p className="text-slate-500 text-sm leading-relaxed font-light">
+                            {step.desc}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SEO Articles & Insights */}
+                {copy.seoArticles && (
+                  <div className="pt-6 space-y-8">
+                    <div className="space-y-2 border-t border-slate-200/70 pt-8">
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                         {copy.seoArticlesTitle}
                       </h2>
-                      <div className="w-12 h-1 bg-blue-600 rounded-full mx-auto" />
+                      <div className="w-12 h-1 bg-blue-600 rounded-full" />
                     </div>
 
-                    {/* 🌟 Featured Top Article (บทความภาพรวม ย้ายมาจัดแบบจอกว้างเพื่อความสมดุล) */}
+                    {/* Featured Top Article */}
                     {copy.seoArticles[0] && (
-                      <div className="bg-linear-to-br from-indigo-950 via-slate-900 to-slate-950 rounded-3xl p-6 sm:p-10 text-white relative overflow-hidden shadow-xl border border-white/5">
-                        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-[80px] -z-0 pointer-events-none" />
-                        <div className="relative z-10 space-y-4 max-w-4xl">
+                      <div className="bg-linear-to-br from-indigo-950 via-slate-900 to-slate-950 rounded-3xl p-6 text-white relative overflow-hidden shadow-xl border border-white/5">
+                        <div className="absolute top-0 right-0 w-60 h-60 bg-blue-500/10 rounded-full blur-[60px] -z-0 pointer-events-none" />
+                        <div className="relative z-10 space-y-3">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold uppercase tracking-wider">
                             <Sparkles className="h-3.5 w-3.5 text-blue-400" />{" "}
                             Insight
                           </span>
-                          <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-snug">
+                          <h3 className="text-lg font-bold tracking-tight text-white leading-snug">
                             {copy.seoArticles[0].title}
                           </h3>
-                          <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-light">
+                          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-light">
                             {copy.seoArticles[0].content}
                           </p>
                         </div>
                       </div>
                     )}
 
-                    {/* 🌟 Dynamic Layout: Remaining 4 Articles in Grid (เรียง 2x2 สวยงามไม่มีแหว่ง) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                    {/* Remaining Articles */}
+                    <div className="space-y-6">
                       {copy.seoArticles.slice(1).map((art, idx) => {
-                        // สุ่มสร้างสไตล์ไอคอนและสีการ์ดตัดความเบื่อให้แต่ละบล็อกดูเป็นเรื่องราวที่ต่างกัน
                         const styles = [
-                          {
-                            icon: Megaphone,
-                            color: "text-blue-600",
-                            bg: "bg-blue-50",
-                          },
-                          {
-                            icon: Clock,
-                            color: "text-purple-600",
-                            bg: "bg-purple-50",
-                          },
-                          {
-                            icon: Shield,
-                            color: "text-emerald-600",
-                            bg: "bg-emerald-50",
-                          },
-                          {
-                            icon: Award,
-                            color: "text-amber-600",
-                            bg: "bg-amber-50",
-                          },
+                          { icon: Megaphone, color: "text-blue-600", bg: "bg-blue-50" },
+                          { icon: Clock, color: "text-purple-600", bg: "bg-purple-50" },
+                          { icon: Shield, color: "text-emerald-600", bg: "bg-emerald-50" },
+                          { icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
                         ][idx % 4];
 
                         return (
                           <article
                             key={idx}
-                            className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-xs hover:shadow-lg hover:border-slate-200/80 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
+                            className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xs hover:shadow-lg hover:border-slate-200/80 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
                           >
-                            <div className="space-y-4">
-                              {/* Article Header with Icon Badge */}
+                            <div className="space-y-3">
                               <div className="flex items-center gap-3">
-                                <div
-                                  className={`p-2.5 rounded-2xl ${styles.bg} ${styles.color} shrink-0`}
-                                >
+                                <div className={`p-2.5 rounded-2xl ${styles.bg} ${styles.color} shrink-0`}>
                                   <styles.icon className="h-5 w-5" />
                                 </div>
-                                <h3 className="text-base sm:text-lg font-bold text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors duration-200">
+                                <h3 className="text-base font-bold text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors duration-200">
                                   {art.title}
                                 </h3>
                               </div>
-
-                              {/* Content text */}
-                              <p className="text-slate-600 text-sm leading-relaxed font-light">
+                              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-light">
                                 {art.content}
                               </p>
                             </div>
-
-                            {/* Decorative side accent line */}
                             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-slate-100 group-hover:bg-blue-500 rounded-r-full transition-all duration-300" />
                           </article>
                         );
                       })}
                     </div>
                   </div>
+                )}
+              </m.div>
+
+              {/* Right Column: Deposit Form Card (Sticky on Desktop) */}
+              <div className="lg:col-span-7 order-1 lg:order-2 lg:sticky lg:top-24 self-start rounded-3xl">
+                <m.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Card className="relative shadow-2xl shadow-indigo-900/10 border-white/80 bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 bg-transparent backdrop-blur-xl overflow-hidden rounded-3xl p-1 md:p-2 border">
+                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80" />
+                    <CardContent className="p-4 sm:p-6 md:p-8">
+                      {isSuccess ? (
+                        <div className="text-center py-12 px-4 space-y-6">
+                          <div className="w-20 h-20 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner mb-4">
+                            <CheckCircle className="h-10 w-10" />
+                          </div>
+                          <div className="space-y-2">
+                            <h3 className="text-2xl font-bold text-slate-900 leading-tight">
+                              {t("deposit.success.title") || "ส่งข้อมูลสำเร็จ!"}
+                            </h3>
+                            <p className="text-slate-500 text-sm max-w-sm mx-auto">
+                              {t("deposit.success.message") || "ข้อมูลทรัพย์สินของท่านถูกบันทึกเรียบร้อยแล้ว ทีมงานจะติดต่อกลับโดยเร็วที่สุด"}
+                            </p>
+                          </div>
+                          <div className="flex justify-center gap-3 pt-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsSuccess(false)}
+                              className="border-slate-200 hover:bg-slate-50! text-blue-500! rounded-xl px-6"
+                            >
+                              {t("deposit.success.more_info_btn") || "ส่งข้อมูลเพิ่มเติม"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => router.push("/")}
+                              className="bg-blue-600 hover:bg-blue-700 text-white! rounded-xl px-6"
+                            >
+                              {t("breadcrumb.home") || "หน้าแรก"}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mb-6 space-y-2">
+                            <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+                              {t("deposit.dialog.title") || "ฝากข้อมูลทรัพย์สิน"}
+                            </h2>
+                            <p className="text-slate-500 text-xs md:text-sm font-light">
+                              {t("deposit.dialog.subtitle") ||
+                                "บริการฝากขาย-เช่า บ้าน คอนโด และออฟฟิศ"}
+                            </p>
+                          </div>
+                          <DepositWizard
+                            onSuccessAction={() => setIsSuccess(true)}
+                            onCancelAction={() => router.push("/")}
+                            location="Landing Page"
+                          />
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
                 </m.div>
-              )}
+              </div>
             </div>
           </div>
         </div>

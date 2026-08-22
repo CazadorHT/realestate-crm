@@ -77,6 +77,55 @@ export async function clearDuplicateSubmissionCache() {
 }
 
 // ==========================================
+// 📸 DEPOSIT PREVIEW IMAGE UPLOAD ACTION
+// ==========================================
+export async function uploadDepositPreviewAction(formData: FormData) {
+  try {
+    const file = formData.get("file") as File;
+    if (!file) return { success: false, message: "กรุณาเลือกไฟล์รูปภาพ" };
+
+    if (file.size > 10 * 1024 * 1024) {
+      return { success: false, message: "ขนาดไฟล์ต้องไม่เกิน 10MB" };
+    }
+
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic"];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      return { success: false, message: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WebP, HEIC)" };
+    }
+
+    const supabase = await createClient();
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const sharp = (await import("sharp")).default;
+    const compressedBuffer = await sharp(buffer)
+      .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    const fileName = `deposit-previews/${Date.now()}_${crypto.randomUUID()}.webp`;
+    const { error: uploadError } = await supabase.storage
+      .from("property-images")
+      .upload(fileName, compressedBuffer, {
+        contentType: "image/webp",
+        cacheControl: "36000",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("[Deposit Preview Upload Error]:", uploadError);
+      return { success: false, message: "อัปโหลดรูปภาพไม่สำเร็จ" };
+    }
+
+    const cdnUrl = `https://cdn.vccasset.com/storage/v1/object/public/property-images/${fileName}`;
+    return { success: true, url: cdnUrl };
+  } catch (err: any) {
+    console.error("[Deposit Preview Upload Exception]:", err);
+    return { success: false, message: "เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ" };
+  }
+}
+
+// ==========================================
 // 🏠 DEPOSIT LEAD ACTION
 // ==========================================
 export async function createDepositLeadAction(data: DepositLeadInput) {
@@ -140,6 +189,7 @@ Line: ${cleanLineId || "-"}
 WeChat: ${sanitizeInput(data.wechatId) || "-"}
 WhatsApp: ${sanitizeInput(data.whatsapp) || "-"}
 Type: ${data.propertyType}
+Image: ${data.propertyImage || "-"}
 Details: ${sanitizedDetails || "-"}`),
     }
   );
@@ -177,47 +227,64 @@ Details: ${sanitizedDetails || "-"}`),
     action: { type: "uri", label: "CRM", uri: `${siteConfig.url}/protected/leads/${leadId}` }
   });
 
+  const flexBubble: FlexBubble = {
+    type: "bubble",
+    header: {
+      type: "box", layout: "horizontal", backgroundColor: templateConfig.config.headerColor || "#0D47A1", paddingAll: "lg",
+      contents: [
+        { type: "text", text: "🏠 ", size: "xxl", flex: 1, align: "center", gravity: "center" },
+        { type: "text", text: templateConfig.config.headerText || "ฝากทรัพย์ใหม่ (Deposit)", weight: "bold", color: "#FFFFFF", size: "md", flex: 8, gravity: "center", wrap: true }
+      ]
+    },
+    body: {
+      type: "box", layout: "vertical", contents: [
+        { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "🏠 ประเภท", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: PROPERTY_TYPE_MAP[data.propertyType] || data.propertyType, size: "sm", color: "#111111", weight: "bold", flex: 7, wrap: true }] },
+        { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "👤 ชื่อลูกค้า", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.fullName, size: "sm", color: "#111111", flex: 7, wrap: true }] },
+        { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "📧 อีเมล", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.email || "-", size: "sm", color: "#111111", flex: 7, wrap: true }] },
+        { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "📞 เบอร์โทร", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.phone, size: "sm", color: "#111111", flex: 7, action: { type: "uri", label: "Call", uri: `tel:${cleanPhone}` } }] },
+        { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "📱 Line ID", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.lineId || "-", size: "sm", color: "#111111", flex: 7 }] },
+        { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "💬 WeChat", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.wechatId || "-", size: "sm", color: "#111111", flex: 7 }] },
+        { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "🟢 WhatsApp", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.whatsapp || "-", size: "sm", color: "#111111", flex: 7 }] },
+        { type: "separator", margin: "lg" },
+        { type: "text", text: "📝 รายละเอียด:", size: "sm", color: "#555555", margin: "lg" },
+        { type: "text", text: data.details || "-", size: "sm", color: "#111111", wrap: true, margin: "sm" }
+      ]
+    },
+    footer: { type: "box", layout: "vertical", spacing: "sm", contents: footerButtons, paddingAll: "lg" }
+  };
+
+  if (data.propertyImage) {
+    flexBubble.hero = {
+      type: "image",
+      url: data.propertyImage,
+      size: "full",
+      aspectRatio: "20:13",
+      aspectMode: "cover",
+    };
+  }
+
   await sendLineNotification({
     type: "flex",
     altText: "🏠 มีคนฝากทรัพย์ใหม่ระครับ!",
-    contents: {
-      type: "bubble",
-      header: {
-        type: "box", layout: "horizontal", backgroundColor: templateConfig.config.headerColor || "#0D47A1", paddingAll: "lg",
-        contents: [
-          { type: "text", text: "🏠 ", size: "xxl", flex: 1, align: "center", gravity: "center" },
-          { type: "text", text: templateConfig.config.headerText || "ฝากทรัพย์ใหม่ (Deposit)", weight: "bold", color: "#FFFFFF", size: "md", flex: 8, gravity: "center", wrap: true }
-        ]
-      },
-      body: {
-        type: "box", layout: "vertical", contents: [
-          { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "🏠 ประเภท", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: PROPERTY_TYPE_MAP[data.propertyType] || data.propertyType, size: "sm", color: "#111111", weight: "bold", flex: 7, wrap: true }] },
-          { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "👤 ชื่อลูกค้า", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.fullName, size: "sm", color: "#111111", flex: 7, wrap: true }] },
-          { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "📧 อีเมล", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.email || "-", size: "sm", color: "#111111", flex: 7, wrap: true }] },
-          { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "📞 เบอร์โทร", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.phone, size: "sm", color: "#111111", flex: 7, action: { type: "uri", label: "Call", uri: `tel:${cleanPhone}` } }] },
-          { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "📱 Line ID", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.lineId || "-", size: "sm", color: "#111111", flex: 7 }] },
-          { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "💬 WeChat", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.wechatId || "-", size: "sm", color: "#111111", flex: 7 }] },
-          { type: "box", layout: "horizontal", margin: "md", contents: [{ type: "text", text: "🟢 WhatsApp", size: "sm", color: "#555555", flex: 4 }, { type: "text", text: data.whatsapp || "-", size: "sm", color: "#111111", flex: 7 }] },
-          { type: "separator", margin: "lg" },
-          { type: "text", text: "📝 รายละเอียด:", size: "sm", color: "#555555", margin: "lg" },
-          { type: "text", text: data.details || "-", size: "sm", color: "#111111", wrap: true, margin: "sm" }
-        ]
-      },
-      footer: { type: "box", layout: "vertical", spacing: "sm", contents: footerButtons, paddingAll: "lg" }
-    }
+    contents: flexBubble,
   });
 
   // 🚀 Bridge to Telegram for Website Deposit
   try {
     const { sendAdminNotification } = await import("@/lib/telegram");
     const propTypeThai = PROPERTY_TYPE_MAP[data.propertyType] || data.propertyType;
-    const tgMessage = `🏠 <b>มีคนฝากทรัพย์สินใหม่ (จาก Website)</b>\n━━━━━━━━━━━━━━━━━━\n\n` +
+    let tgMessage = `🏠 <b>มีคนฝากทรัพย์สินใหม่ (จาก Website)</b>\n━━━━━━━━━━━━━━━━━━\n\n` +
       `👤 <b>ผู้ฝาก:</b> ${data.fullName}\n` +
       `📞 <b>เบอร์โทร:</b> ${data.phone}\n` +
       `📱 <b>Line ID:</b> ${data.lineId || "-"}\n` +
       `📧 <b>อีเมล:</b> ${data.email || "-"}\n` +
-      `🏠 <b>ประเภททรัพย์:</b> ${propTypeThai}\n` +
-      `📝 <b>รายละเอียด:</b> ${data.details || "-"}\n\n` +
+      `🏠 <b>ประเภททรัพย์:</b> ${propTypeThai}\n`;
+
+    if (data.propertyImage) {
+      tgMessage += `🖼️ <b>รูปตัวอย่างทรัพย์:</b> <a href="${data.propertyImage}">คลิกดูรูปภาพ</a>\n`;
+    }
+
+    tgMessage += `📝 <b>รายละเอียด:</b> ${data.details || "-"}\n\n` +
       `📂 <a href="${siteConfig.url}/protected/leads/${leadId}">คลิกจัดการข้อมูลลูกค้าใน CRM</a>`;
     await sendAdminNotification(tgMessage, { parseMode: "HTML" });
   } catch (tgErr) {

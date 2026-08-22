@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { useFormContext } from "react-hook-form";
+import { toast } from "sonner";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
+  useFormField,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,16 +24,94 @@ import {
   HomeIcon,
   Layout,
   Mail,
+  Upload,
+  X,
+  Loader2,
 } from "lucide-react";
 import { FaLine, FaWhatsapp, FaCommentDots } from "react-icons/fa";
 import { FaCircleCheck } from "react-icons/fa6";
 import { IoLogoWechat } from "react-icons/io5";
 import { m, AnimatePresence } from "framer-motion";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface FieldProps {
   isMobile: boolean;
   t: (key: string) => string;
   onFocus?: () => void;
+}
+
+function TranslatedFormMessage({ t }: { t: (key: string) => string }) {
+  const { error } = useFormField();
+  const { language } = useLanguage();
+  if (!error) return null;
+
+  const msg = String(error.message || "");
+  let displayMsg = msg;
+
+  if (msg === "required_name" || msg.includes("ชื่อ-นามสกุล") || msg.includes("full name")) {
+    displayMsg = t("deposit.validation.required_name");
+    if (!displayMsg || displayMsg === "deposit.validation.required_name") {
+      if (language === "cn") displayMsg = "请输入您的姓名";
+      else if (language === "ru") displayMsg = "Пожалуйста, введите ваше имя";
+      else if (language === "en") displayMsg = "Please enter your full name";
+      else displayMsg = "กรุณาระบุชื่อ-นามสกุล";
+    }
+  } else if (msg === "name_max") {
+    displayMsg = t("deposit.validation.name_max");
+    if (!displayMsg || displayMsg === "deposit.validation.name_max") {
+      if (language === "cn") displayMsg = "姓名不能超过 100 个字符";
+      else if (language === "ru") displayMsg = "Имя не должно превышать 100 символов";
+      else if (language === "en") displayMsg = "Full name must not exceed 100 characters";
+      else displayMsg = "ชื่อ-นามสกุลต้องไม่เกิน 100 ตัวอักษร";
+    }
+  } else if (msg === "invalid_phone" || msg.includes("เบอร์โทร") || msg.includes("phone")) {
+    displayMsg = t("deposit.validation.invalid_phone");
+    if (!displayMsg || displayMsg === "deposit.validation.invalid_phone") {
+      if (language === "cn") displayMsg = "请输入有效的电话号码";
+      else if (language === "ru") displayMsg = "Пожалуйста, введите корректный номер телефона";
+      else if (language === "en") displayMsg = "Please enter a valid mobile or landline phone number";
+      else displayMsg = "กรุณากรอกเบอร์โทรศัพท์มือถือหรือเบอร์บ้านให้ถูกต้อง";
+    }
+  } else if (msg === "invalid_email" || msg.includes("อีเมล") || msg.includes("email")) {
+    displayMsg = t("deposit.validation.invalid_email");
+    if (!displayMsg || displayMsg === "deposit.validation.invalid_email") {
+      if (language === "cn") displayMsg = "请输入有效的电子邮箱";
+      else if (language === "ru") displayMsg = "Пожалуйста, введите корректный email";
+      else if (language === "en") displayMsg = "Please enter a valid email address";
+      else displayMsg = "อีเมลไม่ถูกต้อง";
+    }
+  } else if (msg === "email_max") {
+    displayMsg = t("deposit.validation.email_max");
+    if (!displayMsg || displayMsg === "deposit.validation.email_max") {
+      if (language === "cn") displayMsg = "电子邮箱不能超过 100 个字符";
+      else if (language === "ru") displayMsg = "Email не должен превышать 100 символов";
+      else if (language === "en") displayMsg = "Email must not exceed 100 characters";
+      else displayMsg = "อีเมลต้องไม่เกิน 100 ตัวอักษร";
+    }
+  } else if (msg === "required_type" || msg.includes("ประเภททรัพย์") || msg.includes("property type")) {
+    displayMsg = t("deposit.validation.required_type");
+    if (!displayMsg || displayMsg === "deposit.validation.required_type") {
+      if (language === "cn") displayMsg = "请选择房产类型";
+      else if (language === "ru") displayMsg = "Пожалуйста, выберите тип недвижимости";
+      else if (language === "en") displayMsg = "Please select property type";
+      else displayMsg = "กรุณาเลือกประเภททรัพย์";
+    }
+  } else if (msg === "details_max" || msg.includes("รายละเอียด") || msg.includes("details")) {
+    displayMsg = t("deposit.validation.details_max");
+    if (!displayMsg || displayMsg === "deposit.validation.details_max") {
+      if (language === "cn") displayMsg = "详细信息不能超过 1,500 个字符";
+      else if (language === "ru") displayMsg = "Описание не должно превышать 1 500 символов";
+      else if (language === "en") displayMsg = "Details must not exceed 1,500 characters";
+      else displayMsg = "รายละเอียดฝากทรัพย์ต้องไม่เกิน 1,500 ตัวอักษร";
+    }
+  }
+
+  return (
+    <p className="text-destructive text-sm font-medium mt-1">
+      {displayMsg}
+    </p>
+  );
 }
 
 export function NameField({ isMobile, t, onFocus }: FieldProps) {
@@ -87,7 +168,7 @@ export function NameField({ isMobile, t, onFocus }: FieldProps) {
                 )}
               </AnimatePresence>
             </div>
-            <FormMessage />
+            <TranslatedFormMessage t={t} />
           </FormItem>
         );
       }}
@@ -153,7 +234,7 @@ export function PhoneField({ isMobile, t, onFocus }: FieldProps) {
                 )}
               </AnimatePresence>
             </div>
-            <FormMessage />
+            <TranslatedFormMessage t={t} />
           </FormItem>
         );
       }}
@@ -216,7 +297,7 @@ export function EmailField({ isMobile, t, onFocus }: FieldProps) {
                 )}
               </AnimatePresence>
             </div>
-            <FormMessage />
+            <TranslatedFormMessage t={t} />
           </FormItem>
         );
       }}
@@ -278,7 +359,7 @@ export function LineField({ isMobile, t, onFocus }: FieldProps) {
                 )}
               </AnimatePresence>
             </div>
-            <FormMessage />
+            <TranslatedFormMessage t={t} />
           </FormItem>
         );
       }}
@@ -340,7 +421,7 @@ export function WeChatField({ isMobile, t, onFocus }: FieldProps) {
                 )}
               </AnimatePresence>
             </div>
-            <FormMessage />
+            <TranslatedFormMessage t={t} />
           </FormItem>
         );
       }}
@@ -431,7 +512,7 @@ export function WhatsAppField({ isMobile, t, onFocus }: FieldProps) {
                 )}
               </AnimatePresence>
             </div>
-            <FormMessage />
+            <TranslatedFormMessage t={t} />
           </FormItem>
         );
       }}
@@ -573,7 +654,7 @@ export function PropertyTypeField({ isMobile, t, onFocus }: FieldProps) {
               </m.button>
             ))}
           </div>
-          <FormMessage />
+          <TranslatedFormMessage t={t} />
         </FormItem>
       )}
     />
@@ -626,7 +707,121 @@ export function MessageField({ isMobile, t }: Pick<FieldProps, "isMobile" | "t">
                 )}
               </AnimatePresence>
             </div>
-            <FormMessage />
+            <TranslatedFormMessage t={t} />
+          </FormItem>
+        );
+      }}
+    />
+  );
+}
+
+export function PropertyImageField({ isMobile, t }: Pick<FieldProps, "isMobile" | "t">) {
+  const { control, setValue } = useFormContext();
+  const [isUploading, setIsUploading] = useState(false);
+
+  return (
+    <FormField
+      control={control}
+      name="propertyImage"
+      render={({ field }) => {
+        const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          if (file.size > 10 * 1024 * 1024) {
+            toast.error(t("deposit.form.image_limit") || "ขนาดไฟล์ต้องไม่เกิน 10MB");
+            return;
+          }
+
+          setIsUploading(true);
+          try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const { uploadDepositPreviewAction } = await import("@/features/public/actions");
+            const res = await uploadDepositPreviewAction(formData);
+            if (res.success && res.url) {
+              setValue("propertyImage", res.url, { shouldValidate: true });
+              toast.success(t("deposit.form.image_success") || "อัปโหลดรูปตัวอย่างสำเร็จ!");
+            } else {
+              toast.error(res.message || t("deposit.form.image_error") || "อัปโหลดรูปไม่สำเร็จ");
+            }
+          } catch (err) {
+            toast.error(t("deposit.form.image_error") || "เกิดข้อผิดพลาดในการอัปโหลด");
+          } finally {
+            setIsUploading(false);
+          }
+        };
+
+        const handleRemove = () => {
+          setValue("propertyImage", "", { shouldValidate: true });
+        };
+
+        const labelText = t("deposit.form.image_label");
+        const displayLabel = labelText.startsWith("deposit.form.") ? "แนบรูปตัวอย่างทรัพย์สิน (ถ้ามี)" : labelText;
+
+        return (
+          <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
+            <FormLabel
+              className={cn(
+                "text-slate-800 font-semibold flex items-center gap-2",
+                isMobile ? "text-[15px] xs:text-base" : "text-sm",
+              )}
+            >
+              <Upload className="w-3.5 h-3.5 text-slate-500" />
+              {displayLabel}
+              <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
+            </FormLabel>
+            <FormControl>
+              <div className="relative">
+                {field.value ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 group">
+                    <img
+                      src={field.value}
+                      alt="Property Preview"
+                      className="w-full h-36 object-cover rounded-2xl"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={handleRemove}
+                        className="bg-rose-500 hover:bg-rose-600 text-white p-2 rounded-full shadow-lg transition-transform hover:scale-110"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    className={cn(
+                      "flex flex-col items-center justify-center w-full border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all group",
+                      isMobile ? "h-24 p-2" : "h-28 p-4",
+                      isUploading && "pointer-events-none opacity-60"
+                    )}
+                  >
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      disabled={isUploading}
+                    />
+                    {isUploading ? (
+                      <div className="flex flex-col items-center gap-2 text-blue-600">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span className="text-xs font-semibold">{t("deposit.form.image_uploading")}</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-slate-500 group-hover:text-blue-600">
+                        <Upload className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
+                        <span className="text-xs font-semibold">{t("deposit.form.image_hint")}</span>
+                        <span className="text-[10px] text-slate-400">{t("deposit.form.image_limit")}</span>
+                      </div>
+                    )}
+                  </label>
+                )}
+              </div>
+            </FormControl>
+            <TranslatedFormMessage t={t} />
           </FormItem>
         );
       }}

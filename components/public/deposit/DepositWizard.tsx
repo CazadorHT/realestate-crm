@@ -40,6 +40,7 @@ export function DepositWizard({
       whatsapp: "",
       details: "",
       propertyType: undefined,
+      propertyImage: "",
       website_hp: "",
     },
   });

@@ -14,6 +14,7 @@ import {
   WeChatField,
   WhatsAppField,
   PropertyTypeField,
+  PropertyImageField,
   MessageField,
 } from "./FormFields";
 import { SubmitButton, StepIcon } from "./SharedComponents";
@@ -195,8 +196,9 @@ export function DepositMobileView({
                         </div>
                       )}
                       {currentStep === 3 && (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <PropertyTypeField isMobile={true} t={t} onFocus={onFormStartAction} />
+                          <PropertyImageField isMobile={true} t={t} />
                           <MessageField isMobile={true} t={t} />
                         </div>
                       )}

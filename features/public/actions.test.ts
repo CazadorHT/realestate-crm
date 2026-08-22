@@ -167,7 +167,7 @@ describe('Public Server Actions - Brutal Hardening Tests', () => {
         p_wechat_id: undefined,
         p_whatsapp: undefined,
         p_property_type: 'CONDO',
-        p_note: 'enc:[ฝากทรัพย์] \nอีเมล: dep@test.com\nLine: -\nWeChat: -\nWhatsApp: -\nType: CONDO\nDetails: High floor'
+        p_note: 'enc:[ฝากทรัพย์] \nอีเมล: dep@test.com\nLine: -\nWeChat: -\nWhatsApp: -\nType: CONDO\nImage: -\nDetails: High floor'
       });
     });
 

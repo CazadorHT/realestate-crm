@@ -425,7 +425,22 @@
       "details_more_placeholder": "Provide more details you want to tell our team",
       "details_placeholder_office": "e.g., Want to rent office at G Tower, 20th floor, 200 sqm, near MRT...",
       "submit_btn": "Submit Property Info",
-      "required_note": "Fill all info. Staff will contact back shortly."
+      "required_note": "Fill all info. Staff will contact back shortly.",
+      "image_label": "Attach Sample Property Image",
+      "image_hint": "Click or drag and drop image here",
+      "image_limit": "JPG, PNG, WebP (Max 10MB)",
+      "image_uploading": "Uploading image...",
+      "image_success": "Sample image uploaded successfully!",
+      "image_error": "Failed to upload image"
+    },
+    "validation": {
+      "required_name": "Please enter your full name",
+      "name_max": "Full name must not exceed 100 characters",
+      "invalid_phone": "Please enter a valid mobile or landline phone number",
+      "invalid_email": "Please enter a valid email address",
+      "email_max": "Email must not exceed 100 characters",
+      "required_type": "Please select property type",
+      "details_max": "Details must not exceed 1,500 characters"
     },
     "success": {
       "title": "Thank you for the info",

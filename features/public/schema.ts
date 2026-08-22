@@ -23,24 +23,25 @@ export function isValidThaiPhone(val: string): boolean {
 export const depositLeadSchema = z.object({
   fullName: z
     .string()
-    .min(2, "กรุณาระบุชื่อ-นามสกุล")
-    .max(100, "ชื่อ-นามสกุลต้องไม่เกิน 100 ตัวอักษร"),
+    .min(2, "required_name")
+    .max(100, "name_max"),
   phone: z.string().refine(
     (val) => isValidThaiPhone(val),
-    { message: "เบอร์โทรศัพท์ไม่ถูกต้อง (กรุณากรอกเบอร์มือถือหรือเบอร์บ้านที่ถูกต้อง)" }
+    { message: "invalid_phone" }
   ),
   email: z
     .string()
-    .email("อีเมลไม่ถูกต้อง")
-    .max(100, "อีเมลต้องไม่เกิน 100 ตัวอักษร")
+    .email("invalid_email")
+    .max(100, "email_max")
     .optional()
     .or(z.literal(""))
     .nullable(),
-  lineId: z.string().max(100, "Line ID ต้องไม่เกิน 100 ตัวอักษร").optional().nullable(),
-  wechatId: z.string().max(100, "WeChat ID ต้องไม่เกิน 100 ตัวอักษร").optional().nullable(),
-  whatsapp: z.string().max(100, "WhatsApp ต้องไม่เกิน 100 ตัวอักษร").optional().nullable(),
-  propertyType: z.string().min(1, "กรุณาเลือกประเภททรัพย์"),
-  details: z.string().max(1500, "รายละเอียดฝากทรัพย์ต้องไม่เกิน 1,500 ตัวอักษร").optional().nullable(),
+  lineId: z.string().max(100, "line_max").optional().nullable(),
+  wechatId: z.string().max(100, "wechat_max").optional().nullable(),
+  whatsapp: z.string().max(100, "whatsapp_max").optional().nullable(),
+  propertyType: z.string().min(1, "required_type"),
+  details: z.string().max(1500, "details_max").optional().nullable(),
+  propertyImage: z.string().url("invalid_url").optional().or(z.literal("")).nullable(),
   website_hp: z.string().optional().nullable(),
 });
 

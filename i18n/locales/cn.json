@@ -422,8 +422,23 @@
       "details_more_label": "更多详情",
       "details_more_placeholder": "提供您想告诉我们的团队的更多详细信息",
       "details_placeholder_office": "例如：想要出租 G Tower 办公楼，20 层，200 平方米，靠近 MRT...",
-      "submit_btn": "提交委托信息",
-      "required_note": "请填好信息，我们将尽快与您联系。"
+      "submit_btn": "提交房产信息",
+      "required_note": "请填写完整信息，工作人员将尽快与您联系",
+      "image_label": "附上样品财产图像（可选）",
+      "image_hint": "点击或拖放图片到此处",
+      "image_limit": "JPG, PNG, WebP (最大 10MB)",
+      "image_uploading": "正在上传图片...",
+      "image_success": "样品图片上传成功！",
+      "image_error": "上传图片失败"
+    },
+    "validation": {
+      "required_name": "请输入您的姓名",
+      "name_max": "姓名不能超过 100 个字符",
+      "invalid_phone": "请输入有效的电话号码",
+      "invalid_email": "请输入有效的电子邮箱",
+      "email_max": "电子邮箱不能超过 100 个字符",
+      "required_type": "请选择房产类型",
+      "details_max": "详细信息不能超过 1,500 个字符"
     },
     "success": {
       "title": "感谢您的提交",

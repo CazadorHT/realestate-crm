@@ -23,6 +23,7 @@ import {
   WeChatField,
   WhatsAppField,
   PropertyTypeField,
+  PropertyImageField,
   MessageField,
 } from "./FormFields";
 import { SubmitButton, StepIcon } from "./SharedComponents";
@@ -274,6 +275,7 @@ export function DepositDesktopView({
                           t={t}
                           onFocus={onFormStartAction}
                         />
+                        <PropertyImageField isMobile={false} t={t} />
                         <MessageField isMobile={false} t={t} />
                       </div>
                     )}
