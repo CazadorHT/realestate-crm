@@ -28,6 +28,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function ExecutiveAISummary({
   tenantId,
@@ -41,6 +42,8 @@ export function ExecutiveAISummary({
   multiTenantEnabled?: boolean;
 }) {
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<AISummaryResult | null>(null);
 
@@ -65,16 +68,16 @@ export function ExecutiveAISummary({
 
       if (showToast) {
         if (result.isSample) {
-          toast.info("แสดงข้อมูลจำลอง (ยังไม่มีข้อมูลการขายในรอบ 30 วัน)");
+          toast.info(isEn ? "Sample data preview (no live deals recorded in 30 days)" : "แสดงข้อมูลจำลอง (ยังไม่มีข้อมูลการขายในรอบ 30 วัน)");
         } else if (result.stats?.totalLeads === 0) {
-          toast.warning("ไม่มีข้อมูลใหม่ในช่วง 30 วันที่ผ่านมา");
+          toast.warning(isEn ? "No new activity logged in the last 30 days" : "ไม่มีข้อมูลใหม่ในช่วง 30 วันที่ผ่านมา");
         } else {
-          toast.success("AI สรุปข้อมูลรายเดือนเรียบร้อยแล้ว");
+          toast.success(isEn ? "AI executive summary generated successfully" : "AI สรุปข้อมูลรายเดือนเรียบร้อยแล้ว");
         }
       }
     } catch (error) {
       if (showToast) {
-        toast.error("ไม่สามารถสรุปข้อมูลได้ในขณะนี้");
+        toast.error(isEn ? "Unable to generate AI analysis right now" : "ไม่สามารถสรุปข้อมูลได้ในขณะนี้");
       }
     } finally {
       setLoading(false);
@@ -85,7 +88,7 @@ export function ExecutiveAISummary({
     if (!data) return;
     const textToCopy = `🤖 AI Executive Summary\n\n${data.summary}\n\n📊 Stats:\n- Leads: ${data.stats?.totalLeads}\n- Hot: ${data.stats?.hotLeads}\n- Won: ${data.stats?.dealsWon}`;
     navigator.clipboard.writeText(textToCopy);
-    toast.success("คัดลอกบทวิเคราะห์ลง Clipboard แล้ว");
+    toast.success(isEn ? "Copied summary to clipboard" : "คัดลอกบทวิเคราะห์ลง Clipboard แล้ว");
   };
 
   // Auto-fetch when filters change with debounce
@@ -115,7 +118,7 @@ export function ExecutiveAISummary({
               <div className="mt-1 text-[10px] text-slate-400 flex items-center gap-2">
                  <Filter size={10} className="text-blue-500" />
                  <span className="font-medium">
-                  ขอบเขต: {currentBranchId === "ALL" ? "บริษัท" : "รายสาขา"} / {currentTeamId === "ALL" ? "ทุกทีม" : "รายทีม"}
+                  {isEn ? "Scope:" : "ขอบเขต:"} {currentBranchId === "ALL" ? (isEn ? "Company" : "บริษัท") : (isEn ? "Branch" : "รายสาขา")} / {currentTeamId === "ALL" ? (isEn ? "All Teams" : "ทุกทีม") : (isEn ? "Team" : "รายทีม")}
                  </span>
               </div>
             </div>
@@ -134,8 +137,8 @@ export function ExecutiveAISummary({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="bg-slate-900 text-white border-slate-800">
-                  <p className="font-bold">คัดลอกบทวิเคราะห์</p>
-                  <p className="text-[10px] opacity-70">สำหรับนำไปแชร์ต่อใน LINE หรือ Email</p>
+                  <p className="font-bold">{isEn ? "Copy Analysis" : "คัดลอกบทวิเคราะห์"}</p>
+                  <p className="text-[10px] opacity-70">{isEn ? "Share via LINE, WhatsApp, or Email" : "สำหรับนำไปแชร์ต่อใน LINE หรือ Email"}</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -147,7 +150,7 @@ export function ExecutiveAISummary({
               </TooltipTrigger>
               <TooltipContent side="bottom" className="bg-amber-900! text-white border-amber-800">
                 <p className="font-bold text-amber-200">Executive Insight</p>
-                <p className="text-[10px] opacity-80 text-amber-100">การวิเคราะห์ระดับสูงตามเป้าหมายธุรกิจ</p>
+                <p className="text-[10px] opacity-80 text-amber-100">{isEn ? "High-level strategic analysis aligned with goals" : "การวิเคราะห์ระดับสูงตามเป้าหมายธุรกิจ"}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -162,19 +165,19 @@ export function ExecutiveAISummary({
               <div className="absolute inset-0 bg-indigo-500 rounded-full blur-2xl opacity-20 animate-pulse" />
               <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4 relative z-10" />
             </div>
-            <p className="text-slate-900 font-bold text-sm mb-1 animate-pulse">AI กำลังวิเคราะห์ข้อมูล...</p>
+            <p className="text-slate-900 font-bold text-sm mb-1 animate-pulse">{isEn ? "AI is analyzing performance..." : "AI กำลังวิเคราะห์ข้อมูล..."}</p>
             <p className="text-slate-500 text-[10px] uppercase tracking-widest font-bold opacity-60">Scanning Performance Metrics</p>
           </div>
         ) : !data ? (
           <div className="flex flex-col items-center justify-center py-10 text-center min-h-[200px]">
             <Bot className="h-12 w-12 text-slate-300 mb-4" />
-            <h3 className="text-slate-900 font-semibold mb-1 text-sm">พร้อมวิเคราะห์ข้อมูล</h3>
-            <p className="text-slate-500 text-xs mb-6 max-w-[280px]">AI จะประมวลผลสรุปภาพรวมธุรกิจตามฟิลเตอร์ที่คุณเลือก</p>
+            <h3 className="text-slate-900 font-semibold mb-1 text-sm">{isEn ? "Ready to Analyze" : "พร้อมวิเคราะห์ข้อมูล"}</h3>
+            <p className="text-slate-500 text-xs mb-6 max-w-[280px]">{isEn ? "AI will summarize real-time metrics according to your selected filters." : "AI จะประมวลผลสรุปภาพรวมธุรกิจตามฟิลเตอร์ที่คุณเลือก"}</p>
             <Button
               onClick={() => fetchSummary(true)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full px-8 text-xs h-9"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full px-8 text-xs h-9 cursor-pointer"
             >
-              เริ่มสรุปรายงานด้วย AI
+              {isEn ? "Generate AI Executive Report" : "เริ่มสรุปรายงานด้วย AI"}
             </Button>
           </div>
         ) : (
@@ -186,7 +189,7 @@ export function ExecutiveAISummary({
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                 </span>
                 <p className="font-medium leading-relaxed">
-                  <span className="font-bold text-amber-600">ข้อมูลจำลอง</span> เนืองจากยังไม่มีข้อมูลจริงในรอบ 30 วัน
+                  <span className="font-bold text-amber-600">{isEn ? "Sample Simulation:" : "ข้อมูลจำลอง"}</span> {isEn ? "No closed transactions logged in the past 30 days." : "เนื่องจากยังไม่มีข้อมูลจริงในรอบ 30 วัน"}
                 </p>
               </div>
             )}
@@ -238,9 +241,9 @@ export function ExecutiveAISummary({
               variant="outline"
               onClick={() => fetchSummary(true)}
               disabled={loading}
-              className="w-full bg-white border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl h-10 text-xs font-semibold"
+              className="w-full bg-white border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl h-10 text-xs font-semibold cursor-pointer"
             >
-              {loading ? <Loader2 size={16} className="animate-spin text-indigo-500" /> : "อัปเดตบทวิเคราะห์"}
+              {loading ? <Loader2 size={16} className="animate-spin text-indigo-500" /> : (isEn ? "Regenerate Analysis" : "อัปเดตบทวิเคราะห์")}
             </Button>
           </div>
         )}

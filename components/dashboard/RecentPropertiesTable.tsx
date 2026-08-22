@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import { PropertyTableData } from "@/features/properties/types";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // Using PropertyTableData as the base type for consistency
 export type PropertyWithRelations = PropertyTableData & {
@@ -73,6 +74,8 @@ export function RecentPropertiesTable({
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
 
   const view = searchParams.get("view") || (isAdminOrManager ? "company" : "personal");
@@ -97,13 +100,13 @@ export function RecentPropertiesTable({
             <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-200">
               <Building2 size={20} className="text-white" />
             </div>
-            ทรัพย์มาใหม่
+            {isEn ? "Recent Listings" : "ทรัพย์มาใหม่"}
             <span className="text-slate-400 font-semibold text-sm hidden xs:inline mt-0.5">
-              (Recent Listings)
+              ({isEn ? "Properties" : "Recent Listings"})
             </span>
           </h3>
           <p className="text-sm text-slate-500 font-medium pl-12">
-            รายการทรัพย์ล่าสุดที่ถูกเพิ่มเข้ามาในระบบ
+            {isEn ? "Latest properties added to your CRM inventory" : "รายการทรัพย์ล่าสุดที่ถูกเพิ่มเข้ามาในระบบ"}
           </p>
         </div>
 
@@ -121,7 +124,7 @@ export function RecentPropertiesTable({
                 )}
               >
                 <Building2 size={13} />
-                ทั้งหมด
+                {isEn ? "All Company" : "ทั้งหมด"}
               </button>
               <button
                 onClick={() => handleViewChange("personal")}
@@ -133,7 +136,7 @@ export function RecentPropertiesTable({
                 )}
               >
                 <User size={13} />
-                เฉพาะของฉัน
+                {isEn ? "My Listings" : "เฉพาะของฉัน"}
               </button>
             </div>
           )}
@@ -151,7 +154,7 @@ export function RecentPropertiesTable({
             {navigatingId === "view-all" ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2 text-slate-500" />
             ) : null}
-            ดูทั้งหมด →
+            {isEn ? "View All →" : "ดูทั้งหมด →"}
           </Button>
         </div>
       </div>
@@ -166,36 +169,36 @@ export function RecentPropertiesTable({
               {/* 3. ปรับ Background ของ Table Header ให้ชัดเจนขึ้น */}
               <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-slate-200/60">
                 <TableHead className="px-4 py-4 font-bold text-slate-600 w-[350px]">
-                  ทรัพย์
+                  {isEn ? "Property" : "ทรัพย์"}
                 </TableHead>
                 <TableHead className="px-2 py-4 font-bold text-slate-600 w-[100px] text-xs">
-                  ชนิด
+                  {isEn ? "Type" : "ชนิด"}
                 </TableHead>
                 <TableHead className="px-2 py-4 font-bold text-slate-600 w-[150px] text-xs">
-                  ทำเล
+                  {isEn ? "Location" : "ทำเล"}
                 </TableHead>
                 <TableHead className="px-2 py-4 font-bold text-slate-600 w-[120px] text-xs">
-                  ราคา
+                  {isEn ? "Price" : "ราคา"}
                 </TableHead>
                 <TableHead className="px-2 py-4 font-bold text-slate-600 w-[90px] text-xs">
-                  การเข้าชม
+                  {isEn ? "Views" : "การเข้าชม"}
                 </TableHead>
                 <TableHead className="px-2 py-4 font-bold text-slate-600 w-[110px] text-xs">
-                  อัปเดตล่าสุด
+                  {isEn ? "Last Updated" : "อัปเดตล่าสุด"}
                 </TableHead>
                 <TableHead className="px-2 py-4 font-bold text-slate-600 w-[120px] text-xs">
-                  สถานะ
+                  {isEn ? "Status" : "สถานะ"}
                 </TableHead>
                 <TableHead className="px-2 py-4 font-bold text-slate-600 w-[100px] text-xs">
-                  โซเชียล
+                  {isEn ? "Social" : "โซเชียล"}
                 </TableHead>
                 {showBranch && (
                   <TableHead className="px-2 py-4 font-bold text-slate-600 w-[100px] text-xs">
-                    สาขา
+                    {isEn ? "Branch" : "สาขา"}
                   </TableHead>
                 )}
                 <TableHead className="px-4 py-4 text-right font-bold text-slate-600 w-[120px] text-xs">
-                  จัดการ
+                  {isEn ? "Actions" : "จัดการ"}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -651,8 +654,8 @@ export function RecentPropertiesTable({
               <div className="col-span-full">
                 <DashboardEmptyState
                   icon={Home}
-                  title="ยังไม่มีทรัพย์ในระบบ"
-                  description="เริ่มสร้างทรัพย์รายการแรกของคุณวันนี้ เพื่อเริ่มต้นการจัดการข้อมูลทรัพย์สินอย่างเป็นระบบ"
+                  title={isEn ? "No Properties Listed Yet" : "ยังไม่มีทรัพย์ในระบบ"}
+                  description={isEn ? "Add your first property listing to begin managing your real estate portfolio." : "เริ่มสร้างทรัพย์รายการแรกของคุณวันนี้ เพื่อเริ่มต้นการจัดการข้อมูลทรัพย์สินอย่างเป็นระบบ"}
                   action={
                     <Button
                       className="rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold shadow-md h-11 px-8 transition-all"
@@ -665,7 +668,7 @@ export function RecentPropertiesTable({
                       {navigatingId === "new-prop" && (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       )}
-                      เพิ่มทรัพย์รายการแรก
+                      {isEn ? "Create First Property" : "เพิ่มทรัพย์รายการแรก"}
                     </Button>
                   }
                 />

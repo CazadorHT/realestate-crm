@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import { Clock, Info } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface StatItem {
   label: string;
@@ -19,6 +22,9 @@ export function TableFooterStats({
   unitLabel,
   secondaryStats = [],
 }: TableFooterStatsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const getColorClass = (color?: string) => {
     switch (color) {
       case "blue":
@@ -49,7 +55,7 @@ export function TableFooterStats({
     <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 px-2 py-4 gap-4 border-t border-slate-100 mt-4">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
         <span className="font-medium">
-          แสดงทั้งหมด <span className="text-slate-900">{totalCount}</span>{" "}
+          {isEn ? "Showing total" : "แสดงทั้งหมด"} <span className="text-slate-900 font-bold">{totalCount}</span>{" "}
           {unitLabel}
         </span>
 
@@ -66,7 +72,8 @@ export function TableFooterStats({
 
       <div className="text-right whitespace-nowrap">
         <p className="text-xs opacity-70">
-          อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
+          {isEn ? "Last updated:" : "อัพเดทล่าสุด:"}{" "}
+          {new Date().toLocaleDateString(isEn ? "en-US" : "th-TH")}
         </p>
       </div>
     </div>

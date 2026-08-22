@@ -10,12 +10,16 @@ import {
 import { MarketingPerformanceData } from "@/features/dashboard/queries";
 import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp, Zap, Facebook, MessageCircle, Search, Share2, Globe } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface MarketingROISummaryProps {
   data: MarketingPerformanceData[];
 }
 
 export function MarketingROISummary({ data }: MarketingROISummaryProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const getSourceIcon = (source: string) => {
     const s = source.toLowerCase();
     if (s.includes("facebook")) return <Facebook className="h-4 w-4 text-blue-600" />;
@@ -33,10 +37,10 @@ export function MarketingROISummary({ data }: MarketingROISummaryProps) {
             <div className="p-1.5 bg-blue-600 rounded-lg shadow-blue-200 shadow-lg">
               <Target className="h-4 w-4 text-white" />
             </div>
-            วิเคราะห์คุณภาพช่องทางตลาด
+            {isEn ? "Marketing Channel ROI" : "วิเคราะห์คุณภาพช่องทางตลาด"}
           </CardTitle>
           <CardDescription className="text-xs">
-            ประสิทธิภาพตามคุณภาพลีดที่ประเมินโดย AI
+            {isEn ? "Performance scored by AI lead intent analysis" : "ประสิทธิภาพตามคุณภาพลีดที่ประเมินโดย AI"}
           </CardDescription>
         </div>
         <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-100 group-hover:rotate-12 transition-transform">
@@ -50,7 +54,7 @@ export function MarketingROISummary({ data }: MarketingROISummaryProps) {
               <div className="p-4 bg-slate-50 rounded-full border border-dashed border-slate-200">
                 <Target className="h-8 w-8 text-slate-300" />
               </div>
-              <p className="text-sm text-slate-400 font-medium">ยังไม่มีข้อมูลการตลาดในระบบ</p>
+              <p className="text-sm text-slate-400 font-medium">{isEn ? "No marketing source data recorded" : "ยังไม่มีข้อมูลการตลาดในระบบ"}</p>
             </div>
           ) : (
             data.map((item) => (
@@ -68,10 +72,10 @@ export function MarketingROISummary({ data }: MarketingROISummaryProps) {
                         {item.source}
                       </div>
                       <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                        <span className="font-medium">{item.leadCount} ลีด</span>
+                        <span className="font-medium">{item.leadCount} {isEn ? "leads" : "ลีด"}</span>
                         <span className="h-1 w-1 rounded-full bg-slate-300" />
                         <span className="text-orange-600 font-bold flex items-center gap-0.5">
-                          🔥 {item.hotLeadCount} คุณภาพสูง
+                          🔥 {item.hotLeadCount} {isEn ? "High Intent" : "คุณภาพสูง"}
                         </span>
                       </div>
                     </div>
@@ -127,8 +131,9 @@ export function MarketingROISummary({ data }: MarketingROISummaryProps) {
             <div className="space-y-1">
               <p className="text-xs font-bold text-blue-900 uppercase tracking-wide">AI Recommendation</p>
               <p className="text-[11px] text-blue-700 leading-relaxed font-medium">
-                ช่องทางที่มี AI Score สูงมีความตั้งใจซื้อ (Intent) สูงกว่าปกติ 
-                ควรพิจารณาปรับงบประมาณจากช่องทางทั่วไปมายังช่องทางที่มีลีดคุณภาพหนาแน่นเพื่อเพิ่มโอกาสปิดการขาย
+                {isEn
+                  ? "Channels with higher AI quality scores demonstrate significantly stronger purchasing intent. Consider allocating more marketing budget towards these top-tier sources to maximize conversion rates."
+                  : "ช่องทางที่มี AI Score สูงมีความตั้งใจซื้อ (Intent) สูงกว่าปกติ ควรพิจารณาปรับงบประมาณจากช่องทางทั่วไปมายังช่องทางที่มีลีดคุณภาพหนาแน่นเพื่อเพิ่มโอกาสปิดการขาย"}
               </p>
             </div>
           </div>

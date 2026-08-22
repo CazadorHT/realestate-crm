@@ -23,9 +23,10 @@ import {
 } from "react-icons/si";
 import { BiLoaderAlt } from "react-icons/bi";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // ─── Status Indicator Component ──────────────────────────────────────────────
-function StatusIndicator({ ok, warn }: { ok: boolean; warn?: boolean }) {
+function StatusIndicator({ ok, warn, isEn }: { ok: boolean; warn?: boolean; isEn: boolean }) {
   const color = ok ? "bg-emerald-500" : warn ? "bg-amber-500" : "bg-rose-500";
   const textColor = ok
     ? "text-emerald-700"
@@ -33,6 +34,11 @@ function StatusIndicator({ ok, warn }: { ok: boolean; warn?: boolean }) {
       ? "text-amber-700"
       : "text-rose-700";
   const bgColor = ok ? "bg-emerald-50" : warn ? "bg-amber-50" : "bg-rose-50";
+
+  const getStatusText = () => {
+    if (isEn) return ok ? "Online" : warn ? "Degraded" : "Offline";
+    return ok ? "ออนไลน์" : warn ? "มีปัญหา" : "ออฟไลน์";
+  };
 
   return (
     <div
@@ -63,7 +69,7 @@ function StatusIndicator({ ok, warn }: { ok: boolean; warn?: boolean }) {
           textColor,
         )}
       >
-        {ok ? "ออนไลน์" : warn ? "มีปัญหา" : "ออฟไลน์"}
+        {getStatusText()}
       </span>
     </div>
   );
@@ -76,12 +82,14 @@ function IntegrationCard({
   ok,
   missing,
   warn = false,
+  isEn,
 }: {
   icon: React.ElementType;
   name: string;
   ok: boolean;
   missing?: string[];
   warn?: boolean;
+  isEn: boolean;
 }) {
   return (
     <div
@@ -109,16 +117,16 @@ function IntegrationCard({
           </h4>
           <p className="text-[11px] text-slate-500 font-medium mt-0.5">
             {ok ? (
-              "เชื่อมต่อเรียบร้อย"
+              isEn ? "Connected" : "เชื่อมต่อเรียบร้อย"
             ) : missing && missing.length > 0 ? (
-              <span className="text-rose-500">ขาด: {missing.join(", ")}</span>
+              <span className="text-rose-500">{isEn ? "Missing:" : "ขาด:"} {missing.join(", ")}</span>
             ) : (
-              "ยังไม่ได้ตั้งค่า"
+              isEn ? "Not Configured" : "ยังไม่ได้ตั้งค่า"
             )}
           </p>
         </div>
       </div>
-      <StatusIndicator ok={ok} warn={warn} />
+      <StatusIndicator ok={ok} warn={warn} isEn={isEn} />
     </div>
   );
 }
@@ -128,6 +136,8 @@ export function SystemStatus() {
   const [status, setStatus] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   React.useEffect(() => {
     getSystemStatus().then((s) => {
@@ -138,44 +148,47 @@ export function SystemStatus() {
 
   if (loading) {
     return (
-      <div className="p-8 flex flex-col items-center justify-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-        <BiLoaderAlt size={24} className="text-blue-500 animate-spin mb-2" />
-        <p className="text-xs font-medium text-slate-400">
-          กำลังตรวจสอบระบบ...
-        </p>
+      <div className="bg-white/60 backdrop-blur-md p-4 rounded-3xl border border-slate-200/60 flex items-center justify-center gap-3 text-slate-400 text-xs font-semibold">
+        <BiLoaderAlt className="animate-spin text-blue-600" size={16} />
+        <span>{isEn ? "Checking system health..." : "กำลังตรวจสอบระบบ..."}</span>
       </div>
     );
   }
 
   if (!status) return null;
 
-  const totalServices = 7;
-  const activeServices = [
+  const checks = [
     status.supabase?.configured,
-    status.meta?.configured,
-    status.line?.configured,
-    status.tiktok?.configured,
-    status.ai?.configured,
     status.app?.url_configured,
+    status.line?.configured,
     status.telegram?.configured,
-  ].filter(Boolean).length;
+    status.meta?.configured,
+    status.ai?.configured,
+    status.tiktok?.configured,
+  ];
 
-  const healthPercentage = Math.round((activeServices / totalServices) * 100);
+  const passedChecks = checks.filter(Boolean).length;
+  const totalChecks = checks.length;
+  const healthPercentage = Math.round((passedChecks / totalChecks) * 100);
 
   return (
     <div
       className={cn(
-        "bg-linear-to-br from-white via-slate-50 to-slate-100 rounded-3xl border border-slate-200 shadow-sm transition-all duration-500 overflow-hidden",
-        isExpanded ? "p-4 sm:p-6 lg:p-8 space-y-6" : "p-4",
+        "relative overflow-hidden rounded-3xl transition-all duration-500 border",
+        isExpanded
+          ? "bg-slate-50/90 border-blue-200/80 shadow-xl shadow-blue-500/5 p-6"
+          : "bg-white/80 backdrop-blur-md border-slate-200/60 hover:border-blue-300 hover:shadow-md p-4",
       )}
     >
-      {/* Header with Overall Health */}
+      {/* Dynamic Background Glow */}
+      {isExpanded && (
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+      )}
+
+      {/* Header / Summary Bar */}
       <div
-        className={cn(
-          "flex flex-col md:flex-row md:items-center justify-between gap-5 cursor-pointer select-none",
-          !isExpanded && "md:gap-2",
-        )}
         onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center justify-between cursor-pointer group select-none"
       >
         <div className="flex items-center gap-3.5">
           <div
@@ -193,7 +206,7 @@ export function SystemStatus() {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-slate-900 tracking-tight flex items-center gap-2">
-              สถานะระบบ
+              {isEn ? "System Status" : "สถานะระบบ"}
               {!isExpanded && (
                 <span
                   className={cn(
@@ -208,7 +221,7 @@ export function SystemStatus() {
               )}
             </h3>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              ตรวจสอบการเชื่อมต่อและโครงสร้างพื้นฐาน
+              {isEn ? "Infrastructure & integration connectivity monitor" : "ตรวจสอบการเชื่อมต่อและโครงสร้างพื้นฐาน"}
             </p>
           </div>
         </div>
@@ -217,7 +230,7 @@ export function SystemStatus() {
           <div className="flex items-center gap-4 bg-white px-5 py-2.5 rounded-2xl border border-slate-200 shadow-sm">
             <div className="flex flex-col items-end">
               <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest leading-none mb-1">
-                ความพร้อม
+                {isEn ? "Health Score" : "ความพร้อม"}
               </span>
               <span
                 className={cn(
@@ -238,61 +251,56 @@ export function SystemStatus() {
                 status.supabase?.configured,
                 status.line?.configured,
                 status.ai?.configured,
-              ].map((ok, i) => (
+              ].map((isOk, i) => (
                 <div
                   key={i}
-                  className="h-8 w-8 rounded-full border-2 border-white bg-slate-50 flex items-center justify-center overflow-hidden relative shadow-sm"
+                  className={cn(
+                    "w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-bold shadow-xs",
+                    isOk ? "bg-emerald-500" : "bg-slate-300",
+                  )}
                 >
-                  <div
-                    className={cn(
-                      "absolute inset-0 opacity-15",
-                      ok ? "bg-emerald-500" : "bg-slate-400",
-                    )}
-                  />
-                  <HiOutlineCheckBadge
-                    size={14}
-                    className={
-                      ok ? "text-emerald-600 z-10" : "text-slate-400 z-10"
-                    }
-                  />
+                  {isOk ? "✓" : "!"}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400">
-            {isExpanded ? (
-              <ChevronDown className="h-5 w-5 rotate-180 transition-transform" />
-            ) : (
-              <ChevronRight className="h-5 w-5 transition-transform" />
+          <div
+            className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-all",
+              isExpanded && "rotate-180 bg-blue-50 text-blue-600",
             )}
+          >
+            <ChevronDown size={18} />
           </div>
         </div>
       </div>
 
       {isExpanded && (
-        <div className="animate-in fade-in slide-in-from-top-2 duration-500 space-y-6">
+        <div className="animate-in fade-in slide-in-from-top-2 duration-500 space-y-6 pt-6 mt-4 border-t border-slate-200/50">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {/* Core Infrastructure */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 px-1">
                 <HiOutlineShieldCheck size={16} className="text-slate-400" />
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                  โครงสร้างพื้นฐานหลัก
+                  {isEn ? "Core Infrastructure" : "โครงสร้างพื้นฐานหลัก"}
                 </span>
               </div>
               <div className="flex flex-col gap-3">
                 <IntegrationCard
                   icon={SiSupabase}
-                  name="ฐานข้อมูล Supabase"
+                  name={isEn ? "Supabase Database" : "ฐานข้อมูล Supabase"}
                   ok={status.supabase?.configured}
                   missing={status.supabase?.missing}
+                  isEn={isEn}
                 />
                 <IntegrationCard
                   icon={HiOutlineGlobeAlt}
-                  name="Webhook URL ของแอป"
+                  name={isEn ? "App Webhook URL" : "Webhook URL ของแอป"}
                   ok={status.app?.url_configured}
                   missing={["NEXT_PUBLIC_APP_URL"]}
+                  isEn={isEn}
                 />
               </div>
             </div>
@@ -305,7 +313,7 @@ export function SystemStatus() {
                   className="text-slate-400"
                 />
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                  ข้อความและโซเชียล
+                  {isEn ? "Messaging & Social" : "ข้อความและโซเชียล"}
                 </span>
               </div>
               <div className="flex flex-col gap-3">
@@ -314,18 +322,21 @@ export function SystemStatus() {
                   name="LINE Official Account"
                   ok={status.line?.configured}
                   missing={status.line?.missing}
+                  isEn={isEn}
                 />
                 <IntegrationCard
                   icon={SiTelegram}
                   name="Telegram Admin Bot"
                   ok={status.telegram?.configured}
                   missing={status.telegram?.missing}
+                  isEn={isEn}
                 />
                 <IntegrationCard
                   icon={SiFacebook}
                   name="Meta (Facebook/IG)"
                   ok={status.meta?.configured}
                   missing={status.meta?.missing}
+                  isEn={isEn}
                 />
               </div>
             </div>
@@ -335,22 +346,24 @@ export function SystemStatus() {
               <div className="flex items-center gap-2 px-1">
                 <HiOutlineCpuChip size={16} className="text-slate-400" />
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                  เอไอและระบบอัตโนมัติ
+                  {isEn ? "AI & Automation" : "เอไอและระบบอัตโนมัติ"}
                 </span>
               </div>
               <div className="flex flex-col gap-3">
                 <IntegrationCard
                   icon={SiGoogle}
-                  name="ระบบสมองกล Gemini AI"
+                  name={isEn ? "Gemini AI Engine" : "ระบบสมองกล Gemini AI"}
                   ok={status.ai?.configured}
                   missing={status.ai?.missing}
                   warn={!status.ai?.configured}
+                  isEn={isEn}
                 />
                 <IntegrationCard
                   icon={SiTiktok}
-                  name="การเชื่อมต่อ TikTok"
+                  name={isEn ? "TikTok Integration" : "การเชื่อมต่อ TikTok"}
                   ok={status.tiktok?.configured}
                   missing={status.tiktok?.missing}
+                  isEn={isEn}
                 />
               </div>
             </div>
@@ -364,11 +377,11 @@ export function SystemStatus() {
                 className="text-amber-500 shrink-0 mt-0.5 sm:mt-0"
               />
               <p className="text-sm font-medium text-amber-800">
-                การเชื่อมต่อบางอย่างยังไม่สมบูรณ์ โปรดไปที่{" "}
-                <span className="font-bold underline decoration-amber-300 underline-offset-2 cursor-pointer hover:text-amber-900">
-                  ตั้งค่าระบบ
-                </span>{" "}
-                เพื่อจัดการให้เรียบร้อย
+                {isEn ? (
+                  <>Some integrations are not configured. Please visit <span className="font-bold underline decoration-amber-300 underline-offset-2 cursor-pointer hover:text-amber-900">Settings</span> to configure credentials.</>
+                ) : (
+                  <>การเชื่อมต่อบางอย่างยังไม่สมบูรณ์ โปรดไปที่ <span className="font-bold underline decoration-amber-300 underline-offset-2 cursor-pointer hover:text-amber-900">ตั้งค่าระบบ</span> เพื่อจัดการให้เรียบร้อย</>
+                )}
               </p>
             </div>
           )}

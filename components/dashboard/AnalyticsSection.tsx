@@ -35,6 +35,7 @@ import {
   FunnelData,
   PipelineData,
 } from "@/features/dashboard/queries/types";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface AnalyticsSectionProps {
   initialRange?: string;
@@ -60,6 +61,8 @@ export function AnalyticsSection({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
 
   // --- Sync from URL ---
@@ -98,16 +101,22 @@ export function AnalyticsSection({
         fetch(`/api/dashboard/pipeline?${queryParams}`, { signal }),
       ]);
 
-      if (revRes.ok) setRevenueData((await revRes.json()).data);
-      if (funnelRes.ok) setFunnelData((await funnelRes.json()).data);
-      if (pipeRes.ok) setPipelineData((await pipeRes.json()).data);
-    } catch (error: any) {
-      if (error.name === "AbortError") return;
-      console.error("Failed to fetch analytics:", error);
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
+      if (revRes.ok && funnelRes.ok && pipeRes.ok) {
+        const [revJson, funnelJson, pipeJson] = await Promise.all([
+          revRes.json(),
+          funnelRes.json(),
+          pipeRes.json(),
+        ]);
+        setRevenueData(revJson.data || []);
+        setFunnelData(funnelJson.data || []);
+        setPipelineData(pipeJson.data || []);
       }
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        console.error("Failed to fetch analytics data", err);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -166,34 +175,34 @@ export function AnalyticsSection({
   }, [isAdmin]);
 
   const getDynamicScopeLabel = () => {
-    if (scope === "company") return "ภาพรวมบริษัท";
+    if (scope === "company") return isEn ? "Company Overview" : "ภาพรวมบริษัท";
     if (scope === "branch") {
       const branch = branches.find(b => b.id === selectedBranchId);
-      return branch ? `สาขา: ${branch.name}` : "ทุกสาขา";
+      return branch ? `${isEn ? "Branch" : "สาขา"}: ${branch.name}` : (isEn ? "All Branches" : "ทุกสาขา");
     }
     if (scope === "team") {
       const team = teams.find(t => t.id === selectedTeamId);
-      return team ? `ทีม: ${team.name}` : "ทุกทีม";
+      return team ? `${isEn ? "Team" : "ทีม"}: ${team.name}` : (isEn ? "All Teams" : "ทุกทีม");
     }
-    if (scope === "personal") return "ข้อมูลส่วนตัว";
-    return "ภาพรวม";
+    if (scope === "personal") return isEn ? "Personal Performance" : "ข้อมูลส่วนตัว";
+    return isEn ? "Overview" : "ภาพรวม";
   };
 
   const rangeLabels = {
-    today: "วันนี้",
-    week: "สัปดาห์นี้",
-    month: "เดือนนี้",
-    "6months": "6 เดือนล่าสุด",
-    q1: "ไตรมาส 1 (Q1)",
-    q2: "ไตรมาส 2 (Q2)",
-    q3: "ไตรมาส 3 (Q3)",
-    q4: "ไตรมาส 4 (Q4)",
-    year: "ปีนี้",
-    lastYear: "ปีที่แล้ว",
-    year2024: "ปี 2024",
-    year2023: "ปี 2023",
-    year2022: "ปี 2022",
-    all: "ทั้งหมด",
+    today: isEn ? "Today" : "วันนี้",
+    week: isEn ? "This Week" : "สัปดาห์นี้",
+    month: isEn ? "This Month" : "เดือนนี้",
+    "6months": isEn ? "Last 6 Months" : "6 เดือนล่าสุด",
+    q1: isEn ? "Quarter 1 (Q1)" : "ไตรมาส 1 (Q1)",
+    q2: isEn ? "Quarter 2 (Q2)" : "ไตรมาส 2 (Q2)",
+    q3: isEn ? "Quarter 3 (Q3)" : "ไตรมาส 3 (Q3)",
+    q4: isEn ? "Quarter 4 (Q4)" : "ไตรมาส 4 (Q4)",
+    year: isEn ? "This Year" : "ปีนี้",
+    lastYear: isEn ? "Last Year" : "ปีที่แล้ว",
+    year2024: isEn ? "Year 2024" : "ปี 2024",
+    year2023: isEn ? "Year 2023" : "ปี 2023",
+    year2022: isEn ? "Year 2022" : "ปี 2022",
+    all: isEn ? "All Time" : "ทั้งหมด",
   };
 
   return (
@@ -205,7 +214,7 @@ export function AnalyticsSection({
         </div>
         <div>
           <h2 className="text-lg font-bold text-slate-800">
-            การวิเคราะห์เชิงลึก
+            {isEn ? "Executive Deep Analytics" : "การวิเคราะห์เชิงลึก"}
           </h2>
           <p className="text-xs text-slate-500">
             {getDynamicScopeLabel()} • {rangeLabels[range as keyof typeof rangeLabels]}
@@ -226,7 +235,7 @@ export function AnalyticsSection({
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-indigo-500" />
-                แนวโน้มรายได้ ({getDynamicScopeLabel()}) • 
+                {isEn ? "Revenue Trajectory" : "แนวโน้มรายได้"} ({getDynamicScopeLabel()}) • 
                 <p className="text-xs text-blue-600">
                   {rangeLabels[range as keyof typeof rangeLabels]}
                 </p>
@@ -248,7 +257,7 @@ export function AnalyticsSection({
             <div className="p-6">
               <h3 className="font-semibold text-slate-800 flex items-center gap-2 mb-6">
                 <PieChart className="h-4 w-4 text-violet-500" />
-                สรุปสถานะลีด ({getDynamicScopeLabel()}) • 
+                {isEn ? "Lead Funnel Status" : "สรุปสถานะลีด"} ({getDynamicScopeLabel()}) • 
                 <p className="text-xs text-blue-600">
                   {rangeLabels[range as keyof typeof rangeLabels]}
                 </p>
@@ -267,13 +276,13 @@ export function AnalyticsSection({
             <div className="p-6">
               <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6">
                 <TrendingUp className="h-4 w-4 text-emerald-500" />
-                ความคืบหน้าโครงการ ({getDynamicScopeLabel()}) • 
+                {isEn ? "Pipeline Deals Progress" : "ความคืบหน้าโครงการ"} ({getDynamicScopeLabel()}) • 
                 <p className="text-xs text-blue-600">
                   {rangeLabels[range as keyof typeof rangeLabels]}
                 </p>
               </h3>
               <p className="text-xs text-slate-500 mb-6 font-medium">
-                ระยะเวลา: {rangeLabels[range as keyof typeof rangeLabels]}
+                {isEn ? "Timeframe:" : "ระยะเวลา:"} {rangeLabels[range as keyof typeof rangeLabels]}
               </p>
               <PipelineSummary data={pipelineData || []} />
             </div>

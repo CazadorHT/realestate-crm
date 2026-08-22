@@ -4,6 +4,7 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { RiskDeal } from "@/features/dashboard/queries";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface RiskAlertsProps {
   deals?: RiskDeal[];
@@ -13,6 +14,8 @@ interface RiskAlertsProps {
 
 export function RiskAlerts({ deals = [], role, view = "personal" }: RiskAlertsProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const isAdminView = (role === "ADMIN" || role === "MANAGER" || role === "OWNER") && view !== "personal";
   return (
@@ -20,14 +23,14 @@ export function RiskAlerts({ deals = [], role, view = "personal" }: RiskAlertsPr
       <CardHeader className="pb-2 px-4 sm:px-6">
         <CardTitle className="text-sm font-semibold flex items-center gap-2 text-red-800">
           <AlertTriangle className="h-4 w-4" />
-          ดีลเสี่ยง / ค้างนาน
+          {isEn ? "Stalled & At-Risk Deals" : "ดีลเสี่ยง / ค้างนาน"}
         </CardTitle>
       </CardHeader>
       <CardContent className="pb-6">
         <div className="space-y-3 max-h-[200px] custom-scrollbar overflow-y-auto px-4 sm:px-6 py-4">
           {deals.length === 0 ? (
             <p className="text-xs text-muted-foreground">
-              ไม่มีดีลที่มีความเสี่ยง
+              {isEn ? "No at-risk deals detected" : "ไม่มีดีลที่มีความเสี่ยง"}
             </p>
           ) : (
             deals.map((deal) => (
@@ -51,11 +54,11 @@ export function RiskAlerts({ deals = [], role, view = "personal" }: RiskAlertsPr
                   <span className="text-xs text-muted-foreground">
                     Stage: {deal.stage}
                     {isAdminView && (
-                      <span className="ml-1 text-slate-400 font-bold">• โดย: {deal.agentName || "ไม่ระบุ"}</span>
+                      <span className="ml-1 text-slate-400 font-bold">• {isEn ? "Agent:" : "โดย:"} {deal.agentName || (isEn ? "Unassigned" : "ไม่ระบุ")}</span>
                     )}
                   </span>
                   <span className="text-xs font-bold text-red-600">
-                    ค้าง {deal.daysInStage} วัน
+                    {isEn ? `Stalled for ${deal.daysInStage} days` : `ค้าง ${deal.daysInStage} วัน`}
                   </span>
                 </div>
               </div>

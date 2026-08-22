@@ -12,6 +12,7 @@ import { getTopAgentsAction } from "@/features/dashboard/queries/performance";
 import { Button } from "@/components/ui/button";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import { Trophy } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface TopAgentsProps {
   data: TopAgent[];
@@ -22,6 +23,8 @@ interface TopAgentsProps {
 
 export function TopAgents({ data: initialData, role, multiTenantEnabled, range: initialRange }: TopAgentsProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<TopAgent[]>(initialData);
@@ -98,21 +101,36 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
         const res = await getTopAgentsAction({ 
           tenantId: filters.branchId, 
           teamId: filters.teamId,
-          range: filters.range
+          range: filters.range 
         });
         setData(res);
+      } catch (err) {
+        console.error("Failed to fetch top agents:", err);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [filters.branchId, filters.teamId, filters.range, role]);
+  }, [filters, role, initialRange]);
 
   // 🛡️ RBAC: Agents are not allowed to see this performance board
   if (role === "AGENT") return null;
 
-  const currentBranch = options.branches.find((b) => b.id === filters.branchId);
-  const currentTeam = options.teams.find((t) => t.id === filters.teamId);
+  const currentBranch = options.branches.find(b => b.id === filters.branchId);
+  const currentTeam = options.teams.find(t => t.id === filters.teamId);
+
+  const rangeLabels: Record<string, string> = {
+    today: isEn ? "Today" : "วันนี้",
+    week: isEn ? "This Week" : "สัปดาห์นี้",
+    month: isEn ? "This Month" : "เดือนนี้",
+    "6months": isEn ? "Last 6 Months" : "6 เดือนล่าสุด",
+    q1: isEn ? "Q1" : "ไตรมาส 1",
+    q2: isEn ? "Q2" : "ไตรมาส 2",
+    q3: isEn ? "Q3" : "ไตรมาส 3",
+    q4: isEn ? "Q4" : "ไตรมาส 4",
+    year: isEn ? "This Year" : "ปีนี้",
+    all: isEn ? "All Time" : "ทั้งหมด"
+  };
 
   return (
     <Card className="h-full shadow-lg border-none bg-white overflow-hidden relative group">
@@ -123,7 +141,7 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
         <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-[1px] flex items-center justify-center transition-all duration-300">
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Loading Top 5...</span>
+            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">{isEn ? "Loading..." : "กำลังโหลดข้อมูล..."}</span>
           </div>
         </div>
       )}
@@ -133,22 +151,11 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <span className="text-xl">🏆</span> ตัวแทนยอดเยี่ยม
+                <span className="text-xl">🏆</span> {isEn ? "Top Performers" : "ตัวแทนยอดเยี่ยม"}
               </CardTitle>
               <p className="text-xs text-slate-500 font-medium">
-                จัดอันดับตามค่าคอมมิชชั่น • {
-                  {
-                    today: "วันนี้",
-                    week: "สัปดาห์นี้",
-                    month: "เดือนนี้",
-                    "6months": "6 เดือนล่าสุด",
-                    q1: "ไตรมาส 1",
-                    q2: "ไตรมาส 2",
-                    q3: "ไตรมาส 3",
-                    q4: "ไตรมาส 4",
-                    year: "ปีนี้",
-                    all: "ทั้งหมด"
-                  }[initialRange as string] || initialRange
+                {isEn ? "Ranked by gross commission" : "จัดอันดับตามค่าคอมมิชชั่น"} • {
+                  rangeLabels[initialRange as string] || initialRange
                 }
               </p>
             </div>
@@ -164,8 +171,8 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
                 open={branchDialogOpen}
                 onOpenChange={setBranchDialogOpen}
                 className="sm:max-w-sm!"
-                title="เลือกสาขา"
-                description="กรองข้อมูลตามสาขาที่ต้องการ"
+                title={isEn ? "Select Branch" : "เลือกสาขา"}
+                description={isEn ? "Filter leaderboard by branch" : "กรองข้อมูลตามสาขาที่ต้องการ"}
                 trigger={
                   <Button
                     variant="outline"
@@ -178,7 +185,7 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
                     )}
                   >
                     <Building2 className="h-3 w-3 mr-1.5" />
-                    {currentBranch?.name || "ทุกสาขา"}
+                    {currentBranch?.name || (isEn ? "All Branches" : "ทุกสาขา")}
                     <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
                   </Button>
                 }
@@ -202,7 +209,7 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
                           : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                       )}
                     >
-                      <span>ทุกสาขา</span>
+                      <span>{isEn ? "All Branches" : "ทุกสาขา"}</span>
                       {filters.branchId === "ALL" && <Check className="h-4 w-4" />}
                     </button>
                     {options.branches.map((b) => (
@@ -239,8 +246,8 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
               open={teamDialogOpen}
               onOpenChange={setTeamDialogOpen}
               className="sm:max-w-sm!"
-              title="เลือกทีม"
-              description="กรองข้อมูลตามทีมที่ต้องการ"
+              title={isEn ? "Select Team" : "เลือกทีม"}
+              description={isEn ? "Filter leaderboard by team" : "กรองข้อมูลตามทีมที่ต้องการ"}
               trigger={
                 <Button
                   variant="outline"
@@ -253,7 +260,7 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
                   )}
                 >
                   <Users className="h-3 w-3 mr-1.5" />
-                  {currentTeam?.name || "ทุกทีม"}
+                  {currentTeam?.name || (isEn ? "All Teams" : "ทุกทีม")}
                   <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
                 </Button>
               }
@@ -273,7 +280,7 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                     )}
                   >
-                    <span>ทุกทีม</span>
+                    <span>{isEn ? "All Teams" : "ทุกทีม"}</span>
                     {filters.teamId === "ALL" && <Check className="h-4 w-4" />}
                   </button>
                   {options.teams
@@ -369,7 +376,7 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
                         )}
                       >
                         <Building2 className="h-2.5 w-2.5" />
-                        {agent.branch_name || "ยังไม่ได้สังกัดสาขา"}
+                        {agent.branch_name || (isEn ? "No Branch" : "ยังไม่ได้สังกัดสาขา")}
                       </span>
                     )}
                     <span
@@ -381,12 +388,12 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
                       )}
                     >
                       <Users className="h-2.5 w-2.5 text-slate-400" />
-                      {agent.team_name || "ยังไม่ได้สังกัดทีม"}
+                      {agent.team_name || (isEn ? "No Team" : "ยังไม่ได้สังกัดทีม")}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium flex items-center gap-1 mt-0.5">
                     <span className="w-1 h-1 bg-slate-300 rounded-full" />
-                    <span className=" text-emerald-600 font-medium ">{agent.deals_count} ดีลสำเร็จ</span>
+                    <span className=" text-emerald-600 font-medium ">{agent.deals_count} {isEn ? "deals won" : "ดีลสำเร็จ"}</span>
                   </p>
                 </div>
               </div>
@@ -406,8 +413,8 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
             <div className="flex flex-col items-center justify-center min-h-[300px]">
               <DashboardEmptyState
                 icon={Trophy}
-                title="ยังไม่มีข้อมูลผลงานในส่วนนี้"
-                description="ไม่พบข้อมูลยอดขายหรือค่าคอมมิชชั่นสำหรับทีมหรือสาขาที่คุณเลือกในขณะนี้"
+                title={isEn ? "No Leaderboard Data Yet" : "ยังไม่มีข้อมูลผลงานในส่วนนี้"}
+                description={isEn ? "No closed deals or commissions found for this selected scope." : "ไม่พบข้อมูลยอดขายหรือค่าคอมมิชชั่นสำหรับทีมหรือสาขาที่คุณเลือกในขณะนี้"}
                 action={
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse" />

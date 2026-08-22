@@ -6,6 +6,7 @@ import { Phone, MessageCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FollowUpLead } from "@/features/dashboard/queries";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FollowUpInsightsProps {
   leads?: FollowUpLead[];
@@ -15,6 +16,8 @@ interface FollowUpInsightsProps {
 
 export function FollowUpInsights({ leads = [], role, view = "personal" }: FollowUpInsightsProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const isAdminView = (role === "ADMIN" || role === "MANAGER" || role === "OWNER") && view !== "personal";
   return (
@@ -22,14 +25,14 @@ export function FollowUpInsights({ leads = [], role, view = "personal" }: Follow
       <CardHeader className="pb-2 px-4 sm:px-6">
         <CardTitle className="text-sm font-semibold flex items-center gap-2 text-orange-800">
           <Phone className="h-4 w-4" />
-          ต้องติดตาม (Follow Up)
+          {isEn ? "Action Required (Follow Up)" : "ต้องติดตาม (Follow Up)"}
         </CardTitle>
       </CardHeader>
       <CardContent className="pb-6">
         <div className="space-y-3 max-h-[200px] custom-scrollbar overflow-y-auto px-4 sm:px-6 py-4">
           {leads.length === 0 ? (
             <p className="text-xs text-muted-foreground">
-              ไม่มีรายการค้างติดตาม
+              {isEn ? "No pending leads requiring follow-up" : "ไม่มีรายการค้างติดตาม"}
             </p>
           ) : (
             leads.map((lead) => (
@@ -44,11 +47,11 @@ export function FollowUpInsights({ leads = [], role, view = "personal" }: Follow
                       {lead.stage}
                     </Badge>
                     <span className="text-xs text-red-500 font-medium">
-                      หายไป {lead.daysQuiet} วัน
+                      {isEn ? `Inactive for ${lead.daysQuiet} days` : `หายไป ${lead.daysQuiet} วัน`}
                     </span>
                     {isAdminView && (
                       <span className="text-[10px] text-slate-400 font-bold ml-1">
-                        • โดย: {lead.agentName || "ไม่ระบุ"}
+                        • {isEn ? "Agent:" : "โดย:"} {lead.agentName || (isEn ? "Unassigned" : "ไม่ระบุ")}
                       </span>
                     )}
                   </div>
