@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
+import { rateLimit } from "@/lib/rate-limit";
+
+const proxyLimiter = rateLimit({
+  interval: 60 * 1000,
+  uniqueTokenPerInterval: 1000,
+});
 
 /**
  * Image Proxy to convert WebP (and others) to JPEG for TikTok compatibility
@@ -14,6 +20,13 @@ export async function HEAD(req: NextRequest) {
 }
 
 async function handleImageProxy(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+  try {
+    await proxyLimiter.check(120, ip);
+  } catch {
+    return new NextResponse("Too many proxy requests", { status: 429 });
+  }
+
   const { searchParams } = new URL(req.url);
   const imageUrl = searchParams.get("url");
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";

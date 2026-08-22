@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { submitInquiryAction, createDepositLeadAction } from './actions';
+import { submitInquiryAction, createDepositLeadAction, clearDuplicateSubmissionCache } from './actions';
 import * as crypto from '@/lib/crypto';
 
 // Mock Supabase
@@ -56,8 +56,9 @@ vi.mock('@/lib/ratelimit', () => ({
 }));
 
 describe('Public Server Actions - Brutal Hardening Tests', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await clearDuplicateSubmissionCache();
   });
 
   describe('submitInquiryAction', () => {
@@ -145,7 +146,7 @@ describe('Public Server Actions - Brutal Hardening Tests', () => {
 
       const payload = {
         fullName: 'Depositor Name',
-        phone: '0999999999',
+        phone: '0898765432',
         email: 'dep@test.com',
         propertyType: 'CONDO' as any,
         details: 'High floor'
@@ -157,8 +158,8 @@ describe('Public Server Actions - Brutal Hardening Tests', () => {
       expect(mockRpc).toHaveBeenCalledWith('create_deposit_lead', {
         p_full_name: 'enc:Depositor Name',
         p_full_name_hash: 'hash:Depositor Name',
-        p_phone: 'enc:0999999999',
-        p_phone_hash: 'hash:0999999999',
+        p_phone: 'enc:0898765432',
+        p_phone_hash: 'hash:0898765432',
         p_email: 'enc:dep@test.com',
         p_email_hash: 'hash:dep@test.com',
         p_line_id: 'enc:',
@@ -168,6 +169,77 @@ describe('Public Server Actions - Brutal Hardening Tests', () => {
         p_property_type: 'CONDO',
         p_note: 'enc:[ฝากทรัพย์] \nอีเมล: dep@test.com\nLine: -\nWeChat: -\nWhatsApp: -\nType: CONDO\nDetails: High floor'
       });
+    });
+
+    it('should reject dummy phone numbers like 0999999999 or 0123456789', async () => {
+      const payload = {
+        fullName: 'Dummy Phone User',
+        phone: '0999999999',
+        propertyType: 'CONDO' as any,
+      };
+
+      const result = await createDepositLeadAction(payload);
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('ข้อมูลไม่ถูกต้อง');
+    });
+
+    it('should silently block bot submission via honeypot field', async () => {
+      const payload = {
+        fullName: 'Bot Spammer',
+        phone: '0898765432',
+        propertyType: 'CONDO' as any,
+        website_hp: 'i-am-a-bot-value'
+      };
+
+      const result = await createDepositLeadAction(payload);
+      expect(result.success).toBe(true);
+      expect(result.leadId).toBe('hp_blocked');
+      expect(mockRpc).not.toHaveBeenCalled();
+    });
+
+    it('should handle duplicate content hash intelligently (allow different propertyType or updated details)', async () => {
+      mockRpc.mockResolvedValue({ data: 'lead-id-1', error: null });
+
+      const condoPayload = {
+        fullName: 'User A',
+        phone: '0811111111',
+        propertyType: 'CONDO' as any,
+        details: 'Unit 101'
+      };
+
+      // First submit -> Allowed
+      const res1 = await createDepositLeadAction(condoPayload);
+      expect(res1.success).toBe(true);
+      expect(res1.leadId).toBe('lead-id-1');
+
+      // Exact same submit immediately -> Blocked as duplicate
+      const res2 = await createDepositLeadAction(condoPayload);
+      expect(res2.success).toBe(true);
+      expect(res2.leadId).toBe('dup_acknowledged');
+
+      // Submit DIFFERENT propertyType (HOUSE) -> ALLOWED immediately!
+      mockRpc.mockResolvedValue({ data: 'lead-id-2', error: null });
+      const housePayload = {
+        fullName: 'User A',
+        phone: '0811111111',
+        propertyType: 'HOUSE' as any,
+        details: 'Unit 101'
+      };
+      const res3 = await createDepositLeadAction(housePayload);
+      expect(res3.success).toBe(true);
+      expect(res3.leadId).toBe('lead-id-2');
+
+      // Submit DIFFERENT details -> ALLOWED immediately!
+      mockRpc.mockResolvedValue({ data: 'lead-id-3', error: null });
+      const updatedDetailsPayload = {
+        fullName: 'User A',
+        phone: '0811111111',
+        propertyType: 'CONDO' as any,
+        details: 'Unit 102 - Updated info'
+      };
+      const res4 = await createDepositLeadAction(updatedDetailsPayload);
+      expect(res4.success).toBe(true);
+      expect(res4.leadId).toBe('lead-id-3');
     });
   });
 });

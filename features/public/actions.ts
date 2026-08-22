@@ -36,6 +36,46 @@ const limiter = rateLimit({
   uniqueTokenPerInterval: 500,
 });
 
+// Duplicate submission cache (Content Hash within 3-minute sliding window)
+const duplicateSubmissionCache = new Map<string, number>();
+const DUPLICATE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+
+function isDuplicateSubmission(phone: string, propertyType: string, details?: string | null): boolean {
+  const cleanPhone = phone.replace(/[^\d]/g, "");
+  const cleanDetails = (details || "").trim().toLowerCase();
+  const key = `${cleanPhone}:${propertyType}:${cleanDetails}`;
+
+  const now = Date.now();
+  const lastTime = duplicateSubmissionCache.get(key);
+
+  if (lastTime && now - lastTime < DUPLICATE_TTL_MS) {
+    return true;
+  }
+
+  duplicateSubmissionCache.set(key, now);
+
+  if (duplicateSubmissionCache.size > 1000) {
+    for (const [k, time] of duplicateSubmissionCache.entries()) {
+      if (now - time > DUPLICATE_TTL_MS) duplicateSubmissionCache.delete(k);
+    }
+  }
+  return false;
+}
+
+// Helper to sanitize HTML/Script tags (Anti-XSS)
+function sanitizeInput(text?: string | null): string | undefined {
+  if (text === undefined || text === null) return undefined;
+  return text
+    .replace(/<[^>]*>?/gm, "")
+    .replace(/javascript:/gi, "")
+    .trim();
+}
+
+// Helper to reset duplicate cache for testing
+export async function clearDuplicateSubmissionCache() {
+  duplicateSubmissionCache.clear();
+}
+
 // ==========================================
 // 🏠 DEPOSIT LEAD ACTION
 // ==========================================
@@ -43,31 +83,64 @@ export async function createDepositLeadAction(data: DepositLeadInput) {
   const parsed = depositLeadSchema.safeParse(data);
   if (!parsed.success) return { success: false, message: "ข้อมูลไม่ถูกต้อง" };
 
+  // Sanitize text inputs
+  const sanitizedFullName = sanitizeInput(data.fullName);
+  const sanitizedDetails = sanitizeInput(data.details);
+  const sanitizedEmail = sanitizeInput(data.email);
+  const sanitizedLineId = sanitizeInput(data.lineId);
+
+  // 1. Honeypot Check (Silent drop for bot submissions)
+  if (data.website_hp && data.website_hp.trim().length > 0) {
+    return { success: true, leadId: "hp_blocked" };
+  }
+
+  // 2. IP Rate Limiting
+  let ip = "127.0.0.1";
+  try {
+    ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
+  } catch (e) {
+    // Safe fallback outside Next.js request scope
+  }
+  try {
+    await limiter.check(3, ip);
+  } catch {
+    return { success: false, message: "⏳ คุณส่งข้อมูลถี่เกินไป กรุณารอสักครู่แล้วลองใหม่อีกครั้ง" };
+  }
+
+  // 3. Smart Duplicate Content Hash Check (Same phone + type + details within 3 mins)
+  if (isDuplicateSubmission(data.phone, data.propertyType, sanitizedDetails)) {
+    return {
+      success: true,
+      leadId: "dup_acknowledged",
+      message: "ระบบได้รับข้อมูลของท่านแล้วเรียบร้อย",
+    };
+  }
+
   const supabase = await createClient();
   const cleanPhone = data.phone.replace(/[^0-9+]/g, "");
-  const cleanLineId = data.lineId?.replace(/^@/, "").trim();
+  const cleanLineId = sanitizedLineId?.replace(/^@/, "").trim();
 
   const { data: leadId, error: rpcError } = await supabase.rpc(
     "create_deposit_lead",
     {
-      p_full_name: encrypt(data.fullName) || data.fullName,
-      p_full_name_hash: generateBlindIndex(data.fullName),
+      p_full_name: encrypt(sanitizedFullName) || sanitizedFullName,
+      p_full_name_hash: generateBlindIndex(sanitizedFullName),
       p_phone: encrypt(data.phone) || data.phone,
       p_phone_hash: generateBlindIndex(data.phone),
-      p_email: encrypt(data.email || "") || data.email || "",
-      p_email_hash: generateBlindIndex(data.email || ""),
-      p_line_id: encrypt(data.lineId || "") || data.lineId || "",
-      p_line_id_hash: generateBlindIndex(data.lineId || ""),
-      p_wechat_id: data.wechatId,
-      p_whatsapp: data.whatsapp,
+      p_email: encrypt(sanitizedEmail || "") || sanitizedEmail || "",
+      p_email_hash: generateBlindIndex(sanitizedEmail || ""),
+      p_line_id: encrypt(cleanLineId || "") || cleanLineId || "",
+      p_line_id_hash: generateBlindIndex(cleanLineId || ""),
+      p_wechat_id: sanitizeInput(data.wechatId),
+      p_whatsapp: sanitizeInput(data.whatsapp),
       p_property_type: data.propertyType,
       p_note: encrypt(`[ฝากทรัพย์] 
-อีเมล: ${data.email || "-"}
-Line: ${data.lineId || "-"}
-WeChat: ${data.wechatId || "-"}
-WhatsApp: ${data.whatsapp || "-"}
+อีเมล: ${sanitizedEmail || "-"}
+Line: ${cleanLineId || "-"}
+WeChat: ${sanitizeInput(data.wechatId) || "-"}
+WhatsApp: ${sanitizeInput(data.whatsapp) || "-"}
 Type: ${data.propertyType}
-Details: ${data.details || "-"}`),
+Details: ${sanitizedDetails || "-"}`),
     }
   );
 
@@ -158,6 +231,11 @@ Details: ${data.details || "-"}`),
 // 💬 PUBLIC INQUIRY ACTION
 // ==========================================
 export async function submitInquiryAction(prevState: LeadState, formData: FormData): Promise<LeadState> {
+  const rawHoneypot = formData.get("website_hp")?.toString();
+  if (rawHoneypot && rawHoneypot.trim().length > 0) {
+    return { success: true, data: { id: "hp_blocked", aiScore: 0, isHotLead: false, utmSource: "" } };
+  }
+
   let ip = "127.0.0.1";
   try {
     ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";

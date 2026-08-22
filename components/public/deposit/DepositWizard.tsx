@@ -40,6 +40,7 @@ export function DepositWizard({
       whatsapp: "",
       details: "",
       propertyType: undefined,
+      website_hp: "",
     },
   });
   const hasStartedRef = useRef(false);
@@ -183,6 +184,15 @@ export function DepositWizard({
   return (
     <Form {...form}>
       <div ref={wizardRef}>
+        {/* Anti-spam Honeypot Field (Hidden from real users, filled by bots) */}
+        <input
+          type="text"
+          {...form.register("website_hp")}
+          className="hidden pointer-events-none absolute opacity-0 -z-50"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+        />
         <DepositMobileView
           form={form}
           currentStep={currentStep}

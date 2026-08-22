@@ -22,6 +22,16 @@ export async function POST(req: Request) {
 
     const adminSupabase = createAdminClient();
     const buffer = Buffer.from(base64Data, "base64");
+
+    // Staff upload size limit check (Max 20MB)
+    const MAX_STAFF_UPLOAD_BYTES = 20 * 1024 * 1024;
+    if (buffer.length > MAX_STAFF_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { success: false, message: "ขนาดไฟล์ใหญ่เกินไป (ไม่เกิน 20MB)" },
+        { status: 400 }
+      );
+    }
+
     const tempCoverPath = `social-covers/${propertyId}/cover_${Date.now()}.jpg`;
 
     const jpegBuf = await sharp(buffer)
