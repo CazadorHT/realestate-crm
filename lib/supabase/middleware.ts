@@ -76,22 +76,31 @@ export async function updateSession(request: NextRequest) {
     let userState = activeUserCache.get(user.id);
 
     if (!userState) {
-      const { data: identity } = await supabase
-        .from("identities_v3")
-        .select("is_active, role")
-        .eq("id", user.id)
-        .maybeSingle();
+      const statelessRole = user.app_metadata?.role as string | undefined;
+      const statelessIsActive = user.app_metadata?.is_active as boolean | undefined;
 
-      userState = {
-        isActive: identity ? Boolean(identity.is_active) : true,
-        role: identity?.role || (user.app_metadata?.role as string) || "AGENT",
-      };
-
-      // 🛡️ Smart Cache: แคชเฉพาะ User ที่ Active แล้ว (5 นาที)
-      // ส่วน User ที่ยัง Pending (isActive: false) จะไม่จำแคชค้างไว้ เพื่อให้เมื่อได้รับอนุมัติแล้ว สามารถเข้าสู่ระบบได้ทันที!
-      if (userState.isActive) {
+      if (statelessRole && statelessIsActive !== undefined) {
+        userState = {
+          isActive: Boolean(statelessIsActive),
+          role: statelessRole,
+        };
         activeUserCache.set(user.id, userState);
-        setTimeout(() => activeUserCache.delete(user.id), CACHE_TTL_MS);
+      } else {
+        const { data: identity } = await supabase
+          .from("identities_v3")
+          .select("is_active, role")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        userState = {
+          isActive: identity ? Boolean(identity.is_active) : true,
+          role: identity?.role || statelessRole || "AGENT",
+        };
+
+        if (userState.isActive) {
+          activeUserCache.set(user.id, userState);
+          setTimeout(() => activeUserCache.delete(user.id), CACHE_TTL_MS);
+        }
       }
     }
 

@@ -10,33 +10,39 @@ export type SystemConfig = {
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 
+let configMemoryCache: { data: SystemConfig; timestamp: number } | null = null;
+const CONFIG_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 /**
  * Fetches the global system configuration from site_settings.
- * Cached cross-request (30 days) with tag invalidation.
+ * Fast 30-day In-Memory & Request-level Cache with instant update invalidation.
  */
 export const getSystemConfig = cache(async (): Promise<SystemConfig> => {
-  return unstable_cache(
-    async () => {
-      const { createAdminClient } = await import("@/lib/supabase/admin");
-      const supabase = await createAdminClient();
-      const { data, error } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("key", "system_config")
-        .maybeSingle();
+  const now = Date.now();
+  if (configMemoryCache && now - configMemoryCache.timestamp < CONFIG_CACHE_TTL_MS) {
+    return configMemoryCache.data;
+  }
 
-      if (error || !data) {
-        return {
-          multi_tenant_enabled: false,
-          default_tenant_id: null,
-        };
-      }
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "system_config")
+      .maybeSingle();
 
-      return data.value as SystemConfig;
-    },
-    ["global-system-config"],
-    { revalidate: 31536000, tags: ["system-config", "site-settings"] }
-  )();
+    if (!error && data?.value) {
+      const config = data.value as SystemConfig;
+      configMemoryCache = { data: config, timestamp: now };
+      return config;
+    }
+  } catch (err) {
+    console.warn("[getSystemConfig] Cache fetch failed:", err);
+  }
+
+  const fallback: SystemConfig = { multi_tenant_enabled: false, default_tenant_id: null };
+  return fallback;
 });
 
 import type { Json } from "@/lib/database.types.generated";
@@ -58,6 +64,12 @@ export async function updateSystemConfig(config: Partial<SystemConfig>) {
     updated_at: new Date().toISOString(),
   }, { onConflict: "tenant_id,category,key" });
 
-  if (error) throw error;
-  return newValue;
+  // Clear memory cache so next request loads fresh config
+  configMemoryCache = null;
+
+  if (error) {
+    throw error;
+  }
+
+  return { success: true };
 }
