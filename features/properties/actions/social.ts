@@ -1540,6 +1540,7 @@ export async function uploadCoverBannerAction(
       .from("property-images")
       .upload(tempCoverPath, jpegBuf, {
         contentType: "image/jpeg",
+        cacheControl: "31536000",
         upsert: true,
       });
 
