@@ -602,15 +602,21 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                   {isLogin && (
                     <button
                       type="button"
+                      disabled={isLoading}
                       onClick={() => {
                         form.setValue("email", "demo@vccasset.com");
                         form.setValue("password", "Demo2026!");
-                        toast.success("กรอกข้อมูลบัญชีทดสอบ Sandbox Demo เรียบร้อย!");
+                        toast.success("Logging in to Sandbox Demo...");
+                        onFormSubmit({
+                          email: "demo@vccasset.com",
+                          password: "Demo2026!",
+                          rememberMe: true,
+                        });
                       }}
-                      className="w-full mt-3 py-2.5 px-3 rounded-xl border border-dashed border-blue-200 hover:border-blue-400 bg-blue-50/50 hover:bg-blue-50 text-blue-700 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      className="w-full mt-3 py-2.5 px-3 rounded-xl border border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs disabled:opacity-50"
                     >
                       <span>🧪</span>
-                      <span>คลิกเพื่อกรอกบัญชีทดสอบ Sandbox Demo (demo@vccasset.com)</span>
+                      <span>One-Click Sandbox Demo Login (demo@vccasset.com)</span>
                     </button>
                   )}
                 </div>

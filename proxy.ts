@@ -65,6 +65,13 @@ export async function proxy(request: NextRequest) {
     });
   }
 
+  // 🧪 Sandbox Demo Subdomain Routing:
+  // If user accesses via demo.vccasset.com and visits root public pages, redirect straight to CRM Login
+  const hostname = request.headers.get("host")?.toLowerCase() || "";
+  if (hostname.startsWith("demo.") && (pathname === "/" || pathname === "/properties")) {
+    return NextResponse.redirect(new URL("/auth/login?demo=true", request.url));
+  }
+
   // 2. 🔑 Supabase Session Management (Auth Refresh)
   // [OPTIMIZATION] Only run session management on protected & auth routes
   const isPublicApi = path.startsWith("/api/public");
