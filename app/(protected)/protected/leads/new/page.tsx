@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { UserPlus } from "lucide-react";
@@ -6,9 +7,22 @@ import { createLeadAction } from "@/features/leads/actions";
 import { LeadFormValues } from "@/features/leads/types";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
+  return {
+    title: isEn ? "Add New Lead" : "เพิ่มลูกค้าใหม่",
+    description: isEn
+      ? "Fill in the details to add a new lead into the system"
+      : "กรอกข้อมูลเพื่อเพิ่มลูกค้าใหม่เข้าในระบบ",
+  };
+}
+
 export default async function LeadNewPage() {
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   async function onSubmitAction(values: LeadFormValues) {
@@ -16,7 +30,7 @@ export default async function LeadNewPage() {
     const res = await createLeadAction(values);
     if (!res.success) {
       const cStore = await cookies();
-      const currentIsEn = (cStore.get("language")?.value || "th") === "en";
+      const currentIsEn = (cStore.get("crm-language")?.value || cStore.get("language")?.value || "th") === "en";
       return { success: false, message: res.error || (currentIsEn ? "Error creating lead" : "เกิดข้อผิดพลาดในการสร้างลีด") };
     }
     redirect(`/protected/leads/${res.data.leadId}?success=true`);

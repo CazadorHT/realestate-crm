@@ -8,10 +8,18 @@ import { Metadata } from "next";
 import { CoBrokerTour } from "@/features/co-brokers/_components/CoBrokerTour";
 import { cookies } from "next/headers";
 
-export const metadata: Metadata = {
-  title: "เครือข่ายคู่ค้า | Real Estate CRM",
-  description: "จัดการพาร์ทเนอร์และ Co-brokers ในเครือข่ายธุรกิจของคุณ",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
+  return {
+    title: isEn ? "Co-Brokers Network | Real Estate CRM" : "เครือข่ายคู่ค้า | Real Estate CRM",
+    description: isEn
+      ? "Manage partners and co-brokers across your real estate network."
+      : "จัดการพาร์ทเนอร์และ Co-brokers ในเครือข่ายธุรกิจของคุณ",
+  };
+}
 
 // 🛡️ [HARDENING] Force dynamic rendering to prevent "Unauthorized" errors during build
 // This page requires a user session to fetch co-broker data.
@@ -19,7 +27,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CoBrokersPage() {
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   return (

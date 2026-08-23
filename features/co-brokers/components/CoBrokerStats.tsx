@@ -5,7 +5,7 @@ import { Users, TrendingUp, Handshake } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface CoBrokerStatsProps {
-  stats: {
+  stats?: {
     total: number;
     highRated: number;
     active: number;
@@ -15,6 +15,12 @@ interface CoBrokerStatsProps {
 export function CoBrokerStats({ stats }: CoBrokerStatsProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
+
+  const safeStats = {
+    total: stats?.total ?? 0,
+    highRated: stats?.highRated ?? 0,
+    active: stats?.active ?? 0,
+  };
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
@@ -27,7 +33,7 @@ export function CoBrokerStats({ stats }: CoBrokerStatsProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-slate-900">{stats.total}</div>
+          <div className="text-3xl font-bold text-slate-900">{safeStats.total}</div>
           <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1 italic">{isEn ? "Cooperation Network" : "เครือข่ายความร่วมมือ"}</p>
         </CardContent>
       </Card>
@@ -41,7 +47,7 @@ export function CoBrokerStats({ stats }: CoBrokerStatsProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-slate-900">{stats.highRated}</div>
+          <div className="text-3xl font-bold text-slate-900">{safeStats.highRated}</div>
           <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1 italic">{isEn ? "4-5 Stars Rating" : "เรตติ้ง 4-5 ดาว"}</p>
         </CardContent>
       </Card>
@@ -55,7 +61,7 @@ export function CoBrokerStats({ stats }: CoBrokerStatsProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-slate-900">{stats.active}</div>
+          <div className="text-3xl font-bold text-slate-900">{safeStats.active}</div>
           <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1 italic">{isEn ? "Ready to Collaborate" : "พร้อมร่วมงานทันที"}</p>
         </CardContent>
       </Card>

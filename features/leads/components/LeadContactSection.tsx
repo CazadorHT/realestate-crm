@@ -290,7 +290,7 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
                   <div
                     className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? "bg-emerald-500" : "bg-slate-300"}`}
                   />
-                  {nat.label}
+                  {isEn ? nat.labelEn : nat.labelTh}
                 </button>
               );
             })}

@@ -17,7 +17,7 @@ import {
   uploadDocumentToStorageAction,
 } from "../generation-actions";
 import { createDocumentRecordAction, searchOwnerAction } from "../actions";
-import { DOC_TYPE_LABELS, DocumentOwnerType } from "../schema";
+import { DOC_TYPE_LABELS, DOC_TYPE_LABELS_EN, DocumentOwnerType } from "../schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,7 @@ export function TemplateDialog({
   const [loading, setLoading] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const [language, setLanguage] = useState<string>("th");
+  const [language, setLanguage] = useState<string>(currentLang || "th");
   const [templateSource, setTemplateSource] = useState<"standard" | "custom">(
     "standard",
   );
@@ -1030,9 +1030,14 @@ export function TemplateDialog({
                                   : "text-slate-400"
                               }
                             >
-                              {templates.find(
-                                (t) => t.id === selectedTemplateId,
-                              )?.name || (isEn ? "Select template..." : "เลือกต้นแบบ...")}
+                              {(() => {
+                                const found = templates.find((t) => t.id === selectedTemplateId);
+                                if (!found) return isEn ? "Select template..." : "เลือกต้นแบบ...";
+                                if (isEn && found.type && DOC_TYPE_LABELS_EN[found.type]) {
+                                  return DOC_TYPE_LABELS_EN[found.type];
+                                }
+                                return found.name;
+                              })()}
                             </span>
                             <Loader2
                               className={cn(
@@ -1099,10 +1104,12 @@ export function TemplateDialog({
                                       : "text-slate-700",
                                   )}
                                 >
-                                  {t.name}
+                                  {isEn && t.type && DOC_TYPE_LABELS_EN[t.type]
+                                    ? DOC_TYPE_LABELS_EN[t.type]
+                                    : t.name}
                                 </p>
                                 <p className="text-[10px] text-slate-400 font-medium">
-                                  Type: {t.type || "General"}
+                                  {isEn ? "Type:" : "ประเภท:"} {isEn && t.type && DOC_TYPE_LABELS_EN[t.type] ? DOC_TYPE_LABELS_EN[t.type] : (t.type || "General")}
                                 </p>
                               </div>
                               {selectedTemplateId === t.id && (
@@ -1120,7 +1127,7 @@ export function TemplateDialog({
                       </Label>
                       <div className="grid grid-cols-4 gap-2 p-1 bg-slate-100/50 rounded-2xl border border-slate-200/50">
                         {[
-                          { id: "th", label: "ไทย", icon: "🇹🇭" },
+                          { id: "th", label: isEn ? "Thai" : "ไทย", icon: "🇹🇭" },
                           { id: "en", label: "EN", icon: "🇺🇸" },
                           { id: "cn", label: "中文", icon: "🇨🇳" },
                           { id: "ru", label: "Русский", icon: "🇷🇺" },

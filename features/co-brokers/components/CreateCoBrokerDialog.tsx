@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CoBrokerFormValues, CoBrokerSchema } from "../schema";
+import { CoBrokerFormValues, CoBrokerSchema, getCoBrokerSchema } from "../schema";
 import { 
   ResponsiveDialog
 } from "@/components/ui/responsive-dialog";
@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createCoBrokerAction } from "../actions";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { 
   Loader2, 
   Info, 
@@ -40,7 +40,6 @@ import {
   PROPERTY_TYPE_ORDER, 
   PROPERTY_TYPE_ICONS 
 } from "../../properties/labels";
-import { useEffect } from "react";
 import { getBanksAction } from "../../finance/bank-actions";
 import { 
   Select, 
@@ -74,8 +73,10 @@ export function CreateCoBrokerDialog({
   const [isRatingOpen, setIsRatingOpen] = useState(false);
   const totalSteps = 3;
 
+  const currentSchema = useMemo(() => getCoBrokerSchema(isEn), [isEn]);
+
   const form = useForm<CoBrokerFormValues>({
-    resolver: zodResolver(CoBrokerSchema) as any,
+    resolver: zodResolver(currentSchema) as any,
     defaultValues: {
       name: "",
       company_name: "",

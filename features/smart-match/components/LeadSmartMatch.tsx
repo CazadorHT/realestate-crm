@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, ArrowRight, CheckCircle2, Loader2, Send } from "lucide-react";
+import { Sparkles, ArrowRight, CheckCircle2, Loader2, Send, AlertTriangle } from "lucide-react";
 import { runSmartMatchAction } from "../actions";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface LeadSmartMatchProps {
   leadId: string;
@@ -18,22 +21,30 @@ export function LeadSmartMatch({ leadId, leadName, initialSummary }: LeadSmartMa
   const [matches, setMatches] = useState<any[]>([]);
   const [summary, setSummary] = useState(initialSummary || "");
   const [hasScanned, setHasScanned] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { language } = useLanguage();
   const isEn = language === "en";
 
   const handleScan = async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       const res = await runSmartMatchAction(leadId, true); // true = notify agent if high match
       if (res.success) {
         setMatches(res.matches || []);
         if (res.requirementSummary) setSummary(res.requirementSummary);
         setHasScanned(true);
+        toast.success(isEn ? "AI Matching completed" : "จับคู่รายการทรัพย์เรียบร้อย");
       } else {
-        alert(isEn ? "Matching failed: " + res.error : "การจับคู่ล้มเหลว: " + res.error);
+        const errorText = res.error || (isEn ? "Lead not found" : "ไม่พบข้อมูลลูกค้า");
+        setErrorMessage(errorText);
+        toast.error(isEn ? `Matching failed: ${errorText}` : `การจับคู่ล้มเหลว: ${errorText}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      const errStr = err?.message || (isEn ? "Connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      setErrorMessage(errStr);
+      toast.error(errStr);
     } finally {
       setLoading(false);
     }
@@ -169,6 +180,42 @@ export function LeadSmartMatch({ leadId, leadName, initialSummary }: LeadSmartMa
           </div>
         )}
       </div>
+
+      {/* Error Alert Dialog */}
+      <ResponsiveDialog
+        open={!!errorMessage}
+        onOpenChange={(open) => !open && setErrorMessage(null)}
+        title={
+          <div className="flex items-center gap-3 text-rose-600">
+            <div className="h-10 w-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
+              <AlertTriangle className="h-5 w-5 text-rose-600" />
+            </div>
+            <span className="font-bold text-lg text-slate-900">
+              {isEn ? "AI Matching Failed" : "การจับคู่ล้มเหลว"}
+            </span>
+          </div>
+        }
+        description={
+          isEn
+            ? "Could not complete smart matching for this lead."
+            : "ไม่สามารถดำเนินการค้นหาทรัพย์ที่ตรงกับลูกค้ารายนี้ได้"
+        }
+        className="bg-white md:max-w-md"
+      >
+        <div className="p-4 md:p-6 space-y-4">
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-100 text-sm text-rose-700 leading-relaxed font-medium">
+            {errorMessage}
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button
+              onClick={() => setErrorMessage(null)}
+              className="h-11 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold cursor-pointer"
+            >
+              {isEn ? "Close" : "ปิด"}
+            </Button>
+          </div>
+        </div>
+      </ResponsiveDialog>
     </div>
   );
 }

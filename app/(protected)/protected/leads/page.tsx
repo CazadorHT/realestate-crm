@@ -1,16 +1,13 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { Suspense } from "react";
+import { UserPlus } from "lucide-react";
 import {
   getLeadsQuery,
   getLeadsForKanbanQuery,
   getLeadsDashboardStatsQuery,
 } from "@/features/leads/queries";
-
-export const metadata: Metadata = {
-  title: "จัดการลูกค้า (Leads)",
-  description: "จัดการและติดตามลูกค้าที่สนใจอสังหาริมทรัพย์",
-};
 import { LeadsFilters } from "@/components/leads/LeadsFilters";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { LeadsKanban } from "@/features/leads/LeadsKanban";
@@ -22,9 +19,20 @@ import { requireAuthContext } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { MobileFloatingAction } from "@/components/ui/mobile-floating-action";
-import { UserPlus } from "lucide-react";
 import { LeadsListTour } from "@/features/leads/_components/LeadsListTour";
-import { Suspense } from "react";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
+  return {
+    title: isEn ? "Leads" : "จัดการลูกค้า (Leads)",
+    description: isEn
+      ? "Manage and track prospective real estate clients"
+      : "จัดการและติดตามลูกค้าที่สนใจอสังหาริมทรัพย์",
+  };
+}
 
 export default async function LeadsPage({
   searchParams,
@@ -39,7 +47,7 @@ export default async function LeadsPage({
   }>;
 }) {
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   const sp = (await searchParams) ?? {};

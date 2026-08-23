@@ -29,7 +29,7 @@ import { AIDocumentInsight } from "./AIDocumentInsight";
 import { DocumentPreviewDialog } from "./DocumentPreviewDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { useLanguage } from "@/lib/i18n/language-context";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DocumentListProps {
   ownerId: string;

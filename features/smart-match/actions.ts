@@ -66,13 +66,19 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
   assertStaff(role);
 
   try {
-    // 1. Fetch Lead Requirements from V3 tables
-    const { data: leadRow, error: leadErr } = await supabase
+    const config = await (await import("@/lib/actions/system-config")).getSystemConfig();
+    const isMultiTenant = config.multi_tenant_enabled;
+
+    let query = supabase
       .from("crm_leads_v3")
       .select("id, tenant_id, assigned_to, budget_min, budget_max, min_bedrooms, preferred_locations, utm_data, ai_summary, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone, line_id)")
-      .eq("id", leadId)
-      .eq("tenant_id", tenantId || "")
-      .single();
+      .eq("id", leadId);
+
+    if (isMultiTenant && tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: leadRow, error: leadErr } = await query.single();
 
     if (leadErr || !leadRow) throw new Error("Lead not found");
 

@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -82,13 +83,35 @@ import { LeadDetailTour } from "@/features/leads/_components/LeadDetailTour";
 import { LeadsMatchingTour } from "@/features/leads/_components/LeadsMatchingTour";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
+  const lead = await getLeadWithActivitiesQuery(id);
+  const identity = (lead as any)?.identity_v3;
+  const fullName = identity?.display_name || (lead as any)?.full_name || (isEn ? "Lead Detail" : "รายละเอียดลูกค้า");
+
+  return {
+    title: `${fullName} | ${isEn ? "Lead Details" : "รายละเอียดลูกค้า"}`,
+    description: isEn
+      ? `Lead details for ${fullName}`
+      : `รายละเอียดข้อมูลลูกค้า ${fullName}`,
+  };
+}
+
 export default async function LeadDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   const { id } = await params;

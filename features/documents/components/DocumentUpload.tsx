@@ -6,6 +6,7 @@ import {
   DocumentType,
   DocumentTypeEnum,
   DOC_TYPE_LABELS,
+  DOC_TYPE_LABELS_EN,
 } from "../schema";
 import { createDocumentRecordAction } from "../actions";
 import { createClient } from "@/lib/supabase/client";
@@ -23,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Loader2, Trash, UploadCloud } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DocumentUploadProps {
   ownerId: string;
@@ -39,6 +41,9 @@ export function DocumentUpload({
   parentId,
   tenantId,
 }: DocumentUploadProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [selectedFiles, setSelectedFiles] = useState<
     { file: File; type: DocumentType }[]
   >([]);
@@ -98,11 +103,11 @@ export function DocumentUpload({
       });
 
       if (rejectedSize > 0) {
-        toast.error(`พบ ${rejectedSize} ไฟล์ที่มีขนาดเกิน 20MB และถูกยกเว้น`);
+        toast.error(isEn ? `Found ${rejectedSize} file(s) exceeding 20MB limit (skipped)` : `พบ ${rejectedSize} ไฟล์ที่มีขนาดเกิน 20MB และถูกยกเว้น`);
       }
       if (rejectedType > 0) {
         toast.error(
-          `พบ ${rejectedType} ไฟล์ที่มีนามสกุลไม่รองรับ และถูกยกเว้น`,
+          isEn ? `Found ${rejectedType} unsupported file format(s) (skipped)` : `พบ ${rejectedType} ไฟล์ที่มีนามสกุลไม่รองรับ และถูกยกเว้น`,
         );
       }
 
@@ -216,13 +221,14 @@ export function DocumentUpload({
 
       if (successCount > 0) {
         toast.success(
-          `อัปโหลดสำเร็จ ${successCount} ไฟล์` +
-            (failCount > 0 ? ` (ล้มเหลว ${failCount})` : ""),
+          isEn
+            ? `Successfully uploaded ${successCount} file(s)` + (failCount > 0 ? ` (${failCount} failed)` : "")
+            : `อัปโหลดสำเร็จ ${successCount} ไฟล์` + (failCount > 0 ? ` (ล้มเหลว ${failCount})` : ""),
         );
         setSelectedFiles([]);
         if (onUploadComplete) onUploadComplete();
       } else if (failCount > 0) {
-        toast.error(`อัปโหลดล้มเหลวทั้งหมด ${failCount} ไฟล์`);
+        toast.error(isEn ? `Failed to upload all ${failCount} file(s)` : `อัปโหลดล้มเหลวทั้งหมด ${failCount} ไฟล์`);
       }
     } finally {
       setUploading(false);
@@ -233,7 +239,7 @@ export function DocumentUpload({
     <div className="space-y-4 border border-slate-200 p-4 rounded-lg bg-muted/5">
       <div className="space-y-2">
         <Label className="text-sm font-semibold">
-          เลือกไฟล์เอกสาร (ได้หลายไฟล์)
+          {isEn ? "Select Documents (Multiple allowed)" : "เลือกไฟล์เอกสาร (ได้หลายไฟล์)"}
         </Label>
 
         <Input
@@ -241,7 +247,7 @@ export function DocumentUpload({
           multiple
           onChange={handleFileChange}
           disabled={uploading}
-          className="cursor-pointer "
+          className="cursor-pointer"
         />
       </div>
 
@@ -249,7 +255,7 @@ export function DocumentUpload({
         <div className="space-y-3">
           <Separator />
           <Label className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-            รายการไฟล์ที่เลือก
+            {isEn ? "Selected Files" : "รายการไฟล์ที่เลือก"}
           </Label>
           <div className="max-h-[350px] overflow-y-auto space-y-2 pr-2 -mr-2">
             {selectedFiles.map((item, index) => (
@@ -269,17 +275,16 @@ export function DocumentUpload({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive cursor-pointer"
                     onClick={() => removeFile(index)}
                     disabled={uploading}
                   >
-                    <Trash className="h-4 w-4" />{" "}
-                    {/* Swap with Trash later or just Loader if uploading */}
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </div>
 
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs shrink-0 font-medium">ประเภท:</span>
+                  <span className="text-xs shrink-0 font-medium">{isEn ? "Type:" : "ประเภท:"}</span>
                   <Select
                     value={item.type}
                     onValueChange={(v) =>
@@ -287,13 +292,13 @@ export function DocumentUpload({
                     }
                     disabled={uploading}
                   >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="เลือกประเภท..." />
+                    <SelectTrigger className="h-8 text-xs cursor-pointer">
+                      <SelectValue placeholder={isEn ? "Select type..." : "เลือกประเภท..."} />
                     </SelectTrigger>
                     <SelectContent className="z-200">
                       {DocumentTypeEnum.options.map((option) => (
                         <SelectItem key={option} value={option}>
-                          {DOC_TYPE_LABELS[option] || option}
+                          {isEn ? (DOC_TYPE_LABELS_EN[option] || option) : (DOC_TYPE_LABELS[option] || option)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -308,15 +313,15 @@ export function DocumentUpload({
               variant="outline"
               onClick={() => setSelectedFiles([])}
               disabled={uploading}
-              className="flex-1"
+              className="flex-1 cursor-pointer"
               size="sm"
             >
-              ล้างทั้งหมด
+              {isEn ? "Clear All" : "ล้างทั้งหมด"}
             </Button>
             <Button
               onClick={handleUpload}
               disabled={uploading}
-              className="flex-2"
+              className="flex-2 cursor-pointer"
               size="sm"
             >
               {uploading ? (
@@ -324,7 +329,7 @@ export function DocumentUpload({
               ) : (
                 <UploadCloud className="mr-2 h-4 w-4" />
               )}
-              เริ่มอัปโหลด ({selectedFiles.length})
+              {isEn ? `Start Upload (${selectedFiles.length})` : `เริ่มอัปโหลด (${selectedFiles.length})`}
             </Button>
           </div>
         </div>

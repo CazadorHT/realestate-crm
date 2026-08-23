@@ -210,10 +210,18 @@ export function CoBrokersContent({
     }
   };
 
+  const computedStats = useMemo(() => {
+    if (stats) return stats;
+    const total = data.length;
+    const highRated = data.filter((item) => (item.rating || 0) >= 4).length;
+    const active = data.filter((item) => (item as any).status !== "INACTIVE" && (item as any).status !== "SUSPENDED").length;
+    return { total, highRated, active };
+  }, [stats, data]);
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
       <div id="tour-cobrokers-stats">
-        <CoBrokerStats stats={stats} />
+        <CoBrokerStats stats={computedStats} />
       </div>
 
       <Tabs 
