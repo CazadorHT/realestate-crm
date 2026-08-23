@@ -20,9 +20,10 @@ export async function generateAIPropertyDescriptionAction(
   }
 
   // 2. Build prompt
+  const displayTitle = values.title || values.title_en || values.title_cn || values.title_ru || "ไม่ระบุ";
   const baseData = `
     ข้อมูลทรัพย์สินมีดังนี้:
-    - หัวข้อ: ${values.title}
+    - หัวข้อ/ชื่อโครงการ: ${displayTitle}
     - ประเภท: ${values.property_type}
     - ประกาศสำหรับ: ${values.listing_type}
     - ราคาขายจริง (สุทธิ/ลดแล้ว): ${values.price || "ไม่ระบุ"}
@@ -34,7 +35,7 @@ export async function generateAIPropertyDescriptionAction(
     } ตร.ว.
     - ห้องนอน: ${values.bedrooms} / ห้องน้ำ: ${values.bathrooms}
     - ชั้น: ${values.floor || "ไม่ระบุ"}
-    - ทำเล: ${values.district}, ${values.province} (${values.subdistrict || ""})
+    - ทำเล: ${values.district || values.popular_area || ""}, ${values.province || ""} (${values.subdistrict || ""})
     - สถานีรถไฟฟ้าใกล้เคียง: ${values.transit_station_name || "ไม่ระบุ"} (${
       values.transit_distance_meters || ""
     } เมตร)

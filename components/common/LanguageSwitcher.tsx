@@ -34,7 +34,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
           variant="outline"
           size="sm"
           className={cn(
-            "h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold gap-1.5 transition-all shadow-2xs hover:shadow-xs",
+            "h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-blue-500 font-semibold gap-1.5 transition-all shadow-2xs hover:shadow-xs",
             className,
           )}
           aria-label="Change Language"

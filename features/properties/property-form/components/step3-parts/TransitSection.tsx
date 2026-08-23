@@ -56,6 +56,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Label } from "@/components/ui/label";
 
 // Util function for parsing numbers
@@ -139,6 +140,8 @@ interface TransitSectionProps {
 }
 
 export function TransitSection({ form: formProp }: TransitSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const [transitTypes, setTransitTypes] = React.useState<MasterDataTransitType[]>([]);
@@ -195,7 +198,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
   const handleSaveTransit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTransitCode || !newTransitLabelTh) {
-      toast.error("กรุณากรอกรหัสและชื่อสายรถไฟฟ้า");
+      toast.error(isEn ? "Please enter transit line code and name" : "กรุณากรอกรหัสและชื่อสายรถไฟฟ้า");
       return;
     }
     setIsSavingTransit(true);
@@ -209,7 +212,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
         is_active: true,
       });
       if (res.success) {
-        toast.success("เพิ่มสายรถไฟฟ้าใหม่สำเร็จ!");
+        toast.success(isEn ? "Added new transit line successfully!" : "เพิ่มสายรถไฟฟ้าใหม่สำเร็จ!");
         setTransitTypes([...transitTypes, {
           code: newTransitCode.toUpperCase(),
           label: { th: newTransitLabelTh, en: newTransitLabelTh, cn: newTransitLabelTh, ru: newTransitLabelTh },
@@ -222,7 +225,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
         toast.error(res.message);
       }
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึก");
+      toast.error(isEn ? "Error saving transit line" : "เกิดข้อผิดพลาดในการบันทึก");
     } finally {
       setIsSavingTransit(false);
     }
@@ -249,8 +252,8 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
       <CardHeader className="space-y-4 pb-0 px-4 sm:px-6 py-4 sm:py-6">
         <SectionHeader
           icon={TrainFront}
-          title="การเดินทาง"
-          desc="รถไฟฟ้าและจุดเชื่อมต่อสำคัญ"
+          title={isEn ? "Transportation & Transit" : "การเดินทาง"}
+          desc={isEn ? "BTS / MRT and key transit connections" : "รถไฟฟ้าและจุดเชื่อมต่อสำคัญ"}
           tone="blue"
           right={
             <div className="flex items-center gap-2">
@@ -268,7 +271,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                   ) : (
                     <Sparkles className="h-3.5 w-3.5" />
                   )}
-                  <span>AI {isTranslating ? "กำลังแปล..." : "แปลชื่อทั้งหมด"}</span>
+                  <span>{isTranslating ? (isEn ? "Translating..." : "กำลังแปล...") : (isEn ? "AI Translate All" : "AI แปลชื่อทั้งหมด")}</span>
                 </Button>
               )}
               <DropdownMenu>
@@ -288,14 +291,14 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                     className="flex items-center gap-2 text-xs font-bold text-blue-600 cursor-pointer py-2 rounded-lg hover:bg-blue-50"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>เพิ่มสายรถไฟฟ้าใหม่ (Add Line)</span>
+                    <span>{isEn ? "Add New Transit Line" : "เพิ่มสายรถไฟฟ้าใหม่ (Add Line)"}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => window.open('/protected/admin/master-data', '_blank')}
                     className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer py-2 rounded-lg hover:bg-slate-50"
                   >
                     <Landmark className="h-4 w-4 text-slate-400" />
-                    <span>จัดการข้อมูลระบบ (Master Data)</span>
+                    <span>{isEn ? "Manage Master Data" : "จัดการข้อมูลระบบ (Master Data)"}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -336,13 +339,13 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <TrainFront className="h-3.5 w-3.5 text-blue-500" />
-                          <span>ประเภท</span>
+                          <span>{isEn ? "Transit Type" : "ประเภท"}</span>
                         </FormLabel>
                         {isMobileOrTablet ? (
                           <ResponsiveDialog
                             open={openIndex === index}
                             onOpenChange={(open) => setOpenIndex(open ? index : null)}
-                            title="เลือกประเภทการเดินทาง"
+                            title={isEn ? "Select Transit Type" : "เลือกประเภทการเดินทาง"}
                             trigger={
                               <Button
                                 type="button"
@@ -353,7 +356,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                 {isLoadingTypes ? (
                                   <div className="flex items-center gap-2">
                                     <Loader2 className="h-3 w-3 animate-spin" />
-                                    <span>กำลังโหลด...</span>
+                                    <span>{isEn ? "Loading..." : "กำลังโหลด..."}</span>
                                   </div>
                                 ) : (
                                   <div className="flex items-center gap-2.5">
@@ -365,7 +368,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                             className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50"
                                             style={{ backgroundColor: selectedType?.metadata?.color || "#cbd5e1" }}
                                           />
-                                          <span>{selectedType?.label.th || field.value || "BTS"}</span>
+                                          <span>{selectedType?.label[isEn ? "en" : "th"] || field.value || "BTS"}</span>
                                         </>
                                       );
                                     })()}
@@ -398,7 +401,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                           className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50"
                                           style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
                                         />
-                                        <span className="text-xs font-bold">{t.label.th}</span>
+                                        <span className="text-xs font-bold">{t.label[isEn ? "en" : "th"] || t.label.th}</span>
                                       </div>
                                       {isSelected && (
                                         <div className="bg-blue-600 rounded-full p-1 text-white">
@@ -448,7 +451,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                   }}
                                 >
                                   <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                                  เพิ่มสายรถไฟฟ้าใหม่ (Add New)
+                                  {isEn ? "Add New Transit Line" : "เพิ่มสายรถไฟฟ้าใหม่ (Add New)"}
                                 </Button>
                               </div>
                             </div>
@@ -466,7 +469,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                 {isLoadingTypes ? (
                                   <div className="flex items-center gap-2">
                                     <Loader2 className="h-3 w-3 animate-spin" />
-                                    <span>กำลังโหลด...</span>
+                                    <span>{isEn ? "Loading..." : "กำลังโหลด..."}</span>
                                   </div>
                                 ) : (
                                   <SelectValue />
@@ -486,7 +489,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                         className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50" 
                                         style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
                                       />
-                                      <span className="flex-1">{t.label.th}</span>
+                                      <span className="flex-1">{t.label[isEn ? "en" : "th"] || t.label.th}</span>
                                     </div>
                                   </SelectItem>
                                 ))
@@ -509,7 +512,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                   }}
                                 >
                                   <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                                  เพิ่มสายรถไฟฟ้าใหม่ (Add New)
+                                  {isEn ? "Add New Transit Line" : "เพิ่มสายรถไฟฟ้าใหม่ (Add New)"}
                                 </Button>
                               </div>
                             </SelectContent>
@@ -527,7 +530,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Ruler className="h-3.5 w-3.5 text-blue-500" />
-                          <span>ระยะทาง (กม.)</span>
+                          <span>{isEn ? "Distance (km)" : "ระยะทาง (กม.)"}</span>
                         </FormLabel>
                         <FormControl>
                           <KilometerInput
@@ -549,7 +552,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Clock className="h-3.5 w-3.5 text-blue-500" />
-                          <span>เวลา (นาที)</span>
+                          <span>{isEn ? "Time (mins)" : "เวลา (นาที)"}</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -573,7 +576,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                       <FormItem className="flex flex-col">
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                          <span>ชื่อสถานี (ภาษาไทย)</span>
+                          <span>{isEn ? "Station Name (Thai)" : "ชื่อสถานี (ภาษาไทย)"}</span>
                         </FormLabel>
                         <FormControl>
                           <StationCombobox
@@ -581,6 +584,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                             stations={transitStations}
                             transitType={form.watch(`nearby_transits.${index}.type`)}
                             onRefreshStations={refreshStations}
+                            placeholder={isEn ? "Select or search station..." : "เลือกหรือค้นหาสถานี..."}
                             onChange={(station) => {
                               if (station) {
                                 field.onChange(station.label.th);
@@ -664,7 +668,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
             onClick={handleAddTransit}
           >
             <Plus className="h-4 w-4 mr-2" />
-            เพิ่มสถานี
+            {isEn ? "Add Transit Station" : "เพิ่มสถานี"}
           </Button>
         </div>
       </CardContent>
@@ -675,37 +679,37 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <Plus className="h-5 w-5 text-blue-600" />
-              <span>เพิ่มสายรถไฟฟ้า / การเดินทางใหม่</span>
+              <span>{isEn ? "Add New Transit Line" : "เพิ่มสายรถไฟฟ้า / การเดินทางใหม่"}</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              สายรถไฟฟ้าใหม่จะถูกบันทึกและพร้อมเลือกใช้งานในฟอร์มทันที
+              {isEn ? "New transit line will be saved and immediately selectable in forms" : "สายรถไฟฟ้าใหม่จะถูกบันทึกและพร้อมเลือกใช้งานในฟอร์มทันที"}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSaveTransit} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">รหัสสายรถไฟฟ้า (Code) <span className="text-red-500">*</span></Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Transit Code" : "รหัสสายรถไฟฟ้า (Code)"} <span className="text-red-500">*</span></Label>
               <Input
                 value={newTransitCode}
                 onChange={(e) => setNewTransitCode(e.target.value.toUpperCase())}
-                placeholder="เช่น BTS_GOLD หรือ BRT"
+                placeholder={isEn ? "e.g. BTS_GOLD or BRT" : "เช่น BTS_GOLD หรือ BRT"}
                 className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-medium placeholder:text-base placehover:font-medium uppercase"
               />
-              <span className="text-[10px] text-slate-400">ภาษาอังกฤษตัวพิมพ์ใหญ่ ไม่มีเว้นวรรค</span>
+              <span className="text-[10px] text-slate-400">{isEn ? "Uppercase English letters with no spaces" : "ภาษาอังกฤษตัวพิมพ์ใหญ่ ไม่มีเว้นวรรค"}</span>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">ชื่อสายรถไฟฟ้า (ภาษาไทย) <span className="text-red-500">*</span></Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Transit Name (Thai)" : "ชื่อสายรถไฟฟ้า (ภาษาไทย)"} <span className="text-red-500">*</span></Label>
               <Input
                 value={newTransitLabelTh}
                 onChange={(e) => setNewTransitLabelTh(e.target.value)}
-                placeholder="เช่น รถไฟฟ้าสายสีทอง / BRT"
+                placeholder={isEn ? "e.g. Gold Line / BRT" : "เช่น รถไฟฟ้าสายสีทอง / BRT"}
                 className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-medium placeholder:text-base placehover:font-medium "
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">สีประจำสาย</Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Line Color" : "สีประจำสาย"}</Label>
               <div className="flex items-center gap-3">
                 <Input
                   type="color"
@@ -729,7 +733,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                 onClick={() => setIsTransitModalOpen(false)}
                 className="h-10 rounded-xl font-bold text-slate-600"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
               <Button
                 type="submit"
@@ -737,7 +741,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                 className="h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6"
               >
                 {isSavingTransit ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                <span>บันทึกสายรถไฟฟ้า</span>
+                <span>{isEn ? "Save Transit Line" : "บันทึกสายรถไฟฟ้า"}</span>
               </Button>
             </DialogFooter>
           </form>

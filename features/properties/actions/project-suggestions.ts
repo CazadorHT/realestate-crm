@@ -16,7 +16,7 @@ export interface ProjectSuggestion {
   longitude?: number;
 }
 
-export async function getProjectSuggestions(search: string): Promise<ProjectSuggestion[]> {
+export async function getProjectSuggestions(search: string, limit: number = 10): Promise<ProjectSuggestion[]> {
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
@@ -51,7 +51,7 @@ export async function getProjectSuggestions(search: string): Promise<ProjectSugg
       );
     }
 
-    const { data, error } = await query.order("sort_order").limit(10);
+    const { data, error } = await query.order("sort_order").limit(limit);
 
     if (error) {
       console.error("[getProjectSuggestions] DB error:", error);

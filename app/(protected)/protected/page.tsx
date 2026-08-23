@@ -1,10 +1,19 @@
 import { Metadata } from "next";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = {
-  title: "แดชบอร์ด",
-  description: "ภาพรวมระบบ CRM อสังหาริมทรัพย์ สถิติ รายได้ และข้อมูลสำคัญ",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
+  return {
+    title: isEn ? "Dashboard" : "แดชบอร์ด",
+    description: isEn
+      ? "Real Estate CRM overview, statistics, revenue, and core analytics"
+      : "ภาพรวมระบบ CRM อสังหาริมทรัพย์ สถิติ รายได้ และข้อมูลสำคัญ",
+  };
+}
 
 // วิดเจ็ตต่างๆ
 import { StatsSectionSuspense } from "@/components/dashboard/StatsSection";

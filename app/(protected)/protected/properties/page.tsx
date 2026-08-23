@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { cookies } from "next/headers";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import { getPropertiesDashboardStatsQuery, getPropertiesFastCountQuery } from "@/features/properties/queries/stats";
@@ -20,10 +21,18 @@ import {
   AddPropertyMobileButton,
 } from "./_components/PropertiesSectionHeader";
 
-export const metadata: Metadata = {
-  title: "จัดการทรัพย์",
-  description: "จัดการ เพิ่ม แก้ไข และติดตามอสังหาริมทรัพย์ทั้งหมดในระบบ",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
+  return {
+    title: isEn ? "Properties" : "จัดการทรัพย์",
+    description: isEn
+      ? "Manage, add, edit, and track all real estate properties in the system"
+      : "จัดการ เพิ่ม แก้ไข และติดตามอสังหาริมทรัพย์ทั้งหมดในระบบ",
+  };
+}
 
 const PropertiesTable = dynamic(
   () =>

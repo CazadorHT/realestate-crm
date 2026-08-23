@@ -18,21 +18,37 @@ interface PageProps {
 
 async function getOwnerProperties(ownerId: string) {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("properties")
-    .select("id, title, property_type, listing_type, status, price, original_price, rental_price, original_rental_price, bedrooms, bathrooms, size_sqm, district, subdistrict, province, popular_area, created_at, tenant_id, main_image_url:main_image")
+    .select("id, title, title_en, title_cn, title_ru, projects(name), property_type, listing_type, status, price, original_price, rental_price, original_rental_price, bedrooms, bathrooms, size_sqm, district, subdistrict, province, popular_area, created_at, tenant_id, main_image_url:main_image")
     .eq("owner_id", ownerId)
     .order("created_at", { ascending: false });
   
-  return (data || []).map((p: any) => ({
-    ...p,
-    main_image_url: getPublicImageUrl(p.main_image_url) || null,
-  }));
+  if (error) {
+    console.error("Error fetching owner properties:", error);
+  }
+  
+  return (data || []).map((p: any) => {
+    let projName = "";
+    if (p.projects?.name) {
+      if (typeof p.projects.name === "object") {
+        projName = p.projects.name.en || p.projects.name.th || "";
+      } else {
+        projName = p.projects.name;
+      }
+    }
+
+    return {
+      ...p,
+      project_name: projName || p.project_name || null,
+      main_image_url: getPublicImageUrl(p.main_image_url) || null,
+    };
+  });
 }
 
 export default async function OwnerPage({ params }: PageProps) {
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   const { id } = await params;

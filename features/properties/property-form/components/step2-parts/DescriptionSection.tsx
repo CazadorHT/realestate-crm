@@ -47,11 +47,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function DescriptionSection({
   form: formProp,
   isReadOnly,
 }: DescriptionSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const { isTranslating, translateDescription } = useAITranslation(form);
@@ -99,8 +102,8 @@ export function DescriptionSection({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <SectionHeader
               icon={FileText}
-              title="คำบรรยายและรายละเอียด"
-              desc="เขียนจุดเด่นที่น่าสนใจ เพื่อเพิ่มโอกาสในการขาย"
+              title={isEn ? "Description & Details" : "คำบรรยายและรายละเอียด"}
+              desc={isEn ? "Highlight key features to attract prospective buyers & tenants" : "เขียนจุดเด่นที่น่าสนใจ เพื่อเพิ่มโอกาสในการขาย"}
               tone="blue"
             />
             <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto" id="tour-property-ai-writer-translate">
@@ -124,14 +127,14 @@ export function DescriptionSection({
                             ) : (
                               <Languages className="h-4 w-4 text-blue-500" />
                             )}
-                            <span>AI แปลภาษาทั้งหมด </span>
+                            <span>{isEn ? "AI Translate All" : "AI แปลภาษาทั้งหมด"}</span>
                           </Button>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">
                         <div className="flex items-center gap-2">
                           <Languages className="w-3 h-3 text-blue-400" />
-                          <span>แปลคำบรรยายจากภาษาไทยไปยังภาษาอื่นทั้งหมดโดยอัตโนมัติ 🌐</span>
+                          <span>{isEn ? "Automatically translates description to all other languages 🌐" : "แปลคำบรรยายจากภาษาไทยไปยังภาษาอื่นทั้งหมดโดยอัตโนมัติ 🌐"}</span>
                         </div>
                       </TooltipContent>
                     </Tooltip>
@@ -151,7 +154,7 @@ export function DescriptionSection({
                   className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 gap-2"
                 >
                   <span className="fi fi-th rounded-sm shadow-xs" />
-                  <span>ไทย</span>
+                  <span>{isEn ? "TH" : "ไทย"}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="en"
@@ -192,7 +195,7 @@ export function DescriptionSection({
                           value={field.value ?? ""}
                           onChange={field.onChange}
                           disabled={isReadOnly}
-                          placeholder={`เขียนรายละเอียดภาษาไทยที่นี่...`}
+                          placeholder={isEn ? "Write description in Thai here..." : "เขียนรายละเอียดภาษาไทยที่นี่..."}
                           onAiGenerate={
                             isFeatureEnabled("ai_auto_description")
                               ? handleGenerate
@@ -211,8 +214,9 @@ export function DescriptionSection({
                       <FormMessage className="text-xs text-red-500 mt-2" />
                     ) : (
                       <FormDescription className="text-xs text-slate-500 mt-2">
-                        💡 เคล็ดลับ: ใช้ AI Writer
-                        เพื่อช่วยแต่งคำบรรยายให้สละสลวยยิ่งขึ้น
+                        {isEn
+                          ? "💡 Pro-Tip: Use AI Writer to compose compelling and professional property descriptions."
+                          : "💡 เคล็ดลับ: ใช้ AI Writer เพื่อช่วยแต่งคำบรรยายให้สละสลวยยิ่งขึ้น"}
                       </FormDescription>
                     )}
                   </FormItem>

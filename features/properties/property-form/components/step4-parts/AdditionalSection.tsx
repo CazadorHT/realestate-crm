@@ -30,12 +30,16 @@ import { useEffect } from "react";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { PropertyFormValues } from "../../../schema";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface AdditionalSectionProps {
   form: UseFormReturn<PropertyFormValues>;
 }
 
 export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const isCoAgent = useWatch({
     control: form.control,
     name: "is_co_agent",
@@ -125,7 +129,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
 
   // Helper to format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("th-TH", {
+    return new Intl.NumberFormat(isEn ? "en-US" : "th-TH", {
       style: "currency",
       currency: "THB",
       maximumFractionDigits: 0,
@@ -139,7 +143,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
           <LinkIcon className="w-4 h-4" />
         </div>
         <h3 className="text-sm sm:text-base font-medium text-slate-800">
-          ข้อมูลเพิ่มเติม (Additional)
+          {isEn ? "Additional Information" : "ข้อมูลเพิ่มเติม (Additional)"}
         </h3>
       </div>
 
@@ -151,7 +155,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
           <FormItem>
             <FormLabel className="text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wide flex items-center gap-2">
               <FileText className="w-3 h-3 text-indigo-600" />
-              <span>ที่มาของทรัพย์ (Source) 🔒</span>
+              <span>{isEn ? "Property Source 🔒" : "ที่มาของทรัพย์ (Source) 🔒"}</span>
             </FormLabel>
             <FormControl>
               <Textarea
@@ -159,7 +163,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 value={field.value || ""}
                 rows={2}
                 className="min-h-[80px] rounded-xl border-slate-200 bg-slate-50  p-3 resize-none shadow-sm text-sm focus:bg-white transition-colors"
-                placeholder="ระบุที่มา (Facebook, เพื่อนแนะนำ, etc.)"
+                placeholder={isEn ? "e.g. Facebook, Referral, Direct contact" : "ระบุที่มา (Facebook, เพื่อนแนะนำ, etc.)"}
               />
             </FormControl>
           </FormItem>
@@ -175,10 +179,10 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
             <div className="space-y-0.5">
               <FormLabel className="text-blue-900 font-bold text-xs sm:text-sm flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-600" />
-                <span>Co-Agent (เขามีทรัพย์ในมือ)</span>
+                <span>{isEn ? "Co-Agent Listing (External Source)" : "Co-Agent (เขามีทรัพย์ในมือ)"}</span>
               </FormLabel>
               <p className="text-[10px] font-medium text-blue-600/70">
-                เลือกหากทรัพย์ชิ้นนี้มาจาก Co-broker (Listing Side)
+                {isEn ? "Enable if listing is provided by co-broker" : "เลือกหากทรัพย์ชิ้นนี้มาจาก Co-broker (Listing Side)"}
               </p>
             </div>
             <FormControl>
@@ -187,9 +191,9 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 onCheckedChange={(checked) => {
                   field.onChange(checked);
                   if (checked) {
-                    toast.success("เปิด Co-Agent (คุณสามารถระบุข้อมูลเจ้าของควบคู่กันได้)");
+                    toast.success(isEn ? "Co-Agent enabled (You can also specify property owner details)" : "เปิด Co-Agent (คุณสามารถระบุข้อมูลเจ้าของควบคู่กันได้)");
                   } else {
-                    toast.success("ปิด Co-Agent สำเร็จ");
+                    toast.success(isEn ? "Co-Agent disabled" : "ปิด Co-Agent สำเร็จ");
                   }
                 }}
                 className="data-[state=checked]:bg-blue-600"
@@ -210,14 +214,14 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 <FormItem className="col-span-1">
                   <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <User className="w-3 h-3 text-slate-400" />
-                    <span>ชื่อ Co-Agent</span>
+                    <span>{isEn ? "Co-Agent Name" : "ชื่อ Co-Agent"}</span>
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       value={field.value || ""}
                       className="h-10 bg-slate-50 border-slate-200 text-xs sm:text-sm"
-                      placeholder="ระบุชื่อ"
+                      placeholder={isEn ? "Enter name" : "ระบุชื่อ"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -232,7 +236,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 <FormItem className="col-span-1">
                   <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <Phone className="w-3 h-3 text-slate-400" />
-                    <span>เบอร์โทร</span>
+                    <span>{isEn ? "Phone Number" : "เบอร์โทร"}</span>
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -253,7 +257,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 <FormItem className="col-span-1">
                   <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <MessageCircle className="w-3 h-3 text-slate-400" />
-                    <span>ช่องทางติดต่อ</span>
+                    <span>{isEn ? "Contact Channel" : "ช่องทางติดต่อ"}</span>
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -261,14 +265,14 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                   >
                     <FormControl>
                       <SelectTrigger className="h-10 bg-slate-50 border-slate-200 text-xs sm:text-sm">
-                        <SelectValue placeholder="เลือก" />
+                        <SelectValue placeholder={isEn ? "Select" : "เลือก"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-white">
                       <SelectItem value="Line">Line</SelectItem>
                       <SelectItem value="Facebook">Facebook</SelectItem>
-                      <SelectItem value="PHONE">โทรสาร</SelectItem>
-                      <SelectItem value="OTHER">อื่นๆ</SelectItem>
+                      <SelectItem value="PHONE">{isEn ? "Phone" : "โทรศัพท์"}</SelectItem>
+                      <SelectItem value="OTHER">{isEn ? "Other" : "อื่นๆ"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>
@@ -282,14 +286,14 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 <FormItem className="col-span-1">
                   <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <LinkIcon className="w-3 h-3 text-slate-400" />
-                    <span>ID / Link</span>
+                    <span>{isEn ? "ID / Link" : "ID / Link"}</span>
                   </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       value={field.value || ""}
                       className="h-10 bg-slate-50 border-slate-200 text-xs sm:text-sm"
-                      placeholder="LINE ID / ลิงก์"
+                      placeholder={isEn ? "LINE ID / Link" : "LINE ID / ลิงก์"}
                     />
                   </FormControl>
                 </FormItem>
@@ -302,7 +306,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
             <div className="bg-orange-50/40 p-3 sm:p-4 rounded-xl border border-orange-100 shadow-sm space-y-3">
               <p className="text-[10px] sm:text-xs font-bold text-orange-700 uppercase flex items-center gap-1.5 active:scale-95 transition-transform cursor-default">
                 <AlertCircle className="w-3.5 h-3.5" />
-                <span>ส่วนแบ่งค่าคอมมิชชั่นสำหรับ Co-Agent</span>
+                <span>{isEn ? "Co-Agent Commission Split" : "ส่วนแบ่งค่าคอมมิชชั่นสำหรับ Co-Agent"}</span>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {showSaleCommission && (
@@ -312,7 +316,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-slate-600 text-[10px] font-semibold flex justify-between items-center px-0.5">
-                          <span>ขาย (%)</span>
+                          <span>{isEn ? "Sale (%)" : "ขาย (%)"}</span>
                           {coAgentSalePercent ? (
                             activePrice ? (
                               <span className="text-emerald-700 font-bold">
@@ -324,7 +328,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                               </span>
                             ) : (
                               <span className="text-slate-400 font-normal">
-                                (ระบุราคาขาย)
+                                {isEn ? "(Enter sale price)" : "(ระบุราคาขาย)"}
                               </span>
                             )
                           ) : null}
@@ -361,7 +365,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-slate-600 text-[10px] font-semibold flex justify-between items-center px-0.5">
-                          <span>เช่า (เดือน)</span>
+                          <span>{isEn ? "Rent (Months)" : "เช่า (เดือน)"}</span>
                           {coAgentRentMonths ? (
                             activeRentalPrice ? (
                               <span className="text-emerald-700 font-bold">
@@ -372,7 +376,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                               </span>
                             ) : (
                               <span className="text-slate-400 font-normal">
-                                (ระบุค่าเช่า)
+                                {isEn ? "(Enter rental price)" : "(ระบุค่าเช่า)"}
                               </span>
                             )
                           ) : null}
@@ -394,7 +398,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                               placeholder="0.0"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium">
-                              เดือน
+                              {isEn ? "Months" : "เดือน"}
                             </span>
                           </div>
                         </FormControl>

@@ -105,9 +105,9 @@ export function PropertyTypeSection({
                       <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <span className="text-[10px] sm:text-xs md:text-sm font-semibold tracking-wide text-center w-full">
-                      {PROPERTY_TYPE_LABELS[type]?.[language as "th" | "en"] ||
-                        PROPERTY_TYPE_LABELS[type]?.th ||
-                        type}
+                      {isEn
+                        ? PROPERTY_TYPE_LABELS[type]?.en
+                        : PROPERTY_TYPE_LABELS[type]?.th || type}
                     </span>
 
                     {isActive && (

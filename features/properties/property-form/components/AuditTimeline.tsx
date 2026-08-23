@@ -877,7 +877,7 @@ function ChangeRow({
       land_size_sqwah: "Land Size (sq.wah)",
       floor: "Floor",
       parking_slots: "Parking",
-      address_line1: "Address / Project",
+      address_line1: "Project / Address",
       google_maps_link: "Map Link",
       images: "Photos",
       feature_ids: "Amenities",

@@ -12,6 +12,9 @@ import {
   translateAreaNameAction,
   savePopularAreaAction,
 } from "@/features/properties/actions/popular-area-actions";
+import { registerCustomAreaTranslation, getProvinceName } from "@/lib/utils/provinces";
+
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface QuickCreateAreaDialogProps {
   open: boolean;
@@ -28,6 +31,8 @@ export function QuickCreateAreaDialog({
   defaultAreaName = "",
   onAreaCreated,
 }: QuickCreateAreaDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [province, setProvince] = useState(defaultProvince);
   const [nameTh, setNameTh] = useState(defaultAreaName);
   const [nameEn, setNameEn] = useState("");
@@ -52,7 +57,7 @@ export function QuickCreateAreaDialog({
   const handleAutoTranslate = async (textToTranslate?: string) => {
     const text = textToTranslate || nameTh;
     if (!text || !text.trim()) {
-      toast.error("กรุณากรอกชื่อทำเลภาษาไทยก่อนครับ");
+      toast.error(isEn ? "Please enter Thai area name first" : "กรุณากรอกชื่อทำเลภาษาไทยก่อนครับ");
       return;
     }
 
@@ -62,9 +67,9 @@ export function QuickCreateAreaDialog({
       if (res.en) setNameEn(res.en);
       if (res.cn) setNameCn(res.cn);
       if (res.ru) setNameRu(res.ru);
-      toast.success("AI แปลภาษาทำเลครบทั้ง 4 ภาษาเรียบร้อยแล้ว ✨");
+      toast.success(isEn ? "AI translated area into 4 languages ✨" : "AI แปลภาษาทำเลครบทั้ง 4 ภาษาเรียบร้อยแล้ว ✨");
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการแปลภาษา");
+      toast.error(isEn ? "Translation failed" : "เกิดข้อผิดพลาดในการแปลภาษา");
     } finally {
       setIsTranslating(false);
     }
@@ -72,11 +77,11 @@ export function QuickCreateAreaDialog({
 
   const handleSave = async () => {
     if (!nameTh || !nameTh.trim()) {
-      toast.error("กรุณากรอกชื่อทำเลภาษาไทย");
+      toast.error(isEn ? "Please enter Thai area name" : "กรุณากรอกชื่อทำเลภาษาไทย");
       return;
     }
     if (!province) {
-      toast.error("กรุณาระบุจังหวัด");
+      toast.error(isEn ? "Please specify province" : "กรุณาระบุจังหวัด");
       return;
     }
 
@@ -91,7 +96,12 @@ export function QuickCreateAreaDialog({
       });
 
       if (res.success) {
-        toast.success(`เพิ่ม "${nameTh}" เข้าสู่ย่านยอดนิยมเรียบร้อยแล้ว ✨`);
+        registerCustomAreaTranslation(nameTh.trim(), {
+          en: nameEn.trim() || nameTh.trim(),
+          cn: nameCn.trim() || nameTh.trim(),
+          ru: nameRu.trim() || nameTh.trim(),
+        });
+        toast.success(isEn ? `Added "${nameEn || nameTh}" to popular areas ✨` : `เพิ่ม "${nameTh}" เข้าสู่ย่านยอดนิยมเรียบร้อยแล้ว ✨`);
         if (onAreaCreated) {
           onAreaCreated({
             th: nameTh.trim(),
@@ -102,10 +112,10 @@ export function QuickCreateAreaDialog({
         }
         onOpenChange(false);
       } else {
-        toast.error(res.error || "เกิดข้อผิดพลาดในการบันทึก");
+        toast.error(res.error || (isEn ? "Error saving area" : "เกิดข้อผิดพลาดในการบันทึก"));
       }
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
+      toast.error(isEn ? "Database connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
     } finally {
       setIsSaving(false);
     }
@@ -115,15 +125,15 @@ export function QuickCreateAreaDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="เพิ่มย่านยอดนิยม / Add Popular Area"
-      description="สร้างทำเลใหม่พร้อมคำแปล 4 ภาษา เพื่อให้แสดงผลบนหน้าแรกและค้นหาได้ทันที"
+      title={isEn ? "Add Popular Area / Location" : "เพิ่มย่านยอดนิยม / Add Popular Area"}
+      description={isEn ? "Create a new 4-language area so it appears on home search and filters immediately" : "สร้างทำเลใหม่พร้อมคำแปล 4 ภาษา เพื่อให้แสดงผลบนหน้าแรกและค้นหาได้ทันที"}
     >
       <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
         {/* Province Indicator */}
         <div className="flex items-center gap-2 p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900 font-medium">
           <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
           <span>
-            จังหวัด: <strong className="font-bold text-blue-950">{province}</strong>
+            {isEn ? "Province:" : "จังหวัด:"} <strong className="font-bold text-blue-950">{isEn ? getProvinceName(province, "en") : province}</strong>
           </span>
         </div>
 
@@ -131,7 +141,7 @@ export function QuickCreateAreaDialog({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <span>🇹🇭 ชื่อย่าน/ทำเล (ภาษาไทย)</span>
+              <span>🇹🇭 {isEn ? "Area / Neighborhood Name (Thai)" : "ชื่อย่าน/ทำเล (ภาษาไทย)"}</span>
               <span className="text-red-500">*</span>
             </Label>
             <button
@@ -145,13 +155,13 @@ export function QuickCreateAreaDialog({
               ) : (
                 <Sparkles className="w-3.5 h-3.5" />
               )}
-              <span>{isTranslating ? "AI กำลังแปล..." : "ให้ AI ช่วยแปล 4 ภาษา"}</span>
+              <span>{isTranslating ? (isEn ? "Translating..." : "AI กำลังแปล...") : (isEn ? "Translate into 4 languages with AI" : "ให้ AI ช่วยแปล 4 ภาษา")}</span>
             </button>
           </div>
           <Input
             value={nameTh}
             onChange={(e) => setNameTh(e.target.value)}
-            placeholder="เช่น บางละมุง, พัทยากลาง, หาดจอมเทียน, นิมมาน"
+            placeholder={isEn ? "e.g. Bang Lamung, Central Pattaya, Nimman" : "เช่น บางละมุง, พัทยากลาง, หาดจอมเทียน, นิมมาน"}
             className="h-10 rounded-xl text-xs bg-slate-50/50 focus:bg-white"
           />
         </div>
@@ -206,7 +216,7 @@ export function QuickCreateAreaDialog({
             onClick={() => onOpenChange(false)}
             className="h-10 px-4 rounded-xl text-xs font-semibold cursor-pointer"
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
           <Button
             type="button"
@@ -217,12 +227,12 @@ export function QuickCreateAreaDialog({
             {isSaving ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                <span>กำลังบันทึก...</span>
+                <span>{isEn ? "Saving..." : "กำลังบันทึก..."}</span>
               </>
             ) : (
               <>
                 <Check className="w-3.5 h-3.5 mr-1.5" />
-                <span>บันทึกเป็นย่านยอดนิยม</span>
+                <span>{isEn ? "Save Popular Area" : "บันทึกเป็นย่านยอดนิยม"}</span>
               </>
             )}
           </Button>

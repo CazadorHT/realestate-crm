@@ -41,6 +41,8 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
 
 type Props = {
   popularAreas: string[];
@@ -69,6 +71,8 @@ export function QuickInfoSection({
   setNewAreaRuAction,
   onAddAreaAction,
 }: Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const form = useFormContext<PropertyFormValues>();
   const { provinces, loading: addressLoading } = useThaiAddress();
   const hasTitleError = !!form.formState.errors.title;
@@ -154,15 +158,22 @@ export function QuickInfoSection({
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  // AI Translation for New Area & SEO Generation
+  // AI Translation for New Area & SEO Generation (Supports TH, EN, CN, RU as input)
   const handleTranslateArea = async () => {
-    if (!newArea.trim()) {
-      toast.error("กรุณากรอกชื่อย่านภาษาไทยก่อนกดแปลครับ");
+    const sourceArea =
+      newArea.trim() ||
+      newAreaEn.trim() ||
+      newAreaCn.trim() ||
+      newAreaRu.trim();
+
+    if (!sourceArea) {
+      toast.error(isEn ? "Please enter an area name first" : "กรุณากรอกชื่อย่านในช่องภาษาใดก็ได้ก่อนกดแปลครับ");
       return;
     }
+
     setIsTranslatingArea(true);
     const toastId = toast.loading(
-      "กำลังแปลชื่อย่านและเตรียมข้อมูล SEO 4 ภาษาด้วย AI...",
+      isEn ? "Translating area name & generating SEO in 4 languages..." : "กำลังแปลชื่อย่านและเตรียมข้อมูล SEO 4 ภาษาด้วย AI...",
     );
     try {
       const { generateAreaSeoContentAction } = await import(
@@ -170,27 +181,29 @@ export function QuickInfoSection({
       );
       const province = form.getValues("province") || "กรุงเทพมหานคร";
       const aiRes = await generateAreaSeoContentAction(
-        newArea.trim(),
-        newAreaEn.trim() || newArea.trim(),
+        newArea.trim() || sourceArea,
+        newAreaEn.trim() || sourceArea,
         province,
       );
       if (aiRes.success && aiRes.data) {
         const d = aiRes.data;
+        if (d.name?.th && !newArea.trim()) setNewAreaAction(d.name.th);
         if (d.name?.en) setNewAreaEnAction(d.name.en);
         if (d.name?.cn) setNewAreaCnAction(d.name.cn);
         if (d.name?.ru) setNewAreaRuAction(d.name.ru);
-        toast.success("แปลชื่อย่านและสร้างข้อมูลทำเล 4 ภาษาเรียบร้อยแล้ว ✨", {
+        toast.success(isEn ? "Area translated and multi-language SEO generated ✨" : "แปลชื่อย่านและสร้างข้อมูลทำเล 4 ภาษาเรียบร้อยแล้ว ✨", {
           id: toastId,
         });
       } else {
-        const result = await translateTextAction(newArea, "plain");
-        setNewAreaEnAction(result.en);
-        setNewAreaCnAction(result.cn);
-        setNewAreaRuAction(result.ru);
-        toast.success("แปลชื่อย่านเรียบร้อยแล้ว ✨", { id: toastId });
+        const result = await translateTextAction(sourceArea, "plain");
+        if (result.th && !newArea.trim()) setNewAreaAction(result.th);
+        if (result.en && !newAreaEn.trim()) setNewAreaEnAction(result.en);
+        if (result.cn && !newAreaCn.trim()) setNewAreaCnAction(result.cn);
+        if (result.ru && !newAreaRu.trim()) setNewAreaRuAction(result.ru);
+        toast.success(isEn ? "Area translated successfully ✨" : "แปลชื่อย่านเรียบร้อยแล้ว ✨", { id: toastId });
       }
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "การแปลขัดข้อง", {
+      toast.error(error instanceof Error ? error.message : (isEn ? "Translation failed" : "การแปลขัดข้อง"), {
         id: toastId,
       });
     } finally {
@@ -217,10 +230,10 @@ export function QuickInfoSection({
                 hasTitleError ? "text-red-700" : "text-slate-900"
               }`}
             >
-              ข้อมูลพื้นฐานของทรัพย์
+              {isEn ? "Basic Property Information" : "ข้อมูลพื้นฐานของทรัพย์"}
             </h3>
             <p className="text-slate-500 font-light text-sm mt-0.5">
-              ระบุชื่อและย่านเพื่อความสะดวกในการจัดการข้อมูล
+              {isEn ? "Specify title and location for quick identification" : "ระบุชื่อและย่านเพื่อความสะดวกในการจัดการข้อมูล"}
             </p>
           </div>
         </div>
@@ -241,7 +254,7 @@ export function QuickInfoSection({
                       fieldState.error ? "text-red-700" : "text-slate-700"
                     }`}
                   >
-                    ชื่อทรัพย์ (ไทย) <span className="text-red-500">*</span>
+                    {isEn ? "Property Title (TH)" : "ชื่อทรัพย์ (ไทย)"} <span className="text-red-500">*</span>
                   </label>
                   <Button
                     type="button"
@@ -256,7 +269,7 @@ export function QuickInfoSection({
                     ) : (
                       <Sparkles className="h-3.5 w-3.5 text-amber-500 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
                     )}
-                    AI แปล
+                    {isEn ? "AI Translate" : "AI แปล"}
                   </Button>
                 </div>
 
@@ -358,19 +371,19 @@ export function QuickInfoSection({
             control={form.control}
             name="province"
             render={({ field }) => (
-              <FormItem className="flex flex-col space-y-2">
-                <label className="font-medium text-sm uppercase tracking-wider text-slate-700 h-8 flex items-center gap-2">
-                  จังหวัด <span className="text-red-500">*</span>
-                  {addressLoading && (
-                    <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
-                  )}
+              <FormItem data-field="province" className="flex flex-col space-y-2">
+                <label
+                  htmlFor={field.name}
+                  className="font-medium text-sm uppercase tracking-wider text-slate-700 h-8"
+                >
+                  {isEn ? "Province" : "จังหวัด"} <span className="text-red-500">*</span>
                 </label>
                 <div className="mt-auto w-full">
                   {isMobileOrTablet ? (
                     <ResponsiveDialog
                       open={provinceOpen}
                       onOpenChange={setProvinceOpen}
-                      title="เลือกจังหวัด"
+                      title={isEn ? "Select Province" : "เลือกจังหวัด"}
                       trigger={
                         <Button
                           type="button"
@@ -379,70 +392,59 @@ export function QuickInfoSection({
                         >
                           <Flag className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
                           <span className={cn("font-medium transition-colors", field.value ? "text-slate-800 group-hover:text-slate-900" : "text-slate-400 group-hover:text-slate-500")}>
-                            {field.value || "เลือกจังหวัด"}
+                            {field.value ? getProvinceName(field.value, isEn ? "en" : "th") : (isEn ? "Select Province" : "เลือกจังหวัด")}
                           </span>
                         </Button>
                       }
                     >
                       <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
-                        {provinces.length === 0 ? (
-                          <div className="p-8 text-center text-slate-400 text-sm font-medium">
-                            ไม่มีข้อมูลจังหวัด
-                          </div>
-                        ) : (
-                          provinces.map((p) => {
-                            const isSelected = field.value === p.name_th;
-                            return (
-                              <button
-                                key={p.id}
-                                type="button"
-                                onClick={() => {
-                                  field.onChange(p.name_th);
-                                  // Reset dependent fields when province changes in Step 1
-                                  form.setValue("district", "");
-                                  form.setValue("subdistrict", "");
-                                  form.setValue("postal_code", "");
-                                  form.setValue("popular_area", undefined);
-                                  setProvinceOpen(false);
-                                }}
-                                className={cn(
-                                  "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left",
-                                  isSelected
-                                    ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                                )}
-                              >
-                                <span className="text-sm font-bold">{p.name_th}</span>
-                                {isSelected && (
-                                  <div className="bg-blue-600 rounded-full p-1 text-white">
-                                    <Check className="h-3 w-3" />
-                                  </div>
-                                )}
-                              </button>
-                            );
-                          })
-                        )}
+                        {provinces.map((p) => {
+                          const isSelected = field.value === p.name_th;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                field.onChange(p.name_th);
+                                setProvinceOpen(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                isSelected
+                                  ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                  : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                              )}
+                            >
+                              <span className="text-sm font-bold">{getProvinceName(p.name_th, isEn ? "en" : "th")}</span>
+                              {isSelected && (
+                                <div className="bg-blue-600 rounded-full p-1 text-white">
+                                  <Check className="h-3 w-3" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </ResponsiveDialog>
                   ) : (
                     <Select
-                      value={field.value}
-                      onValueChange={(val) => {
-                        field.onChange(val);
-                        // Reset dependent fields when province changes in Step 1
-                        form.setValue("district", "");
-                        form.setValue("subdistrict", "");
-                        form.setValue("postal_code", "");
-                        form.setValue("popular_area", undefined);
-                      }}
+                      value={field.value || ""}
+                      onValueChange={field.onChange}
                     >
                       <FormControl>
-                        <SelectTrigger className="group rounded-2xl bg-white font-medium px-4 py-7 relative w-full border-slate-200 h-14 flex items-center gap-3 hover:border-slate-300 hover:bg-slate-50/50 transition-all">
-                          <Flag className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
-                          <SelectValue placeholder="เลือกจังหวัด" />
+                        <SelectTrigger
+                          id={field.name}
+                          className="rounded-2xl bg-white font-medium px-4 py-7 relative w-full border-slate-200 h-14 focus:ring-2 focus:ring-blue-500"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Flag className="h-5 w-5 text-slate-400" />
+                            <SelectValue placeholder={isEn ? "Select Province" : "เลือกจังหวัด"}>
+                              {field.value ? getProvinceName(field.value, isEn ? "en" : "th") : undefined}
+                            </SelectValue>
+                          </div>
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[350px] p-2">
+                      <SelectContent className="bg-white rounded-2xl shadow-xl border-slate-100 max-h-[300px]">
                         <SelectGroup>
                           {provinces.map((p) => (
                             <SelectItem
@@ -450,7 +452,7 @@ export function QuickInfoSection({
                               value={p.name_th}
                               className="rounded-lg"
                             >
-                              {p.name_th}
+                              {getProvinceName(p.name_th, isEn ? "en" : "th")}
                             </SelectItem>
                           ))}
                         </SelectGroup>
@@ -472,7 +474,7 @@ export function QuickInfoSection({
                   htmlFor={field.name}
                   className="font-medium text-sm uppercase tracking-wider text-slate-700 h-8"
                 >
-                  ระบุย่านทำเล
+                  {isEn ? "Popular Area / Zone" : "ระบุย่านทำเล"}
                 </label>
 
                 <div className="mt-auto w-full">
@@ -480,7 +482,7 @@ export function QuickInfoSection({
                     <ResponsiveDialog
                       open={areaOpen}
                       onOpenChange={setAreaOpen}
-                      title="เลือกย่าน / ทำเล"
+                      title={isEn ? "Select Area / Zone" : "เลือกย่าน / ทำเล"}
                       trigger={
                         <Button
                           type="button"
@@ -489,7 +491,7 @@ export function QuickInfoSection({
                         >
                           <MapPin className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
                           <span className={cn("font-medium transition-colors", field.value ? "text-slate-800 group-hover:text-slate-900" : "text-slate-400 group-hover:text-slate-500")}>
-                            {field.value || "เลือกย่าน / ทำเล"}
+                            {field.value || (isEn ? "Select Area / Zone" : "เลือกย่าน / ทำเล")}
                           </span>
                         </Button>
                       }
@@ -498,7 +500,7 @@ export function QuickInfoSection({
                         <div className="relative flex items-center">
                           <Search className="absolute left-3.5 h-4 w-4 text-slate-400" />
                           <Input
-                            placeholder="ค้นหาย่าน / ทำเล..."
+                            placeholder={isEn ? "Search area / zone..." : "ค้นหาย่าน / ทำเล..."}
                             value={areaSearchQuery}
                             onChange={(e) => setAreaSearchQuery(e.target.value)}
                             onKeyDown={(e) => handleAreaKeyDown(e, field, true)}
@@ -522,7 +524,7 @@ export function QuickInfoSection({
                               highlightedAreaIndex === 0 && "border-blue-500 ring-2 ring-blue-500/20 bg-slate-50 text-slate-700"
                             )}
                           >
-                            <span>-- ไม่ระบุ --</span>
+                            <span>{isEn ? "-- Unspecified --" : "-- ไม่ระบุ --"}</span>
                             {!field.value && (
                               <div className="bg-blue-600 rounded-full p-1 text-white">
                                 <Check className="h-3 w-3" />
@@ -532,7 +534,7 @@ export function QuickInfoSection({
                           
                           {sortedFilteredAreas.length === 0 ? (
                             <div className="p-4 text-center text-sm text-slate-400">
-                              ไม่พบย่านทำเล
+                              {isEn ? "No areas found" : "ไม่พบย่านทำเล"}
                             </div>
                           ) : (
                             sortedFilteredAreas.map((a, i) => {
@@ -579,7 +581,7 @@ export function QuickInfoSection({
                         >
                           <MapPin className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
                           <span className={cn("font-medium transition-colors", field.value ? "text-slate-800 group-hover:text-slate-900" : "text-slate-400 group-hover:text-slate-500")}>
-                            {field.value || "เลือกย่าน / ทำเล"}
+                            {field.value ? getDistrictName(field.value, isEn ? "en" : "th") : (isEn ? "Select Area / Zone" : "เลือกย่าน / ทำเล")}
                           </span>
                         </Button>
                       </PopoverTrigger>
@@ -591,7 +593,7 @@ export function QuickInfoSection({
                         <div className="relative flex items-center">
                           <Search className="absolute left-3.5 h-4 w-4 text-slate-400" />
                           <Input
-                            placeholder="ค้นหาย่าน / ทำเล..."
+                            placeholder={isEn ? "Search area / zone..." : "ค้นหาย่าน / ทำเล..."}
                             value={areaSearchQuery}
                             onChange={(e) => setAreaSearchQuery(e.target.value)}
                             onKeyDown={(e) => handleAreaKeyDown(e, field, false)}
@@ -615,7 +617,7 @@ export function QuickInfoSection({
                               highlightedAreaIndex === 0 && "border-blue-500 ring-2 ring-blue-500/20 bg-slate-50 text-slate-700"
                             )}
                           >
-                            <span>-- ไม่ระบุ --</span>
+                            <span>{isEn ? "-- Unspecified --" : "-- ไม่ระบุ --"}</span>
                             {!field.value && (
                               <div className="bg-blue-600 rounded-full p-1 text-white">
                                 <Check className="h-3 w-3" />
@@ -625,7 +627,7 @@ export function QuickInfoSection({
 
                           {sortedFilteredAreas.length === 0 ? (
                             <div className="p-4 text-center text-sm text-slate-400">
-                              ไม่พบย่านทำเล
+                              {isEn ? "No areas found" : "ไม่พบย่านทำเล"}
                             </div>
                           ) : (
                             sortedFilteredAreas.map((a, i) => {
@@ -648,7 +650,7 @@ export function QuickInfoSection({
                                       isHighlighted && "border-blue-500 ring-2 ring-blue-500/20 bg-slate-50 text-slate-900"
                                     )}
                                   >
-                                    <span className="text-sm font-semibold">{a}</span>
+                                    <span className="text-sm font-semibold">{getDistrictName(a, isEn ? "en" : "th")}</span>
                                     {isSelected && (
                                       <div className="bg-blue-600 rounded-full p-0.5 text-white">
                                         <Check className="h-3 w-3" />
@@ -681,7 +683,7 @@ export function QuickInfoSection({
                   className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-medium px-0 hover:px-4 transition-all"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  ไม่พบย่านที่ต้องการ? เพิ่มใหม่
+                  {isEn ? "Can't find your area? Add New" : "ไม่พบย่านที่ต้องการ? เพิ่มใหม่"}
                 </Button>
               </div>
             ) : (
@@ -689,7 +691,7 @@ export function QuickInfoSection({
                 <div className="flex items-center justify-between ">
                   <div className="flex items-center gap-2 ">
                     <label className="font-medium text-sm uppercase tracking-wider text-slate-700">
-                      เพิ่มย่านใหม่ (Multi-language)
+                      {isEn ? "Add New Area (Multi-language)" : "เพิ่มย่านใหม่ (Multi-language)"}
                     </label>
                   </div>
                   <div className="flex items-center gap-2 ">
@@ -706,12 +708,12 @@ export function QuickInfoSection({
                       ) : (
                         <Sparkles className="h-3 w-3 text-amber-500 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
                       )}
-                      AI ช่วยแปลชื่อย่าน
+                      {isEn ? "AI Translate Area Name" : "AI ช่วยแปลชื่อย่าน"}
                     </Button>
                     <button
                     type="button"
                     onClick={() => setShowAddArea(false)}
-                    className="text-slate-400 p-2 hover:bg-red-100 hover:text-red-600 rounded-sm transition-all"
+                    className="text-slate-400 p-2 hover:bg-red-100 hover:text-red-600 rounded-sm transition-all cursor-pointer"
                     >
                     <X className="h-4 w-4" />
                     </button>
@@ -727,7 +729,7 @@ export function QuickInfoSection({
                       value={newArea}
                       onChange={(e) => setNewAreaAction(e.target.value)}
                       className="h-14 rounded-2xl bg-white font-medium pl-12 pr-6 w-full"
-                      placeholder="ชื่อย่าน (ไทย)"
+                      placeholder={isEn ? "Area (Thai)" : "ชื่อย่าน (ไทย)"}
                     />
                   </div>
                   <div className="relative">
@@ -775,14 +777,14 @@ export function QuickInfoSection({
                       }
                     }}
                     disabled={isAddingArea}
-                    className="h-14 rounded-2xl font-medium px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 min-w-[150px]"
+                    className="h-14 rounded-2xl font-medium px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 min-w-[150px] cursor-pointer"
                   >
                     {isAddingArea ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
                         <Plus className="h-5 w-5 mr-2" />
-                        เพิ่มย่านใหม่
+                        {isEn ? "Add New Area" : "เพิ่มย่านใหม่"}
                       </>
                     )}
                   </Button>

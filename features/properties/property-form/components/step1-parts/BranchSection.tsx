@@ -52,12 +52,19 @@ export function BranchSection({ branches }: BranchSectionProps) {
         name="branch_id"
         render={({ field }) => {
           const effectiveBranchId = field.value || (branches.length > 0 ? branches[0].id : undefined);
+          const getBranchDisplayName = (name: any) => {
+            if (!name) return isEn ? "Select Branch" : "เลือกสาขา";
+            if (typeof name === "object") {
+              return name?.[language as "th" | "en"] || name?.th || name?.en;
+            }
+            if (isEn && name === "สาขาหลัก") return "Main Branch";
+            if (isEn && name === "สำนักงานใหญ่") return "Headquarters";
+            return name;
+          };
           const selectedBranch = branches.find((b) => b.id === effectiveBranchId);
           const selectedBranchLabel = selectedBranch
-            ? typeof selectedBranch.name === "object"
-              ? selectedBranch.name?.[language as "th" | "en"] || selectedBranch.name?.th || selectedBranch.name?.en
-              : selectedBranch.name
-            : (isEn ? "Select Branch" : "เลือกสาขา");
+            ? getBranchDisplayName(selectedBranch.name)
+            : (isEn ? "Main Branch" : "สาขาหลัก");
 
           return (
             <FormItem data-field="branch_id">
@@ -97,10 +104,7 @@ export function BranchSection({ branches }: BranchSectionProps) {
                     ) : (
                       branches.map((branch) => {
                         const isSelected = field.value === branch.id;
-                        const branchName =
-                          typeof branch.name === "object"
-                            ? branch.name?.[language as "th" | "en"] || branch.name?.th || branch.name?.en
-                            : branch.name;
+                        const branchName = getBranchDisplayName(branch.name);
                         return (
                           <button
                             key={branch.id}

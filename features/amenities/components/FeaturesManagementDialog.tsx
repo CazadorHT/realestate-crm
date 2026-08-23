@@ -38,6 +38,8 @@ import { DEFAULT_ICON } from "../icons";
 import { IconPicker } from "@/components/icon-picker";
 import { DynamicIcon } from "@/components/dynamic-icon";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 const CATEGORIES = [
   "RESIDENTIAL",
   "OFFICE",
@@ -53,6 +55,83 @@ const CATEGORIES = [
   "OTHER",
 ];
 
+const FEATURE_TRANSLATION_MAP: Record<string, string> = {
+  "อ่างอาบน้ำ": "Bathtub",
+  "คลับเฮ้าส์": "Clubhouse",
+  "คลับเฮ้าส์ / เลานจ์": "Clubhouse / Lounge",
+  "โซล่าเซลล์": "Solar Cells",
+  "โซลาร์เซลล์": "Solar Cells",
+  "วิวทะเล": "Sea View",
+  "วิวภูเขา": "Mountain View",
+  "วิวเมือง": "City View",
+  "วิวแม่น้ำ": "River View",
+  "สวน": "Garden",
+  "สวนหย่อม": "Garden",
+  "สวนขั้นดาดฟ้า": "Rooftop Garden",
+  "สวนดาดฟ้า": "Rooftop Garden",
+  "สวนสาธารณะ": "Public Park",
+  "เครื่องชาร์จรถยนต์ไฟฟ้า": "EV Charger",
+  "จุดชาร์จรถยนต์ไฟฟ้า": "EV Charging Station",
+  "โซนสัตว์เลี้ยง": "Pet Friendly Zone",
+  "ที่จอดรถ": "Parking",
+  "โรงยิม / ฟิตเนส": "Fitness / Gym",
+  "ฟิตเนส": "Fitness Gym",
+  "ลิฟต์": "Elevator",
+  "ลิฟต์โดยสาร": "Passenger Lift",
+  "สระว่ายน้ำ": "Swimming Pool",
+  "ห้องซาวน่า / ห้องอบไอน้ำ": "Sauna / Steam Room",
+  "ห้องซาวน่า": "Sauna",
+  "ห้องอบไอน้ำ": "Steam Room",
+  "สตรีม": "Steam Room",
+  "สนามเด็กเล่น": "Playground",
+  "ระบบรักษาความปลอดภัย": "24/7 Security",
+  "ระบบรักษาความปลอดภัย 24 ชม.": "24-Hour Security",
+  "กล้องวงจรปิด": "CCTV",
+  "กล้องวงจรปิด (CCTV)": "CCTV Security",
+  "คีย์การ์ด": "Keycard Access",
+  "เข้า-ออกด้วยคีย์การ์ด": "Key Card Access",
+  "ล็อบบี้": "Lobby",
+  "ล็อบบี้ / แผนกต้อนรับ": "Lobby / Reception",
+  "ห้องสมุด": "Library",
+  "ห้องสมุด / Co-working Space": "Library / Co-working Space",
+  "co-working space": "Co-Working Space",
+  "เพดานสูง": "High Ceiling",
+  "เพดานสูงโปร่ง": "High Ceiling",
+  "ระบบสมาร์ทโฮม": "Smart Home System",
+  "ห้องแม่บ้าน": "Maid Quarter",
+  "บริการรถรับส่ง": "Shuttle Service",
+  "พนักงานต้อนรับ": "Concierge",
+  "อินเทอร์เน็ต / wifi": "High-Speed Wi-Fi",
+  "wifi": "Wi-Fi",
+  "เครื่องปรับอากาศ": "Air Conditioning",
+  "แอร์": "Air Conditioning",
+  "เครื่องทำน้ำอุ่น": "Water Heater",
+  "เฟอร์นิเจอร์": "Fully Furnished",
+  "ตู้เย็น": "Refrigerator",
+  "ไมโครเวฟ": "Microwave",
+  "เตาไฟฟ้า": "Electric Stove",
+  "เครื่องดูดควัน": "Cooker Hood",
+  "เครื่องซักผ้า": "Washing Machine",
+  "ระเบียง": "Balcony",
+  "จากุซซี่": "Jacuzzi",
+  "อ่างจากุซซี่": "Jacuzzi Bathtub",
+};
+
+function getFeatureDisplayName(feature: { name: string; name_en?: string | null }, isEn: boolean): string {
+  if (!isEn) return feature.name;
+  if (feature.name_en && feature.name_en.trim()) return feature.name_en;
+
+  const trimmed = feature.name.trim();
+  if (FEATURE_TRANSLATION_MAP[trimmed]) return FEATURE_TRANSLATION_MAP[trimmed];
+
+  const lower = trimmed.toLowerCase();
+  for (const [key, val] of Object.entries(FEATURE_TRANSLATION_MAP)) {
+    if (lower === key.toLowerCase()) return val;
+  }
+
+  return feature.name;
+}
+
 interface FeaturesManagementDialogProps {
   onUpdate?: () => void; // Callback to reload parent data
 }
@@ -60,6 +139,9 @@ interface FeaturesManagementDialogProps {
 export function FeaturesManagementDialog({
   onUpdate,
 }: FeaturesManagementDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [features, setFeatures] = useState<FeatureRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -121,10 +203,10 @@ export function FeaturesManagementDialog({
         loadData();
         onUpdate?.();
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาด");
+        toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (error) {
-      toast.error("บันทึกข้อมูลไม่สำเร็จ");
+      toast.error(isEn ? "Failed to save feature" : "บันทึกข้อมูลไม่สำเร็จ");
     } finally {
       setIsSubmitting(false);
     }
@@ -165,7 +247,7 @@ export function FeaturesManagementDialog({
         loadData();
         onUpdate?.();
       } else {
-        toast.error(result.message || "ลบข้อมูลไม่สำเร็จ");
+        toast.error(result.message || (isEn ? "Failed to delete" : "ลบข้อมูลไม่สำเร็จ"));
       }
     } finally {
       setDeletingId(null);
@@ -175,6 +257,7 @@ export function FeaturesManagementDialog({
   const filteredFeatures = features.filter(
     (f) =>
       f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (f.name_en && f.name_en.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (f.category &&
         f.category.toLowerCase().includes(searchTerm.toLowerCase())),
   );
@@ -183,17 +266,17 @@ export function FeaturesManagementDialog({
     <ResponsiveDialog
       open={isOpen}
       onOpenChange={setIsOpen}
-      title="จัดการรายการสิ่งอำนวยความสะดวก"
-      description="เพิ่ม ลบ หรือแก้ไขรายการ Features ที่ใช้ในระบบ"
+      title={isEn ? "Manage Features & Amenities" : "จัดการรายการสิ่งอำนวยความสะดวก"}
+      description={isEn ? "Add, delete, or edit features used across the system" : "เพิ่ม ลบ หรือแก้ไขรายการ Features ที่ใช้ในระบบ"}
       className="sm:max-w-[800px]"
       trigger={
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 bg-white/50 hover:bg-white/80"
+          className="gap-2 bg-white/50 hover:bg-white/80 text-blue-500! cursor-pointer"
         >
           <Settings className="w-4 h-4 text-blue-500" />
-          จัดการสิ่งอำนวยความสะดวก
+          <span>{isEn ? "Manage Amenities" : "จัดการสิ่งอำนวยความสะดวก"}</span>
         </Button>
       }
     >
@@ -202,7 +285,7 @@ export function FeaturesManagementDialog({
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="ค้นหา (ชื่อ, หมวดหมู่)..."
+              placeholder={isEn ? "Search (name, category)..." : "ค้นหา (ชื่อ, หมวดหมู่)..."}
               className="pl-9 bg-slate-50 border-slate-200"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -211,10 +294,10 @@ export function FeaturesManagementDialog({
           <Button
             onClick={handleAddNew}
             size="sm"
-            className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm"
+            className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            เพิ่มรายการใหม่
+            <span>{isEn ? "Add New Feature" : "เพิ่มรายการใหม่"}</span>
           </Button>
         </div>
 
@@ -222,16 +305,16 @@ export function FeaturesManagementDialog({
           {loading ? (
             <div className="flex h-full items-center justify-center flex-col gap-2">
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-              <p className="text-sm text-slate-400">กำลังโหลดข้อมูล...</p>
+              <p className="text-sm text-slate-400">{isEn ? "Loading features..." : "กำลังโหลดข้อมูล..."}</p>
             </div>
           ) : (
             <>
               {filteredFeatures.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 min-h-[300px]">
                   <Box className="w-12 h-12 text-slate-200" />
-                  <p>ไม่พบรายการที่ค้นหา</p>
+                  <p>{isEn ? "No matching features found" : "ไม่พบรายการที่ค้นหา"}</p>
                   <Button variant="link" onClick={handleAddNew}>
-                    + สร้างรายการใหม่
+                    {isEn ? "+ Create New Feature" : "+ สร้างรายการใหม่"}
                   </Button>
                 </div>
               ) : (
@@ -248,10 +331,10 @@ export function FeaturesManagementDialog({
                           onClick={(e) => e.stopPropagation()}
                         >
                           <ConfirmDialog
-                            title="ลบรายการ"
-                            description={`คุณแน่ใจหรือไม่ที่จะลบ "${feature.name}"?`}
-                            confirmText="ลบ"
-                            cancelText="ยกเลิก"
+                            title={isEn ? "Delete Feature" : "ลบรายการ"}
+                            description={isEn ? `Are you sure you want to delete "${feature.name_en || feature.name}"?` : `คุณแน่ใจหรือไม่ที่จะลบ "${feature.name}"?`}
+                            confirmText={isEn ? "Delete" : "ลบ"}
+                            cancelText={isEn ? "Cancel" : "ยกเลิก"}
                             variant="destructive"
                             onConfirm={() =>
                               handleDelete(feature.id, feature.name)
@@ -272,26 +355,36 @@ export function FeaturesManagementDialog({
                         </div>
                         <div className="w-full space-y-1">
                           <h4
-                            className="font-medium text-slate-700 text-sm  px-1 group-hover:text-emerald-900 transition-colors"
+                            className="font-medium text-slate-700 text-sm px-1 group-hover:text-emerald-900 transition-colors"
                             title={feature.name}
                           >
-                            {feature.name}
+                            {getFeatureDisplayName(feature, isEn)}
                           </h4>
                           {feature.category && (
                             <div>
-                            <div>
-                              <span className="text-[10px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full inline-block max-w-full truncate border border-slate-100 uppercase tracking-wide">
-                                {(() => {
-                                  const displayNames: Record<string, string> = {
-                                    RESIDENTIAL: "Residential",
-                                    OFFICE: "Office",
-                                    FACILITY: "Facility",
-                                    UNIT: "Unit",
-                                  };
-                                  return displayNames[feature.category.toUpperCase()] || feature.category.split("(")[0].trim();
-                                })()}
-                              </span>
-                            </div>
+                              <div>
+                                <span className="text-[10px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full inline-block max-w-full truncate border border-slate-100 uppercase tracking-wide">
+                                  {(() => {
+                                    const displayNames: Record<string, { th: string; en: string }> = {
+                                      RESIDENTIAL: { th: "ที่พักอาศัย", en: "Residential" },
+                                      OFFICE: { th: "สำนักงาน", en: "Office" },
+                                      FACILITY: { th: "ส่วนกลาง", en: "Facility" },
+                                      UNIT: { th: "ในยูนิต", en: "Unit" },
+                                      EXTERIOR: { th: "ภายนอก", en: "Exterior" },
+                                      SECURITY: { th: "ความปลอดภัย", en: "Security" },
+                                      KITCHEN: { th: "ครัว", en: "Kitchen" },
+                                      TECH: { th: "เทคโนโลยี", en: "Tech" },
+                                      RECREATION: { th: "สันทนาการ", en: "Recreation" },
+                                      NEARBY: { th: "สถานที่ใกล้เคียง", en: "Nearby" },
+                                      SERVICES: { th: "บริการ", en: "Services" },
+                                      OTHER: { th: "อื่นๆ", en: "Other" },
+                                    };
+                                    const entry = displayNames[feature.category.toUpperCase()];
+                                    if (entry) return isEn ? entry.en : entry.th;
+                                    return feature.category.split("(")[0].trim();
+                                  })()}
+                                </span>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -308,7 +401,7 @@ export function FeaturesManagementDialog({
         <ResponsiveDialog
           open={isFormOpen}
           onOpenChange={setIsFormOpen}
-          title={editingFeature ? "แก้ไขรายการ" : "เพิ่มรายการใหม่"}
+          title={editingFeature ? (isEn ? "Edit Feature" : "แก้ไขรายการ") : (isEn ? "Add New Feature" : "เพิ่มรายการใหม่")}
           className="sm:max-w-[450px]"
         >
           <Form {...form}>
@@ -321,10 +414,10 @@ export function FeaturesManagementDialog({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ชื่อรายการ (ไทย)</FormLabel>
+                    <FormLabel>{isEn ? "Feature Name (Thai)" : "ชื่อรายการ (ไทย)"}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="เช่น สระว่ายน้ำ, ฟิตเนส"
+                        placeholder={isEn ? "e.g. สระว่ายน้ำ, ฟิตเนส" : "เช่น สระว่ายน้ำ, ฟิตเนส"}
                         {...field}
                       />
                     </FormControl>
@@ -382,7 +475,7 @@ export function FeaturesManagementDialog({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>หมวดหมู่</FormLabel>
+                    <FormLabel>{isEn ? "Category" : "หมวดหมู่"}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value || undefined}
@@ -390,28 +483,28 @@ export function FeaturesManagementDialog({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="เลือกหมวดหมู่..." />
+                          <SelectValue placeholder={isEn ? "Select category..." : "เลือกหมวดหมู่..."} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {CATEGORIES.map((c) => {
-                          const displayNames: Record<string, string> = {
-                            RESIDENTIAL: "ที่พักอาศัย (Residential)",
-                            OFFICE: "สำนักงาน (Office)",
-                            FACILITY: "ส่วนกลาง (Facilities)",
-                            UNIT: "ในยูนิต (Unit Features)",
-                            EXTERIOR: "ภายนอก (Exterior)",
-                            SECURITY: "ความปลอดภัย (Security)",
-                            KITCHEN: "ครัว (Kitchen)",
-                            TECH: "เทคโนโลยี (Tech)",
-                            RECREATION: "สันทนาการ (Recreation)",
-                            NEARBY: "สถานที่ใกล้เคียง (Nearby)",
-                            SERVICES: "บริการ (Services)",
-                            OTHER: "อื่นๆ (Other)",
+                          const displayNames: Record<string, { th: string; en: string }> = {
+                            RESIDENTIAL: { th: "ที่พักอาศัย (Residential)", en: "Residential" },
+                            OFFICE: { th: "สำนักงาน (Office)", en: "Office" },
+                            FACILITY: { th: "ส่วนกลาง (Facilities)", en: "Facilities" },
+                            UNIT: { th: "ในยูนิต (Unit Features)", en: "In-Unit Features" },
+                            EXTERIOR: { th: "ภายนอก (Exterior)", en: "Exterior" },
+                            SECURITY: { th: "ความปลอดภัย (Security)", en: "Security" },
+                            KITCHEN: { th: "ครัว (Kitchen)", en: "Kitchen" },
+                            TECH: { th: "เทคโนโลยี (Tech)", en: "Technology & Smart Home" },
+                            RECREATION: { th: "สันทนาการ (Recreation)", en: "Recreation & Sports" },
+                            NEARBY: { th: "สถานที่ใกล้เคียง (Nearby)", en: "Nearby Places" },
+                            SERVICES: { th: "บริการ (Services)", en: "Services" },
+                            OTHER: { th: "อื่นๆ (Other)", en: "Other" },
                           };
                           return (
                             <SelectItem key={c} value={c}>
-                              {displayNames[c] || c}
+                              {displayNames[c] ? (isEn ? displayNames[c].en : displayNames[c].th) : c}
                             </SelectItem>
                           );
                         })}
@@ -427,7 +520,7 @@ export function FeaturesManagementDialog({
                 name="icon_key"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ไอคอน</FormLabel>
+                    <FormLabel>{isEn ? "Icon" : "ไอคอน"}</FormLabel>
                     <FormControl>
                       <IconPicker
                         value={field.value}
@@ -443,18 +536,18 @@ export function FeaturesManagementDialog({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-12 rounded-xl text-slate-500 font-medium"
+                  className="h-12 rounded-xl text-slate-500 font-medium cursor-pointer"
                   onClick={() => setIsFormOpen(false)}
                 >
-                  ยกเลิก
+                  {isEn ? "Cancel" : "ยกเลิก"}
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold gap-2 shadow-lg shadow-blue-100"
+                  className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold gap-2 shadow-lg shadow-blue-100 cursor-pointer"
                 >
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {editingFeature ? "บันทึกการแก้ไข" : "สร้างรายการ"}
+                  {editingFeature ? (isEn ? "Save Changes" : "บันทึกการแก้ไข") : (isEn ? "Create Feature" : "สร้างรายการ")}
                 </Button>
               </div>
             </form>

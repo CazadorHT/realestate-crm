@@ -304,206 +304,171 @@ export const ManagementSection = ({
                     const selectedOwner = owners.find((o) => o.id === field.value);
                     return (
                       <div className="flex-1 min-w-0 flex items-stretch gap-2">
-                        {isMobileOrTablet ? (
-                          <ResponsiveDialog
-                            open={ownerOpen}
-                            onOpenChange={setOwnerOpen}
-                            title={isEn ? "Select Property Owner" : "เลือกเจ้าของทรัพย์"}
-                            trigger={
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="h-11! flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm justify-between text-left"
-                              >
-                                <span className="truncate">
-                                  {selectedOwner
-                                    ? `K. ${selectedOwner.full_name}${selectedOwner.phone ? ` (${selectedOwner.phone})` : ""}`
-                                    : (isEn ? "Search or select owner" : "ค้นหาหรือเลือกเจ้าของ")}
-                                </span>
-                              </Button>
-                            }
-                          >
-                      <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            field.onChange(null);
-                            setOwnerOpen(false);
+                        <ResponsiveDialog
+                          open={ownerOpen}
+                          onOpenChange={(open) => {
+                            setOwnerOpen(open);
+                            if (!open) setSearchTerm("");
                           }}
-                          className={cn(
-                            "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
-                            !field.value
-                              ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                              : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                          )}
-                        >
-                          <span className="text-xs font-bold italic text-slate-400">{isEn ? "-- No Owner Specified --" : "-- ไม่ระบุเจ้าของ --"}</span>
-                          {!field.value && (
-                            <div className="bg-blue-600 rounded-full p-1 text-white shrink-0">
-                              <Check className="h-3 w-3" />
-                            </div>
-                          )}
-                        </button>
-                        {owners.map((o) => {
-                          const isSelected = field.value === o.id;
-                          return (
-                            <button
-                              key={o.id}
+                          title={isEn ? "Select Owner" : "เลือกเจ้าของทรัพย์"}
+                          trigger={
+                            <Button
                               type="button"
-                              onClick={() => {
-                                field.onChange(o.id);
-                                setOwnerOpen(false);
-                              }}
-                              className={cn(
-                                "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
-                                isSelected
-                                  ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                  : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                              )}
+                              variant="outline"
+                              className="h-11! w-full flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm overflow-hidden justify-between text-left"
                             >
-                              <span className="text-xs font-bold flex items-center gap-1.5 min-w-0">
-                                <span className="text-slate-500 mr-1.5 shrink-0">K.</span>
-                                <span className="inline-block truncate flex-1 min-w-0 align-bottom">{o.full_name}</span>{" "}
-                                {o.phone && (
-                                  <span className="text-[10px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 shrink-0">
-                                    {o.phone}
-                                  </span>
-                                )}
+                              <span className="truncate">
+                                {selectedOwner
+                                  ? `K. ${selectedOwner.full_name}${selectedOwner.phone ? ` (${selectedOwner.phone})` : ""}`
+                                  : (isEn ? "-- No Owner Specified --" : "-- ไม่ระบุเจ้าของ --")}
                               </span>
-                              {isSelected && (
-                                <div className="bg-blue-600 rounded-full p-1 text-white shrink-0">
-                                  <Check className="h-3 w-3" />
-                                </div>
+                            </Button>
+                          }
+                        >
+                          <div className="flex flex-col h-full max-h-[75vh] bg-white">
+                            {/* Search box */}
+                            <div className="flex items-center border-b border-slate-100 px-4 py-2.5 shrink-0 bg-white">
+                              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-500" />
+                              <input
+                                type="text"
+                                placeholder={isEn ? "Search name or phone..." : "พิมพ์ค้นหาชื่อ หรือเบอร์..."}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="h-10 w-full border-0 bg-transparent pr-2 placeholder:text-sm text-sm focus:outline-none text-slate-800"
+                              />
+                              {searchTerm && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSearchTerm("")}
+                                  className="text-xs text-slate-400 hover:text-slate-600 font-medium px-1.5 shrink-0"
+                                >
+                                  {isEn ? "Clear" : "ล้าง"}
+                                </button>
                               )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </ResponsiveDialog>
-                  ) : (
-                    <Select
-                      value={field.value ?? "NONE"}
-                      onValueChange={(v) =>
-                        field.onChange(v === "NONE" ? null : v)
-                      }
-                      onOpenChange={(open) => {
-                        if (!open) setSearchTerm("");
-                      }}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11! w-full flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm overflow-hidden">
-                          <SelectValue placeholder={isEn ? "Search or select owner" : "ค้นหาหรือเลือกเจ้าของ"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white rounded-2xl shadow-xl border-none max-h-[300px] overflow-y-auto custom-scrollbar p-1">
-                        <div 
-                          className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50 sticky top-0 z-10"
-                          onClick={(e) => e.stopPropagation()} 
-                          onKeyDown={(e) => e.stopPropagation()}
-                        >
-                          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <input
-                            type="text"
-                            placeholder={isEn ? "Search name or phone..." : "พิมพ์ค้นหาชื่อ หรือเบอร์..."}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-white  placeholder:text-sm placeholder:font-medium border-none text-xs outline-none placeholder:text-slate-400 text-slate-700"
-                          />
-                          {searchTerm && (
-                            <button
-                              type="button"
-                              onClick={() => setSearchTerm("")}
-                              className="text-[10px] text-slate-400 hover:text-slate-600 font-medium px-1"
-                            >
-                              {isEn ? "Clear" : "ล้าง"}
-                            </button>
-                          )}
-                        </div>
-                        <SelectItem
-                          value="NONE"
-                          className="font-medium text-slate-400 text-sm italic py-3 rounded-lg"
-                        >
-                          {isEn ? "-- No Owner Specified --" : "-- ไม่ระบุเจ้าของ --"}
-                        </SelectItem>
-                        {searchTerm && (
-                          <div className="p-2 border-b border-slate-100 bg-slate-50/20" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPrefilledOwnerName(searchTerm);
-                                setIsAddingOwner(true);
-                              }}
-                              className="w-full flex items-center gap-2 p-2.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl border border-dashed border-emerald-200 transition-all text-left"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                              <span>{isEn ? `Add new owner named "${searchTerm}"` : `เพิ่มเจ้าของใหม่ชื่อ "${searchTerm}"`}</span>
-                            </button>
-                          </div>
-                        )}
-                        {filteredOwners.length === 0 && searchTerm ? (
-                          <div className="py-6 text-center text-xs text-slate-400">
-                            {isEn ? "No matching owners found" : "ไม่พบรายชื่อที่ค้นหา"}
-                          </div>
-                        ) : (
-                          filteredOwners.map((o) => {
-                            const isNew = isNewOwner(o.created_at) || o.id === newlyCreatedOwnerId;
-                            return (
-                              <SelectItem
-                                key={o.id}
-                                value={o.id}
-                                className="py-3 font-medium text-sm rounded-lg"
-                              >
-                                <span className="flex items-center gap-1.5 min-w-0 w-full overflow-hidden">
-                                  <span className="text-slate-500 shrink-0">K.</span>
-                                  <span className="inline-block truncate flex-1 min-w-0 max-w-[80px] align-bottom">{o.full_name}</span>
-                                  {isNew && (
-                                    <span className="px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200 shrink-0">
-                                      NEW
-                                    </span>
-                                  )}
-                                  {o.phone && (
-                                    <span className="text-[11px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 shrink-0">
-                                      {o.phone}
-                                    </span>
-                                  )}
-                                </span>
-                              </SelectItem>
-                            );
-                          })
-                        )}
-                      </SelectContent>
-                    </Select>
-                  )}
+                            </div>
 
-                  {selectedOwner && (selectedOwner.phone || selectedOwner.line_id) && (
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {selectedOwner.phone && (
-                        <a
-                          href={`tel:${selectedOwner.phone}`}
-                          title={isEn ? `Call K. ${selectedOwner.full_name}` : `โทรหา K. ${selectedOwner.full_name}`}
-                          className="h-11 w-11 flex items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm"
-                        >
-                          <Phone className="w-4 h-4" />
-                        </a>
-                      )}
-                      {selectedOwner.line_id && (
-                        <button
-                          type="button"
-                          title={isEn ? `Copy Line ID of K. ${selectedOwner.full_name}` : `คัดลอก Line ID ของ K. ${selectedOwner.full_name}`}
-                          onClick={() => {
-                            navigator.clipboard.writeText(selectedOwner.line_id || "");
-                            toast.success(isEn ? `Line ID "${selectedOwner.line_id}" copied!` : `คัดลอก Line ID "${selectedOwner.line_id}" สำเร็จ`);
-                          }}
-                          className="h-11 w-11 flex items-center justify-center rounded-xl border border-green-100 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all shadow-sm"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+                            {/* Content List */}
+                            <div className="p-4 overflow-y-auto space-y-2 flex-1 bg-slate-50/30">
+                              {/* Option: No owner */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(null);
+                                  setOwnerOpen(false);
+                                }}
+                                className={cn(
+                                  "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                  !field.value
+                                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 font-bold shadow-sm"
+                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-500 italic",
+                                )}
+                              >
+                                <span className="text-xs">
+                                  {isEn ? "-- No Owner Specified --" : "-- ไม่ระบุเจ้าของ --"}
+                                </span>
+                                {!field.value && (
+                                  <div className="bg-emerald-600 rounded-full p-1 text-white shrink-0">
+                                    <Check className="h-3 w-3" />
+                                  </div>
+                                )}
+                              </button>
+
+                              {/* Option: Add quick owner if searching */}
+                              {searchTerm && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPrefilledOwnerName(searchTerm);
+                                    setIsAddingOwner(true);
+                                    setOwnerOpen(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 p-3 text-xs font-bold text-emerald-600 bg-emerald-50/50 hover:bg-emerald-50 rounded-xl border border-dashed border-emerald-200 transition-all text-left"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                  <span>{isEn ? `Add new owner named "${searchTerm}"` : `เพิ่มเจ้าของใหม่ชื่อ "${searchTerm}"`}</span>
+                                </button>
+                              )}
+
+                              {filteredOwners.length === 0 && searchTerm ? (
+                                <div className="py-8 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-100">
+                                  {isEn ? "No matching owners found" : "ไม่พบรายชื่อที่ค้นหา"}
+                                </div>
+                              ) : (
+                                filteredOwners.map((o) => {
+                                  const isSelected = field.value === o.id;
+                                  const isNew = isNewOwner(o.created_at) || o.id === newlyCreatedOwnerId;
+                                  return (
+                                    <button
+                                      key={o.id}
+                                      type="button"
+                                      onClick={() => {
+                                        field.onChange(o.id);
+                                        setOwnerOpen(false);
+                                      }}
+                                      className={cn(
+                                        "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                        isSelected
+                                          ? "bg-emerald-50 border-emerald-200 text-emerald-700 font-bold shadow-sm"
+                                          : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                      )}
+                                    >
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <span className="text-xs font-bold text-slate-800">
+                                          K. {o.full_name}
+                                        </span>
+                                        {isNew && (
+                                          <span className="px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider text-emerald-700 bg-emerald-100 rounded-full border border-emerald-200 shrink-0">
+                                            NEW
+                                          </span>
+                                        )}
+                                        {o.phone && (
+                                          <span className="text-[11px] text-slate-400 font-normal bg-slate-100 px-2 py-0.5 rounded-md shrink-0">
+                                            {o.phone}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {isSelected && (
+                                        <div className="bg-emerald-600 rounded-full p-1 text-white shrink-0">
+                                          <Check className="h-3 w-3" />
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                })
+                              )}
+                            </div>
+                          </div>
+                        </ResponsiveDialog>
+
+                        {selectedOwner && (selectedOwner.phone || selectedOwner.line_id) && (
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {selectedOwner.phone && (
+                              <a
+                                href={`tel:${selectedOwner.phone}`}
+                                title={isEn ? `Call K. ${selectedOwner.full_name}` : `โทรหา K. ${selectedOwner.full_name}`}
+                                className="h-11 w-11 flex items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm"
+                              >
+                                <Phone className="w-4 h-4" />
+                              </a>
+                            )}
+                            {selectedOwner.line_id && (
+                              <button
+                                type="button"
+                                title={isEn ? `Copy Line ID of K. ${selectedOwner.full_name}` : `คัดลอก Line ID ของ K. ${selectedOwner.full_name}`}
+                                onClick={() => {
+                                  navigator.clipboard.writeText(selectedOwner.line_id || "");
+                                  toast.success(isEn ? `Line ID "${selectedOwner.line_id}" copied!` : `คัดลอก Line ID "${selectedOwner.line_id}" สำเร็จ`);
+                                }}
+                                className="h-11 w-11 flex items-center justify-center rounded-xl border border-green-100 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all shadow-sm"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   <ResponsiveDialog
                     open={isAddingOwner}

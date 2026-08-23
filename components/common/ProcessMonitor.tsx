@@ -40,6 +40,8 @@ import {
 } from "./ProcessIcons";
 import { Checkbox } from "@/components/ui/checkbox";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 function playWebAudioTone(type: "SUCCESS" | "ERROR") {
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -77,6 +79,9 @@ function playWebAudioTone(type: "SUCCESS" | "ERROR") {
 }
 
 export function ProcessMonitor() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const { processes, activeCount, errorCount, clearFinished, deleteMultiple } = useProcess();
   const [isOpen, setIsOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -117,7 +122,7 @@ export function ProcessMonitor() {
     if (selectedIds.length === 0) return;
     await deleteMultiple(selectedIds);
     setSelectedIds([]);
-    toast.success(`ลบรายการที่เลือก (${selectedIds.length}) เรียบร้อยแล้ว`);
+    toast.success(isEn ? `Deleted (${selectedIds.length}) selected tasks` : `ลบรายการที่เลือก (${selectedIds.length}) เรียบร้อยแล้ว`);
   };
 
   return (
@@ -141,10 +146,10 @@ export function ProcessMonitor() {
                   e.stopPropagation();
                   e.preventDefault();
                   clearFinished();
-                  toast.info("ปิดและล้างประวัติงานที่สำเร็จเรียบร้อย");
+                  toast.info(isEn ? "Cleared finished background tasks" : "ปิดและล้างประวัติงานที่สำเร็จเรียบร้อย");
                 }}
-                className="h-6 w-6 rounded-full bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center border border-slate-200 shadow-sm transition-all"
-                title="ปิด / ล้างงานที่สำเร็จ"
+                className="h-6 w-6 rounded-full bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center border border-slate-200 shadow-sm transition-all cursor-pointer"
+                title={isEn ? "Dismiss / Clear completed tasks" : "ปิด / ล้างงานที่สำเร็จ"}
               >
                 <span className="text-[10px] font-bold">✕</span>
               </m.button>
@@ -156,7 +161,7 @@ export function ProcessMonitor() {
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsOpen(true)}
               className={cn(
-                "h-10 w-10 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center border transition-all group overflow-hidden bg-white relative",
+                "h-10 w-10 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center border transition-all group overflow-hidden bg-white relative cursor-pointer",
                 activeCount > 0 
                   ? "border-blue-500 text-blue-600 shadow-blue-200" 
                   : errorCount > 0 
@@ -216,14 +221,14 @@ export function ProcessMonitor() {
           <div className="flex items-center justify-between w-full pr-8">
             <div className="flex items-center gap-2">
               <History className="h-5 w-5 text-slate-400" />
-              <span className="text-lg!">ห้องควบคุมงานเบื้องหลัง</span>
+              <span className="text-lg!">{isEn ? "Background Process Monitor" : "ห้องควบคุมงานเบื้องหลัง"}</span>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className={cn("h-8 w-8 rounded-full", soundEnabled ? "text-blue-500" : "text-slate-300")}
+              className={cn("h-8 w-8 rounded-full cursor-pointer", soundEnabled ? "text-blue-500" : "text-slate-300")}
               onClick={() => setSoundEnabled(!soundEnabled)}
-              title={soundEnabled ? "ปิดเสียงแจ้งเตือน" : "เปิดเสียงแจ้งเตือน"}
+              title={soundEnabled ? (isEn ? "Mute notification tone" : "ปิดเสียงแจ้งเตือน") : (isEn ? "Unmute notification tone" : "เปิดเสียงแจ้งเตือน")}
             >
               <Volume2 className="h-4 w-4" />
             </Button>
@@ -241,7 +246,7 @@ export function ProcessMonitor() {
                 />
               )}
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                ประวัติการทำงาน ({processes.length})
+                {isEn ? `Task History (${processes.length})` : `ประวัติการทำงาน (${processes.length})`}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -250,10 +255,10 @@ export function ProcessMonitor() {
                   variant="destructive" 
                   size="sm" 
                   onClick={handleDeleteSelected}
-                  className="text-xs rounded-full h-8 px-4 animate-in fade-in zoom-in duration-200"
+                  className="text-xs rounded-full h-8 px-4 animate-in fade-in zoom-in duration-200 cursor-pointer"
                 >
                   <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  ลบที่เลือก ({selectedIds.length})
+                  {isEn ? `Delete Selected (${selectedIds.length})` : `ลบที่เลือก (${selectedIds.length})`}
                 </Button>
               ) : (
                 <Button 
@@ -261,10 +266,10 @@ export function ProcessMonitor() {
                   size="sm" 
                   onClick={clearFinished}
                   disabled={processes.filter(p => p.status !== 'PROCESSING').length === 0}
-                  className="text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-full h-8"
+                  className="text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-full h-8 cursor-pointer"
                 >
                   <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  ล้างที่สำเร็จ
+                  {isEn ? "Clear Finished" : "ล้างที่สำเร็จ"}
                 </Button>
               )}
             </div>
@@ -315,8 +320,13 @@ export function ProcessMonitor() {
                     })()}
                   </div>
                   <div className="flex-1 min-w-0">
+                    {/* Process Title & Time */}
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-bold text-slate-900 truncate">{p.name}</p>
+                      <p className="text-sm font-bold text-slate-900 truncate">
+                        {isEn && p.name.startsWith("โพสต์ ")
+                          ? p.name.replace(/^โพสต์\s+/, "")
+                          : p.name}
+                      </p>
                       <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap bg-slate-50 px-2 py-0.5 rounded-full">
                         {(() => {
                           const startDate = p.startedAt instanceof Date ? p.startedAt : new Date(p.startedAt);
@@ -326,12 +336,31 @@ export function ProcessMonitor() {
                         })()}
                       </span>
                     </div>
+
+                    {/* Process Message */}
                     <p className={cn(
                       "text-xs mt-1 leading-relaxed",
                       p.status === "ERROR" ? "text-red-600 font-medium" : "text-slate-500"
                     )}>
-                      {p.status === "PROCESSING" ? "กำลังประมวลผลระบบหลังบ้าน..." : 
-                       p.message || (p.status === "SUCCESS" ? "ดำเนินการเสร็จสิ้นเรียบร้อยแล้ว" : "เกิดข้อผิดพลาดในการประมวลผล")}
+                      {(() => {
+                        if (p.status === "PROCESSING") {
+                          return isEn ? "Processing in background..." : "กำลังประมวลผลระบบหลังบ้าน...";
+                        }
+                        const rawMsg = p.message || (p.status === "SUCCESS" ? "ดำเนินการเสร็จสิ้นเรียบร้อยแล้ว" : "เกิดข้อผิดพลาดในการประมวลผล");
+                        if (!isEn) return rawMsg;
+
+                        // Smart Auto Translation for common background worker messages
+                        if (rawMsg.includes("โพสต์ไปที่ INSTAGRAM สำเร็จแล้ว")) return "Successfully posted to Instagram";
+                        if (rawMsg.includes("โพสต์ไปที่ FACEBOOK สำเร็จแล้ว")) return "Successfully posted to Facebook Page";
+                        if (rawMsg.includes("ส่งแบบร่างสำเร็จ! กรุณาเปิดแอป TikTok")) {
+                          return "Draft submitted successfully! Please open TikTok > Inbox > System Notifications to confirm publishing.";
+                        }
+                        if (rawMsg.includes("ดำเนินการเสร็จสิ้นเรียบร้อยแล้ว")) return "Completed successfully";
+                        if (rawMsg.includes("เกิดข้อผิดพลาดในการประมวลผล")) return "An error occurred during processing";
+                        if (rawMsg.includes("ยกเลิกการทำงานโดยผู้ใช้")) return "Cancelled by user";
+
+                        return rawMsg;
+                      })()}
                     </p>
 
                     {/* 🕵️ Source Tracking (Audit Info) */}
@@ -354,10 +383,10 @@ export function ProcessMonitor() {
                               p.onRetry?.();
                               setIsOpen(false);
                             }}
-                            className="h-8 text-[10px] font-bold gap-1.5 rounded-xl border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200"
+                            className="h-8 text-[10px] font-bold gap-1.5 rounded-xl border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 cursor-pointer"
                           >
                             <RotateCcw className="h-3 w-3" />
-                            ลองอีกครั้ง
+                            {isEn ? "Retry" : "ลองอีกครั้ง"}
                           </Button>
                         )}
 
@@ -374,17 +403,17 @@ export function ProcessMonitor() {
                                   type: "PROCESS_UPDATED",
                                   id: p.id,
                                   status: "ERROR",
-                                  message: "ยกเลิกการทำงานโดยผู้ใช้"
+                                  message: isEn ? "Cancelled by user" : "ยกเลิกการทำงานโดยผู้ใช้"
                                 });
-                                toast.success("หยุดการทำงานเรียบร้อยแล้ว");
+                                toast.success(isEn ? "Task stopped successfully" : "หยุดการทำงานเรียบร้อยแล้ว");
                               } else {
-                                toast.error("ไม่สามารถยกเลิกงานได้: " + res.message);
+                                toast.error(isEn ? "Failed to cancel task: " + res.message : "ไม่สามารถยกเลิกงานได้: " + res.message);
                               }
                             }}
-                            className="h-8 text-[10px] font-bold gap-1.5 rounded-xl border-orange-100 text-orange-600! hover:bg-orange-50 hover:border-orange-200"
+                            className="h-8 text-[10px] font-bold gap-1.5 rounded-xl border-orange-100 text-orange-600! hover:bg-orange-50 hover:border-orange-200 cursor-pointer"
                           >
                             <Square className="h-3 w-3 fill-current" />
-                            หยุดทำงาน
+                            {isEn ? "Stop" : "หยุดทำงาน"}
                           </Button>
                         )}
 
@@ -395,10 +424,10 @@ export function ProcessMonitor() {
                             onClick={() => {
                               window.open(p.resultLink, "_blank");
                             }}
-                            className="h-8 text-[10px] font-semibold gap-1.5 rounded-xl border-emerald-100 text-emerald-600! hover:bg-emerald-50 hover:border-emerald-200 shadow-sm"
+                            className="h-8 text-[10px] font-semibold gap-1.5 rounded-xl border-emerald-100 text-emerald-600! hover:bg-emerald-50 hover:border-emerald-200 shadow-sm cursor-pointer"
                           >
                             <ExternalLink className="h-3 w-3" />
-                            ดูผลลัพธ์ (View)
+                            {isEn ? "View Result" : "ดูผลลัพธ์ (View)"}
                           </Button>
                         )}
 
@@ -408,7 +437,7 @@ export function ProcessMonitor() {
                       const compDate = p.completedAt instanceof Date ? p.completedAt : new Date(p.completedAt);
                       return !isNaN(compDate.getTime()) ? (
                         <p className="text-[10px] text-slate-300 mt-3 italic">
-                          เสร็จสิ้นเมื่อ {compDate.toLocaleTimeString()}
+                          {isEn ? `Completed at ${compDate.toLocaleTimeString()}` : `เสร็จสิ้นเมื่อ ${compDate.toLocaleTimeString()}`}
                         </p>
                       ) : null;
                     })()}
@@ -429,8 +458,8 @@ export function ProcessMonitor() {
                   animate={{ scale: 1, opacity: 1 }}
                 >
                   <Activity className="h-16 w-16 mx-auto mb-4 opacity-10" />
-                  <p className="text-sm font-medium">ยังไม่มีประวัติการทำงานในขณะนี้</p>
-                  <p className="text-xs mt-1">ระบบจะแสดงรายการที่คุณสั่งรันในหน้านี้</p>
+                  <p className="text-sm font-medium">{isEn ? "No active background tasks right now" : "ยังไม่มีประวัติการทำงานในขณะนี้"}</p>
+                  <p className="text-xs mt-1">{isEn ? "Background sync and publishing tasks will appear here" : "ระบบจะแสดงรายการที่คุณสั่งรันในหน้านี้"}</p>
                 </m.div>
               </div>
             )}

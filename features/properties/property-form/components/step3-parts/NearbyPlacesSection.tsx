@@ -55,6 +55,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Label } from "@/components/ui/label";
 
 const KilometerInput = ({
@@ -102,6 +103,8 @@ interface NearbyPlacesSectionProps {
 export function NearbyPlacesSection({
   form: formProp,
 }: NearbyPlacesSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const { fields, append, remove } = useFieldArray({
@@ -109,8 +112,8 @@ export function NearbyPlacesSection({
     name: "nearby_places",
   });
 
-  const [categories, setCategories] = React.useState<{ value: string; label: string }[]>(
-    NEARBY_PLACE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))
+  const [categories, setCategories] = React.useState<{ value: string; label: string; labelEn?: string }[]>(
+    NEARBY_PLACE_CATEGORIES.map((c) => ({ value: c.value, label: c.label, labelEn: c.value }))
   );
   const [isLoadingCats, setIsLoadingCats] = React.useState(true);
 
@@ -138,9 +141,9 @@ export function NearbyPlacesSection({
           const dbValues = new Set(data.map((d) => d.code));
           const defaultsToAdd = NEARBY_PLACE_CATEGORIES
             .filter((c) => !dbValues.has(c.value))
-            .map((c) => ({ value: c.value, label: c.label }));
+            .map((c) => ({ value: c.value, label: c.label, labelEn: c.value }));
           setCategories([
-            ...data.map((d) => ({ value: d.code, label: d.label.th })),
+            ...data.map((d) => ({ value: d.code, label: d.label.th, labelEn: d.label.en || d.code })),
             ...defaultsToAdd,
           ]);
         }
@@ -155,7 +158,7 @@ export function NearbyPlacesSection({
   const handleSaveCat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCatCode || !newCatLabelTh) {
-      toast.error("กรุณากรอกรหัสและชื่อหมวดหมู่");
+      toast.error(isEn ? "Please enter category code and name" : "กรุณากรอกรหัสและชื่อหมวดหมู่");
       return;
     }
     setIsSavingCat(true);
@@ -168,8 +171,8 @@ export function NearbyPlacesSection({
         is_active: true,
       });
       if (res.success) {
-        toast.success("เพิ่มหมวดหมู่ใหม่สำเร็จ!");
-        setCategories([...categories, { value: newCatCode.toUpperCase(), label: newCatLabelTh }]);
+        toast.success(isEn ? "Added new category successfully!" : "เพิ่มหมวดหมู่ใหม่สำเร็จ!");
+        setCategories([...categories, { value: newCatCode.toUpperCase(), label: newCatLabelTh, labelEn: newCatLabelTh }]);
         setIsCatModalOpen(false);
         setNewCatCode("");
         setNewCatLabelTh("");
@@ -177,7 +180,7 @@ export function NearbyPlacesSection({
         toast.error(res.message);
       }
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึก");
+      toast.error(isEn ? "Error saving category" : "เกิดข้อผิดพลาดในการบันทึก");
     } finally {
       setIsSavingCat(false);
     }
@@ -199,8 +202,8 @@ export function NearbyPlacesSection({
       <CardHeader className="space-y-4 pb-0 px-4 sm:px-6 py-4 sm:py-6">
         <SectionHeader
           icon={Landmark}
-          title="สถานที่ใกล้เคียง"
-          desc="เพิ่มจุดเด่นรอบๆ ทรัพย์สิน"
+          title={isEn ? "Nearby Landmarks & Places" : "สถานที่ใกล้เคียง"}
+          desc={isEn ? "Add highlights and key spots around the property" : "เพิ่มจุดเด่นรอบๆ ทรัพย์สิน"}
           tone="blue"
           right={
             <div className="flex items-center gap-2">
@@ -218,7 +221,7 @@ export function NearbyPlacesSection({
                   ) : (
                     <Sparkles className="h-3.5 w-3.5" />
                   )}
-                  <span>AI {isTranslating ? "กำลังแปล..." : "แปลชื่อทั้งหมด"}</span>
+                  <span>{isTranslating ? (isEn ? "Translating..." : "กำลังแปล...") : (isEn ? "AI Translate All" : "AI แปลชื่อทั้งหมด")}</span>
                 </Button>
               ) : null}
               <DropdownMenu>
@@ -238,14 +241,14 @@ export function NearbyPlacesSection({
                     className="flex items-center gap-2 text-xs font-bold text-emerald-600 cursor-pointer py-2 rounded-lg hover:bg-emerald-50"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>เพิ่มหมวดหมู่ใหม่ (Add Category)</span>
+                    <span>{isEn ? "Add New Category" : "เพิ่มหมวดหมู่ใหม่ (Add Category)"}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => window.open('/protected/admin/master-data', '_blank')}
                     className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer py-2 rounded-lg hover:bg-slate-50"
                   >
                     <Landmark className="h-4 w-4 text-slate-400" />
-                    <span>จัดการข้อมูลระบบ (Master Data)</span>
+                    <span>{isEn ? "Manage Master Data" : "จัดการข้อมูลระบบ (Master Data)"}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -283,13 +286,13 @@ export function NearbyPlacesSection({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Landmark className="h-3.5 w-3.5 text-blue-500" />
-                          <span>ประเภท</span>
+                          <span>{isEn ? "Category" : "ประเภท"}</span>
                         </FormLabel>
                         {isMobileOrTablet ? (
                           <ResponsiveDialog
                             open={openIndex === index}
                             onOpenChange={(open) => setOpenIndex(open ? index : null)}
-                            title="เลือกหมวดหมู่สถานที่"
+                            title={isEn ? "Select Place Category" : "เลือกหมวดหมู่สถานที่"}
                             trigger={
                               <Button
                                 type="button"
@@ -300,11 +303,14 @@ export function NearbyPlacesSection({
                                 {isLoadingCats ? (
                                   <div className="flex items-center gap-2">
                                     <Loader2 className="h-3 w-3 animate-spin" />
-                                    <span>กำลังโหลด...</span>
+                                    <span>{isEn ? "Loading..." : "กำลังโหลด..."}</span>
                                   </div>
                                 ) : (
                                   <span>
-                                    {categories.find((cat) => cat.value === field.value)?.label || field.value || "เลือก..."}
+                                    {(() => {
+                                      const selected = categories.find((cat) => cat.value === field.value);
+                                      return (isEn ? (selected?.labelEn || selected?.label) : selected?.label) || field.value || (isEn ? "Select..." : "เลือก...");
+                                    })()}
                                   </span>
                                 )}
                               </Button>
@@ -328,7 +334,7 @@ export function NearbyPlacesSection({
                                         : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
                                     )}
                                   >
-                                    <span className="text-xs font-bold">{cat.label}</span>
+                                    <span className="text-xs font-bold">{isEn ? (cat.labelEn || cat.label) : cat.label}</span>
                                     {isSelected && (
                                       <div className="bg-blue-600 rounded-full p-1 text-white">
                                         <Check className="h-3 w-3" />
@@ -349,7 +355,7 @@ export function NearbyPlacesSection({
                                   }}
                                 >
                                   <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                                  เพิ่มหมวดหมู่ใหม่ (Add New)
+                                  {isEn ? "Add New Category" : "เพิ่มหมวดหมู่ใหม่ (Add New)"}
                                 </Button>
                               </div>
                             </div>
@@ -361,17 +367,17 @@ export function NearbyPlacesSection({
                                 {isLoadingCats ? (
                                   <div className="flex items-center gap-2">
                                     <Loader2 className="h-3 w-3 animate-spin" />
-                                    <span>กำลังโหลด...</span>
+                                    <span>{isEn ? "Loading..." : "กำลังโหลด..."}</span>
                                   </div>
                                 ) : (
-                                  <SelectValue placeholder="เลือก..." />
+                                  <SelectValue placeholder={isEn ? "Select..." : "เลือก..."} />
                                 )}
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-white rounded-xl">
                               {categories.map((cat) => (
                                 <SelectItem key={cat.value} value={cat.value} className="font-medium py-2 text-sm">
-                                  {cat.label}
+                                  {isEn ? (cat.labelEn || cat.label) : cat.label}
                                 </SelectItem>
                               ))}
                               <div className="p-1 border-t border-slate-100 mt-1">
@@ -385,7 +391,7 @@ export function NearbyPlacesSection({
                                   }}
                                 >
                                   <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                                  เพิ่มหมวดหมู่ใหม่ (Add New)
+                                  {isEn ? "Add New Category" : "เพิ่มหมวดหมู่ใหม่ (Add New)"}
                                 </Button>
                               </div>
                             </SelectContent>
@@ -402,7 +408,7 @@ export function NearbyPlacesSection({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Ruler className="h-3.5 w-3.5 text-blue-500" />
-                          <span>ระยะทาง (กม.)</span>
+                          <span>{isEn ? "Distance (km)" : "ระยะทาง (กม.)"}</span>
                         </FormLabel>
                         <FormControl>
                           <KilometerInput
@@ -423,7 +429,7 @@ export function NearbyPlacesSection({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Clock className="h-3.5 w-3.5 text-blue-500" />
-                          <span>เวลา (นาที)</span>
+                          <span>{isEn ? "Time (mins)" : "เวลา (นาที)"}</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -445,12 +451,12 @@ export function NearbyPlacesSection({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                          <span>ชื่อสถานที่ (ภาษาไทย)</span>
+                          <span>{isEn ? "Place Name (Thai)" : "ชื่อสถานที่ (ภาษาไทย)"}</span>
                         </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="เช่น โรงเรียนสาธิต"
+                            placeholder={isEn ? "e.g. Demonstration School / Central World" : "เช่น โรงเรียนสาธิต / เซ็นทรัลเวิลด์"}
                             className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium px-4 text-xs focus:ring-0 focus:border-blue-400"
                           />
                         </FormControl>
@@ -517,7 +523,7 @@ export function NearbyPlacesSection({
             onClick={handleAddPlace}
           >
             <Plus className="h-4 w-4 mr-2" />
-            เพิ่มสถานที่
+            {isEn ? "Add Nearby Place" : "เพิ่มสถานที่"}
           </Button>
         </div>
       </CardContent>
@@ -528,31 +534,31 @@ export function NearbyPlacesSection({
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <Plus className="h-5 w-5 text-emerald-600" />
-              <span>เพิ่มหมวดหมู่สถานที่ใกล้เคียงใหม่</span>
+              <span>{isEn ? "Add New Place Category" : "เพิ่มหมวดหมู่สถานที่ใกล้เคียงใหม่"}</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              หมวดหมู่ใหม่จะถูกบันทึกและพร้อมเลือกใช้งานในฟอร์มทันที
+              {isEn ? "New category will be saved and immediately selectable in forms" : "หมวดหมู่ใหม่จะถูกบันทึกและพร้อมเลือกใช้งานในฟอร์มทันที"}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSaveCat} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">รหัสหมวดหมู่ (Code) <span className="text-red-500">*</span></Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Category Code" : "รหัสหมวดหมู่ (Code)"} <span className="text-red-500">*</span></Label>
               <Input
                 value={newCatCode}
                 onChange={(e) => setNewCatCode(e.target.value.toUpperCase())}
-                placeholder="เช่น SUPERMARKET หรือ CLINIC"
+                placeholder={isEn ? "e.g. SUPERMARKET or CLINIC" : "เช่น SUPERMARKET หรือ CLINIC"}
                 className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold uppercase"
               />
-              <span className="text-[10px] text-slate-400">ภาษาอังกฤษตัวพิมพ์ใหญ่ ไม่มีเว้นวรรค</span>
+              <span className="text-[10px] text-slate-400">{isEn ? "Uppercase English letters with no spaces" : "ภาษาอังกฤษตัวพิมพ์ใหญ่ ไม่มีเว้นวรรค"}</span>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">ชื่อหมวดหมู่ (ภาษาไทย) <span className="text-red-500">*</span></Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Category Name (Thai)" : "ชื่อหมวดหมู่ (ภาษาไทย)"} <span className="text-red-500">*</span></Label>
               <Input
                 value={newCatLabelTh}
                 onChange={(e) => setNewCatLabelTh(e.target.value)}
-                placeholder="เช่น ซูเปอร์มาร์เก็ต / คลินิก"
+                placeholder={isEn ? "e.g. Supermarket / Clinic" : "เช่น ซูเปอร์มาร์เก็ต / คลินิก"}
                 className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
               />
             </div>
@@ -564,7 +570,7 @@ export function NearbyPlacesSection({
                 onClick={() => setIsCatModalOpen(false)}
                 className="h-10 rounded-xl font-bold text-slate-600"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
               <Button
                 type="submit"
@@ -572,7 +578,7 @@ export function NearbyPlacesSection({
                 className="h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6"
               >
                 {isSavingCat ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                <span>บันทึกหมวดหมู่</span>
+                <span>{isEn ? "Save Category" : "บันทึกหมวดหมู่"}</span>
               </Button>
             </DialogFooter>
           </form>

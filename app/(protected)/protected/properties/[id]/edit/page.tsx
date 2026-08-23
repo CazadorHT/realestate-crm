@@ -11,7 +11,12 @@ export default async function EditPropertyPage({
   params: Promise<{ id: string }>;
 }) {
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (
+    cookieStore.get("crm-language")?.value ||
+    cookieStore.get("language")?.value ||
+    cookieStore.get("public-language")?.value ||
+    "th"
+  ) as "th" | "en";
   const isEn = lang === "en";
 
   const { id } = await params;

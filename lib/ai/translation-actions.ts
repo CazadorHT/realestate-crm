@@ -6,18 +6,19 @@ import { createClient } from "@/lib/supabase/server";
 
 export interface TranslationResult {
   [x: string]: unknown;
+  th?: string;
   en: string;
   cn: string;
   ru: string;
 }
 
 /**
- * Generic AI action to translate text from Thai to English and Chinese.
+ * Generic AI action to translate text between languages (Auto-detecting source).
  * Handles both plain text and HTML content.
  */
 async function translateToLanguage(
   text: string,
-  targetLang: "en" | "cn" | "ru",
+  targetLang: "th" | "en" | "cn" | "ru",
   contentType: "plain" | "html" = "plain",
   userId?: string,
 ): Promise<string> {
@@ -26,6 +27,7 @@ async function translateToLanguage(
   }
 
   const langMap = {
+    th: "Thai",
     en: "English",
     cn: "Chinese (Simplified)",
     ru: "Russian",
@@ -33,7 +35,8 @@ async function translateToLanguage(
 
   const prompt = `
     You are a professional translator and real estate marketing expert.
-    Translate the following ${contentType === "html" ? "HTML content" : "text"} from Thai to ${langMap[targetLang]}.
+    Translate the following ${contentType === "html" ? "HTML content" : "text"} accurately into ${langMap[targetLang]}.
+    Detect the source language automatically (whether it is Thai, English, Chinese, etc.).
 
     RULES:
     1. Maintain a professional, premium, and engaging tone suitable for real estate.
@@ -128,15 +131,16 @@ async function translateToLanguage(
 }
 
 /**
- * Generic AI action to translate text from Thai to English, Chinese, and Russian in parallel.
+ * Generic AI action to translate text across Thai, English, Chinese, and Russian in parallel.
  * Handles both plain text and HTML content.
  */
 export async function translateTextAction(
   text: string,
   contentType: "plain" | "html" = "plain",
+  targets: ("th" | "en" | "cn" | "ru")[] = ["th", "en", "cn", "ru"],
 ): Promise<TranslationResult> {
   if (!text || text.trim() === "") {
-    return { en: "", cn: "", ru: "" };
+    return { th: "", en: "", cn: "", ru: "" };
   }
 
   try {
@@ -148,15 +152,27 @@ export async function translateTextAction(
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
 
-    console.log(`🌐 [AI Translation] Translating ${text.length} chars in parallel using model: ${modelName || "default"}`);
+    console.log(`🌐 [AI Translation] Translating ${text.length} chars in parallel to [${targets.join(", ")}] using model: ${modelName || "default"}`);
 
-    const [en, cn, ru] = await Promise.all([
-      translateToLanguage(text, "en", contentType, userId),
-      translateToLanguage(text, "cn", contentType, userId),
-      translateToLanguage(text, "ru", contentType, userId),
-    ]);
+    const results: Record<string, string> = {
+      th: "",
+      en: "",
+      cn: "",
+      ru: "",
+    };
 
-    return { en, cn, ru };
+    await Promise.all(
+      targets.map(async (lang) => {
+        results[lang] = await translateToLanguage(text, lang, contentType, userId);
+      })
+    );
+
+    return {
+      th: results.th || "",
+      en: results.en || "",
+      cn: results.cn || "",
+      ru: results.ru || "",
+    };
   } catch (error: any) {
     console.error("Translation Action Parallel Error:", error);
     throw new Error(error.message || "ไม่สามารถแปลภาษาได้ในขณะนี้");

@@ -9,6 +9,9 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getProvinceName, getDistrictName, getSubdistrictName } from "@/lib/utils/provinces";
+
 interface AddressSelectorFieldProps {
   control: any;
   name: "province" | "district" | "subdistrict";
@@ -46,6 +49,29 @@ export function AddressSelectorField({
   formatOptionName = (n) => n,
   loading = false,
 }: AddressSelectorFieldProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const getDisplayName = React.useCallback(
+    (opt: any) => {
+      if (!opt) return "";
+      const rawName = typeof opt === "string" ? opt : opt.name_th || opt.name_en || "";
+      if (!isEn) return formatOptionName(rawName);
+
+      if (opt.name_en && opt.name_en.trim() !== "") {
+        return opt.name_en;
+      }
+      if (name === "province") {
+        return getProvinceName(rawName, "en");
+      }
+      if (name === "subdistrict") {
+        return getSubdistrictName(rawName, "en");
+      }
+      return getDistrictName(rawName, "en");
+    },
+    [isEn, formatOptionName, name],
+  );
+
   const cleanWord = React.useCallback((val: string) => {
     if (!val) return "";
     return val.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim().toLowerCase();
@@ -70,7 +96,7 @@ export function AddressSelectorField({
               {
                 id: `custom-${val}`,
                 name_th: val,
-                name_en: val,
+                name_en: isEn ? getSubdistrictName(val, "en") : val,
                 zip_code: "",
               },
               ...options,
@@ -82,9 +108,15 @@ export function AddressSelectorField({
           ? effectiveOptions
           : effectiveOptions.filter(
               (opt) =>
-                opt.name_th.toLowerCase().includes(q) ||
-                opt.name_en.toLowerCase().includes(q),
+                opt.name_th?.toLowerCase().includes(q) ||
+                opt.name_en?.toLowerCase().includes(q) ||
+                getDisplayName(opt).toLowerCase().includes(q),
             );
+
+        const selectedOption = effectiveOptions.find((o) => o.name_th === val || o.name_en === val);
+        const displaySelectedValue = selectedOption
+          ? getDisplayName(selectedOption)
+          : (val ? (isEn ? (name === "subdistrict" ? getSubdistrictName(val, "en") : getDistrictName(val, "en")) : val) : "");
 
         return (
           <FormItem className="col-span-1">
@@ -104,7 +136,7 @@ export function AddressSelectorField({
                   setIsOpen(open);
                   if (!open) setSearchQuery("");
                 }}
-                title={`เลือก${label}`}
+                title={isEn ? `Select ${label}` : `เลือก${label}`}
                 trigger={
                   <Button
                     type="button"
@@ -112,7 +144,7 @@ export function AddressSelectorField({
                     disabled={disabled}
                     className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs justify-start text-left text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span>{field.value || placeholder}</span>
+                    <span>{displaySelectedValue || placeholder}</span>
                   </Button>
                 }
               >
@@ -123,7 +155,7 @@ export function AddressSelectorField({
                       <Input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={`ค้นหา${label}...`}
+                        placeholder={isEn ? `Search ${label}...` : `ค้นหา${label}...`}
                         className="h-10 w-full border-0 bg-transparent pr-2 placeholder:text-sm text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
@@ -131,15 +163,15 @@ export function AddressSelectorField({
                   <div className="p-4 overflow-y-auto space-y-2 flex-1 bg-slate-50/30">
                     {effectiveOptions.length === 0 ? (
                       <div className="p-8 text-center text-slate-400 text-xs font-medium bg-white border border-slate-100 rounded-xl">
-                        กรุณาเลือกข้อมูลก่อนหน้า
+                        {isEn ? "Please select the previous location first" : "กรุณาเลือกข้อมูลก่อนหน้า"}
                       </div>
                     ) : filteredOptions.length === 0 ? (
                       <div className="py-8 text-center text-slate-400 text-xs font-medium bg-white border border-slate-100 rounded-xl">
-                        {`ไม่พบ${label}ที่คุณค้นหา`}
+                        {isEn ? `No ${label} found` : `ไม่พบ${label}ที่คุณค้นหา`}
                       </div>
                     ) : (
                       [...filteredOptions]
-                        .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                        .sort((a, b) => getDisplayName(a).localeCompare(getDisplayName(b), isEn ? "en" : "th"))
                         .map((opt) => {
                           const isSelected = field.value === opt.name_th;
                           return (
@@ -159,7 +191,7 @@ export function AddressSelectorField({
                               )}
                             >
                               <span className="text-xs font-bold">
-                                {formatOptionName(opt.name_th)}
+                                {getDisplayName(opt)}
                               </span>
                               {isSelected && (
                                 <div className="bg-blue-600 rounded-full p-1 text-white">
@@ -189,15 +221,17 @@ export function AddressSelectorField({
               >
                 <FormControl>
                   <SelectTrigger className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs focus:ring-0">
-                    <SelectValue placeholder={placeholder} />
+                    <span className="truncate">
+                      {displaySelectedValue || <span className="text-slate-400 font-normal">{placeholder}</span>}
+                    </span>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className="max-h-75 min-w-50 bg-white rounded-xl shadow-lg border border-slate-100 p-1">
                   {[...effectiveOptions]
-                    .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                    .sort((a, b) => getDisplayName(a).localeCompare(getDisplayName(b), isEn ? "en" : "th"))
                     .map((opt) => (
                       <SelectItem key={opt.id} value={opt.name_th} className="rounded-lg cursor-pointer">
-                        {formatOptionName(opt.name_th)}
+                        {getDisplayName(opt)}
                       </SelectItem>
                     ))}
                 </SelectContent>

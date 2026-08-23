@@ -12,7 +12,11 @@ import {
   Sparkles,
   Plus,
   Compass,
+  Search,
+  Building2,
+  ExternalLink,
 } from "lucide-react";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   FormField,
   FormItem,
@@ -40,11 +44,21 @@ import { QuickCreateProjectDialog } from "./QuickCreateProjectDialog";
 import { QuickCreateAreaDialog } from "./QuickCreateAreaDialog";
 import { checkPopularAreaExistsAction } from "@/features/properties/actions/popular-area-actions";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import {
+  getProvinceName,
+  getDistrictName,
+  getSubdistrictName,
+  registerCustomAreaTranslation,
+} from "@/lib/utils/provinces";
+
 interface AddressSectionProps {
   form?: UseFormReturn<PropertyFormValues>;
 }
 
 export function AddressSection({ form: formProp }: AddressSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
 
@@ -70,6 +84,11 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
   const [suggestions, setSuggestions] = React.useState<any[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = React.useState(false);
   const [showDropdown, setShowDropdown] = React.useState(false);
+  const [showDropdownEn, setShowDropdownEn] = React.useState(false);
+  const [isProjectSearchModalOpen, setIsProjectSearchModalOpen] = React.useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = React.useState("");
+  const [modalSuggestions, setModalSuggestions] = React.useState<any[]>([]);
+  const [isLoadingModalSuggestions, setIsLoadingModalSuggestions] = React.useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = React.useState(false);
   const [isCreateAreaOpen, setIsCreateAreaOpen] = React.useState(false);
   const [showAreaPrompt, setShowAreaPrompt] = React.useState(false);
@@ -93,6 +112,26 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     }
   }, []);
 
+  const fetchModalSuggestions = React.useCallback(async (val: string) => {
+    setIsLoadingModalSuggestions(true);
+    try {
+      const res = await getProjectSuggestions(val, 50);
+      setModalSuggestions(res);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingModalSuggestions(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!isProjectSearchModalOpen) return;
+    const timer = setTimeout(() => {
+      fetchModalSuggestions(modalSearchQuery);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [modalSearchQuery, isProjectSearchModalOpen, fetchModalSuggestions]);
+
   React.useEffect(() => {
     if (!showDropdown) return;
     const timer = setTimeout(() => {
@@ -101,9 +140,18 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     return () => clearTimeout(timer);
   }, [watchedAddressLine1, showDropdown, fetchSuggestions]);
 
+  React.useEffect(() => {
+    if (!showDropdownEn) return;
+    const timer = setTimeout(() => {
+      fetchSuggestions(watchedAddressLine1En);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [watchedAddressLine1En, showDropdownEn, fetchSuggestions]);
+
   const handleBlur = () => {
     setTimeout(() => {
       setShowDropdown(false);
+      setShowDropdownEn(false);
     }, 200);
   };
 
@@ -203,7 +251,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
         if (transits.length > 0 || places.length > 0) {
           form.setValue("nearby_transits", transits, { shouldDirty: true, shouldTouch: true });
           form.setValue("nearby_places", places, { shouldDirty: true, shouldTouch: true });
-          toast.success("ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการเดิมสำเร็จ ✨");
+          toast.success(isEn ? "Location & transit synced from project ✨" : "ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการเดิมสำเร็จ ✨");
         }
       }
     });
@@ -217,7 +265,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           shouldDirty: true,
           shouldValidate: true,
         });
-        toast.success(`เลือกสิ่งอำนวยความสะดวกจากโครงการสำเร็จ ✨ (${res.featureIds.length} รายการ)`);
+        toast.success(isEn ? `Applied ${res.featureIds.length} project amenities ✨` : `เลือกสิ่งอำนวยความสะดวกจากโครงการสำเร็จ ✨ (${res.featureIds.length} รายการ)`);
       }
     });
 
@@ -243,9 +291,11 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     return val.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
   };
 
-  const activeProvinceId = provinces.find(
-    (p) => cleanWordGlobal(p.name_th) === cleanWordGlobal(watchedProvince),
-  )?.id;
+  const activeProvinceId = React.useMemo(() => {
+    if (!watchedProvince) return null;
+    const p = provinces.find((item) => cleanWordGlobal(item.name_th) === cleanWordGlobal(watchedProvince));
+    return p ? p.id : null;
+  }, [watchedProvince, provinces]);
 
   // Auto reverse-lookup District if Province and Subdistrict are filled, but District is empty/missing
   React.useEffect(() => {
@@ -267,62 +317,83 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     }
   }, [activeProvinceId, watchedSubdistrict, watchedDistrict, getDistricts, getSubDistricts, form]);
 
-  // Check if current district is in popular_areas_v3
   React.useEffect(() => {
-    let isMounted = true;
-    if (watchedProvince && watchedDistrict) {
-      const cleanName = watchedDistrict.replace(/^(เขต|อำเภอ|อ\.)/, "").trim();
-      checkPopularAreaExistsAction(watchedProvince, cleanName).then((res) => {
-        if (isMounted) {
-          if (!res.exists && cleanName) {
-            setAreaPromptName(cleanName);
-            setShowAreaPrompt(true);
-          } else {
-            setShowAreaPrompt(false);
-          }
+    async function checkArea() {
+      if (!watchedProvince) {
+        setShowAreaPrompt(false);
+        return;
+      }
+
+      // Check subdistrict first if selected, else district
+      const targetAreaTh = watchedSubdistrict || watchedDistrict;
+      if (!targetAreaTh) {
+        setShowAreaPrompt(false);
+        return;
+      }
+
+      try {
+        const cleanName = targetAreaTh.replace(/^(จังหวัด|จ\.|เขต|อำเภอ|อ\.|แขวง|ตำบล|ต\.)/, "").trim();
+        
+        // 1. Check if it already has an English translation in memory/PROVINCES dictionary
+        const hasEn = getSubdistrictName(cleanName, "en") !== cleanName || getDistrictName(cleanName, "en") !== cleanName;
+        
+        // 2. If not translated, check popular_areas_v3 DB table
+        const existsInDb = await checkPopularAreaExistsAction(watchedProvince, cleanName);
+
+        if (!hasEn && !existsInDb.exists) {
+          setAreaPromptName(cleanName);
+          setShowAreaPrompt(true);
+        } else {
+          setShowAreaPrompt(false);
         }
-      });
-    } else {
-      setShowAreaPrompt(false);
+      } catch (err) {
+        setShowAreaPrompt(false);
+      }
     }
-    return () => {
-      isMounted = false;
+    checkArea();
+  }, [watchedSubdistrict, watchedDistrict, watchedProvince]);
+
+  React.useEffect(() => {
+    const checkDevice = () => {
+      setIsMobileOrTablet(window.innerWidth < 1024);
     };
-  }, [watchedProvince, watchedDistrict]);
+    checkDevice();
+    window.addEventListener("resize", checkDevice);
+    return () => window.removeEventListener("resize", checkDevice);
+  }, []);
 
-  const districtOptions = activeProvinceId
-    ? getDistricts(activeProvinceId)
-    : [];
+  React.useEffect(() => {
+    if (activeProvinceId) {
+      ensureDistrictsLoaded();
+    }
+  }, [activeProvinceId, ensureDistrictsLoaded]);
 
-  const activeDistrictId = districtOptions.find(
-    (d) => cleanWordGlobal(d.name_th) === cleanWordGlobal(watchedDistrict),
-  )?.id;
+  const districtOptions = activeProvinceId ? getDistricts(activeProvinceId) : [];
 
-  const subDistrictOptions = activeDistrictId
-    ? getSubDistricts(activeDistrictId)
-    : [];
+  const activeDistrictId = React.useMemo(() => {
+    if (!watchedDistrict || !districtOptions.length) return null;
+    const d = districtOptions.find((item) => item.name_th === watchedDistrict);
+    return d ? d.id : null;
+  }, [watchedDistrict, districtOptions]);
+
+  React.useEffect(() => {
+    if (activeDistrictId) {
+      ensureSubDistrictsLoaded();
+    }
+  }, [activeDistrictId, ensureSubDistrictsLoaded]);
+
+  const subDistrictOptions = activeDistrictId ? getSubDistricts(activeDistrictId) : [];
 
   return (
-    <Card className="border-slate-200/70 bg-white shadow-sm">
+    <Card className="border-slate-200/70 bg-white shadow-sm relative">
       <CardHeader className="space-y-4 pb-0">
         <SectionHeader
           icon={MapPin}
-          title="ที่ตั้งและทำเล"
-          desc="ระบุพิกัดให้แม่นยำเพื่อการค้นหาที่ดีขึ้น"
+          title={isEn ? "Location & Address" : "ที่ตั้งและทำเล"}
+          desc={isEn ? "Accurate coordinates & location for enhanced search discovery" : "ระบุพิกัดให้แม่นยำเพื่อการค้นหาที่ดีขึ้น"}
           tone="blue"
           right={
             <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-8 gap-1.5 text-indigo-600! border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 font-bold px-3 shadow-xs transition-all active:scale-95 cursor-pointer"
-                onClick={() => setIsCreateAreaOpen(true)}
-              >
-                <Compass className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">เพิ่มย่าน 4 ภาษา</span>
-                <span className="sm:hidden">+ ย่าน</span>
-              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -336,7 +407,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                 ) : (
                   <Sparkles className="h-3.5 w-3.5" />
                 )}
-                <span>AI {isTranslating ? "กำลังแปล..." : "แปลที่อยู่"}</span>
+                <span>{isTranslating ? (isEn ? "Translating..." : "กำลังแปล...") : (isEn ? "AI Translate Address" : "AI แปลที่อยู่")}</span>
               </Button>
             </div>
           }
@@ -346,14 +417,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
 
       <CardContent className="pt-6 px-4 sm:px-6">
         <div className="flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          
           <AddressSelectorField
             control={form.control}
             name="province"
-            label="จังหวัด"
+            label={isEn ? "Province" : "จังหวัด"}
             icon={MapIcon}
-            placeholder="เลือกจังหวัด"
-            description="เลือกจังหวัดที่ตั้งของทรัพย์สิน"
+            placeholder={isEn ? "Select Province" : "เลือกจังหวัด"}
+            description={isEn ? "Select province where property is located" : "เลือกจังหวัดที่ตั้งของทรัพย์สิน"}
             options={provinces}
             isOpen={provinceOpen}
             setIsOpen={setProvinceOpen}
@@ -372,10 +442,10 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <AddressSelectorField
             control={form.control}
             name="district"
-            label="เขต / อำเภอ"
+            label={isEn ? "District / City" : "เขต / อำเภอ"}
             icon={MapPinned}
-            placeholder="เลือกอำเภอ"
-            description="เลือกเขตหรืออำเภอ"
+            placeholder={isEn ? "Select District" : "เลือกอำเภอ"}
+            description={isEn ? "Select district or city" : "เลือกเขตหรืออำเภอ"}
             disabled={!activeProvinceId}
             options={districtOptions}
             isOpen={districtOpen}
@@ -394,10 +464,10 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <AddressSelectorField
             control={form.control}
             name="subdistrict"
-            label="แขวง / ตำบล"
+            label={isEn ? "Subdistrict" : "แขวง / ตำบล"}
             icon={SignpostBig}
-            placeholder="เลือกตำบล"
-            description="เลือกแขวงหรือตำบล ระบบจะเติมรหัสไปรษณีย์ให้อัตโนมัติ"
+            placeholder={isEn ? "Select Subdistrict" : "เลือกตำบล"}
+            description={isEn ? "Select subdistrict (Postal code autofilled)" : "เลือกแขวงหรือตำบล ระบบจะเติมรหัสไปรษณีย์ให้อัตโนมัติ"}
             disabled={!activeDistrictId}
             options={subDistrictOptions}
             isOpen={subdistrictOpen}
@@ -411,7 +481,6 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
             }}
           />
 
-          {/* Postal Code */}
           <FormField
             control={form.control}
             name="postal_code"
@@ -419,7 +488,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <Mail className="h-3.5 w-3.5 text-blue-500" />
-                  <span>รหัสไปรษณีย์</span>
+                  <span>{isEn ? "Postal Code" : "รหัสไปรษณีย์"}</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -431,17 +500,16 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   />
                 </FormControl>
                 {fieldState.error ? (
-                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1 min-h-[32px]" />
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1 min-h-8" />
                 ) : (
-                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 min-h-[32px]">
-                    รหัสไปรษณีย์จะถูกเติมตามตำบลที่เลือก
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 min-h-8">
+                    {isEn ? "Auto-filled based on selected subdistrict" : "รหัสไปรษณีย์จะถูกเติมตามตำบลที่เลือก"}
                   </FormDescription>
                 )}
               </FormItem>
             )}
           />
 
-          {/* New Area AI Prompt Banner */}
           {showAreaPrompt && areaPromptName && (
             <div className="col-span-full p-3.5 bg-linear-to-r from-blue-50 via-indigo-50/70 to-blue-50 border border-blue-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex items-center gap-2.5">
@@ -450,10 +518,20 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                 </div>
                 <div>
                   <p className="font-bold text-slate-800 text-xs">
-                    พบทำเลใหม่: <span className="text-blue-600 font-extrabold">{areaPromptName}</span> ({watchedProvince})
+                    {isEn ? (
+                      <>
+                        New Area Detected: <span className="text-blue-600 font-extrabold">{areaPromptName}</span> ({getProvinceName(watchedProvince, "en")})
+                      </>
+                    ) : (
+                      <>
+                        พบทำเลใหม่: <span className="text-blue-600 font-extrabold">{areaPromptName}</span> ({watchedProvince})
+                      </>
+                    )}
                   </p>
                   <p className="text-slate-500 text-[11px]">
-                    ยังไม่มีในฐานข้อมูลย่าน 4 ภาษา สามารถให้ AI ช่วยแปล EN/CN/RU และบันทึกเป็นย่านยอดนิยมได้ทันที
+                    {isEn
+                      ? "Not yet indexed in 4-language area database. Let AI translate to EN/CN/RU and save to popular areas."
+                      : "ยังไม่มีในฐานข้อมูลย่าน 4 ภาษา สามารถให้ AI ช่วยแปล EN/CN/RU และบันทึกเป็นย่านยอดนิยมได้ทันที"}
                   </p>
                 </div>
               </div>
@@ -464,20 +542,19 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                 className="h-8 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shrink-0 shadow-xs cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5 mr-1" />
-                <span>ให้ AI แปล 4 ภาษา & บันทึกย่าน</span>
+                <span>{isEn ? "AI Translate 4 Languages & Save" : "ให้ AI แปล 4 ภาษา & บันทึกย่าน"}</span>
               </Button>
             </div>
           )}
 
-          {/* Address Line 1 / Project Name */}
           <FormField
             control={form.control}
             name="address_line1"
             render={({ field, fieldState }) => (
-              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
+              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1 relative z-20">
                 <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <SignpostBig className="w-4 h-4 text-blue-500" />
-                  <span>ที่อยู่ / โครงการ</span>
+                  <span>{isEn ? "Project / Address (TH)" : "โครงการ/ที่อยู่"}</span>
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
@@ -486,7 +563,6 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                       value={field.value ?? ""}
                       onChange={(e) => {
                         field.onChange(e.target.value);
-                        // Clear project_id if the user modifies the text so stale project links don't persist
                         if (form.getValues("project_id")) {
                           form.setValue("project_id", null, { shouldDirty: true });
                         }
@@ -499,41 +575,80 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                         field.onBlur();
                         handleBlur();
                       }}
-                      placeholder="เลขที่บ้าน / ชื่อโครงการ..."
+                      placeholder={isEn ? "Project Name / House No...." : "ชื่อโครงการ... / เลขที่บ้าน..."}
                       className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
-                      autoComplete="off"
+                      autoComplete="new-password"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      name="project_search_query"
+                      data-form-type="other"
+                      data-lpignore="true"
                     />
 
                     {showDropdown && (suggestions.length > 0 || isLoadingSuggestions || (watchedAddressLine1.trim().length >= 2 && !form.getValues("project_id"))) && (
-                      <div className="absolute z-999 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto divide-y divide-slate-100">
+                      <div className="absolute z-20 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-100 ring-1 ring-black/5">
                         {isLoadingSuggestions && suggestions.length === 0 ? (
                           <div className="px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
                             <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
-                            <span>กำลังค้นหาโครงการ...</span>
+                            <span>{isEn ? "Searching projects..." : "กำลังค้นหาโครงการ..."}</span>
                           </div>
                         ) : (
                           <>
-                            {suggestions.map((proj) => (
+                            {suggestions.map((proj) => {
+                              const displayName = isEn && proj.address_line1_en ? proj.address_line1_en : proj.address_line1;
+                              const secondaryName = isEn && proj.address_line1_en && proj.address_line1 !== proj.address_line1_en 
+                                ? proj.address_line1 
+                                : (!isEn && proj.address_line1_en && proj.address_line1_en !== proj.address_line1 ? proj.address_line1_en : null);
+
+                              const locationBreadcrumb = [
+                                isEn && proj.subdistrict ? getSubdistrictName(proj.subdistrict, "en") : proj.subdistrict,
+                                isEn && proj.district ? getDistrictName(proj.district, "en") : proj.district,
+                                isEn && proj.province ? getProvinceName(proj.province, "en") : proj.province,
+                              ]
+                                .filter(Boolean)
+                                .join(" » ");
+
+                              return (
+                                <button
+                                  key={proj.id || proj.address_line1}
+                                  type="button"
+                                  onMouseDown={() => handleSelectProject(proj)}
+                                  className="w-full px-4 py-2.5 text-left text-xs hover:bg-slate-50 transition-colors flex flex-col gap-0.5 cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-semibold text-slate-800">{displayName}</span>
+                                    {secondaryName && (
+                                      <span className="text-[11px] text-slate-400 font-normal">({secondaryName})</span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-slate-400">
+                                    {locationBreadcrumb}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                            {suggestions.length >= 5 && (
                               <button
-                                key={proj.address_line1}
                                 type="button"
-                                onMouseDown={() => handleSelectProject(proj)}
-                                className="w-full px-4 py-2.5 text-left text-xs hover:bg-slate-50 transition-colors flex flex-col gap-0.5"
+                                onMouseDown={() => {
+                                  setModalSearchQuery(watchedAddressLine1);
+                                  setIsProjectSearchModalOpen(true);
+                                }}
+                                className="w-full px-4 py-2.5 text-center text-xs bg-slate-50 hover:bg-blue-50 text-blue-600 font-bold border-t border-slate-100 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                               >
-                                <span className="font-semibold text-slate-800">{proj.address_line1}</span>
-                                <span className="text-[10px] text-slate-400">
-                                  {[proj.subdistrict, proj.district, proj.province].filter(Boolean).join(" » ")}
-                                </span>
+                                <Search className="w-3.5 h-3.5" />
+                                <span>{isEn ? "View more projects..." : "ดูเพิ่มเติม / ค้นหาโครงการทั้งหมด..."}</span>
                               </button>
-                            ))}
+                            )}
                             {watchedAddressLine1.trim().length >= 2 && !form.getValues("project_id") && (
                               <button
                                 type="button"
                                 onMouseDown={() => setIsCreateProjectOpen(true)}
-                                className="w-full px-4 py-3 text-left text-xs bg-indigo-50/70 hover:bg-indigo-50 text-indigo-700 font-bold border-t border-indigo-100 flex items-center gap-1.5 transition-colors"
+                                className="w-full px-4 py-3 text-left text-xs bg-indigo-50/70 hover:bg-indigo-50 text-indigo-700 font-bold border-t border-indigo-100 flex items-center gap-1.5 transition-colors cursor-pointer"
                               >
                                 <Plus className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                                <span>สร้างโครงการใหม่: "{watchedAddressLine1}" เข้าระบบ</span>
+                                <span>{isEn ? `Create new project: "${watchedAddressLine1}"` : `สร้างโครงการใหม่: "${watchedAddressLine1}" เข้าระบบ`}</span>
                               </button>
                             )}
                           </>
@@ -546,43 +661,121 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
                 ) : (
                   <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                    บ้านเลขที่, ชื่อหมู่บ้าน หรือชื่อโครงการ (ถ้ามี)
+                    {isEn ? "House number, village or project name (optional)" : "บ้านเลขที่, ชื่อหมู่บ้าน หรือชื่อโครงการ (ถ้ามี)"}
                   </FormDescription>
                 )}
               </FormItem>
             )}
           />
 
-          {/* Address English */}
           <FormField
             control={form.control}
             name="address_line1_en"
             render={({ field, fieldState }) => (
-              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
-                <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
-                  <Languages className="w-3.5 h-3.5" />
-                  <span>Address (English)</span>
+              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1 relative z-20">
+                <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
+                  <SignpostBig className="w-4 h-4 text-blue-500" />
+                  <span>Project / Address (English)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    placeholder="Project Name / Address in English..."
-                    className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
-                  />
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        field.onChange(e.target.value);
+                      }}
+                      onFocus={() => {
+                        setShowDropdownEn(true);
+                        fetchSuggestions(field.value || "");
+                      }}
+                      onBlur={() => {
+                        field.onBlur();
+                        handleBlur();
+                      }}
+                      placeholder={isEn ? "Project Name / Address in English..." : "ชื่อโครงการในภาษาอังกฤษ..."}
+                      className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
+                      autoComplete="new-password"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      name="project_search_en"
+                      data-form-type="other"
+                      data-lpignore="true"
+                    />
+
+                    {showDropdownEn && (suggestions.length > 0 || isLoadingSuggestions) && (
+                      <div className="absolute z-20 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-100 ring-1 ring-black/5">
+                        {isLoadingSuggestions && suggestions.length === 0 ? (
+                          <div className="px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                            <span>{isEn ? "Searching projects..." : "กำลังค้นหาโครงการ..."}</span>
+                          </div>
+                        ) : (
+                          <>
+                            {suggestions.map((proj) => {
+                              const displayName = proj.address_line1_en || proj.address_line1;
+                              const secondaryName = proj.address_line1_en && proj.address_line1 !== proj.address_line1_en
+                                ? proj.address_line1
+                                : null;
+
+                              const locationBreadcrumb = [
+                                proj.subdistrict ? getSubdistrictName(proj.subdistrict, "en") : proj.subdistrict,
+                                proj.district ? getDistrictName(proj.district, "en") : proj.district,
+                                proj.province ? getProvinceName(proj.province, "en") : proj.province,
+                              ]
+                                .filter(Boolean)
+                                .join(" » ");
+
+                              return (
+                                <button
+                                  key={proj.id || proj.address_line1_en || proj.address_line1}
+                                  type="button"
+                                  onMouseDown={() => handleSelectProject(proj)}
+                                  className="w-full px-4 py-2.5 text-left text-xs hover:bg-slate-50 transition-colors flex flex-col gap-0.5 cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-semibold text-slate-800">{displayName}</span>
+                                    {secondaryName && (
+                                      <span className="text-[11px] text-slate-400 font-normal">({secondaryName})</span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-slate-400">
+                                    {locationBreadcrumb}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                            {suggestions.length >= 5 && (
+                              <button
+                                type="button"
+                                onMouseDown={() => {
+                                  setModalSearchQuery(watchedAddressLine1En || watchedAddressLine1);
+                                  setIsProjectSearchModalOpen(true);
+                                }}
+                                className="w-full px-4 py-2.5 text-center text-xs bg-slate-50 hover:bg-blue-50 text-blue-600 font-bold border-t border-slate-100 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                              >
+                                <Search className="w-3.5 h-3.5" />
+                                <span>{isEn ? "View more projects..." : "ดูเพิ่มเติม / ค้นหาโครงการทั้งหมด..."}</span>
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </FormControl>
                 {fieldState.error ? (
                   <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
                 ) : (
                   <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                    ชื่อโครงการในภาษาอังกฤษ
+                    {isEn ? "Project name in English" : "ชื่อโครงการในภาษาอังกฤษ"}
                   </FormDescription>
                 )}
               </FormItem>
             )}
           />
 
-          {/* Address Chinese */}
           <FormField
             control={form.control}
             name="address_line1_cn"
@@ -604,14 +797,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
                 ) : (
                   <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                    ชื่อโครงการในภาษาจีน
+                    {isEn ? "Project name in Chinese" : "ชื่อโครงการในภาษาจีน"}
                   </FormDescription>
                 )}
               </FormItem>
             )}
           />
 
-          {/* Address Russian */}
           <FormField
             control={form.control}
             name="address_line1_ru"
@@ -633,7 +825,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
                 ) : (
                   <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                    ชื่อโครงการในภาษารัสเซีย
+                    {isEn ? "Project name in Russian" : "ชื่อโครงการในภาษารัสเซีย"}
                   </FormDescription>
                 )}
               </FormItem>
@@ -654,7 +846,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <Input
                     {...field}
                     value={field.value ?? ""}
-                    placeholder="ลิงก์จาก Google Maps..."
+                    placeholder={isEn ? "Link from Google Maps..." : "ลิงก์จาก Google Maps..."}
                     className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
                   />
                 </FormControl>
@@ -662,7 +854,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
                 ) : (
                   <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 leading-relaxed">
-                    google map ตัวอย่าง "https://maps.app.goo.gl/....."
+                    {isEn ? "Google Maps link e.g. 'https://maps.app.goo.gl/...'" : "google map ตัวอย่าง 'https://maps.app.goo.gl/...'"}
                   </FormDescription>
                 )}
               </FormItem>
@@ -738,8 +930,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
         open={isCreateAreaOpen}
         onOpenChange={setIsCreateAreaOpen}
         defaultProvince={watchedProvince || "กรุงเทพมหานคร"}
-        defaultAreaName={areaPromptName || watchedDistrict.replace(/^(เขต|อำเภอ|อ\.)/, "").trim()}
+        defaultAreaName={areaPromptName || (watchedSubdistrict || watchedDistrict).replace(/^(จังหวัด|จ\.|เขต|อำเภอ|อ\.|แขวง|ตำบล|ต\.)/, "").trim()}
         onAreaCreated={(area) => {
+          registerCustomAreaTranslation(area.th, {
+            en: area.en,
+            cn: area.cn,
+            ru: area.ru,
+          });
           form.setValue("popular_area", area.th, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
           form.setValue("popular_area_en", area.en, { shouldDirty: true });
           form.setValue("popular_area_cn", area.cn, { shouldDirty: true });
@@ -747,6 +944,109 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           setShowAreaPrompt(false);
         }}
       />
+
+      {/* 🏢 Project Explorer Dialog (ค้นหาโครงการทั้งหมด) */}
+      <ResponsiveDialog
+        open={isProjectSearchModalOpen}
+        onOpenChange={setIsProjectSearchModalOpen}
+        title={isEn ? "Select Project / Location" : "ค้นหาโครงการและทำเล"}
+        description={isEn ? "Search through database of condominiums, housing estates, and commercial projects" : "ค้นหาโครงการ คอนโด บ้านเดี่ยว ทาวน์โฮม ทั้งหมดในระบบ"}
+      >
+        <div className="p-5 space-y-4 max-h-[80vh] flex flex-col">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              value={modalSearchQuery}
+              onChange={(e) => setModalSearchQuery(e.target.value)}
+              placeholder={isEn ? "Search by project name (Thai/English)..." : "พิมพ์ชื่อโครงการภาษาไทย หรือ อังกฤษ..."}
+              className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-medium focus:bg-white"
+              autoFocus
+            />
+            {isLoadingModalSuggestions && (
+              <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500 animate-spin" />
+            )}
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-1.5 min-h-[300px] max-h-[420px] divide-y divide-slate-100 pr-1">
+            {isLoadingModalSuggestions && modalSuggestions.length === 0 ? (
+              <div className="py-16 text-center text-xs text-slate-400 space-y-2">
+                <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" />
+                <p>{isEn ? "Searching project database..." : "กำลังค้นหาข้อมูลโครงการ..."}</p>
+              </div>
+            ) : modalSuggestions.length === 0 ? (
+              <div className="py-16 text-center text-xs text-slate-400 space-y-3">
+                <Building2 className="w-10 h-10 mx-auto text-slate-300 stroke-1" />
+                <div>
+                  <p className="font-semibold text-slate-700">{isEn ? "No matching projects found" : `ไม่พบโครงการ "${modalSearchQuery}"`}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">{isEn ? "You can create this as a new project" : "คุณสามารถกดสร้างเป็นโครงการใหม่ได้ทันที"}</p>
+                </div>
+                {modalSearchQuery.trim() && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setIsProjectSearchModalOpen(false);
+                      form.setValue("address_line1", modalSearchQuery);
+                      setIsCreateProjectOpen(true);
+                    }}
+                    className="h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{isEn ? `Create "${modalSearchQuery}"` : `สร้างโครงการ "${modalSearchQuery}"`}</span>
+                  </Button>
+                )}
+              </div>
+            ) : (
+              modalSuggestions.map((proj) => {
+                const displayName = isEn && proj.address_line1_en ? proj.address_line1_en : proj.address_line1;
+                const locationBreadcrumb = [
+                  isEn && proj.subdistrict ? getSubdistrictName(proj.subdistrict, "en") : proj.subdistrict,
+                  isEn && proj.district ? getDistrictName(proj.district, "en") : proj.district,
+                  isEn && proj.province ? getProvinceName(proj.province, "en") : proj.province,
+                ]
+                  .filter(Boolean)
+                  .join(" » ");
+
+                return (
+                  <button
+                    key={proj.id || proj.address_line1}
+                    type="button"
+                    onClick={() => {
+                      handleSelectProject(proj);
+                      setIsProjectSearchModalOpen(false);
+                    }}
+                    className="w-full p-3 text-left rounded-xl hover:bg-blue-50/70 transition-colors flex items-center justify-between gap-3 group cursor-pointer border border-transparent hover:border-blue-100"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-slate-100 group-hover:bg-blue-600 group-hover:text-white text-slate-600 flex items-center justify-center shrink-0 transition-colors">
+                        <Building2 className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-800 text-xs group-hover:text-blue-900">{displayName}</span>
+                          {proj.address_line1_en && proj.address_line1 !== proj.address_line1_en && (
+                            <span className="text-[10px] text-slate-400">({proj.address_line1})</span>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-slate-400 group-hover:text-slate-600 mt-0.5">
+                          {locationBreadcrumb}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-3 rounded-lg text-xs font-bold text-blue-600 border-blue-200 group-hover:bg-blue-600 group-hover:text-white shrink-0 transition-all pointer-events-none"
+                    >
+                      {isEn ? "Select" : "เลือก"}
+                    </Button>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </ResponsiveDialog>
     </Card>
   );
 }

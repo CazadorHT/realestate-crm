@@ -306,7 +306,7 @@ export function StudioCardCustomizer({
         {/* Custom Card & Canvas Background Color Chooser */}
         <div className="pt-2.5 border-t border-slate-800/80 space-y-2">
           <Label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-            <span>🎨 ปรับเปลี่ยนสีพื้นหลังการ์ดข้อมูล (Custom Card Color)</span>
+            <span>{isEn ? "🎨 Custom Card Background Color" : "🎨 ปรับเปลี่ยนสีพื้นหลังการ์ดข้อมูล (Custom Card Color)"}</span>
           </Label>
 
           <div className="flex items-center justify-between">

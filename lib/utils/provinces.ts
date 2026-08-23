@@ -135,6 +135,45 @@ export const PROVINCES: Record<string, { en: string; cn: string; ru: string }> =
   "พระราม 4": { en: "Rama IV Road", cn: "拉玛四路", ru: "Рама IV" },
   "พระราม 3": { en: "Rama 3", cn: "拉玛三", ru: "Рама 3" },
   "นานา": { en: "Nana", cn: "那那", ru: "Нана" },
+  "เจริญกรุง": { en: "Charoen Krung", cn: "石龙军路", ru: "Чароен Крунг" },
+  "เจริญนคร": { en: "Charoen Nakhon", cn: "乍能那空", ru: "Чароен Накхон" },
+  "พระโขนง": { en: "Phra Khanong", cn: "帕卡侬", ru: "Пхра Кханонг" },
+  "พระโขนงเหนือ": { en: "Phra Khanong Nuea", cn: "北帕卡侬", ru: "Пхра Кханонг Нуа" },
+  "พระโขนงใต้": { en: "Phra Khanong Tai", cn: "南帕卡侬", ru: "Пхра Кханонг Тай" },
+  "คลองตันเหนือ": { en: "Khlong Tan Nuea", cn: "北空丹", ru: "Кхлонг Тан Нуа" },
+  "คลองตัน": { en: "Khlong Tan", cn: "空丹", ru: "Кхлонг Тан" },
+  "คลองเตยเหนือ": { en: "Khlong Toei Nuea", cn: "北空堤", ru: "Кхлонг Тей Нуа" },
+  "ลุมพินี": { en: "Lumphini", cn: "伦披尼", ru: "Лумпхини" },
+  "ปทุมวัน": { en: "Pathum Wan", cn: "巴吞旺", ru: "Патхум Ван" },
+  "บางแก้ว": { en: "Bang Kaeo", cn: "邦告", ru: "Банг Кео" },
+  "บางบ่อ": { en: "Bang Bo", cn: "邦波", ru: "Банг Бо" },
+  "บางเสาธง": { en: "Bang Sao Thong", cn: "邦骚通", ru: "Банг Саотхонг" },
+  "พระประแดง": { en: "Phra Pradaeng", cn: "帕巴登", ru: "Пхра Прадэнг" },
+  "พระสมุทรเจดีย์": { en: "Phra Samut Chedi", cn: "帕沙木真第", ru: "Пхра Самут Чеди" },
+  "เมืองสมุทรปราการ": { en: "Mueang Samut Prakan", cn: "北榄府直辖县", ru: "Самут Пракан Таун" },
+  "หัวหมาก": { en: "Hua Mak", cn: "华马克", ru: "Хуа Мак" },
+  "หนองบอน": { en: "Nong Bon", cn: "农蓬", ru: "Нонг Бон" },
+  "ดอกไม้": { en: "Dokmai", cn: "多迈", ru: "Докмай" },
+  "บางนาเหนือ": { en: "Bang Na Nuea", cn: "北邦那", ru: "Банг На Нуа" },
+  "บางนาใต้": { en: "Bang Na Tai", cn: "南邦那", ru: "Банг На Тай" },
+  "สำโรงเหนือ": { en: "Samrong Nuea", cn: "北三隆", ru: "Самронг Нуа" },
+  "บางจาก": { en: "Bang Chak", cn: "邦节", ru: "Банг Чак" },
+  "ปุณณวิถี": { en: "Punnawithi", cn: "普那威提", ru: "Пуннавитхи" },
+  "แบริ่ง": { en: "Bearing", cn: "培林", ru: "Беринг" },
+  "สำโรง": { en: "Samrong", cn: "三隆", ru: "Самронг" },
+  "ศาลายา": { en: "Salaya", cn: "萨拉亚", ru: "Салая" },
+  "พุทธมณฑล": { en: "Phutthamonthon", cn: "佛统", ru: "Пхуттхамонтхон" },
+  "ราชพฤกษ์": { en: "Ratchaphruek", cn: "皇家田", ru: "Ратчапхрык" },
+  "กัลปพฤกษ์": { en: "Kanlapaphruek", cn: "甘拉帕普", ru: "Канлапапхрык" },
+  "พระราม 2": { en: "Rama 2", cn: "拉玛二", ru: "Рама 2" },
+  "สยาม": { en: "Siam", cn: "暹罗", ru: "Сиам" },
+  "รามคำแหง": { en: "Ramkhamhaeng", cn: "蓝康恒", ru: "Рамкхамхэнг" },
+  "รัชดา": { en: "Ratchada", cn: "拉查达", ru: "Ратчада" },
+  "พหลโยธิน": { en: "Phahonyothin", cn: "拍凤裕庭", ru: "Пхахонйотин" },
+  "พัฒนาการ": { en: "Phatthanakan", cn: "帕塔纳干", ru: "Пхаттханакан" },
+  "สะพานควาย": { en: "Saphan Khwai", cn: "萨潘快", ru: "Сапхан Квай" },
+  "บางซ่อน": { en: "Bang Son", cn: "挽松", ru: "Банг Сон" },
+  "เอกมัย - รามอินทรา": { en: "Ekkamai - Ram Intra", cn: "亿甲迈 - 兰因他", ru: "Эккамай - Рам Интра" },
 
   // Chonburi & Pattaya
   "บางละมุง": { en: "Bang Lamung", cn: "挽腊茫", ru: "Бангламунг" },
@@ -184,6 +223,28 @@ export const PROVINCES: Record<string, { en: string; cn: string; ru: string }> =
   "อำเภอตัวอย่าง": { en: "Sample District", cn: "示例区", ru: "Пример округа" },
 };
 
+// Dynamic translations registry for runtime/user-defined/AI-translated areas
+const DYNAMIC_AREA_TRANSLATIONS: Record<string, { en?: string; cn?: string; ru?: string }> = {};
+
+/**
+ * Register a custom/AI-translated area into dynamic runtime memory
+ */
+export function registerCustomAreaTranslation(
+  thaiName: string,
+  translations: { en?: string; cn?: string; ru?: string }
+) {
+  if (!thaiName) return;
+  const cleanName = thaiName.replace(/^(จังหวัด|จ\.|เขต|อำเภอ|อ\.|แขวง|ตำบล|ต\.)/, "").trim();
+  DYNAMIC_AREA_TRANSLATIONS[cleanName] = {
+    ...DYNAMIC_AREA_TRANSLATIONS[cleanName],
+    ...translations,
+  };
+  DYNAMIC_AREA_TRANSLATIONS[thaiName.trim()] = {
+    ...DYNAMIC_AREA_TRANSLATIONS[thaiName.trim()],
+    ...translations,
+  };
+}
+
 /**
  * Get localized province name
  * @param thaiName Original Thai name from database
@@ -196,6 +257,13 @@ export function getProvinceName(thaiName: string, lang: string): string {
 
   // Normalize: trim and remove "จังหวัด" or "จ." prefix if present
   const cleanName = thaiName.replace(/^(จังหวัด|จ\.)/, "").trim();
+
+  const dynamic = DYNAMIC_AREA_TRANSLATIONS[cleanName] || DYNAMIC_AREA_TRANSLATIONS[thaiName.trim()];
+  if (dynamic) {
+    if (lang === "cn" && dynamic.cn) return dynamic.cn;
+    if (lang === "ru" && dynamic.ru) return dynamic.ru;
+    if (dynamic.en) return dynamic.en;
+  }
 
   const mapped = PROVINCES[cleanName];
   if (mapped) {
@@ -221,6 +289,13 @@ export function getDistrictName(thaiName: string, lang: string): string {
   // Normalize: remove "เขต" or "อำเภอ" or "อ." prefix if present
   const cleanName = thaiName.replace(/^(เขต|อำเภอ|อ\.)/, "").trim();
 
+  const dynamic = DYNAMIC_AREA_TRANSLATIONS[cleanName] || DYNAMIC_AREA_TRANSLATIONS[thaiName.trim()];
+  if (dynamic) {
+    if (lang === "cn" && dynamic.cn) return dynamic.cn;
+    if (lang === "ru" && dynamic.ru) return dynamic.ru;
+    if (dynamic.en) return dynamic.en;
+  }
+
   const mapped = PROVINCES[cleanName];
   if (mapped) {
     if (lang === "cn") return mapped.cn;
@@ -243,6 +318,13 @@ export function getSubdistrictName(thaiName: string, lang: string): string {
 
   // Normalize: remove "แขวง" or "ตำบล" or "ต." prefix if present
   const cleanName = thaiName.replace(/^(แขวง|ตำบล|ต\.)/, "").trim();
+
+  const dynamic = DYNAMIC_AREA_TRANSLATIONS[cleanName] || DYNAMIC_AREA_TRANSLATIONS[thaiName.trim()];
+  if (dynamic) {
+    if (lang === "cn" && dynamic.cn) return dynamic.cn;
+    if (lang === "ru" && dynamic.ru) return dynamic.ru;
+    if (dynamic.en) return dynamic.en;
+  }
 
   const mapped = PROVINCES[cleanName];
   if (mapped) {

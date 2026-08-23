@@ -29,6 +29,7 @@ export function NotificationBell() {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    deleteAll,
   } = useNotifications();
 
   const router = useRouter();
@@ -89,17 +90,30 @@ export function NotificationBell() {
           <span className="font-medium text-slate-500 text-sm">
             {isEn ? `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}` : `${unreadCount} รายการที่ยังไม่ได้อ่าน`}
           </span>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold -mr-2 rounded-lg"
-              onClick={markAllAsRead}
-            >
-              <CheckCheck className="h-3.5 w-3.5 mr-1.5" />
-              {isEn ? "Mark all read" : "อ่านทั้งหมด"}
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold rounded-lg"
+                onClick={markAllAsRead}
+              >
+                <CheckCheck className="h-3.5 w-3.5 mr-1" />
+                {isEn ? "Mark all read" : "อ่านทั้งหมด"}
+              </Button>
+            )}
+            {stackedNotifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 font-bold rounded-lg"
+                onClick={deleteAll}
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                {isEn ? "Clear all" : "ลบทั้งหมด"}
+              </Button>
+            )}
+          </div>
         </div>
       }
       className="max-w-md!"
@@ -140,6 +154,22 @@ export function NotificationBell() {
               const IconComp = config.icon;
               const timeAgo = formatDistanceToNowThai(n.created_at, isEn);
 
+              // Auto translate common legacy titles & messages
+              const rawTitle = n.title || "";
+              const isLoginNotif = rawTitle.includes("มีการเข้าสู่ระบบ") || rawTitle.includes("User Login");
+              const displayTitle = isEn && isLoginNotif
+                ? "User Login 🔑"
+                : n.title;
+
+              let displayMessage = n.message;
+              if (isEn && isLoginNotif) {
+                if (n.isGroup) {
+                  displayMessage = `User login activities (${n.notifications.length} entries)`;
+                } else if (displayMessage.includes("มีการเข้าสู่ระบบ")) {
+                  displayMessage = displayMessage.replace(/มีการเข้าสู่ระบบ/g, "User logged in").replace(/รายการ/g, "entries");
+                }
+              }
+
               const content = (
                 <div
                   className={cn(
@@ -177,13 +207,13 @@ export function NotificationBell() {
                           "text-sm font-bold text-slate-800 truncate",
                           !n.is_read && "text-blue-700",
                         )}>
-                          {n.title}
+                          {displayTitle}
                           {n.isGroup && <span className="ml-1 opacity-40 font-medium text-[10px]">({n.notifications.length})</span>}
                         </p>
                         {!n.is_read && <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />}
                     </div>
                     <p className="text-[12px] text-slate-500 leading-snug font-medium line-clamp-2">
-                      {n.message}
+                      {displayMessage}
                     </p>
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-2 pt-0.5">
                       {timeAgo}
@@ -191,7 +221,7 @@ export function NotificationBell() {
                     {n.id === "draft-recovery" && (
                       <div className="pt-2.5">
                         <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-sm hover:bg-blue-700 transition-colors">
-                          ⚡ กู้คืนแบบร่าง (Restore)
+                          {isEn ? "⚡ Restore Draft" : "⚡ กู้คืนแบบร่าง (Restore)"}
                         </span>
                       </div>
                     )}
@@ -209,8 +239,8 @@ export function NotificationBell() {
                         deleteNotification(n.id);
                       }
                     }}
-                    className="absolute top-4 right-4 p-2 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all text-slate-400 hover:text-red-500"
-                    title="ลบ"
+                    className="absolute top-4 right-4 p-2 rounded-lg opacity-60 sm:opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all text-slate-400 hover:text-red-500 cursor-pointer"
+                    title={isEn ? "Delete" : "ลบ"}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

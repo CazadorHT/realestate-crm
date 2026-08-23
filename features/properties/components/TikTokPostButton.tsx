@@ -46,8 +46,8 @@ export function TikTokPostButton({
         platform="TIKTOK"
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onSuccess={(url) => {
-          onSuccess?.(url);
+        onSuccess={() => {
+          onSuccess?.("");
         }}
       />
       {children ? (

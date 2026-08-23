@@ -165,7 +165,9 @@ export function NotificationItem({
             "text-base font-bold tracking-tight text-slate-800 truncate",
             !notification.is_read && "text-blue-700"
           )}>
-            {notification.title}
+            {isEn && (notification.title?.includes("มีการเข้าสู่ระบบ") || notification.title?.includes("User Login"))
+              ? "User Login 🔑"
+              : notification.title}
             {notification.isGroup && (
               <span className="ml-2 text-xs text-slate-400 font-medium">
                 ({notification.notifications.length} {isEn ? (notification.notifications.length === 1 ? "item" : "items") : "รายการ"})
@@ -177,7 +179,11 @@ export function NotificationItem({
           )}
         </div>
         <p className="text-sm text-slate-600 leading-relaxed font-medium line-clamp-2">
-          {notification.message}
+          {isEn && (notification.message?.includes("มีการเข้าสู่ระบบ") || notification.title?.includes("มีการเข้าสู่ระบบ"))
+            ? (notification.isGroup
+                ? `User login activities (${notification.notifications.length} entries)`
+                : (notification.message || "").replace(/มีการเข้าสู่ระบบ/g, "User logged in").replace(/รายการ/g, "entries"))
+            : notification.message}
         </p>
 
         {/* Interactive Buttons for Invites */}

@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { PROPERTY_TYPE_LABELS, type PropertyType } from "@/features/properties/labels";
+import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 interface OwnerPropertiesProps {
   properties: any[];
@@ -141,10 +143,19 @@ export function OwnerProperties({ properties, ownerId }: OwnerPropertiesProps) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                            {prop.title || (isEn ? "Untitled Listing" : "ไม่ระบุชื่อโครงการ")}
+                            {isEn
+                              ? (prop.title_en || getLocaleValue(prop, "title", "en") || prop.title || "Untitled Listing")
+                              : (prop.title || getLocaleValue(prop, "title", "th") || prop.title_en || "ไม่ระบุชื่อโครงการ")}
                           </h3>
                           {getStatusBadge(prop.status)}
                         </div>
+
+                        {prop.project_name ? (
+                          <div className="flex items-center gap-1 text-xs font-semibold text-indigo-600 mb-1.5 line-clamp-1">
+                            <Building2 className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+                            <span className="truncate">{prop.project_name}</span>
+                          </div>
+                        ) : null}
 
                         <div className="flex items-center gap-3 text-sm text-slate-500 mb-2">
                           <span className="flex items-center gap-1">
@@ -163,10 +174,9 @@ export function OwnerProperties({ properties, ownerId }: OwnerPropertiesProps) {
                           <MapPin className="h-3.5 w-3.5 text-slate-400" />
                           <span className="line-clamp-1">
                             {[
-                              prop.popular_area,
-                              prop.subdistrict,
-                              prop.district,
-                              prop.province,
+                              getDistrictName(getLocaleValue(prop, "popular_area", language) || prop.popular_area || "", isEn ? "en" : "th"),
+                              getDistrictName(getLocaleValue(prop, "district", language) || prop.district || "", isEn ? "en" : "th"),
+                              getProvinceName(getLocaleValue(prop, "province", language) || prop.province || "", isEn ? "en" : "th"),
                             ]
                               .filter(Boolean)
                               .join(", ") || (isEn ? "Location unassigned" : "ไม่ระบุที่ตั้ง")}

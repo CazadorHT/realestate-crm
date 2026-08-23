@@ -265,26 +265,42 @@ export function useNotifications() {
 
   const deleteNotification = async (id: string) => {
     const original = [...notifications];
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    const updated = notifications.filter((n) => n.id !== id);
+    setNotifications(updated);
+    if (globalNotificationsCache) {
+      globalNotificationsCache.data = updated;
+      globalNotificationsCache.cachedAt = Date.now();
+    }
     
     try {
       const result = await deleteNotificationAction(id);
       if (!result.success) throw new Error();
     } catch (err) {
       setNotifications(original);
+      if (globalNotificationsCache) {
+        globalNotificationsCache.data = original;
+      }
       toast.error("ไม่สามารถลบการแจ้งเตือนได้");
     }
   };
 
   const deleteMultiple = async (ids: string[]) => {
     const original = [...notifications];
-    setNotifications((prev) => prev.filter((n) => !ids.includes(n.id)));
+    const updated = notifications.filter((n) => !ids.includes(n.id));
+    setNotifications(updated);
+    if (globalNotificationsCache) {
+      globalNotificationsCache.data = updated;
+      globalNotificationsCache.cachedAt = Date.now();
+    }
     
     try {
       const result = await deleteNotificationsAction(ids);
       if (!result.success) throw new Error();
     } catch (err) {
       setNotifications(original);
+      if (globalNotificationsCache) {
+        globalNotificationsCache.data = original;
+      }
       toast.error("ไม่สามารถลบการแจ้งเตือนได้");
     }
   };
@@ -292,12 +308,19 @@ export function useNotifications() {
   const deleteAll = async () => {
     const original = [...notifications];
     setNotifications([]);
+    if (globalNotificationsCache) {
+      globalNotificationsCache.data = [];
+      globalNotificationsCache.cachedAt = Date.now();
+    }
     
     try {
       const result = await deleteAllNotificationsAction(tenantId);
       if (!result.success) throw new Error();
     } catch (err) {
       setNotifications(original);
+      if (globalNotificationsCache) {
+        globalNotificationsCache.data = original;
+      }
       toast.error("ไม่สามารถลบการแจ้งเตือนทั้งหมดได้");
     }
   };

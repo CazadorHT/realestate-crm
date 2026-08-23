@@ -114,6 +114,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 // Hardened types for tables that might be missing from generated types
 interface ExtendedDatabase extends Database {
   public: Database["public"] & {
@@ -146,6 +148,9 @@ interface Step6ReviewProps {
 type Feature = {
   id: string;
   name: string;
+  name_en?: string | null;
+  name_cn?: string | null;
+  name_ru?: string | null;
   icon_key: string;
   category: string | null;
 };
@@ -167,14 +172,23 @@ const isStringWithContent = (val: any): boolean => {
 };
 
 export function Step6Review({ mode }: Step6ReviewProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const form = useFormContext<PropertyFormValues>();
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [activeFeatures, setActiveFeatures] = useState<Feature[]>([]);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [previewLanguage, setPreviewLanguage] = useState<"th" | "en" | "cn" | "ru">(
-    "th",
+    language || "th",
   );
   const values = form.watch();
+
+  // Sync preview language if user changes global CRM language
+  useEffect(() => {
+    if (language) {
+      setPreviewLanguage(language);
+    }
+  }, [language]);
 
   const {
     isTranslating,
@@ -457,23 +471,24 @@ export function Step6Review({ mode }: Step6ReviewProps) {
   // 📊 Listing Readiness Score
   const readinessChecks = useMemo(() => {
     const checks = [
-      { label: "ชื่อทรัพย์", ok: isStringWithContent(values.title), weight: 15 },
-      { label: "รูปภาพ ≥5 รูป", ok: (values.images?.length || 0) >= 5, weight: 20 },
-      { label: "ราคา", ok: !!(values.price || values.rental_price ||values.original_price ||values.original_rental_price), weight: 15 },
-      { label: "รายละเอียด (TH)", ok: isStringWithContent(values.description), weight: 10 },
-      { label: "รายละเอียด (EN)", ok: isStringWithContent(values.description_en), weight: 5 },
-      { label: "รายละเอียด (CN)", ok: isStringWithContent(values.description_cn), weight: 5 },
-      { label: "ทำเล", ok: !!values.popular_area || !!values.district, weight: 10 },
-      { label: "ข้อมูลห้อง", ok: !!(values.bedrooms || values.size_sqm), weight: 5 },
-      { label: "สิ่งอำนวยความสะดวก", ok: (values.feature_ids?.length || 0) >= 1, weight: 5 },
-      { label: "แผนที่ Google", ok: isStringWithContent(values.google_maps_link), weight: 5 },
-      { label: "ชื่อ (EN)", ok: isStringWithContent(values.title_en), weight: 5 },
+      { label: isEn ? "Title (TH)" : "ชื่อทรัพย์", ok: isStringWithContent(values.title), weight: 15 },
+      { label: isEn ? "Photos ≥5" : "รูปภาพ ≥5 รูป", ok: (values.images?.length || 0) >= 5, weight: 20 },
+      { label: isEn ? "Pricing" : "ราคา", ok: !!(values.price || values.rental_price ||values.original_price ||values.original_rental_price), weight: 15 },
+      { label: isEn ? "Description (TH)" : "รายละเอียด (TH)", ok: isStringWithContent(values.description), weight: 10 },
+      { label: isEn ? "Description (EN)" : "รายละเอียด (EN)", ok: isStringWithContent(values.description_en), weight: 5 },
+      { label: isEn ? "Description (CN)" : "รายละเอียด (CN)", ok: isStringWithContent(values.description_cn), weight: 5 },
+      { label: isEn ? "Location" : "ทำเล", ok: !!values.popular_area || !!values.district, weight: 10 },
+      { label: isEn ? "Unit Specs" : "ข้อมูลห้อง", ok: !!(values.bedrooms || values.size_sqm), weight: 5 },
+      { label: isEn ? "Amenities" : "สิ่งอำนวยความสะดวก", ok: (values.feature_ids?.length || 0) >= 1, weight: 5 },
+      { label: isEn ? "Google Maps" : "แผนที่ Google", ok: isStringWithContent(values.google_maps_link), weight: 5 },
+      { label: isEn ? "Title (EN)" : "ชื่อ (EN)", ok: isStringWithContent(values.title_en), weight: 5 },
     ];
     const totalWeight = checks.reduce((s, c) => s + c.weight, 0);
     const earned = checks.filter(c => c.ok).reduce((s, c) => s + c.weight, 0);
     const score = Math.round((earned / totalWeight) * 100);
     return { checks, score };
   }, [
+    isEn,
     values.title, values.title_en, values.images, values.price, values.rental_price,
     values.description, values.description_en, values.description_cn,
     values.popular_area, values.district, values.bedrooms, values.size_sqm,
@@ -490,22 +505,14 @@ export function Step6Review({ mode }: Step6ReviewProps) {
           </div>
           <div className="space-y-1">
             <h3 className="text-sm sm:text-base font-bold text-blue-700">
-              {previewLanguage === "th"
-                ? "ขั้นตอนที่ 6: ตรวจสอบหน้าประกาศ (Review & Publish)"
-                : previewLanguage === "en"
-                  ? "Step 6: Review & Publish"
-                  : previewLanguage === "cn"
-                    ? "第 6 步：查看并发布"
-                    : "Шаг 6: Просмотр и публикация"}
+              {isEn
+                ? "Step 6: Review & Publish"
+                : "ขั้นตอนที่ 6: ตรวจสอบหน้าประกาศ (Review & Publish)"}
             </h3>
             <p className="text-[11px] sm:text-sm text-blue-600/80 leading-relaxed max-w-2xl">
-              {previewLanguage === "th"
-                ? "นี่คือตัวอย่างหน้าประกาศของคุณที่จะแสดงให้ลูกค้าเห็นจริง กรุณาตรวจสอบความถูกต้องของข้อมูลทั้งหมด และสามารถเลือกดูพรีวิวในภาษาต่างๆ ได้ทางขวามือครับ"
-                : previewLanguage === "en"
-                  ? "This is a preview of your listing as it will appear to customers. Please check all information for accuracy. You can preview in different languages using the buttons on the right."
-                  : previewLanguage === "cn"
-                    ? "这是房源发布的实际预览。请检查所有信息的准确性。您可以使用右侧的按钮预览不同语言。"
-                    : "Это предварительный просмотр вашего объявления в том виде, в котором его увидят клиенты. Пожалуйста, проверьте точность всей информации. Вы можете просмотреть его на разных языках с помощью кнопок справа."}
+              {isEn
+                ? "This is a preview of your listing as it will appear to customers. Please check all information for accuracy. You can preview in different languages using the buttons on the right."
+                : "นี่คือตัวอย่างหน้าประกาศของคุณที่จะแสดงให้ลูกค้าเห็นจริง กรุณาตรวจสอบความถูกต้องของข้อมูลทั้งหมด และสามารถเลือกดูพรีวิวในภาษาต่างๆ ได้ทางขวามือครับ"}
             </p>
           </div>
         </div>
@@ -530,14 +537,14 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                       ) : (
                         <Languages className="h-3.5 w-3.5 text-blue-500" />
                       )}
-                      AI แปลให้ครบทั้งหมด
+                      <span>{isEn ? "AI Translate All" : "AI แปลให้ครบทั้งหมด"}</span>
                     </Button>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent className="bg-slate-900 text-white border-none z-102 shadow-xl px-4 py-2 text-xs">
                   <div className="flex items-center gap-2">
                     <Languages className="w-3 h-3 text-blue-400" />
-                    <span>AI Global Fix: ตรวจสอบและแปลข้อมูลทุกส่วนที่ยังไม่สมบูรณ์ให้ครบถ้วน 🌐</span>
+                    <span>{isEn ? "AI Global Fix: Check & complete translations in all languages 🌐" : "AI Global Fix: ตรวจสอบและแปลข้อมูลทุกส่วนที่ยังไม่สมบูรณ์ให้ครบถ้วน 🌐"}</span>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -607,7 +614,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-bold text-slate-700 flex items-center gap-1.5">
                 <BarChart3 className="h-4 w-4 text-slate-400" />
-                ความพร้อมประกาศ
+                <span>{isEn ? "Listing Readiness" : "ความพร้อมประกาศ"}</span>
               </h4>
               <span className={cn(
                 "text-[11px] font-bold px-2 py-0.5 rounded-full",
@@ -617,7 +624,11 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                     ? "bg-amber-100 text-amber-700"
                     : "bg-red-100 text-red-700"
               )}>
-                {readinessChecks.score >= 80 ? "พร้อมเผยแพร่" : readinessChecks.score >= 50 ? "ควรเพิ่มข้อมูล" : "ข้อมูลน้อย"}
+                {readinessChecks.score >= 80
+                  ? (isEn ? "Ready to Publish" : "พร้อมเผยแพร่")
+                  : readinessChecks.score >= 50
+                    ? (isEn ? "Add more info" : "ควรเพิ่มข้อมูล")
+                    : (isEn ? "Incomplete info" : "ข้อมูลน้อย")}
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1">
@@ -638,7 +649,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
             {/* Translation Status */}
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
               <Globe className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span className="text-[11px] text-slate-500 font-medium shrink-0">แปลภาษา:</span>
+              <span className="text-[11px] text-slate-500 font-medium shrink-0">{isEn ? "Translations:" : "แปลภาษา:"}</span>
              {(["th", "en", "cn", "ru"] as const).map((lang) => {
                 const hasDesc = lang === "th" ? isStringWithContent(values.description)
                   : lang === "en" ? isStringWithContent(values.description_en)
@@ -674,8 +685,8 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                   "text-[10px] font-bold",
                   (values.images?.length || 0) >= 5 ? "text-emerald-600" : "text-amber-600"
                 )}>
-                  {values.images?.length || 0} รูป
-                  {(values.images?.length || 0) < 5 && " (แนะนำ ≥5)"}
+                  {values.images?.length || 0} {isEn ? "Photos" : "รูป"}
+                  {(values.images?.length || 0) < 5 && (isEn ? " (Recommended ≥5)" : " (แนะนำ ≥5)")}
                 </span>
               </div>
             </div>
@@ -811,14 +822,14 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                             onClick={() => setIsEditingDesc(false)}
                             className="text-slate-500"
                           >
-                            <X className="w-4 h-4 mr-1" /> ยกเลิก
+                            <X className="w-4 h-4 mr-1" /> {isEn ? "Cancel" : "ยกเลิก"}
                           </Button>
                           <Button
                             size="sm"
                             onClick={() => setIsEditingDesc(false)}
                             className="bg-blue-600 hover:bg-blue-700 text-white"
                           >
-                            <Check className="w-4 h-4 mr-1" /> เสร็จสิ้น
+                            <Check className="w-4 h-4 mr-1" /> {isEn ? "Done" : "เสร็จสิ้น"}
                           </Button>
                         </>
                       ) : (
@@ -829,7 +840,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                           onClick={() => setIsEditingDesc(true)}
                           className="gap-2"
                         >
-                          <Pencil className="w-3.5 h-3.5" /> แก้ไขรายละเอียด
+                          <Pencil className="w-3.5 h-3.5" /> {isEn ? "Edit Details" : "แก้ไขรายละเอียด"}
                         </Button>
                       )}
                     </div>
@@ -887,7 +898,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                             ) : (
                               <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                             )}
-                            <span className="sm:inline">AI แปลรวมทุกภาษา</span>
+                            <span className="sm:inline">{isEn ? "AI Translate All Languages" : "AI แปลรวมทุกภาษา"}</span>
                           </Button>
                         </div>
 

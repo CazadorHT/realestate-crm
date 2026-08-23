@@ -20,7 +20,7 @@ import {
   AVMResult,
 } from "@/features/properties/actions/avm";
 import { cn } from "@/lib/utils";
-
+import {useLanguage} from "@/components/providers/LanguageProvider";
 interface AvmResultDialogProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   isOpen: boolean;
@@ -34,6 +34,8 @@ export function AvmResultDialog({
   onClose,
   listingType,
 }: AvmResultDialogProps) {
+   const { language } = useLanguage();
+    const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const [loading, setLoading] = useState(false);
@@ -100,53 +102,76 @@ export function AvmResultDialog({
       setLoading(false);
     }
   };
-
-  const handleExportPdf = () => {
-    if (!result) return;
-
-    const values = form.getValues();
-    const exportData = {
-      result,
-      inputs: {
-        propertyType: values.property_type,
-        listingType: listingType,
-        sizeSqm: values.size_sqm,
-        bedrooms: values.bedrooms,
-        bathrooms: values.bathrooms,
-        province: values.province,
-        district: values.district,
-        subdistrict: values.subdistrict,
-        popularArea: values.popular_area,
-      },
-    };
-
-    // Base64 encode the JSON data
-    const encodedStr = btoa(
-      unescape(encodeURIComponent(JSON.stringify(exportData))),
-    );
-    window.open(`/avm-report?data=${encodedStr}`, "_blank");
-  };
-
-  const applyPrice = (price: number) => {
+  const applyPrice = (val: number) => {
     if (listingType === "SALE") {
-      form.setValue("original_price", price, {
-        shouldValidate: true,
+      form.setValue("original_price", val, {
         shouldDirty: true,
+        shouldValidate: true,
       });
     } else {
-      form.setValue("original_rental_price", price, {
-        shouldValidate: true,
+      form.setValue("original_rental_price", val, {
         shouldDirty: true,
+        shouldValidate: true,
       });
     }
     form.setValue("requires_ai_review", true, { shouldDirty: true });
     onClose();
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(
-      price,
-    );
+  const formatPrice = (val: number) => {
+    return new Intl.NumberFormat("th-TH").format(val);
+  };
+
+  const handleExportPdf = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow || !result) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${isEn ? "AI Smart Valuation Report" : "รายงานการประเมินราคา - AI Smart Valuation"}</title>
+          <style>
+            body { font-family: 'Sarabun', sans-serif; padding: 40px; color: #1e293b; }
+            .header { border-bottom: 2px solid #4f46e5; padding-bottom: 20px; margin-bottom: 30px; }
+            h1 { color: #4f46e5; margin: 0 0 10px 0; }
+            .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; }
+            .card { border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; text-align: center; }
+            .price { font-size: 24px; font-weight: bold; color: #0f172a; margin: 10px 0; }
+            .summary { background: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px; font-size: 14px; line-height: 1.6; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${isEn ? "AI Smart Valuation Report" : "รายงานการประเมินมูลค่าทรัพย์สิน"}</h1>
+            <p>${isEn ? "Smart Market Valuation Analysis" : "ระบบประเมินราคาอัจฉริยะจากข้อมูลตลาดจริง"}</p>
+          </div>
+          <div class="summary">
+            <h3>${isEn ? "AI Market Analysis" : "บทวิเคราะห์จาก AI"}</h3>
+            <p>${result.analysisSummary}</p>
+            <p><strong>${isEn ? "Confidence:" : "ระดับความแม่นยำ:"}</strong> ${result.confidenceScore}</p>
+          </div>
+          <div class="grid">
+            <div class="card">
+              <h4>Max Profit</h4>
+              <div class="price">฿${formatPrice(result.maxProfitPrice)}</div>
+              <p>${isEn ? "Highest viable market ceiling" : "ราคาสูงสุดที่ตลาดอาจยอมรับได้"}</p>
+            </div>
+            <div class="card" style="border: 2px solid #10b981;">
+              <h4 style="color: #10b981;">Market Value</h4>
+              <div class="price">฿${formatPrice(result.marketPrice)}</div>
+              <p>${isEn ? "Optimal realistic market price" : "ราคาตลาดที่เหมาะสม มีความเป็นไปได้จริง"}</p>
+            </div>
+            <div class="card">
+              <h4>Quick Sale</h4>
+              <div class="price">฿${formatPrice(result.quickSalePrice)}</div>
+              <p>${isEn ? "Competitive price for rapid closing" : "ลดราคาเพื่อเพิ่มสภาพคล่อง ปิดดีลด่วน"}</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
@@ -166,7 +191,7 @@ export function AvmResultDialog({
                 AI Smart Valuation
               </h2>
               <p className="text-slate-500 text-xs font-medium">
-                ประเมินราคาอัจฉริยะจากข้อมูลตลาดจริง
+                {isEn ? "Intelligent pricing powered by real-time market data" : "ประเมินราคาอัจฉริยะจากข้อมูลตลาดจริง"}
               </p>
             </div>
           </div>
@@ -178,7 +203,7 @@ export function AvmResultDialog({
               className="hidden sm:flex rounded-full border-slate-200 h-9 px-4"
             >
               <Printer className="h-4 w-4 mr-2" />
-              รายงาน
+              {isEn ? "Report" : "รายงาน"}
             </Button>
           )}
         </div>
@@ -191,17 +216,19 @@ export function AvmResultDialog({
               <Sparkles className="h-10 w-10" />
             </div>
             <h3 className="text-lg font-semibold text-slate-800">
-              พร้อมให้ระบบ AI ช่วยวิเคราะห์ราคาตลาดที่เหมาะสม?
+              {isEn ? "Ready to let AI analyze optimal market pricing?" : "พร้อมให้ระบบ AI ช่วยวิเคราะห์ราคาตลาดที่เหมาะสม?"}
             </h3>
             <p className="text-sm text-slate-500 max-w-sm px-4">
-              ระบบจะคำนวณราคาจากทรัพย์สินประเภทเดียวกัน ในพื้นที่ใกล้เคียง ทั้งตัวที่กำลังประกาศและดีลที่ปิดไปแล้ว
+              {isEn
+                ? "AI calculates pricing based on comparable listings and closed deals in the nearby vicinity."
+                : "ระบบจะคำนวณราคาจากทรัพย์สินประเภทเดียวกัน ในพื้นที่ใกล้เคียง ทั้งตัวที่กำลังประกาศและดีลที่ปิดไปแล้ว"}
             </p>
             <Button
               onClick={handleEvaluate}
-              className="mt-6 gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-8 py-6 text-base shadow-lg transition-all"
+              className="mt-6 gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-8 py-6 text-base shadow-lg transition-all cursor-pointer"
             >
               <Sparkles className="h-5 w-5" />
-              <span>เริ่มการประเมิน</span>
+              <span>{isEn ? "Start Valuation" : "เริ่มการประเมิน"}</span>
             </Button>
           </div>
         )}
@@ -211,9 +238,9 @@ export function AvmResultDialog({
             <Loader2 className="h-12 w-12 text-indigo-500 animate-spin" />
             <div>
               <h3 className="text-lg font-medium text-slate-800 animate-pulse">
-                กำลังประมวลผลข้อมูลตลาด...
+                {isEn ? "Processing market data..." : "กำลังประมวลผลข้อมูลตลาด..."}
               </h3>
-              <p className="text-sm text-slate-500">อาจใช้เวลาสักครู่</p>
+              <p className="text-sm text-slate-500">{isEn ? "This might take a few moments" : "อาจใช้เวลาสักครู่"}</p>
             </div>
           </div>
         )}
@@ -223,14 +250,14 @@ export function AvmResultDialog({
             <div className="text-red-500 bg-red-50 p-4 rounded-full">
               <AlertCircle className="h-8 w-8" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-800">ขออภัย</h3>
+            <h3 className="text-lg font-semibold text-slate-800">{isEn ? "Notice" : "ขออภัย"}</h3>
             <p className="text-sm text-slate-600 px-4">{error}</p>
             <Button
               onClick={() => setError(null)}
               variant="outline"
               className="mt-4"
             >
-              ลองใหม่อีกครั้ง
+              {isEn ? "Try Again" : "ลองใหม่อีกครั้ง"}
             </Button>
           </div>
         )}
@@ -241,7 +268,7 @@ export function AvmResultDialog({
             <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-6">
               <div className="flex-1">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                  บทวิเคราะห์จาก AI
+                  {isEn ? "AI Market Analysis" : "บทวิเคราะห์จาก AI"}
                 </h4>
                 <p className="text-slate-700 leading-relaxed text-sm">
                   {result?.analysisSummary}
@@ -249,7 +276,7 @@ export function AvmResultDialog({
               </div>
               <div className="sm:border-l border-slate-100 sm:pl-6 flex flex-col justify-center shrink-0">
                 <span className="text-xs font-bold text-slate-400 uppercase mb-1">
-                  ความแม่นยำ
+                  {isEn ? "Confidence" : "ความแม่นยำ"}
                 </span>
                 <div className="flex items-center gap-2">
                   <div
@@ -283,7 +310,7 @@ export function AvmResultDialog({
             <div className="space-y-4">
               <h4 className="font-semibold text-slate-800 flex items-center gap-2 px-1">
                 <Scale className="h-5 w-5 text-indigo-500" />
-                กลยุทธ์การตั้งราคา
+                {isEn ? "Pricing Strategies" : "กลยุทธ์การตั้งราคา"}
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Maximum Profit */}
@@ -298,14 +325,14 @@ export function AvmResultDialog({
                     ฿{formatPrice(result?.maxProfitPrice ?? 0)}
                   </div>
                   <p className="text-[10px] text-slate-500 mb-5 leading-relaxed">
-                    ราคาสูงสุดที่ตลาดอาจยอมรับได้ เหมาะสำหรับการตั้งเผื่อต่อรอง
+                    {isEn ? "Highest market ceiling viable, ideal for buffer negotiations." : "ราคาสูงสุดที่ตลาดอาจยอมรับได้ เหมาะสำหรับการตั้งเผื่อต่อรอง"}
                   </p>
                   <Button
                     onClick={() => result && applyPrice(result.maxProfitPrice)}
                     variant="outline"
-                    className="mt-auto w-full rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-10 text-xs font-bold"
+                    className="mt-auto w-full rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50 h-10 text-xs font-bold cursor-pointer"
                   >
-                    ใช้ราคานี้
+                    {isEn ? "Apply Price" : "ใช้ราคานี้"}
                   </Button>
                 </div>
 
@@ -321,13 +348,13 @@ export function AvmResultDialog({
                     ฿{formatPrice(result?.marketPrice ?? 0)}
                   </div>
                   <p className="text-[10px] text-slate-600 mb-5 leading-relaxed">
-                    ราคาตลาดที่เหมาะสม โอกาสปิดการขายสูง มีความเป็นไปได้จริง
+                    {isEn ? "Optimal realistic market price with high probability of closing." : "ราคาตลาดที่เหมาะสม โอกาสปิดการขายสูง มีความเป็นไปได้จริง"}
                   </p>
                   <Button
                     onClick={() => result && applyPrice(result.marketPrice)}
-                    className="mt-auto w-full rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm h-10 text-xs font-bold"
+                    className="mt-auto w-full rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm h-10 text-xs font-bold cursor-pointer"
                   >
-                    ใช้ราคานี้
+                    {isEn ? "Apply Price" : "ใช้ราคานี้"}
                   </Button>
                 </div>
 
@@ -343,14 +370,14 @@ export function AvmResultDialog({
                     ฿{formatPrice(result?.quickSalePrice ?? 0)}
                   </div>
                   <p className="text-[10px] text-slate-500 mb-5 leading-relaxed">
-                    ลดราคาเพื่อเพิ่มสภาพคล่อง เหมาะสำหรับปิดดีลด่วนฟ้าแลบ
+                    {isEn ? "Competitive price to maximize liquidity and rapid deal turnaround." : "ลดราคาเพื่อเพิ่มสภาพคล่อง เหมาะสำหรับปิดดีลด่วนฟ้าแลบ"}
                   </p>
                   <Button
                     onClick={() => result && applyPrice(result.quickSalePrice)}
                     variant="outline"
-                    className="mt-auto w-full rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50 h-10 text-xs font-bold"
+                    className="mt-auto w-full rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50 h-10 text-xs font-bold cursor-pointer"
                   >
-                    ใช้ราคานี้
+                    {isEn ? "Apply Price" : "ใช้ราคานี้"}
                   </Button>
                 </div>
               </div>
@@ -360,10 +387,10 @@ export function AvmResultDialog({
             <Button
               onClick={handleExportPdf}
               variant="outline"
-              className="w-full sm:hidden rounded-xl border-slate-200 h-12 font-bold"
+              className="w-full sm:hidden rounded-xl border-slate-200 h-12 font-bold cursor-pointer"
             >
               <Printer className="h-4 w-4 mr-2" />
-              <span>พิมพ์รายงานความคุ้มค่า (PDF)</span>
+              <span>{isEn ? "Print Valuation Report (PDF)" : "พิมพ์รายงานความคุ้มค่า (PDF)"}</span>
             </Button>
           </div>
         )}

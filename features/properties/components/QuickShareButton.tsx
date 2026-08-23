@@ -108,10 +108,10 @@ ${L.link} ${publicUrl}
     try {
       await navigator.clipboard.writeText(shareMessage);
       setCopied(true);
-      toast.success("คัดลอกข้อความแล้ว!");
+      toast.success(isEn ? "Text copied to clipboard!" : "คัดลอกข้อความแล้ว!");
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      toast.error("ไม่สามารถคัดลอกได้");
+      toast.error(isEn ? "Failed to copy" : "ไม่สามารถคัดลอกได้");
     }
   };
 
@@ -156,18 +156,22 @@ ${L.link} ${publicUrl}
               ) : (
                 <Copy className="w-4 h-4" />
               )}
-              {copied ? "คัดลอกแล้ว" : "คัดลอกข้อความ"}
+              {copied
+                ? (isEn ? "Copied" : "คัดลอกแล้ว")
+                : (isEn ? "Copy Text" : "คัดลอกข้อความ")}
             </Button>
             <Button
               className="h-12 rounded-xl gap-2 font-bold bg-[#00B900] hover:bg-[#00A000] text-white"
               onClick={handleLineShare}
             >
               <FaLine className="w-5 h-5" />
-              ส่งเข้า LINE
+              {isEn ? "Share to LINE" : "ส่งเข้า LINE"}
             </Button>
           </div>
           <p className="text-[10px] text-slate-400 text-center font-medium mt-4">
-            * ระบบจะทำการสร้างข้อความสรุปพร้อมลิงก์ที่ระบุตัวตน Agent เพื่อใช้แชร์ให้ลูกค้าได้ทันที
+            {isEn
+              ? "* The system creates a summary message with your agent tracking link ready to share with clients."
+              : "* ระบบจะทำการสร้างข้อความสรุปพร้อมลิงก์ที่ระบุตัวตน Agent เพื่อใช้แชร์ให้ลูกค้าได้ทันที"}
           </p>
         </div>
       }
@@ -176,7 +180,7 @@ ${L.link} ${publicUrl}
         {/* Language Selector */}
         <div className="space-y-2">
           <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-            <Languages className="w-3 h-3" /> เลือกภาษาสำหรับแชร์
+            <Languages className="w-3 h-3" /> {isEn ? "Select Share Language" : "เลือกภาษาสำหรับแชร์"}
           </Label>
           <Tabs 
             value={lang} 

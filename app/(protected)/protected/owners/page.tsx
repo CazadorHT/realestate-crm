@@ -17,10 +17,18 @@ import { Suspense } from "react";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { getSystemConfig } from "@/lib/actions/system-config";
 
-export const metadata: Metadata = {
-  title: "จัดการเจ้าของทรัพย์",
-  description: "จัดการข้อมูลเจ้าของทรัพย์และผู้ติดต่อ",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
+  return {
+    title: isEn ? "Property Owners" : "จัดการเจ้าของทรัพย์",
+    description: isEn
+      ? "Manage property owners and contact directory"
+      : "จัดการข้อมูลเจ้าของทรัพย์และผู้ติดต่อ",
+  };
+}
 
 type PageProps = {
   searchParams: Promise<{
@@ -33,7 +41,7 @@ type PageProps = {
 
 export default async function OwnersPage({ searchParams }: PageProps) {
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   const sp = await searchParams;

@@ -38,6 +38,7 @@ import { FaPhone } from "react-icons/fa6";
 
 import { useFormContext } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 /**
  * Agent Multi-Select Section
@@ -45,6 +46,8 @@ import type { PropertyFormValues } from "@/features/properties/schema";
  * Enhanced with professional layout: Roles, Commission, Quick Actions
  */
 export function AgentMultiSelect({ form: formProp, agents }: AgentMultiSelectProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   // Local state for UI only (Roles are not yet persisted in Schema)
@@ -97,13 +100,13 @@ export function AgentMultiSelect({ form: formProp, agents }: AgentMultiSelectPro
                 <div className="bg-blue-100 p-1.5 rounded-md">
                   <User className="w-4 h-4 text-blue-600" />
                 </div>
-                ทีมดูแลการขาย (Sales Team)
+                <span>{isEn ? "Sales & Agent Team" : "ทีมดูแลการขาย (Sales Team)"}</span>
               </FormLabel>
               <Badge
                 variant="secondary"
                 className="bg-slate-100 text-slate-600 font-medium"
               >
-                {agentIds.length} ท่าน
+                {agentIds.length} {isEn ? "Members" : "ท่าน"}
               </Badge>
             </div>
 
@@ -129,7 +132,7 @@ export function AgentMultiSelect({ form: formProp, agents }: AgentMultiSelectPro
                       <div className="absolute -top-3 left-4 z-10">
                         <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-blue-700 tracking-wider bg-white border border-blue-200 px-2.5 py-1 rounded-full shadow-xs">
                           <ShieldCheck className="w-3 h-3 text-blue-600" />
-                          ผู้ดูแลหลัก / Listing Agent 🏢
+                          {isEn ? "Primary Listing Agent 🏢" : "ผู้ดูแลหลัก / Listing Agent 🏢"}
                         </span>
                       </div>
                     )}
@@ -188,7 +191,7 @@ export function AgentMultiSelect({ form: formProp, agents }: AgentMultiSelectPro
                                     )}
                                   </div>
                                 ) : (
-                                  <SelectValue placeholder="เลือกรายชื่อ Agent..." />
+                                  <SelectValue placeholder={isEn ? "Select Agent..." : "เลือกรายชื่อ Agent..."} />
                                 )}
                               </div>
                             </SelectTrigger>
@@ -243,8 +246,8 @@ export function AgentMultiSelect({ form: formProp, agents }: AgentMultiSelectPro
                             </div>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="primary">ผู้ดูแลหลัก (Primary)</SelectItem>
-                            <SelectItem value="support">ผู้ประสานงาน (Support)</SelectItem>
+                            <SelectItem value="primary">{isEn ? "Primary Agent" : "ผู้ดูแลหลัก (Primary)"}</SelectItem>
+                            <SelectItem value="support">{isEn ? "Support Agent" : "ผู้ประสานงาน (Support)"}</SelectItem>
                             <SelectItem value="cobroker">Co-Broker</SelectItem>
                           </SelectContent>
                         </Select>
@@ -258,7 +261,7 @@ export function AgentMultiSelect({ form: formProp, agents }: AgentMultiSelectPro
                           size="icon"
                           className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                           onClick={() => handleRemove(index)}
-                          title="ลบรายชื่อ"
+                          title={isEn ? "Remove Agent" : "ลบรายชื่อ"}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -277,7 +280,7 @@ export function AgentMultiSelect({ form: formProp, agents }: AgentMultiSelectPro
                 <div className="bg-slate-100 p-1 rounded-md group-hover:bg-white transition-colors">
                   <Plus className="h-4 w-4" />
                 </div>
-                เพิ่มผู้ดูแล (Add Agent)
+                <span>{isEn ? "Add Agent" : "เพิ่มผู้ดูแล (Add Agent)"}</span>
               </Button>
             </div>
             <FormMessage />

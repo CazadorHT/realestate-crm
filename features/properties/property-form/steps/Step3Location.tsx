@@ -16,6 +16,7 @@ import {
   suggestNearbyPlacesAndTransitAction,
   getExistingProjectLocationAction,
 } from "../actions/ai-actions";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 /**
  * Step 3: Location
@@ -23,6 +24,8 @@ import {
  * Refactored into separate components for easier debugging
  */
 export function Step3Location({ mode }: Step3Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const form = useFormContext<PropertyFormValues>();
   const [isSearching, setIsSearching] = useState(false);
 
@@ -41,12 +44,12 @@ export function Step3Location({ mode }: Step3Props) {
           if (fetchedTransits.length > 0 || fetchedPlaces.length > 0) {
             form.setValue("nearby_transits", fetchedTransits, { shouldDirty: true, shouldTouch: true });
             form.setValue("nearby_places", fetchedPlaces, { shouldDirty: true, shouldTouch: true });
-            toast.success("ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการเดิมสำเร็จ ✨");
+            toast.success(isEn ? "Location & transit synced from project ✨" : "ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการเดิมสำเร็จ ✨");
           }
         }
       });
     }
-  }, [form]);
+  }, [form, isEn]);
 
   const handleAISearch = async () => {
     const address = form.getValues("address_line1");
@@ -58,7 +61,7 @@ export function Step3Location({ mode }: Step3Props) {
     const projectId = form.getValues("project_id");
 
     if ((!province || !district) && !googleMapsLink) {
-      toast.error("กรุณากรอกข้อมูลจังหวัดและอำเภอ/เขต หรือใส่ลิงก์ Google Maps ก่อนใช้ AI ค้นหาครับ");
+      toast.error(isEn ? "Please fill Province & District or provide a Google Maps link first." : "กรุณากรอกข้อมูลจังหวัดและอำเภอ/เขต หรือใส่ลิงก์ Google Maps ก่อนใช้ AI ค้นหาครับ");
       return;
     }
 
@@ -82,15 +85,15 @@ export function Step3Location({ mode }: Step3Props) {
         form.setValue("nearby_places", places, { shouldDirty: true, shouldTouch: true });
         
         if ((res as any).cached) {
-          toast.success("ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการที่มีอยู่แล้วเรียบร้อย ✨");
+          toast.success(isEn ? "Location & transit retrieved from existing project ✨" : "ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการที่มีอยู่แล้วเรียบร้อย ✨");
         } else {
-          toast.success("AI ค้นหาและกรอกข้อมูลการเดินทางและสถานที่ใกล้เคียงเรียบร้อยแล้ว ✨");
+          toast.success(isEn ? "AI discovered and filled transit & nearby places ✨" : "AI ค้นหาและกรอกข้อมูลการเดินทางและสถานที่ใกล้เคียงเรียบร้อยแล้ว ✨");
         }
       } else {
-        toast.error((res as any).error || "เกิดข้อผิดพลาดในการค้นหา");
+        toast.error((res as any).error || (isEn ? "Failed to search location" : "เกิดข้อผิดพลาดในการค้นหา"));
       }
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI");
+      toast.error(isEn ? "Failed to connect with AI" : "เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI");
     } finally {
       setIsSearching(false);
     }
@@ -108,9 +111,13 @@ export function Step3Location({ mode }: Step3Props) {
             <Sparkles className="h-5 w-5 animate-pulse" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-800">ค้นหาทำเล & การเดินทางอัตโนมัติด้วย AI</h4>
+            <h4 className="text-sm font-bold text-slate-800">
+              {isEn ? "Auto-Discover Location & Transit with AI" : "ค้นหาทำเล & การเดินทางอัตโนมัติด้วย AI"}
+            </h4>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed max-w-xl">
-              ระบบจะใช้ชื่อโครงการ/ที่อยู่ จังหวัด และเขต เพื่อค้นหาสถานีรถไฟฟ้า (BTS/MRT) และสถานที่ใกล้เคียงที่แท้จริงให้โดยอัตโนมัติ
+              {isEn
+                ? "AI uses project name, address, and district to automatically find actual BTS/MRT stations and landmarks."
+                : "ระบบจะใช้ชื่อโครงการ/ที่อยู่ จังหวัด และเขต เพื่อค้นหาสถานีรถไฟฟ้า (BTS/MRT) และสถานที่ใกล้เคียงที่แท้จริงให้โดยอัตโนมัติ"}
             </p>
           </div>
         </div>
@@ -123,12 +130,12 @@ export function Step3Location({ mode }: Step3Props) {
           {isSearching ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              กำลังค้นหา...
+              {isEn ? "Searching..." : "กำลังค้นหา..."}
             </>
           ) : (
             <>
               <Sparkles className="h-4 w-4 mr-2" />
-              ค้นหาและกรอกข้อมูลด้วย AI
+              {isEn ? "Search & Auto-fill with AI" : "ค้นหาและกรอกข้อมูลด้วย AI"}
             </>
           )}
         </Button>

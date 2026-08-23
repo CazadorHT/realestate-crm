@@ -148,14 +148,27 @@ export function LanguageProvider({
     } else if (pathname === "/contact") {
       const contactTitle = getNestedValue(dict, "metadata.contact_title") || `${getNestedValue(dict, "nav.contact")} | ${siteName}`;
       if (contactTitle) document.title = contactTitle.replace("{siteName}", siteName);
-    } else if (pathname === "/projects" || pathname.startsWith("/projects/")) {
-      const projectsTitle = getNestedValue(dict, "metadata.projects_title") || `${getNestedValue(dict, "nav.projects") || "Projects"} | ${siteName}`;
-      if (projectsTitle) document.title = projectsTitle.replace("{siteName}", siteName);
+    } else if (pathname.startsWith("/protected/owners")) {
+      document.title = (language === "en" ? "Property Owners" : "จัดการเจ้าของทรัพย์") + ` | ${siteName}`;
+    } else if (pathname.startsWith("/protected/properties")) {
+      document.title = (language === "en" ? "Properties" : "จัดการทรัพย์") + ` | ${siteName}`;
+    } else if (pathname.startsWith("/protected/leads")) {
+      document.title = (language === "en" ? "Leads" : "จัดการลีด") + ` | ${siteName}`;
+    } else if (pathname.startsWith("/protected/deals")) {
+      document.title = (language === "en" ? "Deals" : "จัดการดีล") + ` | ${siteName}`;
+    } else if (pathname.startsWith("/protected/inbox")) {
+      document.title = (language === "en" ? "Inbox" : "กล่องข้อความ") + ` | ${siteName}`;
+    } else if (pathname.startsWith("/protected/co-brokers")) {
+      document.title = (language === "en" ? "Co-Brokers" : "เครือข่ายคู่ค้า") + ` | ${siteName}`;
+    } else if (pathname.startsWith("/protected/calendar")) {
+      document.title = (language === "en" ? "Calendar" : "ปฏิทินงาน") + ` | ${siteName}`;
+    } else if (pathname === "/protected") {
+      document.title = (language === "en" ? "Dashboard" : "แดชบอร์ด") + ` | ${siteName}`;
     }
 
     // Synchronize html lang attribute dynamically
     document.documentElement.lang = language;
-  }, [language, mounted]);
+  }, [language, mounted, pathname]);
 
 
 

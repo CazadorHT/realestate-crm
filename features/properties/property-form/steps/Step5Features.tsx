@@ -62,6 +62,83 @@ const CATEGORY_MAP: Record<string, { th: string; en: string; icon: any }> = {
   SERVICES: { th: "บริการ (Services)", en: "Services", icon: ConciergeBell },
 };
 
+const FEATURE_TRANSLATION_MAP: Record<string, string> = {
+  "อ่างอาบน้ำ": "Bathtub",
+  "คลับเฮ้าส์": "Clubhouse",
+  "คลับเฮ้าส์ / เลานจ์": "Clubhouse / Lounge",
+  "โซล่าเซลล์": "Solar Cells",
+  "โซลาร์เซลล์": "Solar Cells",
+  "วิวทะเล": "Sea View",
+  "วิวภูเขา": "Mountain View",
+  "วิวเมือง": "City View",
+  "วิวแม่น้ำ": "River View",
+  "สวน": "Garden",
+  "สวนหย่อม": "Garden",
+  "สวนขั้นดาดฟ้า": "Rooftop Garden",
+  "สวนดาดฟ้า": "Rooftop Garden",
+  "สวนสาธารณะ": "Public Park",
+  "เครื่องชาร์จรถยนต์ไฟฟ้า": "EV Charger",
+  "จุดชาร์จรถยนต์ไฟฟ้า": "EV Charging Station",
+  "โซนสัตว์เลี้ยง": "Pet Friendly Zone",
+  "ที่จอดรถ": "Parking",
+  "โรงยิม / ฟิตเนส": "Fitness / Gym",
+  "ฟิตเนส": "Fitness Gym",
+  "ลิฟต์": "Elevator",
+  "ลิฟต์โดยสาร": "Passenger Lift",
+  "สระว่ายน้ำ": "Swimming Pool",
+  "ห้องซาวน่า / ห้องอบไอน้ำ": "Sauna / Steam Room",
+  "ห้องซาวน่า": "Sauna",
+  "ห้องอบไอน้ำ": "Steam Room",
+  "สตรีม": "Steam Room",
+  "สนามเด็กเล่น": "Playground",
+  "ระบบรักษาความปลอดภัย": "24/7 Security",
+  "ระบบรักษาความปลอดภัย 24 ชม.": "24-Hour Security",
+  "กล้องวงจรปิด": "CCTV",
+  "กล้องวงจรปิด (CCTV)": "CCTV Security",
+  "คีย์การ์ด": "Keycard Access",
+  "เข้า-ออกด้วยคีย์การ์ด": "Key Card Access",
+  "ล็อบบี้": "Lobby",
+  "ล็อบบี้ / แผนกต้อนรับ": "Lobby / Reception",
+  "ห้องสมุด": "Library",
+  "ห้องสมุด / Co-working Space": "Library / Co-working Space",
+  "co-working space": "Co-Working Space",
+  "เพดานสูง": "High Ceiling",
+  "เพดานสูงโปร่ง": "High Ceiling",
+  "ระบบสมาร์ทโฮม": "Smart Home System",
+  "ห้องแม่บ้าน": "Maid Quarter",
+  "บริการรถรับส่ง": "Shuttle Service",
+  "พนักงานต้อนรับ": "Concierge",
+  "อินเทอร์เน็ต / wifi": "High-Speed Wi-Fi",
+  "wifi": "Wi-Fi",
+  "เครื่องปรับอากาศ": "Air Conditioning",
+  "แอร์": "Air Conditioning",
+  "เครื่องทำน้ำอุ่น": "Water Heater",
+  "เฟอร์นิเจอร์": "Fully Furnished",
+  "ตู้เย็น": "Refrigerator",
+  "ไมโครเวฟ": "Microwave",
+  "เตาไฟฟ้า": "Electric Stove",
+  "เครื่องดูดควัน": "Cooker Hood",
+  "เครื่องซักผ้า": "Washing Machine",
+  "ระเบียง": "Balcony",
+  "จากุซซี่": "Jacuzzi",
+  "อ่างจากุซซี่": "Jacuzzi Bathtub",
+};
+
+function getFeatureDisplayName(feature: Feature, isEn: boolean): string {
+  if (!isEn) return feature.name;
+  if (feature.name_en && feature.name_en.trim()) return feature.name_en;
+
+  const trimmed = feature.name.trim();
+  if (FEATURE_TRANSLATION_MAP[trimmed]) return FEATURE_TRANSLATION_MAP[trimmed];
+
+  const lower = trimmed.toLowerCase();
+  for (const [key, val] of Object.entries(FEATURE_TRANSLATION_MAP)) {
+    if (lower === key.toLowerCase()) return val;
+  }
+
+  return feature.name;
+}
+
 export const Step5Features = React.memo(Step5FeaturesComponent);
 function Step5FeaturesComponent() {
   const { language } = useLanguage();
@@ -83,7 +160,7 @@ function Step5FeaturesComponent() {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("features")
-          .select("id, name, icon_key, category")
+          .select("id, name, name_en, icon_key, category")
           .order("category", { ascending: true })
           .order("name", { ascending: true });
 
@@ -104,7 +181,7 @@ function Step5FeaturesComponent() {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("features")
-        .select("id, name, icon_key, category")
+        .select("id, name, name_en, icon_key, category")
         .order("category", { ascending: true })
         .order("name", { ascending: true });
 
@@ -364,7 +441,7 @@ function Step5FeaturesComponent() {
                           : "text-slate-600 group-hover:text-slate-900",
                       )}
                     >
-                      {isEn && feature.name_en ? feature.name_en : feature.name}
+                      {getFeatureDisplayName(feature, isEn)}
                     </span>
                     {isSelected && (
                       <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-in zoom-in" />

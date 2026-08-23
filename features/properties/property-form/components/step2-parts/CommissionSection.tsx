@@ -17,6 +17,7 @@ import { PropertyFormValues } from "@/features/properties/schema";
 import { getCommissionRulesAction } from "@/features/dashboard/actions/commission-actions";
 import { CommissionRuleSet } from "@/lib/finance/commissions";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface CommissionSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
@@ -31,6 +32,8 @@ export function CommissionSection({
   showSale,
   showRent,
 }: CommissionSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   // Watch values for calculation
@@ -126,8 +129,8 @@ export function CommissionSection({
       <CardHeader className="pb-4 border-b border-blue-100">
         <SectionHeader
           icon={Percent}
-          title="คอมมิชชั่น (Internal Only)"
-          desc="ข้อมูลสำหรับคำนวณผลตอบแทนทีมขาย (ไม่แสดงหน้าเว็บ)"
+          title={isEn ? "Commission (Internal Only)" : "คอมมิชชั่น (Internal Only)"}
+          desc={isEn ? "Internal sales remuneration data (hidden from public website)" : "ข้อมูลสำหรับคำนวณผลตอบแทนทีมขาย (ไม่แสดงหน้าเว็บ)"}
           tone="blue"
           right={
             <Badge
@@ -150,8 +153,8 @@ export function CommissionSection({
                 <Banknote className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-medium text-slate-900">คอมมิชชั่นการขาย</h4>
-                <p className="text-xs text-slate-500">คิดเป็น % ของราคาขาย</p>
+                <h4 className="font-medium text-slate-900">{isEn ? "Sales Commission" : "คอมมิชชั่นการขาย"}</h4>
+                <p className="text-xs text-slate-500">{isEn ? "% of selling price" : "คิดเป็น % ของราคาขาย"}</p>
               </div>
             </div>
 
@@ -167,7 +170,7 @@ export function CommissionSection({
                           <div className="flex items-center gap-2">
                             <Sparkles className="h-3.5 w-3.5 text-blue-500" />
                             <span className="text-[11px] font-bold text-blue-700">
-                              แนะนำตามเกณฑ์: {suggestedCommissionPercent}%
+                              {isEn ? `Standard Rule: ${suggestedCommissionPercent}%` : `แนะนำตามเกณฑ์: ${suggestedCommissionPercent}%`}
                             </span>
                           </div>
                           <button
@@ -175,7 +178,7 @@ export function CommissionSection({
                             onClick={applySuggested}
                             className="text-[10px] font-bold text-blue-600 hover:text-blue-700 underline"
                           >
-                            ใช้ค่านี้
+                            {isEn ? "Apply" : "ใช้ค่านี้"}
                           </button>
                         </div>
                       )}
@@ -210,7 +213,7 @@ export function CommissionSection({
                               value={field.value ?? undefined}
                               onChange={(v) => field.onChange(v)}
                               decimals={2}
-                              placeholder="ระบุเอง"
+                              placeholder={isEn ? "Custom" : "ระบุเอง"}
                               disabled={isReadOnly}
                               className="pl-3 pr-8 h-10 text-center font-medium text-emerald-700 border-slate-200 focus:border-emerald-500 focus:ring-0 rounded-xl bg-slate-50"
                             />
@@ -229,7 +232,7 @@ export function CommissionSection({
               {/* Preview */}
               <div className="px-4 py-3 border-t border-emerald-100 flex justify-between items-center bg-emerald-50">
                 <span className="text-xs font-medium text-emerald-700">
-                  รับจริงประมาณ
+                  {isEn ? "Est. Net Payout" : "รับจริงประมาณ"}
                 </span>
                 {saleCommissionCalc !== null ? (
                   <span className="text-base font-bold text-emerald-600 flex items-center gap-2">
@@ -259,9 +262,9 @@ export function CommissionSection({
               </div>
               <div>
                 <h4 className="font-medium text-slate-900">
-                  คอมมิชชั่นการเช่า
+                  {isEn ? "Rental Commission" : "คอมมิชชั่นการเช่า"}
                 </h4>
-                <p className="text-xs text-slate-500">จำนวนเดือนจากค่าเช่า</p>
+                <p className="text-xs text-slate-500">{isEn ? "Months of rent amount" : "จำนวนเดือนจากค่าเช่า"}</p>
               </div>
             </div>
 
@@ -290,7 +293,7 @@ export function CommissionSection({
                                 }
                               `}
                             >
-                              {val} ด.
+                              {val} {isEn ? "mo." : "ด."}
                             </button>
                           );
                         })}
@@ -302,12 +305,12 @@ export function CommissionSection({
                               value={field.value ?? undefined}
                               onChange={(v) => field.onChange(v)}
                               decimals={1}
-                              placeholder="ระบุเอง"
+                              placeholder={isEn ? "Custom" : "ระบุเอง"}
                               disabled={isReadOnly}
                               className="pl-3 pr-10 h-10 text-center font-medium text-indigo-700 border-slate-200 focus:border-indigo-500 focus:ring-0 rounded-xl bg-slate-50"
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
-                              เดือน
+                              {isEn ? "Mo." : "เดือน"}
                             </div>
                           </div>
                         </FormControl>
@@ -321,7 +324,7 @@ export function CommissionSection({
               {/* Preview */}
               <div className="px-4 py-3 border-t border-indigo-100 flex justify-between items-center bg-indigo-50">
                 <span className="text-xs font-medium text-indigo-700">
-                  รับจริงประมาณ
+                  {isEn ? "Est. Net Payout" : "รับจริงประมาณ"}
                 </span>
                 {rentCommissionCalc !== null ? (
                   <span className="text-base font-bold text-indigo-600 flex items-center gap-2">

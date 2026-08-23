@@ -157,13 +157,13 @@ export function SpecsSection({
                   render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel className="flex items-center justify-between gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider w-full">
-                        <span className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4 text-purple-500" />
-                          <span>
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <item.icon className="h-4 w-4 text-purple-500 shrink-0" />
+                          <span className="truncate">
                             {item.name === "floor"
                               ? isTotalFloors
-                                ? (isEn ? "Total Storeys" : "จำนวนชั้น")
-                                : (isEn ? "Floor No." : "ชั้นที่")
+                                ? (isEn ? "Total Floors" : "จำนวนชั้น")
+                                : (isEn ? "Floor" : "ชั้นที่")
                               : item.label}
                           </span>
                         </span>
@@ -175,11 +175,12 @@ export function SpecsSection({
                                 shouldDirty: true,
                               })
                             }
-                            className="text-[10px] text-blue-500 truncate hover:text-blue-700 hover:underline normal-case transition-colors cursor-pointer select-none"
+                            title={isTotalFloors ? (isEn ? "Switch to Floor No." : "สลับเป็น ชั้นที่") : (isEn ? "Switch to Total Storeys" : "สลับเป็น มีกี่ชั้น")}
+                            className="text-[10px] text-blue-600 hover:text-blue-700 hover:underline normal-case font-medium transition-colors cursor-pointer select-none shrink-0"
                           >
                             {isTotalFloors
-                              ? (isEn ? "Switch to Floor No." : "สลับเป็น ชั้นที่")
-                              : (isEn ? "Switch to Total Storeys" : "สลับเป็น มีกี่ชั้น")}
+                              ? (isEn ? "Floor No.?" : "สลับเป็นชั้นที่")
+                              : (isEn ? "Total Floors?" : "สลับเป็นมีกี่ชั้น")}
                           </button>
                         )}
                       </FormLabel>

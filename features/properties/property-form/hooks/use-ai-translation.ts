@@ -21,49 +21,70 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslatingAll, setIsTranslatingAll] = useState(false);
 
-  // 1. Translate Title
+  // 1. Translate Title (Auto-detect source language: TH, EN, CN, RU)
   const translateTitle = async (silent = false, force = false) => {
-    const title = form.getValues("title");
-    if (typeof title !== "string" || !title.trim()) {
-      if (!silent) toast.error("กรุณากรอกชื่อภาษาไทยก่อนกดแปลครับ");
-      return;
-    }
-
+    const titleTh = form.getValues("title");
     const currentEn = form.getValues("title_en");
     const currentCn = form.getValues("title_cn");
     const currentRu = form.getValues("title_ru");
 
+    const sourceText =
+      (isNonEmptyString(titleTh) && titleTh) ||
+      (isNonEmptyString(currentEn) && currentEn) ||
+      (isNonEmptyString(currentCn) && currentCn) ||
+      (isNonEmptyString(currentRu) && currentRu);
+
+    if (!sourceText) {
+      if (!silent) toast.error("กรุณากรอกชื่อทรัพย์ในช่องภาษาใดก็ได้ก่อนกดแปลครับ");
+      return;
+    }
+
+    const hasTh = isNonEmptyString(titleTh);
     const hasEn = isNonEmptyString(currentEn);
     const hasCn = isNonEmptyString(currentCn);
     const hasRu = isNonEmptyString(currentRu);
 
-    if (!force && hasEn && hasCn && hasRu) {
+    if (!force && hasTh && hasEn && hasCn && hasRu) {
       if (!silent) toast.success("ชื่อทรัพย์แปลครบถ้วนแล้ว ✨");
       return;
     }
 
     setIsTranslating(true);
-    const processId = !silent ? startProcess(`แปลชื่อทรัพย์: ${title}`, { type: "PROPERTY_TRANSLATION" }) : null;
+    const processId = !silent ? startProcess(`แปลชื่อทรัพย์: ${sourceText}`, { type: "PROPERTY_TRANSLATION" }) : null;
 
     try {
-      const result = await translateTextAction(title, "plain");
+      const result = await translateTextAction(sourceText, "plain");
+      if (force || !hasTh) {
+        if (result.th) {
+          form.setValue("title", result.th, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
+      }
       if (force || !hasEn) {
-        form.setValue("title_en", result.en, {
-          shouldDirty: true,
-          shouldTouch: true,
-        });
+        if (result.en) {
+          form.setValue("title_en", result.en, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
       }
       if (force || !hasCn) {
-        form.setValue("title_cn", result.cn, {
-          shouldDirty: true,
-          shouldTouch: true,
-        });
+        if (result.cn) {
+          form.setValue("title_cn", result.cn, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
       }
       if (force || !hasRu) {
-        form.setValue("title_ru", result.ru, {
-          shouldDirty: true,
-          shouldTouch: true,
-        });
+        if (result.ru) {
+          form.setValue("title_ru", result.ru, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
       }
       if (processId) finishProcess(processId, "SUCCESS", "แปลชื่อทรัพย์เรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
@@ -77,23 +98,30 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     }
   };
 
-  // 2. Translate Description
+  // 2. Translate Description (Auto-detect source language: TH, EN, CN, RU)
   const translateDescription = async (silent = false, force = false) => {
-    const desc = form.getValues("description");
-    if (typeof desc !== "string" || desc.trim() === "" || desc === "<p></p>") {
-      if (!silent) toast.error("กรุณากรอกคำบรรยายภาษาไทยก่อนกดแปลครับ");
-      return;
-    }
-
+    const descTh = form.getValues("description");
     const currentEn = form.getValues("description_en");
     const currentCn = form.getValues("description_cn");
     const currentRu = form.getValues("description_ru");
 
+    const sourceText =
+      (isNonEmptyString(descTh) && descTh) ||
+      (isNonEmptyString(currentEn) && currentEn) ||
+      (isNonEmptyString(currentCn) && currentCn) ||
+      (isNonEmptyString(currentRu) && currentRu);
+
+    if (!sourceText) {
+      if (!silent) toast.error("กรุณากรอกคำบรรยายในช่องภาษาใดก็ได้ก่อนกดแปลครับ");
+      return;
+    }
+
+    const hasTh = isNonEmptyString(descTh);
     const hasEn = isNonEmptyString(currentEn);
     const hasCn = isNonEmptyString(currentCn);
     const hasRu = isNonEmptyString(currentRu);
 
-    if (!force && hasEn && hasCn && hasRu) {
+    if (!force && hasTh && hasEn && hasCn && hasRu) {
       if (!silent) toast.success("คำบรรยายแปลครบถ้วนแล้ว ✨");
       return;
     }
@@ -106,24 +134,38 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       : null;
 
     try {
-      const result = await translateTextAction(desc, "html");
+      const result = await translateTextAction(sourceText, "html");
+      if (force || !hasTh) {
+        if (result.th) {
+          form.setValue("description", result.th, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
+      }
       if (force || !hasEn) {
-        form.setValue("description_en", result.en, {
-          shouldDirty: true,
-          shouldTouch: true,
-        });
+        if (result.en) {
+          form.setValue("description_en", result.en, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
       }
       if (force || !hasCn) {
-        form.setValue("description_cn", result.cn, {
-          shouldDirty: true,
-          shouldTouch: true,
-        });
+        if (result.cn) {
+          form.setValue("description_cn", result.cn, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
       }
       if (force || !hasRu) {
-        form.setValue("description_ru", result.ru, {
-          shouldDirty: true,
-          shouldTouch: true,
-        });
+        if (result.ru) {
+          form.setValue("description_ru", result.ru, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
       }
       if (processId)
         finishProcess(processId, "SUCCESS", "แปลคำบรรยายเรียบร้อยแล้ว ✨");

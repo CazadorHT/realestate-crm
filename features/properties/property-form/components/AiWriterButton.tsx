@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { useAITranslation } from "../hooks/use-ai-translation";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface AiWriterButtonProps {
   className?: string;
   variant?: "outline" | "default" | "ghost" | "secondary";
@@ -28,6 +30,8 @@ export function AiWriterButton({
   onClick,
   disabled,
 }: AiWriterButtonProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isOpen, setIsOpen] = useState(false);
   const { isTranslatingAll, generateAndTranslateAll } = useAITranslation();
 
@@ -53,7 +57,7 @@ export function AiWriterButton({
                 onClick={() => setIsOpen(true)}
                 disabled={disabled || isTranslatingAll}
                 className={cn(
-                  "gap-2 border-amber-200 text-amber-600! bg-amber-50 hover:bg-amber-100 rounded-xl font-medium transition-all active:scale-95 w-full",
+                  "gap-2 border-amber-200 text-amber-600! bg-amber-50 hover:bg-amber-100 rounded-xl font-medium transition-all active:scale-95 w-full cursor-pointer",
                 )}
               >
                 {isTranslatingAll ? (
@@ -61,7 +65,7 @@ export function AiWriterButton({
                 ) : (
                   <Sparkles className="h-4 w-4 text-amber-500" />
                 )}
-                <span>AI แต่งคำบรรยาย</span>
+                <span>{isEn ? "AI Description Writer" : "AI แต่งคำบรรยาย"}</span>
               </Button>
             </div>
           </TooltipTrigger>
@@ -69,7 +73,9 @@ export function AiWriterButton({
             <div className="flex items-center gap-2">
               <Sparkles className="w-3 h-3 text-amber-400" />
               <span>
-                AI Writer: ให้ AI ช่วยแต่งคำบรรยาย'ทุกภาษา' ให้น่าสนใจและเป็นมืออาชีพ ✨
+                {isEn
+                  ? "AI Writer: Let AI draft engaging & professional descriptions in all languages ✨"
+                  : "AI Writer: ให้ AI ช่วยแต่งคำบรรยาย'ทุกภาษา' ให้น่าสนใจและเป็นมืออาชีพ ✨"}
               </span>
             </div>
           </TooltipContent>
@@ -82,10 +88,14 @@ export function AiWriterButton({
         title={
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-500" />
-            <span>AI Writer อัจฉริยะ ✨</span>
+            <span>{isEn ? "Smart AI Writer ✨" : "AI Writer อัจฉริยะ ✨"}</span>
           </div>
         }
-        description="ช่วยคุณแต่งคำบรรยายประกาศให้น่าสนใจและเป็นมืออาชีพในพริบตา"
+        description={
+          isEn
+            ? "Helps generate captivating and professional listing descriptions in seconds."
+            : "ช่วยคุณแต่งคำบรรยายประกาศให้น่าสนใจและเป็นมืออาชีพในพริบตา"
+        }
         className="sm:max-w-md"
       >
         <div className="space-y-6 py-4">
@@ -95,28 +105,28 @@ export function AiWriterButton({
             </div>
             <div className="text-sm text-blue-800 leading-relaxed">
               <p className="font-bold mb-1 text-base text-blue-900">
-                คำแนะนำก่อนเริ่ม:
+                {isEn ? "Before You Start:" : "คำแนะนำก่อนเริ่ม:"}
               </p>
-              กรุณาลงข้อมูลทรัพย์สินให้ครบถ้วนก่อนในสเต็ปที่ 1 และ 2 (เช่น ราคา,
-              ขนาดพื้นที่, จุดเด่น) เพื่อให้ AI
-              สามารถนำข้อมูลไปแต่งคำบรรยายได้อย่างละเอียดและแม่นยำที่สุดครับ
+              {isEn
+                ? "Please fill in key property details in Steps 1 & 2 (e.g. price, size, highlights) so AI can craft an accurate and compelling description."
+                : "กรุณาลงข้อมูลทรัพย์สินให้ครบถ้วนก่อนในสเต็ปที่ 1 และ 2 (เช่น ราคา, ขนาดพื้นที่, จุดเด่น) เพื่อให้ AI สามารถนำข้อมูลไปแต่งคำบรรยายได้อย่างละเอียดและแม่นยำที่สุดครับ"}
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3 animate-in fade-in duration-700">
             <Button
-              className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-base shadow-lg shadow-slate-200 gap-2"
+              className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-base shadow-lg shadow-slate-200 gap-2 cursor-pointer"
               onClick={handleStart}
             >
               <Sparkles className="w-5 h-5" />
-              เริ่มการแต่งคำบรรยายทันที
+              {isEn ? "Generate Description Now" : "เริ่มการแต่งคำบรรยายทันที"}
             </Button>
             <Button
               variant="ghost"
-              className="w-full h-12 rounded-xl text-slate-500 font-medium"
+              className="w-full h-12 rounded-xl text-slate-500 font-medium cursor-pointer"
               onClick={() => setIsOpen(false)}
             >
-              ไว้ทำภายหลัง
+              {isEn ? "Later" : "ไว้ทำภายหลัง"}
             </Button>
           </div>
         </div>

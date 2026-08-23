@@ -15,6 +15,7 @@ import slugify from "slugify";
 import { useThaiAddress } from "@/hooks/useThaiAddress";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getProvinceName, getDistrictName, getSubdistrictName } from "@/lib/utils/provinces";
 
 // Property types mapping
 const PROPERTY_TYPES = [
@@ -555,17 +556,18 @@ export function QuickCreateProjectDialog({
             {/* District */}
             <div className="col-span-1 sm:col-span-2">
               <AddressCascadeField
-                label="เขต / อำเภอ"
+                label={isEn ? "District / City" : "เขต / อำเภอ"}
                 value={district}
                 options={filteredDistricts}
                 allOptions={districtOptions}
                 search={districtSearch}
                 onSearch={setDistrictSearch}
                 disabled={!activeProvinceId}
-                placeholder={!activeProvinceId ? "เลือกจังหวัดก่อน" : "เลือกเขต / อำเภอ"}
+                isEn={isEn}
+                placeholder={!activeProvinceId ? (isEn ? "Select province first" : "เลือกจังหวัดก่อน") : (isEn ? "Select District" : "เลือกเขต / อำเภอ")}
                 formatOptionName={(n) => n.replace(/^(เขต|อำเภอ)/, "")}
                 onSelect={(opt) => {
-                  setDistrict(cleanAddressWord(opt.name_th));
+                  setDistrict(cleanAddressWord(isEn && opt.name_en ? opt.name_en : opt.name_th));
                   setSubdistrict("");
                   setSubdistrictSearch("");
                 }}
@@ -575,16 +577,17 @@ export function QuickCreateProjectDialog({
             {/* Subdistrict */}
             <div className="col-span-1 sm:col-span-2">
               <AddressCascadeField
-                label="แขวง / ตำบล"
+                label={isEn ? "Subdistrict" : "แขวง / ตำบล"}
                 value={subdistrict}
                 options={filteredSubDistricts}
                 allOptions={subDistrictOptions}
                 search={subdistrictSearch}
                 onSearch={setSubdistrictSearch}
                 disabled={!activeDistrictId}
-                placeholder={!activeDistrictId ? "เลือกเขต / อำเภอก่อน" : "เลือกแขวง / ตำบล"}
+                isEn={isEn}
+                placeholder={!activeDistrictId ? (isEn ? "Select district first" : "เลือกเขต / อำเภอก่อน") : (isEn ? "Select Subdistrict" : "เลือกแขวง / ตำบล")}
                 formatOptionName={(n) => n.replace(/^(แขวง|ตำบล)/, "")}
-                onSelect={(opt) => setSubdistrict(cleanAddressWord(opt.name_th))}
+                onSelect={(opt) => setSubdistrict(cleanAddressWord(isEn && opt.name_en ? opt.name_en : opt.name_th))}
               />
             </div>
           </div>
@@ -640,6 +643,31 @@ function AddressCascadeField({
     return () => document.removeEventListener("mousedown", handler);
   }, [open, onSearch]);
 
+  const displayValue = React.useMemo(() => {
+    if (!value) return "";
+    if (!isEn) return formatOptionName(value);
+
+    // Look in allOptions first
+    const opt = allOptions.find(
+      (o) =>
+        o.name_th.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim() ===
+          value.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim() ||
+        (o.name_en && o.name_en.toLowerCase() === value.toLowerCase()),
+    );
+    if (opt && opt.name_en) return opt.name_en;
+
+    // Fallback translation dictionary
+    const cleaned = value.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
+    const trans = getSubdistrictName(cleaned, "en");
+    if (trans !== cleaned) return trans;
+    const distTrans = getDistrictName(cleaned, "en");
+    if (distTrans !== cleaned) return distTrans;
+    const provTrans = getProvinceName(cleaned, "en");
+    if (provTrans !== cleaned) return provTrans;
+
+    return value;
+  }, [value, isEn, allOptions, formatOptionName]);
+
   return (
     <div className="space-y-1 text-left" ref={ref}>
       <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -663,7 +691,7 @@ function AddressCascadeField({
                   : "border-slate-200 bg-white text-slate-400 hover:border-slate-300"
           )}
         >
-          <span className="truncate">{value || defaultPlaceholder}</span>
+          <span className="truncate">{displayValue || defaultPlaceholder}</span>
           <ChevronDown className={cn("w-3.5 h-3.5 shrink-0 text-slate-400 transition-transform", open && "rotate-180")} />
         </button>
 

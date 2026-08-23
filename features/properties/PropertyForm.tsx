@@ -164,6 +164,7 @@ import { usePropertyFormDraft } from "./hooks/usePropertyFormDraft";
 import { usePropertyFormData } from "./hooks/usePropertyFormData";
 import { Card } from "@/components/ui/card";
 import { FaFacebook, FaLine } from "react-icons/fa6";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type Props = {
   mode: "create" | "edit";
@@ -184,6 +185,8 @@ export function PropertyForm({
   isMultiTenant = false,
   userRole,
 }: Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -882,7 +885,7 @@ export function PropertyForm({
                 <div className="p-1 rounded-md bg-slate-100 group-data-[state=active]:bg-blue-50 transition-colors">
                   <List className="w-3.5 h-3.5" />
                 </div>
-                ข้อมูลทรัพย์สิน
+                {isEn ? "Property Information" : "ข้อมูลทรัพย์สิน"}
               </TabsTrigger>
               <TabsTrigger
                 value="history"
@@ -891,7 +894,7 @@ export function PropertyForm({
                 <div className="p-1 rounded-md bg-slate-100 group-data-[state=active]:bg-blue-50 transition-colors">
                   <History className="w-3.5 h-3.5" />
                 </div>
-                ประวัติการแก้ไข
+                {isEn ? "Edit History" : "ประวัติการแก้ไข"}
               </TabsTrigger>
             </TabsList>
           </div>
@@ -969,10 +972,12 @@ export function PropertyForm({
                 <div className="bg-slate-50/50 border-b border-slate-100 p-4">
                   <h3 className="text-sm font-bold flex items-center gap-2 text-slate-700">
                     <Clock className="w-4 h-4 text-blue-500" />{" "}
-                    บันทึกประวัติการเปลี่ยนแปลงทั้งหมด
+                    {isEn ? "Audit & Change Log" : "บันทึกประวัติการเปลี่ยนแปลงทั้งหมด"}
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    ระบบบันทึกเฉพาะการเปลี่ยนแปลงสำคัญเพื่อความโปร่งใสในการจัดการทรัพย์สิน
+                    {isEn
+                      ? "Important changes are logged automatically for transparency and compliance."
+                      : "ระบบบันทึกเฉพาะการเปลี่ยนแปลงสำคัญเพื่อความโปร่งใสในการจัดการทรัพย์สิน"}
                   </p>
                 </div>
                 <div className=" bg-white min-h-[400px]">
@@ -1086,10 +1091,10 @@ export function PropertyForm({
             <div className="p-2 bg-emerald-100 rounded-full shrink-0">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            บันทึกข้อมูลสำเร็จ
+            {isEn ? "Listing Saved Successfully" : "บันทึกข้อมูลสำเร็จ"}
           </div>
         }
-        description="คุณต้องการทำรายการใดต่อ?"
+        description={isEn ? "What would you like to do next?" : "คุณต้องการทำรายการใดต่อ?"}
         className="sm:max-w-md!"
       >
         <div className="flex flex-col gap-3 py-2">
@@ -1104,7 +1109,7 @@ export function PropertyForm({
                 router.push("/protected/properties?success=true#table");
                 router.refresh();
               } else {
-                toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
+                toast.error(isEn ? "Property slug not found" : "ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
               }
             }}
           >
@@ -1116,11 +1121,11 @@ export function PropertyForm({
               )}
             </div>
             <div className="flex flex-col items-start leading-tight group-hover:text-emerald-600!">
-              <span>ดูหน้าเว็บไซต์</span>
+              <span>{isEn ? "View Public Page" : "ดูหน้าเว็บไซต์"}</span>
               <span className="text-[11px] font-normal text-slate-500">
                 {successData?.status !== "ACTIVE"
-                  ? "ปุ่มนี้เปิดได้เฉพาะทรัพย์ที่มีสถานะใช้งาน (Active) เท่านั้น"
-                  : "เปิดแท็บใหม่เพื่อดูตัวอย่าง และกลับหน้ารายการ"}
+                  ? (isEn ? "Only available for Active listings" : "ปุ่มนี้เปิดได้เฉพาะทรัพย์ที่มีสถานะใช้งาน (Active) เท่านั้น")
+                  : (isEn ? "Open in a new tab and return to list" : "เปิดแท็บใหม่เพื่อดูตัวอย่าง และกลับหน้ารายการ")}
               </span>
             </div>
           </Button>
@@ -1142,16 +1147,16 @@ export function PropertyForm({
               )}
             </div>
             <div className="flex flex-col items-start leading-tight">
-              <span>กลับหน้ารายการ</span>
+              <span>{isEn ? "Back to Properties List" : "กลับหน้ารายการ"}</span>
               <span className="text-[11px] font-normal text-slate-400">
-                จัดการทรัพย์อื่นต่อใน CRM
+                {isEn ? "Manage other listings in CRM" : "จัดการทรัพย์อื่นต่อใน CRM"}
               </span>
             </div>
           </Button>
 
           <div className="pt-4 border-t border-slate-100 mt-2">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3">
-              แชร์ไปยังโซเชียลมีเดีย
+              {isEn ? "Share to Social Media" : "แชร์ไปยังโซเชียลมีเดีย"}
             </span>
             <div className="grid grid-cols-2 gap-2">
               {/* Facebook */}
@@ -1178,7 +1183,7 @@ export function PropertyForm({
                   <FaFacebook className="w-6 h-6" />
                 )}
                 <span className="leading-tight">
-                  {shareStatus["FACEBOOK"]?.success ? "แชร์แล้ว" : "Facebook"}
+                  {shareStatus["FACEBOOK"]?.success ? (isEn ? "Shared" : "แชร์แล้ว") : "Facebook"}
                 </span>
                 {shareStatus["FACEBOOK"]?.success &&
                   shareStatus["FACEBOOK"]?.url && (
@@ -1218,7 +1223,7 @@ export function PropertyForm({
                   <FaTiktok className="w-6 h-6" />
                 )}
                 <span className="leading-tight">
-                  {shareStatus["TIKTOK"]?.success ? "แชร์แล้ว" : "TikTok"}
+                  {shareStatus["TIKTOK"]?.success ? (isEn ? "Shared" : "แชร์แล้ว") : "TikTok"}
                 </span>
                 {shareStatus["TIKTOK"]?.success &&
                   shareStatus["TIKTOK"]?.url && (
@@ -1258,7 +1263,7 @@ export function PropertyForm({
                   <Instagram className="w-6 h-6" />
                 )}
                 <span className="leading-tight">
-                  {shareStatus["INSTAGRAM"]?.success ? "แชร์แล้ว" : "Instagram"}
+                  {shareStatus["INSTAGRAM"]?.success ? (isEn ? "Shared" : "แชร์แล้ว") : "Instagram"}
                 </span>
               </Button>
 
@@ -1286,7 +1291,7 @@ export function PropertyForm({
                   <FaLine className="w-6 h-6 text-[#06C755]" />
                 )}
                 <span className="leading-tight">
-                  {shareStatus["LINE"]?.success ? "ส่งแล้ว" : "Line"}
+                  {shareStatus["LINE"]?.success ? (isEn ? "Sent" : "ส่งแล้ว") : "Line"}
                 </span>
               </Button>
             </div>

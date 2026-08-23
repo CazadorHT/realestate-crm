@@ -54,6 +54,8 @@ const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
   ),
 });
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface ToolbarProps {
   editor: Editor;
   disabled?: boolean;
@@ -69,6 +71,9 @@ export function Toolbar({
   onAiGenerate,
   setLineHeight,
 }: ToolbarProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const insertTemplate = (content: string) => {
     editor.commands.insertContent(content);
   };
@@ -121,7 +126,7 @@ export function Toolbar({
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 gap-1 text-xs font-semibold text-slate-600 bg-white px-2 border-slate-200 shadow-sm"
+              className="h-7 gap-1 text-xs font-semibold text-slate-600 bg-white px-2 border-slate-200 shadow-sm cursor-pointer"
             >
               <span>
                 {editor.isActive("heading", { level: 1 }) ? "H1" :
@@ -134,19 +139,19 @@ export function Toolbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={() => editor.chain().focus().setParagraph().run()}>
-              ปกติ (Paragraph)
+              {isEn ? "Paragraph (Normal)" : "ปกติ (Paragraph)"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className="font-extrabold text-lg">
-              <Heading1 className="h-4 w-4 mr-2" /> หัวข้อใหญ่ (H1)
+              <Heading1 className="h-4 w-4 mr-2" /> {isEn ? "Heading 1 (H1)" : "หัวข้อใหญ่ (H1)"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className="font-bold text-base">
-              <Heading2 className="h-4 w-4 mr-2" /> หัวข้อย่อยหลัก (H2)
+              <Heading2 className="h-4 w-4 mr-2" /> {isEn ? "Heading 2 (H2)" : "หัวข้อย่อยหลัก (H2)"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className="font-semibold text-sm">
-              <Heading3 className="h-4 w-4 mr-2" /> หัวข้อย่อยรอง (H3)
+              <Heading3 className="h-4 w-4 mr-2" /> {isEn ? "Heading 3 (H3)" : "หัวข้อย่อยรอง (H3)"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()} className="font-normal text-xs">
-              <Heading4 className="h-4 w-4 mr-2" /> หัวข้อย่อยเล็ก (H4)
+              <Heading4 className="h-4 w-4 mr-2" /> {isEn ? "Heading 4 (H4)" : "หัวข้อย่อยเล็ก (H4)"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -157,11 +162,11 @@ export function Toolbar({
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 gap-1.5 text-xs font-semibold bg-white px-2 border-slate-200 shadow-sm "
+              className="h-7 gap-1.5 text-xs font-semibold bg-white px-2 border-slate-200 shadow-sm cursor-pointer"
               title="Text Color"
             >
               <Palette className="h-3.5 w-3.5" />
-              <span>สีข้อความ</span>
+              <span>{isEn ? "Text Color" : "สีข้อความ"}</span>
               <ChevronDown className="h-3 w-3 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
@@ -191,9 +196,9 @@ export function Toolbar({
             <button
               type="button"
               onClick={() => (editor.chain().focus() as any).unsetColor().run()}
-              className="col-span-5 text-[10px] font-bold text-slate-400 hover:text-red-500 py-1 text-center border border-slate-100 rounded-md mt-1"
+              className="col-span-5 text-[10px] font-bold text-slate-400 hover:text-red-500 py-1 text-center border border-slate-100 rounded-md mt-1 cursor-pointer"
             >
-              ล้างสี (Reset)
+              {isEn ? "Reset Color" : "ล้างสี (Reset)"}
             </button>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -323,14 +328,14 @@ export function Toolbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            {TEMPLATES.map((template) => (
+            {TEMPLATES.map((template: any) => (
               <DropdownMenuItem
                 key={template.label}
-                onClick={() => insertTemplate(template.content)}
+                onClick={() => insertTemplate(isEn && template.content_en ? template.content_en : template.content)}
                 className="gap-2 cursor-pointer"
               >
                 <LayoutTemplate className="h-3.5 w-3.5 opacity-70" />
-                {template.label}
+                {isEn && template.label_en ? template.label_en : template.label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

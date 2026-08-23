@@ -16,6 +16,8 @@ import {
 import { useFormContext, type UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "../../../schema";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface MediaSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   uploadSessionId: string;
@@ -31,6 +33,8 @@ export const MediaSection = ({
   uploadSessionId,
   initialImages,
 }: MediaSectionProps) => {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
 
@@ -52,11 +56,12 @@ export const MediaSection = ({
           </div>
           <div className="flex flex-col">
             <h3 className="text-base sm:text-lg font-medium text-slate-900 tracking-tight">
-              คลังรูปภาพ (Media Gallery)
+              {isEn ? "Media Gallery" : "คลังรูปภาพ (Media Gallery)"}
             </h3>
             <p className="text-[10px] sm:text-xs text-slate-500 ">
-              จัดการรูปภาพทรัพย์สิน อัปโหลดได้สูงสุด{" "}
-              {IMAGE_UPLOAD_POLICY.maxFiles} รูป
+              {isEn
+                ? `Manage property images, upload up to ${IMAGE_UPLOAD_POLICY.maxFiles} photos`
+                : `จัดการรูปภาพทรัพย์สิน อัปโหลดได้สูงสุด ${IMAGE_UPLOAD_POLICY.maxFiles} รูป`}
             </p>
           </div>
         </div>
@@ -89,7 +94,7 @@ export const MediaSection = ({
             <Layout className="w-4 h-4" />
           </div>
           <h4 className="text-sm font-semibold text-slate-800">
-            ผังอาคาร / ห้อง (Floor Plan)
+            {isEn ? "Floor Plan" : "ผังอาคาร / ห้อง (Floor Plan)"}
           </h4>
         </div>
 

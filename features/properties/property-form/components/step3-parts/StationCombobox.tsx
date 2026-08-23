@@ -24,6 +24,7 @@ import { upsertMasterDataAction } from "@/features/properties/actions/fetch-mast
 import type { MasterDataTransitStation } from "@/features/properties/actions/fetch-master-data";
 import { formatStationLabel } from "@/lib/property-utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface StationComboboxProps {
   value: string;
@@ -67,9 +68,13 @@ export function StationCombobox({
   onChange,
   stations,
   transitType,
-  placeholder = "เลือกหรือค้นหาสถานี...",
+  placeholder,
   onRefreshStations,
 }: StationComboboxProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const defaultPlaceholder = placeholder || (isEn ? "Select or search station..." : "เลือกหรือค้นหาสถานี...");
+
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isMobileOrTablet, React_useState] = React.useState(false);
@@ -86,7 +91,7 @@ export function StationCombobox({
   const handleSaveStation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStationNameTh.trim()) {
-      toast.error("กรุณากรอกชื่อสถานีภาษาไทย");
+      toast.error(isEn ? "Please enter Thai station name" : "กรุณากรอกชื่อสถานีภาษาไทย");
       return;
     }
     setIsSavingStation(true);
@@ -116,7 +121,7 @@ export function StationCombobox({
       });
 
       if (res.success) {
-        toast.success("เพิ่มสถานีใหม่สำเร็จ!");
+        toast.success(isEn ? "Added new station successfully!" : "เพิ่มสถานีใหม่สำเร็จ!");
         
         // Notify parent to refresh list
         if (onRefreshStations) {
@@ -143,10 +148,10 @@ export function StationCombobox({
         setNewStationNameCn("");
         setNewStationNameRu("");
       } else {
-        toast.error(res.message || "เกิดข้อผิดพลาดในการบันทึก");
+        toast.error(res.message || (isEn ? "Error saving station" : "เกิดข้อผิดพลาดในการบันทึก"));
       }
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      toast.error(isEn ? "Connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อ");
     } finally {
       setIsSavingStation(false);
     }
@@ -218,7 +223,7 @@ export function StationCombobox({
       <ResponsiveDialog
         open={open}
         onOpenChange={setOpen}
-        title="เลือกหรือค้นหาสถานี"
+        title={isEn ? "Select or Search Station" : "เลือกหรือค้นหาสถานี"}
         trigger={
           <Button
             variant="outline"
@@ -230,8 +235,8 @@ export function StationCombobox({
               <TrainFront className="h-3.5 w-3.5 text-blue-500 shrink-0" />
               <span className="truncate text-slate-500!">
                 {selectedStation
-                  ? `${selectedStation.metadata?.transit_type ? `[${getNormalizedType(selectedStation.metadata.transit_type)}] ` : ""}${selectedStation.label.th}`
-                  : value || placeholder}
+                  ? `${selectedStation.metadata?.transit_type ? `[${getNormalizedType(selectedStation.metadata.transit_type)}] ` : ""}${isEn ? (selectedStation.label.en || selectedStation.label.th) : selectedStation.label.th}`
+                  : value || defaultPlaceholder}
               </span>
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -244,7 +249,7 @@ export function StationCombobox({
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ค้นหาชื่อสถานี (ไทย/อังกฤษ)..."
+              placeholder={isEn ? "Search station name (Thai/English)..." : "ค้นหาชื่อสถานี (ไทย/อังกฤษ)..."}
               className="h-10 w-full border-0 bg-transparent pr-2 placeholder:text-sm text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
@@ -284,12 +289,12 @@ export function StationCombobox({
                 }}
                 className="flex w-full items-center justify-between p-3.5 rounded-xl border border-dashed border-blue-200 text-left bg-blue-50/50 text-blue-700 font-bold hover:bg-blue-50 transition-all active:scale-[0.98]"
               >
-                <span>✨ ใช้ชื่อสถานีนี้: "{searchQuery.trim()}"</span>
+                <span>✨ {isEn ? `Use station name: "${searchQuery.trim()}"` : `ใช้ชื่อสถานีนี้: "${searchQuery.trim()}"`}</span>
               </button>
             )}
             {filteredStations.length === 0 && !searchQuery.trim() ? (
               <div className="py-12 text-center text-sm text-slate-400 font-medium bg-white rounded-xl border border-slate-100">
-                ไม่พบสถานีที่คุณค้นหา
+                {isEn ? "No stations found" : "ไม่พบสถานีที่คุณค้นหา"}
               </div>
             ) : filteredStations.length === 0 && searchQuery.trim() ? null : (
               filteredStations.map((station) => {
@@ -322,9 +327,9 @@ export function StationCombobox({
                         {getNormalizedType(type)}
                       </span>
                       <div className="flex-1 truncate">
-                        <span className="block text-sm font-bold truncate">{station.label.th}</span>
+                        <span className="block text-sm font-bold truncate">{isEn ? (station.label.en || station.label.th) : station.label.th}</span>
                         <span className="block text-xs text-slate-400 truncate">
-                          {station.label.en}
+                          {isEn ? station.label.th : station.label.en}
                         </span>
                       </div>
                       {isSelected && (
@@ -347,7 +352,7 @@ export function StationCombobox({
                 className="flex w-full items-center justify-center p-3.5 rounded-xl border border-dashed border-blue-200 text-blue-700 font-bold hover:bg-blue-50 transition-all active:scale-[0.98]"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                <span>เพิ่มสถานีใหม่ (Add Station)</span>
+                <span>{isEn ? "Add New Station" : "เพิ่มสถานีใหม่ (Add Station)"}</span>
               </button>
             </div>
           </div>
@@ -369,8 +374,8 @@ export function StationCombobox({
             <TrainFront className="h-3.5 w-3.5 text-blue-500 shrink-0" />
             <span className="truncate text-slate-500!">
               {selectedStation
-                ? `${selectedStation.metadata?.transit_type ? `[${getNormalizedType(selectedStation.metadata.transit_type)}] ` : ""}${selectedStation.label.th}`
-                : value || placeholder}
+                ? `${selectedStation.metadata?.transit_type ? `[${getNormalizedType(selectedStation.metadata.transit_type)}] ` : ""}${isEn ? (selectedStation.label.en || selectedStation.label.th) : selectedStation.label.th}`
+                : value || defaultPlaceholder}
             </span>
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -382,7 +387,7 @@ export function StationCombobox({
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="ค้นหาชื่อสถานี (ไทย/อังกฤษ)..."
+            placeholder={isEn ? "Search station name (Thai/English)..." : "ค้นหาชื่อสถานี (ไทย/อังกฤษ)..."}
             className="h-8 w-full border-0 bg-transparent pr-2 placeholder:text-xs text-xs focus-visible:ring-0 focus-visible:ring-offset-0"
           />
         </div>
@@ -422,12 +427,12 @@ export function StationCombobox({
               }}
               className="flex w-full items-center rounded-lg py-2 px-2.5 text-xs text-blue-600 font-semibold hover:bg-blue-50 border border-dashed border-blue-200/50 mb-1"
             >
-              <span>✨ ใช้ชื่อสถานีนี้: "{searchQuery.trim()}"</span>
+              <span>✨ {isEn ? `Use station name: "${searchQuery.trim()}"` : `ใช้ชื่อสถานีนี้: "${searchQuery.trim()}"`}</span>
             </button>
           )}
           {filteredStations.length === 0 && !searchQuery.trim() ? (
             <div className="py-6 text-center text-xs text-slate-400">
-              ไม่พบสถานีที่คุณค้นหา
+              {isEn ? "No stations found" : "ไม่พบสถานีที่คุณค้นหา"}
             </div>
           ) : filteredStations.length === 0 && searchQuery.trim() ? null : (
             filteredStations.map((station) => {
@@ -460,9 +465,9 @@ export function StationCombobox({
                       {getNormalizedType(type)}
                     </span>
                     <div className="flex-1 truncate">
-                      <span className="block truncate">{station.label.th}</span>
+                      <span className="block truncate">{isEn ? (station.label.en || station.label.th) : station.label.th}</span>
                       <span className="block text-[10px] text-slate-400 truncate">
-                        {station.label.en}
+                        {isEn ? station.label.th : station.label.en}
                       </span>
                     </div>
                     {isSelected && (
@@ -485,7 +490,7 @@ export function StationCombobox({
             className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-1.5 h-auto cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-            เพิ่มสถานีใหม่ (Add Station)
+            {isEn ? "Add New Station" : "เพิ่มสถานีใหม่ (Add Station)"}
           </Button>
         </div>
       </PopoverContent>
@@ -495,16 +500,16 @@ export function StationCombobox({
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <Plus className="h-5 w-5 text-blue-600" />
-              เพิ่มสถานีรถไฟฟ้าใหม่
+              <span>{isEn ? "Add New Transit Station" : "เพิ่มสถานีรถไฟฟ้าใหม่"}</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              สถานีรถไฟฟ้าใหม่จะถูกบันทึกเข้าระบบ และพร้อมให้เลือกใช้งานทันที
+              {isEn ? "New station will be saved and immediately selectable in forms" : "สถานีรถไฟฟ้าใหม่จะถูกบันทึกเข้าระบบ และพร้อมให้เลือกใช้งานทันที"}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSaveStation} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">ประเภทรถไฟฟ้า</Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Transit Type" : "ประเภทรถไฟฟ้า"}</Label>
               <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl">
                 <span className={cn(
                   "text-[8px] font-extrabold px-1.5 py-1 rounded-md leading-none text-white shrink-0",
@@ -519,41 +524,41 @@ export function StationCombobox({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษาไทย) <span className="text-red-500">*</span></Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Station Name (Thai)" : "ชื่อสถานี (ภาษาไทย)"} <span className="text-red-500">*</span></Label>
               <Input
                 value={newStationNameTh}
                 onChange={(e) => setNewStationNameTh(e.target.value)}
-                placeholder="เช่น สยาม / ห้าแยกลาดพร้าว"
+                placeholder={isEn ? "e.g. Siam / Ha Yaek Lat Phrao" : "เช่น สยาม / ห้าแยกลาดพร้าว"}
                 className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษาอังกฤษ - EN)</Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Station Name (English - EN)" : "ชื่อสถานี (ภาษาอังกฤษ - EN)"}</Label>
               <Input
                 value={newStationNameEn}
                 onChange={(e) => setNewStationNameEn(e.target.value)}
-                placeholder="เช่น Siam / Ha Yaek Lat Phrao"
+                placeholder="e.g. Siam / Ha Yaek Lat Phrao"
                 className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษาจีน - CN)</Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Station Name (Chinese - CN)" : "ชื่อสถานี (ภาษาจีน - CN)"}</Label>
               <Input
                 value={newStationNameCn}
                 onChange={(e) => setNewStationNameCn(e.target.value)}
-                placeholder="เช่น 暹罗 / 叻抛"
+                placeholder={isEn ? "e.g. 暹罗 / 叻抛" : "เช่น 暹罗 / 叻抛"}
                 className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษารัสเซีย - RU)</Label>
+              <Label className="text-xs font-bold text-slate-700">{isEn ? "Station Name (Russian - RU)" : "ชื่อสถานี (ภาษารัสเซีย - RU)"}</Label>
               <Input
                 value={newStationNameRu}
                 onChange={(e) => setNewStationNameRu(e.target.value)}
-                placeholder="เช่น Сиам / Лат Пхрао"
+                placeholder={isEn ? "e.g. Сиам / Лат Пхрао" : "เช่น Сиам / Лат Пхрао"}
                 className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
               />
             </div>
@@ -565,7 +570,7 @@ export function StationCombobox({
                 onClick={() => setIsAddStationOpen(false)}
                 className="h-10 rounded-xl font-bold text-slate-600"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
               <Button
                 type="submit"
@@ -573,7 +578,7 @@ export function StationCombobox({
                 className="h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6"
               >
                 {isSavingStation ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                บันทึกสถานี
+                <span>{isEn ? "Save Station" : "บันทึกสถานี"}</span>
               </Button>
             </DialogFooter>
           </form>

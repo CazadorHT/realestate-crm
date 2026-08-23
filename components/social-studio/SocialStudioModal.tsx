@@ -932,10 +932,10 @@ export function SocialStudioModal({
               {/* Tab Navigation Header */}
               <div className="grid grid-cols-4 gap-1 p-1 bg-slate-950/80 rounded-2xl border border-slate-800/80 sticky top-0 z-20 backdrop-blur-md shadow-md">
                 {[
-                  { id: "layout", label: "🎨 รูปแบบ", sub: "Layout & Theme" },
-                  { id: "style", label: "🎛️ สไตล์", sub: "Card & Scrim" },
-                  { id: "content", label: "📝 ข้อความ", sub: "Text & AI" },
-                  { id: "album", label: "📑 ชุดภาพ", sub: "Carousel & Zip" },
+                  { id: "layout", label: isEn ? "🎨 Layout" : "🎨 รูปแบบ", sub: "Layout & Theme" },
+                  { id: "style", label: isEn ? "🎛️ Style" : "🎛️ สไตล์", sub: "Card & Scrim" },
+                  { id: "content", label: isEn ? "📝 Content" : "📝 ข้อความ", sub: "Text & AI" },
+                  { id: "album", label: isEn ? "📑 Album" : "📑 ชุดภาพ", sub: "Carousel & Zip" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
