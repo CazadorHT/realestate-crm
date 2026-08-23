@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface Step1BasicInfoProps {
   nameTh: string;
@@ -56,6 +57,9 @@ export function Step1BasicInfo({
   onAiAutoFill,
   setIsFormDirty,
 }: Step1BasicInfoProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100/70 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -64,8 +68,14 @@ export function Step1BasicInfo({
             <Sparkles className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <span className="text-sm font-bold text-indigo-950 block">AI ค้นหาและกรอกข้อมูลโครงการด่วน</span>
-            <span className="text-[11px] text-indigo-700/80 block">ระบุชื่อโครงการภาษาอังกฤษหรือไทย แล้วกดปุ่มเพื่อให้ AI กรอกข้อมูล 5 ขั้นตอนให้อัตโนมัติ</span>
+            <span className="text-sm font-bold text-indigo-950 block">
+              {isEn ? "AI Instant Project Auto-Fill" : "AI ค้นหาและกรอกข้อมูลโครงการด่วน"}
+            </span>
+            <span className="text-[11px] text-indigo-700/80 block">
+              {isEn
+                ? "Enter project name in English or Thai, then click to auto-generate all 5 wizard steps."
+                : "ระบุชื่อโครงการภาษาอังกฤษหรือไทย แล้วกดปุ่มเพื่อให้ AI กรอกข้อมูล 5 ขั้นตอนให้อัตโนมัติ"}
+            </span>
           </div>
         </div>
         <Button
@@ -77,38 +87,44 @@ export function Step1BasicInfo({
           {isAiGenerating ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              กำลังค้นหา...
+              {isEn ? "Searching..." : "กำลังค้นหา..."}
             </>
           ) : (
             <>
               <Sparkles className="w-3.5 h-3.5" />
-              ให้ AI ค้นและกรอกข้อมูล
+              {isEn ? "AI Auto-Fill Project" : "ให้ AI ค้นและกรอกข้อมูล"}
             </>
           )}
         </Button>
       </div>
 
       <div className="space-y-4">
-        <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-1">ข้อมูลทั่วไปโครงการ</h4>
+        <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-1">
+          {isEn ? "General Project Information" : "ข้อมูลทั่วไปโครงการ"}
+        </h4>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="nameTh" className="text-sm font-bold text-slate-700">ชื่อโครงการ (ภาษาไทย) *</Label>
+            <Label htmlFor="nameTh" className="text-sm font-bold text-slate-700">
+              {isEn ? "Project Name (Thai) *" : "ชื่อโครงการ (ภาษาไทย) *"}
+            </Label>
             <Input
               id="nameTh"
               value={nameTh}
               onChange={(e) => { setNameTh(e.target.value); setIsFormDirty(true); }}
-              placeholder="เช่น เดอะ ไลน์ สุขุมวิท 71"
+              placeholder={isEn ? "e.g. เดอะ ไลน์ สุขุมวิท 71" : "เช่น เดอะ ไลน์ สุขุมวิท 71"}
               className="h-10.5 rounded-xl border-slate-200"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="nameEn" className="text-sm font-bold text-slate-700">ชื่อโครงการ (ภาษาอังกฤษ) *</Label>
+            <Label htmlFor="nameEn" className="text-sm font-bold text-slate-700">
+              {isEn ? "Project Name (English) *" : "ชื่อโครงการ (ภาษาอังกฤษ) *"}
+            </Label>
             <Input
               id="nameEn"
               value={nameEn}
               onChange={(e) => { setNameEn(e.target.value); setIsFormDirty(true); }}
-              placeholder="เช่น The Line Sukhumvit 71"
+              placeholder={isEn ? "e.g. The Line Sukhumvit 71" : "เช่น The Line Sukhumvit 71"}
               className="h-10.5 rounded-xl border-slate-200"
             />
           </div>
@@ -116,22 +132,26 @@ export function Step1BasicInfo({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="slug" className="text-sm font-bold text-slate-700">URL Slug *</Label>
+            <Label htmlFor="slug" className="text-sm font-bold text-slate-700">
+              {isEn ? "URL Slug *" : "URL Slug *"}
+            </Label>
             <Input
               id="slug"
               value={slug}
               onChange={(e) => { setSlug(e.target.value); setIsFormDirty(true); }}
-              placeholder="เช่น the-line-sukhumvit-71"
+              placeholder={isEn ? "e.g. the-line-sukhumvit-71" : "เช่น the-line-sukhumvit-71"}
               className="h-10.5 rounded-xl border-slate-200"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="developer" className="text-sm font-bold text-slate-700">ผู้พัฒนาโครงการ (Developer)</Label>
+            <Label htmlFor="developer" className="text-sm font-bold text-slate-700">
+              {isEn ? "Developer" : "ผู้พัฒนาโครงการ (Developer)"}
+            </Label>
             <Input
               id="developer"
               value={developer}
               onChange={(e) => { setDeveloper(e.target.value); setIsFormDirty(true); }}
-              placeholder="เช่น แสนสิริ (Sansiri)"
+              placeholder={isEn ? "e.g. Sansiri" : "เช่น แสนสิริ (Sansiri)"}
               className="h-10.5 rounded-xl border-slate-200"
             />
           </div>
@@ -139,43 +159,49 @@ export function Step1BasicInfo({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label className="text-sm font-bold text-slate-700">ประเภทโครงการ</Label>
+            <Label className="text-sm font-bold text-slate-700">
+              {isEn ? "Property Type" : "ประเภทโครงการ"}
+            </Label>
             <Select value={propertyType} onValueChange={(val) => { setPropertyType(val); setIsFormDirty(true); }}>
               <SelectTrigger className="h-10.5 rounded-xl border-slate-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">คอนโดมิเนียม (Condo)</SelectItem>
-                <SelectItem value="2">บ้านเดี่ยว (House)</SelectItem>
-                <SelectItem value="3">ทาวน์โฮม (Townhome)</SelectItem>
-                <SelectItem value="8">วิลล่า (Villa)</SelectItem>
-                <SelectItem value="9">พูลวิลล่า (Pool Villa)</SelectItem>
-                <SelectItem value="7">อาคารสำนักงาน (Office Building)</SelectItem>
-                <SelectItem value="4">ที่ดิน (Land)</SelectItem>
-                <SelectItem value="6">โกดัง / โรงงาน (Warehouse)</SelectItem>
-                <SelectItem value="5">อาคารพาณิชย์ (Commercial)</SelectItem>
-                <SelectItem value="10">อื่นๆ (Other)</SelectItem>
+                <SelectItem value="1">{isEn ? "Condominium (Condo)" : "คอนโดมิเนียม (Condo)"}</SelectItem>
+                <SelectItem value="2">{isEn ? "Detached House (House)" : "บ้านเดี่ยว (House)"}</SelectItem>
+                <SelectItem value="3">{isEn ? "Townhome" : "ทาวน์โฮม (Townhome)"}</SelectItem>
+                <SelectItem value="8">{isEn ? "Villa" : "วิลล่า (Villa)"}</SelectItem>
+                <SelectItem value="9">{isEn ? "Pool Villa" : "พูลวิลล่า (Pool Villa)"}</SelectItem>
+                <SelectItem value="7">{isEn ? "Office Building" : "อาคารสำนักงาน (Office Building)"}</SelectItem>
+                <SelectItem value="4">{isEn ? "Land" : "ที่ดิน (Land)"}</SelectItem>
+                <SelectItem value="6">{isEn ? "Warehouse / Factory" : "โกดัง / โรงงาน (Warehouse)"}</SelectItem>
+                <SelectItem value="5">{isEn ? "Commercial Building" : "อาคารพาณิชย์ (Commercial)"}</SelectItem>
+                <SelectItem value="10">{isEn ? "Other" : "อื่นๆ (Other)"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="yearCompleted" className="text-sm font-bold text-slate-700">ปีที่สร้างเสร็จ (พ.ศ. / ค.ศ.)</Label>
+            <Label htmlFor="yearCompleted" className="text-sm font-bold text-slate-700">
+              {isEn ? "Completion Year" : "ปีที่สร้างเสร็จ (พ.ศ. / ค.ศ.)"}
+            </Label>
             <Input
               id="yearCompleted"
               value={yearCompleted}
               onChange={(e) => { setYearCompleted(e.target.value); setIsFormDirty(true); }}
-              placeholder="เช่น 2018"
+              placeholder={isEn ? "e.g. 2018" : "เช่น 2018"}
               type="number"
               className="h-10.5 rounded-xl border-slate-200"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="totalUnits" className="text-sm font-bold text-slate-700">จำนวนยูนิตทั้งหมด</Label>
+            <Label htmlFor="totalUnits" className="text-sm font-bold text-slate-700">
+              {isEn ? "Total Units" : "จำนวนยูนิตทั้งหมด"}
+            </Label>
             <Input
               id="totalUnits"
               value={totalUnits}
               onChange={(e) => { setTotalUnits(e.target.value); setIsFormDirty(true); }}
-              placeholder="เช่น 291"
+              placeholder={isEn ? "e.g. 291" : "เช่น 291"}
               type="number"
               className="h-10.5 rounded-xl border-slate-200"
             />
@@ -183,7 +209,9 @@ export function Step1BasicInfo({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="imageUrl" className="text-sm font-bold text-slate-700">รูปภาพหน้าปกโครงการ (Image URL)</Label>
+          <Label htmlFor="imageUrl" className="text-sm font-bold text-slate-700">
+            {isEn ? "Project Cover Image (Image URL)" : "รูปภาพหน้าปกโครงการ (Image URL)"}
+          </Label>
           <Input
             id="imageUrl"
             value={imageUrl}
@@ -196,3 +224,4 @@ export function Step1BasicInfo({
     </div>
   );
 }
+

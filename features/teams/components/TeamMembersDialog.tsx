@@ -22,6 +22,7 @@ import {
 } from "@/features/teams/actions/teamActions";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TeamMembersDialogProps {
   isOpen: boolean;
@@ -35,6 +36,9 @@ export function TeamMembersDialog({
   teamId,
   teamName,
 }: TeamMembersDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [members, setMembers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRemoving, setIsRemoving] = useState<string | null>(null);
@@ -47,15 +51,14 @@ export function TeamMembersDialog({
       if (result.success) {
         setMembers(result.data || []);
       } else {
-        toast.error(result.message || "ไม่สามารถโหลดข้อมูลสมาชิกทีมได้");
+        toast.error(result.message || (isEn ? "Failed to load team members" : "ไม่สามารถโหลดข้อมูลสมาชิกทีมได้"));
       }
-    } catch (error) {
-      console.error("Error fetching team members:", error);
-      toast.error("เกิดข้อผิดพลาดในการดึงข้อมูล");
+    } catch {
+      toast.error(isEn ? "An error occurred while fetching data" : "เกิดข้อผิดพลาดในการดึงข้อมูล");
     } finally {
       setIsLoading(false);
     }
-  }, [teamId]);
+  }, [teamId, isEn]);
 
   useEffect(() => {
     if (isOpen && teamId) {
@@ -70,13 +73,13 @@ export function TeamMembersDialog({
     try {
       const result = await updateUserTeamAction(memberToRemove.id, null);
       if (result.success) {
-        toast.success(`ถอด ${memberToRemove.full_name} ออกจากทีมแล้ว`);
+        toast.success(isEn ? `Removed ${memberToRemove.full_name} from team` : `ถอด ${memberToRemove.full_name} ออกจากทีมแล้ว`);
         setMembers(members.filter((m) => m.id !== memberToRemove.id));
       } else {
-        toast.error(result.message || "ไม่สามารถถอดสมาชิกได้");
+        toast.error(result.message || (isEn ? "Failed to remove member" : "ไม่สามารถถอดสมาชิกได้"));
       }
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาด");
+    } catch {
+      toast.error(isEn ? "An error occurred" : "เกิดข้อผิดพลาด");
     } finally {
       setIsRemoving(null);
       setMemberToRemove(null);
@@ -93,11 +96,11 @@ export function TeamMembersDialog({
             <Users className="h-5 w-5 text-indigo-600" />
           </div>
           <div className="text-xl font-bold text-slate-900 leading-tight">
-            สมาชิกในทีม: {teamName}
+            {isEn ? `Team Members: ${teamName}` : `สมาชิกในทีม: ${teamName}`}
           </div>
         </div>
       }
-      description="รายชื่อเอเจนท์และหัวหน้าที่สังกัดทีมนี้"
+      description={isEn ? "List of agents and leaders assigned to this team" : "รายชื่อเอเจนท์และหัวหน้าที่สังกัดทีมนี้"}
       className="md:max-w-2xl"
     >
       <div className="space-y-4 py-2">
@@ -106,16 +109,16 @@ export function TeamMembersDialog({
             <TableHeader className="bg-slate-50/50">
               <TableRow>
                 <TableHead className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
-                  ชื่อ-นามสกุล
+                  {isEn ? "Full Name" : "ชื่อ-นามสกุล"}
                 </TableHead>
                 <TableHead className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
-                  บทบาท
+                  {isEn ? "Role" : "บทบาท"}
                 </TableHead>
                 <TableHead className="py-3 px-4 text-center font-bold text-slate-900 whitespace-nowrap">
-                  Lead ในมือ
+                  {isEn ? "Active Leads" : "Lead ในมือ"}
                 </TableHead>
                 <TableHead className="py-3 px-4 text-right font-bold text-slate-900">
-                  จัดการ
+                  {isEn ? "Actions" : "จัดการ"}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -128,7 +131,7 @@ export function TeamMembersDialog({
                   >
                     <div className="flex flex-col items-center gap-2">
                       <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
-                      กำลังโหลดข้อมูลสมาชิก...
+                      {isEn ? "Loading members..." : "กำลังโหลดข้อมูลสมาชิก..."}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -138,7 +141,7 @@ export function TeamMembersDialog({
                     colSpan={4}
                     className="py-12 text-center text-slate-400"
                   >
-                    ยังไม่มีสมาชิกในทีมนี้
+                    {isEn ? "No members in this team yet" : "ยังไม่มีสมาชิกในทีมนี้"}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -170,11 +173,11 @@ export function TeamMembersDialog({
                         </div>
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-700 whitespace-nowrap leading-tight">
-                            {member.full_name || "ไม่มีชื่อ"}
+                            {member.full_name || (isEn ? "No Name" : "ไม่มีชื่อ")}
                           </span>
                           {member.isLeader && (
                             <span className="text-[9px] font-bold text-amber-600 uppercase tracking-tighter">
-                              หัวหน้าทีม (Leader)
+                              {isEn ? "Team Leader" : "หัวหน้าทีม (Leader)"}
                             </span>
                           )}
                         </div>
@@ -195,7 +198,7 @@ export function TeamMembersDialog({
                           onClick={() => setMemberToRemove(member)}
                           disabled={!!isRemoving}
                           className="text-slate-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
-                          title="ถอดออกจากทีม"
+                          title={isEn ? "Remove from team" : "ถอดออกจากทีม"}
                         >
                           {isRemoving === member.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -216,8 +219,8 @@ export function TeamMembersDialog({
       <ResponsiveDialog
         open={!!memberToRemove}
         onOpenChange={(val: boolean) => !val && setMemberToRemove(null)}
-        title="ยืนยันการถอดสมาชิก?"
-        description="สมาชิกจะยังคงอยู่ในระบบแต่จะไม่สังกัดทีมใดๆ"
+        title={isEn ? "Confirm Member Removal?" : "ยืนยันการถอดสมาชิก?"}
+        description={isEn ? "Member will remain in the system but will no longer be assigned to any team" : "สมาชิกจะยังคงอยู่ในระบบแต่จะไม่สังกัดทีมใดๆ"}
         footer={
           <div className="p-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row gap-2 w-full">
             <Button
@@ -225,13 +228,13 @@ export function TeamMembersDialog({
               onClick={() => setMemberToRemove(null)}
               className="flex-1 rounded-xl h-11 font-bold text-slate-500"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               onClick={handleRemoveMember}
               className="flex-1 rounded-xl h-11 px-8 font-bold bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-100 transition-all active:scale-95"
             >
-              ยืนยันการถอดออก
+              {isEn ? "Confirm Removal" : "ยืนยันการถอดออก"}
             </Button>
           </div>
         }
@@ -241,13 +244,17 @@ export function TeamMembersDialog({
             <Trash2 className="h-8 w-8 text-red-500" />
           </div>
           <p className="text-slate-600 font-medium leading-relaxed">
-            คุณต้องการถอด <strong>{memberToRemove?.full_name}</strong>{" "}
-            ออกจากทีม <strong>{teamName}</strong> ใช่หรือไม่?
+            {isEn ? (
+              <>Are you sure you want to remove <strong>{memberToRemove?.full_name}</strong> from team <strong>{teamName}</strong>?</>
+            ) : (
+              <>คุณต้องการถอด <strong>{memberToRemove?.full_name}</strong> ออกจากทีม <strong>{teamName}</strong> ใช่หรือไม่?</>
+            )}
           </p>
         </div>
       </ResponsiveDialog>
     </ResponsiveDialog>
   );
 }
+
   
 

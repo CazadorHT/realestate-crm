@@ -12,28 +12,6 @@ import {
 } from "@/features/properties/labels";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -60,88 +38,86 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { format } from "date-fns";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { leadActivityTypeLabelNullable } from "@/features/leads/labels";
 
 const ACTIVITY_CONFIG: Record<
   string,
-  { icon: any; color: string; label: string }
+  { icon: any; color: string; labelTh: string; labelEn: string }
 > = {
   CALL: {
     icon: Phone,
     color: "bg-emerald-50 text-emerald-600",
-    label: "โทรศัพท์",
+    labelTh: "โทรศัพท์",
+    labelEn: "Phone Call",
   },
   LINE_CHAT: {
     icon: MessageSquare,
     color: "bg-green-50 text-green-600",
-    label: "LINE",
+    labelTh: "LINE",
+    labelEn: "LINE",
   },
-  EMAIL: { icon: Mail, color: "bg-blue-50 text-blue-600", label: "อีเมล" },
+  EMAIL: {
+    icon: Mail,
+    color: "bg-blue-50 text-blue-600",
+    labelTh: "อีเมล",
+    labelEn: "Email",
+  },
   VIEWING: {
     icon: Eye,
     color: "bg-purple-50 text-purple-600",
-    label: "พาชมทรัพย์",
+    labelTh: "พาชมทรัพย์",
+    labelEn: "Viewing",
   },
   FOLLOW_UP: {
     icon: Repeat,
     color: "bg-amber-50 text-amber-600",
-    label: "ติดตามผล",
+    labelTh: "ติดตามผล",
+    labelEn: "Follow-up",
   },
   NOTE: {
     icon: FileText,
     color: "bg-slate-50 text-slate-600",
-    label: "บันทึก",
+    labelTh: "บันทึก",
+    labelEn: "Note",
   },
   SYSTEM: {
     icon: Settings,
     color: "bg-slate-100 text-slate-400",
-    label: "ระบบ",
+    labelTh: "ระบบ",
+    labelEn: "System",
   },
   transfer_requested: {
     icon: ArrowRightLeft,
     color: "bg-indigo-50 text-indigo-600",
-    label: "คำขอส่งตัว",
+    labelTh: "คำขอส่งตัว",
+    labelEn: "Transfer Request",
   },
   transferred: {
     icon: ArrowRightLeft,
     color: "bg-blue-50 text-blue-600",
-    label: "โอนย้ายสาขา",
+    labelTh: "โอนย้ายสาขา",
+    labelEn: "Branch Transferred",
   },
   assigned_changed: {
     icon: User,
     color: "bg-cyan-50 text-cyan-600",
-    label: "เปลี่ยนผู้ดูแล",
+    labelTh: "เปลี่ยนผู้ดูแล",
+    labelEn: "Agent Reassigned",
   },
 };
 
-function fmt(dt: string) {
-  try {
-    const d = new Date(dt);
-    const date = d.toLocaleDateString("th-TH", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-    const time = d.toLocaleTimeString("th-TH", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    return { date, time };
-  } catch {
-    return { date: dt, time: "" };
-  }
-}
-
-function fmtMoney(value: any, currency?: string | null) {
+function fmtMoney(value: any, currency?: string | null, isEn?: boolean) {
   if (value === null || value === undefined || value === "") return "-";
   const n = Number(value);
   if (Number.isNaN(n)) return String(value);
-  const formatted = new Intl.NumberFormat("th-TH").format(n);
+  const formatted = new Intl.NumberFormat(isEn ? "en-US" : "th-TH").format(n);
   return currency ? `${formatted} ${currency}` : formatted;
 }
 
-function PriceDisplay({ p }: { p: PropertySummary }) {
+function PriceDisplay({ p, isEn }: { p: PropertySummary; isEn?: boolean }) {
   const listingType = getListingTypeFromDb(p.listing_type as any);
   const isRent = listingType === "RENT";
   const isSale = listingType === "SALE";
@@ -162,11 +138,11 @@ function PriceDisplay({ p }: { p: PropertySummary }) {
       <span className="inline-flex items-baseline gap-1">
         {hasDiscount && (
           <span className="line-through text-xs text-muted-foreground/70">
-            {fmtMoney(original)}
+            {fmtMoney(original, undefined, isEn)}
           </span>
         )}
         <span className="font-medium text-green-600">
-          {fmtMoney(effective, p.currency)}
+          {fmtMoney(effective, p.currency, isEn)}
           {suffix}
         </span>
       </span>
@@ -176,8 +152,8 @@ function PriceDisplay({ p }: { p: PropertySummary }) {
   if (isRent) {
     return (
       <div className="flex items-center gap-1">
-        <span className="text-muted-foreground">เช่า:</span>
-        {renderPrice(p.rental_price, p.original_rental_price, " /ด.")}
+        <span className="text-muted-foreground">{isEn ? "Rent:" : "เช่า:"}</span>
+        {renderPrice(p.rental_price, p.original_rental_price, isEn ? " /mo" : " /ด.")}
       </div>
     );
   }
@@ -185,7 +161,7 @@ function PriceDisplay({ p }: { p: PropertySummary }) {
   if (isSale) {
     return (
       <div className="flex items-center gap-1">
-        <span className="text-muted-foreground">ขาย:</span>
+        <span className="text-muted-foreground">{isEn ? "Sale:" : "ขาย:"}</span>
         {renderPrice(p.price, p.original_price)}
       </div>
     );
@@ -195,13 +171,13 @@ function PriceDisplay({ p }: { p: PropertySummary }) {
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <div className="flex items-center gap-1">
-          <span className="text-muted-foreground">ขาย:</span>
+          <span className="text-muted-foreground">{isEn ? "Sale:" : "ขาย:"}</span>
           {renderPrice(p.price, p.original_price)}
         </div>
         <span className="text-muted-foreground/40">•</span>
         <div className="flex items-center gap-1">
-          <span className="text-muted-foreground">เช่า:</span>
-          {renderPrice(p.rental_price, p.original_rental_price, " /ด.")}
+          <span className="text-muted-foreground">{isEn ? "Rent:" : "เช่า:"}</span>
+          {renderPrice(p.rental_price, p.original_rental_price, isEn ? " /mo" : " /ด.")}
         </div>
       </div>
     );
@@ -222,14 +198,16 @@ export function LeadTimeline({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editActivity, setEditActivity] = useState<any>(null);
   const [isPending, startTransition] = useTransition();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const handleDelete = (id: string) => {
     startTransition(async () => {
       const res = await deleteLeadActivityAction({ activityId: id, leadId });
       if (res.success) {
-        toast.success("ลบกิจกรรมเรียบร้อย");
+        toast.success(isEn ? "Activity deleted successfully" : "ลบกิจกรรมเรียบร้อย");
       } else {
-        toast.error(res.error || "เกิดข้อผิดพลาดในการลบกิจกรรม");
+        toast.error(res.error || (isEn ? "Failed to delete activity" : "เกิดข้อผิดพลาดในการลบกิจกรรม"));
       }
       setDeleteId(null);
     });
@@ -243,10 +221,10 @@ export function LeadTimeline({
       values,
     });
     if (res.success) {
-      toast.success("แก้ไขกิจกรรมเรียบร้อย");
+      toast.success(isEn ? "Activity updated successfully" : "แก้ไขกิจกรรมเรียบร้อย");
       setEditActivity(null);
     } else {
-      toast.error(res.error || "เกิดข้อผิดพลาดในการแก้ไขกิจกรรม");
+      toast.error(res.error || (isEn ? "Failed to update activity" : "เกิดข้อผิดพลาดในการแก้ไขกิจกรรม"));
     }
   };
 
@@ -254,7 +232,9 @@ export function LeadTimeline({
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <Calendar className="h-10 w-10 text-muted-foreground/50 mb-3" />
-        <p className="text-sm text-muted-foreground">ยังไม่มีกิจกรรม</p>
+        <p className="text-sm text-muted-foreground">
+          {isEn ? "No activities yet" : "ยังไม่มีกิจกรรม"}
+        </p>
       </div>
     );
   }
@@ -266,8 +246,14 @@ export function LeadTimeline({
           const pid = a.property_id as string | null;
           const p = pid ? propertiesById[pid] : null;
           const config =
-            ACTIVITY_CONFIG[a.activity_type] || ACTIVITY_CONFIG.NOTE;
+            ACTIVITY_CONFIG[a.activity_type] || {
+              icon: FileText,
+              color: "bg-slate-50 text-slate-600",
+              labelTh: "บันทึก",
+              labelEn: "Note",
+            };
           const Icon = config.icon;
+          const typeLabel = isEn ? config.labelEn : config.labelTh;
 
           return (
             <Card
@@ -309,7 +295,7 @@ export function LeadTimeline({
                           "border-current/20",
                         )}
                       >
-                        {config.label}
+                        {typeLabel}
                       </span>
                       
                       {/* 👤 Created By Avatar */}
@@ -328,20 +314,20 @@ export function LeadTimeline({
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                         <Calendar className="h-3 w-3 opacity-50" />
                         {format(new Date(a.created_at), "d MMM yy • HH:mm", {
-                          locale: th,
+                          locale: isEn ? enUS : th,
                         })}
                       </div>
                       {/* Action Menu */}
                       <div className="shrink-0 flex items-center ">
                         <ResponsiveDialog
-                          title="จัดการกิจกรรม"
-                          description="เลือกการดำเนินการสำหรับรายการนี้"
+                          title={isEn ? "Manage Activity" : "จัดการกิจกรรม"}
+                          description={isEn ? "Choose an action for this activity" : "เลือกการดำเนินการสำหรับรายการนี้"}
                           className="bg-white md:max-w-md"
                           trigger={
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100 active:scale-95 bg-white shadow-xs"
+                              className="h-8 w-8 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100 active:scale-95 bg-white shadow-xs cursor-pointer"
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -353,12 +339,12 @@ export function LeadTimeline({
                               onClick={() => {
                                 setEditActivity(a);
                               }}
-                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 border border-transparent hover:border-blue-100"
+                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 border border-transparent hover:border-blue-100 cursor-pointer"
                             >
                               <div className="h-8 w-8 rounded-lg bg-blue-100/50 flex items-center justify-center">
                                 <Pencil className="h-4 w-4" />
                               </div>
-                              แก้ไขกิจกรรม
+                              {isEn ? "Edit Activity" : "แก้ไขกิจกรรม"}
                             </Button>
 
                             <Button
@@ -366,12 +352,12 @@ export function LeadTimeline({
                               onClick={() => {
                                 setDeleteId(a.id);
                               }}
-                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 border border-transparent hover:border-rose-100 group"
+                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 border border-transparent hover:border-rose-100 group cursor-pointer"
                             >
                               <div className="h-8 w-8 rounded-lg bg-rose-100/50 flex items-center justify-center group-hover:bg-rose-100">
                                 <Trash2 className="h-4 w-4" />
                               </div>
-                              ลบกิจกรรมนี้
+                              {isEn ? "Delete Activity" : "ลบกิจกรรมนี้"}
                             </Button>
                           </div>
                         </ResponsiveDialog>
@@ -388,14 +374,14 @@ export function LeadTimeline({
                     {p && (
                       <Link
                         href={`/protected/properties/${p.id}`}
-                        className="flex items-center gap-3 rounded-xl border border-blue-50 bg-blue-50/20 p-2.5 hover:bg-white hover:border-blue-200 hover:shadow-md hover:shadow-blue-900/5 transition-all mt-3 max-w-lg group/prop"
+                        className="flex items-center gap-3 rounded-xl border border-blue-50 bg-blue-50/20 p-2.5 hover:bg-white hover:border-blue-200 hover:shadow-md hover:shadow-blue-900/5 transition-all mt-3 max-w-lg group/prop cursor-pointer"
                       >
                         <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
                           <Building2 className="h-4 w-4 text-blue-600" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-[10px] font-bold text-blue-500 uppercase tracking-tight mb-0.5">
-                            ทรัพย์สินที่เกี่ยวข้อง
+                            {isEn ? "Related Property" : "ทรัพย์สินที่เกี่ยวข้อง"}
                           </p>
                           <p className="text-xs font-bold text-slate-700 line-clamp-1 group-hover/prop:text-blue-600 transition-colors">
                             {p.title}
@@ -415,7 +401,7 @@ export function LeadTimeline({
       <ResponsiveDialog 
         open={!!editActivity} 
         onOpenChange={() => setEditActivity(null)} 
-        title="แก้ไขกิจกรรม"
+        title={isEn ? "Edit Activity" : "แก้ไขกิจกรรม"}
         className="bg-white md:max-w-lg"
       >
         <div className="p-4 md:p-6">
@@ -436,8 +422,12 @@ export function LeadTimeline({
       <ResponsiveDialog 
         open={!!deleteId} 
         onOpenChange={() => setDeleteId(null)}
-        title="ยืนยันการลบ"
-        description="คุณต้องการลบกิจกรรมนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+        title={isEn ? "Confirm Deletion" : "ยืนยันการลบ"}
+        description={
+          isEn
+            ? "Are you sure you want to delete this activity? This action cannot be undone."
+            : "คุณต้องการลบกิจกรรมนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+        }
         className="bg-white md:max-w-md"
       >
         <div className="p-4 md:p-6 space-y-4">
@@ -446,17 +436,19 @@ export function LeadTimeline({
                 variant="outline"
                 disabled={isPending}
                 onClick={() => setDeleteId(null)}
-                className="w-full md:w-auto h-12 rounded-xl px-6 font-semibold text-slate-600 border-slate-200"
+                className="w-full md:w-auto h-12 rounded-xl px-6 font-semibold text-slate-600 border-slate-200 cursor-pointer"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
               <Button
                 onClick={() => deleteId && handleDelete(deleteId)}
                 disabled={isPending}
                 variant="destructive"
-                className="w-full md:w-auto h-12 rounded-xl px-6 font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-100 border-none"
+                className="w-full md:w-auto h-12 rounded-xl px-6 font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-100 border-none cursor-pointer"
               >
-                {isPending ? "กำลังลบ..." : "ยืนยันการลบ"}
+                {isPending
+                  ? (isEn ? "Deleting..." : "กำลังลบ...")
+                  : (isEn ? "Confirm Delete" : "ยืนยันการลบ")}
               </Button>
           </div>
         </div>

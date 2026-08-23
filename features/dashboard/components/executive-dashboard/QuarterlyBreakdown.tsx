@@ -12,6 +12,7 @@ import { PieChart as PieChartIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExecutiveStats, QuarterlyRevenue } from "../../executive-queries";
 import { formatThaiCurrency } from "@/lib/excel-export";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface QuarterlyBreakdownProps {
   stats: ExecutiveStats;
@@ -24,15 +25,18 @@ export function QuarterlyBreakdown({
   quarterlyData,
   className,
 }: QuarterlyBreakdownProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Card className={cn("border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm", className)}>
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <PieChartIcon className="h-5 w-5 text-indigo-500" />
-          สรุปรายไตรมาส (Quarterly)
+          {isEn ? "Quarterly Breakdown" : "สรุปรายไตรมาส (Quarterly)"}
         </CardTitle>
         <CardDescription>
-          ผลงานแยกตามไตรมาสของปีปัจจุบัน
+          {isEn ? "Performance segmented across current calendar year quarters" : "ผลงานแยกตามไตรมาสของปีปัจจุบัน"}
         </CardDescription>
       </CardHeader>
       <CardContent className="px-4 sm:px-6">
@@ -58,11 +62,11 @@ export function QuarterlyBreakdown({
               <div className="flex flex-col xs:flex-row justify-between text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-tighter gap-1 xs:gap-0">
                 <span className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
-                  Sales: {formatThaiCurrency(q.sales)}
+                  {isEn ? "Sales: " : "Sales: "}{formatThaiCurrency(q.sales)}
                 </span>
                 <span className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                  Rent: {formatThaiCurrency(q.rent)}
+                  {isEn ? "Rent: " : "Rent: "}{formatThaiCurrency(q.rent)}
                 </span>
               </div>
             </div>

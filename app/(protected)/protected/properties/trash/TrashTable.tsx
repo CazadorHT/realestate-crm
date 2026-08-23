@@ -18,6 +18,8 @@ import { TrashIcon } from "lucide-react";
 
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 // ขยาย Type Property เพื่อให้รองรับฟิลด์ที่อาจจะตกหล่นใน lib/types/property
 type ExtendedProperty = Property & {
   original_price?: number | null;
@@ -40,13 +42,18 @@ export function TrashTable({
   currentPage,
   showCreator = true,
 }: TrashTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (data.length === 0 && totalCount === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 border border-slate-200 rounded-lg bg-muted/10 h-[400px]">
         <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center mb-4">
           <TrashIcon className="w-12 h-12 text-slate-400" />
         </div>
-        <p className="text-muted-foreground">ไม่มีรายการในถังขยะ</p>
+        <p className="text-muted-foreground">
+          {isEn ? "No items in trash" : "ไม่มีรายการในถังขยะ"}
+        </p>
       </div>
     );
   }
@@ -56,46 +63,43 @@ export function TrashTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>รูปภาพ</TableHead>
-            <TableHead>ชื่อทรัพย์</TableHead>
-            <TableHead>ราคา</TableHead>
-            <TableHead>ทำเล</TableHead>
-            <TableHead>ประเภท</TableHead>
-            {showCreator && <TableHead>ผู้สร้าง</TableHead>}
-            <TableHead>วันที่ลบ</TableHead>
-            <TableHead className="text-right">จัดการ</TableHead>
+            <TableHead>{isEn ? "Image" : "รูปภาพ"}</TableHead>
+            <TableHead>{isEn ? "Title" : "ชื่อทรัพย์"}</TableHead>
+            <TableHead>{isEn ? "Price" : "ราคา"}</TableHead>
+            <TableHead>{isEn ? "Location" : "ทำเล"}</TableHead>
+            <TableHead>{isEn ? "Type" : "ประเภท"}</TableHead>
+            {showCreator && <TableHead>{isEn ? "Creator" : "ผู้สร้าง"}</TableHead>}
+            <TableHead>{isEn ? "Deleted Date" : "วันที่ลบ"}</TableHead>
+            <TableHead className="text-right">{isEn ? "Actions" : "จัดการ"}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((propertyItem, index) => {
-            // แปลง Type เพื่อให้ TypeScript รู้จัก original_price และ original_rental_price
             const property = propertyItem as ExtendedProperty;
 
             return (
               <TableRow key={property.id || index}>
                 <TableCell>
                   <div className="h-12 w-20 bg-muted rounded-md overflow-hidden relative border border-slate-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     {Array.isArray(property.images) && property.images.length > 0 ? (
                       <img
                         src={property.images[0]}
-                        alt={property.title ?? "รูปภาพทรัพย์"} // แก้ไข: จัดการ null
+                        alt={property.title ?? (isEn ? "Property image" : "รูปภาพทรัพย์")}
                         className="h-full w-full object-cover"
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center bg-gray-50 text-[10px] text-gray-400 font-medium">
-                        ไม่มีรูป
+                        {isEn ? "No image" : "ไม่มีรูป"}
                       </div>
                     )}
                   </div>
                 </TableCell>
                 <TableCell>
-                  {/* แก้ไข: title attribute ต้องไม่เป็น null */}
                   <div
-                    className="max-w-[300px] truncate"
+                    className="max-w-[300px] truncate font-medium text-slate-900"
                     title={property.title ?? undefined}
                   >
-                    {property.title || "ไม่ระบุชื่อ"}
+                    {property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ")}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -145,7 +149,7 @@ export function TrashTable({
                                   </span>
                                   <div className="flex items-center gap-1">
                                     <span className="text-[10px] text-red-500 font-medium">
-                                      ลดขาย
+                                      {isEn ? "Sale Disc" : "ลดขาย"}
                                     </span>
                                     <span className="font-bold text-sm text-red-600">
                                       ฿{salePrice?.toLocaleString()}
@@ -170,24 +174,24 @@ export function TrashTable({
                               {hasRentDiscount ? (
                                 <div className="flex flex-col items-start gap-0.5">
                                   <span className="text-xs text-slate-400 line-through decoration-slate-300">
-                                    ฿{originalRentPrice?.toLocaleString()}/ด
+                                    ฿{originalRentPrice?.toLocaleString()}{isEn ? "/mo" : "/ด"}
                                   </span>
                                   <div className="flex items-center gap-1">
                                     <span className="text-[10px] text-orange-500 font-medium">
-                                      ลดเช่า
+                                      {isEn ? "Rent Disc" : "ลดเช่า"}
                                     </span>
                                     <span className="font-bold text-sm text-orange-600">
-                                      ฿{rentPrice?.toLocaleString()}/ด
+                                      ฿{rentPrice?.toLocaleString()}{isEn ? "/mo" : "/ด"}
                                     </span>
                                   </div>
                                 </div>
                               ) : rentPrice ? (
                                 <span className="text-xs font-semibold text-blue-600">
-                                  เช่า: ฿{rentPrice.toLocaleString()}/ด
+                                  {isEn ? "Rent: " : "เช่า: "}฿{rentPrice.toLocaleString()}{isEn ? "/mo" : "/ด"}
                                 </span>
                               ) : originalRentPrice ? (
                                 <span className="text-xs font-semibold text-blue-600">
-                                  เช่า: ฿{originalRentPrice.toLocaleString()}/ด
+                                  {isEn ? "Rent: " : "เช่า: "}฿{originalRentPrice.toLocaleString()}{isEn ? "/mo" : "/ด"}
                                 </span>
                               ) : null}
                             </>
@@ -206,16 +210,10 @@ export function TrashTable({
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline">
-                    {/* แก้ไข: ระบุให้ TypeScript รู้ว่าค่าที่ดึงมาเป็น Object 
-      แล้วเจาะเข้า .th (หรือเปลี่ยนเป็น .en, .label ตามโครงสร้างของ MultiLangLabel ที่คุณมี)
-    */}
                     {property.property_type
-                      ? (
-                          PROPERTY_TYPE_LABELS as Record<
-                            string,
-                            { th?: string; en?: string }
-                          >
-                        )[property.property_type]?.th || property.property_type
+                      ? (PROPERTY_TYPE_LABELS as any)[property.property_type]?.[isEn ? "en" : "th"] ||
+                        (PROPERTY_TYPE_LABELS as any)[property.property_type]?.en ||
+                        property.property_type
                       : "-"}
                   </Badge>
                 </TableCell>
@@ -234,14 +232,11 @@ export function TrashTable({
                     ? format(
                         new Date(property.deleted_at),
                         "dd MMM yyyy HH:mm",
-                        {
-                          locale: th,
-                        },
+                        isEn ? undefined : { locale: th },
                       )
                     : "-"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {/* แก้ไข: ตรวจสอบว่า id เป็น string แน่นอน */}
                   {property.id ? <TrashRowActions id={property.id} /> : "-"}
                 </TableCell>
               </TableRow>
@@ -252,7 +247,7 @@ export function TrashTable({
 
       {data.length === 0 && totalCount > 0 && (
         <div className="py-10 text-center text-sm text-slate-400 border-t border-slate-100">
-          ไม่พบข้อมูลในหน้านี้
+          {isEn ? "No items found on this page" : "ไม่พบข้อมูลในหน้านี้"}
         </div>
       )}
 

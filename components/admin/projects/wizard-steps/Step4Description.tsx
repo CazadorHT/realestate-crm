@@ -8,6 +8,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface Step4DescriptionProps {
   descTh: string;
@@ -32,16 +33,29 @@ export function Step4Description({
   setDescRu,
   setIsFormDirty,
 }: Step4DescriptionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="space-y-3">
-        <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-1">คำบรรยายรายละเอียดโครงการ</h4>
+        <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-1">
+          {isEn ? "Project Descriptions (Multi-language)" : "คำบรรยายรายละเอียดโครงการ"}
+        </h4>
         <Tabs defaultValue="th" className="w-full">
           <TabsList className="grid grid-cols-4 rounded-xl h-10.5 p-1 bg-slate-100 border border-slate-200/50">
-            <TabsTrigger value="th" className="rounded-lg font-semibold text-xs">ไทย</TabsTrigger>
-            <TabsTrigger value="en" className="rounded-lg font-semibold text-xs">อังกฤษ</TabsTrigger>
-            <TabsTrigger value="cn" className="rounded-lg font-semibold text-xs">จีน</TabsTrigger>
-            <TabsTrigger value="ru" className="rounded-lg font-semibold text-xs">รัสเซีย</TabsTrigger>
+            <TabsTrigger value="th" className="rounded-lg font-semibold text-xs">
+              {isEn ? "Thai" : "ไทย"}
+            </TabsTrigger>
+            <TabsTrigger value="en" className="rounded-lg font-semibold text-xs">
+              {isEn ? "English" : "อังกฤษ"}
+            </TabsTrigger>
+            <TabsTrigger value="cn" className="rounded-lg font-semibold text-xs">
+              {isEn ? "Chinese" : "จีน"}
+            </TabsTrigger>
+            <TabsTrigger value="ru" className="rounded-lg font-semibold text-xs">
+              {isEn ? "Russian" : "รัสเซีย"}
+            </TabsTrigger>
           </TabsList>
           <div className="mt-3">
             <TabsContent value="th">
@@ -86,3 +100,4 @@ export function Step4Description({
     </div>
   );
 }
+

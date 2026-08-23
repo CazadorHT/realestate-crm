@@ -1,16 +1,23 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { UserPlus } from "lucide-react";
 import { LeadForm } from "@/features/leads/LeadsForm";
 import { createLeadAction } from "@/features/leads/actions";
 import { LeadFormValues } from "@/features/leads/types";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
-export default function LeadNewPage() {
+export default async function LeadNewPage() {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   async function onSubmitAction(values: LeadFormValues) {
     "use server";
     const res = await createLeadAction(values);
     if (!res.success) {
-      return { success: false, message: res.error || "เกิดข้อผิดพลาดในการสร้างลีด" };
+      const cStore = await cookies();
+      const currentIsEn = (cStore.get("language")?.value || "th") === "en";
+      return { success: false, message: res.error || (currentIsEn ? "Error creating lead" : "เกิดข้อผิดพลาดในการสร้างลีด") };
     }
     redirect(`/protected/leads/${res.data.leadId}?success=true`);
   }
@@ -20,8 +27,8 @@ export default function LeadNewPage() {
       <Breadcrumb
         backHref="/protected/leads"
         items={[
-          { label: "ลูกค้า", href: "/protected/leads" },
-          { label: "เพิ่มลูกค้าใหม่" },
+          { label: isEn ? "Leads" : "ลูกค้า", href: "/protected/leads" },
+          { label: isEn ? "Add New Lead" : "เพิ่มลูกค้าใหม่" },
         ]}
       />
       <div className="flex items-center gap-3">
@@ -29,9 +36,13 @@ export default function LeadNewPage() {
           <UserPlus className="h-6 w-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">เพิ่มลูกค้าใหม่</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isEn ? "Add New Lead" : "เพิ่มลูกค้าใหม่"}
+          </h1>
           <p className="text-sm text-slate-500">
-            กรอกข้อมูลเพื่อเพิ่มลูกค้าใหม่เข้าในระบบ
+            {isEn
+              ? "Fill in the details to add a new lead into the system"
+              : "กรอกข้อมูลเพื่อเพิ่มลูกค้าใหม่เข้าในระบบ"}
           </p>
         </div>
       </div>

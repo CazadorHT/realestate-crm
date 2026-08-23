@@ -63,7 +63,8 @@ export function AddRuleDialog({
   const [isOpen, setIsOpen] = useState(false);
   const [propertySearchOpen, setPropertySearchOpen] = useState(false);
   const [propertySearchQuery, setPropertySearchQuery] = useState("");
-  const { t } = useLanguage();
+  const { t, language: uiLang } = useLanguage();
+  const isEn = uiLang === "en";
   const [isConfirming, setIsConfirming] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isHourOpen, setIsHourOpen] = useState(false);
@@ -74,9 +75,18 @@ export function AddRuleDialog({
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [targetType, setTargetType] = useState<"property" | "deal">("property");
   const steps = [
-    { title: targetType === "deal" ? "เลือกดีล" : "เลือกทรัพย์", desc: targetType === "deal" ? "Deal" : "Property" },
-    { title: "ตั้งค่ากลุ่ม LINE", desc: "Communication" },
-    { title: "กำหนดเวลา", desc: "Schedule" },
+    { 
+      title: targetType === "deal" ? (isEn ? "Select Deal" : "เลือกดีล") : (isEn ? "Select Property" : "เลือกทรัพย์"), 
+      desc: targetType === "deal" ? "Deal" : "Property" 
+    },
+    { 
+      title: isEn ? "LINE Group Settings" : "ตั้งค่ากลุ่ม LINE", 
+      desc: "Communication" 
+    },
+    { 
+      title: isEn ? "Schedule" : "กำหนดเวลา", 
+      desc: "Schedule" 
+    },
   ];
   const isEdit = !!existingRule;
   const router = useRouter();
@@ -108,7 +118,7 @@ export function AddRuleDialog({
       is_active: existingRule?.is_active ?? true,
       language: (existingRule?.language as "th" | "en" | "cn" | "ru") || "th",
       tenant_id: existingRule?.tenant_id || tenantId || null,
-      custom_group_name: existingRule?.channel?.channel_name || "",
+      custom_group_name: existingRule?.custom_group_name || "",
     },
   });
 
@@ -118,42 +128,33 @@ export function AddRuleDialog({
         property_id: existingRule.property_id,
         line_group_id: existingRule.line_group_id,
         notification_day: existingRule.notification_day,
-        notification_hour: existingRule.notification_hour ?? 9,
-        is_active: existingRule.is_active ?? true,
-        language: (existingRule.language as "th" | "en" | "cn" | "ru") || "th",
-        tenant_id: existingRule.tenant_id || tenantId || null,
-        custom_group_name: existingRule.channel?.channel_name || "",
+        notification_hour: existingRule.notification_hour,
+        is_active: existingRule.is_active,
+        language: existingRule.language,
+        tenant_id: existingRule.tenant_id,
+        custom_group_name: existingRule.custom_group_name || "",
       });
     }
-  }, [existingRule, form, tenantId]);
+  }, [existingRule, form]);
+
+  const onSubmit = (values: RentNotificationRuleInput) => {
+    setPendingValues(values);
+    setIsConfirming(true);
+  };
 
   const executeSubmit = async (values: RentNotificationRuleInput) => {
     try {
-      let res;
       if (isEdit) {
-        res = await updateRentNotificationRule(existingRule.id, values);
+        await updateRentNotificationRule(existingRule.id, values);
+        toast.success(isEn ? "Updated notification rule successfully" : "อัปเดตการแจ้งเตือนสำเร็จ");
       } else {
-        res = await createRentNotificationRule(values);
+        await createRentNotificationRule(values);
+        toast.success(isEn ? "Created notification rule successfully" : "สร้างการแจ้งเตือนสำเร็จ");
       }
-
-      if (res.success) {
-        toast.success(isEdit ? "บันทึกการแก้ไขแล้ว" : "สร้างการแจ้งเตือนแล้ว");
-        updateOpen(false);
-        router.refresh();
-      } else {
-        toast.error(res.message || "เกิดข้อผิดพลาด");
-      }
-    } catch (e: any) {
-      toast.error("เกิดข้อผิดพลาด: " + e.message);
-    }
-  };
-
-  const onSubmit = async (values: RentNotificationRuleInput) => {
-    if (isEdit) {
-      setPendingValues(values);
-      setIsConfirming(true);
-    } else {
-      await executeSubmit(values);
+      updateOpen(false);
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error.message || (isEn ? "Failed to save notification rule" : "เกิดข้อผิดพลาดในการบันทึก"));
     }
   };
 
@@ -165,9 +166,9 @@ export function AddRuleDialog({
         className="max-w-xl"
         trigger={
           !isEdit ? (
-            <Button className="gap-2 bg-white text-slate-600 hover:text-blue-600 hover:bg-slate-50 transition-all shadow-md rounded-xl h-11 font-bold">
+            <Button className="gap-2 bg-white text-slate-600 hover:text-blue-600 hover:bg-slate-50 transition-all shadow-md rounded-xl h-11 font-bold cursor-pointer">
               <Plus className="w-4 h-4" />
-              สร้างการแจ้งเตือน
+              {isEn ? "Create Notification" : "สร้างการแจ้งเตือน"}
             </Button>
           ) : undefined
         }
@@ -176,10 +177,10 @@ export function AddRuleDialog({
             <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
               <Bell className="w-5 h-5" />
             </div>
-            <span>{isEdit ? "แก้ไขการแจ้งเตือน" : "สร้างการแจ้งเตือนใหม่"}</span>
+            <span>{isEdit ? (isEn ? "Edit Notification Rule" : "แก้ไขการแจ้งเตือน") : (isEn ? "Create New Notification" : "สร้างการแจ้งเตือนใหม่")}</span>
           </div>
         }
-        description="ระบุทรัพย์และกลุ่มไลน์ที่ต้องการให้แจ้งเตือนค่าเช่า"
+        description={isEn ? "Specify property and LINE group to receive automated rent reminders." : "ระบุทรัพย์และกลุ่มไลน์ที่ต้องการให้แจ้งเตือนค่าเช่า"}
         footer={
           <div className="flex flex-row gap-3 w-full">
             {currentStep > 1 ? (
@@ -187,18 +188,18 @@ export function AddRuleDialog({
                 variant="outline"
                 type="button"
                 onClick={() => setCurrentStep(s => s - 1)}
-                className="flex-1 rounded-xl h-12 font-bold border-slate-200 text-slate-500 gap-2"
+                className="flex-1 rounded-xl h-12 font-bold border-slate-200 text-slate-500 gap-2 cursor-pointer"
               >
-                ย้อนกลับ
+                {isEn ? "Back" : "ย้อนกลับ"}
               </Button>
             ) : (
               <Button
                 variant="outline"
                 type="button"
                 onClick={() => updateOpen(false)}
-                className="flex-1 rounded-xl h-12 font-bold border-slate-200 text-slate-500"
+                className="flex-1 rounded-xl h-12 font-bold border-slate-200 text-slate-500 cursor-pointer"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             )}
 
@@ -207,27 +208,31 @@ export function AddRuleDialog({
                 type="button"
                 onClick={() => {
                   if (currentStep === 1 && !form.getValues("property_id")) {
-                    toast.error(targetType === "deal" ? "กรุณาเลือกดีลก่อนไปขั้นตอนถัดไป" : "กรุณาเลือกทรัพย์ก่อนไปขั้นตอนถัดไป");
+                    toast.error(
+                      targetType === "deal" 
+                        ? (isEn ? "Please select a deal before proceeding" : "กรุณาเลือกดีลก่อนไปขั้นตอนถัดไป")
+                        : (isEn ? "Please select a property before proceeding" : "กรุณาเลือกทรัพย์ก่อนไปขั้นตอนถัดไป")
+                    );
                     return;
                   }
                   if (currentStep === 2 && !form.getValues("line_group_id")) {
-                    toast.error("กรุณาเลือกกลุ่มไลน์ก่อนไปขั้นตอนถัดไป");
+                    toast.error(isEn ? "Please select a LINE group before proceeding" : "กรุณาเลือกกลุ่มไลน์ก่อนไปขั้นตอนถัดไป");
                     return;
                   }
                   setCurrentStep(s => s + 1);
                 }}
-                className="flex-2 bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-blue-500/10 gap-2"
+                className="flex-2 bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-blue-500/10 gap-2 cursor-pointer"
               >
-                ถัดไป
+                {isEn ? "Next" : "ถัดไป"}
                 <ChevronRight className="w-4 h-4" />
               </Button>
             ) : (
               <Button
                 type="button"
                 onClick={form.handleSubmit(onSubmit)}
-                className="flex-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-emerald-500/10"
+                className="flex-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-emerald-500/10 cursor-pointer"
               >
-                {isEdit ? "บันทึกการเปลี่ยนแปลง" : "สร้างการแจ้งเตือน"}
+                {isEdit ? (isEn ? "Save Changes" : "บันทึกการเปลี่ยนแปลง") : (isEn ? "Create Notification" : "สร้างการแจ้งเตือน")}
               </Button>
             )}
           </div>
@@ -248,19 +253,19 @@ export function AddRuleDialog({
                     >
                       {currentStep > s ? <Check className="w-5 h-5" /> : s}
                     </div>
-                    <div className="absolute -bottom-6 w-max text-center">
-                      <span className={cn(
-                        "text-[10px] font-bold uppercase tracking-wider transition-colors",
-                        currentStep === s ? "text-blue-600" : "text-slate-400"
-                      )}>
+                    <div className="text-center">
+                      <p className={cn("text-xs font-bold leading-none", currentStep >= s ? "text-slate-800" : "text-slate-400")}>
                         {step.title}
-                      </span>
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-medium mt-1">
+                        {step.desc}
+                      </p>
                     </div>
                   </div>
                   {s < 3 && (
                     <div 
                       className={cn(
-                        "flex-1 h-0.5 mx-4 transition-all rounded-full",
+                        "h-0.5 flex-1 mx-4 mb-6 transition-all",
                         currentStep > s ? "bg-blue-600" : "bg-slate-100"
                       )} 
                     />
@@ -273,9 +278,10 @@ export function AddRuleDialog({
 
         <Form {...form}>
           <form 
-            className="space-y-6 pb-6 px-6"
+            onSubmit={form.handleSubmit(onSubmit)} 
+            className="space-y-6"
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+              if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
                 e.preventDefault();
               }
             }}
@@ -286,7 +292,9 @@ export function AddRuleDialog({
                 {currentStep === 1 && (
                   <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-4">
                     <div className="flex flex-col gap-2">
-                      <FormLabel className="text-sm font-bold text-slate-700 ml-1">เลือกประเภทข้อมูลที่ต้องการสร้างการแจ้งเตือน</FormLabel>
+                      <FormLabel className="text-sm font-bold text-slate-700 ml-1">
+                        {isEn ? "Select target type for notification" : "เลือกประเภทข้อมูลที่ต้องการสร้างการแจ้งเตือน"}
+                      </FormLabel>
                       <Tabs
                         value={targetType}
                         onValueChange={(val) => {
@@ -298,17 +306,17 @@ export function AddRuleDialog({
                         <TabsList className="grid grid-cols-2 w-full h-11 bg-slate-100 p-1 rounded-xl">
                           <TabsTrigger
                             value="property"
-                            className="rounded-lg font-bold gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                            className="rounded-lg font-bold gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm cursor-pointer"
                           >
                             <Building2 className="w-4 h-4" />
-                            เลือกจากทรัพย์
+                            {isEn ? "From Property" : "เลือกจากทรัพย์"}
                           </TabsTrigger>
                           <TabsTrigger
                             value="deal"
-                            className="rounded-lg font-bold gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                            className="rounded-lg font-bold gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm cursor-pointer"
                           >
                             <Handshake className="w-4 h-4" />
-                            เลือกจากดีล
+                            {isEn ? "From Deal" : "เลือกจากดีล"}
                           </TabsTrigger>
                         </TabsList>
                       </Tabs>
@@ -320,7 +328,7 @@ export function AddRuleDialog({
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel className="text-sm font-bold text-slate-700 ml-1">
-                            {targetType === "deal" ? "เลือกดีล (Deal)" : "เลือกทรัพย์ (Property)"}
+                            {targetType === "deal" ? (isEn ? "Select Deal" : "เลือกดีล (Deal)") : (isEn ? "Select Property" : "เลือกทรัพย์ (Property)")}
                           </FormLabel>
                           <FormControl>
                             {targetType === "property" ? (
@@ -329,7 +337,7 @@ export function AddRuleDialog({
                                 onChangeAction={(id) => {
                                   field.onChange(id);
                                 }}
-                                placeholder="ค้นหาและเลือกทรัพย์..."
+                                placeholder={isEn ? "Search and select property..." : "ค้นหาและเลือกทรัพย์..."}
                                 className="w-full"
                                 initialProperty={existingRule?.properties ? {
                                   id: existingRule.properties.id,
@@ -353,14 +361,14 @@ export function AddRuleDialog({
                                     field.onChange("");
                                   }
                                 }}
-                                placeholder="ค้นหาและเลือกดีล..."
+                                placeholder={isEn ? "Search and select deal..." : "ค้นหาและเลือกดีล..."}
                               />
                             )}
                           </FormControl>
                           <FormDescription className="text-[11px] text-rose-500 font-medium ml-1">
                             {targetType === "property" 
-                              ? "* แสดงเฉพาะทรัพย์ที่มีสัญญาเช่า (Active Contract) เท่านั้น"
-                              : "* แสดงเฉพาะดีลในระบบ"
+                              ? (isEn ? "* Shows only properties with active rental contracts" : "* แสดงเฉพาะทรัพย์ที่มีสัญญาเช่า (Active Contract) เท่านั้น")
+                              : (isEn ? "* Shows all deals in system" : "* แสดงเฉพาะดีลในระบบ")
                             }
                           </FormDescription>
                           <FormMessage />
@@ -382,18 +390,20 @@ export function AddRuleDialog({
                           const selectedGroup = groups.find(g => g.group_id === field.value);
                           return (
                             <FormItem className="flex flex-col">
-                              <FormLabel className="text-sm font-bold text-slate-700 ml-1">กลุ่มไลน์ (LINE Group)</FormLabel>
+                              <FormLabel className="text-sm font-bold text-slate-700 ml-1">
+                                {isEn ? "LINE Group" : "กลุ่มไลน์ (LINE Group)"}
+                              </FormLabel>
                               <ResponsiveDialog
                                 open={isGroupOpen}
                                 onOpenChange={setIsGroupOpen}
-                                title="เลือกกลุ่มไลน์"
+                                title={isEn ? "Select LINE Group" : "เลือกกลุ่มไลน์"}
                                 className="lg:max-w-[400px]!"
-                                description="เลือกกลุ่มที่ต้องการให้ระบบแจ้งเตือนค่าเช่า (ต้องเชิญบอทเข้ากลุ่มก่อน)"
+                                description={isEn ? "Select group to receive reminders (invite bot first)" : "เลือกกลุ่มที่ต้องการให้ระบบแจ้งเตือนค่าเช่า (ต้องเชิญบอทเข้ากลุ่มก่อน)"}
                                 trigger={
                                   <Button
                                     variant="outline"
                                     type="button"
-                                    className="w-full h-11 justify-between px-4 rounded-xl border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 hover:text-blue-500 transition-colors font-medium"
+                                    className="w-full h-11 justify-between px-4 rounded-xl border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 hover:text-blue-500 transition-colors font-medium cursor-pointer"
                                   >
                                     {selectedGroup ? (
                                       <div className="flex items-center gap-2 ">
@@ -410,7 +420,7 @@ export function AddRuleDialog({
                                         <span className="text-slate-900">{selectedGroup.group_name}</span>
                                       </div>
                                     ) : (
-                                      <span className="text-slate-400">เลือกกลุ่มไลน์...</span>
+                                      <span className="text-slate-400">{isEn ? "Select LINE group..." : "เลือกกลุ่มไลน์..."}</span>
                                     )}
                                     <ChevronsUpDown className="w-4 h-4 text-slate-400" />
                                   </Button>
@@ -423,8 +433,8 @@ export function AddRuleDialog({
                                         <Bell className="w-6 h-6 text-slate-300" />
                                       </div>
                                       <p className="text-sm text-slate-500">
-                                        ยังไม่มีกลุ่มไลน์ในระบบ <br />
-                                        เชิญบอทเข้ากลุ่มเพื่อเริ่มต้นใช้งานครับ
+                                        {isEn ? "No LINE groups connected yet." : "ยังไม่มีกลุ่มไลน์ในระบบ"} <br />
+                                        {isEn ? "Invite bot to group to get started." : "เชิญบอทเข้ากลุ่มเพื่อเริ่มต้นใช้งานครับ"}
                                       </p>
                                     </div>
                                   ) : (
@@ -434,7 +444,7 @@ export function AddRuleDialog({
                                         variant="ghost"
                                         type="button"
                                         className={cn(
-                                          "w-full h-14 justify-start gap-3 px-4 rounded-xl text-left hover:bg-slate-100 transition-all",
+                                          "w-full h-14 justify-start gap-3 px-4 rounded-xl text-left hover:bg-slate-100 transition-all cursor-pointer",
                                           field.value === group.group_id && "bg-blue-50 text-blue-600 hover:bg-blue-100"
                                         )}
                                         onClick={() => {
@@ -474,10 +484,12 @@ export function AddRuleDialog({
                               {field.value && (
                                 <div className="mt-3.5 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
                                   <FormLabel className="text-xs font-bold text-slate-500 ml-1">
-                                    ตั้งชื่อกลุ่มไลน์นี้ใหม่ (เปลี่ยนจาก {selectedGroup?.group_name})
+                                    {isEn 
+                                      ? `Rename this group (custom alias from ${selectedGroup?.group_name})`
+                                      : `ตั้งชื่อกลุ่มไลน์นี้ใหม่ (เปลี่ยนจาก ${selectedGroup?.group_name})`}
                                   </FormLabel>
                                   <Input
-                                    placeholder="เช่น กลุ่มคอนโด 202, กลุ่มเจ้านาย ฯลฯ"
+                                    placeholder={isEn ? "e.g. Condo 202 Group, Boss Group..." : "เช่น กลุ่มคอนโด 202, กลุ่มเจ้านาย ฯลฯ"}
                                     {...form.register("custom_group_name")}
                                     className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus:bg-white transition-colors"
                                   />
@@ -495,25 +507,25 @@ export function AddRuleDialog({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-sm font-bold text-slate-700 ml-1 flex items-center gap-1.5">
-                              <Languages className="w-3.5 h-3.5" /> ภาษาที่แจ้งเตือน
+                              <Languages className="w-3.5 h-3.5" /> {isEn ? "Alert Language" : "ภาษาที่แจ้งเตือน"}
                             </FormLabel>
                             <ResponsiveDialog
                               open={isLanguageOpen}
                               onOpenChange={setIsLanguageOpen}
-                              title="เลือกภาษา"
+                              title={isEn ? "Select Language" : "เลือกภาษา"}
                               className="lg:max-w-[300px]!"
-                              description="เลือกภาษาที่ต้องการใช้ในการส่งข้อความแจ้งเตือน"
+                              description={isEn ? "Choose language for automated notification messages" : "เลือกภาษาที่ต้องการใช้ในการส่งข้อความแจ้งเตือน"}
                               trigger={
                                 <Button
                                   variant="outline"
                                   type="button"
-                                  className="w-full h-11 justify-between hover:text-blue-500 px-4 rounded-xl border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 transition-colors font-medium"
+                                  className="w-full h-11 justify-between hover:text-blue-500 px-4 rounded-xl border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 transition-colors font-medium cursor-pointer"
                                 >
                                   <span className="flex items-center gap-2">
-                                    {field.value === "th" && "🇹🇭 ไทย"}
-                                    {field.value === "en" && "🇬🇧 อังกฤษ (English)"}
-                                    {field.value === "cn" && "🇨🇳 จีน (Chinese)"}
-                                    {field.value === "ru" && "🇷🇺 รัสเซีย (Russian)"}
+                                    {field.value === "th" && (isEn ? "🇹🇭 Thai" : "🇹🇭 ไทย")}
+                                    {field.value === "en" && (isEn ? "🇬🇧 English" : "🇬🇧 อังกฤษ (English)")}
+                                    {field.value === "cn" && (isEn ? "🇨🇳 Chinese" : "🇨🇳 จีน (Chinese)")}
+                                    {field.value === "ru" && (isEn ? "🇷🇺 Russian" : "🇷🇺 รัสเซีย (Russian)")}
                                   </span>
                                   <ChevronsUpDown className="w-4 h-4 text-slate-400" />
                                 </Button>
@@ -521,17 +533,17 @@ export function AddRuleDialog({
                             >
                               <div className="grid gap-2 p-4 pointer-events-auto ">
                                 {[
-                                  { value: "th", label: "ไทย", flag: "🇹🇭" },
-                                  { value: "en", label: "อังกฤษ (English)", flag: "🇬🇧" },
-                                  { value: "cn", label: "จีน (Chinese)", flag: "🇨🇳" },
-                                  { value: "ru", label: "รัสเซีย (Russian)", flag: "🇷🇺" },
+                                  { value: "th", label: isEn ? "Thai" : "ไทย", flag: "🇹🇭" },
+                                  { value: "en", label: isEn ? "English" : "อังกฤษ (English)", flag: "🇬🇧" },
+                                  { value: "cn", label: isEn ? "Chinese" : "จีน (Chinese)", flag: "🇨🇳" },
+                                  { value: "ru", label: isEn ? "Russian" : "รัสเซีย (Russian)", flag: "🇷🇺" },
                                 ].map((lang) => (
                                   <Button
                                     key={lang.value}
                                     variant="ghost"
                                     type="button"
                                     className={cn(
-                                      "w-full h-12 justify-start gap-3 px-4 rounded-xl text-left hover:bg-slate-100 transition-all",
+                                      "w-full h-12 justify-start gap-3 px-4 rounded-xl text-left hover:bg-slate-100 transition-all cursor-pointer",
                                       field.value === lang.value && "bg-blue-50 text-blue-600 hover:bg-blue-100"
                                     )}
                                     onClick={() => {
@@ -568,7 +580,7 @@ export function AddRuleDialog({
                           <FormItem>
                             <FormLabel className="text-sm font-bold text-slate-700 ml-1 flex items-center gap-1.5">
                               <Calendar className="w-3.5 h-3.5" />
-                              วันที่แจ้งเตือน (1-31)
+                              {isEn ? "Notification Day (1-31)" : "วันที่แจ้งเตือน (1-31)"}
                             </FormLabel>
                             <FormControl>
                               <div className="relative">
@@ -581,7 +593,7 @@ export function AddRuleDialog({
                                   className="h-11 rounded-xl pr-16 border-slate-200 bg-slate-50/50 font-medium"
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">
-                                  ทุกเดือน
+                                  {isEn ? "Every Month" : "ทุกเดือน"}
                                 </div>
                               </div>
                             </FormControl>
@@ -597,21 +609,21 @@ export function AddRuleDialog({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-sm font-bold text-slate-700 ml-1 flex items-center gap-1.5">
-                              <Clock className="w-3.5 h-3.5" /> เวลาส่งแจ้งเตือน
+                              <Clock className="w-3.5 h-3.5" /> {isEn ? "Notification Hour" : "เวลาส่งแจ้งเตือน"}
                             </FormLabel>
                             <ResponsiveDialog
                               open={isHourOpen}
                               onOpenChange={setIsHourOpen}
-                              title="เลือกเวลาส่ง"
-                              description="เลือกเวลาที่ต้องการให้ระบบส่งข้อความแจ้งเตือนอัตโนมัติ"
+                              title={isEn ? "Select Time" : "เลือกเวลาส่ง"}
+                              description={isEn ? "Select time for automated rent notification delivery" : "เลือกเวลาที่ต้องการให้ระบบส่งข้อความแจ้งเตือนอัตโนมัติ"}
                               trigger={
                                 <Button
                                   variant="outline"
                                   type="button"
-                                  className="w-full h-11 justify-between px-4 rounded-xl border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 transition-colors font-medium"
+                                  className="w-full h-11 justify-between px-4 rounded-xl border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 transition-colors font-medium cursor-pointer"
                                 >
                                   <span className="flex items-center gap-2 text-slate-900">
-                                    {field.value !== undefined ? `${field.value.toString().padStart(2, "0")}:00 น.` : "เลือกเวลา"}
+                                    {field.value !== undefined ? `${field.value.toString().padStart(2, "0")}:00` : (isEn ? "Select time" : "เลือกเวลา")}
                                   </span>
                                   <ChevronsUpDown className="w-4 h-4 text-slate-400" />
                                 </Button>

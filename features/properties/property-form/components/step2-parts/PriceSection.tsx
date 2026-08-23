@@ -31,6 +31,8 @@ import { FaAirbnb } from "react-icons/fa6";
 import { Input } from "@/components/ui/input";
 import { parseAirbnbMinContract } from "@/lib/property-utils";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 // Helper for smooth height animations
 function CollapsibleSection({
   open,
@@ -63,6 +65,8 @@ export function PriceSection({
   showSale,
   showRent,
 }: PriceSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   // State for showing discount fields
@@ -179,8 +183,12 @@ export function PriceSection({
       <CardHeader className="space-y-4 ">
         <SectionHeader
           icon={Banknote}
-          title="ราคาและเงื่อนไข"
-          desc="กรอกให้ครบเพื่อให้ระบบจัดอันดับและแสดงดีลได้แม่นยำ"
+          title={isEn ? "Price & Terms" : "ราคาและเงื่อนไข"}
+          desc={
+            isEn
+              ? "Complete the pricing details for accurate ranking and deal matching"
+              : "กรอกให้ครบเพื่อให้ระบบจัดอันดับและแสดงดีลได้แม่นยำ"
+          }
           tone="blue"
         />
         <Separator className="bg-slate-200/70" />
@@ -209,7 +217,7 @@ export function PriceSection({
                     <TrendingDown className="h-4 w-4" />
                   </div>
                   <h4 className="text-sm font-medium text-slate-900">
-                    ข้อมูลการขาย (For Sale)
+                    {isEn ? "Sale Pricing" : "ข้อมูลการขาย (For Sale)"}
                   </h4>
                 </div>
               )}
@@ -223,9 +231,9 @@ export function PriceSection({
                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm flex gap-3 text-amber-800">
                       <Info className="h-5 w-5 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-bold">ตรวจสอบราคา</p>
+                        <p className="font-bold">{isEn ? "Verify Price" : "ตรวจสอบราคา"}</p>
                         <p className="text-xs opacity-90">
-                          ราคาเต็มต้องมากกว่าราคาพิเศษ
+                          {isEn ? "Original price must be higher than discounted price" : "ราคาเต็มต้องมากกว่าราคาพิเศษ"}
                         </p>
                       </div>
                     </div>
@@ -234,11 +242,13 @@ export function PriceSection({
                 {/* Main Price Field */}
                 <UnitNumberField
                   label={
-                    showSaleDiscount ? "ราคาเต็ม (ก่อนลด)" : "ราคาขายสุทธิ"
+                    showSaleDiscount
+                      ? (isEn ? "Original Price (Before Discount)" : "ราคาเต็ม (ก่อนลด)")
+                      : (isEn ? "Net Selling Price" : "ราคาขายสุทธิ")
                   }
                   name="original_price"
                   control={form.control}
-                  placeholder="กรุณากรอกราคาเต็ม"
+                  placeholder={isEn ? "Enter original price" : "กรุณากรอกราคาเต็ม"}
                   suffix="฿"
                   disabled={isReadOnly}
                   emphasize={!showSaleDiscount} // Emphasize if it's the only price
@@ -261,7 +271,7 @@ export function PriceSection({
                     className="flex w-fit items-center gap-2 px-3 py-1.5 mt-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors shadow-sm cursor-pointer hover:shadow-md"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
-                    <span>ประเมินราคาด้วย AI</span>
+                    <span>{isEn ? "AI Price Valuation" : "ประเมินราคาด้วย AI"}</span>
                   </button>
                 )}
 
@@ -275,17 +285,17 @@ export function PriceSection({
                       className="group flex items-center gap-2 text-sm text-blue-600 font-medium hover:text-blue-700 transition-colors py-2"
                     >
                       <PlusCircleIcon className="h-4 w-4 opacity-50 group-hover:opacity-100" />
-                      <span>เพิ่มราคาพิเศษ / ส่วนลด</span>
+                      <span>{isEn ? "Add Special Price / Discount" : "เพิ่มราคาพิเศษ / ส่วนลด"}</span>
                     </button>
                   </CollapsibleSection>
 
                   <CollapsibleSection open={showSaleDiscount}>
                     <div className="border-l-2 border-blue-100 pl-4 py-1 space-y-4">
                       <UnitNumberField
-                        label="ราคาพิเศษ (โชว์หน้าเว็บ)"
+                        label={isEn ? "Special Price (Display on Website)" : "ราคาพิเศษ (โชว์หน้าเว็บ)"}
                         name="price"
                         control={form.control}
-                        placeholder="กรุณากรอกราคาพิเศษ"
+                        placeholder={isEn ? "Enter special price" : "กรุณากรอกราคาพิเศษ"}
                         suffix="฿"
                         disabled={isReadOnly || !showSaleDiscount}
                         emphasize
@@ -318,7 +328,7 @@ export function PriceSection({
                               <path d="M18 6 6 18" />
                               <path d="m6 6 12 12" />
                             </svg>
-                            <span>ยกเลิกส่วนลด</span>
+                            <span>{isEn ? "Cancel Discount" : "ยกเลิกส่วนลด"}</span>
                           </button>
                         }
                       />
@@ -336,14 +346,14 @@ export function PriceSection({
                       className="group flex items-center gap-2 text-sm text-slate-500 font-medium hover:text-slate-700 transition-colors py-2"
                     >
                       <PlusCircleIcon className="h-4 w-4 opacity-50 group-hover:opacity-100" />
-                      <span>เพิ่มค่าส่วนกลาง (ถ้ามี)</span>
+                      <span>{isEn ? "Add Maintenance Fee (Optional)" : "เพิ่มค่าส่วนกลาง (ถ้ามี)"}</span>
                     </button>
                   </CollapsibleSection>
 
                   <CollapsibleSection open={showCommonFee}>
                     <div className="border-l-2 border-slate-100 pl-4 py-2">
                       <UnitNumberField
-                        label="ค่าส่วนกลาง (ต่อปี)"
+                        label={isEn ? "Maintenance Fee (Per Year)" : "ค่าส่วนกลาง (ต่อปี)"}
                         name="maintenance_fee"
                         control={form.control}
                         placeholder="0"
@@ -377,7 +387,7 @@ export function PriceSection({
                               <path d="M18 6 6 18" />
                               <path d="m6 6 12 12" />
                             </svg>
-                            <span>ยกเลิกค่าส่วนกลาง</span>
+                            <span>{isEn ? "Cancel Fee" : "ยกเลิกค่าส่วนกลาง"}</span>
                           </button>
                         }
                       />
@@ -398,7 +408,7 @@ export function PriceSection({
                     <TrendingDown className="h-4 w-4" />
                   </div>
                   <h4 className="text-sm font-medium text-slate-900">
-                    ข้อมูลการเช่า (For Rent)
+                    {isEn ? "Rental Pricing" : "ข้อมูลการเช่า (For Rent)"}
                   </h4>
                 </div>
               )}
@@ -412,9 +422,9 @@ export function PriceSection({
                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm flex gap-3 text-amber-800">
                       <Info className="h-5 w-5 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-bold">ตรวจสอบราคา</p>
+                        <p className="font-bold">{isEn ? "Verify Price" : "ตรวจสอบราคา"}</p>
                         <p className="text-xs opacity-90">
-                          ราคาเต็มต้องมากกว่าราคาพิเศษ
+                          {isEn ? "Original price must be higher than discounted price" : "ราคาเต็มต้องมากกว่าราคาพิเศษ"}
                         </p>
                       </div>
                     </div>
@@ -441,11 +451,13 @@ export function PriceSection({
                                 prev === "sqm" ? "sqwah" : "sqm",
                               )
                             }
-                            title="คลิกเพื่อสลับหน่วย"
+                            title={isEn ? "Click to switch unit" : "คลิกเพื่อสลับหน่วย"}
                           >
                             <span className="hover:text-blue-600 transition-colors">
-                              ราคาเช่า ต่อ{" "}
-                              {priceUnit === "sqm" ? "ตร.ม." : "ตร.ว."}
+                              {isEn ? "Rental Rate per " : "ราคาเช่า ต่อ "}
+                              {priceUnit === "sqm"
+                                ? (isEn ? "Sq.m." : "ตร.ม.")
+                                : (isEn ? "Sq.wah" : "ตร.ว.")}
                             </span>
                             <div className="p-1 rounded-md bg-blue-50 text-blue-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-all duration-200 group-active:scale-90 shadow-sm border border-blue-100/50">
                               <ArrowLeftRight
@@ -461,7 +473,11 @@ export function PriceSection({
                         name="rent_price_per_sqm"
                         control={form.control}
                         placeholder="0"
-                        suffix={priceUnit === "sqm" ? "฿ / ตร.ม." : "฿ / ตร.ว."}
+                        suffix={
+                          priceUnit === "sqm"
+                            ? (isEn ? "฿ / Sq.m." : "฿ / ตร.ม.")
+                            : (isEn ? "฿ / Sq.wah" : "฿ / ตร.ว.")
+                        }
                         disabled={isReadOnly}
                         size="default"
                         className="text-sm font-medium  text-slate-700 border-blue-100 focus:border-blue-300"
@@ -473,15 +489,15 @@ export function PriceSection({
                   <UnitNumberField
                     label={
                       showRentDiscount
-                        ? "ค่าเช่าเต็ม (ก่อนลด)"
-                        : "ค่าเช่าต่อเดือน"
+                        ? (isEn ? "Original Rent (Before Discount)" : "ค่าเช่าเต็ม (ก่อนลด)")
+                        : (isEn ? "Monthly Rental Price" : "ค่าเช่าต่อเดือน")
                     }
                     name="original_rental_price"
                     control={form.control}
                     placeholder={
                       propertyType === "OFFICE_BUILDING" ||
                       propertyType === "LAND"
-                        ? "คำนวณอัตโนมัติเมื่อกรอก ราคาต่อ ตร.ม."
+                        ? (isEn ? "Auto-calculated when rate/sq.m. is entered" : "คำนวณอัตโนมัติเมื่อกรอก ราคาต่อ ตร.ม.")
                         : "0"
                     }
                     suffix="฿"
@@ -504,7 +520,7 @@ export function PriceSection({
                       className="flex w-fit items-center gap-2 px-3 py-1.5 mt-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors shadow-sm cursor-pointer hover:shadow-md"
                     >
                       <Sparkles className="h-3.5 w-3.5" />
-                      <span>ประเมินค่าเช่าด้วย AI</span>
+                      <span>{isEn ? "AI Rent Valuation" : "ประเมินค่าเช่าด้วย AI"}</span>
                     </button>
                   )}
                 </div>
@@ -520,7 +536,7 @@ export function PriceSection({
                       className="group flex items-center gap-2 text-sm text-blue-600 font-medium hover:text-blue-700 transition-colors py-2 "
                     >
                       <PlusCircleIcon className="h-4 w-4 opacity-50 group-hover:opacity-100" />
-                      <span>เพิ่มราคาโปรโมชั่น</span>
+                      <span>{isEn ? "Add Promotional Rent" : "เพิ่มราคาโปรโมชั่น"}</span>
                     </button>
                   </CollapsibleSection>
 
@@ -534,16 +550,16 @@ export function PriceSection({
                           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm flex gap-3 text-amber-800 animate-in fade-in slide-in-from-top-1">
                             <Info className="h-5 w-5 shrink-0 mt-0.5" />
                             <div>
-                              <p className="font-bold">ตรวจสอบราคา</p>
+                              <p className="font-bold">{isEn ? "Verify Price" : "ตรวจสอบราคา"}</p>
                               <p className="text-xs opacity-90">
-                                ราคาเต็มต้องมากกว่าราคาพิเศษ
+                                {isEn ? "Original price must be higher than discounted price" : "ราคาเต็มต้องมากกว่าราคาพิเศษ"}
                               </p>
                             </div>
                           </div>
                         )}
 
                       <UnitNumberField
-                        label="ค่าเช่าพิเศษ (โชว์หน้าเว็บ)"
+                        label={isEn ? "Special Rent (Display on Website)" : "ค่าเช่าพิเศษ (โชว์หน้าเว็บ)"}
                         name="rental_price"
                         control={form.control}
                         placeholder="0"
@@ -579,7 +595,7 @@ export function PriceSection({
                               <path d="M18 6 6 18" />
                               <path d="m6 6 12 12" />
                             </svg>
-                            <span>ยกเลิกโปรโมชั่น</span>
+                            <span>{isEn ? "Cancel Promo" : "ยกเลิกโปรโมชั่น"}</span>
                           </button>
                         }
                       />
@@ -588,7 +604,6 @@ export function PriceSection({
                 </div>
 
                 {/* Contract Duration */}
-
                 <div className="pt-2 ">
                   <div className="border-l-2 border-slate-100 pl-4 py-2">
                     <FormField
@@ -597,9 +612,9 @@ export function PriceSection({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="flex items-center justify-between text-sm text-slate-500 font-normal ">
-                            <span>สัญญาขั้นต่ำ</span>
+                            <span>{isEn ? "Minimum Contract" : "สัญญาขั้นต่ำ"}</span>
                             <span className="text-slate-400">
-                              ระบุเป็นเดือน
+                              {isEn ? "in months" : "ระบุเป็นเดือน"}
                             </span>
                           </FormLabel>
                           <div className="flex gap-2">
@@ -618,7 +633,9 @@ export function PriceSection({
                                 }
                               `}
                               >
-                                {m >= 12 ? `${m / 12} ปี` : `${m} เดือน`}
+                                {isEn
+                                  ? (m >= 12 ? `${m / 12} Year${m > 12 ? "s" : ""}` : `${m} Mo`)
+                                  : (m >= 12 ? `${m / 12} ปี` : `${m} เดือน`)}
                               </button>
                             ))}
                             {/* Custom Input for contract */}
@@ -631,7 +648,7 @@ export function PriceSection({
                               />
                             </div>
                             <span className="flex items-center text-xs text-slate-400">
-                              ด.
+                              {isEn ? "mo." : "ด."}
                             </span>
                           </div>
 
@@ -654,29 +671,29 @@ export function PriceSection({
                     <FaAirbnb className="h-4 w-4 text-[#FF5A5F]" />
                   </div>
                   <h4 className="text-sm font-medium text-slate-900">
-                    ข้อมูลราคา Airbnb (Airbnb Pricing)
+                    {isEn ? "Airbnb Pricing" : "ข้อมูลราคา Airbnb (Airbnb Pricing)"}
                   </h4>
                 </div>
               )}
 
               <div className="space-y-6">
                 <UnitNumberField
-                  label="ราคาปล่อยเช่ารายวัน (Airbnb Daily Rate)"
+                  label={isEn ? "Airbnb Daily Rate" : "ราคาปล่อยเช่ารายวัน (Airbnb Daily Rate)"}
                   name="airbnb_daily_price"
                   control={form.control}
-                  placeholder="กรุณากรอกราคาปล่อยเช่ารายวัน"
-                  suffix="฿ / วัน"
+                  placeholder={isEn ? "Enter daily rate" : "กรุณากรอกราคาปล่อยเช่ารายวัน"}
+                  suffix={isEn ? "฿ / Day" : "฿ / วัน"}
                   disabled={isReadOnly}
                   size="default"
                   className="text-sm font-medium text-slate-700"
                 />
 
                 <UnitNumberField
-                  label="ราคาปล่อยเช่ารายเดือน (Airbnb Monthly Rate)"
+                  label={isEn ? "Airbnb Monthly Rate" : "ราคาปล่อยเช่ารายเดือน (Airbnb Monthly Rate)"}
                   name="airbnb_monthly_price"
                   control={form.control}
-                  placeholder="กรุณากรอกราคาปล่อยเช่ารายเดือน"
-                  suffix="฿ / เดือน"
+                  placeholder={isEn ? "Enter monthly rate" : "กรุณากรอกราคาปล่อยเช่ารายเดือน"}
+                  suffix={isEn ? "฿ / Month" : "฿ / เดือน"}
                   disabled={isReadOnly}
                   size="default"
                   className="text-sm font-medium text-slate-700"
@@ -705,16 +722,16 @@ export function PriceSection({
                     return (
                       <FormItem>
                         <FormLabel className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
-                          สัญญาขั้นต่ำ (Airbnb Minimum Contract)
+                          {isEn ? "Airbnb Minimum Stay" : "สัญญาขั้นต่ำ (Airbnb Minimum Contract)"}
                         </FormLabel>
                         <div className="flex flex-col gap-2.5">
                           {/* Quick Presets */}
                           <div className="flex flex-wrap gap-2">
                             {[
-                              { label: "1 วัน", value: "1 day" },
-                              { label: "1 สัปดาห์", value: "1 week" },
-                              { label: "1 เดือน", value: "1 month" },
-                              { label: "6 เดือน", value: "6 month" },
+                              { label: isEn ? "1 Day" : "1 วัน", value: "1 day" },
+                              { label: isEn ? "1 Week" : "1 สัปดาห์", value: "1 week" },
+                              { label: isEn ? "1 Month" : "1 เดือน", value: "1 month" },
+                              { label: isEn ? "6 Months" : "6 เดือน", value: "6 month" },
                             ].map((preset) => (
                               <button
                                 key={preset.value}
@@ -744,7 +761,7 @@ export function PriceSection({
                                 pattern="[0-9]*"
                                 value={number}
                                 onChange={(e) => handleNumberChange(e.target.value)}
-                                placeholder="หรือระบุตัวเลข เช่น 3, 5"
+                                placeholder={isEn ? "or enter number e.g. 3, 5" : "หรือระบุตัวเลข เช่น 3, 5"}
                                 disabled={isReadOnly}
                                 className="h-11 rounded-lg border-slate-200 text-sm font-medium text-slate-700 placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-orange-500"
                               />
@@ -756,9 +773,9 @@ export function PriceSection({
                                 disabled={isReadOnly}
                                 className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 focus-visible:ring-orange-500 outline-none"
                               >
-                                <option value="day">วัน (Days)</option>
-                                <option value="week">สัปดาห์ (Weeks)</option>
-                                <option value="month">เดือน (Months)</option>
+                                <option value="day">{isEn ? "Days" : "วัน (Days)"}</option>
+                                <option value="week">{isEn ? "Weeks" : "สัปดาห์ (Weeks)"}</option>
+                                <option value="month">{isEn ? "Months" : "เดือน (Months)"}</option>
                               </select>
                             </div>
                           </div>
@@ -778,9 +795,19 @@ export function PriceSection({
           <Sparkles className="h-5 w-5 text-yellow-500 shrink-0" />
           <p className="text-xs leading-relaxed">
             <span className="font-semibold text-slate-800">Tips:</span>{" "}
-            การใส่ส่วนลด (ราคาพิเศษ) จะช่วยให้ประกาศของคุณติดป้าย{" "}
-            <span className="font-bold text-rose-500">Hot Deal</span>{" "}
-            และได้รับการจัดอันดับที่ดีขึ้นในหน้าค้นหา
+            {isEn ? (
+              <>
+                Adding discounts / special rates helps your listing earn the{" "}
+                <span className="font-bold text-rose-500">Hot Deal</span> badge
+                and improves search ranking.
+              </>
+            ) : (
+              <>
+                การใส่ส่วนลด (ราคาพิเศษ) จะช่วยให้ประกาศของคุณติดป้าย{" "}
+                <span className="font-bold text-rose-500">Hot Deal</span>{" "}
+                และได้รับการจัดอันดับที่ดีขึ้นในหน้าค้นหา
+              </>
+            )}
           </p>
         </div>
       </CardContent>

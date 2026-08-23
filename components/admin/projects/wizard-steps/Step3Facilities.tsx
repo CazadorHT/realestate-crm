@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 const FACILITIES_LIST = [
   { value: "สระว่ายน้ำ", label: "สระว่ายน้ำ (Swimming Pool)" },
@@ -31,10 +32,15 @@ export function Step3Facilities({
   dbFeatures,
   groupedFeatures,
 }: Step3FacilitiesProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="space-y-4">
-        <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-1">สิ่งอำนวยความสะดวกโครงการ (Facilities)</h4>
+        <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-1">
+          {isEn ? "Project Amenities & Facilities" : "สิ่งอำนวยความสะดวกโครงการ (Facilities)"}
+        </h4>
         
         {dbFeatures.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
@@ -98,3 +104,4 @@ export function Step3Facilities({
     </div>
   );
 }
+

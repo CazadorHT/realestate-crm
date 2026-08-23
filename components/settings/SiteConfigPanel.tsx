@@ -59,10 +59,14 @@ import { FaLine } from "react-icons/fa";
 import { Eye, EyeOff } from "lucide-react";
 import { FaFacebook } from "react-icons/fa6";
 import { siteConfig } from "@/lib/site-config";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 type BrandingSettings = z.infer<typeof siteSettingsSchema>;
 
 export function SiteConfigPanel() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [initialData, setInitialData] = useState<SiteSettings | null>(null);
@@ -108,13 +112,13 @@ export function SiteConfigPanel() {
         setInitialData(data);
         form.reset(data as BrandingSettings);
       } catch (error) {
-        toast.error("ไม่สามารถโหลดการตั้งค่าได้");
+        toast.error(isEn ? "Failed to load settings" : "ไม่สามารถโหลดการตั้งค่าได้");
       } finally {
         setIsLoading(false);
       }
     }
     loadSettings();
-  }, [form]);
+  }, [form, isEn]);
 
   // Handle Unsaved Changes before leaving
   useEffect(() => {
@@ -135,17 +139,17 @@ export function SiteConfigPanel() {
           values as Partial<SiteSettings>,
         );
         if (result.success) {
-          toast.success("บันทึกการตั้งค่าแบรนด์เรียบร้อย");
+          toast.success(isEn ? "Brand settings saved successfully" : "บันทึกการตั้งค่าแบรนด์เรียบร้อย");
           if (initialData) {
             const newData = { ...initialData, ...values } as SiteSettings;
             setInitialData(newData);
             form.reset(newData as BrandingSettings);
           }
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาดในการบันทึก");
+          toast.error(result.message || (isEn ? "Error saving settings" : "เกิดข้อผิดพลาดในการบันทึก"));
         }
       } catch (error) {
-        toast.error("เกิดข้อผิดพลาดที่ไม่คาดคิดในการบันทึก");
+        toast.error(isEn ? "Unexpected error saving settings" : "เกิดข้อผิดพลาดที่ไม่คาดคิดในการบันทึก");
       }
     });
   };
@@ -153,24 +157,22 @@ export function SiteConfigPanel() {
   const handleReset = () => {
     if (initialData) {
       form.reset(initialData);
-      toast.info("คืนค่าข้อมูลเดิมเรียบร้อย");
+      toast.info(isEn ? "Restored original settings" : "คืนค่าข้อมูลเดิมเรียบร้อย");
     }
   };
+
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     );
   }
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {/* Save Action Bar */}
         <div
           className={cn(
@@ -183,14 +185,14 @@ export function SiteConfigPanel() {
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-amber-600 animate-pulse" />
                 <span className="text-sm font-bold text-amber-700">
-                  มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก
+                  {isEn ? "Unsaved changes pending" : "มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก"}
                 </span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-emerald-500" />
                 <span className="text-sm font-medium text-slate-500">
-                  ข้อมูลเว็บไซต์เป็นปัจจุบัน
+                  {isEn ? "Website data up to date" : "ข้อมูลเว็บไซต์เป็นปัจจุบัน"}
                 </span>
               </div>
             )}
@@ -198,7 +200,7 @@ export function SiteConfigPanel() {
               <div className="flex items-center gap-2 px-2 border-l border-slate-200 ml-2">
                 <AlertTriangle className="h-4 w-4 text-red-500" />
                 <span className="text-xs font-semibold text-red-500">
-                  ข้อมูลบางอย่างไม่ถูกต้อง
+                  {isEn ? "Some fields contain errors" : "ข้อมูลบางอย่างไม่ถูกต้อง"}
                 </span>
               </div>
             )}
@@ -213,7 +215,7 @@ export function SiteConfigPanel() {
                 className="rounded-xl font-bold text-slate-600 hover:bg-slate-100"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                ยกเลิก
+                {isEn ? "Reset" : "ยกเลิก"}
               </Button>
             )}
             <Button
@@ -236,7 +238,7 @@ export function SiteConfigPanel() {
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
-              บันทึกข้อมูลทั้งหมด
+              {isEn ? "Save All Changes" : "บันทึกข้อมูลทั้งหมด"}
             </Button>
           </div>
         </div>
@@ -252,10 +254,10 @@ export function SiteConfigPanel() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">
-                      ข้อมูลพื้นฐานเว็บไซต์
+                      {isEn ? "Basic Website Information" : "ข้อมูลพื้นฐานเว็บไซต์"}
                     </CardTitle>
                     <CardDescription>
-                      ชื่อเว็บไซต์และคำอธิบายสำหรับ SEO
+                      {isEn ? "Website name and SEO metadata descriptions" : "ชื่อเว็บไซต์และคำอธิบายสำหรับ SEO"}
                     </CardDescription>
                   </div>
                 </div>
@@ -266,10 +268,10 @@ export function SiteConfigPanel() {
                   name="site_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ชื่อเว็บไซต์ (Site Name)</FormLabel>
+                      <FormLabel>{isEn ? "Site Name" : "ชื่อเว็บไซต์ (Site Name)"}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={`เช่น ${siteConfig.name}`}
+                          placeholder={isEn ? `e.g. ${siteConfig.name}` : `เช่น ${siteConfig.name}`}
                           className="rounded-xl"
                           {...field}
                         />
@@ -283,15 +285,14 @@ export function SiteConfigPanel() {
                   name="company_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ชื่อบริษัท (Company Name)</FormLabel>
+                      <FormLabel>{isEn ? "Company Name" : "ชื่อบริษัท (Company Name)"}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={`เช่น ${siteConfig.company}`}
+                          placeholder={isEn ? `e.g. ${siteConfig.company}` : `เช่น ${siteConfig.company}`}
                           className="rounded-xl"
                           {...field}
                         />
                       </FormControl>
-
                       <FormMessage />
                     </FormItem>
                   )}
@@ -301,10 +302,10 @@ export function SiteConfigPanel() {
                   name="site_description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>คำอธิบายเว็บไซต์ (Description)</FormLabel>
+                      <FormLabel>{isEn ? "Website Description" : "คำอธิบายเว็บไซต์ (Description)"}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="คำอธิบายสำหรับแสดงผลบน Google..."
+                          placeholder={isEn ? "Meta description for Google and search engines..." : "คำอธิบายสำหรับแสดงผลบน Google..."}
                           className="rounded-xl min-h-[100px] resize-none"
                           {...field}
                         />
@@ -326,7 +327,7 @@ export function SiteConfigPanel() {
                             <Globe className="h-4 w-4 text-blue-400" />
                           </FormLabel>
                           <p className="text-xs text-slate-500">
-                            เปิดหรือปิดการทำงานของ GTM และ Tracking ทั้งหมด
+                            {isEn ? "Enable or disable all GTM scripts and tracking" : "เปิดหรือปิดการทำงานของ GTM และ Tracking ทั้งหมด"}
                           </p>
                         </div>
                         <FormControl>
@@ -373,7 +374,7 @@ export function SiteConfigPanel() {
                             </div>
                           </FormControl>
                           <p className="text-[10px] text-slate-400">
-                            ระบุ ID เพื่อให้ระบบเริ่มเก็บสถิติและ Marketing Attribution
+                            {isEn ? "Provide Container ID for web analytics and marketing attribution" : "ระบุ ID เพื่อให้ระบบเริ่มเก็บสถิติและ Marketing Attribution"}
                           </p>
                           <FormMessage />
                         </FormItem>
@@ -393,10 +394,10 @@ export function SiteConfigPanel() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">
-                      ระบบ CRM Intelligence
+                      {isEn ? "CRM Intelligence System" : "ระบบ CRM Intelligence"}
                     </CardTitle>
                     <CardDescription>
-                      ตั้งค่าการแจ้งเตือนและการสรุปผลด้วย AI
+                      {isEn ? "Configure smart alerts and AI report summaries" : "ตั้งค่าการแจ้งเตือนและการสรุปผลด้วย AI"}
                     </CardDescription>
                   </div>
                 </div>
@@ -408,7 +409,7 @@ export function SiteConfigPanel() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        Hot Lead Threshold (คะแนน)
+                        {isEn ? "Hot Lead Threshold (Score)" : "Hot Lead Threshold (คะแนน)"}
                         <Info className="h-4 w-4 text-slate-400" />
                       </FormLabel>
                       <FormControl>
@@ -421,7 +422,7 @@ export function SiteConfigPanel() {
                         />
                       </FormControl>
                       <p className="text-[10px] text-slate-400">
-                        คะแนน AI Score ขั้นต่ำที่ระบบจะแจ้งเตือนเป็น "ลีดคุณภาพสูง" (แนะนำ: 80)
+                        {isEn ? 'Minimum AI score to flag as a "High-Quality Lead" (Recommended: 80)' : 'คะแนน AI Score ขั้นต่ำที่ระบบจะแจ้งเตือนเป็น "ลีดคุณภาพสูง" (แนะนำ: 80)'}
                       </p>
                       <FormMessage />
                     </FormItem>
@@ -439,7 +440,7 @@ export function SiteConfigPanel() {
                           <Sparkles className="h-4 w-4 text-indigo-400" />
                         </FormLabel>
                         <p className="text-xs text-slate-500">
-                          เปิดใช้งานการสรุปรายงานบริหารรายสัปดาห์
+                          {isEn ? "Enable automated weekly executive summary reports" : "เปิดใช้งานการสรุปรายงานบริหารรายสัปดาห์"}
                         </p>
                       </div>
                       <FormControl>
@@ -463,10 +464,10 @@ export function SiteConfigPanel() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">
-                      เอกลักษณ์แบรนด์ (Visual Identity)
+                      {isEn ? "Visual Identity" : "เอกลักษณ์แบรนด์ (Visual Identity)"}
                     </CardTitle>
                     <CardDescription>
-                      จัดการโลโก้และไอคอนของเว็บไซต์
+                      {isEn ? "Manage logos, icons, and social sharing cards" : "จัดการโลโก้และไอคอนของเว็บไซต์"}
                     </CardDescription>
                   </div>
                 </div>
@@ -479,7 +480,7 @@ export function SiteConfigPanel() {
                     <FormItem>
                       <FormControl>
                         <SiteAssetUploader
-                          label="Logo (สำหรับพื้นหลังสีเข้ม/โปร่งใส)"
+                          label={isEn ? "Logo (For Dark/Transparent backgrounds)" : "Logo (สำหรับพื้นหลังสีเข้ม/โปร่งใส)"}
                           value={field.value}
                           onChange={field.onChange}
                           disabled={isPending}
@@ -497,7 +498,7 @@ export function SiteConfigPanel() {
                     <FormItem>
                       <FormControl>
                         <SiteAssetUploader
-                          label="Logo (สำหรับพื้นหลังสีสว่าง)"
+                          label={isEn ? "Logo (For Light backgrounds)" : "Logo (สำหรับพื้นหลังสีสว่าง)"}
                           className="bg-slate-900 hover:bg-slate-800"
                           value={field.value}
                           onChange={field.onChange}
@@ -516,7 +517,7 @@ export function SiteConfigPanel() {
                     <FormItem>
                       <FormControl>
                         <SiteAssetUploader
-                          label="Favicon URL (16x16 หรือ 32x32)"
+                          label={isEn ? "Favicon URL (16x16 or 32x32)" : "Favicon URL (16x16 หรือ 32x32)"}
                           value={field.value}
                           onChange={field.onChange}
                           disabled={isPending}
@@ -535,7 +536,7 @@ export function SiteConfigPanel() {
                     <FormItem>
                       <FormControl>
                         <SiteAssetUploader
-                          label="Social Sharing Card (สำหรับแชร์ลงโซเชียล)"
+                          label={isEn ? "Social Sharing Card (OG Image)" : "Social Sharing Card (สำหรับแชร์ลงโซเชียล)"}
                           value={field.value}
                           onChange={field.onChange}
                           disabled={isPending}
@@ -543,7 +544,7 @@ export function SiteConfigPanel() {
                         />
                       </FormControl>
                       <p className="text-[10px] text-slate-400">
-                        แนะนำขนาด 1200x630 (1.91:1) หรือรูปภาพสี่เหลี่ยมจัตุรัสสำหรับ Facebook/Line
+                        {isEn ? "Recommended resolution: 1200x630 (1.91:1) or square image for Facebook/Line" : "แนะนำขนาด 1200x630 (1.91:1) หรือรูปภาพสี่เหลี่ยมจัตุรัสสำหรับ Facebook/Line"}
                       </p>
                       <FormMessage />
                     </FormItem>
@@ -560,9 +561,11 @@ export function SiteConfigPanel() {
                     <Phone className="h-5 w-5 text-emerald-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">ข้อมูลการติดต่อ</CardTitle>
+                    <CardTitle className="text-lg">
+                      {isEn ? "Contact Information" : "ข้อมูลการติดต่อ"}
+                    </CardTitle>
                     <CardDescription>
-                      ข้อมูลที่จะแสดงบนหน้าติดต่อเราและ Footer
+                      {isEn ? "Details displayed on Contact page and website footer" : "ข้อมูลที่จะแสดงบนหน้าติดต่อเราและ Footer"}
                     </CardDescription>
                   </div>
                 </div>
@@ -574,7 +577,7 @@ export function SiteConfigPanel() {
                     name="contact_phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>เบอร์โทรศัพท์</FormLabel>
+                        <FormLabel>{isEn ? "Phone Number" : "เบอร์โทรศัพท์"}</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="0XX-XXX-XXXX"
@@ -591,7 +594,7 @@ export function SiteConfigPanel() {
                     name="contact_email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>อีเมล</FormLabel>
+                        <FormLabel>{isEn ? "Email" : "อีเมล"}</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="name@example.com"
@@ -609,10 +612,10 @@ export function SiteConfigPanel() {
                   name="contact_address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ที่อยู่สำนักงาน</FormLabel>
+                      <FormLabel>{isEn ? "Office Address" : "ที่อยู่สำนักงาน"}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="เลขที่... ถนน... แขวง... เขต..."
+                          placeholder={isEn ? "Address, Road, District, Province..." : "เลขที่... ถนน... แขวง... เขต..."}
                           className="rounded-xl min-h-[80px] resize-none"
                           {...field}
                         />
@@ -650,10 +653,10 @@ export function SiteConfigPanel() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">
-                      โซเชียลมีเดีย (Social Media)
+                      {isEn ? "Social Media" : "โซเชียลมีเดีย (Social Media)"}
                     </CardTitle>
                     <CardDescription>
-                      ลิงก์ไปยังช่องทางโซเชียลต่างๆ ของบริษัท
+                      {isEn ? "Links to company official social channels" : "ลิงก์ไปยังช่องทางโซเชียลต่างๆ ของบริษัท"}
                     </CardDescription>
                   </div>
                 </div>
@@ -733,7 +736,7 @@ export function SiteConfigPanel() {
                             <div className="flex items-center gap-2 mb-2">
                               <FaLine className="h-4 w-4 text-emerald-600" />
                               <FormLabel className="m-0">
-                                Line ID (แสดงเป็นข้อความ)
+                                {isEn ? "Line ID (Text)" : "Line ID (แสดงเป็นข้อความ)"}
                               </FormLabel>
                             </div>
                             <FormControl>
@@ -787,7 +790,7 @@ export function SiteConfigPanel() {
                       Social Preview
                     </CardTitle>
                     <CardDescription className="text-slate-400">
-                      ตัวอย่างการแชร์บนโซเชียล
+                      {isEn ? "Live social share card preview" : "ตัวอย่างการแชร์บนโซเชียล"}
                     </CardDescription>
                   </div>
                 </div>
@@ -820,11 +823,11 @@ export function SiteConfigPanel() {
                         DOMAIN PREVIEW
                       </p>
                       <h4 className="text-sm font-bold text-slate-800 mt-1 line-clamp-1">
-                        {form.watch("site_name") || "ชื่อเว็บไซต์ของคุณ"}
+                        {form.watch("site_name") || (isEn ? "Your Website Name" : "ชื่อเว็บไซต์ของคุณ")}
                       </h4>
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
                         {form.watch("site_description") ||
-                          "คำอธิบายเว็บไซต์..."}
+                          (isEn ? "Website description..." : "คำอธิบายเว็บไซต์...")}
                       </p>
                     </div>
                   </div>
@@ -833,8 +836,9 @@ export function SiteConfigPanel() {
                   <div className="flex gap-3">
                     <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                     <p className="text-[10px] text-blue-700 leading-relaxed font-medium">
-                      รูปภาพพรีวิวนี้ใช้ **Logo (พื้นหลังสีเข้ม)**
-                      เป็นภาพปกชั่วคราว
+                      {isEn 
+                        ? "This preview uses **Logo (Dark Background)** as a temporary placeholder." 
+                        : "รูปภาพพรีวิวนี้ใช้ **Logo (พื้นหลังสีเข้ม)** เป็นภาพปกชั่วคราว"}
                     </p>
                   </div>
                 </div>
@@ -846,11 +850,11 @@ export function SiteConfigPanel() {
         <div className="flex items-start gap-4 p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
           <Info className="h-5 w-5 text-blue-500 mt-0.5" />
           <div className="space-y-1">
-            <p className="text-sm font-bold text-blue-900">เกร็ดน่ารู้</p>
+            <p className="text-sm font-bold text-blue-900">{isEn ? "Helpful Tip" : "เกร็ดน่ารู้"}</p>
             <p className="text-xs text-blue-700 leading-relaxed">
-              ข้อมูลเหล่านี้จะถูกนำไปแสดงผลบนหน้าเว็บไซต์สาธารณะโดยอัตโนมัติ
-              รวมถึงใน SEO Meta Tags เพื่อให้ลูกค้าและ Search Engine
-              สามารถเข้าถึงข้อมูลที่ถูกต้องของแบรนด์คุณได้ทันที
+              {isEn 
+                ? "This information is automatically displayed across the public website and SEO meta tags, allowing customers and search engines to discover your brand accurately." 
+                : "ข้อมูลเหล่านี้จะถูกนำไปแสดงผลบนหน้าเว็บไซต์สาธารณะโดยอัตโนมัติ รวมถึงใน SEO Meta Tags เพื่อให้ลูกค้าและ Search Engine สามารถเข้าถึงข้อมูลที่ถูกต้องของแบรนด์คุณได้ทันที"}
             </p>
           </div>
         </div>
@@ -858,3 +862,4 @@ export function SiteConfigPanel() {
     </Form>
   );
 }
+

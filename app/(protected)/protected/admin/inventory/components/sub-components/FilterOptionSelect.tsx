@@ -9,6 +9,7 @@ import {
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 /**
  * 🛡️ Elite FilterOptionSelect
@@ -30,6 +31,9 @@ interface FilterOptionSelectProps {
 }
 
 export function FilterOptionSelect({ label, value, options, onSelect, placeholder, icon }: FilterOptionSelectProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -44,18 +48,18 @@ export function FilterOptionSelect({ label, value, options, onSelect, placeholde
         title={
           <div className="flex items-center gap-2">
             {icon}
-            <span>เลือก{label}</span>
+            <span>{isEn ? `Select ${label}` : `เลือก${label}`}</span>
           </div>
         }
         trigger={
           <Button
             variant="outline"
-            className="w-full h-11 justify-between px-4 rounded-xl border-slate-200 bg-white hover:bg-slate-50 transition-all font-medium text-slate-700 shadow-xs"
+            className="w-full h-11 justify-between px-4 rounded-xl border-slate-200 bg-white hover:bg-slate-50 transition-all font-medium text-slate-700 shadow-xs cursor-pointer"
           >
             <div className="flex items-center gap-2 truncate">
               {icon && <span className="text-slate-400">{icon}</span>}
               <span className={cn(!selectedOption && "text-slate-400")}>
-                {selectedOption ? selectedOption.label : placeholder || "เลือก..."}
+                {selectedOption ? selectedOption.label : placeholder || (isEn ? "Select..." : "เลือก...")}
               </span>
             </div>
             <ChevronDown className="h-4 w-4 text-slate-300 shrink-0" />
@@ -68,7 +72,7 @@ export function FilterOptionSelect({ label, value, options, onSelect, placeholde
               key={opt.value}
               variant="ghost"
               className={cn(
-                "w-full h-14 justify-between px-3 rounded-xl transition-all border border-transparent",
+                "w-full h-14 justify-between px-3 rounded-xl transition-all border border-transparent cursor-pointer",
                 value === opt.value 
                   ? "bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-100 hover:text-blue-700" 
                   : "text-slate-600 hover:bg-slate-50 hover:border-slate-100"
@@ -113,3 +117,4 @@ export function FilterOptionSelect({ label, value, options, onSelect, placeholde
     </div>
   );
 }
+

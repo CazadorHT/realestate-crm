@@ -2,6 +2,7 @@
 
 import { type Language } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -132,6 +133,8 @@ export function SocialPostDialog({
 }: SocialPostDialogProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [content, setContent] = useState("");
   const [isCustomContent, setIsCustomContent] = useState(false);
   const [customContent, setCustomContent] = useState("");
@@ -249,19 +252,23 @@ export function SocialPostDialog({
       setIdentity(validContents[0].identity || {});
       
       if (!mergedContent) {
-        setResultMessage("ยังไม่ได้ตั้งค่า Template สำหรับช่องทางนี้ กรุณาไปที่หน้าตั้งค่า");
+        setResultMessage(
+          isEn 
+            ? "Template not configured for this channel yet. Please configure in settings." 
+            : "ยังไม่ได้ตั้งค่า Template สำหรับช่องทางนี้ กรุณาไปที่หน้าตั้งค่า"
+        );
       }
     } catch (e) {
       console.error("Load Social Content Error:", e);
       if (versionRef.current === currentVersion) {
-        toast.error("ไม่สามารถโหลดเนื้อหาประกาศได้ กรุณาลองใหม่อีกครั้ง");
+        toast.error(isEn ? "Failed to load post content. Please try again." : "ไม่สามารถโหลดเนื้อหาประกาศได้ กรุณาลองใหม่อีกครั้ง");
       }
     } finally {
       if (versionRef.current === currentVersion) {
         setIsLoading(false);
       }
     }
-  }, [isOpen, propertyId, selectedLangs, platform]);
+  }, [isOpen, propertyId, selectedLangs, platform, customCoverUrl, isEn]);
 
   useEffect(() => {
     if (isOpen && propertyId) {
@@ -308,10 +315,15 @@ export function SocialPostDialog({
     setStatus("POSTING");
     
     // Unified Process Monitor
-    const processId = startProcess(`โพสต์ ${PLATFORM_CONFIG[platform].title}: ${propertyTitle || "ทรัพย์สิน"}`, {
-      type: `SOCIAL_${platform}`,
-      onRetry: handlePost
-    });
+    const processId = startProcess(
+      isEn 
+        ? `Post to ${PLATFORM_CONFIG[platform].title}: ${propertyTitle || "Property"}` 
+        : `โพสต์ ${PLATFORM_CONFIG[platform].title}: ${propertyTitle || "ทรัพย์สิน"}`, 
+      {
+        type: `SOCIAL_${platform}`,
+        onRetry: handlePost
+      }
+    );
 
     try {
       let res: any;
@@ -352,9 +364,9 @@ export function SocialPostDialog({
       }
 
       if (res && res.success) {
-        finishProcess(processId, "SUCCESS", res.message || "โพสต์สำเร็จเรียบร้อย ✨");
+        finishProcess(processId, "SUCCESS", res.message || (isEn ? "Posted successfully ✨" : "โพสต์สำเร็จเรียบร้อย ✨"));
         setStatus("SUCCESS");
-        setResultMessage(res.message || "โพสต์สำเร็จเรียบร้อย");
+        setResultMessage(res.message || (isEn ? "Posted successfully" : "โพสต์สำเร็จเรียบร้อย"));
         
         // Clear saved draft on success
         localStorage.removeItem(`social_post_draft:${propertyId}:${platform}`);
@@ -365,13 +377,13 @@ export function SocialPostDialog({
         router.refresh();
         onSuccess?.();
       } else {
-        finishProcess(processId, "ERROR", res?.message || "เกิดข้อผิดพลาดในการโพสต์ ❌");
+        finishProcess(processId, "ERROR", res?.message || (isEn ? "Failed to post ❌" : "เกิดข้อผิดพลาดในการโพสต์ ❌"));
         setStatus("ERROR");
-        setResultMessage(res?.message || "เกิดข้อผิดพลาดในการโพสต์");
+        setResultMessage(res?.message || (isEn ? "Failed to post" : "เกิดข้อผิดพลาดในการโพสต์"));
       }
     } catch (error: any) {
       console.error("[SocialPostDialog] Post failed with client-side/network error:", error);
-      const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+      const errorMessage = error instanceof Error ? error.message : (isEn ? "Connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อ");
       
       // If it is the unexpected response error from Next.js server actions (typically timeout/502 but the action itself completed)
       if (errorMessage.toLowerCase().includes("unexpected response") || errorMessage.toLowerCase().includes("server action")) {
@@ -382,9 +394,19 @@ export function SocialPostDialog({
           console.error("[SocialPostDialog] Failed to update post timestamp fallback:", dbErr);
         }
         
-        finishProcess(processId, "SUCCESS", "ส่งข้อมูลไปยังโซเชียลมีเดียเรียบร้อยแล้ว (กำลังประมวลผลบนหน้าเพจ) ✨");
+        finishProcess(
+          processId, 
+          "SUCCESS", 
+          isEn 
+            ? "Payload submitted to social media (processing on page) ✨" 
+            : "ส่งข้อมูลไปยังโซเชียลมีเดียเรียบร้อยแล้ว (กำลังประมวลผลบนหน้าเพจ) ✨"
+        );
         setStatus("SUCCESS");
-        setResultMessage("ระบบได้ส่งข้อมูลไปยังโซเชียลมีเดียเรียบร้อยแล้ว แต่อาจใช้เวลา 1-2 นาทีในประมวลผลรูปภาพบนหน้าเพจของคุณครับ");
+        setResultMessage(
+          isEn 
+            ? "Payload submitted to social media. It may take 1-2 minutes to process images on your channel." 
+            : "ระบบได้ส่งข้อมูลไปยังโซเชียลมีเดียเรียบร้อยแล้ว แต่อาจใช้เวลา 1-2 นาทีในประมวลผลรูปภาพบนหน้าเพจของคุณครับ"
+        );
         localStorage.removeItem(`social_post_draft:${propertyId}:${platform}`);
         router.refresh();
         onSuccess?.();
@@ -393,8 +415,8 @@ export function SocialPostDialog({
 
       finishProcess(processId, "ERROR", errorMessage);
       setStatus("ERROR");
-      setResultMessage(`เกิดข้อผิดพลาดในการโพสต์: ${errorMessage}`);
-      toast.error(`โพสต์ไปที่ ${platform} ไม่สำเร็จ! (${errorMessage})`, {
+      setResultMessage(isEn ? `Error posting: ${errorMessage}` : `เกิดข้อผิดพลาดในการโพสต์: ${errorMessage}`);
+      toast.error(isEn ? `Failed to post to ${platform}! (${errorMessage})` : `โพสต์ไปที่ ${platform} ไม่สำเร็จ! (${errorMessage})`, {
         duration: 6000,
       });
     }
@@ -440,13 +462,13 @@ export function SocialPostDialog({
                       </div>
                     ) : (
                       <DrawerDescription className="text-xs font-medium text-slate-400">
-                        ตรวจสอบพรีวิวก่อนทำการโพสต์
+                        {isEn ? "Review preview before posting" : "ตรวจสอบพรีวิวก่อนทำการโพสต์"}
                       </DrawerDescription>
                     )}
                   </div>
                 </div>
                 <DrawerClose asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer">
                     <X className="h-5 w-5" />
                   </Button>
                 </DrawerClose>
@@ -459,20 +481,20 @@ export function SocialPostDialog({
                 {/* Language Selector */}
                 <div className="space-y-3">
                   <Label className="text-xs font-bold text-slate-500 uppercase tracking-[2px] ml-1">
-                    Choose Language
+                    {isEn ? "Choose Language" : "เลือกภาษา"}
                   </Label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: "th", label: "Thai", flag: "🇹🇭" },
-                      { id: "en", label: "English", flag: "🇺🇸" },
-                      { id: "cn", label: "Chinese", flag: "🇨🇳" },
-                      { id: "ru", label: "Russian", flag: "🇷🇺" },
+                      { id: "th", label: isEn ? "Thai" : "ไทย", flag: "🇹🇭" },
+                      { id: "en", label: isEn ? "English" : "อังกฤษ", flag: "🇺🇸" },
+                      { id: "cn", label: isEn ? "Chinese" : "จีน", flag: "🇨🇳" },
+                      { id: "ru", label: isEn ? "Russian" : "รัสเซีย", flag: "🇷🇺" },
                     ].map((l) => (
                       <button
                         key={l.id}
                         onClick={() => toggleLang(l.id as any)}
                         className={cn(
-                          "flex flex-col items-center gap-1 py-3 px-2 rounded-xl border transition-all",
+                          "flex flex-col items-center gap-1 py-3 px-2 rounded-xl border transition-all cursor-pointer",
                           selectedLangs.includes(l.id as any)
                             ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm font-bold"
                             : "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100"
@@ -497,7 +519,7 @@ export function SocialPostDialog({
                       htmlFor="mobile-custom-content"
                       className="text-sm font-semibold text-slate-700 cursor-pointer select-none"
                     >
-                      เขียนเนื้อหาเอง (Custom Content)
+                      {isEn ? "Custom Content" : "เขียนเนื้อหาเอง (Custom Content)"}
                     </Label>
                   </div>
 
@@ -513,15 +535,15 @@ export function SocialPostDialog({
                             size="sm"
                             type="button"
                             onClick={() => setCustomContent(content)}
-                            className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1 rounded-lg"
+                            className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1 rounded-lg cursor-pointer"
                           >
                             <Copy className="h-3 w-3" />
-                            คัดลอกข้อความเทมเพลต
+                            {isEn ? "Copy Template Text" : "คัดลอกข้อความเทมเพลต"}
                           </Button>
                         )}
                       </div>
                       <Textarea
-                        placeholder="กรอกเนื้อหาโพสต์ที่นี่..."
+                        placeholder={isEn ? "Enter your custom post text here..." : "กรอกเนื้อหาโพสต์ที่นี่..."}
                         value={customContent}
                         onChange={(e) => setCustomContent(e.target.value)}
                         className="min-h-[120px] text-sm"
@@ -546,7 +568,7 @@ export function SocialPostDialog({
                       </div>
                       <div className="space-y-1">
                         <h3 className={cn("text-xl font-bold", status === "SUCCESS" ? "text-green-600" : "text-red-600")}>
-                          {status === "SUCCESS" ? "เรียบร้อย!" : "เกิดข้อผิดพลาด"}
+                          {status === "SUCCESS" ? (isEn ? "Success!" : "เรียบร้อย!") : (isEn ? "An error occurred" : "เกิดข้อผิดพลาด")}
                         </h3>
                         <p className="text-sm text-slate-500 px-4">{resultMessage}</p>
                       </div>
@@ -555,7 +577,7 @@ export function SocialPostDialog({
                     <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
                       <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
                       <p className="text-sm font-medium text-slate-500">
-                        {status === "POSTING" ? "กำลังทำการโพสต์..." : "กำลังเตรียมข้อมูล..."}
+                        {status === "POSTING" ? (isEn ? "Posting to channel..." : "กำลังทำการโพสต์...") : (isEn ? "Preparing data..." : "กำลังเตรียมข้อมูล...")}
                       </p>
                     </div>
                   ) : !isCustomContent && !content && platform !== "LINE" ? (
@@ -564,14 +586,14 @@ export function SocialPostDialog({
                         <Settings className="h-7 w-7" />
                       </div>
                       <div className="space-y-1.5">
-                        <h4 className="font-bold text-orange-800">ไม่พบ Template</h4>
+                        <h4 className="font-bold text-orange-800">{isEn ? "Template Not Found" : "ไม่พบ Template"}</h4>
                         <p className="text-[11px] text-orange-700 leading-relaxed max-w-[200px]">
-                          คุณยังไม่ได้ตั้งค่า Template สำหรับช่องทางนี้ในเมนู Social Automation
+                          {isEn ? "You haven't configured a template for this channel in Social Automation settings." : "คุณยังไม่ได้ตั้งค่า Template สำหรับช่องทางนี้ในเมนู Social Automation"}
                         </p>
                       </div>
                       <Link href="/protected/settings?tab=social#social-automation">
-                        <Button variant="outline" size="sm" className="bg-white border-orange-200 text-orange-700 hover:bg-orange-100 font-bold">
-                          ไปตั้งค่าตอนนี้
+                        <Button variant="outline" size="sm" className="bg-white border-orange-200 text-orange-700 hover:bg-orange-100 font-bold cursor-pointer">
+                          {isEn ? "Configure Now" : "ไปตั้งค่าตอนนี้"}
                         </Button>
                       </Link>
                     </div>
@@ -595,11 +617,11 @@ export function SocialPostDialog({
                   <div className="p-3 rounded-xl bg-red-50 border border-red-100 space-y-2 animate-in fade-in duration-300">
                     <p className="text-[11px] text-red-600 font-bold flex items-center gap-2">
                       <AlertCircle className="h-4 w-4" />
-                      ยังไม่ได้เชื่อมต่อ {platform}
+                      {isEn ? `${platform} is not connected` : `ยังไม่ได้เชื่อมต่อ ${platform}`}
                     </p>
                     <Link href="/protected/settings?tab=social">
-                      <Button size="sm" className="w-full hover:bg-rose-600 text-xs h-8 border-red-200 text-red-700 hover:text-white bg-white font-bold">
-                        ไปที่หน้าตั้งค่า
+                      <Button size="sm" className="w-full hover:bg-rose-600 text-xs h-8 border-red-200 text-red-700 hover:text-white bg-white font-bold cursor-pointer">
+                        {isEn ? "Go to Settings" : "ไปที่หน้าตั้งค่า"}
                       </Button>
                     </Link>
                   </div>
@@ -611,26 +633,26 @@ export function SocialPostDialog({
             <DrawerFooter className="px-5 py-4 border-t border-slate-100 bg-slate-50/50 shrink-0 flex flex-col sm:flex-row gap-3">
               {status === "SUCCESS" ? (
                 <Button
-                  className="w-full h-12 rounded-2xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg"
+                  className="w-full h-12 rounded-2xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg cursor-pointer"
                   onClick={() => onOpenChange(false)}
                 >
-                  ตกลง (เรียบร้อยแล้ว)
+                  {isEn ? "Done" : "ตกลง (เรียบร้อยแล้ว)"}
                 </Button>
               ) : status === "ERROR" ? (
                 <div className="flex w-full gap-3">
                   <DrawerClose asChild>
-                    <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold border-slate-200 text-slate-600">
-                      ยกเลิก
+                    <Button variant="outline" className="flex-1 h-12 rounded-2xl font-bold border-slate-200 text-slate-600 cursor-pointer">
+                      {isEn ? "Cancel" : "ยกเลิก"}
                     </Button>
                   </DrawerClose>
                   <Button
-                    className="flex-1 h-12 rounded-2xl font-bold bg-slate-100 hover:bg-slate-200 text-slate-900"
+                    className="flex-1 h-12 rounded-2xl font-bold bg-slate-100 hover:bg-slate-200 text-slate-900 cursor-pointer"
                     onClick={() => {
                       setStatus("IDLE");
                       setResultMessage("");
                     }}
                   >
-                    ลองใหม่อีกครั้ง
+                    {isEn ? "Try Again" : "ลองใหม่อีกครั้ง"}
                   </Button>
                 </div>
               ) : (
@@ -638,15 +660,15 @@ export function SocialPostDialog({
                   <DrawerClose asChild>
                     <Button 
                       variant="outline" 
-                      className="flex-1 h-12 rounded-2xl font-bold border-slate-200 text-slate-600"
+                      className="flex-1 h-12 rounded-2xl font-bold border-slate-200 text-slate-600 cursor-pointer"
                       disabled={status === "POSTING"}
                     >
-                      ยกเลิก
+                      {isEn ? "Cancel" : "ยกเลิก"}
                     </Button>
                   </DrawerClose>
                   
                   <Button
-                    className={cn("flex-1 h-12 rounded-2xl font-bold text-white shadow-lg gap-2", config.btnColor)}
+                    className={cn("flex-1 h-12 rounded-2xl font-bold text-white shadow-lg gap-2 cursor-pointer", config.btnColor)}
                     disabled={isLoading || status === "POSTING" || !isConnected || (platform !== "LINE" && activeContent.length === 0)}
                     onClick={handlePost}
                   >
@@ -655,7 +677,7 @@ export function SocialPostDialog({
                     ) : (
                       <Zap className="h-5 w-5" />
                     )}
-                    {status === "POSTING" ? "กำลังส่งข้อมูล..." : "โพสต์เลย"}
+                    {status === "POSTING" ? (isEn ? "Sending..." : "กำลังส่งข้อมูล...") : (isEn ? "Post Now" : "โพสต์เลย")}
                   </Button>
                 </div>
               )}
@@ -709,7 +731,7 @@ export function SocialPostDialog({
                     key={l.id}
                     onClick={() => toggleLang(l.id as any)}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs xs:text-sm transition-all duration-200 font-bold",
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs xs:text-sm transition-all duration-200 font-bold cursor-pointer",
                       isActive
                         ? "bg-white border border-slate-200 shadow-xs text-slate-800"
                         : "text-slate-400 hover:text-slate-600"
@@ -724,39 +746,39 @@ export function SocialPostDialog({
           </div>
         </div>
       }
-      description="ตรวจสอบพรีวิวก่อนทำการโพสต์ลงโซเชียลมีเดีย"
+      description={isEn ? "Review preview before posting to social media channels." : "ตรวจสอบพรีวิวก่อนทำการโพสต์ลงโซเชียลมีเดีย"}
       footer={
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="flex-1 rounded-2xl h-11 xs:h-12 font-bold border-slate-200"
+            className="flex-1 rounded-2xl h-11 xs:h-12 font-bold border-slate-200 cursor-pointer"
             disabled={status === "POSTING"}
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
 
           {status === "SUCCESS" ? (
             <Button
-              className="flex-1 rounded-2xl h-11 xs:h-12 font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg"
+              className="flex-1 rounded-2xl h-11 xs:h-12 font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg cursor-pointer"
               onClick={() => onOpenChange(false)}
             >
-              ตกลง
+              {isEn ? "Done" : "ตกลง"}
             </Button>
           ) : status === "ERROR" ? (
             <Button
-              className="flex-1 rounded-2xl h-11 xs:h-12 font-bold bg-slate-100 hover:bg-slate-200 text-slate-900"
+              className="flex-1 rounded-2xl h-11 xs:h-12 font-bold bg-slate-100 hover:bg-slate-200 text-slate-900 cursor-pointer"
               onClick={() => {
                 setStatus("IDLE");
                 setResultMessage("");
               }}
             >
-              ลองใหม่อีกครั้ง
+              {isEn ? "Try Again" : "ลองใหม่อีกครั้ง"}
             </Button>
           ) : (
             <Button
               className={cn(
-                "flex-1 rounded-2xl h-11 xs:h-12 font-bold text-white shadow-lg gap-2",
+                "flex-1 rounded-2xl h-11 xs:h-12 font-bold text-white shadow-lg gap-2 cursor-pointer",
                 platform === "LINE"
                   ? "bg-emerald-600 hover:bg-emerald-700"
                   : platform === "TIKTOK"
@@ -773,7 +795,7 @@ export function SocialPostDialog({
               ) : (
                 <Zap className="h-5 w-5" />
               )}
-              {status === "POSTING" ? "กำลังประมวลผล..." : "โพสต์เลย"}
+              {status === "POSTING" ? (isEn ? "Processing..." : "กำลังประมวลผล...") : (isEn ? "Post Now" : "โพสต์เลย")}
             </Button>
           )}
         </div>
@@ -788,7 +810,7 @@ export function SocialPostDialog({
               type="button"
               onClick={() => setIsCustomContent(!isCustomContent)}
               className={cn(
-                "flex items-center justify-between w-full p-4 rounded-2xl border transition-all duration-300 text-left shadow-sm",
+                "flex items-center justify-between w-full p-4 rounded-2xl border transition-all duration-300 text-left shadow-sm cursor-pointer",
                 isCustomContent
                   ? "bg-blue-50/60 border-blue-200 text-blue-900"
                   : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50/50"
@@ -802,8 +824,8 @@ export function SocialPostDialog({
                   <Edit className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold">เขียนเนื้อหาเอง (Custom Content)</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">พิมพ์ข้อความอิสระโดยไม่ใช้เทมเพลตระบบ</p>
+                  <p className="text-sm font-bold">{isEn ? "Custom Content" : "เขียนเนื้อหาเอง (Custom Content)"}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{isEn ? "Write custom post text without using the template" : "พิมพ์ข้อความอิสระโดยไม่ใช้เทมเพลตระบบ"}</p>
                 </div>
               </div>
               <div className={cn(
@@ -826,15 +848,15 @@ export function SocialPostDialog({
                       size="sm"
                       type="button"
                       onClick={() => setCustomContent(content)}
-                      className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1 rounded-lg"
+                      className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1 rounded-lg cursor-pointer"
                     >
                       <Copy className="h-3 w-3" />
-                      คัดลอกข้อความเทมเพลต
+                      {isEn ? "Copy Template Text" : "คัดลอกข้อความเทมเพลต"}
                     </Button>
                   )}
                 </div>
                 <Textarea
-                  placeholder="กรอกเนื้อหาโพสต์ที่นี่..."
+                  placeholder={isEn ? "Enter post content here..." : "กรอกเนื้อหาโพสต์ที่นี่..."}
                   value={customContent}
                   onChange={(e) => setCustomContent(e.target.value)}
                   className="max-h-[390px] text-sm md:text-base leading-relaxed"
@@ -843,14 +865,14 @@ export function SocialPostDialog({
             )}
 
             {/* Social Studio Banner Option */}
-            <div className="p-3.5 rounded-2xl border border-amber-200/80 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent space-y-3 shadow-xs">
+            <div className="p-3.5 rounded-2xl border border-amber-200/80 bg-linear-to-r from-amber-500/10 via-amber-400/5 to-transparent space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {customCoverUrl ? (
                     <div className="relative w-14 h-14 shrink-0">
                       <Image
                         src={customCoverUrl}
-                        alt="ภาพปกสไตล์โปร"
+                        alt={isEn ? "Social Studio Banner" : "ภาพปกสไตล์โปร"}
                         fill
                         unoptimized
                         className="rounded-xl object-cover border-2 border-emerald-500 shadow-md animate-in zoom-in-75 duration-200"
@@ -867,18 +889,22 @@ export function SocialPostDialog({
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="text-sm font-bold text-slate-900">
-                        ภาพปกสไตล์โปร (Social Studio Banner)
+                        {isEn ? "Social Studio Banner (Cover #1)" : "ภาพปกสไตล์โปร (Social Studio Banner)"}
                       </p>
                       {customCoverUrl && (
                         <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-xs">
-                          ✨ มีภาพปกใหม่แล้ว
+                          {isEn ? "✨ Custom Cover Ready" : "✨ มีภาพปกใหม่แล้ว"}
                         </span>
                       )}
                     </div>
                     <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
                       {customCoverUrl
-                        ? "ภาพปกนี้ถูกตั้งเป็นภาพแรก (Image #1) เรียบร้อยแล้ว สำหรับทุกช่องทาง (Facebook, IG, LINE, TikTok)"
-                        : "สร้างหรือใส่ภาพปกแบนเนอร์ไฮไลท์เป็นภาพแรกของโพสต์ (ใช้ได้กับทุกช่องทางรวมถึง TikTok)"}
+                        ? (isEn 
+                            ? "This custom banner is set as the first image (Image #1) for all channels (Facebook, IG, LINE, TikTok)." 
+                            : "ภาพปกนี้ถูกตั้งเป็นภาพแรก (Image #1) เรียบร้อยแล้ว สำหรับทุกช่องทาง (Facebook, IG, LINE, TikTok)")
+                        : (isEn 
+                            ? "Create or set a highlight banner as image #1 for all social channels including TikTok." 
+                            : "สร้างหรือใส่ภาพปกแบนเนอร์ไฮไลท์เป็นภาพแรกของโพสต์ (ใช้ได้กับทุกช่องทางรวมถึง TikTok)")}
                     </p>
                   </div>
                 </div>
@@ -892,7 +918,11 @@ export function SocialPostDialog({
                   className="flex-1 h-9 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 hover:text-amber-800 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                  <span>{customCoverUrl ? "🎨 แก้ไข/สร้างภาพปกใหม่" : "✨ + เพิ่ม/สร้างภาพปกด้วย AI Social Studio"}</span>
+                  <span>
+                    {customCoverUrl 
+                      ? (isEn ? "🎨 Edit / Create New Banner" : "🎨 แก้ไข/สร้างภาพปกใหม่") 
+                      : (isEn ? "✨ + Add Cover Banner with AI Studio" : "✨ + เพิ่ม/สร้างภาพปกด้วย AI Social Studio")}
+                  </span>
                 </Button>
                 {customCoverUrl && (
                   <Button
@@ -902,13 +932,13 @@ export function SocialPostDialog({
                     onClick={() => {
                       setImages((prev) => prev.filter((u) => u !== customCoverUrl));
                       setCustomCoverUrl(null);
-                      toast.info("ถอดภาพปก Social Studio ออกแล้ว");
+                      toast.info(isEn ? "Removed Social Studio cover banner" : "ถอดภาพปก Social Studio ออกแล้ว");
                     }}
                     className="h-9 px-3 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 text-xs font-bold cursor-pointer"
-                    title="ถอดภาพปกออก"
+                    title={isEn ? "Remove Cover" : "ถอดภาพปกออก"}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
-                    <span>ถอดภาพปก</span>
+                    <span>{isEn ? "Remove" : "ถอดภาพปก"}</span>
                   </Button>
                 )}
               </div>
@@ -940,7 +970,7 @@ export function SocialPostDialog({
                       status === "SUCCESS" ? "text-green-600" : "text-red-600"
                     )}
                   >
-                    {status === "SUCCESS" ? "ดำเนินการสำเร็จ!" : "เกิดข้อผิดพลาด"}
+                    {status === "SUCCESS" ? (isEn ? "Operation Successful!" : "ดำเนินการสำเร็จ!") : (isEn ? "An error occurred" : "เกิดข้อผิดพลาด")}
                   </h3>
                   <p className="text-slate-500 leading-relaxed max-w-[400px] mx-auto text-sm">
                     {resultMessage}
@@ -955,7 +985,7 @@ export function SocialPostDialog({
                 <Loader2 className="h-8 w-8 text-amber-200 absolute inset-0 m-auto animate-pulse" />
               </div>
               <p className="text-lg font-bold text-slate-600">
-                {status === "POSTING" ? "กำลังส่งข้อมูล..." : "กำลังเตรียมพรีวิว..."}
+                {status === "POSTING" ? (isEn ? "Sending data..." : "กำลังส่งข้อมูล...") : (isEn ? "Preparing preview..." : "กำลังเตรียมพรีวิว...")}
               </p>
             </div>
           ) : (
@@ -965,8 +995,8 @@ export function SocialPostDialog({
                   <div className="flex items-center gap-2 text-[11px] text-slate-400 italic">
                     <ImageIcon className="h-3.5 w-3.5" />
                     <span>
-                      {platform === "TIKTOK" ? "วิดีโอ (Photo Mode) " : "รูปภาพ "}
-                      {displayImages.length} รูป
+                      {platform === "TIKTOK" ? (isEn ? "Video (Photo Mode) " : "วิดีโอ (Photo Mode) ") : (isEn ? "Images " : "รูปภาพ ")}
+                      {displayImages.length} {isEn ? "photos" : "รูป"}
                     </span>
                   </div>
                   <div className={cn(

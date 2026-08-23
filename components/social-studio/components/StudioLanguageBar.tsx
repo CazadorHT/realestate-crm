@@ -3,6 +3,7 @@
 import React from "react";
 import { Globe } from "lucide-react";
 import type { StudioLanguage } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StudioLanguageBarProps {
   language: StudioLanguage;
@@ -10,15 +11,18 @@ interface StudioLanguageBarProps {
 }
 
 export function StudioLanguageBar({ language, onLanguageChange }: StudioLanguageBarProps) {
+  const { language: currentLang } = useLanguage();
+  const isEn = currentLang === "en";
+
   return (
     <div className="p-2.5 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-2">
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
         <Globe className="h-3.5 w-3.5 text-amber-400" />
-        <span>ภาษาภาพ & AI (Language)</span>
+        <span>{isEn ? "Banner Language & AI" : "ภาษาภาพ & AI (Language)"}</span>
       </div>
       <div className="flex gap-1">
         {[
-          { id: "th", label: "🇹🇭 ไทย" },
+          { id: "th", label: isEn ? "🇹🇭 TH" : "🇹🇭 ไทย" },
           { id: "en", label: "🇬🇧 EN" },
           { id: "zh", label: "🇨🇳 中文" },
           { id: "ru", label: "🇷🇺 RU" },
@@ -40,3 +44,4 @@ export function StudioLanguageBar({ language, onLanguageChange }: StudioLanguage
     </div>
   );
 }
+

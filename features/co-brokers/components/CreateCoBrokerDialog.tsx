@@ -1,4 +1,4 @@
-  "use client";
+"use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,6 +49,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface CreateCoBrokerDialogProps {
   isOpen: boolean;
@@ -65,6 +66,9 @@ export function CreateCoBrokerDialog({
   initialData,
   mode = "create"
 }: CreateCoBrokerDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
@@ -175,17 +179,21 @@ export function CreateCoBrokerDialog({
         : await updateCoBrokerAction(initialData!.id, values);
 
       if (result.success && result.data) {
-        toast.success(mode === "create" ? "เพิ่มรายชื่อคู่ค้าเรียบร้อยแล้ว" : "อัปเดตข้อมูลคู่ค้าเรียบร้อยแล้ว");
+        toast.success(
+          mode === "create" 
+            ? (isEn ? "Partner added successfully" : "เพิ่มรายชื่อคู่ค้าเรียบร้อยแล้ว")
+            : (isEn ? "Partner updated successfully" : "อัปเดตข้อมูลคู่ค้าเรียบร้อยแล้ว")
+        );
         onSuccess(result.data as CoBroker);
         if (mode === "create") {
           form.reset();
           setCurrentStep(1);
         }
       } else {
-        toast.error((result as any).error || "เกิดข้อผิดพลาดในการบันทึก");
+        toast.error((result as any).error || (isEn ? "Failed to save partner" : "เกิดข้อผิดพลาดในการบันทึก"));
       }
     } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      toast.error(isEn ? "Connection error occurred" : "เกิดข้อผิดพลาดในการเชื่อมต่อ");
     } finally {
       setIsSubmitting(false);
     }
@@ -194,11 +202,11 @@ export function CreateCoBrokerDialog({
   // Helper for Rating Selection
   const RatingSelector = ({ value, onChange }: { value: number; onChange: (v: number) => void }) => {
     const ratings = [
-      { v: 5, label: "5 ดาว (ดีเยี่ยม/ปิดดีลบ่อย)", color: "text-amber-500", bg: "bg-amber-50" },
-      { v: 4, label: "4 ดาว (ดีมาก/คุยง่าย)", color: "text-amber-400", bg: "bg-amber-50/50" },
-      { v: 3, label: "3 ดาว (มาตรฐาน)", color: "text-slate-400", bg: "bg-slate-50" },
-      { v: 2, label: "2 ดาว (ต้องระวัง/ส่งงานช้า)", color: "text-blue-400", bg: "bg-blue-50/30" },
-      { v: 1, label: "1 ดาว (Blacklist/ไม่แนะนำ)", color: "text-red-400", bg: "bg-red-50/50" },
+      { v: 5, label: isEn ? "5 Stars (Excellent / Frequent Closer)" : "5 ดาว (ดีเยี่ยม/ปิดดีลบ่อย)", color: "text-amber-500", bg: "bg-amber-50" },
+      { v: 4, label: isEn ? "4 Stars (Great / Responsive)" : "4 ดาว (ดีมาก/คุยง่าย)", color: "text-amber-400", bg: "bg-amber-50/50" },
+      { v: 3, label: isEn ? "3 Stars (Standard)" : "3 ดาว (มาตรฐาน)", color: "text-slate-400", bg: "bg-slate-50" },
+      { v: 2, label: isEn ? "2 Stars (Caution / Slow Delivery)" : "2 ดาว (ต้องระวัง/ส่งงานช้า)", color: "text-blue-400", bg: "bg-blue-50/30" },
+      { v: 1, label: isEn ? "1 Star (Blacklist / Not Recommended)" : "1 ดาว (Blacklist/ไม่แนะนำ)", color: "text-red-400", bg: "bg-red-50/50" },
     ];
 
     return (
@@ -209,7 +217,7 @@ export function CreateCoBrokerDialog({
             type="button"
             onClick={() => onChange(r.v)}
             className={cn(
-              "w-full flex items-center justify-between p-4 rounded-2xl transition-all border-2",
+              "w-full flex items-center justify-between p-4 rounded-2xl transition-all border-2 cursor-pointer",
               value === r.v 
                 ? "border-amber-500 bg-amber-50/50 ring-4 ring-amber-500/10" 
                 : "border-slate-50 hover:border-slate-100 bg-white"
@@ -234,6 +242,18 @@ export function CreateCoBrokerDialog({
     );
   };
 
+  const getStepTitle = () => {
+    if (mode === "create") {
+      if (currentStep === 1) return isEn ? "New Partner: Identity Info" : "เพิ่มคู่ค้าใหม่: ข้อมูลตัวตน";
+      if (currentStep === 2) return isEn ? "New Partner: Expertise" : "เพิ่มคู่ค้าใหม่: ความถนัด";
+      return isEn ? "New Partner: Financial Info" : "เพิ่มคู่ค้าใหม่: การเงิน";
+    } else {
+      if (currentStep === 1) return isEn ? "Edit Partner: Identity Info" : "แก้ไขคู่ค้า: ข้อมูลตัวตน";
+      if (currentStep === 2) return isEn ? "Edit Partner: Expertise" : "แก้ไขคู่ค้า: ความถนัด";
+      return isEn ? "Edit Partner: Financial Info" : "แก้ไขคู่ค้า: การเงิน";
+    }
+  };
+
   return (
     <ResponsiveDialog 
       open={isOpen} 
@@ -250,13 +270,9 @@ export function CreateCoBrokerDialog({
           </div>
           <div className="text-left">
              <div className="text-lg font-bold text-slate-900">
-                {mode === "create" ? (
-                  currentStep === 1 ? "เพิ่มคู่ค้าใหม่: ข้อมูลตัวตน" : currentStep === 2 ? "เพิ่มคู่ค้าใหม่: ความถนัด" : "เพิ่มคู่ค้าใหม่: การเงิน"
-                ) : (
-                  currentStep === 1 ? "แก้ไขคู่ค้า: ข้อมูลตัวตน" : currentStep === 2 ? "แก้ไขคู่ค้า: ความถนัด" : "แก้ไขคู่ค้า: การเงิน"
-                )}
+                {getStepTitle()}
              </div>
-             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">ขั้นตอนที่ {currentStep} จาก {totalSteps}</p>
+             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{isEn ? `Step ${currentStep} of ${totalSteps}` : `ขั้นตอนที่ ${currentStep} จาก ${totalSteps}`}</p>
           </div>
         </div>
       }
@@ -285,9 +301,9 @@ export function CreateCoBrokerDialog({
                 variant="ghost" 
                 onClick={handlePrev} 
                 disabled={isSubmitting}
-                className="h-12 px-6 rounded-xl font-bold text-slate-500"
+                className="h-12 px-6 rounded-xl font-bold text-slate-500 cursor-pointer"
               >
-                <ChevronLeft className="h-4 w-4 mr-1" /> ย้อนกลับ
+                <ChevronLeft className="h-4 w-4 mr-1" /> {isEn ? "Back" : "ย้อนกลับ"}
               </Button>
             )}
             
@@ -296,9 +312,9 @@ export function CreateCoBrokerDialog({
                 key={`next-btn-${currentStep}`}
                 type="button" 
                 onClick={handleNext}
-                className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer"
               >
-                ดำเนินการต่อ <ChevronRight className="h-4 w-4 ml-1" />
+                {isEn ? "Continue" : "ดำเนินการต่อ"} <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
               <Button 
@@ -306,17 +322,17 @@ export function CreateCoBrokerDialog({
                 type="button"
                 onClick={form.handleSubmit(onSubmit)}
                 disabled={isSubmitting}
-                className="h-12 px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-100" 
+                className="h-12 px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-100 cursor-pointer" 
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    กำลังบันทึก...
+                    {isEn ? "Saving..." : "กำลังบันทึก..."}
                   </>
                 ) : (
                   <>
                     <Check className="mr-2 h-4 w-4" />
-                    {mode === "create" ? "ยืนยันการเพิ่มคู่ค้า" : "บันทึกการแก้ไข"}
+                    {mode === "create" ? (isEn ? "Confirm Add Partner" : "ยืนยันการเพิ่มคู่ค้า") : (isEn ? "Save Changes" : "บันทึกการแก้ไข")}
                   </>
                 )}
               </Button>
@@ -346,9 +362,9 @@ export function CreateCoBrokerDialog({
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ชื่อ-นามสกุล / ชื่อเล่น <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Full Name / Nickname" : "ชื่อ-นามสกุล / ชื่อเล่น"} <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
-                          <Input placeholder="เช่น นายสมชาย (เก่ง)" {...field} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
+                          <Input placeholder={isEn ? "e.g. John Doe (Johnny)" : "เช่น นายสมชาย (เก่ง)"} {...field} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -359,9 +375,9 @@ export function CreateCoBrokerDialog({
                     name="company_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ชื่อบริษัท / สังกัด</FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Company / Agency" : "ชื่อบริษัท / สังกัด"}</FormLabel>
                         <FormControl>
-                          <Input placeholder="เช่น ABC Realty" {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
+                          <Input placeholder={isEn ? "e.g. ABC Realty" : "เช่น ABC Realty"} {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -375,7 +391,7 @@ export function CreateCoBrokerDialog({
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">เบอร์โทรศัพท์ <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Phone Number" : "เบอร์โทรศัพท์"} <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input placeholder="08x-xxxxxxx" type="number" {...field} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
                         </FormControl>
@@ -388,7 +404,7 @@ export function CreateCoBrokerDialog({
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">อีเมล</FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Email" : "อีเมล"}</FormLabel>
                         <FormControl>
                           <Input placeholder="email@example.com" {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
                         </FormControl>
@@ -404,7 +420,7 @@ export function CreateCoBrokerDialog({
                     name="line_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Line ID / WhatsApp</FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Line ID / WhatsApp" : "Line ID / WhatsApp"}</FormLabel>
                         <FormControl>
                           <Input placeholder="line_id" {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
                         </FormControl>
@@ -417,24 +433,24 @@ export function CreateCoBrokerDialog({
                     name="rating"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">เรตติ้งพาร์ทเนอร์</FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Partner Rating" : "เรตติ้งพาร์ทเนอร์"}</FormLabel>
                         <ResponsiveDialog 
                           open={isRatingOpen}
                           onOpenChange={setIsRatingOpen}
                           className="max-w-md!"
-                          title="เลือกเรตติ้งของคู่ค้า"
-                          description="ประเมินศักยภาพการร่วมงานเบื้องต้น"
+                          title={isEn ? "Select Partner Rating" : "เลือกเรตติ้งของคู่ค้า"}
+                          description={isEn ? "Assess initial collaboration capability" : "ประเมินศักยภาพการร่วมงานเบื้องต้น"}
                           trigger={
-                            <Button type="button" variant="outline" className="w-full h-12 rounded-xl justify-between px-3 border-slate-200 bg-slate-50/30" onClick={() => setIsRatingOpen(true)}>
+                            <Button type="button" variant="outline" className="w-full h-12 rounded-xl justify-between px-3 border-slate-200 bg-slate-50/30 cursor-pointer" onClick={() => setIsRatingOpen(true)}>
                               <div className="flex items-center gap-2">
                                 <Star className={cn("h-4 w-4 fill-amber-500 text-amber-500")} />
-                                <span className="font-bold">{field.value} ดาว</span>
+                                <span className="font-bold">{field.value} {isEn ? "Stars" : "ดาว"}</span>
                               </div>
                               <ChevronRight className="h-4 w-4 text-slate-400" />
                             </Button>
                           }
                         >
-                          <div className="p-6  ">
+                          <div className="p-6">
                              <RatingSelector value={field.value} onChange={(v) => {
                                field.onChange(v);
                                setIsRatingOpen(false);
@@ -456,9 +472,11 @@ export function CreateCoBrokerDialog({
                     <Info className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-blue-900">ระบุพื้นที่และความเชี่ยวชาญ</h4>
+                    <h4 className="text-sm font-bold text-blue-900">{isEn ? "Specify Area & Property Expertise" : "ระบุพื้นที่และความเชี่ยวชาญ"}</h4>
                     <p className="text-xs text-blue-700/70 font-medium leading-relaxed mt-1">
-                       ข้อมูลส่วนนี้จะใช้ในการ "Smart Match" เพื่อแนะนำพาร์ทเนอร์ที่ตรงกับทรัพย์ที่เรามีโดยอัตโนมัติ
+                       {isEn 
+                         ? "This info is used for 'Smart Match' to automatically recommend partners matching your active listings." 
+                         : "ข้อมูลส่วนนี้จะใช้ในการ \"Smart Match\" เพื่อแนะนำพาร์ทเนอร์ที่ตรงกับทรัพย์ที่เรามีโดยอัตโนมัติ"}
                     </p>
                   </div>
                </div>
@@ -468,10 +486,10 @@ export function CreateCoBrokerDialog({
                   name="specialized_areas"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">โซนพื้นที่ที่ถนัด (คั่นด้วยจุลภาค ,)</FormLabel>
+                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Specialized Areas (comma-separated)" : "โซนพื้นที่ที่ถนัด (คั่นด้วยจุลภาค ,)"}</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="เช่น สุขุมวิท, ทองหล่อ, อารีย์" 
+                          placeholder={isEn ? "e.g. Sukhumvit, Thonglor, Ari" : "เช่น สุขุมวิท, ทองหล่อ, อารีย์"} 
                           className="h-14 rounded-2xl bg-slate-50/50 border-slate-200 font-medium"
                           onChange={(e) => field.onChange(e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
                         />
@@ -486,7 +504,7 @@ export function CreateCoBrokerDialog({
                   name="property_types"
                   render={({ field }) => (
                     <FormItem className="space-y-4">
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ประเภททรัพย์ที่คู่ค้าถนัด (เลือกได้มากกว่า 1)</FormLabel>
+                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Specialized Property Types (Select multiple)" : "ประเภททรัพย์ที่คู่ค้าถนัด (เลือกได้มากกว่า 1)"}</FormLabel>
                       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-3">
                          {PROPERTY_TYPE_ORDER.map((type) => {
                            const Icon = PROPERTY_TYPE_ICONS[type];
@@ -505,7 +523,7 @@ export function CreateCoBrokerDialog({
                                  }
                                }}
                                className={cn(
-                                 "flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 gap-2 group relative overflow-hidden",
+                                 "flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 gap-2 group relative overflow-hidden cursor-pointer",
                                  isSelected 
                                    ? "bg-indigo-50 border-indigo-500 ring-4 ring-indigo-500/10" 
                                    : "bg-white border-slate-100 hover:border-slate-200 text-slate-400"
@@ -518,7 +536,7 @@ export function CreateCoBrokerDialog({
                                   <Icon className="h-5 w-5" />
                                 </div>
                                 <span className={cn("text-[11px] font-bold text-center leading-tight", isSelected ? "text-indigo-700" : "text-slate-500")}>
-                                  {PROPERTY_TYPE_CONFIG[type].label.th}
+                                  {PROPERTY_TYPE_CONFIG[type].label[isEn ? "en" : "th"]}
                                 </span>
                                 
                                 {isSelected && (
@@ -545,7 +563,7 @@ export function CreateCoBrokerDialog({
                     name="tax_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">เลขผู้เสียภาษี</FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Tax ID" : "เลขผู้เสียภาษี"}</FormLabel>
                         <FormControl>
                           <Input placeholder="1234567890123" {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
                         </FormControl>
@@ -558,9 +576,9 @@ export function CreateCoBrokerDialog({
                     name="tax_address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ที่อยู่ตามทะเบียนภาษี</FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Tax Registration Address" : "ที่อยู่ตามทะเบียนภาษี"}</FormLabel>
                         <FormControl>
-                          <Input placeholder="ที่อยู่สำหรับออกใบ 50 ทวิ" {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
+                          <Input placeholder={isEn ? "Address for tax certificates" : "ที่อยู่สำหรับออกใบ 50 ทวิ"} {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -574,18 +592,18 @@ export function CreateCoBrokerDialog({
                     name="bank_code"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ธนาคาร <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Bank" : "ธนาคาร"} <span className="text-red-500">*</span></FormLabel>
                         <Select onValueChange={field.onChange} value={field.value || ""}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl bg-slate-50/50 border-slate-200 font-medium">
-                              <SelectValue placeholder="เลือกธนาคาร..." />
+                            <SelectTrigger className="h-12 rounded-xl bg-slate-50/50 border-slate-200 font-medium cursor-pointer">
+                              <SelectValue placeholder={isEn ? "Select bank..." : "เลือกธนาคาร..."} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
                             {banks.map((bank) => (
-                              <SelectItem key={bank.code} value={bank.code} className="py-3 rounded-xl font-medium">
+                              <SelectItem key={bank.code} value={bank.code} className="py-3 rounded-xl font-medium cursor-pointer">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-slate-900">{bank.name_th}</span>
+                                  <span className="font-bold text-slate-900">{isEn ? (bank.name_en || bank.name_th) : bank.name_th}</span>
                                   <span className="text-[10px] text-slate-400 uppercase">{bank.code}</span>
                                 </div>
                               </SelectItem>
@@ -601,10 +619,10 @@ export function CreateCoBrokerDialog({
                     name="bank_account_no"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">เลขที่บัญชี (เฉพาะตัวเลข)</FormLabel>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Account Number (Digits only)" : "เลขที่บัญชี (เฉพาะตัวเลข)"}</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="เช่น 1234567890" 
+                            placeholder="1234567890" 
                             {...field} 
                             value={field.value || ""} 
                             className="h-12 rounded-xl bg-slate-50/50 border-slate-200 font-mono font-bold tracking-wider" 
@@ -615,7 +633,7 @@ export function CreateCoBrokerDialog({
                             }}
                           />
                         </FormControl>
-                        <FormDescription className="text-[10px] ml-1">ระบุเฉพาะตัวเลข 10-12 หลัก โดยไม่ต้องใส่ขีดหรือช่องว่าง</FormDescription>
+                        <FormDescription className="text-[10px] ml-1">{isEn ? "Enter 10-12 numeric digits without dashes or spaces" : "ระบุเฉพาะตัวเลข 10-12 หลัก โดยไม่ต้องใส่ขีดหรือช่องว่าง"}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -627,9 +645,9 @@ export function CreateCoBrokerDialog({
                   name="bank_account_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ชื่อบัญชี</FormLabel>
+                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Account Name" : "ชื่อบัญชี"}</FormLabel>
                       <FormControl>
-                        <Input placeholder="ระบุชื่อบัญชี..." {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
+                        <Input placeholder={isEn ? "Enter account name..." : "ระบุชื่อบัญชี..."} {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -641,10 +659,10 @@ export function CreateCoBrokerDialog({
                   name="internal_notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">บันทึกภายในสำหรับทีมงาน (Private)</FormLabel>
+                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Internal Notes for Team (Private)" : "บันทึกภายในสำหรับทีมงาน (Private)"}</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="ระบุข้อตกลงพิเศษ หรือข้อควรระวังในการร่วมงาน..." 
+                          placeholder={isEn ? "Specify special agreements or collaboration guidelines..." : "ระบุข้อตกลงพิเศษ หรือข้อควรระวังในการร่วมงาน..."} 
                           className="min-h-[120px] rounded-3xl bg-slate-50/30 border-slate-100 font-medium p-4 py-3"
                           {...field} 
                           value={field.value || ""}
@@ -661,3 +679,4 @@ export function CreateCoBrokerDialog({
     </ResponsiveDialog>
   );
 }
+

@@ -3,6 +3,7 @@
 import { Mail, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TenantInvitation {
   id: string;
@@ -18,6 +19,9 @@ interface BranchInvitationListProps {
 }
 
 export function BranchInvitationList({ invitations, onCancel }: BranchInvitationListProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (invitations.length === 0) return null;
 
   return (
@@ -28,7 +32,7 @@ export function BranchInvitationList({ invitations, onCancel }: BranchInvitation
         </div>
         <div>
           <h3 className="font-bold text-slate-900 underline underline-offset-8 decoration-indigo-200 decoration-2">
-            คำเชิญที่รอการตอบรับ
+            {isEn ? "Pending Invitations" : "คำเชิญที่รอการตอบรับ"}
           </h3>
           <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold">
             Pending Invitations ({invitations.length})
@@ -52,9 +56,13 @@ export function BranchInvitationList({ invitations, onCancel }: BranchInvitation
                   <p className="text-sm font-bold text-slate-900">{inv.email}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge className="bg-white border-slate-200 text-slate-500 font-bold text-[9px] h-5 shadow-none uppercase">{inv.role}</Badge>
-                    <span className="text-[10px] text-slate-400">เชิญเมื่อ: {new Date(inv.created_at).toLocaleDateString("th-TH")}</span>
+                    <span className="text-[10px] text-slate-400">
+                      {isEn ? "Invited: " : "เชิญเมื่อ: "}{new Date(inv.created_at).toLocaleDateString(isEn ? "en-US" : "th-TH")}
+                    </span>
                     {isExpiring && (
-                      <Badge className="bg-rose-50 text-rose-600 border-rose-100 font-bold text-[9px] h-5">Expiring Soon</Badge>
+                      <Badge className="bg-rose-50 text-rose-600 border-rose-100 font-bold text-[9px] h-5">
+                        {isEn ? "Expiring Soon" : "ใกล้หมดอายุ"}
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -65,7 +73,7 @@ export function BranchInvitationList({ invitations, onCancel }: BranchInvitation
                 onClick={() => onCancel(inv)}
               >
                 <Trash2 size={16} className="mr-2" />
-                ยกเลิกคำเชิญ
+                {isEn ? "Cancel Invitation" : "ยกเลิกคำเชิญ"}
               </Button>
             </div>
           );
@@ -74,3 +82,4 @@ export function BranchInvitationList({ invitations, onCancel }: BranchInvitation
     </div>
   );
 }
+

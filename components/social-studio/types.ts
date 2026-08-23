@@ -176,5 +176,6 @@ export interface BannerRenderOptions {
 export interface AvailableBadgeItem {
   id: string;
   label: string;
+  labelEn?: string;
 }
 

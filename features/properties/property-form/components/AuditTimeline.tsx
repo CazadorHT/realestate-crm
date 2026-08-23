@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import NextImage from "next/image";
 import { formatDistanceToNow, format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import {
   History,
   ChevronDown,
@@ -77,6 +78,10 @@ interface AuditTimelineProps {
 }
 
 export function AuditTimeline({ propertyId }: AuditTimelineProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const dateLocale = isEn ? enUS : th;
+
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -145,14 +150,14 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
           return next;
         });
       } else {
-        setError(result.message || "ไม่สามารถโหลดประวัติได้");
-        toast.error(result.message || "เกิดข้อผิดพลาดในการโหลดประวัติ");
+        setError(result.message || (isEn ? "Failed to load audit history" : "ไม่สามารถโหลดประวัติได้"));
+        toast.error(result.message || (isEn ? "Error loading history" : "เกิดข้อผิดพลาดในการโหลดประวัติ"));
       }
 
       setLoading(false);
       setLoadingMore(false);
     },
-    [propertyId],
+    [propertyId, isEn],
   );
 
   const fetchStats = useCallback(async () => {
@@ -264,7 +269,7 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="ค้นหาตามชื่อพนักงาน หรือสิ่งที่เปลี่ยน..."
+              placeholder={isEn ? "Search by modifier or changed field..." : "ค้นหาตามชื่อพนักงาน หรือสิ่งที่เปลี่ยน..."}
               className="w-full rounded-xl border-slate-200 bg-white py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -273,8 +278,8 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
           <ResponsiveDialog
             open={isFilterOpen}
             onOpenChange={setIsFilterOpen}
-            title="ตัวกรองประวัติ (Sentinel Filter)"
-            description="กรองข้อมูลตามพนักงานหรือประเภทการกระทำเพื่อความรวดเร็ว"
+            title={isEn ? "Audit Filter (Sentinel)" : "ตัวกรองประวัติ (Sentinel Filter)"}
+            description={isEn ? "Filter by modifier or action type for quick lookup" : "กรองข้อมูลตามพนักงานหรือประเภทการกระทำเพื่อความรวดเร็ว"}
             trigger={
               <div className="flex items-center">
                 <TooltipProvider>
@@ -292,7 +297,7 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
                       >
                         <Filter className="h-4 w-4" />
                         <span className="text-xs font-bold hidden xs:inline">
-                          ตัวกรอง
+                          {isEn ? "Filter" : "ตัวกรอง"}
                         </span>
                         {(filterAction !== "ALL" ||
                           filterModifier !== "ALL") && (
@@ -303,7 +308,7 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent className="bg-slate-900 text-white border-none rounded-lg text-[10px]">
-                      คลิกเพื่อกรองข้อมูลประวัติ
+                      {isEn ? "Click to filter audit history" : "คลิกเพื่อกรองข้อมูลประวัติ"}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -319,13 +324,13 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
                     setFilterAction("ALL");
                   }}
                 >
-                  ล้างทั้งหมด
+                  {isEn ? "Clear All" : "ล้างทั้งหมด"}
                 </Button>
                 <Button
                   className="flex-2 h-11 rounded-xl bg-blue-600 hover:bg-blue-700"
                   onClick={() => setIsFilterOpen(false)}
                 >
-                  ดูผลลัพธ์
+                  {isEn ? "Apply Filter" : "ดูผลลัพธ์"}
                 </Button>
               </div>
             }
@@ -333,7 +338,7 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
             <div className="space-y-6 p-6">
               <div className="space-y-3">
                 <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  พนักงาน (Modifier)
+                  {isEn ? "Modifier (Staff)" : "พนักงาน (Modifier)"}
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -345,7 +350,7 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
                         : "bg-white border-slate-100 text-slate-600 hover:border-slate-300",
                     )}
                   >
-                    ทุกคน
+                    {isEn ? "Everyone" : "ทุกคน"}
                     <span className="mt-1 text-[10px] opacity-60 font-medium">
                       ({stats?.totalCount || logs.length})
                     </span>
@@ -374,44 +379,44 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
 
               <div className="space-y-3">
                 <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  ปรเภทการกระทำ (Action)
+                  {isEn ? "Action Type" : "ประเภทการกระทำ (Action)"}
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     {
                       id: "ALL",
-                      label: "ทุกการกระทำ",
+                      label: isEn ? "All Actions" : "ทุกการกระทำ",
                       icon: LayoutGrid,
                       color: "bg-slate-50 text-slate-700 border-slate-200",
                     },
                     {
                       id: "property.create",
-                      label: "สร้างทรัพย์ใหม่",
+                      label: isEn ? "Create Listing" : "สร้างทรัพย์ใหม่",
                       icon: Plus,
                       color:
                         "bg-emerald-50 text-emerald-700 border-emerald-100",
                     },
                     {
                       id: "property.update",
-                      label: "แก้ไขข้อมูล",
+                      label: isEn ? "Edit Details" : "แก้ไขข้อมูล",
                       icon: Edit3,
                       color: "bg-blue-50 text-blue-700 border-blue-100",
                     },
                     {
                       id: "property.status.update",
-                      label: "เปลี่ยนสถานะ",
+                      label: isEn ? "Change Status" : "เปลี่ยนสถานะ",
                       icon: Activity,
                       color: "bg-indigo-50 text-indigo-700 border-indigo-100",
                     },
                     {
                       id: "property.duplicate",
-                      label: "คัดลอกทรัพย์",
+                      label: isEn ? "Duplicate" : "คัดลอกทรัพย์",
                       icon: Copy,
                       color: "bg-sky-50 text-sky-700 border-sky-100",
                     },
                     {
                       id: "property.restore",
-                      label: "คืนค่าเดิม",
+                      label: isEn ? "Restore" : "คืนค่าเดิม",
                       icon: RotateCcw,
                       color: "bg-orange-50 text-orange-700 border-orange-100",
                     },
@@ -482,7 +487,7 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
               }}
               className="ml-auto text-[10px] text-rose-500 hover:text-rose-600 font-bold flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-full"
             >
-              <X className="h-2.5 w-2.5" /> ล้างตัวกรอง
+              <X className="h-2.5 w-2.5" /> {isEn ? "Clear Filter" : "ล้างตัวกรอง"}
             </button>
           </div>
         )}
@@ -497,10 +502,10 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
               <Search className="h-12 w-12 text-slate-400" />
             </div>
             <h3 className="text-lg font-medium">
-              ไม่พบรายการที่ตรงกับเงื่อนไข
+              {isEn ? "No matching audit records found" : "ไม่พบรายการที่ตรงกับเงื่อนไข"}
             </h3>
             <p className="text-sm text-slate-500">
-              ลองเปลี่ยนคำค้นหาหรือตัวกรองเพื่อให้เห็นประวัติมากขึ้น
+              {isEn ? "Try changing search terms or filter criteria" : "ลองเปลี่ยนคำค้นหาหรือตัวกรองเพื่อให้เห็นประวัติมากขึ้น"}
             </p>
           </div>
         )}
@@ -539,7 +544,7 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
               disabled={loadingMore}
               className="rounded-full px-8 text-xs font-medium"
             >
-              {loadingMore ? "กำลังโหลด..." : "โหลดประวัติเพิ่มเติม"}
+              {loadingMore ? (isEn ? "Loading..." : "กำลังโหลด...") : (isEn ? "Load More History" : "โหลดประวัติเพิ่มเติม")}
             </Button>
           </div>
         )}
@@ -588,6 +593,9 @@ function LogItem({
   });
 
   const displayCount = meaningfulChanges.length > 0 ? meaningfulChanges.length : meaningfulDiffs.length;
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const dateLocale = isEn ? enUS : th;
 
   return (
     <AccordionItem
@@ -610,7 +618,7 @@ function LogItem({
               </span>
               {isRestore && (
                 <Badge className="bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100">
-                  <RotateCcw className="mr-1 h-3 w-3" /> คืนค่าเดิม
+                  <RotateCcw className="mr-1 h-3 w-3" /> {isEn ? "Restored" : "คืนค่าเดิม"}
                 </Badge>
               )}
             </div>
@@ -618,12 +626,12 @@ function LogItem({
               <Clock className="h-3 w-3" />
               <span>
                 {format(new Date(log.created_at), "d MMM yyyy • HH:mm", {
-                  locale: th,
+                  locale: dateLocale,
                 })}{" "}
                 (
                 {formatDistanceToNow(new Date(log.created_at), {
                   addSuffix: true,
-                  locale: th,
+                  locale: dateLocale,
                 })}
                 )
               </span>
@@ -632,7 +640,7 @@ function LogItem({
 
           <div className="mr-4 text-right">
             <Badge variant="secondary" className="bg-blue-50 text-blue-700 border border-blue-100 font-semibold text-xs px-2.5 py-0.5 rounded-full">
-              {displayCount} รายการที่เปลี่ยน
+              {displayCount} {isEn ? "changes" : "รายการที่เปลี่ยน"}
             </Badge>
           </div>
         </div>
@@ -650,9 +658,9 @@ function LogItem({
                   ? change.replace(deltaMatch[0], "").trim()
                   : change;
 
-                const isPrice = change.includes("ราคา") || change.includes("ค่าเช่า");
-                const isMedia = change.includes("รูปภาพ");
-                const isBoolean = change.includes("ใช่") || change.includes("ไม่ใช่");
+                const isPrice = change.includes("ราคา") || change.includes("ค่าเช่า") || change.toLowerCase().includes("price") || change.toLowerCase().includes("rent");
+                const isMedia = change.includes("รูปภาพ") || change.toLowerCase().includes("image") || change.toLowerCase().includes("photo");
+                const isBoolean = change.includes("ใช่") || change.includes("ไม่ใช่") || change.toLowerCase().includes("yes") || change.toLowerCase().includes("no") || change.toLowerCase().includes("true") || change.toLowerCase().includes("false");
 
                 return (
                   <div
@@ -690,8 +698,7 @@ function LogItem({
           {meta.image_changes && (
             <div className="space-y-2">
               <h5 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                <ImageIcon className="h-3 w-3" /> การจัดการรูปภาพ (Asset
-                Tracking)
+                <ImageIcon className="h-3 w-3" /> {isEn ? "Asset Tracking (Photos)" : "การจัดการรูปภาพ (Asset Tracking)"}
               </h5>
               <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8">
                 {meta.image_changes.added?.map((url: string, idx: number) => (
@@ -741,14 +748,14 @@ function LogItem({
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
                     <th className="px-4 py-2.5 font-bold uppercase tracking-wider w-1/3">
-                      ฟิลด์
+                      {isEn ? "Field" : "ฟิลด์"}
                     </th>
                     <th className="px-4 py-2.5 font-bold uppercase tracking-wider w-1/3">
-                      ค่าเดิม
+                      {isEn ? "Previous" : "ค่าเดิม"}
                     </th>
                     <th className="px-0 py-2.5 text-center w-8"></th>
                     <th className="px-4 py-2.5 font-bold uppercase tracking-wider w-1/3">
-                      ค่าใหม่
+                      {isEn ? "Updated" : "ค่าใหม่"}
                     </th>
                   </tr>
                 </thead>
@@ -791,11 +798,13 @@ function ChangeRow({
   oldValue: any;
   newValue: any;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [showModal, setShowModal] = useState(false);
   const isDescription = label.includes("description");
 
   const keyToLabel = (key: string) => {
-    const mapping: Record<string, string> = {
+    const mappingTh: Record<string, string> = {
       price: "ราคาขายพิเศษ",
       original_price: "ราคาตั้งขาย",
       rental_price: "ราคาเช่าพิเศษ",
@@ -843,7 +852,57 @@ function ChangeRow({
       is_cbd: "ทำเล CBD",
       is_smart_home: "ระบบ Smart Home",
     };
-    return mapping[key] || key;
+
+    const mappingEn: Record<string, string> = {
+      price: "Sale Price",
+      original_price: "Original Price",
+      rental_price: "Rent Price",
+      original_rental_price: "Original Rent",
+      status: "Status",
+      listing_type: "Listing Type",
+      property_type: "Property Type",
+      title: "Title (TH)",
+      title_en: "Title (EN)",
+      description: "Description (TH)",
+      description_en: "Description (EN)",
+      owner_id: "Owner",
+      assigned_to: "Assigned Agent",
+      commission_sale_percentage: "Sale Comm (%)",
+      commission_rent_months: "Rent Comm (Mo)",
+      total_units: "Total Units",
+      sold_units: "Sold Units",
+      bedrooms: "Bedrooms",
+      bathrooms: "Bathrooms",
+      size_sqm: "Usable Area (sq.m.)",
+      land_size_sqwah: "Land Size (sq.wah)",
+      floor: "Floor",
+      parking_slots: "Parking",
+      address_line1: "Address / Project",
+      google_maps_link: "Map Link",
+      images: "Photos",
+      feature_ids: "Amenities",
+      agent_ids: "Agent Team",
+      is_exclusive: "Exclusive",
+      requires_ai_review: "AI Review Pending",
+      is_pet_friendly: "Pet Friendly",
+      is_fully_furnished: "Fully Furnished",
+      is_renovated: "Renovated",
+      verified: "Verified Listing",
+      province: "Province",
+      district: "District",
+      is_co_agent: "Co-Agent Welcome",
+      has_private_pool: "Private Pool",
+      is_selling_with_tenant: "Selling with Tenant",
+      is_bare_shell: "Bare Shell",
+      has_garden_view: "Garden View",
+      has_pool_view: "Pool View",
+      has_city_view: "City View",
+      has_river_view: "River View",
+      is_cbd: "CBD Area",
+      is_smart_home: "Smart Home",
+    };
+
+    return (isEn ? mappingEn[key] : mappingTh[key]) || key;
   };
 
   const formatVal = (val: any) => {
@@ -851,21 +910,21 @@ function ChangeRow({
       return <span className="text-slate-300 italic">N/A</span>;
     if (Array.isArray(val)) {
       if (val.length === 0)
-        return <span className="text-slate-300 italic">ว่าง</span>;
+        return <span className="text-slate-300 italic">{isEn ? "Empty" : "ว่าง"}</span>;
       return (
         <Badge variant="secondary" className="font-mono text-[10px]">
-          {val.length} รายการ
+          {val.length} {isEn ? "items" : "รายการ"}
         </Badge>
       );
     }
     if (typeof val === "boolean")
       return val ? (
         <Badge className="bg-emerald-100 text-emerald-700 font-bold border-none px-2 py-0.5">
-          ใช่
+          {isEn ? "Yes" : "ใช่"}
         </Badge>
       ) : (
         <Badge className="bg-slate-100 text-slate-500 font-normal border-none px-2 py-0.5">
-          ไม่ใช่
+          {isEn ? "No" : "ไม่ใช่"}
         </Badge>
       );
 
@@ -888,8 +947,8 @@ function ChangeRow({
           {isDescription && (
             <button
               onClick={() => setShowModal(true)}
-              className="text-blue-500 hover:text-blue-700 transition-colors p-1"
-              title="เปรียบเทียบเนื้อหา"
+              className="text-blue-500 hover:text-blue-700 transition-colors p-1 cursor-pointer"
+              title={isEn ? "Compare Content" : "เปรียบเทียบเนื้อหา"}
             >
               <Maximize2 className="h-3.5 w-3.5" />
             </button>
@@ -934,6 +993,9 @@ function DiffModal({
   oldVal: string;
   newVal: string;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col rounded-3xl p-0 border-none shadow-2xl bg-white">
@@ -944,14 +1006,14 @@ function DiffModal({
               Sentinel Side-by-Side: {label}
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              เปรียบเทียบเนื้อหาก่อนและหลังแก้ไข (Visual Character Diff)
+              {isEn ? "Compare content before and after edit (Visual Character Diff)" : "เปรียบเทียบเนื้อหาก่อนและหลังแก้ไข (Visual Character Diff)"}
             </p>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="rounded-full"
+            className="rounded-full cursor-pointer"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -961,14 +1023,14 @@ function DiffModal({
           <div className="flex-1 space-y-3">
             <div className="flex items-center justify-between px-3">
               <h4 className="text-[10px] font-bold uppercase tracking-widest text-rose-500 px-3 py-1 bg-rose-50 rounded-full">
-                เวอร์ชันก่อนหน้า
+                {isEn ? "Previous Version" : "เวอร์ชันก่อนหน้า"}
               </h4>
               <span className="text-[10px] text-slate-400 italic">
                 {oldVal?.length || 0} characters
               </span>
             </div>
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 text-sm leading-relaxed text-slate-600 whitespace-pre-wrap h-[400px] overflow-y-auto font-serif">
-              {oldVal || "ไม่มีข้อมูลเดิม"}
+              {oldVal || (isEn ? "No previous data" : "ไม่มีข้อมูลเดิม")}
             </div>
           </div>
 
@@ -977,14 +1039,14 @@ function DiffModal({
           <div className="flex-1 space-y-3">
             <div className="flex items-center justify-between px-3">
               <h4 className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 px-3 py-1 bg-emerald-50 rounded-full">
-                เวอร์ชันอัปเดต
+                {isEn ? "Updated Version" : "เวอร์ชันอัปเดต"}
               </h4>
               <span className="text-[10px] text-slate-400 italic">
                 {newVal?.length || 0} characters
               </span>
             </div>
             <div className="p-5 rounded-2xl bg-white border border-blue-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] text-sm leading-relaxed text-slate-800 whitespace-pre-wrap h-[400px] overflow-y-auto font-serif font-medium">
-              {newVal || "ไม่มีข้อมูลใหม่"}
+              {newVal || (isEn ? "No updated data" : "ไม่มีข้อมูลใหม่")}
             </div>
           </div>
         </div>
@@ -993,15 +1055,15 @@ function DiffModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="rounded-xl px-6"
+            className="rounded-xl px-6 cursor-pointer"
           >
-            ปิด
+            {isEn ? "Close" : "ปิด"}
           </Button>
           <Button
             onClick={onClose}
-            className="rounded-xl px-8 bg-blue-600 hover:bg-blue-700"
+            className="rounded-xl px-8 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
           >
-            ยืนยันความถูกต้อง
+            {isEn ? "Confirm" : "ยืนยันความถูกต้อง"}
           </Button>
         </div>
       </DialogContent>
@@ -1018,6 +1080,8 @@ function RestoreButton({
   logId: string;
   onSuccess: () => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isRestoring, setIsRestoring] = useState(false);
 
   const handleRestore = async () => {
@@ -1025,13 +1089,13 @@ function RestoreButton({
     try {
       const res = await restorePropertyVersionAction(propertyId, logId);
       if (res.success) {
-        toast.success("คืนค่าข้อมูลสำเร็จ! กำลังอัปเดตข้อมูล...");
+        toast.success(isEn ? "Restored version successfully! Updating..." : "คืนค่าข้อมูลสำเร็จ! กำลังอัปเดตข้อมูล...");
         onSuccess();
       } else {
         toast.error(res.message);
       }
     } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการคืนค่าข้อมูล");
+      toast.error(isEn ? "Failed to restore version" : "เกิดข้อผิดพลาดในการคืนค่าข้อมูล");
     } finally {
       setIsRestoring(false);
     }
@@ -1043,41 +1107,42 @@ function RestoreButton({
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-2 border-orange-200 bg-orange-50/50 text-orange-700 hover:bg-orange-100/50 hover:text-orange-800 transition-all rounded-lg"
+          className="h-8 gap-2 border-orange-200 bg-orange-50/50 text-orange-700 hover:bg-orange-100/50 hover:text-orange-800 transition-all rounded-lg cursor-pointer"
           disabled={isRestoring}
         >
           <RotateCcw
             className={cn("h-3.5 w-3.5", isRestoring && "animate-spin")}
           />
-          Restore Version
+          {isEn ? "Restore Version" : "Restore Version"}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="rounded-3xl border-none shadow-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-orange-600">
-            <AlertCircle className="h-5 w-5" /> ยืนยันการคืนค่าข้อมูล?
+            <AlertCircle className="h-5 w-5" /> {isEn ? "Confirm version restore?" : "ยืนยันการคืนค่าข้อมูล?"}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-slate-600">
-            ระบบจะดึงข้อมูลจากจุดนี้ไปเขียนทับข้อมูลปัจจุบัน
-            การดำเนินการนี้จะสร้างรายการ Audit ใหม่
-            และข้อมูลปัจจุบันจะถูกเก็บไว้ในประวัติ
+            {isEn
+              ? "The system will restore data from this snapshot and overwrite current property details. A new audit entry will be generated."
+              : "ระบบจะดึงข้อมูลจากจุดนี้ไปเขียนทับข้อมูลปัจจุบัน การดำเนินการนี้จะสร้างรายการ Audit ใหม่ และข้อมูลปัจจุบันจะถูกเก็บไว้ในประวัติ"}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
           <p className="text-xs text-slate-500 italic">
-            💡 "ระบบ Restore ของ Sentinel จะทำการตรวจสอบประเภทข้อมูล (Dry Run)
-            ก่อนเขียนทับจริงเพื่อความปลอดภัย 100%"
+            {isEn
+              ? "💡 Sentinel restore performs data validation (dry run) before overwriting for 100% data safety."
+              : '💡 "ระบบ Restore ของ Sentinel จะทำการตรวจสอบประเภทข้อมูล (Dry Run) ก่อนเขียนทับจริงเพื่อความปลอดภัย 100%"'}
           </p>
         </div>
         <AlertDialogFooter className="gap-2 sm:gap-1">
-          <AlertDialogCancel className="rounded-xl border-slate-200">
-            ยกเลิก
+          <AlertDialogCancel className="rounded-xl border-slate-200 cursor-pointer">
+            {isEn ? "Cancel" : "ยกเลิก"}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleRestore}
-            className="rounded-xl bg-orange-600 hover:bg-orange-700 text-white border-none"
+            className="rounded-xl bg-orange-600 hover:bg-orange-700 text-white border-none cursor-pointer"
           >
-            ยืนยันการคืนค่า
+            {isEn ? "Confirm Restore" : "ยืนยันการคืนค่า"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

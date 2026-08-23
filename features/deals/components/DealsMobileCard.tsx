@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import Link from "next/link";
 import { format, differenceInHours, differenceInMonths } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { Sparkles, Eye, Edit2, Home, Calendar, Wallet, Copy, MoreHorizontal, Trash2, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { DeleteDealButton } from "./DeleteDealButton";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealsMobileCardProps {
   deal: DealWithProperty;
@@ -36,10 +37,13 @@ export function DealsMobileCard({
   index,
 }: DealsMobileCardProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isNavigating, setIsNavigating] = useState(false);
   const refCode = (deal.property_id || "").slice(0, 8);
 
-  const statusLabelMap: Record<string, string> = {
+  const statusLabelMapTh: Record<string, string> = {
     NEGOTIATING: "กำลังต่อรอง",
     SIGNED: "เซ็นสัญญา",
     CLOSED_WIN: "จบดีลแล้ว",
@@ -47,11 +51,21 @@ export function DealsMobileCard({
     CANCELLED: "ยกเลิก",
   };
 
+  const statusLabelMapEn: Record<string, string> = {
+    NEGOTIATING: "Negotiating",
+    SIGNED: "Signed",
+    CLOSED_WIN: "Closed Won",
+    CLOSED_LOSS: "Closed Lost",
+    CANCELLED: "Cancelled",
+  };
+
+  const currentStatusMap = isEn ? statusLabelMapEn : statusLabelMapTh;
+
   return (
     <Card
       className={cn(
         "group overflow-hidden border border-slate-200 rounded-xl bg-white shadow-xs transition-all duration-300",
-        isSelected ? " ring-2 ring-blue-500 shadow-lg bg-blue-50/10" : "hover:shadow-md hover:border-blue-200"
+        isSelected ? "ring-2 ring-blue-500 shadow-lg bg-blue-50/10" : "hover:shadow-md hover:border-blue-200"
       )}
     >
       {isNavigating && (
@@ -99,10 +113,8 @@ export function DealsMobileCard({
           })()}
 
           {/* Badges Overlays */}
-          <div className="absolute  inset-0 p-4 flex flex-col justify-between pointer-events-none">
+          <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
             <div className="flex items-start justify-end">
-              
-
               {index !== undefined && (
                 <div className="h-8 w-10 bg-black/40 backdrop-blur-md border border-white/20 rounded-xl flex items-center justify-center text-white text-xs font-semibold shadow-lg">
                   #{index}
@@ -117,20 +129,16 @@ export function DealsMobileCard({
                     deal.deal_type === "RENT" ? "bg-blue-600 text-white" : "bg-orange-500 text-white",
                   )}
                 >
-                  {deal.deal_type === "RENT" ? "เช่า" : "ขาย"}
+                  {deal.deal_type === "RENT" ? (isEn ? "Rent" : "เช่า") : (isEn ? "Sale" : "ขาย")}
                 </Badge>
               <div className="pointer-events-auto">
-                
                 <div className="bg-white/95 backdrop-blur-sm border border-blue-100 px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2">
                    <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
-                   
                    <span className="text-[11px] font-semibold text-blue-700 uppercase tracking-tight leading-none">
-                     {statusLabelMap[deal.status] || deal.status}
+                     {currentStatusMap[deal.status] || deal.status}
                    </span>
                 </div>
               </div>
-
-             
             </div>
           </div>
         </div>
@@ -143,11 +151,11 @@ export function DealsMobileCard({
               onClick={(e) => {
                 e.preventDefault();
                 navigator.clipboard.writeText(refCode);
-                toast.success(`คัดลอกรหัส ${refCode} แล้ว`, {
+                toast.success(isEn ? `Copied code ${refCode}` : `คัดลอกรหัส ${refCode} แล้ว`, {
                   icon: <Copy className="h-4 w-4 text-blue-500" />,
                 });
               }}
-              className="text-[9px] font-semibold text-blue-600 uppercase tracking-widest leading-none bg-blue-50 p-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-all flex items-center gap-1.5 group w-fit"
+              className="text-[9px] font-semibold text-blue-600 uppercase tracking-widest leading-none bg-blue-50 p-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-all flex items-center gap-1.5 group w-fit cursor-pointer"
             >
               REF: #{refCode}
               <Copy className="h-3 w-3 opacity-40 group-hover:opacity-100 transition-opacity" />
@@ -160,20 +168,20 @@ export function DealsMobileCard({
               }}
               className="font-semibold text-sm line-clamp-2! wrap-break-word text-slate-800 leading-[1.3] hover:text-blue-600 transition-colors block cursor-pointer"
             >
-              {deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
+              {deal.property?.title || (isEn ? "Untitled Property" : "ทรัพย์ไม่ระบุชื่อ")}
             </div>
 
             <div className="flex items-center gap-2">
               {(!deal.transaction_date || deal.undetermined_date) ? (
                 <div className="flex items-center gap-2 py-1 px-2 bg-amber-50/50 rounded-xl border border-amber-200/50 text-[10px] font-medium text-amber-600 shadow-sm">
                   <Calendar className="h-3 w-3 text-amber-400" />
-                  <span>ยังไม่ระบุวันที่</span>
+                  <span>{isEn ? "No date specified" : "ยังไม่ระบุวันที่"}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 px-2 py-1 bg-slate-50/50 rounded-2xl border border-slate-100 text-[10px] font-semibold text-slate-500 shadow-sm">
                   <Calendar className="h-3 w-3 text-slate-400" />
                   <span className="text-slate-800">
-                    {format(new Date(deal.transaction_date), "d MMM yy", { locale: th })}
+                    {format(new Date(deal.transaction_date), "d MMM yy", { locale: isEn ? enUS : th })}
                   </span>
                 </div>
               )}
@@ -190,7 +198,9 @@ export function DealsMobileCard({
                   <Wallet className="h-3 w-3" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[11px] text-emerald-600/80 font-semibold uppercase tracking-tight">ค่าคอมมิชชั่น</span>
+                  <span className="text-[11px] text-emerald-600/80 font-semibold uppercase tracking-tight">
+                    {isEn ? "Commission" : "ค่าคอมมิชชั่น"}
+                  </span>
                   <span className="text-sm font-semibold text-emerald-900 leading-none">
                     ฿{deal.commission_amount.toLocaleString()}
                   </span>
@@ -204,14 +214,14 @@ export function DealsMobileCard({
             )}
 
             <ResponsiveDialog
-              title="จัดการดีล"
-              description="เลือกคำสั่งสำหรับดีลนี้"
+              title={isEn ? "Manage Deal" : "จัดการดีล"}
+              description={isEn ? "Select an action for this deal" : "เลือกคำสั่งสำหรับดีลนี้"}
               className="bg-white md:max-w-72!"
               trigger={
                 <Button
                   type="button"
                   size="icon"
-                  className="h-12 w-12 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-all border border-slate-100 active:scale-95 flex items-center justify-center p-0 shadow-none border-none"
+                  className="h-12 w-12 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-all border border-slate-100 active:scale-95 flex items-center justify-center p-0 shadow-none border-none cursor-pointer"
                 >
                   <MoreHorizontal className="h-6 w-6" />
                 </Button>
@@ -227,7 +237,7 @@ export function DealsMobileCard({
                 >
                   <Button
                     variant="ghost"
-                    className="w-full justify-start h-14 rounded-2xl px-5 gap-4 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
+                    className="w-full justify-start h-14 rounded-2xl px-5 gap-4 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100 cursor-pointer"
                     disabled={isNavigating}
                   >
                     <div className="h-10 w-10 rounded-xl bg-blue-100/50 flex items-center justify-center">
@@ -237,7 +247,7 @@ export function DealsMobileCard({
                         <Eye className="h-5 w-5" />
                       )}
                     </div>
-                    ดูรายละเอียดดีล
+                    {isEn ? "View Deal Details" : "ดูรายละเอียดดีล"}
                   </Button>
                 </div>
 
@@ -249,12 +259,12 @@ export function DealsMobileCard({
                   trigger={
                     <Button
                       variant="ghost"
-                      className="w-full justify-start h-14 rounded-2xl px-5 gap-4 font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100"
+                      className="w-full justify-start h-14 rounded-2xl px-5 gap-4 font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100 cursor-pointer"
                     >
                       <div className="h-10 w-10 rounded-xl bg-amber-100/50 flex items-center justify-center">
                         <Edit2 className="h-5 w-5" />
                       </div>
-                      แก้ไขข้อมูลดีล
+                      {isEn ? "Edit Deal Details" : "แก้ไขข้อมูลดีล"}
                     </Button>
                   }
                 />
@@ -274,12 +284,12 @@ export function DealsMobileCard({
                 >
                   <Button
                     variant="ghost"
-                    className="w-full justify-start h-14 rounded-2xl px-5 gap-4 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all border border-transparent hover:border-rose-100 group"
+                    className="w-full justify-start h-14 rounded-2xl px-5 gap-4 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all border border-transparent hover:border-rose-100 group cursor-pointer"
                   >
                     <div className="h-10 w-10 rounded-xl bg-rose-100/50 flex items-center justify-center group-hover:bg-rose-100">
                       <Trash2 className="h-5 w-5" />
                     </div>
-                    ลบดีลนี้
+                    {isEn ? "Delete Deal" : "ลบดีลนี้"}
                   </Button>
                 </DeleteDealButton>
               </div>
@@ -290,3 +300,4 @@ export function DealsMobileCard({
     </Card>
   );
 }
+

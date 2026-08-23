@@ -12,7 +12,8 @@ import {
 import { ViewsTrendData } from "@/features/dashboard/queries";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface AnalyticsTrendProps {
   data: ViewsTrendData[];
@@ -33,17 +34,24 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function AnalyticsTrend({ data }: AnalyticsTrendProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   // Format date for display
   const chartData = data.map((d) => ({
     ...d,
-    formattedDate: format(new Date(d.date), "d MMM", { locale: th }),
+    formattedDate: format(new Date(d.date), "d MMM", { locale: isEn ? enUS : th }),
   }));
 
   return (
     <Card className="border-none shadow-soft overflow-hidden bg-white/50 backdrop-blur-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-slate-800">แนวโน้มการเข้าชม (Interest Trend)</CardTitle>
-        <CardDescription>สถิติการเข้าชมรายวันในช่วงเวลาที่เลือก</CardDescription>
+        <CardTitle className="text-lg font-semibold text-slate-800">
+          {isEn ? "Page Views & Interest Trend" : "แนวโน้มการเข้าชม (Interest Trend)"}
+        </CardTitle>
+        <CardDescription>
+          {isEn ? "Daily traffic and view patterns over the selected period" : "สถิติการเข้าชมรายวันในช่วงเวลาที่เลือก"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full pt-4">
@@ -86,3 +94,4 @@ export function AnalyticsTrend({ data }: AnalyticsTrendProps) {
     </Card>
   );
 }
+

@@ -21,7 +21,8 @@ import {
   UserCheck,
   Instagram
 } from "lucide-react";
-import { MOCK_PROPERTY_DATA } from "./constants";
+import { getMockPropertyData } from "./constants";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export interface PhoneSimulatorProps {
   activeTab: "post" | "comments" | "dm";
@@ -50,10 +51,14 @@ export function PhoneSimulator({
   instagramStoryReplyEnabled = false,
   directDmReplyEnabled = false,
 }: PhoneSimulatorProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const mockData = getMockPropertyData(isEn);
+
   const renderTemplateText = (text: string) => {
-    if (!text) return "กรุณากรอกรูปแบบข้อความเพื่อดูตัวอย่าง...";
+    if (!text) return isEn ? "Please configure a message template to preview..." : "กรุณากรอกรูปแบบข้อความเพื่อดูตัวอย่าง...";
     let rendered = text;
-    Object.entries(MOCK_PROPERTY_DATA).forEach(([key, value]) => {
+    Object.entries(mockData).forEach(([key, value]) => {
       const regex = new RegExp(`\\{\\{${key}\\}\\}`, "g");
       rendered = rendered.replace(regex, value || "");
     });
@@ -61,16 +66,20 @@ export function PhoneSimulator({
   };
 
   const activeKeyword = keywords[0] || {
-    keyword: "สนใจ",
-    dm_content: "ขอบคุณที่สนใจค่ะ นี่คือข้อมูลทรัพย์สินสำหรับคุณ {{title}} ราคา {{price}} บาท สามารถดูได้ที่ {{link}}",
-    public_replies: ["สนใจติดต่อสอบถามเพิ่มเติมได้เลยนะครับ", "เช็คอินบ็อกซ์ได้เลยจ้า ส่งข้อมูลให้แล้วครับ"],
+    keyword: isEn ? "interested" : "สนใจ",
+    dm_content: isEn 
+      ? "Thanks for your interest! Here is the property info for {{title}}, price {{price}} THB. View details: {{link}}" 
+      : "ขอบคุณที่สนใจค่ะ นี่คือข้อมูลทรัพย์สินสำหรับคุณ {{title}} ราคา {{price}} บาท สามารถดูได้ที่ {{link}}",
+    public_replies: isEn 
+      ? ["Feel free to contact us for more info!", "Checked your inbox! Details sent 🙏"] 
+      : ["สนใจติดต่อสอบถามเพิ่มเติมได้เลยนะครับ", "เช็คอินบ็อกซ์ได้เลยจ้า ส่งข้อมูลให้แล้วครับ"],
   };
 
   const getDisplayPublicReply = () => {
     if (activeKeyword.public_replies && activeKeyword.public_replies.length > 0) {
       return activeKeyword.public_replies[0];
     }
-    return activeKeyword.public_reply || "ส่งรายละเอียดให้ทาง inbox แล้วครับ";
+    return activeKeyword.public_reply || (isEn ? "Sent details to your inbox! 🙏" : "ส่งรายละเอียดให้ทาง inbox แล้วครับ");
   };
 
   return (
@@ -189,15 +198,13 @@ export function PhoneSimulator({
               </div>
 
               <div className="flex-1 p-3 space-y-4 text-[12px] overflow-y-auto">
-                
-
                 {/* Customer Comment */}
                 <div className="flex gap-2 mt-4 pl-2 border-l border-slate-800">
                   <div className="w-6 h-6 rounded-full bg-pink-600 flex-shrink-0 flex items-center justify-center text-[9px] font-bold">U</div>
                   <div>
                     <span className="font-semibold mr-1.5">customer_name</span>
                     <span className="text-slate-200">
-                      {activeKeyword.keyword ? `${activeKeyword.keyword}` : "สนใจรายละเอียด"}
+                      {activeKeyword.keyword ? `${activeKeyword.keyword}` : (isEn ? "interested in details" : "สนใจรายละเอียด")}
                     </span>
                     <div className="flex items-center gap-2 mt-1 text-[9px] text-slate-500">
                       <span>2m</span>
@@ -269,7 +276,11 @@ export function PhoneSimulator({
                   <div className="self-center w-full max-w-[220px] bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl text-center mb-2">
                     <UserCheck className="h-4 w-4 text-amber-400 mx-auto mb-1" />
                     <span className="text-[10px] text-amber-300 font-semibold block">Follow Gate Enabled</span>
-                    <span className="text-[8.5px] text-slate-400">บอทจะตรวจสอบสถานะการกดติดตาม ก่อนอนุญาตให้รับข้อมูลทรัพย์สิน</span>
+                    <span className="text-[8.5px] text-slate-400">
+                      {isEn 
+                        ? "Bot checks follow status before sending property info" 
+                        : "บอทจะตรวจสอบสถานะการกดติดตาม ก่อนอนุญาตให้รับข้อมูลทรัพย์สิน"}
+                    </span>
                   </div>
                 )}
 
@@ -277,7 +288,9 @@ export function PhoneSimulator({
                 {leadCaptureGateEnabled ? (
                   <>
                     <div className="bg-slate-850 text-slate-200 px-3 py-2 rounded-2xl rounded-bl-sm self-start max-w-[210px] shadow-sm border border-slate-800/40 mt-1">
-                      กรุณากรอกอีเมลหรือเบอร์โทรศัพท์ของคุณเพื่อรับสิทธิ์ดูรายละเอียดโครงการค่ะ 😊
+                      {isEn 
+                        ? "Please provide your email or phone number to view project details 😊" 
+                        : "กรุณากรอกอีเมลหรือเบอร์โทรศัพท์ของคุณเพื่อรับสิทธิ์ดูรายละเอียดโครงการค่ะ 😊"}
                     </div>
                     
                     <div className="bg-blue-600 text-white px-3 py-2 rounded-2xl rounded-br-sm self-end max-w-[190px] shadow-sm mt-1">
@@ -286,20 +299,20 @@ export function PhoneSimulator({
 
                     <div className="bg-slate-850 text-slate-200 px-3 py-2 rounded-2xl rounded-bl-sm self-start max-w-[210px] shadow-sm border border-slate-800/40 mt-1 flex items-center gap-1.5">
                       <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                      <span>บันทึกข้อมูลเรียบร้อยแล้วค่ะ!</span>
+                      <span>{isEn ? "Information saved successfully!" : "บันทึกข้อมูลเรียบร้อยแล้วค่ะ!"}</span>
                     </div>
                   </>
                 ) : null}
 
                 {/* DM Keyword Auto reply message with Smart Tags substituted */}
-                <div className="bg-slate-850 text-slate-200 px-3 py-2 rounded-2xl rounded-bl-sm  max-w-[250px] shadow-sm border border-slate-800/40 mt-1 whitespace-pre-wrap">
+                <div className="bg-slate-850 text-slate-200 px-3 py-2 rounded-2xl rounded-bl-sm max-w-[250px] shadow-sm border border-slate-800/40 mt-1 whitespace-pre-wrap">
                   {renderTemplateText(activeKeyword.dm_content)}
-                {/* Quick Reply button simulation at the bottom of the chat */}
-                <div className="self-center flex gap-2 mt-2 ">
-                  <div className="bg-slate-800 w-full   hover:bg-slate-700 border border-slate-700 text-blue-400 font-semibold text-[10px] px-4 py-2 rounded-full cursor-pointer transition-colors shadow-xs flex items-center gap-1">
-                    ดูรายละเอียดทรัพย์ <ChevronRight className="h-3 w-3" />
+                  {/* Quick Reply button simulation at the bottom of the chat */}
+                  <div className="self-center flex gap-2 mt-2">
+                    <div className="bg-slate-800 w-full hover:bg-slate-700 border border-slate-700 text-blue-400 font-semibold text-[10px] px-4 py-2 rounded-full cursor-pointer transition-colors shadow-xs flex items-center gap-1">
+                      {isEn ? "View Property Details" : "ดูรายละเอียดทรัพย์"} <ChevronRight className="h-3 w-3" />
+                    </div>
                   </div>
-                </div>
                 </div>
 
               </div>
@@ -325,3 +338,4 @@ export function PhoneSimulator({
     </div>
   );
 }
+

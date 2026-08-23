@@ -8,6 +8,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { deleteDealAction } from "@/features/deals/actions";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DeleteDealButtonProps {
   dealId: string;
@@ -36,6 +37,9 @@ export function DeleteDealButton({
   className,
 }: DeleteDealButtonProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isDeleting, setIsDeleting] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -43,7 +47,7 @@ export function DeleteDealButton({
     setIsDeleting(true);
     const result = await deleteDealAction(dealId, leadId ?? "");
     if (result.success) {
-      toast.success("ลบดีลเรียบร้อย");
+      toast.success(isEn ? "Deal deleted successfully" : "ลบดีลเรียบร้อย");
       setOpen(false);
       setIsDeleting(false);
       if (onSuccess) {
@@ -59,7 +63,7 @@ export function DeleteDealButton({
         router.refresh();
       }
     } else {
-      toast.error(result.message || "ลบไม่สำเร็จ");
+      toast.error(result.message || (isEn ? "Failed to delete deal" : "ลบไม่สำเร็จ"));
       setIsDeleting(false);
     }
   };
@@ -69,21 +73,29 @@ export function DeleteDealButton({
       open={open}
       onOpenChange={setOpen}
       className="sm:max-w-sm!"
-      title="ยืนยันการลบดีล"
+      title={isEn ? "Confirm Delete Deal" : "ยืนยันการลบดีล"}
       description={
         <div className="space-y-4">
-          <p>การดำเนินการนี้ไม่สามารถย้อนกลับได้ ข้อมูลดีลและเอกสารที่เกี่ยวข้องจะถูกลบออกจากระบบถาวร</p>
+          <p>
+            {isEn 
+              ? "This action cannot be undone. All deal details and related records will be permanently removed."
+              : "การดำเนินการนี้ไม่สามารถย้อนกลับได้ ข้อมูลดีลและเอกสารที่เกี่ยวข้องจะถูกลบออกจากระบบถาวร"}
+          </p>
           {(propertyName || customerName) && (
             <div className="rounded-2xl bg-slate-50 border border-slate-100/50 p-4 text-xs text-slate-600 space-y-2 text-left shadow-inner">
               {propertyName && (
                 <div className="flex gap-2">
-                  <span className="font-semibold text-slate-400 shrink-0 w-14">ทรัพย์สิน:</span>{" "}
+                  <span className="font-semibold text-slate-400 shrink-0 w-14">
+                    {isEn ? "Property:" : "ทรัพย์สิน:"}
+                  </span>{" "}
                   <span className="font-semibold text-slate-800 line-clamp-2">{propertyName}</span>
                 </div>
               )}
               {customerName && (
                 <div className="flex gap-2">
-                  <span className="font-semibold text-slate-400 shrink-0 w-14">ลูกค้า:</span>{" "}
+                  <span className="font-semibold text-slate-400 shrink-0 w-14">
+                    {isEn ? "Customer:" : "ลูกค้า:"}
+                  </span>{" "}
                   <span className="font-semibold text-slate-800 line-clamp-1">{customerName}</span>
                 </div>
               )}
@@ -113,7 +125,7 @@ export function DeleteDealButton({
             )}
           >
             <Trash2 className="h-5 w-5 mr-2" />
-            ลบดีล
+            {isEn ? "Delete Deal" : "ลบดีล"}
           </Button>
         )
       }
@@ -123,20 +135,21 @@ export function DeleteDealButton({
             variant="ghost"
             onClick={() => setOpen(false)}
             disabled={isDeleting}
-            className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+            className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
           <Button
             onClick={handleDelete}
             disabled={isDeleting}
             variant="destructive"
-            className="flex-1 h-12 rounded-xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all active:scale-95"
+            className="flex-1 h-12 rounded-xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer"
           >
-            {isDeleting ? "กำลังลบ..." : "ยืนยันการลบ"}
+            {isDeleting ? (isEn ? "Deleting..." : "กำลังลบ...") : (isEn ? "Confirm Delete" : "ยืนยันการลบ")}
           </Button>
         </div>
       }
     />
   );
 }
+

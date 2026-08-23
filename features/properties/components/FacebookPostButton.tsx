@@ -7,6 +7,7 @@ import { postPropertyToMetaAction } from "@/features/properties/actions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SocialPostDialog } from "./SocialPostDialog";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FacebookPostButtonProps {
   propertyId: string;
@@ -31,6 +32,8 @@ export function FacebookPostButton({
   size = "default",
   showLabel = true,
 }: FacebookPostButtonProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -58,7 +61,7 @@ export function FacebookPostButton({
         ) : (
           <Facebook className="h-4 w-4" />
         )}
-        {showLabel && (isLoading ? "กำลังโพสต์..." : "โพสต์ลง Facebook")}
+        {showLabel && (isLoading ? (isEn ? "Posting..." : "กำลังโพสต์...") : (isEn ? "Post to Facebook" : "โพสต์ลง Facebook"))}
       </Button>
     </>
   );

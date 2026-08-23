@@ -46,6 +46,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { PopularAreaPropertiesDialog } from "./PopularAreaPropertiesDialog";
 import { useTenant } from "@/components/providers/TenantProvider";
 import { Info } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // DnD Kit imports
 import {
@@ -110,6 +111,9 @@ function SortableRow({
   isDraggingEnabled,
   start,
 }: SortableRowProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const {
     attributes,
     listeners,
@@ -143,6 +147,7 @@ function SortableRow({
               {...attributes}
               {...listeners}
               className="p-2 cursor-grab active:cursor-grabbing text-slate-300 hover:text-indigo-600 transition-colors rounded-lg hover:bg-white border border-transparent hover:border-slate-100 shrink-0"
+              title={isEn ? "Drag to reorder" : "ลากเพื่อจัดเรียงลำดับ"}
             >
               <GripVertical className="h-4 w-4" />
             </div>
@@ -175,7 +180,9 @@ function SortableRow({
             </div>
           )}
           <div className="flex flex-col">
-            <span className="font-bold text-slate-900 leading-none truncate max-w-[150px]">{item.name}</span>
+            <span className="font-bold text-slate-900 leading-none truncate max-w-[150px]">
+              {isEn ? (item.name_en || item.name) : item.name}
+            </span>
             <span className="text-[10px] text-blue-600 font-bold mt-1 uppercase tracking-tight">{item.province}</span>
           </div>
         </div>
@@ -191,7 +198,7 @@ function SortableRow({
       </TableCell>
       <TableCell className="text-slate-500 px-6 font-medium text-xs whitespace-nowrap">
         {item.created_at ? (
-          new Date(item.created_at).toLocaleDateString("th-TH", {
+          new Date(item.created_at).toLocaleDateString(isEn ? "en-US" : "th-TH", {
             day: "numeric",
             month: "short",
             year: "2-digit",
@@ -225,6 +232,7 @@ function SortableRow({
             size="icon"
             className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer transition-colors"
             onClick={() => onEdit(item)}
+            title={isEn ? "Edit area" : "แก้ไขทำเล"}
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -233,6 +241,7 @@ function SortableRow({
             size="icon"
             className="h-9 w-9 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
             onClick={() => onDelete(item)}
+            title={isEn ? "Delete area" : "ลบทำเล"}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -269,6 +278,9 @@ export function PopularAreasTable({
   initialData: PopularArea[];
   totalCount: number;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -284,10 +296,10 @@ export function PopularAreasTable({
 
   const [data, setData] = useState(initialData);
   const [totalCount, setTotalCount] = useState(initialTotal);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [navigatingSort, setNavigatingSort] = useState<string | null>(null);
 
-   useEffect(() => {
+  useEffect(() => {
     setData(initialData);
     setTotalCount(initialTotal);
     setNavigatingSort(null);
@@ -300,7 +312,7 @@ export function PopularAreasTable({
   const [isTranslating, setIsTranslating] = useState(false);
   const [isGeneratingAiBulk, setIsGeneratingAiBulk] = useState(false);
   const [isAllAcrossSelected, setIsAllAcrossSelected] = useState(false);
-   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [viewingAreaProperties, setViewingAreaProperties] = useState<PopularArea | null>(null);
 
   // Selection
@@ -321,7 +333,7 @@ export function PopularAreasTable({
   }, [isAllSelected, page, search]);
 
   // Sorting
-   const toggleSort = (column: string) => {
+  const toggleSort = (column: string) => {
     setNavigatingSort(column);
     const params = new URLSearchParams(searchParams);
     if (sortBy === column) {
@@ -331,7 +343,9 @@ export function PopularAreasTable({
       params.set("order", "asc");
     }
     params.set("page", "1");
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   // Drag & Drop
@@ -351,9 +365,10 @@ export function PopularAreasTable({
       const offset = (page - 1) * pageSize;
       const ids = newData.map((item) => item.id);
       const res = await reorderPopularAreasAction(ids, offset);
-      if (res.success) toast.success(res.message);
-      else {
-        toast.error(res.message);
+      if (res.success) {
+        toast.success(res.message || (isEn ? "Areas reordered successfully" : "จัดเรียงทำเลสำเร็จ"));
+      } else {
+        toast.error(res.message || (isEn ? "Failed to reorder areas" : "เกิดข้อผิดพลาดในการจัดเรียง"));
         setData(initialData);
       }
     }
@@ -366,10 +381,12 @@ export function PopularAreasTable({
     const res = await deletePopularArea(deleteConfirmItem.id);
     setIsDeleting(false);
     if (res.success) {
-      toast.success(res.message);
+      toast.success(res.message || (isEn ? "Area deleted successfully" : "ลบทำเลสำเร็จ"));
       setDeleteConfirmItem(null);
       router.refresh();
-    } else toast.error(res.message);
+    } else {
+      toast.error(res.message || (isEn ? "Failed to delete area" : "ไม่สามารถลบทำเลได้"));
+    }
   };
 
   const handleBulkDelete = async () => setIsBulkDeleteOpen(true);
@@ -379,7 +396,7 @@ export function PopularAreasTable({
     const count = isAllAcrossSelected ? totalCount : selectedIds.size;
     
     const executeAction = async () => {
-      const processId = startProcess(`ลบทำเลยอดนิยม (${count} รายการ)`, { 
+      const processId = startProcess(isEn ? `Deleting areas (${count} items)` : `ลบทำเลยอดนิยม (${count} รายการ)`, { 
         type: "BULK_DELETE",
         onRetry: executeAction
       });
@@ -399,7 +416,7 @@ export function PopularAreasTable({
         }
       } catch (err: unknown) {
         setIsDeleting(false);
-        const errorMessage = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+        const errorMessage = err instanceof Error ? err.message : (isEn ? "Connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อ");
         finishProcess(processId, "ERROR", `[PopularAreasTable:executeBulkDelete] ${errorMessage}`);
       }
     };
@@ -413,7 +430,7 @@ export function PopularAreasTable({
     const count = isAllAcrossSelected ? totalCount : selectedIds.size;
     
     const executeAction = async () => {
-      const processId = startProcess(`แปลภาษาทำเลยอดนิยม (${count} รายการ)`, { 
+      const processId = startProcess(isEn ? `Translating areas (${count} items)` : `แปลภาษาทำเลยอดนิยม (${count} รายการ)`, { 
         type: "AI_TRANSLATION",
         onRetry: executeAction
       });
@@ -432,7 +449,7 @@ export function PopularAreasTable({
         }
       } catch (err: unknown) {
         setIsTranslating(false);
-        const errorMessage = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+        const errorMessage = err instanceof Error ? err.message : (isEn ? "Connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อ");
         finishProcess(processId, "ERROR", `[PopularAreasTable:handleBulkTranslate] ${errorMessage}`);
       }
     };
@@ -446,7 +463,7 @@ export function PopularAreasTable({
     const count = isAllAcrossSelected ? totalCount : selectedIds.size;
     
     const executeAction = async () => {
-      const processId = startProcess(`สร้างเนื้อหาและ SEO ด้วย AI (${count} รายการ)`, { 
+      const processId = startProcess(isEn ? `Generating AI SEO Content (${count} items)` : `สร้างเนื้อหาและ SEO ด้วย AI (${count} รายการ)`, { 
         type: "AI_GENERATION",
         onRetry: executeAction
       });
@@ -465,7 +482,7 @@ export function PopularAreasTable({
         }
       } catch (err: unknown) {
         setIsGeneratingAiBulk(false);
-        const errorMessage = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+        const errorMessage = err instanceof Error ? err.message : (isEn ? "Connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อ");
         finishProcess(processId, "ERROR", `[PopularAreasTable:handleBulkAiGenerate] ${errorMessage}`);
       }
     };
@@ -483,7 +500,7 @@ export function PopularAreasTable({
         selectedCount={isAllAcrossSelected ? totalCount : selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
-        entityName="ทำเล"
+        entityName={isEn ? "areas" : "ทำเล"}
         extraActions={
           <div className="flex gap-2">
             <Button
@@ -493,7 +510,9 @@ export function PopularAreasTable({
               disabled={isTranslating || isGeneratingAiBulk}
             >
               <Languages className="h-4 w-4" />
-              แปล ({isAllAcrossSelected ? totalCount : selectedCount})
+              {isEn
+                ? `Translate (${isAllAcrossSelected ? totalCount : selectedCount})`
+                : `แปล (${isAllAcrossSelected ? totalCount : selectedCount})`}
             </Button>
             <Button
               variant="outline"
@@ -502,7 +521,9 @@ export function PopularAreasTable({
               disabled={isTranslating || isGeneratingAiBulk}
             >
               <Sparkles className="h-4 w-4 text-violet-500" />
-              เจน AI ทั้งหมด ({isAllAcrossSelected ? totalCount : selectedCount})
+              {isEn
+                ? `Bulk AI (${isAllAcrossSelected ? totalCount : selectedCount})`
+                : `เจน AI ทั้งหมด (${isAllAcrossSelected ? totalCount : selectedCount})`}
             </Button>
           </div>
         }
@@ -518,11 +539,15 @@ export function PopularAreasTable({
         )}>
           <Info className="h-3.5 w-3.5" />
           <span>
-            กำลังแสดงยอดทรัพย์แบบ 
+            {isEn ? "Displaying property counts for " : "กำลังแสดงยอดทรัพย์แบบ "}
             <span className="font-semibold underline underline-offset-2 mx-1">
-              {isGlobalMode ? "ภาพรวมทุกสาขา (Global Override)" : `เฉพาะสาขา ${activeTenant?.name || "ปัจจุบัน"}`}
+              {isGlobalMode 
+                ? (isEn ? "All Branches (Global Override)" : "ภาพรวมทุกสาขา (Global Override)")
+                : (isEn ? `Branch: ${activeTenant?.name || "Current"}` : `เฉพาะสาขา ${activeTenant?.name || "ปัจจุบัน"}`)}
             </span>
-            {isGlobalMode ? " • ตัวเลขรวมจากทรัพย์ที่มีอยู่ในทุกสาขา" : " • ตัวเลขเฉพาะทรัพย์ที่สังกัดสาขานี้เท่านั้น"}
+            {isGlobalMode 
+              ? (isEn ? "• Total counts across all company branches" : " • ตัวเลขรวมจากทรัพย์ที่มีอยู่ในทุกสาขา") 
+              : (isEn ? "• Counts specific to this branch only" : " • ตัวเลขเฉพาะทรัพย์ที่สังกัดสาขานี้เท่านั้น")}
           </span>
         </div>
       )}
@@ -547,21 +572,41 @@ export function PopularAreasTable({
                   </div>
                 </TableHead>
                 <TableHead className="w-[80px] font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("sort_order")}>
-                  <div className="flex items-center">ลำดับ <SortIcon column="sort_order" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} /></div>
+                  <div className="flex items-center">
+                    {isEn ? "Order" : "ลำดับ"}
+                    <SortIcon column="sort_order" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} />
+                  </div>
                 </TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("name")}>
-                  <div className="flex items-center">ชื่อพื้นที่ <span className="ml-1 opacity-50 font-normal">(Area Name)</span> <SortIcon column="name" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} /></div>
+                  <div className="flex items-center">
+                    {isEn ? "Area Name" : "ชื่อพื้นที่"} <span className="ml-1 opacity-50 font-normal">({isEn ? "TH" : "Area Name"})</span>
+                    <SortIcon column="name" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} />
+                  </div>
                 </TableHead>
-                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาอังกฤษ <span className="opacity-50 font-normal">(EN)</span></TableHead>
-                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาจีน <span className="opacity-50 font-normal">(CN)</span></TableHead>
-                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษารัสเซีย <span className="opacity-50 font-normal">(RU)</span></TableHead>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">
+                  {isEn ? "English" : "ภาษาอังกฤษ"} <span className="opacity-50 font-normal">(EN)</span>
+                </TableHead>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">
+                  {isEn ? "Chinese" : "ภาษาจีน"} <span className="opacity-50 font-normal">(CN)</span>
+                </TableHead>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">
+                  {isEn ? "Russian" : "ภาษารัสเซีย"} <span className="opacity-50 font-normal">(RU)</span>
+                </TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("created_at")}>
-                  <div className="flex items-center">สร้างเมื่อ <span className="ml-1 opacity-50 font-normal">(Created)</span> <SortIcon column="created_at" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} /></div>
+                  <div className="flex items-center">
+                    {isEn ? "Created" : "สร้างเมื่อ"}
+                    <SortIcon column="created_at" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} />
+                  </div>
                 </TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 text-center cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("property_count")}>
-                  <div className="flex items-center justify-center">ทรัพย์ <span className="ml-1 opacity-50 font-normal">(Stock)</span> <SortIcon column="property_count" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} /></div>
+                  <div className="flex items-center justify-center">
+                    {isEn ? "Units" : "ทรัพย์"}
+                    <SortIcon column="property_count" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} />
+                  </div>
                 </TableHead>
-                <TableHead className="text-right font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">จัดการ</TableHead>
+                <TableHead className="text-right font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">
+                  {isEn ? "Actions" : "จัดการ"}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -569,19 +614,29 @@ export function PopularAreasTable({
                 <TableRow className="bg-indigo-50/30 border-b border-indigo-100/50 hover:bg-indigo-50/50 transition-colors italic">
                   <TableCell colSpan={9} className="py-4 px-6 text-center">
                     <div className="flex items-center justify-center gap-2 text-[13px]">
-                      <span className="text-slate-500 font-semibold">เลือกทำเล {data.length} รายการในหน้านี้แล้ว</span>
+                      <span className="text-slate-500 font-semibold">
+                        {isEn
+                          ? `Selected ${data.length} areas on this page.`
+                          : `เลือกทำเล ${data.length} รายการในหน้านี้แล้ว`}
+                      </span>
                       <button 
                         onClick={() => setIsAllAcrossSelected(!isAllAcrossSelected)}
                         className="text-indigo-600 hover:text-indigo-700 font-semibold underline underline-offset-4 cursor-pointer"
                       >
-                        {isAllAcrossSelected ? "ยกเลิก (Clear Selection)" : `เลือกทั้งหมด ${totalCount} รายการ (Select All Across Pages)`}
+                        {isAllAcrossSelected
+                          ? (isEn ? "Clear Selection" : "ยกเลิก (Clear Selection)")
+                          : (isEn ? `Select all ${totalCount} areas across pages` : `เลือกทั้งหมด ${totalCount} รายการ (Select All Across Pages)`)}
                       </button>
                     </div>
                   </TableCell>
                 </TableRow>
               )}
               {data.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-32 text-slate-400 bg-white font-semibold italic">ไม่พบข้อมูลที่ต้องการ (No Records Found)</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-32 text-slate-400 bg-white font-semibold italic">
+                    {isEn ? "No records found" : "ไม่พบข้อมูลที่ต้องการ (No Records Found)"}
+                  </TableCell>
+                </TableRow>
               ) : (
                 <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
                   {data.map((item, index) => (
@@ -606,7 +661,7 @@ export function PopularAreasTable({
       </div>
 
       {/* Mobile Card View */}
-      <div className="lg:hidden grid grid-cols-1 md:grid-cols-2  gap-4 animate-in fade-in duration-500">
+      <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-500">
         {data.map((item, index) => (
           <div key={item.id} className={cn("p-5 bg-white rounded-[24px] border transition-all shadow-sm italic", isSelected(item.id) ? "border-indigo-200 bg-indigo-50/30" : "border-slate-200/60")} onClick={() => toggleSelect(item.id)}>
             <div className="flex items-start justify-between gap-4">
@@ -629,23 +684,25 @@ export function PopularAreasTable({
                              : "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed"
                          )}
                        >
-                         {item.property_count || 0} ทรัพย์ (Units)
+                         {item.property_count || 0} {isEn ? "Units" : "ทรัพย์"}
                        </button>
                     </div>
-                   <h4 className="font-semibold text-slate-900 truncate mt-1.5 text-lg">{item.name}</h4>
+                   <h4 className="font-semibold text-slate-900 truncate mt-1.5 text-lg">
+                     {isEn ? (item.name_en || item.name) : item.name}
+                   </h4>
                    <div className="flex items-center gap-2 mt-0.5">
                      <p className="text-[11px] text-blue-600 font-semibold uppercase tracking-wider">{item.province}</p>
                      {item.created_at && (
                        <span className="text-[10px] text-slate-400 font-medium">
-                         • สร้างเมื่อ {new Date(item.created_at).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" })}
+                         • {isEn ? "Created" : "สร้างเมื่อ"} {new Date(item.created_at).toLocaleDateString(isEn ? "en-US" : "th-TH", { day: "numeric", month: "short", year: "2-digit" })}
                        </span>
                      )}
                    </div>
                 </div>
               </div>
               <div className="flex gap-1.5 shrink-0">
-                <Button variant="outline" size="icon" className="h-10 w-10 text-blue-600 border-blue-50/50 rounded-xl shadow-xs" onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}><Pencil className="h-4 w-4" /></Button>
-                <Button variant="outline" size="icon" className="h-10 w-10 text-rose-600 border-rose-50/50 rounded-xl shadow-xs" onClick={(e) => { e.stopPropagation(); setDeleteConfirmItem(item); }}><Trash2 className="h-4 w-4" /></Button>
+                <Button variant="outline" size="icon" className="h-10 w-10 text-blue-600 border-blue-50/50 rounded-xl shadow-xs cursor-pointer" onClick={(e) => { e.stopPropagation(); setEditingItem(item); }} title={isEn ? "Edit" : "แก้ไข"}><Pencil className="h-4 w-4" /></Button>
+                <Button variant="outline" size="icon" className="h-10 w-10 text-rose-600 border-rose-50/50 rounded-xl shadow-xs cursor-pointer" onClick={(e) => { e.stopPropagation(); setDeleteConfirmItem(item); }} title={isEn ? "Delete" : "ลบ"}><Trash2 className="h-4 w-4" /></Button>
               </div>
             </div>
           </div>
@@ -665,34 +722,66 @@ export function PopularAreasTable({
 
       <EditPopularAreaDialog area={editingItem} open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)} onSuccess={() => router.refresh()} />
 
-      <ResponsiveDialog open={!!deleteConfirmItem} onOpenChange={(open) => !open && setDeleteConfirmItem(null)} title="ยืนยันการลบทำเล (Delete Confirm)" className="md:max-w-md!">
+      <ResponsiveDialog 
+        open={!!deleteConfirmItem} 
+        onOpenChange={(open) => !open && setDeleteConfirmItem(null)} 
+        title={isEn ? "Delete Area Confirmation" : "ยืนยันการลบทำเล (Delete Confirm)"} 
+        className="md:max-w-md!"
+      >
         <div className="p-8 text-center space-y-5 italic">
           <div className="mx-auto w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-2 border border-rose-100 shadow-sm"><TriangleAlert className="h-7 w-7" /></div>
           <div>
-            <h3 className="text-xl font-semibold text-slate-900">คุณแน่ใจหรือไม่? (Are you sure?)</h3>
-            <p className="text-[13px] text-slate-500 mt-2 font-medium">กำลังจะลบทำเล "<span className="font-semibold text-slate-900">{deleteConfirmItem?.name}</span>" ข้อมูลนี้จะไม่สามารถกู้คืนได้</p>
+            <h3 className="text-xl font-semibold text-slate-900">
+              {isEn ? "Are you sure?" : "คุณแน่ใจหรือไม่? (Are you sure?)"}
+            </h3>
+            <p className="text-[13px] text-slate-500 mt-2 font-medium">
+              {isEn
+                ? `You are about to delete area "${deleteConfirmItem?.name_en || deleteConfirmItem?.name}". This action cannot be undone.`
+                : `กำลังจะลบทำเล "${deleteConfirmItem?.name}" ข้อมูลนี้จะไม่สามารถกู้คืนได้`}
+            </p>
           </div>
           <div className="flex gap-3 pt-4">
-            <Button variant="outline" className="flex-1 rounded-2xl h-12 font-semibold" onClick={() => setDeleteConfirmItem(null)}>ยกเลิก (Cancel)</Button>
-            <Button className="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl h-12 font-semibold shadow-lg shadow-rose-200 transition-all" onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "ยืนยันการลบ (Delete)"}
+            <Button variant="outline" className="flex-1 rounded-2xl h-12 font-semibold cursor-pointer" onClick={() => setDeleteConfirmItem(null)}>
+              {isEn ? "Cancel" : "ยกเลิก (Cancel)"}
+            </Button>
+            <Button className="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl h-12 font-semibold shadow-lg shadow-rose-200 transition-all cursor-pointer" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : (isEn ? "Delete" : "ยืนยันการลบ (Delete)")}
             </Button>
           </div>
         </div>
       </ResponsiveDialog>
 
-      <ResponsiveDialog open={isBulkDeleteOpen} onOpenChange={(open) => !open && !isDeleting && setIsBulkDeleteOpen(false)} title={isAllAcrossSelected ? "⚠️ ยืนยันการลบข้อมูลทั้งหมดในระบบ" : "ยืนยันการลบหลายรายการ"} className="md:max-w-md">
+      <ResponsiveDialog 
+        open={isBulkDeleteOpen} 
+        onOpenChange={(open) => !open && !isDeleting && setIsBulkDeleteOpen(false)} 
+        title={isAllAcrossSelected ? (isEn ? "⚠️ Confirm Permanent System Delete" : "⚠️ ยืนยันการลบข้อมูลทั้งหมดในระบบ") : (isEn ? "Confirm Bulk Delete" : "ยืนยันการลบหลายรายการ")} 
+        className="md:max-w-md"
+      >
         <div className="p-8 text-center space-y-6 italic">
           <div className={cn("mx-auto w-20 h-20 rounded-[32px] flex items-center justify-center mb-2 animate-pulse border shadow-lg", isAllAcrossSelected ? "bg-rose-100 text-rose-600 border-rose-200" : "bg-amber-100 text-amber-600 border-amber-200")}><TriangleAlert className="h-10 w-10" /></div>
           <div>
-            <h3 className="text-2xl font-semibold text-slate-900 tracking-tight">{isAllAcrossSelected ? "ลบทิ้งทั้งหมด! (Delete All Archives)" : "ยืนยันการลบที่เลือก"}</h3>
-            <p className="text-[13px] text-slate-500 mt-2 font-medium">คุณกำลังจะลบทำเลจำนวน <span className="font-semibold text-rose-600 text-xl">{isAllAcrossSelected ? totalCount : selectedCount}</span> รายการ {isAllAcrossSelected && "จากทุกหน้าเพจ"} ข้อมูลเบสนี้จะถูกลบออกถาวรและไม่สามารถกู้คืนได้</p>
-            {isAllAcrossSelected && <div className="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-[10px] font-semibold font-mono uppercase tracking-widest leading-relaxed shadow-sm">High Risk Admin Override Action Required</div>}
+            <h3 className="text-2xl font-semibold text-slate-900 tracking-tight">
+              {isAllAcrossSelected 
+                ? (isEn ? "Delete All Areas" : "ลบทิ้งทั้งหมด! (Delete All Archives)") 
+                : (isEn ? "Confirm Delete Selected" : "ยืนยันการลบที่เลือก")}
+            </h3>
+            <p className="text-[13px] text-slate-500 mt-2 font-medium">
+              {isEn
+                ? `You are about to delete ${isAllAcrossSelected ? totalCount : selectedCount} areas${isAllAcrossSelected ? " across all pages" : ""}. This action is permanent and cannot be undone.`
+                : `คุณกำลังจะลบทำเลจำนวน ${isAllAcrossSelected ? totalCount : selectedCount} รายการ ${isAllAcrossSelected ? "จากทุกหน้าเพจ" : ""} ข้อมูลเบสนี้จะถูกลบออกถาวรและไม่สามารถกู้คืนได้`}
+            </p>
+            {isAllAcrossSelected && (
+              <div className="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-[10px] font-semibold font-mono uppercase tracking-widest leading-relaxed shadow-sm">
+                High Risk Admin Override Action Required
+              </div>
+            )}
           </div>
           <div className="flex gap-3 pt-4">
-            <Button variant="outline" className="flex-1 rounded-2xl h-14 font-semibold" onClick={() => setIsBulkDeleteOpen(false)} disabled={isDeleting}>ยกเลิก (Cancel)</Button>
-            <Button className={cn("flex-1 text-white rounded-2xl h-14 font-semibold shadow-xl transition-all", isAllAcrossSelected ? "bg-rose-600 hover:bg-rose-700 shadow-rose-200" : "bg-slate-900 hover:bg-black shadow-slate-200")} onClick={executeBulkDelete} disabled={isDeleting}>
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "ยืนยันลบข้อมูล (Execute Delete)"}
+            <Button variant="outline" className="flex-1 rounded-2xl h-14 font-semibold cursor-pointer" onClick={() => setIsBulkDeleteOpen(false)} disabled={isDeleting}>
+              {isEn ? "Cancel" : "ยกเลิก (Cancel)"}
+            </Button>
+            <Button className={cn("flex-1 text-white rounded-2xl h-14 font-semibold shadow-xl transition-all cursor-pointer", isAllAcrossSelected ? "bg-rose-600 hover:bg-rose-700 shadow-rose-200" : "bg-slate-900 hover:bg-black shadow-slate-200")} onClick={executeBulkDelete} disabled={isDeleting}>
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : (isEn ? "Execute Delete" : "ยืนยันลบข้อมูล (Execute Delete)")}
             </Button>
           </div>
         </div>
@@ -700,3 +789,4 @@ export function PopularAreasTable({
     </div>
   );
 }
+

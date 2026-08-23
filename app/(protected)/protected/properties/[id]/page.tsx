@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { unstable_cache } from "next/cache";
 import { PropertyAdminHeader } from "./_components/PropertyAdminHeader";
 import { PropertyCRMDetails } from "./_components/PropertyCRMDetails";
@@ -40,7 +41,14 @@ export default async function PropertyDetailsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const lang = "th"; // Centralized language
+  const cookieStore = await cookies();
+  const lang = (
+    cookieStore.get("crm-language")?.value ||
+    cookieStore.get("language")?.value ||
+    cookieStore.get("public-language")?.value ||
+    "th"
+  ) as "th" | "en";
+  const isEn = lang === "en";
   const { id } = await params;
   const supabase = await createClient();
 
@@ -90,7 +98,9 @@ export default async function PropertyDetailsPage({
     console.error("PropertyDetailsPage query error:", error);
     return (
       <div className="p-8 text-center text-red-500">
-        ไม่พบข้อมูลทรัพย์ หรือเกิดข้อผิดพลาดในการโหลดข้อมูล: {error?.message || "rawData is null"}
+        {isEn
+          ? `Property not found or error loading data: ${error?.message || "rawData is null"}`
+          : `ไม่พบข้อมูลทรัพย์ หรือเกิดข้อผิดพลาดในการโหลดข้อมูล: ${error?.message || "rawData is null"}`}
       </div>
     );
   }
@@ -202,11 +212,17 @@ export default async function PropertyDetailsPage({
     project: (rawData.project as any) || null,
 
     // Unroll details (Strict Mapping & Localization Extraction)
-    title: titleObj?.th || titleObj?.en || "-",
-    description: descObj?.th || descObj?.en || null,
-    province: typeof addressInfo?.province === "object" ? (addressInfo?.province as any)?.th || (addressInfo?.province as any)?.en : addressInfo?.province || null,
-    district: typeof addressInfo?.district === "object" ? (addressInfo?.district as any)?.th || (addressInfo?.district as any)?.en : addressInfo?.district || null,
-    subdistrict: typeof addressInfo?.subdistrict === "object" ? (addressInfo?.subdistrict as any)?.th || (addressInfo?.subdistrict as any)?.en : addressInfo?.subdistrict || null,
+    title: (isEn ? (titleObj?.en || titleObj?.th) : (titleObj?.th || titleObj?.en)) || "-",
+    description: (isEn ? (descObj?.en || descObj?.th) : (descObj?.th || descObj?.en)) || null,
+    province: typeof addressInfo?.province === "object"
+      ? (isEn ? ((addressInfo?.province as any)?.en || (addressInfo?.province as any)?.th) : ((addressInfo?.province as any)?.th || (addressInfo?.province as any)?.en))
+      : addressInfo?.province || null,
+    district: typeof addressInfo?.district === "object"
+      ? (isEn ? ((addressInfo?.district as any)?.en || (addressInfo?.district as any)?.th) : ((addressInfo?.district as any)?.th || (addressInfo?.district as any)?.en))
+      : addressInfo?.district || null,
+    subdistrict: typeof addressInfo?.subdistrict === "object"
+      ? (isEn ? ((addressInfo?.subdistrict as any)?.en || (addressInfo?.subdistrict as any)?.th) : ((addressInfo?.subdistrict as any)?.th || (addressInfo?.subdistrict as any)?.en))
+      : addressInfo?.subdistrict || null,
     address_line1: addressInfo?.address_line1 || null,
     address_line1_en: addressInfo?.address_line1_en || null,
     postal_code: addressInfo?.postal_code || null,
@@ -258,7 +274,9 @@ export default async function PropertyDetailsPage({
     meta_keywords: metaData?.meta_keywords || [],
 
     // Smart Location
-    popular_area: (popularAreaV3?.name as { th?: string; en?: string } | null)?.th || (popularAreaV3?.name as { th?: string; en?: string } | null)?.en || addressInfo?.popular_area || null,
+    popular_area: isEn
+      ? ((popularAreaV3?.name as { th?: string; en?: string } | null)?.en || (popularAreaV3?.name as { th?: string; en?: string } | null)?.th || addressInfo?.popular_area || null)
+      : ((popularAreaV3?.name as { th?: string; en?: string } | null)?.th || (popularAreaV3?.name as { th?: string; en?: string } | null)?.en || addressInfo?.popular_area || null),
 
     // Agent mapping (Strict)
     agent: mainAgentIdentity
@@ -338,29 +356,29 @@ export default async function PropertyDetailsPage({
   const isClosed = property.status === "SOLD" || property.status === "RENTED";
 
   const keySellingPoints = [
-    property.is_pet_friendly && { name: "เลี้ยงสัตว์ได้", icon: "dog" },
-    property.is_corner_unit && { name: "ห้องมุม", icon: "layout" },
-    property.is_renovated && { name: "รีโนเวทใหม่", icon: "sparkles" },
-    property.is_fully_furnished && { name: "ตกแต่งครบ", icon: "armchair" },
+    property.is_pet_friendly && { name: isEn ? "Pet Friendly" : "เลี้ยงสัตว์ได้", icon: "dog" },
+    property.is_corner_unit && { name: isEn ? "Corner Unit" : "ห้องมุม", icon: "layout" },
+    property.is_renovated && { name: isEn ? "Newly Renovated" : "รีโนเวทใหม่", icon: "sparkles" },
+    property.is_fully_furnished && { name: isEn ? "Fully Furnished" : "ตกแต่งครบ", icon: "armchair" },
     (property.floor || 0) > 15 && {
-      name: `วิวสวยชั้นสูง (ชั้น ${property.floor})`,
+      name: isEn ? `High Floor (Fl. ${property.floor})` : `วิวสวยชั้นสูง (ชั้น ${property.floor})`,
       icon: "building-2",
     },
-    property.has_city_view && { name: "วิวเมือง", icon: "building-2" },
-    property.has_pool_view && { name: "วิวสระว่ายน้ำ", icon: "waves" },
-    property.has_garden_view && { name: "วิวสวน", icon: "trees" },
+    property.has_city_view && { name: isEn ? "City View" : "วิวเมือง", icon: "building-2" },
+    property.has_pool_view && { name: isEn ? "Pool View" : "วิวสระว่ายน้ำ", icon: "waves" },
+    property.has_garden_view && { name: isEn ? "Garden View" : "วิวสวน", icon: "trees" },
     property.is_selling_with_tenant && {
-      name: "ขายพร้อมผู้เช่า",
+      name: isEn ? "Sold with Tenant" : "ขายพร้อมผู้เช่า",
       icon: "users",
     },
     property.is_tax_registered && {
-      name: "จดทะเบียนบริษัทได้",
+      name: isEn ? "Company Reg. Allowed" : "จดทะเบียนบริษัทได้",
       icon: "file-check",
     },
-    property.is_foreigner_quota && { name: "โควต้าต่างชาติ", icon: "globe" },
+    property.is_foreigner_quota && { name: isEn ? "Foreigner Quota" : "โควต้าต่างชาติ", icon: "globe" },
     property.near_transit &&
       property.transit_station_name && {
-        name: `ใกล้ ${property.transit_station_name}`,
+        name: isEn ? `Near ${property.transit_station_name}` : `ใกล้ ${property.transit_station_name}`,
         icon: "map-pin",
       },
   ]
@@ -368,7 +386,7 @@ export default async function PropertyDetailsPage({
     .slice(0, 6);
 
   const currentUserId = authContext.user.id;
-  const isPlatformAdmin = authContext.role === "ADMIN";
+  const isPlatformAdmin = ["ADMIN", "OWNER", "MANAGER"].includes(authContext.role?.toUpperCase() || "");
 
   return (
     <div className="min-h-screen bg-white pb-24 lg:pb-32 font-sans ">

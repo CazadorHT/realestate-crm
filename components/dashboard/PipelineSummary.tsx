@@ -11,6 +11,7 @@ interface PipelineSummaryProps {
 
 const STAGE_LABELS: Record<string, { en: string; th: string }> = {
   ACTIVE: { en: "Active Listings", th: "ประกาศขาย" },
+  OFFER: { en: "Under Offer", th: "มีข้อเสนอ" },
   UNDER_OFFER: { en: "Under Negotiation", th: "กำลังเจรจา" },
   RESERVED: { en: "Reserved / Deposit", th: "ติดจอง" },
   SOLD: { en: "Closed & Won", th: "ปิดการขาย" },

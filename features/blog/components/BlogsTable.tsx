@@ -4,7 +4,8 @@ import { useMemo, useTransition, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import {
   Table,
   TableBody,
@@ -117,6 +118,8 @@ function MobileActionDrawer({
   isTrash?: boolean;
 }) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [open, setOpen] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
 
@@ -136,9 +139,9 @@ function MobileActionDrawer({
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title={isTrash ? "จัดการถังขยะ" : "จัดการบทความ"}
+      title={isTrash ? (isEn ? "Manage Trash" : "จัดการถังขยะ") : (isEn ? "Manage Article" : "จัดการบทความ")}
       trigger={
-        <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400">
+        <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 cursor-pointer">
           <MoreVertical className="h-5 w-5" />
         </Button>
       }
@@ -147,27 +150,35 @@ function MobileActionDrawer({
         {isTrash ? (
           <>
             <ConfirmDialog
-              title="กู้คืนบทความ"
-              description={`คุณต้องการกู้คืนบทความ "${post.title}" กลับมาใช้งานปกติใช่หรือไม่?`}
-              confirmText="กู้คืนบทความ"
+              title={isEn ? "Restore Article" : "กู้คืนบทความ"}
+              description={
+                isEn 
+                  ? `Do you want to restore "${post.title}" back to active articles?`
+                  : `คุณต้องการกู้คืนบทความ "${post.title}" กลับมาใช้งานปกติใช่หรือไม่?`
+              }
+              confirmText={isEn ? "Restore Article" : "กู้คืนบทความ"}
               onConfirm={() =>
                 handleAction(() => restoreBlogPostAction(post.id))
               }
               trigger={
                 <Button
                   variant="outline"
-                  className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-green-600"
+                  className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-green-600 cursor-pointer"
                   disabled={isBusy}
                 >
                   <RotateCcw className="h-5 w-5" />
-                  กู้คืนบทความ
+                  {isEn ? "Restore Article" : "กู้คืนบทความ"}
                 </Button>
               }
             />
             <ConfirmDialog
-              title="ลบบทความถาวร"
-              description={`คำเตือน: คุณกำลังจะลบบทความ "${post.title}" ทิ้งถาวร ข้อมูลนี้ไม่สามารถกู้คืนได้อีก`}
-              confirmText="ลบถาวรทันที"
+              title={isEn ? "Permanent Delete" : "ลบบทความถาวร"}
+              description={
+                isEn
+                  ? `Warning: You are about to permanently delete "${post.title}". This cannot be undone.`
+                  : `คำเตือน: คุณกำลังจะลบบทความ "${post.title}" ทิ้งถาวร ข้อมูลนี้ไม่สามารถกู้คืนได้อีก`
+              }
+              confirmText={isEn ? "Delete Permanently" : "ลบถาวรทันที"}
               confirmString="DELETE"
               variant="destructive"
               onConfirm={() =>
@@ -176,11 +187,11 @@ function MobileActionDrawer({
               trigger={
                 <Button
                   variant="outline"
-                  className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-destructive"
+                  className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-destructive cursor-pointer"
                   disabled={isBusy}
                 >
                   <ShieldAlert className="h-5 w-5" />
-                  ลบถาวร
+                  {isEn ? "Delete Permanently" : "ลบถาวร"}
                 </Button>
               }
             />
@@ -194,24 +205,24 @@ function MobileActionDrawer({
                 disabled
               >
                 <Eye className="h-5 w-5 text-slate-300" />
-                เปิดดูหน้าเว็บ (แบบร่าง)
+                {isEn ? "View Article (Draft)" : "เปิดดูหน้าเว็บ (แบบร่าง)"}
               </Button>
             ) : (
               <Button
                 variant="outline"
-                className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200"
+                className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 cursor-pointer"
                 asChild
                 onClick={() => setOpen(false)}
               >
                 <Link href={`/blog/${post.slug}`} target="_blank">
                   <Eye className="h-5 w-5 text-blue-500" />
-                  เปิดดูหน้าเว็บ
+                  {isEn ? "View Article" : "เปิดดูหน้าเว็บ"}
                 </Link>
               </Button>
             )}
             <Button
               variant="outline"
-              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-slate-600 relative overflow-hidden"
+              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-slate-600 relative overflow-hidden cursor-pointer"
               onClick={() => {
                 setIsBusy(true);
                 router.push(`/protected/blogs/${post.id}`);
@@ -223,7 +234,7 @@ function MobileActionDrawer({
               ) : (
                 <Pencil className="h-5 w-5 text-amber-500" />
               )}
-              แก้ไขเนื้อหา
+              {isEn ? "Edit Content" : "แก้ไขเนื้อหา"}
             </Button>
             <div className="col-span-2 pt-2 border-t border-slate-100">
               <DeleteBlogPostButton
@@ -245,6 +256,9 @@ export function BlogsTable({
   currentPage,
 }: BlogsTableProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const dateLocale = isEn ? enUS : th;
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") || "active";
@@ -302,7 +316,11 @@ export function BlogsTable({
               if (result.success) successCount++;
             }
             if (successCount > 0) {
-              toast.success(`ย้าย ${successCount} บทความลงถังขยะเรียบร้อยแล้ว`);
+              toast.success(
+                isEn
+                  ? `Moved ${successCount} articles to trash successfully`
+                  : `ย้าย ${successCount} บทความลงถังขยะเรียบร้อยแล้ว`
+              );
               clearSelection();
               handleSuccessFeedback();
             }
@@ -322,7 +340,7 @@ export function BlogsTable({
           clearSelection();
           handleSuccessFeedback();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
+          toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
         }
         resolve();
       });
@@ -339,7 +357,7 @@ export function BlogsTable({
           clearSelection();
           handleSuccessFeedback();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
+          toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
         }
         resolve();
       });
@@ -353,25 +371,25 @@ export function BlogsTable({
         variant="ghost"
         onClick={() => setTab("active")}
         className={cn(
-          "h-10 rounded-none border-b-2 px-6 font-bold transition-all",
+          "h-10 rounded-none border-b-2 px-6 font-bold transition-all cursor-pointer",
           !isTrash
             ? "border-blue-600 text-blue-600 bg-blue-50/50"
             : "border-transparent text-slate-400 hover:text-slate-600",
         )}
       >
-        บทความทั้งหมด
+        {isEn ? "All Articles" : "บทความทั้งหมด"}
       </Button>
       <Button
         variant="ghost"
         onClick={() => setTab("trash")}
         className={cn(
-          "h-10 rounded-none border-b-2 px-6 font-bold transition-all",
+          "h-10 rounded-none border-b-2 px-6 font-bold transition-all cursor-pointer",
           isTrash
             ? "border-red-600 text-red-600 bg-red-50/50"
             : "border-transparent text-slate-400 hover:text-slate-600",
         )}
       >
-        ถังขยะ
+        {isEn ? "Trash" : "ถังขยะ"}
         {isTrash && posts.length > 0 && (
           <Badge className="ml-2 bg-red-100 text-red-600 hover:bg-red-100 border-none px-1.5 h-4 text-[10px]">
             {posts.length}
@@ -391,16 +409,16 @@ export function BlogsTable({
             <FileText className="h-12 w-12 text-blue-500" />
           </div>
           <h3 className="text-xl font-extrabold text-slate-800 mb-2">
-            {isTrash ? "ถังขยะว่างเปล่า" : "ยังไม่มีบทความในระบบ"}
+            {isTrash ? (isEn ? "Trash is empty" : "ถังขยะว่างเปล่า") : (isEn ? "No articles found" : "ยังไม่มีบทความในระบบ")}
           </h3>
           <p className="text-slate-500 max-w-sm mb-8 font-medium">
             {isTrash 
-              ? "ไม่มีบทความที่ถูกลบค้างอยู่ในถังขยะ" 
-              : "เริ่มสร้างเนื้อหาแรกของคุณ เพื่อดึงดูดผู้ใช้งานและเพิ่มประสิทธิภาพด้าน SEO ให้กับเว็บไซต์"}
+              ? (isEn ? "No deleted articles found in the trash." : "ไม่มีบทความที่ถูกลบค้างอยู่ในถังขยะ") 
+              : (isEn ? "Create your first article to attract users and boost SEO performance." : "เริ่มสร้างเนื้อหาแรกของคุณ เพื่อดึงดูดผู้ใช้งานและเพิ่มประสิทธิภาพด้าน SEO ให้กับเว็บไซต์")}
           </p>
           {!isTrash && (
             <Button
-              className="rounded-xl h-11 px-8 font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100"
+              className="rounded-xl h-11 px-8 font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 cursor-pointer"
               onClick={() => {
                 setNavigatingId("new-blog");
                 router.push("/protected/blogs/new");
@@ -410,7 +428,7 @@ export function BlogsTable({
               {navigatingId === "new-blog" ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                "สร้างบทความแรกของคุณ"
+                isEn ? "Create Your First Article" : "สร้างบทความแรกของคุณ"
               )}
             </Button>
           )}
@@ -426,13 +444,17 @@ export function BlogsTable({
       <ConfirmDialog
         open={isBulkDeleteConfirmOpen}
         onOpenChange={setIsBulkDeleteConfirmOpen}
-        title={isTrash ? "ยืนยันลบถาวรแบบกลุ่ม" : "ยืนยันย้ายลงถังขยะแบบกลุ่ม"}
+        title={isTrash ? (isEn ? "Bulk Permanent Delete" : "ยืนยันลบถาวรแบบกลุ่ม") : (isEn ? "Bulk Move to Trash" : "ยืนยันย้ายลงถังขยะแบบกลุ่ม")}
         description={
           isTrash
-            ? `คำเตือน: คุณกำลังจะลบ ${selectedCount} บทความทิ้งถาวร ข้อมูลนี้ไม่สามารถกู้คืนได้อีก`
-            : `คุณกำลังจะย้าย ${selectedCount} บทความไปที่ถังขยะ (คุณสามารถกู้คืนได้ภายหลังหน้าถังขยะ)`
+            ? (isEn 
+                ? `Warning: You are about to permanently delete ${selectedCount} articles. This cannot be undone.`
+                : `คำเตือน: คุณกำลังจะลบ ${selectedCount} บทความทิ้งถาวร ข้อมูลนี้ไม่สามารถกู้คืนได้อีก`)
+            : (isEn 
+                ? `You are about to move ${selectedCount} articles to trash (you can restore them later).`
+                : `คุณกำลังจะย้าย ${selectedCount} บทความไปที่ถังขยะ (คุณสามารถกู้คืนได้ภายหลังหน้าถังขยะ)`)
         }
-        confirmText={isTrash ? "ลบถาวรทั้งหมด" : "ย้ายลงถังขยะ"}
+        confirmText={isTrash ? (isEn ? "Delete All Permanently" : "ลบถาวรทั้งหมด") : (isEn ? "Move to Trash" : "ย้ายลงถังขยะ")}
         confirmString={isTrash ? "DELETE" : undefined}
         variant={isTrash ? "destructive" : "default"}
         onConfirm={handleBulkDelete}
@@ -442,8 +464,8 @@ export function BlogsTable({
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={async () => setIsBulkDeleteConfirmOpen(true)}
-        entityName="บทความ"
-        onDeleteLabel={isTrash ? "ลบถาวร" : "ย้ายลงถังขยะ"}
+        entityName={isEn ? "Articles" : "บทความ"}
+        onDeleteLabel={isTrash ? (isEn ? "Delete Permanently" : "ลบถาวร") : (isEn ? "Move to Trash" : "ย้ายลงถังขยะ")}
         className={cn(isPending && "opacity-50 pointer-events-none")}
         extraActions={
           isTrash ? (
@@ -451,10 +473,10 @@ export function BlogsTable({
               variant="outline"
               size="sm"
               onClick={handleBulkRestore}
-              className="h-8 rounded-lg border-slate-200 text-xs font-bold gap-1.5 bg-white hover:bg-slate-50 text-slate-700"
+              className="h-8 rounded-lg border-slate-200 text-xs font-bold gap-1.5 bg-white hover:bg-slate-50 text-slate-700 cursor-pointer"
             >
               <RotateCcw className="h-3.5 w-3.5 text-green-600" />
-              กู้คืนข้อมูล
+              {isEn ? "Restore" : "กู้คืนข้อมูล"}
             </Button>
           ) : (
             <div className="flex items-center gap-2">
@@ -462,19 +484,19 @@ export function BlogsTable({
                 variant="outline"
                 size="sm"
                 onClick={() => handleBulkStatusUpdate(true)}
-                className="h-8 rounded-lg border-slate-200 text-xs font-bold gap-1.5"
+                className="h-8 rounded-lg border-slate-200 text-xs font-bold gap-1.5 cursor-pointer"
               >
                 <Globe className="h-3.5 w-3.5 text-green-500" />
-                Publish
+                {isEn ? "Publish" : "เผยแพร่"}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleBulkStatusUpdate(false)}
-                className="h-8 rounded-lg border-slate-200 text-xs font-bold gap-1.5"
+                className="h-8 rounded-lg border-slate-200 text-xs font-bold gap-1.5 cursor-pointer"
               >
                 <EyeOff className="h-3.5 w-3.5 text-slate-400" />
-                Draft
+                {isEn ? "Draft" : "แบบร่าง"}
               </Button>
             </div>
           )
@@ -502,22 +524,22 @@ export function BlogsTable({
                     />
                   </TableHead>
                   <TableHead className="w-[120px] font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    รูปตัวอย่าง
+                    {isEn ? "Preview" : "รูปตัวอย่าง"}
                   </TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    รายละเอียดบทความ
+                    {isEn ? "Article Details" : "รายละเอียดบทความ"}
                   </TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    หมวดหมู่
+                    {isEn ? "Category" : "หมวดหมู่"}
                   </TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    ผู้เขียน
+                    {isEn ? "Author" : "ผู้เขียน"}
                   </TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    {isTrash ? "วันที่ลบ" : "สถานะ"}
+                    {isTrash ? (isEn ? "Deleted At" : "วันที่ลบ") : (isEn ? "Status" : "สถานะ")}
                   </TableHead>
                   <TableHead className="text-right pr-6 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                    จัดการ
+                    {isEn ? "Actions" : "จัดการ"}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -593,7 +615,7 @@ export function BlogsTable({
                           </Badge>
                         ) : (
                           <span className="text-slate-300 italic text-xs">
-                            ไม่มีหมวดหมู่
+                            {isEn ? "Uncategorized" : "ไม่มีหมวดหมู่"}
                           </span>
                         )}
                       </TableCell>
@@ -623,14 +645,14 @@ export function BlogsTable({
                         {isTrash ? (
                           <div className="flex flex-col gap-0.5">
                             <span className="text-[10px] font-bold text-red-600">
-                              ลบเมื่อวันที่
+                              {isEn ? "Deleted At" : "ลบเมื่อวันที่"}
                             </span>
                             <span className="text-[10px] text-slate-400">
                               {post.deleted_at
                                 ? format(
                                     new Date(post.deleted_at),
                                     "dd MMM yyyy",
-                                    { locale: th },
+                                    { locale: dateLocale },
                                   )
                                 : "-"}
                             </span>
@@ -640,21 +662,21 @@ export function BlogsTable({
                             variant="outline"
                             className="gap-1.5 bg-blue-50 text-blue-700 border-blue-200 font-bold px-2 rounded-full text-[10px]"
                           >
-                            <Clock className="h-3 w-3" /> ตั้งเวลาเผยแพร่
+                            <Clock className="h-3 w-3" /> {isEn ? "Scheduled" : "ตั้งเวลาเผยแพร่"}
                           </Badge>
                         ) : post.is_published ? (
                           <Badge
                             variant="outline"
                             className="gap-1.5 bg-green-50 text-green-700 border-green-200 font-bold px-2 rounded-full text-[10px]"
                           >
-                            <Globe className="h-3.5 w-3.5" /> เผยแพร่แล้ว
+                            <Globe className="h-3.5 w-3.5" /> {isEn ? "Published" : "เผยแพร่แล้ว"}
                           </Badge>
                         ) : (
                           <Badge
                             variant="outline"
                             className="gap-1.5 bg-orange-50 text-orange-700 border-orange-200 font-bold px-2 rounded-full text-[10px]"
                           >
-                            <EyeOff className="h-3.5 w-3.5" /> แบบร่าง
+                            <EyeOff className="h-3.5 w-3.5" /> {isEn ? "Draft" : "แบบร่าง"}
                           </Badge>
                         )}
                       </TableCell>
@@ -663,9 +685,13 @@ export function BlogsTable({
                           {isTrash ? (
                             <>
                               <ConfirmDialog
-                                title="กู้คืนบทความ"
-                                description={`คุณต้องการกู้คืนบทความ "${post.title}" ใช่หรือไม่?`}
-                                confirmText="กู้คืนบทความ"
+                                title={isEn ? "Restore Article" : "กู้คืนบทความ"}
+                                description={
+                                  isEn
+                                    ? `Do you want to restore "${post.title}"?`
+                                    : `คุณต้องการกู้คืนบทความ "${post.title}" ใช่หรือไม่?`
+                                }
+                                confirmText={isEn ? "Restore" : "กู้คืนบทความ"}
                                 onConfirm={() =>
                                   startTransition(async () => {
                                     const res = await restoreBlogPostAction(
@@ -681,17 +707,21 @@ export function BlogsTable({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-green-600 hover:bg-green-50 rounded-lg"
-                                    title="Restore"
+                                    className="h-8 w-8 text-green-600 hover:bg-green-50 rounded-lg cursor-pointer"
+                                    title={isEn ? "Restore" : "กู้คืน"}
                                   >
                                     <RotateCcw className="h-4 w-4" />
                                   </Button>
                                 }
                               />
                               <ConfirmDialog
-                                title="ลบบทความถาวร"
-                                description={`คุณกำลังจะลบบทความ "${post.title}" ทิ้งถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้`}
-                                confirmText="ลบถาวรทันที"
+                                title={isEn ? "Permanent Delete" : "ลบบทความถาวร"}
+                                description={
+                                  isEn
+                                    ? `You are about to permanently delete "${post.title}". This cannot be undone.`
+                                    : `คุณกำลังจะลบบทความ "${post.title}" ทิ้งถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้`
+                                }
+                                confirmText={isEn ? "Delete Permanently" : "ลบถาวรทันที"}
                                 confirmString="DELETE"
                                 variant="destructive"
                                 onConfirm={() =>
@@ -710,8 +740,8 @@ export function BlogsTable({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg"
-                                    title="Delete Permanently"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer"
+                                    title={isEn ? "Delete Permanently" : "ลบถาวร"}
                                   >
                                     <ShieldAlert className="h-4 w-4" />
                                   </Button>
@@ -723,8 +753,12 @@ export function BlogsTable({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:pointer-events-none"
-                                title={post.is_published ? "Public Preview" : "ไม่สามารถดูบทความแบบร่างได้"}
+                                className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                                title={
+                                  isEn
+                                    ? (post.is_published ? "Public Preview" : "Draft articles cannot be viewed publicly")
+                                    : (post.is_published ? "Public Preview" : "ไม่สามารถดูบทความแบบร่างได้")
+                                }
                                 onClick={() => {
                                   setNavigatingId(`preview-${post.id}`);
                                   window.open(`/blog/${post.slug}`, "_blank");
@@ -741,8 +775,8 @@ export function BlogsTable({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
-                                title="Edit Content"
+                                className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg cursor-pointer"
+                                title={isEn ? "Edit Content" : "แก้ไขเนื้อหา"}
                                 onClick={() => {
                                   setNavigatingId(`edit-${post.id}`);
                                   router.push(`/protected/blogs/${post.id}`);
@@ -836,15 +870,15 @@ export function BlogsTable({
                         {/* Status Badge - Now in Flow */}
                         {isScheduled ? (
                           <Badge className="bg-blue-50 text-blue-700 border-blue-100 text-[9px] h-5 px-1.5 font-bold rounded-full shadow-none">
-                            ตั้งเวลา
+                            {isEn ? "Scheduled" : "ตั้งเวลา"}
                           </Badge>
                         ) : post.is_published ? (
                           <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[9px] h-5 px-1.5 font-bold rounded-full shadow-none tracking-tight">
-                            เผยแพร่แล้ว
+                            {isEn ? "Published" : "เผยแพร่แล้ว"}
                           </Badge>
                         ) : (
                           <Badge className="bg-orange-50 text-orange-700 border-orange-100 text-[9px] h-5 px-1.5 font-bold rounded-full shadow-none ml-1">
-                            แบบร่าง
+                            {isEn ? "Draft" : "แบบร่าง"}
                           </Badge>
                         )}
 
@@ -869,8 +903,8 @@ export function BlogsTable({
                       <Clock className="h-3 w-3" />
                       <span className="text-[11px] font-bold">
                         {publishedDate
-                          ? format(publishedDate, "dd MMM yyyy", { locale: th })
-                          : "ยังไม่ได้กำหนด"}
+                          ? format(publishedDate, "dd MMM yyyy", { locale: dateLocale })
+                          : (isEn ? "Not set" : "ยังไม่ได้กำหนด")}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">

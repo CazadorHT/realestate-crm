@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { Info, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { SMART_TAGS } from "../constants";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function SmartTagsCheatSheet() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -24,7 +27,9 @@ export function SmartTagsCheatSheet() {
               onClick={() => setIsOpen(!isOpen)}
             >
               <h4 className="text-[14px] font-semibold text-slate-800 flex items-center gap-2">
-                💡 Smart Tags: ดึงข้อมูลทรัพย์สินมาใส่ในข้อความอัตโนมัติ
+                {isEn 
+                  ? "💡 Smart Tags: Automatically insert property data into responses" 
+                  : "💡 Smart Tags: ดึงข้อมูลทรัพย์สินมาใส่ในข้อความอัตโนมัติ"}
               </h4>
               <div className="text-slate-400 hover:text-slate-600 transition-colors p-1">
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -34,9 +39,9 @@ export function SmartTagsCheatSheet() {
             {isOpen && (
               <div className="animate-in fade-in duration-200">
                 <p className="text-[13px] text-slate-500 leading-relaxed mt-1">
-                  เมื่อลูกค้าคอมเมนต์ใต้โพสต์ที่แชร์จากระบบ
-                  ระบบจะส่งอัลบั้มรูปภาพพร้อมข้อความที่คุณตั้งค่าไว้
-                  โดยคุณสามารถใช้ Tag เหล่านี้ได้เลย:
+                  {isEn 
+                    ? "When clients comment on system-shared posts, auto-replies use these dynamic smart tags:" 
+                    : "เมื่อลูกค้าคอมเมนต์ใต้โพสต์ที่แชร์จากระบบ ระบบจะส่งอัลบั้มรูปภาพพร้อมข้อความที่คุณตั้งค่าไว้ โดยคุณสามารถใช้ Tag เหล่านี้ได้เลย:"}
                 </p>
                 <div className="max-h-[160px] overflow-y-auto pr-2 custom-scrollbar mt-3">
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pb-2">
@@ -46,8 +51,8 @@ export function SmartTagsCheatSheet() {
                         className="flex items-center justify-between p-2 bg-white border border-slate-100 rounded-lg text-xs group/tag cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-95"
                         onClick={() => {
                           navigator.clipboard.writeText(item.tag);
-                          toast.success(`คัดลอก ${item.tag} แล้ว`, {
-                            description: "วางในกล่องข้อความได้เลยครับ",
+                          toast.success(isEn ? `Copied ${item.tag}` : `คัดลอก ${item.tag} แล้ว`, {
+                            description: isEn ? "Paste directly into message box" : "วางในกล่องข้อความได้เลยครับ",
                             duration: 2000,
                           });
                         }}
@@ -56,7 +61,7 @@ export function SmartTagsCheatSheet() {
                           {item.tag}
                         </code>
                         <span className="text-slate-400 group-hover/tag:text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis ml-2">
-                          {item.label}
+                          {isEn ? (item.label_en || item.label) : item.label}
                         </span>
                       </div>
                     ))}
@@ -70,3 +75,4 @@ export function SmartTagsCheatSheet() {
     </div>
   );
 }
+

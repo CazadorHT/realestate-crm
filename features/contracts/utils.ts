@@ -1,4 +1,4 @@
-export function getContractStatus(endDate: string) {
+export function getContractStatus(endDate: string, isEn = false) {
   const now = new Date();
   const end = new Date(endDate);
   const daysUntilExpiry = Math.ceil(
@@ -8,23 +8,24 @@ export function getContractStatus(endDate: string) {
   if (daysUntilExpiry < 0) {
     return {
       status: "expired",
-      label: "หมดอายุ",
+      label: isEn ? "Expired" : "หมดอายุ",
       variant: "destructive" as const,
       days: daysUntilExpiry,
     };
   } else if (daysUntilExpiry <= 30) {
     return {
       status: "expiring-soon",
-      label: "ใกล้หมดอายุ",
+      label: isEn ? "Expiring Soon" : "ใกล้หมดอายุ",
       variant: "default" as const,
       days: daysUntilExpiry,
     };
   } else {
     return {
       status: "active",
-      label: "ใช้งาน",
+      label: isEn ? "Active" : "ใช้งาน",
       variant: "default" as const,
       days: daysUntilExpiry,
     };
   }
 }
+

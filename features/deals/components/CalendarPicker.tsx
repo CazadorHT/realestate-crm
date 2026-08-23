@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { CreateDealInput } from "../schema";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // Custom styles for react-calendar
 import "./CalendarPicker.css";
@@ -19,6 +20,9 @@ interface CalendarPickerProps {
 }
 
 export function CalendarPicker({ type }: CalendarPickerProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const form = useFormContext<CreateDealInput>();
   const [open, setOpen] = useState(false);
 
@@ -84,7 +88,7 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
   };
 
   const getLabel = () => {
-    if (!transactionDate) return "เลือกวันที่";
+    if (!transactionDate) return isEn ? "Select Date" : "เลือกวันที่";
     if (type === "SALE") return format(startDate!, "dd/MM/yyyy");
     if (transactionDate && transactionEndDate) {
       return `${format(startDate!, "dd/MM/yyyy")} - ${format(endDate!, "dd/MM/yyyy")}`;
@@ -97,14 +101,14 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
       <ResponsiveDialog
         open={open}
         onOpenChange={setOpen}
-        title={type === "SALE" ? "เลือกวันที่โอน" : "ช่วงเวลาเช่า"}
-        description={type === "SALE" ? "กำหนดวันที่ปิดการขาย" : "เลือกวันเริ่มต้นและสิ้นสุดสัญญา"}
+        title={type === "SALE" ? (isEn ? "Select Transfer Date" : "เลือกวันที่โอน") : (isEn ? "Rental Term" : "ช่วงเวลาเช่า")}
+        description={type === "SALE" ? (isEn ? "Specify deal closing date" : "กำหนดวันที่ปิดการขาย") : (isEn ? "Select start and end dates of lease" : "เลือกวันเริ่มต้นและสิ้นสุดสัญญา")}
         trigger={
           <Button
             type="button"
             variant="outline"
             className={cn(
-              "w-full h-14 px-5 rounded-2xl border-2 flex items-center justify-between transition-all duration-300",
+              "w-full h-14 px-5 rounded-2xl border-2 flex items-center justify-between transition-all duration-300 cursor-pointer",
               transactionDate
                 ? "border-blue-100 bg-blue-50/20 hover:bg-blue-50 shadow-sm"
                 : "border-slate-200 bg-slate-50/50 hover:bg-white hover:border-blue-200"
@@ -116,7 +120,7 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
               </div>
               <div className="flex flex-col items-start leading-none gap-0.5">
                 <span className="text-xs text-slate-400 font-semibold uppercase tracking-widest">
-                  {type === "SALE" ? "วันโอนกรรมสิทธิ์" : "ช่วงเวลาสัญญา"}
+                  {type === "SALE" ? (isEn ? "Ownership Transfer Date" : "วันโอนกรรมสิทธิ์") : (isEn ? "Contract Period" : "ช่วงเวลาสัญญา")}
                 </span>
                 <span className="text-sm font-semibold text-slate-700">
                   {getLabel()}
@@ -130,11 +134,11 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
         }
         footer={
           <div className="flex gap-2 w-full">
-             <Button variant="outline" onClick={() => setOpen(false)} className="flex-1 h-12 rounded-xl font-bold">
-               ยกเลิก
+             <Button variant="outline" onClick={() => setOpen(false)} className="flex-1 h-12 rounded-xl font-bold cursor-pointer">
+               {isEn ? "Cancel" : "ยกเลิก"}
              </Button>
-             <Button onClick={() => setOpen(false)} className="flex-1 h-12 rounded-xl bg-blue-600 font-bold">
-               ตกลง
+             <Button onClick={() => setOpen(false)} className="flex-1 h-12 rounded-xl bg-blue-600 font-bold cursor-pointer">
+               {isEn ? "Done" : "ตกลง"}
              </Button>
           </div>
         }
@@ -147,7 +151,7 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
               value={value}
               selectRange={type === "RENT"}
               className="react-calendar-dealform"
-              locale="th-TH"
+              locale={isEn ? "en-US" : "th-TH"}
               prev2Label={null}
               next2Label={null}
               prevLabel={<ChevronLeft className="h-5 w-5" />}
@@ -160,7 +164,7 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
             <div className="w-full space-y-4">
               <div className="flex flex-col gap-3">
                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
-                   เลือกตามจำนวนปี
+                   {isEn ? "Quick Term Selection" : "เลือกตามจำนวนปี"}
                  </h4>
                  <div className="grid grid-cols-3 gap-2">
                    {[1, 2, 3].map((year) => (
@@ -169,14 +173,14 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
                         type="button"
                         variant={durationMonths === year * 12 ? "default" : "outline"}
                         className={cn(
-                          "h-12 rounded-2xl font-bold transition-all",
+                          "h-12 rounded-2xl font-bold transition-all cursor-pointer",
                           durationMonths === year * 12 
                             ? "bg-blue-600 shadow-lg shadow-blue-100 text-white" 
                             : "border-slate-100 bg-slate-50 text-slate-600"
                         )}
                         onClick={() => setDuration(year)}
                       >
-                        {year} ปี
+                        {isEn ? `${year} Yr${year > 1 ? "s" : ""}` : `${year} ปี`}
                       </Button>
                    ))}
                  </div>
@@ -190,10 +194,20 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
                       </div>
                       <div className="flex flex-col leading-none">
                         <span className="text-[10px] text-emerald-600/70 font-bold uppercase tracking-widest leading-none mb-1">
-                          ระยะเวลาตามจริง
+                          {isEn ? "Actual Duration" : "ระยะเวลาตามจริง"}
                         </span>
                         <span className="text-sm font-bold text-emerald-900">
-                          {Math.floor((durationMonths || 0) / 12)} ปี {(durationMonths || 0) % 12} เดือน
+                          {(() => {
+                            const yrs = Math.floor((durationMonths || 0) / 12);
+                            const mos = (durationMonths || 0) % 12;
+                            if (yrs > 0 && mos > 0) {
+                              return isEn ? `${yrs} yr ${mos} mo` : `${yrs} ปี ${mos} เดือน`;
+                            } else if (yrs > 0) {
+                              return isEn ? `${yrs} yr${yrs > 1 ? "s" : ""}` : `${yrs} ปี`;
+                            } else {
+                              return isEn ? `${mos} mo` : `${mos} เดือน`;
+                            }
+                          })()}
                         </span>
                       </div>
                    </div>
@@ -209,3 +223,4 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
     </div>
   );
 }
+

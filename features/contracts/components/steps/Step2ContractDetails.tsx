@@ -15,6 +15,7 @@ import { PriceInput } from "@/components/ui/price-input";
 import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 import { ContractFormInput } from "@/features/rental-contracts/schema";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface Step2Props {
   isSale: boolean;
@@ -29,6 +30,8 @@ export function Step2ContractDetails({
   setIsPriceEditing,
   updateEndDateFromTerm,
 }: Step2Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const form = useFormContext<ContractFormInput>();
 
   return (
@@ -41,7 +44,7 @@ export function Step2ContractDetails({
             <FormItem>
               <FormLabel className="flex items-center gap-2 text-sm font-bold text-slate-700 ml-1">
                 <CalendarIcon className="h-4 w-4 text-blue-500" />
-                วันที่เริ่มสัญญา
+                {isEn ? "Contract Start Date" : "วันที่เริ่มสัญญา"}
               </FormLabel>
               <FormControl>
                 <DatePicker
@@ -61,13 +64,13 @@ export function Step2ContractDetails({
             <FormItem>
               <FormLabel className="flex items-center gap-2 text-sm font-bold text-slate-700 ml-1">
                 <CalendarIcon className="h-4 w-4 text-blue-500" />
-                {isSale ? "วันที่โอน" : "วันที่สิ้นสุดสัญญา (คำนวณ)"}
+                {isSale ? (isEn ? "Transfer Date" : "วันที่โอน") : (isEn ? "Contract End Date (Calculated)" : "วันที่สิ้นสุดสัญญา (คำนวณ)")}
               </FormLabel>
               <FormControl>
                 <DatePicker
                   value={field.value}
                   onChange={(val) => field.onChange(val)}
-                  placeholder={isSale ? "วว/ดด/ปปปป" : "คำนวณอัตโนมัติ"}
+                  placeholder={isSale ? (isEn ? "DD/MM/YYYY" : "วว/ดด/ปปปป") : (isEn ? "Auto-calculated" : "คำนวณอัตโนมัติ")}
                 />
               </FormControl>
               <FormMessage />
@@ -83,7 +86,7 @@ export function Step2ContractDetails({
               <div className="flex items-center justify-between ml-1 mb-2">
                 <FormLabel className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Wallet className="h-4 w-4 text-emerald-500" />
-                  {isSale ? "ราคาขายสุทธิ" : "ราคาค่าเช่าต่อเดือน"}
+                  {isSale ? (isEn ? "Net Sale Price" : "ราคาขายสุทธิ") : (isEn ? "Monthly Rent Price" : "ราคาค่าเช่าต่อเดือน")}
                 </FormLabel>
                 <Button
                   type="button"
@@ -91,13 +94,13 @@ export function Step2ContractDetails({
                   size="sm"
                   onClick={() => setIsPriceEditing(!isPriceEditing)}
                   className={cn(
-                    "h-7 px-2 text-[10px] font-bold rounded-lg transition-all",
+                    "h-7 px-2 text-[10px] font-bold rounded-lg transition-all cursor-pointer",
                     isPriceEditing 
                       ? "bg-amber-50 text-amber-600 hover:bg-amber-100" 
                       : "bg-blue-50 text-blue-600 hover:bg-blue-100"
                   )}
                 >
-                  {isPriceEditing ? "ล็อกราคา" : "แก้ไขราคา"}
+                  {isPriceEditing ? (isEn ? "Lock Price" : "ล็อกราคา") : (isEn ? "Edit Price" : "แก้ไขราคา")}
                 </Button>
               </div>
               <FormControl>
@@ -123,7 +126,7 @@ export function Step2ContractDetails({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm font-bold text-slate-700 ml-1">
-                  ระยะสัญญา (เดือน)
+                  {isEn ? "Lease Term (Months)" : "ระยะสัญญา (เดือน)"}
                 </FormLabel>
                 <FormControl>
                   <div className="space-y-3">
@@ -135,7 +138,7 @@ export function Step2ContractDetails({
                           variant={field.value === v ? "default" : "outline"}
                           size="sm"
                           className={cn(
-                            "flex-1 h-9 rounded-xl font-bold transition-all",
+                            "flex-1 h-9 rounded-xl font-bold transition-all cursor-pointer",
                             field.value === v ? "bg-blue-600 text-white border-blue-600" : "text-slate-500"
                           )}
                           onClick={() => {
@@ -143,7 +146,7 @@ export function Step2ContractDetails({
                             updateEndDateFromTerm(v);
                           }}
                         >
-                          {v / 12} ปี
+                          {v / 12} {isEn ? (v / 12 > 1 ? "Years" : "Year") : "ปี"}
                         </Button>
                       ))}
                     </div>
@@ -168,3 +171,4 @@ export function Step2ContractDetails({
     </div>
   );
 }
+

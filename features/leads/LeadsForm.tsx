@@ -8,6 +8,7 @@ import { useLeadForm } from "./hooks/useLeadForm";
 import { LeadContactSection } from "./components/LeadContactSection";
 import { LeadRequirementsSection } from "./components/LeadRequirementsSection";
 import { LeadStatusSection } from "./components/LeadStatusSection";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type Props = {
   leadId?: string;
@@ -17,6 +18,8 @@ type Props = {
 
 export function LeadForm({ initialValues, onSubmitAction }: Props) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const { form, onSubmit, isPending, error } = useLeadForm(
     initialValues,
     onSubmitAction,
@@ -50,7 +53,7 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
           disabled={isPending}
           onClick={() => router.back()}
         >
-          ยกเลิก
+          {isEn ? "Cancel" : "ยกเลิก"}
         </Button>
         <Button
           className="h-15 px-8 text-md font-bold shadow-lg cursor-pointer shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 transition-all min-w-[200px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
@@ -58,7 +61,9 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
           disabled={isPending || !form.formState.isValid}
         >
           <Save className="h-4 w-4 mr-2" />
-          {isPending ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+          {isPending
+            ? (isEn ? "Saving..." : "กำลังบันทึก...")
+            : (isEn ? "Save Lead" : "บันทึกข้อมูล")}
         </Button>
       </div>
     </form>

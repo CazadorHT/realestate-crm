@@ -13,6 +13,7 @@ import dynamic from "next/dynamic";
 import { CommissionLeaderboard } from "../CommissionLeaderboard";
 import { MonthlyRevenue } from "../../executive-queries";
 import { TopAgent } from "../../queries";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const ExecutiveRevenueAreaChart = dynamic(
   () => import("../ExecutiveRevenueAreaChart").then(mod => mod.default),
@@ -37,6 +38,9 @@ export const RevenueChartSection = memo(function RevenueChartSection({
   topAgents,
   mounted,
 }: RevenueChartSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
       {/* Monthly Revenue Chart */}
@@ -44,10 +48,10 @@ export const RevenueChartSection = memo(function RevenueChartSection({
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-blue-500" />
-            แนวโน้มรายได้ (Sale vs Rent)
+            {isEn ? "Revenue Trends (Sale vs Rent)" : "แนวโน้มรายได้ (Sale vs Rent)"}
           </CardTitle>
           <CardDescription className="text-xs">
-            การเปรียบเทียบยอดขายและยอดเช่าในแต่ละเดือน
+            {isEn ? "Monthly comparison of sales and rental revenue" : "การเปรียบเทียบยอดขายและยอดเช่าในแต่ละเดือน"}
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] sm:h-[400px] px-2 sm:px-6 relative">

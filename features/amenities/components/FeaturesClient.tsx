@@ -60,6 +60,7 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteFeaturesAction } from "../bulk-actions";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FeaturesClientProps {
   features: FeatureRow[];
@@ -80,6 +81,8 @@ const CATEGORIES = [
 
 export function FeaturesClient({ features }: FeaturesClientProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFeature, setEditingFeature] = useState<FeatureRow | null>(null);
@@ -120,10 +123,10 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
         form.reset({ name: "", category: "", icon_key: "box" });
         router.refresh();
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาด");
+        toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (error) {
-      toast.error("บันทึกไม่สำเร็จ");
+      toast.error(isEn ? "Failed to save" : "บันทึกไม่สำเร็จ");
     }
   };
 
@@ -149,8 +152,8 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
       toast.success(result.message);
       router.refresh();
     } else {
-      toast.error(result.message || "ลบไม่สำเร็จ");
-      throw new Error(result.message || "ลบไม่สำเร็จ");
+      toast.error(result.message || (isEn ? "Failed to delete" : "ลบไม่สำเร็จ"));
+      throw new Error(result.message || (isEn ? "Failed to delete" : "ลบไม่สำเร็จ"));
     }
   };
 
@@ -190,8 +193,8 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
       clearSelection();
       router.refresh();
     } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-      throw new Error(result.message || "เกิดข้อผิดพลาด");
+      toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
+      throw new Error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
 
@@ -217,23 +220,25 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                 <Box className="h-6 w-6 text-white" />
               </div>
               <h1 className="text-2xl md:text-3xl font-bold text-white">
-                สิ่งอำนวยความสะดวก (Features)
+                {isEn ? "Amenities & Features" : "สิ่งอำนวยความสะดวก (Features)"}
               </h1>
             </div>
             <p className="text-white/80 text-sm md:text-base max-w-md">
-              จัดการรายการสิ่งอำนวยความสะดวก ไอคอน และหมวดหมู่ • มีทั้งหมด{" "}
+              {isEn 
+                ? `Manage property amenities, icons, and categories • Total `
+                : `จัดการรายการสิ่งอำนวยความสะดวก ไอคอน และหมวดหมู่ • มีทั้งหมด `}
               <span className="font-bold text-white">{totalFeatures}</span>{" "}
-              รายการ
+              {isEn ? "items" : "รายการ"}
             </p>
           </div>
 
           <Button
             onClick={handleAddNew}
             size="lg"
-            className="bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+            className="bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold cursor-pointer"
           >
             <Plus className="w-5 h-5 mr-2" />
-            เพิ่มรายการใหม่
+            {isEn ? "Add New Feature" : "เพิ่มรายการใหม่"}
           </Button>
         </div>
       </div>
@@ -241,7 +246,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">รายการทั้งหมด</CardTitle>
+            <CardTitle className="text-sm font-medium">{isEn ? "Total Features" : "รายการทั้งหมด"}</CardTitle>
             <Box className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
@@ -251,7 +256,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">หมวดหมู่</CardTitle>
+            <CardTitle className="text-sm font-medium">{isEn ? "Categories" : "หมวดหมู่"}</CardTitle>
             <Layers className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -263,7 +268,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ไอคอนระบบ</CardTitle>
+            <CardTitle className="text-sm font-medium">{isEn ? "System Icons" : "ไอคอนระบบ"}</CardTitle>
             <LayoutGrid className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -280,7 +285,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
-        entityName="รายการ"
+        entityName={isEn ? "Items" : "รายการ"}
       />
 
       {/* Filters & Table */}
@@ -289,7 +294,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
           <div className="relative max-w-sm w-full">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="ค้นหา (ชื่อ, หมวดหมู่)..."
+              placeholder={isEn ? "Search (name, category)..." : "ค้นหา (ชื่อ, หมวดหมู่)..."}
               className="pl-9 bg-white"
               value={searchTerm}
               onChange={(e) => {
@@ -307,7 +312,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                 <Checkbox
                   checked={isAllSelected}
                   onCheckedChange={() => toggleSelectAll(allIds)}
-                  aria-label="เลือกทั้งหมด"
+                  aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
                   className={
                     isPartialSelected
                       ? "data-[state=checked]:bg-primary/50"
@@ -315,10 +320,10 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                   }
                 />
               </TableHead>
-              <TableHead className="w-[80px]">ไอคอน</TableHead>
-              <TableHead>ชื่อ</TableHead>
-              <TableHead>หมวดหมู่</TableHead>
-              <TableHead className="w-[100px] text-right">จัดการ</TableHead>
+              <TableHead className="w-[80px]">{isEn ? "Icon" : "ไอคอน"}</TableHead>
+              <TableHead>{isEn ? "Name" : "ชื่อ"}</TableHead>
+              <TableHead>{isEn ? "Category" : "หมวดหมู่"}</TableHead>
+              <TableHead className="w-[100px] text-right">{isEn ? "Actions" : "จัดการ"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -330,7 +335,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                 >
                   <div className="flex flex-col items-center gap-2">
                     <Box className="h-8 w-8 text-slate-300" />
-                    <p>ไม่พบข้อมูล</p>
+                    <p>{isEn ? "No features found" : "ไม่พบข้อมูล"}</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -348,7 +353,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                       <Checkbox
                         checked={isSelected(feature.id)}
                         onCheckedChange={() => toggleSelect(feature.id)}
-                        aria-label={`เลือก ${feature.name}`}
+                        aria-label={isEn ? `Select ${feature.name}` : `เลือก ${feature.name}`}
                       />
                     </TableCell>
                     <TableCell>
@@ -377,21 +382,21 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(feature)}
-                          className="hover:text-blue-600 hover:bg-blue-50"
+                          className="hover:text-blue-600 hover:bg-blue-50 cursor-pointer"
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
                         <ConfirmDialog
-                          title="ลบรายการ"
-                          description={`คุณแน่ใจหรือไม่ที่จะลบ "${feature.name}"?`}
-                          confirmText="ลบ"
+                          title={isEn ? "Delete Feature" : "ลบรายการ"}
+                          description={isEn ? `Are you sure you want to delete "${feature.name}"?` : `คุณแน่ใจหรือไม่ที่จะลบ "${feature.name}"?`}
+                          confirmText={isEn ? "Delete" : "ลบ"}
                           variant="destructive"
                           onConfirm={() => handleDelete(feature.id)}
                           trigger={
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="hover:text-red-600 hover:bg-red-50"
+                              className="hover:text-red-600 hover:bg-red-50 cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -409,9 +414,9 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
         {/* Pagination Footer */}
         <div className="px-4 py-3 border-t bg-slate-50/50 flex items-center justify-between">
           <div className="text-xs text-slate-500">
-            แสดง {Math.min(startIndex + 1, filteredFeatures.length)} ถึง{" "}
-            {Math.min(endIndex, filteredFeatures.length)} จากทั้งหมด{" "}
-            {filteredFeatures.length} รายการ
+            {isEn 
+              ? `Showing ${Math.min(startIndex + 1, filteredFeatures.length)} to ${Math.min(endIndex, filteredFeatures.length)} of ${filteredFeatures.length} items`
+              : `แสดง ${Math.min(startIndex + 1, filteredFeatures.length)} ถึง ${Math.min(endIndex, filteredFeatures.length)} จากทั้งหมด ${filteredFeatures.length} รายการ`}
           </div>
 
           <div className="flex items-center gap-2">
@@ -420,19 +425,19 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
               size="sm"
               onClick={prevPage}
               disabled={currentPage === 1}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-xs font-medium text-slate-600">
-              หน้า {currentPage} / {totalPages || 1}
+              {isEn ? `Page ${currentPage} / ${totalPages || 1}` : `หน้า ${currentPage} / ${totalPages || 1}`}
             </span>
             <Button
               variant="outline"
               size="sm"
               onClick={nextPage}
               disabled={currentPage === totalPages || totalPages === 0}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -444,24 +449,24 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
       <ResponsiveDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        title={editingFeature ? "แก้ไขรายการ" : "เพิ่มรายการใหม่"}
-        description="กรอกข้อมูลสิ่งอำนวยความสะดวก หมวดหมู่ และไอคอนที่ต้องการแสดง"
+        title={editingFeature ? (isEn ? "Edit Feature" : "แก้ไขรายการ") : (isEn ? "Add New Feature" : "เพิ่มรายการใหม่")}
+        description={isEn ? "Specify feature name, category, and icon representation." : "กรอกข้อมูลสิ่งอำนวยความสะดวก หมวดหมู่ และไอคอนที่ต้องการแสดง"}
         footer={
           <div className="flex flex-col sm:flex-row gap-2 w-full">
             <Button
               type="button"
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
-              className="flex-1 sm:flex-none rounded-xl h-11 font-bold border-slate-200 text-slate-500"
+              className="flex-1 sm:flex-none rounded-xl h-11 font-bold border-slate-200 text-slate-500 cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               type="button"
               onClick={form.handleSubmit(onSubmit)}
-              className="flex-1 rounded-xl h-11 px-8 font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 transition-all hover:scale-[1.02] active:scale-95"
+              className="flex-1 rounded-xl h-11 px-8 font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
             >
-              {editingFeature ? "บันทึกการแก้ไข" : "สร้างรายการใหม่"}
+              {editingFeature ? (isEn ? "Save Changes" : "บันทึกการแก้ไข") : (isEn ? "Create Feature" : "สร้างรายการใหม่")}
             </Button>
           </div>
         }
@@ -473,10 +478,10 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-700 font-bold">ชื่อสิ่งอำนวยความสะดวก</FormLabel>
+                  <FormLabel className="text-slate-700 font-bold">{isEn ? "Feature Name" : "ชื่อสิ่งอำนวยความสะดวก"}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="เช่น สระว่ายน้ำ, ฟิตเนส"
+                      placeholder={isEn ? "e.g. Swimming Pool, Fitness" : "เช่น สระว่ายน้ำ, ฟิตเนส"}
                       className="rounded-xl border-slate-200 h-11 focus:ring-blue-500/10"
                       {...field}
                     />
@@ -492,11 +497,11 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-700 font-bold">หมวดหมู่</FormLabel>
+                    <FormLabel className="text-slate-700 font-bold">{isEn ? "Category" : "หมวดหมู่"}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
-                          placeholder="เลือกหรือพิมพ์..."
+                          placeholder={isEn ? "Select or type..." : "เลือกหรือพิมพ์..."}
                           className="rounded-xl border-slate-200 h-11 focus:ring-blue-500/10"
                           {...field}
                           value={field.value || ""}
@@ -519,14 +524,14 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
                 name="icon_key"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-700 font-bold">ไอคอน</FormLabel>
+                    <FormLabel className="text-slate-700 font-bold">{isEn ? "Icon" : "ไอคอน"}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
-                          <SelectValue placeholder="เลือกไอคอน" />
+                          <SelectValue placeholder={isEn ? "Select Icon" : "เลือกไอคอน"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="max-h-[300px] rounded-xl border-slate-200 shadow-xl">

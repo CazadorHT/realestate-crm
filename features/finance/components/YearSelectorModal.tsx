@@ -23,6 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar, Check, Clock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface YearSelectorModalProps {
   isOpen: boolean;
@@ -37,13 +38,15 @@ interface YearGridProps {
   selectedYear: number;
   handleYearSelect: (year: number) => void;
   currentYear: number;
+  isEn: boolean;
 }
 
 const YearGrid = ({
   availableYears,
   selectedYear,
   handleYearSelect,
-  currentYear
+  currentYear,
+  isEn
 }: YearGridProps) => (
   <ScrollArea className="h-[300px] sm:h-[400px] p-4">
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -54,18 +57,20 @@ const YearGrid = ({
             variant={selectedYear === y ? "default" : "outline"}
             onClick={() => handleYearSelect(y)}
             className={cn(
-              "h-16 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all group relative overflow-hidden",
+              "h-16 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all group relative overflow-hidden cursor-pointer",
               selectedYear === y 
                 ? "bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 border-none" 
                 : "border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30"
             )}
           >
-            <span className={cn(
-              "text-xs font-semibold uppercase tracking-tighter opacity-60",
-              selectedYear === y ? "text-indigo-100" : "text-slate-400"
-            )}>
-              พ.ศ. {y + 543}
-            </span>
+            {!isEn && (
+              <span className={cn(
+                "text-xs font-semibold uppercase tracking-tighter opacity-60",
+                selectedYear === y ? "text-indigo-100" : "text-slate-400"
+              )}>
+                พ.ศ. {y + 543}
+              </span>
+            )}
             <span className={cn(
               "text-lg font-semibold tracking-tight",
               selectedYear === y ? "text-white" : "text-slate-900"
@@ -87,7 +92,9 @@ const YearGrid = ({
       ) : (
         <div className="col-span-full py-20 text-center space-y-3">
            <Clock className="w-10 h-10 text-slate-200 mx-auto" />
-           <p className="text-sm font-semibold text-slate-400">ยังไม่พบข้อมูลปีการเงินย้อนหลัง</p>
+           <p className="text-sm font-semibold text-slate-400">
+             {isEn ? "No financial year data found" : "ยังไม่พบข้อมูลปีการเงินย้อนหลัง"}
+           </p>
         </div>
       )}
     </div>
@@ -101,6 +108,8 @@ export function YearSelectorModal({
   onYearChange,
   availableYears
 }: YearSelectorModalProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isMobile = useIsMobile();
 
   const handleYearSelect = (year: number) => {
@@ -117,10 +126,10 @@ export function YearSelectorModal({
           <DrawerHeader>
             <DrawerTitle className="text-xl font-semibold text-slate-900 flex items-center gap-2 justify-center">
               <Calendar className="w-5 h-5 text-indigo-600" />
-              เลือกปีงบประมาณ
+              {isEn ? "Select Fiscal Year" : "เลือกปีงบประมาณ"}
             </DrawerTitle>
             <DrawerDescription className="text-center font-medium">
-              แสดงเฉพาะปีที่ระบบตรวจพบข้อมูลการเงินและคอมมิชชัน
+              {isEn ? "Showing years with recorded financial and commission data" : "แสดงเฉพาะปีที่ระบบตรวจพบข้อมูลการเงินและคอมมิชชัน"}
             </DrawerDescription>
           </DrawerHeader>
           <YearGrid
@@ -128,10 +137,13 @@ export function YearSelectorModal({
             selectedYear={selectedYear}
             handleYearSelect={handleYearSelect}
             currentYear={currentYear}
+            isEn={isEn}
           />
           <DrawerFooter className="pt-2">
             <DrawerClose asChild>
-              <Button variant="ghost" className="rounded-xl h-12 font-semibold text-slate-500">ยกเลิก</Button>
+              <Button variant="ghost" className="rounded-xl h-12 font-semibold text-slate-500 cursor-pointer">
+                {isEn ? "Cancel" : "ยกเลิก"}
+              </Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
@@ -147,9 +159,11 @@ export function YearSelectorModal({
               <Calendar className="w-24 h-24 rotate-12" />
            </div>
            <DialogHeader>
-             <DialogTitle className="text-2xl font-semibold">เลือกปีงบประมาณองค์กร</DialogTitle>
+             <DialogTitle className="text-2xl font-semibold">
+               {isEn ? "Select Fiscal Year" : "เลือกปีงบประมาณองค์กร"}
+             </DialogTitle>
              <DialogDescription className="text-indigo-100 font-medium opacity-80">
-               เข้าถึงข้อมูลย้อนหลังทุกมิติสำหรับระดับบัญชีและบริหาร
+               {isEn ? "Access historical financial analytics and executive reports" : "เข้าถึงข้อมูลย้อนหลังทุกมิติสำหรับระดับบัญชีและบริหาร"}
              </DialogDescription>
            </DialogHeader>
         </div>
@@ -159,12 +173,16 @@ export function YearSelectorModal({
              selectedYear={selectedYear}
              handleYearSelect={handleYearSelect}
              currentYear={currentYear}
+             isEn={isEn}
            />
         </div>
         <DialogFooter className="p-8 pt-0">
-           <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl font-semibold text-slate-400">ปิดหน้าต่าง</Button>
+           <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl font-semibold text-slate-400 cursor-pointer">
+             {isEn ? "Close" : "ปิดหน้าต่าง"}
+           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+

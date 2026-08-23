@@ -54,12 +54,14 @@ export type MarketingPerformanceData = {
 export type Notification = {
   id: string | number;
   message: string;
+  messageEn?: string;
   type: "info" | "warning" | "alert" | "success";
   time: string;
   read: boolean;
   href?: string;
   createdAt?: number;
   category?: string;
+  daysUntilExpiry?: number;
 };
 
 export type AgendaEvent = {

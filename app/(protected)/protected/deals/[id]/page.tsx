@@ -19,6 +19,7 @@ import { RentalContractSection } from "@/features/rental-contracts/components/Re
 import { DeleteDealButton } from "@/features/deals/components/DeleteDealButton";
 import { differenceInMonths } from "date-fns";
 import { requireAuthContext } from "@/lib/authz";
+import { cookies } from "next/headers";
 
 // Components
 import { DealFinancials } from "@/features/deals/components/DealFinancials";
@@ -33,6 +34,10 @@ interface PageProps {
 
 export default async function DealDetailPage({ params }: PageProps) {
   const { id } = await params;
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const { tenantId } = await requireAuthContext();
   const deal = await getDealById(id);
   const commissions = await getDealCommissions(id);
@@ -66,12 +71,12 @@ export default async function DealDetailPage({ params }: PageProps) {
       <Breadcrumb
         backHref={`/protected/leads/${deal.lead_id}`}
         items={[
-          { label: "ลีด", href: "/protected/leads" },
+          { label: isEn ? "Leads" : "ลีด", href: "/protected/leads" },
           {
-            label: "รายละเอียดลีด",
+            label: isEn ? "Lead Details" : "รายละเอียดลีด",
             href: `/protected/leads/${deal.lead_id}`,
           },
-          { label: "ดีล" },
+          { label: isEn ? "Deal" : "ดีล" },
         ]}
         className="mb-4"
       />
@@ -96,15 +101,15 @@ export default async function DealDetailPage({ params }: PageProps) {
               <div>
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                    {isRent ? "ดีลเช่า" : "ดีลซื้อขาย"}
+                    {isRent ? (isEn ? "Rental Deal" : "ดีลเช่า") : (isEn ? "Sale Deal" : "ดีลซื้อขาย")}
                   </h1>
                   <div className="scale-110 shadow-lg">
                     <DealStatusBadge status={deal.status} />
                   </div>
                 </div>
                 <p className="text-white/90 text-base font-medium mt-1 flex items-center gap-2">
-                  <span className="opacity-70">ทรัพย์:</span>
-                  {deal.property?.title || "ไม่ระบุทรัพย์"}
+                  <span className="opacity-70">{isEn ? "Property:" : "ทรัพย์:"}</span>
+                  {deal.property?.title || (isEn ? "Unassigned Property" : "ไม่ระบุทรัพย์")}
                 </p>
               </div>
             </div>
@@ -150,8 +155,12 @@ export default async function DealDetailPage({ params }: PageProps) {
                 <RiFileTextLine className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-bold text-lg text-slate-800">สัญญาเช่า</h3>
-                <p className="text-xs text-slate-500">ข้อมูลสัญญาและเงื่อนไข</p>
+                <h3 className="font-bold text-lg text-slate-800">
+                  {isEn ? "Rental Contract" : "สัญญาเช่า"}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {isEn ? "Contract information & terms" : "ข้อมูลสัญญาและเงื่อนไข"}
+                </p>
               </div>
             </div>
             <div className="p-5">
@@ -202,14 +211,16 @@ export default async function DealDetailPage({ params }: PageProps) {
               </div>
               <div>
                 <h3 className="font-bold text-lg text-slate-800">
-                  ประวัติการดำเนินการ
+                  {isEn ? "Activity History" : "ประวัติการดำเนินการ"}
                 </h3>
-                <p className="text-xs text-slate-500">บันทึกกิจกรรมในดีล</p>
+                <p className="text-xs text-slate-500">
+                  {isEn ? "Deal activity log" : "บันทึกกิจกรรมในดีล"}
+                </p>
               </div>
             </div>
             <div className="p-5">
               <p className="text-sm text-muted-foreground text-center py-4">
-                ระบบกำลังบันทึกประวัติการเปลี่ยนแปลง...
+                {isEn ? "System is recording deal change logs..." : "ระบบกำลังบันทึกประวัติการเปลี่ยนแปลง..."}
               </p>
             </div>
           </div>

@@ -12,12 +12,53 @@ interface RiskAlertsProps {
   view?: string;
 }
 
+const stageLabelsEn: Record<string, string> = {
+  LEAD: "New Lead",
+  CONTACTED: "Contacted",
+  VIEWING: "Viewing",
+  APPOINTMENT: "Viewing",
+  NEGOTIATION: "Negotiation",
+  UNDER_OFFER: "Under Offer",
+  RESERVED: "Reserved",
+  CONTRACT: "Contract",
+  CLOSING: "Closing",
+  CLOSED_WON: "Closed Won",
+  SOLD: "Sold",
+  RENTED: "Rented",
+  ACTIVE: "Active",
+  LOST: "Lost",
+};
+
+const stageLabelsTh: Record<string, string> = {
+  LEAD: "ลีดใหม่",
+  CONTACTED: "ติดต่อแล้ว",
+  VIEWING: "นัดชมทรัพย์",
+  APPOINTMENT: "นัดชมทรัพย์",
+  NEGOTIATION: "เจรจาต่อรอง",
+  UNDER_OFFER: "กำลังเจรจา",
+  RESERVED: "วางมัดจำ/จอง",
+  CONTRACT: "ทำสัญญา",
+  CLOSING: "รอโอนกรรมสิทธิ์",
+  CLOSED_WON: "ปิดการขาย",
+  SOLD: "ขายแล้ว",
+  RENTED: "ปล่อยเช่าแล้ว",
+  ACTIVE: "เปิดขาย/เช่า",
+  LOST: "ยกเลิก/หลุด",
+};
+
 export function RiskAlerts({ deals = [], role, view = "personal" }: RiskAlertsProps) {
   const router = useRouter();
   const { language } = useLanguage();
   const isEn = language === "en";
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const isAdminView = (role === "ADMIN" || role === "MANAGER" || role === "OWNER") && view !== "personal";
+
+  const getStageLabel = (stage: string) => {
+    const key = stage.toUpperCase();
+    if (isEn) return stageLabelsEn[key] || stage;
+    return stageLabelsTh[key] || stage;
+  };
+
   return (
     <Card className="shadow-sm h-full border-red-200 bg-red-50/50">
       <CardHeader className="pb-2 px-4 sm:px-6">
@@ -52,7 +93,7 @@ export function RiskAlerts({ deals = [], role, view = "personal" }: RiskAlertsPr
                 </span>
                 <div className="flex justify-between items-center mt-1">
                   <span className="text-xs text-muted-foreground">
-                    Stage: {deal.stage}
+                    {isEn ? "Stage:" : "สถานะ:"} {getStageLabel(deal.stage)}
                     {isAdminView && (
                       <span className="ml-1 text-slate-400 font-bold">• {isEn ? "Agent:" : "โดย:"} {deal.agentName || (isEn ? "Unassigned" : "ไม่ระบุ")}</span>
                     )}

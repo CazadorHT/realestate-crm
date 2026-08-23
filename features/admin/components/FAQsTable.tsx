@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { useDebounce } from "use-debounce";
 import { useEffect } from "react";
 import { FAQItem } from "@/features/admin/faqs-actions";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type FAQ = FAQItem;
 
@@ -53,6 +54,8 @@ export function FAQsTable({
   isSuperAdmin = false
 }: FAQsTableProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [deleteConfirmFaq, setDeleteConfirmFaq] = useState<FAQ | null>(null);
@@ -119,7 +122,7 @@ export function FAQsTable({
       clearSelection();
       handleSuccessFeedback();
     } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
+      toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
 
@@ -133,7 +136,7 @@ export function FAQsTable({
       clearSelection();
       handleSuccessFeedback();
     } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
+      toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
 
@@ -147,7 +150,7 @@ export function FAQsTable({
       clearSelection();
       handleSuccessFeedback();
     } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
+      toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
 
@@ -162,7 +165,7 @@ export function FAQsTable({
       setConfirmName("");
       handleSuccessFeedback();
     } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
+      toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
 
@@ -177,8 +180,8 @@ export function FAQsTable({
         toast.error(res.message);
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "เกิดข้อผิดพลาดที่ไม่รู้จัก";
-      toast.error("เกิดข้อผิดพลาดในการย้ายลงถังขยะ: " + message);
+      const message = error instanceof Error ? error.message : (isEn ? "Unknown error" : "เกิดข้อผิดพลาดที่ไม่รู้จัก");
+      toast.error((isEn ? "Error moving to trash: " : "เกิดข้อผิดพลาดในการย้ายลงถังขยะ: ") + message);
     } finally {
       setIsLoading(false);
       setDeleteConfirmFaq(null);
@@ -196,8 +199,8 @@ export function FAQsTable({
         toast.error(res.message);
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "เกิดข้อผิดพลาดที่ไม่รู้จัก";
-      toast.error("เกิดข้อผิดพลาดในการกู้คืนข้อมูล: " + message);
+      const message = error instanceof Error ? error.message : (isEn ? "Unknown error" : "เกิดข้อผิดพลาดที่ไม่รู้จัก");
+      toast.error((isEn ? "Error restoring item: " : "เกิดข้อผิดพลาดในการกู้คืนข้อมูล: ") + message);
     } finally {
       setIsLoading(false);
       setRestoreConfirmFaq(null);
@@ -216,8 +219,8 @@ export function FAQsTable({
         toast.error(res.message);
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "เกิดข้อผิดพลาดที่ไม่รู้จัก";
-      toast.error("เกิดข้อผิดพลาดในการลบข้อมูลถาวร: " + message);
+      const message = error instanceof Error ? error.message : (isEn ? "Unknown error" : "เกิดข้อผิดพลาดที่ไม่รู้จัก");
+      toast.error((isEn ? "Error permanently deleting item: " : "เกิดข้อผิดพลาดในการลบข้อมูลถาวร: ") + message);
     } finally {
       setIsLoading(false);
       setPermanentDeleteFaq(null);
@@ -237,7 +240,7 @@ export function FAQsTable({
               {navigatingTab === "active" && (
                 <Loader2 className="absolute -left-1 h-3 w-3 animate-spin text-blue-600" />
               )}
-              ใช้งานปกติ ({activeCount})
+              {isEn ? `Active (${activeCount})` : `ใช้งานปกติ (${activeCount})`}
             </TabsTrigger>
             <TabsTrigger 
               value="trash"
@@ -246,7 +249,7 @@ export function FAQsTable({
               {navigatingTab === "trash" && (
                 <Loader2 className="absolute -left-1 h-3 w-3 animate-spin text-rose-600" />
               )}
-              ถังขยะ ({trashCount})
+              {isEn ? `Trash (${trashCount})` : `ถังขยะ (${trashCount})`}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -255,7 +258,7 @@ export function FAQsTable({
           <div className="relative w-full sm:w-64 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <Input
-              placeholder="ค้นหาคำถามหรือคำตอบ..."
+              placeholder={isEn ? "Search questions or answers..." : "ค้นหาคำถามหรือคำตอบ..."}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               className="pl-10 pr-10 h-11 bg-slate-100 border-none rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:bg-white transition-all font-medium"
@@ -263,7 +266,7 @@ export function FAQsTable({
             {searchValue && (
               <button 
                 onClick={() => setSearchValue("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-full transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
               >
                 <X className="h-3 w-3 text-slate-500" />
               </button>
@@ -275,10 +278,10 @@ export function FAQsTable({
               variant="outline"
               size="sm"
               onClick={() => setIsEmptyTrashConfirm(true)}
-              className="h-11 px-4 text-rose-600! border-rose-200 bg-rose-50/50 hover:bg-rose-50 rounded-xl font-bold transition-all"
+              className="h-11 px-4 text-rose-600! border-rose-200 bg-rose-50/50 hover:bg-rose-50 rounded-xl font-bold transition-all cursor-pointer"
             >
               <Trash className="w-4 h-4 mr-2" />
-              ล้างถังขยะ
+              {isEn ? "Empty Trash" : "ล้างถังขยะ"}
             </Button>
           )}
         </div>
@@ -290,8 +293,8 @@ export function FAQsTable({
             selectedCount={selectedCount}
             onClear={clearSelection}
             onDelete={isTrash ? handleBulkPermanentDelete : handleBulkTrash}
-            entityName="คำถาม"
-            onDeleteLabel={isTrash ? "ลบถาวร" : "ย้ายลงถังขยะ"}
+            entityName={isEn ? "FAQs" : "คำถาม"}
+            onDeleteLabel={isTrash ? (isEn ? "Delete Permanently" : "ลบถาวร") : (isEn ? "Move to Trash" : "ย้ายลงถังขยะ")}
             extraActions={
               isTrash ? (
                 <Button
@@ -299,10 +302,10 @@ export function FAQsTable({
                   size="sm"
                   onClick={handleBulkRestore}
                   disabled={isLoading}
-                  className="h-11 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium rounded-xl"
+                  className="h-11 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium rounded-xl cursor-pointer"
                 >
                   <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                  กู้คืนข้อมูล
+                  {isEn ? "Restore" : "กู้คืนข้อมูล"}
                 </Button>
               ) : undefined
             }
@@ -318,25 +321,25 @@ export function FAQsTable({
                   <Checkbox
                     checked={isAllSelected}
                     onCheckedChange={() => toggleSelectAll(allIds)}
-                    aria-label="เลือกทั้งหมด"
+                    aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
                     className="rounded-md border-slate-300"
                   />
                 </TableHead>
                 <TableHead className="w-[80px] font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
-                  ลำดับ
+                  {isEn ? "Order" : "ลำดับ"}
                 </TableHead>
                 <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
-                  คำถามสำคัญ
+                  {isEn ? "Question" : "คำถามสำคัญ"}
                 </TableHead>
                 <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
-                   หมวดหมู่คำถาม
+                  {isEn ? "Category" : "หมวดหมู่คำถาม"}
                 </TableHead>
                 <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
-                  {isTrash ? "ลบเมื่อ" : "สถานะ"}
+                  {isTrash ? (isEn ? "Deleted At" : "ลบเมื่อ") : (isEn ? "Status" : "สถานะ")}
                 </TableHead>
                 {isSuperAdmin && (
                   <TableHead className="text-right font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
-                    จัดการข้อมูล
+                    {isEn ? "Actions" : "จัดการข้อมูล"}
                   </TableHead>
                 )}
               </TableRow>
@@ -351,10 +354,10 @@ export function FAQsTable({
                       </div>
                       <div className="space-y-1">
                         <p className="font-bold text-slate-600">
-                          {isTrash ? "ไม่มีรายการในถังขยะ" : "ยังไม่มีข้อมูลคำถามที่พบบ่อย"}
+                          {isTrash ? (isEn ? "No items in trash" : "ไม่มีรายการในถังขยะ") : (isEn ? "No FAQ items found" : "ยังไม่มีข้อมูลคำถามที่พบบ่อย")}
                         </p>
                         <p className="text-sm text-slate-400">
-                          {isTrash ? "ข้อมูลที่ถูกลบชั่วคราวจะมาแสดงที่นี่" : "สร้างคำถามแรกของคุณเพื่อเริ่มต้นใช้งาน"}
+                          {isTrash ? (isEn ? "Deleted items will appear here" : "ข้อมูลที่ถูกลบชั่วคราวจะมาแสดงที่นี่") : (isEn ? "Create your first FAQ to get started" : "สร้างคำถามแรกของคุณเพื่อเริ่มต้นใช้งาน")}
                         </p>
                       </div>
                     </div>
@@ -373,7 +376,7 @@ export function FAQsTable({
                       <Checkbox
                         checked={isSelected(faq.id)}
                         onCheckedChange={() => toggleSelect(faq.id)}
-                        aria-label={`เลือก ${faq.question?.th || faq.question?.en || ""}`}
+                        aria-label={isEn ? `Select ${faq.question?.en || faq.question?.th || ""}` : `เลือก ${faq.question?.th || faq.question?.en || ""}`}
                         className="rounded-md"
                       />
                     </TableCell>
@@ -385,11 +388,11 @@ export function FAQsTable({
                     <TableCell className="px-6 py-4">
                       <div className="flex flex-col min-w-0">
                         <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                          {faq.question?.th || faq.question?.en || ""}
+                          {isEn ? (faq.question?.en || faq.question?.th || "") : (faq.question?.th || faq.question?.en || "")}
                         </span>
                         <div className="flex items-center gap-2 mt-1">
                            <Eye className="h-3 w-3 text-slate-400" />
-                           <span className="text-[10px] text-slate-400">{faq.view_count ?? 0} ครั้ง</span>
+                           <span className="text-[10px] text-slate-400">{faq.view_count ?? 0} {isEn ? "views" : "ครั้ง"}</span>
                         </div>
                       </div>
                     </TableCell>
@@ -402,13 +405,13 @@ export function FAQsTable({
                           {faq.category}
                         </Badge>
                       ) : (
-                        <span className="text-slate-300 text-xs italic">ไม่ได้ระบุ</span>
+                        <span className="text-slate-300 text-xs italic">{isEn ? "Uncategorized" : "ไม่ได้ระบุ"}</span>
                       )}
                     </TableCell>
                     <TableCell className="px-6">
                       {isTrash ? (
                         <span className="text-xs text-slate-500 font-medium">
-                          {new Date(faq.deleted_at!).toLocaleDateString("th-TH", {
+                          {new Date(faq.deleted_at!).toLocaleDateString(isEn ? "en-US" : "th-TH", {
                             day: "numeric",
                             month: "short",
                             year: "numeric",
@@ -416,11 +419,11 @@ export function FAQsTable({
                         </span>
                       ) : faq.is_active ? (
                         <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/80 shadow-none font-bold text-[10px] rounded-lg px-2">
-                          ใช้งาน
+                          {isEn ? "Active" : "ใช้งาน"}
                         </Badge>
                       ) : (
                         <Badge className="bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100/80 shadow-none font-bold text-[10px] rounded-lg px-2">
-                          ปิดใช้งาน
+                          {isEn ? "Inactive" : "ปิดใช้งาน"}
                         </Badge>
                       )}
                     </TableCell>
@@ -431,7 +434,7 @@ export function FAQsTable({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 text-blue-600 hover:bg-blue-100/50 rounded-xl"
+                              className="h-9 w-9 text-blue-600 hover:bg-blue-100/50 rounded-xl cursor-pointer"
                               onClick={() => setEditingFaq(faq)}
                             >
                               <Edit className="w-4.5 h-4.5" />
@@ -439,7 +442,7 @@ export function FAQsTable({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 text-rose-600 hover:bg-rose-100/50 rounded-xl"
+                              className="h-9 w-9 text-rose-600 hover:bg-rose-100/50 rounded-xl cursor-pointer"
                               onClick={() => setDeleteConfirmFaq(faq)}
                             >
                               <Trash2 className="w-4.5 h-4.5" />
@@ -450,7 +453,7 @@ export function FAQsTable({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 text-emerald-600 hover:bg-emerald-100/50 rounded-xl"
+                              className="h-9 w-9 text-emerald-600 hover:bg-emerald-100/50 rounded-xl cursor-pointer"
                               onClick={() => setRestoreConfirmFaq(faq)}
                             >
                               <RotateCcw className="w-4.5 h-4.5" />
@@ -458,7 +461,7 @@ export function FAQsTable({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 text-rose-600 hover:bg-rose-100/50 rounded-xl"
+                              className="h-9 w-9 text-rose-600 hover:bg-rose-100/50 rounded-xl cursor-pointer"
                               onClick={() => setPermanentDeleteFaq(faq)}
                             >
                               <Trash className="w-4.5 h-4.5" />
@@ -486,7 +489,7 @@ export function FAQsTable({
           {faqs.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-slate-200">
               <HelpCircle className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-              <p className="font-bold text-slate-400">ยังไม่มีข้อมูล</p>
+              <p className="font-bold text-slate-400">{isEn ? "No data found" : "ยังไม่มีข้อมูล"}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -515,25 +518,25 @@ export function FAQsTable({
                            {!isTrash ? (
                              faq.is_active ? (
                                <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px] h-5 px-1.5 py-0 font-bold rounded-md">
-                                 ใช้งาน
+                                 {isEn ? "Active" : "ใช้งาน"}
                                </Badge>
                              ) : (
                                <Badge className="bg-slate-50 text-slate-400 border-slate-100 text-[10px] h-5 px-1.5 py-0 font-bold rounded-md">
-                                 ปิด
+                                 {isEn ? "Off" : "ปิด"}
                                </Badge>
                              )
                            ) : (
                              <Badge className="bg-rose-50 text-rose-600 border-rose-100 text-[10px] h-5 px-1.5 py-0 font-bold rounded-md">
-                               ในถังขยะ
+                               {isEn ? "Trash" : "ในถังขยะ"}
                              </Badge>
                            )}
                         </div>
                         <h4 className="font-bold text-slate-900 leading-tight">
-                          {faq.question?.th || faq.question?.en || ""}
+                          {isEn ? (faq.question?.en || faq.question?.th || "") : (faq.question?.th || faq.question?.en || "")}
                         </h4>
                         <div className="flex items-center gap-2 mt-1 opacity-60">
                            <Eye className="h-3 w-3" />
-                           <span className="text-[10px] font-bold">{faq.view_count ?? 0} การเข้าชม</span>
+                           <span className="text-[10px] font-bold">{faq.view_count ?? 0} {isEn ? "views" : "การเข้าชม"}</span>
                         </div>
                       </div>
                     </div>
@@ -542,13 +545,13 @@ export function FAQsTable({
                   <div className="flex items-center justify-between pt-4 border-t border-slate-50 gap-4">
                     <div className="min-w-0">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
-                        หมวดหมู่
+                        {isEn ? "Category" : "หมวดหมู่"}
                       </span>
                       <Badge
                         variant="outline"
                         className="text-[10px] font-bold bg-slate-50/50 max-w-full truncate block whitespace-nowrap rounded-lg px-2 py-0.5"
                       >
-                        {faq.category || "ไม่ได้ระบุ"}
+                        {faq.category || (isEn ? "Uncategorized" : "ไม่ได้ระบุ")}
                       </Badge>
                     </div>
 
@@ -559,19 +562,19 @@ export function FAQsTable({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-10 px-4 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 rounded-2xl font-bold transition-all"
+                              className="h-10 px-4 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 rounded-2xl font-bold transition-all cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setEditingFaq(faq);
                               }}
                             >
                               <Edit className="h-4 w-4 mr-2" />
-                              แก้ไข
+                              {isEn ? "Edit" : "แก้ไข"}
                             </Button>
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-2xl transition-all"
+                              className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-2xl transition-all cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDeleteConfirmFaq(faq);
@@ -585,19 +588,19 @@ export function FAQsTable({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-10 px-4 text-emerald-600 border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 rounded-2xl font-bold transition-all"
+                              className="h-10 px-4 text-emerald-600 border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 rounded-2xl font-bold transition-all cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setRestoreConfirmFaq(faq);
                               }}
                             >
                               <RotateCcw className="h-4 w-4 mr-2" />
-                              กู้คืน
+                              {isEn ? "Restore" : "กู้คืน"}
                             </Button>
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-2xl transition-all"
+                              className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-2xl transition-all cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setPermanentDeleteFaq(faq);
@@ -621,13 +624,19 @@ export function FAQsTable({
       <ResponsiveDialog
         open={!!deleteConfirmFaq}
         onOpenChange={(open) => !open && setDeleteConfirmFaq(null)}
-        title="ย้ายลงถังขยะ"
+        title={isEn ? "Move to Trash" : "ย้ายลงถังขยะ"}
         description={
           deleteConfirmFaq ? (
             <div className="flex flex-col gap-4 py-2">
-              <p className="text-slate-600">คุณแน่ใจหรือไม่ว่าต้องการย้ายคำถามนี้ลงถังขยะ? คุณสามารถกู้คืนข้อมูลได้ในภายหลัง</p>
+              <p className="text-slate-600">
+                {isEn 
+                  ? "Are you sure you want to move this FAQ to trash? You can restore it later."
+                  : "คุณแน่ใจหรือไม่ว่าต้องการย้ายคำถามนี้ลงถังขยะ? คุณสามารถกู้คืนข้อมูลได้ในภายหลัง"}
+              </p>
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                <p className="text-slate-900 font-bold mb-1 italic">"{deleteConfirmFaq.question?.th || deleteConfirmFaq.question?.en || ""}"</p>
+                <p className="text-slate-900 font-bold mb-1 italic">
+                  "{isEn ? (deleteConfirmFaq.question?.en || deleteConfirmFaq.question?.th || "") : (deleteConfirmFaq.question?.th || deleteConfirmFaq.question?.en || "")}"
+                </p>
                 <Badge variant="outline" className="text-[10px] uppercase font-bold text-slate-400 bg-white">
                    ID: {deleteConfirmFaq.id.slice(0, 8)}...
                 </Badge>
@@ -641,23 +650,23 @@ export function FAQsTable({
               variant="ghost"
               onClick={() => setDeleteConfirmFaq(null)}
               disabled={isLoading}
-              className="flex-1 h-12 rounded-2xl font-bold text-slate-500 hover:bg-slate-100"
+              className="flex-1 h-12 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               onClick={() => deleteConfirmFaq && handleMoveToTrash(deleteConfirmFaq)}
               disabled={isLoading}
               variant="destructive"
-              className="flex-1 h-12 rounded-2xl font-bold bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200 transition-all active:scale-[0.98]"
+              className="flex-1 h-12 rounded-2xl font-bold bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200 transition-all active:scale-[0.98] cursor-pointer"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  กำลังย้าย...
+                  {isEn ? "Moving..." : "กำลังย้าย..."}
                 </>
               ) : (
-                "ยืนยันย้ายลงถังขยะ"
+                isEn ? "Confirm Move to Trash" : "ยืนยันย้ายลงถังขยะ"
               )}
             </Button>
           </div>
@@ -668,13 +677,17 @@ export function FAQsTable({
       <ResponsiveDialog
         open={!!restoreConfirmFaq}
         onOpenChange={(open) => !open && setRestoreConfirmFaq(null)}
-        title="กู้คืนข้อมูลคืน"
+        title={isEn ? "Restore FAQ" : "กู้คืนข้อมูลคืน"}
         description={
           restoreConfirmFaq ? (
             <div className="flex flex-col gap-4 py-2">
-              <p className="text-slate-600">คุณต้องการกู้คืนคำถามนี้กลับไปยังรายการที่ใช้งานปกติใช่ไหม?</p>
+              <p className="text-slate-600">
+                {isEn ? "Do you want to restore this FAQ back to active list?" : "คุณต้องการกู้คืนคำถามนี้กลับไปยังรายการที่ใช้งานปกติใช่ไหม?"}
+              </p>
               <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                <p className="text-emerald-900 font-bold italic">"{restoreConfirmFaq.question?.th || restoreConfirmFaq.question?.en || ""}"</p>
+                <p className="text-emerald-900 font-bold italic">
+                  "{isEn ? (restoreConfirmFaq.question?.en || restoreConfirmFaq.question?.th || "") : (restoreConfirmFaq.question?.th || restoreConfirmFaq.question?.en || "")}"
+                </p>
               </div>
             </div>
           ) : ""
@@ -685,19 +698,19 @@ export function FAQsTable({
               variant="ghost"
               onClick={() => setRestoreConfirmFaq(null)}
               disabled={isLoading}
-              className="flex-1 h-12 rounded-2xl font-bold text-slate-500"
+              className="flex-1 h-12 rounded-2xl font-bold text-slate-500 cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               onClick={() => restoreConfirmFaq && handleRestore(restoreConfirmFaq)}
               disabled={isLoading}
-              className="flex-1 h-12 rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 transition-all"
+              className="flex-1 h-12 rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 transition-all cursor-pointer"
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "ยืนยันการกู้คืน"
+                isEn ? "Confirm Restore" : "ยืนยันการกู้คืน"
               )}
             </Button>
           </div>
@@ -713,17 +726,23 @@ export function FAQsTable({
             setConfirmName("");
           }
         }}
-        title="ลบทิ้งถาวร"
+        title={isEn ? "Permanent Delete" : "ลบทิ้งถาวร"}
         description={
           permanentDeleteFaq ? (
             <div className="space-y-4 py-2">
               <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700">
                 <AlertTriangle className="h-5 w-5 shrink-0" />
-                <p className="text-sm font-bold">คำเตือน: การลบถาวรจะไม่สามารถกู้กลับคืนมาได้อีก!</p>
+                <p className="text-sm font-bold">
+                  {isEn ? "Warning: Permanent deletion cannot be undone!" : "คำเตือน: การลบถาวรจะไม่สามารถกู้กลับคืนมาได้อีก!"}
+                </p>
               </div>
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                 <p className="text-slate-900 font-bold italic mb-3">"{permanentDeleteFaq.question?.th || permanentDeleteFaq.question?.en || ""}"</p>
-                 <p className="text-[10px] text-rose-600 font-bold mb-2 uppercase">พิมพ์ DELETE เพื่อยืนยัน:</p>
+                 <p className="text-slate-900 font-bold italic mb-3">
+                   "{isEn ? (permanentDeleteFaq.question?.en || permanentDeleteFaq.question?.th || "") : (permanentDeleteFaq.question?.th || permanentDeleteFaq.question?.en || "")}"
+                 </p>
+                 <p className="text-[10px] text-rose-600 font-bold mb-2 uppercase">
+                   {isEn ? 'Type "DELETE" to confirm:' : "พิมพ์ DELETE เพื่อยืนยัน:"}
+                 </p>
                  <Input
                     value={confirmName}
                     onChange={(e) => setConfirmName(e.target.value)}
@@ -740,23 +759,23 @@ export function FAQsTable({
               variant="ghost"
               onClick={() => setPermanentDeleteFaq(null)}
               disabled={isLoading}
-              className="flex-1 h-12 rounded-2xl font-bold text-slate-500"
+              className="flex-1 h-12 rounded-2xl font-bold text-slate-500 cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               onClick={() => permanentDeleteFaq && handlePermanentDelete(permanentDeleteFaq)}
               disabled={isLoading || confirmName !== "DELETE"}
               variant="destructive"
-              className="flex-1 h-12 rounded-2xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all disabled:opacity-50"
+              className="flex-1 h-12 rounded-2xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
                    <Loader2 className="h-4 w-4 animate-spin" />
-                   <span>กำลังลบ...</span>
+                   <span>{isEn ? "Deleting..." : "กำลังลบ..."}</span>
                 </div>
               ) : (
-                "ลบถาวรทันที"
+                isEn ? "Delete Permanently" : "ลบถาวรทันที"
               )}
             </Button>
           </div>
@@ -772,28 +791,35 @@ export function FAQsTable({
             setConfirmName("");
           }
         }}
-        title="ล้างถังขยะทั้งหมด"
+        title={isEn ? "Empty All Trash" : "ล้างถังขยะทั้งหมด"}
         description={
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700">
               <AlertTriangle className="h-8 w-8 shrink-0" />
               <p className="text-sm font-bold lh-tight">
-                คุณกำลังจะลบคำถามทั้งหมดในถังขยะทิ้งถาวร ({trashCount} รายการ) 
-                ระบบจะไม่สามารถกู้คืนข้อมูลเหล่านี้ได้อีกในอนาคต
+                {isEn 
+                  ? `You are about to permanently delete all ${trashCount} items in the trash. This action cannot be recovered.`
+                  : `คุณกำลังจะลบคำถามทั้งหมดในถังขยะทิ้งถาวร (${trashCount} รายการ) ระบบจะไม่สามารถกู้คืนข้อมูลเหล่านี้ได้อีกในอนาคต`}
               </p>
             </div>
             <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 space-y-2">
               <p className="text-xs text-rose-700 font-bold">
-                พิมพ์ <span className="underline">DELETE_ALL</span> เพื่อยืนยัน:
+                {isEn ? (
+                  <>Type <span className="underline">DELETE_ALL</span> to confirm:</>
+                ) : (
+                  <>พิมพ์ <span className="underline">DELETE_ALL</span> เพื่อยืนยัน:</>
+                )}
               </p>
               <Input
                 value={confirmName}
                 onChange={(e) => setConfirmName(e.target.value)}
-                placeholder="พิมพ์ตัวใหญ่ทั้งหมด..."
+                placeholder={isEn ? "Type in uppercase..." : "พิมพ์ตัวใหญ่ทั้งหมด..."}
                 className="h-10 border-rose-200 focus:border-rose-400 focus:ring-rose-400 font-mono bg-white"
               />
             </div>
-            <p className="text-center text-slate-500 px-4">กรุณายืนยันการดำเนินงานเพื่อความปลอดภัย</p>
+            <p className="text-center text-slate-500 px-4">
+              {isEn ? "Please confirm this operation for safety" : "กรุณายืนยันการดำเนินงานเพื่อความปลอดภัย"}
+            </p>
           </div>
         }
         footer={
@@ -802,20 +828,20 @@ export function FAQsTable({
               variant="ghost"
               onClick={() => setIsEmptyTrashConfirm(false)}
               disabled={isLoading}
-              className="flex-1 h-12 rounded-2xl font-bold text-slate-500"
+              className="flex-1 h-12 rounded-2xl font-bold text-slate-500 cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               onClick={handleEmptyTrash}
               disabled={isLoading || confirmName !== "DELETE_ALL"}
               variant="destructive"
-              className="flex-1 h-12 rounded-2xl font-bold bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 disabled:opacity-50 disabled:grayscale"
+              className="flex-1 h-12 rounded-2xl font-bold bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 disabled:opacity-50 disabled:grayscale cursor-pointer"
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "ล้างถังขยะทั้งหมด"
+                isEn ? "Empty All Trash" : "ล้างถังขยะทั้งหมด"
               )}
             </Button>
           </div>

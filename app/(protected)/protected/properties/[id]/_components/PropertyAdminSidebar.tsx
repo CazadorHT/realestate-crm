@@ -43,19 +43,24 @@ export function PropertyAdminSidebar({
 
   const isOwnerOrAssignee = 
     isPlatformAdmin || 
+    !property.id ||
     (currentUserId && (
       property.assigned_to === currentUserId || 
       property.owner_id === currentUserId ||
-      (property.agents && property.agents.some((a: any) => a.identity?.id === currentUserId))
+      (property as any).created_by === currentUserId ||
+      (property.agent && property.agent.id === currentUserId) ||
+      (property.agents && property.agents.some((a: any) => (a.identity?.id || a.id) === currentUserId))
     ));
 
+  const isEn = language === "en";
+
   return (
-    <div className="space-y-5 sm:space-y-6">
-      {/* Admin Status Card */}
-      <div className="bg-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Property Status Card */}
+      <div id="tour-property-status-card" className="bg-slate-900 text-white rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl border border-slate-800 animate-in fade-in slide-in-from-right-4 duration-500">
         <div className="flex items-center justify-between">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-            Property Status
+          <span className="text-xs sm:text-sm font-semibold text-slate-400">
+            {isEn ? "Status" : "สถานะ"}
           </span>
           <PropertyStatusBadge
             status={property.status || "DRAFT"}
@@ -65,13 +70,13 @@ export function PropertyAdminSidebar({
         <Separator className="bg-white/10" />
         <div className="space-y-3">
           <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-slate-400">สร้างเมื่อ:</span>
+            <span className="text-slate-400">{isEn ? "Created:" : "สร้างเมื่อ:"}</span>
             <span className="font-medium">
               {formatDate(property.created_at)}
             </span>
           </div>
           <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-slate-400">อัปเดตล่าสุด:</span>
+            <span className="text-slate-400">{isEn ? "Updated:" : "อัปเดตล่าสุด:"}</span>
             <span className="font-medium">
               {formatDate(property.updated_at)}
             </span>
@@ -112,7 +117,7 @@ export function PropertyAdminSidebar({
             </div>
             <div>
               <h3 className="font-bold text-white text-sm sm:text-base">
-                เจ้าของทรัพย์
+                {isEn ? "Property Owner" : "เจ้าของทรัพย์"}
               </h3>
               <p className="text-[10px] text-orange-100/80">
                 CRM internal data
@@ -152,7 +157,7 @@ export function PropertyAdminSidebar({
               {property.owner.phone && (
                 <Button
                   variant="outline"
-                  className="w-full rounded-full gap-2 border-slate-200 h-10 sm:h-11 shadow-xs"
+                  className="w-full rounded-full gap-2 border-slate-200 h-10 sm:h-11 shadow-xs cursor-pointer"
                   asChild
                 >
                   <a href={`tel:${property.owner.phone}`}>
@@ -177,10 +182,10 @@ export function PropertyAdminSidebar({
             <Button
               asChild
               variant="ghost"
-              className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full text-xs sm:text-sm font-bold h-9 sm:h-10"
+              className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full text-xs sm:text-sm font-bold h-9 sm:h-10 cursor-pointer"
             >
               <Link href={`/protected/owners/${property.owner.id}`}>
-                ดูประวัติเจ้าของ
+                {isEn ? "View Owner Profile" : "ดูประวัติเจ้าของ"}
               </Link>
             </Button>
           </div>
@@ -195,7 +200,7 @@ export function PropertyAdminSidebar({
               <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <h3 className="font-bold text-white tracking-tight text-sm sm:text-base">
-              ผู้รับผิดชอบ (Agent)
+              {isEn ? "Assigned Agent" : "ผู้รับผิดชอบ (Agent)"}
             </h3>
           </div>
           <div className="p-5 sm:p-6">
@@ -215,7 +220,7 @@ export function PropertyAdminSidebar({
                 </p>
                 <div className="flex items-center gap-2 text-slate-500 text-xs sm:text-sm">
                   <Phone className="w-3.5 h-3.5 text-blue-500" />
-                  {property.agent.phone || "ไม่ระบุเบอร์"}
+                  {property.agent.phone || (isEn ? "No phone" : "ไม่ระบุเบอร์")}
                 </div>
                 {property.agent.line_id && (
                   <div className="flex items-start gap-1.5 text-[10px] sm:text-xs text-slate-400 mt-1 max-w-full">

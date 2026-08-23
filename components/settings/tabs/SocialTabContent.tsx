@@ -15,6 +15,7 @@ import { IntegrationDisconnectButton } from "@/components/settings/IntegrationDi
 import { SocialAutomationSettings } from "@/components/settings/SocialAutomationSettings";
 import { SiteSettings } from "@/features/site-settings/schema";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface SocialTabContentProps {
   isLineConnected: boolean;
@@ -31,6 +32,9 @@ export function SocialTabContent({
   isFacebookConnected,
   allSettings,
 }: SocialTabContentProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -52,7 +56,9 @@ export function SocialTabContent({
                   <FaLine className="h-7 w-7 relative z-10" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-semibold text-slate-900 leading-none mb-1">LINE (ไลน​์)</CardTitle>
+                  <CardTitle className="text-xl font-semibold text-slate-900 leading-none mb-1">
+                    {isEn ? "LINE" : "LINE (ไลน์)"}
+                  </CardTitle>
                   <CardDescription className="text-slate-500 font-medium text-[11px] uppercase tracking-wider">
                     Official Account Hub
                   </CardDescription>
@@ -69,7 +75,9 @@ export function SocialTabContent({
                       <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse pointer-events-none absolute inset-0" />
                       <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                     </div>
-                    <span className="text-xs font-semibold text-emerald-700">เชื่อมต่อแล้ว (Connected)</span>
+                    <span className="text-xs font-semibold text-emerald-700">
+                      {isEn ? "Connected" : "เชื่อมต่อแล้ว (Connected)"}
+                    </span>
                   </div>
                   {lineBotInfo?.displayName && (
                     <Badge variant="outline" className="bg-white/80 border-emerald-200 text-emerald-700 font-semibold px-3 py-1 rounded-xl">
@@ -80,7 +88,7 @@ export function SocialTabContent({
                 <div className="flex gap-2">
                   <Link href="/protected/line-manager" className="flex-1">
                     <Button className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-200 border-none transition-all active:scale-95">
-                      จัดการบอท (Manage Bot)
+                      {isEn ? "Manage Bot" : "จัดการบอท (Manage Bot)"}
                     </Button>
                   </Link>
                   <IntegrationDisconnectButton
@@ -94,7 +102,9 @@ export function SocialTabContent({
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-slate-500 leading-relaxed font-semibold">
-                  เชื่อมต่อ Line OA เพื่อรับการแจ้งเตือนและแชทกับลูกค้าผ่านระบบ CRM ได้ทันที
+                  {isEn 
+                    ? "Connect LINE Official Account to receive notifications and chat with clients directly through CRM."
+                    : "เชื่อมต่อ Line OA เพื่อรับการแจ้งเตือนและแชทกับลูกค้าผ่านระบบ CRM ได้ทันที"}
                 </p>
                 <Link href="/protected/line-manager">
                   <Button variant="outline" className="w-full h-12 rounded-2xl border-dashed border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-50 font-semibold transition-all">
@@ -138,7 +148,9 @@ export function SocialTabContent({
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-100/50 border border-slate-200/50">
                   <div className="flex items-center gap-3">
                     <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                    <span className="text-xs font-semibold text-emerald-700">เปิดใช้งาน (Active)</span>
+                    <span className="text-xs font-semibold text-emerald-700">
+                      {isEn ? "Active" : "เปิดใช้งาน (Active)"}
+                    </span>
                   </div>
                   {allSettings.tiktok_auth_token?.display_name && (
                     <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 font-semibold px-3 py-1 rounded-xl text-[11px]">
@@ -163,7 +175,9 @@ export function SocialTabContent({
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-slate-500 leading-relaxed font-semibold">
-                  นำเข้าวิดีโอจาก TikTok เพื่อทำการตลาดและขายทรัพย์ของคุณได้อย่างน่าสนใจมากขึ้น
+                  {isEn 
+                    ? "Import videos from TikTok to market and showcase your properties attractively."
+                    : "นำเข้าวิดีโอจาก TikTok เพื่อทำการตลาดและขายทรัพย์ของคุณได้อย่างน่าสนใจมากขึ้น"}
                 </p>
                 <a href="/api/auth/tiktok/login" className="w-full">
                   <Button variant="outline" className="w-full h-12 rounded-2xl border-dashed border-2 border-slate-300 text-slate-900 hover:bg-slate-50 font-semibold transition-all">
@@ -212,7 +226,9 @@ export function SocialTabContent({
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50/80 border border-indigo-100/50 backdrop-blur-md">
                   <div className="flex items-center gap-3">
                     <div className="h-2.5 w-2.5 rounded-full bg-indigo-600 animate-pulse" />
-                    <span className="text-xs font-semibold text-indigo-700">กำลังทำงาน (Active)</span>
+                    <span className="text-xs font-semibold text-indigo-700">
+                      {isEn ? "Active" : "กำลังทำงาน (Active)"}
+                    </span>
                   </div>
                   <Badge variant="outline" className="bg-white/90 border-indigo-200 text-indigo-700 font-semibold px-3 py-1 rounded-xl text-[10px]">
                     {allSettings.meta_page_name || "Enterprise"}
@@ -221,7 +237,7 @@ export function SocialTabContent({
                 <div className="flex gap-2">
                   <a href="/api/auth/facebook/login" className="flex-1">
                     <Button className="w-full h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl shadow-lg shadow-indigo-200 border-none transition-all active:scale-95">
-                      อัปเดตโทเค็น (Sync Tokens)
+                      {isEn ? "Sync Tokens" : "อัปเดตโทเค็น (Sync Tokens)"}
                     </Button>
                   </a>
                   <IntegrationDisconnectButton
@@ -235,7 +251,9 @@ export function SocialTabContent({
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-slate-500 leading-relaxed font-semibold">
-                  ขยายตลาดไปยัง Facebook และ Instagram พร้อมรับการแจ้งเตือนและการตลาดอัตโนมัติ
+                  {isEn 
+                    ? "Expand to Facebook and Instagram with automated marketing and lead alerts."
+                    : "ขยายตลาดไปยัง Facebook และ Instagram พร้อมรับการแจ้งเตือนและการตลาดอัตโนมัติ"}
                 </p>
                 <a href="/api/auth/facebook/login" className="w-full">
                   <Button className="w-full h-12 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:opacity-90 shadow-md shadow-indigo-100 transition-all active:scale-95">
@@ -257,3 +275,4 @@ export function SocialTabContent({
     </div>
   );
 }
+

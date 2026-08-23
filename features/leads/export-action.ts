@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { cookies } from "next/headers";
 import {
   generateExcelBuffer,
   ExcelColumn,
@@ -9,42 +10,48 @@ import {
   formatThaiDate,
 } from "@/lib/excel-export";
 
-const LEAD_COLUMNS: ExcelColumn[] = [
-  { key: "full_name", header: "ชื่อ-นามสกุล", width: 25 },
-  { key: "phone", header: "เบอร์โทร", width: 15 },
-  { key: "email", header: "อีเมล", width: 25 },
-  { key: "lead_type", header: "ประเภทลูกค้า", width: 15 },
-  { key: "source", header: "แหล่งที่มา", width: 12 },
-  { key: "stage", header: "สถานะ", width: 12 },
-  {
-    key: "budget_min",
-    header: "งบขั้นต่ำ",
-    width: 15,
-    format: formatThaiCurrency,
-  },
-  {
-    key: "budget_max",
-    header: "งบสูงสุด",
-    width: 15,
-    format: formatThaiCurrency,
-  },
-  { key: "nationality", header: "สัญชาติ", width: 12 },
-  { key: "note", header: "หมายเหตุ", width: 30 },
-  {
-    key: "created_at",
-    header: "สร้างเมื่อ",
-    width: 15,
-    format: formatThaiDate,
-  },
-  {
-    key: "updated_at",
-    header: "อัปเดตเมื่อ",
-    width: 15,
-    format: formatThaiDate,
-  },
-];
+function getLeadColumns(isEn: boolean): ExcelColumn[] {
+  return [
+    { key: "full_name", header: isEn ? "Full Name" : "ชื่อ-นามสกุล", width: 25 },
+    { key: "phone", header: isEn ? "Phone Number" : "เบอร์โทร", width: 15 },
+    { key: "email", header: isEn ? "Email" : "อีเมล", width: 25 },
+    { key: "lead_type", header: isEn ? "Lead Type" : "ประเภทลูกค้า", width: 15 },
+    { key: "source", header: isEn ? "Source" : "แหล่งที่มา", width: 12 },
+    { key: "stage", header: isEn ? "Stage" : "สถานะ", width: 12 },
+    {
+      key: "budget_min",
+      header: isEn ? "Min Budget" : "งบขั้นต่ำ",
+      width: 15,
+      format: formatThaiCurrency,
+    },
+    {
+      key: "budget_max",
+      header: isEn ? "Max Budget" : "งบสูงสุด",
+      width: 15,
+      format: formatThaiCurrency,
+    },
+    { key: "nationality", header: isEn ? "Nationality" : "สัญชาติ", width: 12 },
+    { key: "note", header: isEn ? "Note" : "หมายเหตุ", width: 30 },
+    {
+      key: "created_at",
+      header: isEn ? "Created At" : "สร้างเมื่อ",
+      width: 15,
+      format: formatThaiDate,
+    },
+    {
+      key: "updated_at",
+      header: isEn ? "Updated At" : "อัปเดตเมื่อ",
+      width: 15,
+      format: formatThaiDate,
+    },
+  ];
+}
 
 export async function exportLeadsAction(ids?: string[]) {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
@@ -66,10 +73,11 @@ export async function exportLeadsAction(ids?: string[]) {
   }
 
   if (!data || data.length === 0) {
-    return { success: false, message: "ไม่พบข้อมูลสำหรับ export" };
+    return { success: false, message: isEn ? "No data to export" : "ไม่พบข้อมูลสำหรับ export" };
   }
 
-  const buffer = await generateExcelBuffer(data, LEAD_COLUMNS, "Leads");
+  const columns = getLeadColumns(isEn);
+  const buffer = await generateExcelBuffer(data, columns, "Leads");
   const base64 = buffer.toString("base64");
 
   return {
@@ -79,3 +87,4 @@ export async function exportLeadsAction(ids?: string[]) {
     count: data.length,
   };
 }
+

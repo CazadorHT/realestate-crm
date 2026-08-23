@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { format, parse, isValid } from "date-fns";
-import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, X } from "lucide-react";
+import { th, enUS } from "date-fns/locale";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export interface DatePickerProps {
   value?: string; // ISO string (YYYY-MM-DD)
@@ -28,8 +29,11 @@ export function DatePicker({
   placeholder,
   className,
 }: DatePickerProps) {
-  const defaultPlaceholder = "วว/ดด/ปปปป";
-   const finalPlaceholder = placeholder || defaultPlaceholder;
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const defaultPlaceholder = isEn ? "DD/MM/YYYY" : "วว/ดด/ปปปป";
+  const finalPlaceholder = placeholder || defaultPlaceholder;
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
 
@@ -96,11 +100,11 @@ export function DatePicker({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-0 hover:bg-transparent"
+            className="absolute right-0 hover:bg-transparent cursor-pointer"
           >
             <CalendarIcon className="h-4 w-4 text-slate-400" />
             <span className="sr-only">
-              เปิดปฏิทิน
+              {isEn ? "Open calendar" : "เปิดปฏิทิน"}
             </span>
           </Button>
         </PopoverTrigger>
@@ -110,31 +114,31 @@ export function DatePicker({
             selected={date}
             onSelect={handleSelect}
             initialFocus
-            locale={th}
+            locale={isEn ? enUS : th}
           />
           <div className="flex items-center justify-between px-3 py-2 border-t border-slate-200 bg-slate-50/50">
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs text-blue-600 font-bold hover:bg-blue-50"
+              className="h-8 text-xs text-blue-600 font-bold hover:bg-blue-50 cursor-pointer"
               onClick={() => {
                 onChange("");
                 setOpen(false);
               }}
             >
-              ล้างข้อมูล
+              {isEn ? "Clear" : "ล้างข้อมูล"}
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs text-blue-600 font-bold hover:bg-blue-50"
+              className="h-8 text-xs text-blue-600 font-bold hover:bg-blue-50 cursor-pointer"
               onClick={() => {
                 const today = new Date();
                 onChange(format(today, "yyyy-MM-dd"));
                 setOpen(false);
               }}
             >
-              วันนี้
+              {isEn ? "Today" : "วันนี้"}
             </Button>
           </div>
         </PopoverContent>
@@ -142,3 +146,4 @@ export function DatePicker({
     </div>
   );
 }
+

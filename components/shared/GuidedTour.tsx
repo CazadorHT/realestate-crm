@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { calculateTooltipPosition } from "@/lib/tour-utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface TourStep {
   targetId: string;
@@ -40,6 +41,9 @@ export function GuidedTour({
   showHelpButton = true,
   lifted = false,
 }: GuidedTourProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [currentStep, setCurrentStep] = useState(-1);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -332,7 +336,9 @@ export function GuidedTour({
                     <div className="flex items-center gap-2 text-blue-600">
                       <Sparkles className="h-5 w-5 animate-pulse" />
                       <span className="text-[10px] font-extrabold uppercase tracking-widest">
-                        ขั้นตอนที่ {currentStep + 1} จาก {steps.length}
+                        {isEn
+                          ? `Step ${currentStep + 1} of ${steps.length}`
+                          : `ขั้นตอนที่ ${currentStep + 1} จาก ${steps.length}`}
                       </span>
                     </div>
                     <button
@@ -359,7 +365,7 @@ export function GuidedTour({
                       className="text-slate-400 hover:text-slate-600 font-bold px-2"
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
-                      ย้อนกลับ
+                      {isEn ? "Back" : "ย้อนกลับ"}
                     </Button>
                     <div className="flex items-center gap-2">
                       <Button
@@ -368,7 +374,7 @@ export function GuidedTour({
                         onClick={handleComplete}
                         className="text-slate-400 hover:text-slate-600 font-bold"
                       >
-                        ข้าม
+                        {isEn ? "Skip" : "ข้าม"}
                       </Button>
                       <Button
                         size="sm"
@@ -377,12 +383,12 @@ export function GuidedTour({
                       >
                         {currentStep === steps.length - 1 ? (
                           <>
-                            <span>เสร็จสิ้น</span>
+                            <span>{isEn ? "Finish" : "เสร็จสิ้น"}</span>
                             <CheckCircle2 className="h-4 w-4 ml-2" />
                           </>
                         ) : (
                           <>
-                            <span>ถัดไป</span>
+                            <span>{isEn ? "Next" : "ถัดไป"}</span>
                             <ChevronRight className="h-4 w-4 ml-1" />
                           </>
                         )}

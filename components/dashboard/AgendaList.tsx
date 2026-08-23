@@ -119,12 +119,12 @@ export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListP
                             {/* สำหรับ Admin/Manager: แสดงเจ้าของงาน (ถ้ามีข้อมูลในอนาคต) */}
                             {isAdminView && (event as any).agentName && (
                               <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
-                                <span>• โดย: {(event as any).agentName}</span>
+                                <span>• {isEn ? "By" : "โดย"}: {(event as any).agentName}</span>
                               </div>
                             )}
                           </div>
                           
-                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-50 hover:text-indigo-600">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer">
                             <ChevronRight size={14} />
                           </Button>
                         </div>
@@ -140,8 +140,8 @@ export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListP
       
       {/* Footer Quick Action */}
       <div className="p-4 bg-slate-50 border-t border-slate-100">
-        <Button variant="outline" size="sm" className="w-full rounded-xl text-xs font-bold bg-white hover:bg-indigo-600 hover:text-white transition-all group shadow-xs">
-          ดูตารางงานทั้งหมด
+        <Button variant="outline" size="sm" className="w-full rounded-xl text-xs font-bold bg-white hover:bg-indigo-600 hover:text-white transition-all group shadow-xs cursor-pointer">
+          {isEn ? "View All Tasks" : "ดูตารางงานทั้งหมด"}
           <ExternalLink size={12} className="ml-2 opacity-50 group-hover:opacity-100" />
         </Button>
       </div>

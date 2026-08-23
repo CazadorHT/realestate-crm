@@ -2,6 +2,7 @@
 
 import { Users, UserPlus, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface OwnersStatsProps {
   stats: {
@@ -12,28 +13,31 @@ interface OwnersStatsProps {
 }
 
 export function OwnersStats({ stats }: OwnersStatsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const statItems = [
     {
-      title: "เจ้าของทั้งหมด",
+      title: isEn ? "Total Owners" : "เจ้าของทั้งหมด",
       value: stats.totalOwners,
       icon: Users,
-      desc: "Total Owners",
+      desc: isEn ? "Registered property owners" : "Total Owners",
       color: "text-blue-600",
       bgConfig: "bg-blue-100",
     },
     {
-      title: "เจ้าของใหม่ (เดือนนี้)",
+      title: isEn ? "New Owners (This Month)" : "เจ้าของใหม่ (เดือนนี้)",
       value: `+${stats.newOwnersMonth}`,
       icon: UserPlus,
-      desc: "New This Month",
+      desc: isEn ? "Joined this calendar month" : "New This Month",
       color: "text-emerald-600",
       bgConfig: "bg-emerald-100",
     },
     {
-      title: "ทรัพย์สินที่ดูแล",
+      title: isEn ? "Linked Properties" : "ทรัพย์สินที่ดูแล",
       value: stats.totalPropertiesLinked,
       icon: Building2,
-      desc: "Linked Properties",
+      desc: isEn ? "Properties connected to owners" : "Linked Properties",
       color: "text-purple-600",
       bgConfig: "bg-purple-100",
     },
@@ -62,3 +66,4 @@ export function OwnersStats({ stats }: OwnersStatsProps) {
     </div>
   );
 }
+

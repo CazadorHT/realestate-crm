@@ -21,13 +21,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface MasterDataItem {
   id?: string;
@@ -40,6 +34,9 @@ interface MasterDataItem {
 }
 
 export default function MasterDataAdminPage() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [activeTab, setActiveTab] = React.useState<"TRANSIT_TYPE" | "NEARBY_PLACE_CATEGORY">("TRANSIT_TYPE");
   const [items, setItems] = React.useState<MasterDataItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -63,12 +60,12 @@ export default function MasterDataAdminPage() {
     try {
       const data = await getAllMasterDataAction(activeTab);
       setItems(data as MasterDataItem[]);
-    } catch (err) {
-      toast.error("ไม่สามารถโหลดข้อมูล Master Data ได้");
+    } catch {
+      toast.error(isEn ? "Failed to load master data" : "ไม่สามารถโหลดข้อมูล Master Data ได้");
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, isEn]);
 
   React.useEffect(() => {
     loadData();
@@ -100,7 +97,7 @@ export default function MasterDataAdminPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentItem.code || !currentItem.label.th) {
-      toast.error("กรุณากรอกรหัส (Code) และชื่อภาษาไทย");
+      toast.error(isEn ? "Please specify Code and Thai name" : "กรุณากรอกรหัส (Code) และชื่อภาษาไทย");
       return;
     }
 
@@ -116,32 +113,32 @@ export default function MasterDataAdminPage() {
       });
 
       if (res.success) {
-        toast.success(res.message);
+        toast.success(res.message || (isEn ? "Saved successfully" : "บันทึกสำเร็จ"));
         setIsModalOpen(false);
         loadData();
       } else {
         toast.error(res.message);
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึก");
+    } catch {
+      toast.error(isEn ? "Failed to save master data" : "เกิดข้อผิดพลาดในการบันทึก");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async (type: string, code: string) => {
-    if (!confirm(`คุณต้องการลบ ${code} ใช่หรือไม่?`)) return;
+    if (!confirm(isEn ? `Are you sure you want to delete ${code}?` : `คุณต้องการลบ ${code} ใช่หรือไม่?`)) return;
 
     try {
       const res = await deleteMasterDataAction(type, code);
       if (res.success) {
-        toast.success(res.message);
+        toast.success(res.message || (isEn ? "Deleted successfully" : "ลบสำเร็จ"));
         loadData();
       } else {
         toast.error(res.message);
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการลบ");
+    } catch {
+      toast.error(isEn ? "Failed to delete item" : "เกิดข้อผิดพลาดในการลบ");
     }
   };
 
@@ -156,13 +153,15 @@ export default function MasterDataAdminPage() {
         is_active: nextActive,
       });
       if (res.success) {
-        toast.success(`เปลี่ยนสถานะ ${item.code} เป็น ${nextActive ? "เปิดใช้งาน" : "ปิด"} เรียบร้อย`);
+        toast.success(isEn 
+          ? `Updated ${item.code} status to ${nextActive ? "Active" : "Inactive"}` 
+          : `เปลี่ยนสถานะ ${item.code} เป็น ${nextActive ? "เปิดใช้งาน" : "ปิด"} เรียบร้อย`);
         setItems(items.map((i) => i.code === item.code ? { ...i, is_active: nextActive } : i));
       } else {
         toast.error(res.message);
       }
-    } catch (err) {
-      toast.error("ไม่สามารถอัปเดตสถานะได้");
+    } catch {
+      toast.error(isEn ? "Failed to update status" : "ไม่สามารถอัปเดตสถานะได้");
     }
   };
 
@@ -188,20 +187,22 @@ export default function MasterDataAdminPage() {
               <Sparkles className="h-3.5 w-3.5 animate-pulse" /> V3 Enterprise Config
             </div>
             <h1 className="text-3xl font-semibold tracking-tight bg-linear-to-r from-white via-indigo-100 to-indigo-200 bg-clip-text text-transparent">
-              จัดการข้อมูลการเดินทางและสถานที่ (Master Data)
+              {isEn ? "Master Data & Transit Categories" : "จัดการข้อมูลการเดินทางและสถานที่ (Master Data)"}
             </h1>
             <p className="text-sm text-indigo-200/80 max-w-xl font-medium">
-              เพิ่ม ลด และปรับแต่งหมวดหมู่สายรถไฟฟ้า การเดินทาง และสถานที่ใกล้เคียงสำหรับฟอร์มประกาศอสังหาริมทรัพย์
+              {isEn 
+                ? "Configure transit lines, transport modes, and nearby place categories for listing and search filters." 
+                : "เพิ่ม ลด และปรับแต่งหมวดหมู่สายรถไฟฟ้า การเดินทาง และสถานที่ใกล้เคียงสำหรับฟอร์มประกาศอสังหาริมทรัพย์"}
             </p>
           </div>
 
           <Button
             type="button"
             onClick={handleOpenAddModal}
-            className="h-12 px-6 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:scale-105 flex items-center gap-2 self-start md:self-auto"
+            className="h-12 px-6 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:scale-105 flex items-center gap-2 self-start md:self-auto cursor-pointer"
           >
             <Plus className="h-5 w-5" />
-            เพิ่มรายการใหม่ (Add New)
+            {isEn ? "Add New Entry" : "เพิ่มรายการใหม่ (Add New)"}
           </Button>
         </div>
       </div>
@@ -220,7 +221,7 @@ export default function MasterDataAdminPage() {
             )}
           >
             <TrainFront className="h-4 w-4" />
-            🚝 สายรถไฟฟ้าและการเดินทาง
+            {isEn ? "🚝 Transit Lines & Transport" : "🚝 สายรถไฟฟ้าและการเดินทาง"}
           </button>
           <button
             type="button"
@@ -233,7 +234,7 @@ export default function MasterDataAdminPage() {
             )}
           >
             <Landmark className="h-4 w-4" />
-            🏥 หมวดหมู่สถานที่ใกล้เคียง
+            {isEn ? "🏥 Nearby Place Categories" : "🏥 หมวดหมู่สถานที่ใกล้เคียง"}
           </button>
         </div>
 
@@ -242,7 +243,7 @@ export default function MasterDataAdminPage() {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="ค้นหารหัสอ้างอิง หรือชื่อรายการภาษาไทย/อังกฤษ..."
+            placeholder={isEn ? "Search code or label..." : "ค้นหารหัสอ้างอิง หรือชื่อรายการภาษาไทย/อังกฤษ..."}
             className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-medium focus:bg-white transition-all w-full"
           />
         </div>
@@ -252,21 +253,28 @@ export default function MasterDataAdminPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center p-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
           <Loader2 className="h-10 w-10 text-indigo-500 animate-spin mb-4" />
-          <p className="text-sm font-semibold text-slate-600">กำลังโหลดข้อมูล Master Data...</p>
+          <p className="text-sm font-semibold text-slate-600">
+            {isEn ? "Loading Master Data..." : "กำลังโหลดข้อมูล Master Data..."}
+          </p>
         </div>
       ) : filteredItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-20 bg-white rounded-3xl border border-slate-100 shadow-sm text-center">
           <AlertCircle className="h-12 w-12 text-slate-300 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-800 mb-1">ไม่พบข้อมูลรายการในระบบ</h3>
+          <h3 className="text-lg font-semibold text-slate-800 mb-1">
+            {isEn ? "No records found" : "ไม่พบข้อมูลรายการในระบบ"}
+          </h3>
           <p className="text-xs text-slate-500 max-w-sm mb-6">
-            ยังไม่มีข้อมูล {activeTab === "TRANSIT_TYPE" ? "สายรถไฟฟ้า/การเดินทาง" : "หมวดหมู่สถานที่ใกล้เคียง"} ในฐานข้อมูล หรือไม่พบผลลัพธ์การค้นหา
+            {isEn
+              ? `No ${activeTab === "TRANSIT_TYPE" ? "transit lines" : "nearby place categories"} found matching your search.`
+              : `ยังไม่มีข้อมูล ${activeTab === "TRANSIT_TYPE" ? "สายรถไฟฟ้า/การเดินทาง" : "หมวดหมู่สถานที่ใกล้เคียง"} ในฐานข้อมูล หรือไม่พบผลลัพธ์การค้นหา`}
           </p>
           <Button
             type="button"
             onClick={handleOpenAddModal}
-            className="h-10 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-semibold px-6 border border-indigo-200"
+            className="h-10 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-semibold px-6 border border-indigo-200 cursor-pointer"
           >
-            <Plus className="h-4 w-4 mr-2" /> เพิ่มข้อมูลแรกทันที
+            <Plus className="h-4 w-4 mr-2" />
+            {isEn ? "Add First Entry" : "เพิ่มข้อมูลแรกทันที"}
           </Button>
         </div>
       ) : (
@@ -291,7 +299,7 @@ export default function MasterDataAdminPage() {
                     </div>
                     <div>
                       <h4 className="text-base font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                        {item.label.th}
+                        {isEn ? (item.label.en || item.label.th) : item.label.th}
                       </h4>
                       <span className="text-xs font-mono font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
                         {item.code}
@@ -309,6 +317,10 @@ export default function MasterDataAdminPage() {
                 {/* Multilingual Preview */}
                 <div className="bg-slate-50 p-3.5 rounded-xl space-y-1.5 border border-slate-100 text-xs font-medium">
                   <div className="flex items-center justify-between text-slate-600">
+                    <span className="text-[10px] font-semibold text-slate-400 w-8">TH</span>
+                    <span className="truncate flex-1 text-right">{item.label.th || "-"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-600">
                     <span className="text-[10px] font-semibold text-slate-400 w-8">EN</span>
                     <span className="truncate flex-1 text-right">{item.label.en || "-"}</span>
                   </div>
@@ -325,7 +337,7 @@ export default function MasterDataAdminPage() {
                 {/* Metadata Color Badge */}
                 {item.metadata?.color && (
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                    <span>รหัสสีประจำสาย:</span>
+                    <span>{isEn ? "Line / Category Color:" : "รหัสสีประจำสาย:"}</span>
                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-lg border border-slate-200">
                       <div className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: item.metadata.color }} />
                       <span className="font-mono text-[10px] uppercase">{item.metadata.color}</span>
@@ -340,16 +352,17 @@ export default function MasterDataAdminPage() {
                   type="button"
                   variant="outline"
                   onClick={() => handleOpenEditModal(item)}
-                  className="flex-1 h-10 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold border-slate-200 hover:border-indigo-200 hover:text-indigo-600 transition-all"
+                  className="flex-1 h-10 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold border-slate-200 hover:border-indigo-200 hover:text-indigo-600 transition-all cursor-pointer"
                 >
                   <Edit2 className="h-4 w-4 mr-2" />
-                  แก้ไข (Edit)
+                  {isEn ? "Edit" : "แก้ไข (Edit)"}
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => handleDelete(item.type, item.code)}
-                  className="h-10 w-10 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl"
+                  className="h-10 w-10 p-0 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl cursor-pointer"
+                  title={isEn ? "Delete" : "ลบ"}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -365,29 +378,39 @@ export default function MasterDataAdminPage() {
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-xl font-semibold text-slate-900 flex items-center gap-2">
               {modalMode === "add" ? <Plus className="h-5 w-5 text-indigo-600" /> : <Edit2 className="h-5 w-5 text-indigo-600" />}
-              {modalMode === "add" ? "เพิ่มข้อมูลการเดินทางและสถานที่ใหม่" : `แก้ไขข้อมูลการเดินทางและสถานที่ [${currentItem.code}]`}
+              {modalMode === "add" 
+                ? (isEn ? "Add Master Data Entry" : "เพิ่มข้อมูลการเดินทางและสถานที่ใหม่") 
+                : (isEn ? `Edit Master Data [${currentItem.code}]` : `แก้ไขข้อมูลการเดินทางและสถานที่ [${currentItem.code}]`)}
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500 font-medium">
-              ข้อมูลที่บันทึกจะอัปเดตไปยังตัวเลือกในหน้าฟอร์มสร้างประกาศและระบบค้นหาโดยอัตโนมัติ
+              {isEn
+                ? "Entries will automatically sync with property forms and search filters."
+                : "ข้อมูลที่บันทึกจะอัปเดตไปยังตัวเลือกในหน้าฟอร์มสร้างประกาศและระบบค้นหาโดยอัตโนมัติ"}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSave} className="space-y-6 pt-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-slate-700">รหัสอ้างอิง (Code) <span className="text-red-500">*</span></Label>
+                <Label className="text-xs font-semibold text-slate-700">
+                  {isEn ? "Reference Code" : "รหัสอ้างอิง (Code)"} <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   value={currentItem.code}
                   disabled={modalMode === "edit"}
                   onChange={(e) => setCurrentItem({ ...currentItem, code: e.target.value.toUpperCase() })}
-                  placeholder="เช่น BTS_SUKHUMVIT หรือ SCHOOL"
+                  placeholder={isEn ? "e.g. BTS_SUKHUMVIT or SCHOOL" : "เช่น BTS_SUKHUMVIT หรือ SCHOOL"}
                   className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-semibold uppercase focus:bg-white"
                 />
-                <span className="text-[10px] text-slate-400">ใช้ภาษาอังกฤษตัวพิมพ์ใหญ่ ไม่มีเว้นวรรค</span>
+                <span className="text-[10px] text-slate-400">
+                  {isEn ? "Uppercase English letters, no spaces" : "ใช้ภาษาอังกฤษตัวพิมพ์ใหญ่ ไม่มีเว้นวรรค"}
+                </span>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-slate-700">รหัสสีประจำรายการ (Color Badge)</Label>
+                <Label className="text-xs font-semibold text-slate-700">
+                  {isEn ? "Color Badge" : "รหัสสีประจำรายการ (Color Badge)"}
+                </Label>
                 <div className="flex items-center gap-3">
                   <Input
                     type="color"
@@ -414,16 +437,19 @@ export default function MasterDataAdminPage() {
 
             <div className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
               <Label className="text-xs font-semibold text-slate-800 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-500" /> ชื่อแสดงผลหลายภาษา (Multilingual Labels)
+                <Sparkles className="h-4 w-4 text-indigo-500" />
+                {isEn ? "Multilingual Display Names" : "ชื่อแสดงผลหลายภาษา (Multilingual Labels)"}
               </Label>
               
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-slate-500 w-16">ภาษาไทย <span className="text-red-500">*</span></span>
+                  <span className="text-xs font-semibold text-slate-500 w-16">
+                    {isEn ? "Thai *" : "ภาษาไทย *"}
+                  </span>
                   <Input
                     value={currentItem.label.th}
                     onChange={(e) => setCurrentItem({ ...currentItem, label: { ...currentItem.label, th: e.target.value } })}
-                    placeholder="เช่น รถไฟฟ้าสายสีเขียว (สุขุมวิท)"
+                    placeholder={isEn ? "e.g. รถไฟฟ้าสายสีเขียว (สุขุมวิท)" : "เช่น รถไฟฟ้าสายสีเขียว (สุขุมวิท)"}
                     className="h-10 rounded-xl bg-white border-slate-200 text-xs font-semibold focus:bg-white flex-1"
                   />
                 </div>
@@ -462,7 +488,9 @@ export default function MasterDataAdminPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-slate-700">ลำดับการแสดงผล (Sort Order)</Label>
+                <Label className="text-xs font-semibold text-slate-700">
+                  {isEn ? "Sort Order" : "ลำดับการแสดงผล (Sort Order)"}
+                </Label>
                 <Input
                   type="number"
                   value={currentItem.sort_order}
@@ -472,7 +500,9 @@ export default function MasterDataAdminPage() {
               </div>
 
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 mt-6 sm:mt-0 sm:self-end h-11">
-                <Label className="text-xs font-semibold text-slate-700 cursor-pointer" htmlFor="modal-active">สถานะการเปิดใช้งาน</Label>
+                <Label className="text-xs font-semibold text-slate-700 cursor-pointer" htmlFor="modal-active">
+                  {isEn ? "Active Status" : "สถานะการเปิดใช้งาน"}
+                </Label>
                 <Switch
                   id="modal-active"
                   checked={currentItem.is_active}
@@ -487,17 +517,19 @@ export default function MasterDataAdminPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setIsModalOpen(false)}
-                className="h-11 rounded-xl font-semibold border-slate-200 text-slate-600 hover:bg-slate-50"
+                className="h-11 rounded-xl font-semibold border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
-                ยกเลิก (Cancel)
+                {isEn ? "Cancel" : "ยกเลิก (Cancel)"}
               </Button>
               <Button
                 type="submit"
                 disabled={isSaving}
-                className="h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 shadow-md shadow-indigo-500/20"
+                className="h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 shadow-md shadow-indigo-500/20 cursor-pointer"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                {isSaving ? "กำลังบันทึก..." : "บันทึกข้อมูล (Save)"}
+                {isSaving 
+                  ? (isEn ? "Saving..." : "กำลังบันทึก...") 
+                  : (isEn ? "Save Master Data" : "บันทึกข้อมูล (Save)")}
               </Button>
             </DialogFooter>
           </form>
@@ -506,3 +538,4 @@ export default function MasterDataAdminPage() {
     </div>
   );
 }
+

@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
 import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
 import { BiRefresh } from "react-icons/bi";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function ProtectedError({
   error,
@@ -13,6 +14,9 @@ export default function ProtectedError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   useEffect(() => {
     console.error(error);
     Sentry.captureException(error);
@@ -24,18 +28,22 @@ export default function ProtectedError({
         <HiOutlineWrenchScrewdriver size={32} className="text-blue-600" />
       </div>
       
-      <h2 className="text-lg font-bold text-slate-900 mb-2">หน้านี้ขัดข้องชั่วคราว</h2>
+      <h2 className="text-lg font-bold text-slate-900 mb-2">
+        {isEn ? "This page encountered a temporary error" : "หน้านี้ขัดข้องชั่วคราว"}
+      </h2>
       <p className="text-sm text-slate-500 max-w-sm mb-6">
-        ระบบไม่สามารถโหลดข้อมูลหน้านี้ได้ เราได้บันทึกข้อผิดพลาดส่งให้ทีมพัฒนาแล้ว
+        {isEn 
+          ? "Unable to load data for this page. The error has been logged for our engineering team."
+          : "ระบบไม่สามารถโหลดข้อมูลหน้านี้ได้ เราได้บันทึกข้อผิดพลาดส่งให้ทีมพัฒนาแล้ว"}
       </p>
 
       <div className="flex gap-2">
         <Button
           onClick={() => reset()}
-          className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl gap-2 font-semibold"
+          className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl gap-2 font-semibold cursor-pointer"
         >
           <BiRefresh size={18} />
-          ลองใหม่อีกครั้ง
+          {isEn ? "Try Again" : "ลองใหม่อีกครั้ง"}
         </Button>
       </div>
 
@@ -47,3 +55,4 @@ export default function ProtectedError({
     </div>
   );
 }
+

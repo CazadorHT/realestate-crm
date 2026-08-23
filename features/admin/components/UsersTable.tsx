@@ -22,12 +22,16 @@ import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Shield, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { AdminUserRow, updateUserRoleAction } from "@/features/admin/actions";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface UsersTableProps {
   initialUsers: AdminUserRow[];
 }
 
 export function UsersTable({ initialUsers }: UsersTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [users, setUsers] = useState(initialUsers);
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
@@ -41,9 +45,9 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
       setUsers(
         users.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
-      toast.success(`Updated role to ${newRole}`);
+      toast.success(isEn ? `Updated role to ${newRole}` : `อัปเดตบทบาทเป็น ${newRole} สำเร็จ`);
     } catch (error: any) {
-      toast.error(error.message || "Failed to update role");
+      toast.error(error.message || (isEn ? "Failed to update role" : "เกิดข้อผิดพลาดในการอัปเดตบทบาท"));
     } finally {
       setIsLoading(null);
     }
@@ -51,7 +55,14 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
 
   const handleExport = () => {
     // Simple CSV Export
-    const headers = ["ID", "Email", "Full Name", "Phone", "Role", "Created At"];
+    const headers = [
+      isEn ? "ID" : "รหัสผู้ใช้",
+      isEn ? "Email" : "อีเมล",
+      isEn ? "Full Name" : "ชื่อ-นามสกุล",
+      isEn ? "Phone" : "เบอร์โทรศัพท์",
+      isEn ? "Role" : "บทบาท",
+      isEn ? "Created At" : "วันที่สมัคร",
+    ];
     const rows = users.map((u) => [
       u.id,
       u.email || "",
@@ -83,7 +94,7 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="mr-2 h-4 w-4" /> Export CSV
+          <Download className="mr-2 h-4 w-4" /> {isEn ? "Export CSV" : "ส่งออก CSV"}
         </Button>
       </div>
 
@@ -91,11 +102,11 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User Info</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{isEn ? "User Info" : "ข้อมูลผู้ใช้"}</TableHead>
+              <TableHead>{isEn ? "Role" : "บทบาท"}</TableHead>
+              <TableHead>{isEn ? "Contact" : "ข้อมูลติดต่อ"}</TableHead>
+              <TableHead>{isEn ? "Joined" : "วันที่เข้าร่วม"}</TableHead>
+              <TableHead className="text-right">{isEn ? "Actions" : "การจัดการ"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -104,7 +115,7 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-medium">
-                      {user.full_name || "Unknown"}
+                      {user.full_name || (isEn ? "Unknown" : "ไม่ระบุชื่อ")}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {user.email}
@@ -129,7 +140,7 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
                 </TableCell>
                 <TableCell>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(user.created_at).toLocaleDateString()}
+                    {new Date(user.created_at).toLocaleDateString(isEn ? "en-US" : "th-TH")}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
@@ -148,22 +159,24 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Change Role</DropdownMenuLabel>
+                      <DropdownMenuLabel>
+                        {isEn ? "Change Role" : "เปลี่ยนบทบาท"}
+                      </DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => handleRoleChange(user.id, "USER")}
                       >
-                        Set as USER
+                        {isEn ? "Set as USER" : "กำหนดเป็น USER"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleRoleChange(user.id, "AGENT")}
                       >
-                        Set as AGENT
+                        {isEn ? "Set as AGENT" : "กำหนดเป็น AGENT"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleRoleChange(user.id, "ADMIN")}
                       >
-                        <Shield className="mr-2 h-4 w-4" /> Set as ADMIN
+                        <Shield className="mr-2 h-4 w-4" /> {isEn ? "Set as ADMIN" : "กำหนดเป็น ADMIN"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -176,3 +189,4 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
     </div>
   );
 }
+

@@ -2,11 +2,19 @@
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+
+async function getIsEn(): Promise<boolean> {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  return lang === "en";
+}
 
 /**
- * 🏦 ดึงรายการธนาคารมาตรฐานที่เปิดใช้งานอยู่ (สำหรับเอาไปทำ Combobox/Dropdown)
+ * 🏦 Fetch active standard banks
  */
 export async function getBanksAction() {
+  const isEn = await getIsEn();
   try {
     const { supabase } = await requireAuthContext();
     const { data, error } = await supabase
@@ -32,15 +40,16 @@ export async function getBanksAction() {
     console.error("Error fetching banks:", error);
     return {
       success: false,
-      error: (error as Error).message || "ไม่สามารถดึงข้อมูลธนาคารได้",
+      error: (error as Error).message || (isEn ? "Failed to fetch bank data" : "ไม่สามารถดึงข้อมูลธนาคารได้"),
     };
   }
 }
 
 /**
- * 🏦 ดึงรายการธนาคารทั้งหมด (สำหรับหน้าจัดการ CRUD)
+ * 🏦 Fetch all banks for management (CRUD)
  */
 export async function getAllBanksAction() {
+  const isEn = await getIsEn();
   try {
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
@@ -56,13 +65,13 @@ export async function getAllBanksAction() {
     console.error("Error fetching all banks:", error);
     return {
       success: false,
-      error: (error as Error).message || "ไม่สามารถดึงข้อมูลธนาคารทั้งหมดได้",
+      error: (error as Error).message || (isEn ? "Failed to fetch all banks" : "ไม่สามารถดึงข้อมูลธนาคารทั้งหมดได้"),
     };
   }
 }
 
 /**
- * ➕ เพิ่มธนาคารใหม่
+ * ➕ Create new bank
  */
 export async function createBankAction(data: {
   code: string;
@@ -70,6 +79,7 @@ export async function createBankAction(data: {
   name_en: string;
   is_active?: boolean;
 }) {
+  const isEn = await getIsEn();
   try {
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
@@ -96,13 +106,13 @@ export async function createBankAction(data: {
     console.error("Error creating bank:", error);
     return {
       success: false,
-      error: (error as Error).message || "ไม่สามารถเพิ่มข้อมูลธนาคารได้",
+      error: (error as Error).message || (isEn ? "Failed to create bank" : "ไม่สามารถเพิ่มข้อมูลธนาคารได้"),
     };
   }
 }
 
 /**
- * 📝 แก้ไขข้อมูลธนาคาร
+ * 📝 Update bank details
  */
 export async function updateBankAction(
   id: string | number,
@@ -113,6 +123,7 @@ export async function updateBankAction(
     is_active?: boolean;
   }
 ) {
+  const isEn = await getIsEn();
   try {
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
@@ -140,15 +151,16 @@ export async function updateBankAction(
     console.error("Error updating bank:", error);
     return {
       success: false,
-      error: (error as Error).message || "ไม่สามารถแก้ไขข้อมูลธนาคารได้",
+      error: (error as Error).message || (isEn ? "Failed to update bank" : "ไม่สามารถแก้ไขข้อมูลธนาคารได้"),
     };
   }
 }
 
 /**
- * ❌ ลบธนาคาร
+ * ❌ Delete bank
  */
 export async function deleteBankAction(id: string | number) {
+  const isEn = await getIsEn();
   try {
     const { supabase, role } = await requireAuthContext();
     assertStaff(role);
@@ -161,12 +173,16 @@ export async function deleteBankAction(id: string | number) {
     if (error) throw error;
 
     revalidatePath("/protected/finance/banks");
-    return { success: true, message: "ลบข้อมูลธนาคารเรียบร้อยแล้ว" };
+    return { 
+      success: true, 
+      message: isEn ? "Bank deleted successfully" : "ลบข้อมูลธนาคารเรียบร้อยแล้ว" 
+    };
   } catch (error: unknown) {
     console.error("Error deleting bank:", error);
     return {
       success: false,
-      error: (error as Error).message || "ไม่สามารถลบข้อมูลธนาคารได้",
+      error: (error as Error).message || (isEn ? "Failed to delete bank" : "ไม่สามารถลบข้อมูลธนาคารได้"),
     };
   }
 }
+

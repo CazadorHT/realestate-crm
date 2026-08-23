@@ -17,11 +17,12 @@ import {
   Instagram,
 } from "lucide-react";
 import { SocialKeyword } from "@/features/site-settings/schema";
-import { MOCK_PROPERTY_DATA } from "./constants";
+import { getMockPropertyData } from "./constants";
 import { SmartTagsCheatSheet } from "./components/SmartTagsCheatSheet";
 import { KeywordChip } from "./components/KeywordChip";
 import { KeywordEditorDialog } from "./components/KeywordEditorDialog";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface KeywordAutomationCardProps {
   keywords: SocialKeyword[];
@@ -48,6 +49,9 @@ export function KeywordAutomationCard({
   isGenerating,
   scrollToTemplate,
 }: KeywordAutomationCardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const handleAdd = () => {
@@ -76,7 +80,8 @@ export function KeywordAutomationCard({
   const renderTemplate = (content: string) => {
     if (!content) return "";
     let rendered = content;
-    Object.entries(MOCK_PROPERTY_DATA).forEach(([key, value]) => {
+    const mockData = getMockPropertyData(isEn);
+    Object.entries(mockData).forEach(([key, value]) => {
       rendered = rendered.replaceAll(`{{${key}}}`, value as string);
     });
     return rendered;
@@ -95,8 +100,9 @@ export function KeywordAutomationCard({
                 Keyword Automation
               </CardTitle>
               <CardDescription className="text-slate-500 font-medium">
-                คอมเมนต์ปุ๊บ ส่ง DM ปั๊บ!
-                ตั้งค่าคำสำคัญเพื่อเริ่มการทำงานอัตโนมัติ
+                {isEn 
+                  ? "Comment trigger to instant DM reply! Configure keyword automation rules." 
+                  : "คอมเมนต์ปุ๊บ ส่ง DM ปั๊บ! ตั้งค่าคำสำคัญเพื่อเริ่มการทำงานอัตโนมัติ"}
               </CardDescription>
             </div>
           </div>
@@ -107,7 +113,7 @@ export function KeywordAutomationCard({
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full px-6 h-10 shadow-md shadow-blue-200 transition-all hover:scale-105 active:scale-95"
             >
               <Plus className="h-4 w-4 mr-2" />
-              เพิ่มชุดคำสั่ง
+              {isEn ? "Add Rule" : "เพิ่มชุดคำสั่ง"}
             </Button>
           </div>
         </div>
@@ -126,18 +132,19 @@ export function KeywordAutomationCard({
                 </div>
               </div>
               <h3 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                ยังไม่มีระบบตอบกลับ
+                {isEn ? "No Auto-Replies Configured" : "ยังไม่มีระบบตอบกลับ"}
               </h3>
               <p className="text-slate-500 max-w-sm mt-3 font-medium leading-relaxed">
-                ประหยัดเวลาด้วยระบบตอบกลับอัตโนมัติ เริ่มต้นง่ายๆ
-                โดยการเพิ่มคำสำคัญชุดแรกของคุณ
+                {isEn 
+                  ? "Save time with automated responses. Start by adding your first keyword rule." 
+                  : "ประหยัดเวลาด้วยระบบตอบกลับอัตโนมัติ เริ่มต้นง่ายๆ โดยการเพิ่มคำสำคัญชุดแรกของคุณ"}
               </p>
               <Button
                 onClick={handleAdd}
                 className="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full px-10 h-10 shadow-lg shadow-blue-200 transition-all hover:scale-105 active:scale-95"
               >
                 <Plus className="h-5 w-5 mr-2" />
-                เพิ่ม Keyword แรก
+                {isEn ? "Add First Keyword" : "เพิ่ม Keyword แรก"}
               </Button>
             </div>
           ) : (
@@ -159,12 +166,14 @@ export function KeywordAutomationCard({
                   className="rounded-2xl border-dashed border-2 border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-400 hover:bg-blue-50 px-6 h-[42px] transition-all"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  เพิ่ม Keyword
+                  {isEn ? "Add Keyword" : "เพิ่ม Keyword"}
                 </Button>
               </div>
 
               <div className="pt-6 border-t border-slate-100 flex items-center gap-3 text-slate-400 text-xs italic font-medium text-balance">
-                💡 กดที่ Keyword ด้านบนเพื่อเข้าไปแก้ไขข้อความตอบกลับและการทำงาน
+                {isEn 
+                  ? "💡 Click any keyword above to edit response text and triggers." 
+                  : "💡 กดที่ Keyword ด้านบนเพื่อเข้าไปแก้ไขข้อความตอบกลับและการทำงาน"}
               </div>
             </div>
           )}
@@ -183,11 +192,19 @@ export function KeywordAutomationCard({
                 </div>
               </div>
               <p className="text-slate-500 text-[13px] font-medium">
-                พบ{" "}
-                <span className="text-slate-900 font-semibold">
-                  {keywords.length} ชุดคำสั่ง
-                </span>{" "}
-                ที่พร้อมทำงาน
+                {isEn ? (
+                  <>
+                    Found <span className="text-slate-900 font-semibold">{keywords.length} active rules</span> ready
+                  </>
+                ) : (
+                  <>
+                    พบ{" "}
+                    <span className="text-slate-900 font-semibold">
+                      {keywords.length} ชุดคำสั่ง
+                    </span>{" "}
+                    ที่พร้อมทำงาน
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -214,3 +231,4 @@ export function KeywordAutomationCard({
     </Card>
   );
 }
+

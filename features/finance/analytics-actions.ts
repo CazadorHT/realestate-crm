@@ -277,23 +277,37 @@ export async function exportYearlyFinanceAction(year?: number): Promise<ExportAc
     });
 
     // 3. Define Sheet Structures
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const isEn = (cookieStore.get("language")?.value || "th") === "en";
+
     const summaryColumns = [
-      { key: "date", header: "วันที่ดีลจบ", width: 15, format: (v: unknown) => new Date(v as string).toLocaleDateString("th-TH") },
-      { key: "property", header: "ทรัพย์/โครงการ", width: 35 },
-      { key: "revenue", header: "รายได้บริษัท", width: 18, format: (v: unknown) => FinanceMath.format(v as number) },
-      { key: "payouts", header: "ยอดจ่ายเอเยนต์", width: 18, format: (v: unknown) => FinanceMath.format(v as number) },
-      { key: "adjustments", header: "ยอดปรับปรุง (±)", width: 18, format: (v: unknown) => FinanceMath.format(v as number) },
-      { key: "profit", header: "กำไรสุทธิ", width: 18, format: (v: unknown) => FinanceMath.format(v as number) }
+      { 
+        key: "date", 
+        header: isEn ? "Closed Date" : "วันที่ดีลจบ", 
+        width: 15, 
+        format: (v: unknown) => new Date(v as string).toLocaleDateString(isEn ? "en-US" : "th-TH") 
+      },
+      { key: "property", header: isEn ? "Property / Project" : "ทรัพย์/โครงการ", width: 35 },
+      { key: "revenue", header: isEn ? "Company Revenue" : "รายได้บริษัท", width: 18, format: (v: unknown) => FinanceMath.format(v as number) },
+      { key: "payouts", header: isEn ? "Agent Payouts" : "ยอดจ่ายเอเยนต์", width: 18, format: (v: unknown) => FinanceMath.format(v as number) },
+      { key: "adjustments", header: isEn ? "Adjustments (±)" : "ยอดปรับปรุง (±)", width: 18, format: (v: unknown) => FinanceMath.format(v as number) },
+      { key: "profit", header: isEn ? "Net Profit" : "กำไรสุทธิ", width: 18, format: (v: unknown) => FinanceMath.format(v as number) }
     ];
 
     const whtColumns = [
-      { key: "date", header: "วันที่รายการ", width: 15, format: (v: unknown) => new Date(v as string).toLocaleDateString("th-TH") },
-      { key: "agent", header: "ชื่อผู้รับเงิน", width: 25 },
-      { key: "tax_id", header: "เลขผู้เสียภาษี/ID", width: 20 },
-      { key: "address", header: "ที่อยู่ตามบัตร", width: 40 },
-      { key: "gross", header: "ยอดก่อนหัก (Gross)", width: 18, format: (v: unknown) => FinanceMath.format(v as number) },
-      { key: "wht", header: "ภาษี (3%)", width: 15, format: (v: unknown) => FinanceMath.format(v as number) },
-      { key: "net", header: "ยอดรับสุทธิ", width: 18, format: (v: unknown) => FinanceMath.format(v as number) }
+      { 
+        key: "date", 
+        header: isEn ? "Transaction Date" : "วันที่รายการ", 
+        width: 15, 
+        format: (v: unknown) => new Date(v as string).toLocaleDateString(isEn ? "en-US" : "th-TH") 
+      },
+      { key: "agent", header: isEn ? "Payee Name" : "ชื่อผู้รับเงิน", width: 25 },
+      { key: "tax_id", header: isEn ? "Tax ID" : "เลขผู้เสียภาษี/ID", width: 20 },
+      { key: "address", header: isEn ? "Address" : "ที่อยู่ตามบัตร", width: 40 },
+      { key: "gross", header: isEn ? "Gross Amount" : "ยอดก่อนหัก (Gross)", width: 18, format: (v: unknown) => FinanceMath.format(v as number) },
+      { key: "wht", header: isEn ? "Tax (3%)" : "ภาษี (3%)", width: 15, format: (v: unknown) => FinanceMath.format(v as number) },
+      { key: "net", header: isEn ? "Net Payout" : "ยอดรับสุทธิ", width: 18, format: (v: unknown) => FinanceMath.format(v as number) }
     ];
 
     // 4. Generate Multi-Sheet Buffer

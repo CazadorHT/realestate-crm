@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Printer, Loader2, Maximize2, Download, FileText, X } from "lucide-react";
 import { downloadDocumentAction, getDocumentSignedUrl } from "../actions";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface DocumentPreviewDialogProps {
   documentId: string;
@@ -20,6 +21,9 @@ export function DocumentPreviewDialog({
   storagePath,
   trigger,
 }: DocumentPreviewDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -38,22 +42,22 @@ export function DocumentPreviewDialog({
           setImageUrl(url);
           setContent("IMAGE");
         } else {
-          toast.error("ไม่สามารถดาวน์โหลดภาพสลิปได้");
+          toast.error(isEn ? "Unable to download image" : "ไม่สามารถดาวน์โหลดภาพสลิปได้");
         }
       } else {
         const res = await downloadDocumentAction(storagePath);
         if (res.success && res.data) {
           setContent(res.data);
         } else {
-          toast.error(res.message || "ไม่สามารถโหลดเนื้อหาเอกสารได้");
+          toast.error(res.message || (isEn ? "Unable to load document content" : "ไม่สามารถโหลดเนื้อหาเอกสารได้"));
         }
       }
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการโหลดเอกสาร");
+      toast.error(isEn ? "An error occurred while loading the document" : "เกิดข้อผิดพลาดในการโหลดเอกสาร");
     } finally {
       setLoading(false);
     }
-  }, [storagePath, isImage]);
+  }, [storagePath, isImage, isEn]);
 
   useEffect(() => {
     if (open && !content) {
@@ -88,7 +92,7 @@ export function DocumentPreviewDialog({
       link.click();
       document.body.removeChild(link);
     } else {
-      toast.error("ไม่สามารถดาวน์โหลดไฟล์ได้");
+      toast.error(isEn ? "Unable to download file" : "ไม่สามารถดาวน์โหลดไฟล์ได้");
     }
   };
 
@@ -141,7 +145,7 @@ export function DocumentPreviewDialog({
           <Button 
             variant="ghost" 
             size="icon"
-            className="h-9 w-9 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
+            className="h-9 w-9 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
           >
             <Eye className="h-4.5 w-4.5" />
           </Button>
@@ -153,7 +157,9 @@ export function DocumentPreviewDialog({
             <FileText className="h-5 w-5" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-lg font-black text-slate-900 tracking-tight truncate leading-tight">เอกสาร</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight truncate leading-tight">
+              {isEn ? "Document" : "เอกสาร"}
+            </span>
             <span className="text-[10px] font-bold text-slate-400 truncate uppercase mt-0.5 tracking-wider">{documentName}</span>
           </div>
         </div>
@@ -166,28 +172,28 @@ export function DocumentPreviewDialog({
             size="lg"
             onClick={handlePrint}
             disabled={!content}
-            className="h-11 flex-1 sm:flex-none gap-2 rounded-2xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]"
+            className="h-11 flex-1 sm:flex-none gap-2 rounded-2xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-[0.98] cursor-pointer"
           >
             <Printer className="h-4 w-4" />
-            <span className="hidden sm:inline">ดาวน์โหลด PDF / พิมพ์</span>
-            <span className="sm:hidden">PDF / พิมพ์</span>
+            <span className="hidden sm:inline">{isEn ? "Download PDF / Print" : "ดาวน์โหลด PDF / พิมพ์"}</span>
+            <span className="sm:hidden">{isEn ? "PDF / Print" : "PDF / พิมพ์"}</span>
           </Button>
           <Button
             variant="outline"
             size="lg"
             onClick={handleDownloadWord}
             disabled={!content}
-            className="h-11 flex-1 sm:flex-none gap-2 rounded-2xl border-slate-200 font-bold text-slate-600 bg-white hover:bg-slate-50 transition-all active:scale-[0.98]"
+            className="h-11 flex-1 sm:flex-none gap-2 rounded-2xl border-slate-200 font-bold text-slate-600 bg-white hover:bg-slate-50 transition-all active:scale-[0.98] cursor-pointer"
           >
             <FileText className="h-4 w-4 text-blue-600" />
-            <span className="hidden sm:inline">ดาวน์โหลด Word (.doc)</span>
+            <span className="hidden sm:inline">{isEn ? "Download Word (.doc)" : "ดาวน์โหลด Word (.doc)"}</span>
             <span className="sm:hidden">Word</span>
           </Button>
           <Button
             variant="ghost"
             size="lg"
             onClick={handleDownload}
-            className="h-11 gap-2 rounded-2xl border-transparent font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+            className="h-11 gap-2 rounded-2xl border-transparent font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">HTML</span>
@@ -197,10 +203,10 @@ export function DocumentPreviewDialog({
             size="lg"
             onClick={handleOpenFullPage}
             disabled={!content}
-            className="h-11 gap-2 rounded-2xl font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 ml-auto transition-all hidden sm:flex"
+            className="h-11 gap-2 rounded-2xl font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 ml-auto transition-all hidden sm:flex cursor-pointer"
           >
             <Maximize2 className="h-4 w-4" />
-            เปิดเต็มจอ
+            {isEn ? "Full Screen" : "เปิดเต็มจอ"}
           </Button>
         </div>
       }
@@ -214,7 +220,9 @@ export function DocumentPreviewDialog({
                 <FileText className="h-5 w-5 text-slate-300" />
               </div>
             </div>
-            <span className="text-sm font-black uppercase tracking-widest italic animate-pulse">กำลังดึงข้อมูลเอกสาร...</span>
+            <span className="text-sm font-black uppercase tracking-widest italic animate-pulse">
+              {isEn ? "Retrieving document content..." : "กำลังดึงข้อมูลเอกสาร..."}
+            </span>
           </div>
         ) : content ? (
           <div className="bg-white shadow-2xl shadow-slate-200/50 w-full max-w-[850px] rounded-xl relative overflow-hidden ring-1 ring-slate-200/50 flex justify-center items-center p-4">
@@ -239,10 +247,11 @@ export function DocumentPreviewDialog({
             <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center">
               <X className="h-10 w-10" />
             </div>
-            <span className="font-bold">ไม่พบเนื้อหาในเอกสารนี้</span>
+            <span className="font-bold">{isEn ? "No content found in this document" : "ไม่พบเนื้อหาในเอกสารนี้"}</span>
           </div>
         )}
       </div>
     </ResponsiveDialog>
   );
 }
+

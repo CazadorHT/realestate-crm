@@ -3,16 +3,12 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { 
   Calendar as CalendarIcon, 
   X, 
   Filter, 
-  Check, 
-  Clock, 
-  User as UserIcon, 
   Layers, 
-  Zap,
   History as HistoryIcon,
   Loader2
 } from "lucide-react";
@@ -35,8 +31,8 @@ import {
 } from "@/components/ui/select";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/lib/i18n/language-context";
 
-// You might want to move these labels to a shared constants file if reused
 const LOG_ACTIONS = [
   "property.create",
   "property.update",
@@ -71,6 +67,9 @@ interface AuditLogFiltersProps {
 }
 
 export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -178,26 +177,31 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
   const hasActiveFilters = activeFilterCount > 0;
 
   const filterContent = (
-    <div className="flex flex-col xl:flex-row xl:items-center gap-4 xl:gap-3 italic">
+    <div className="flex flex-col xl:flex-row xl:items-center gap-4 xl:gap-3">
       <div className="flex items-center gap-2 mb-1 xl:hidden">
         <Layers className="h-4 w-4 text-blue-500" />
         <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-          ตัวเลือกการกรอง (Filters) {totalCount !== undefined && `(${totalCount.toLocaleString()})`}
+          {isEn ? "Filter Options" : "ตัวเลือกการกรอง (Filters)"}{" "}
+          {totalCount !== undefined && `(${totalCount.toLocaleString()})`}
         </span>
       </div>
 
       {/* Action Filter */}
       <div className="space-y-1.5 xl:space-y-0">
-        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">ประเภทการดำเนินการ (Event Action)</label>
+        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">
+          {isEn ? "Event Action" : "ประเภทการดำเนินการ (Event Action)"}
+        </label>
         <Select
           value={filters.action}
           onValueChange={(val) => handleFilterChange("action", val)}
         >
           <SelectTrigger className="w-full xl:w-[200px] h-12 xl:h-11 rounded-2xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm">
-            <SelectValue placeholder="ประเภทการดำเนินการ" />
+            <SelectValue placeholder={isEn ? "Select Action" : "ประเภทการดำเนินการ"} />
           </SelectTrigger>
           <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
-            <SelectItem value="ALL" className="font-semibold text-slate-500 italic">การดำเนินการทั้งหมด (All Actions)</SelectItem>
+            <SelectItem value="ALL" className="font-semibold text-slate-500 italic">
+              {isEn ? "All Actions" : "การดำเนินการทั้งหมด (All Actions)"}
+            </SelectItem>
             {LOG_ACTIONS.map((action) => (
               <SelectItem key={action} value={action} className="font-semibold text-slate-700">
                 {action}
@@ -209,16 +213,20 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
 
       {/* Entity Filter */}
       <div className="space-y-1.5 xl:space-y-0">
-        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">หมวดหมู่ข้อมูล (Entity Type)</label>
+        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">
+          {isEn ? "Entity Type" : "หมวดหมู่ข้อมูล (Entity Type)"}
+        </label>
         <Select
           value={filters.entity}
           onValueChange={(val) => handleFilterChange("entity", val)}
         >
           <SelectTrigger className="w-full xl:w-[200px] h-12 xl:h-11 rounded-2xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm">
-            <SelectValue placeholder="เลือกหมวดหมู่" />
+            <SelectValue placeholder={isEn ? "Select Entity" : "เลือกหมวดหมู่"} />
           </SelectTrigger>
           <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
-            <SelectItem value="ALL" className="font-semibold text-slate-500 italic">หมวดหมู่ทั้งหมด (All Entities)</SelectItem>
+            <SelectItem value="ALL" className="font-semibold text-slate-500 italic">
+              {isEn ? "All Entities" : "หมวดหมู่ทั้งหมด (All Entities)"}
+            </SelectItem>
             {LOG_ENTITIES.map((entity) => (
               <SelectItem key={entity} value={entity} className="font-semibold text-slate-700">
                 {entity}
@@ -230,19 +238,23 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
 
       {/* User Filter */}
       <div className="space-y-1.5 xl:space-y-0">
-        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">ผู้ดำเนินการ (Triggered User)</label>
+        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">
+          {isEn ? "Triggered User" : "ผู้ดำเนินการ (Triggered User)"}
+        </label>
         <Select
           value={filters.userId}
           onValueChange={(val) => handleFilterChange("userId", val)}
         >
           <SelectTrigger className="w-full xl:w-[240px] h-12 xl:h-11 rounded-2xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm">
-            <SelectValue placeholder="เลือกผู้ใช้" />
+            <SelectValue placeholder={isEn ? "Select User" : "เลือกผู้ใช้"} />
           </SelectTrigger>
           <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
-            <SelectItem value="ALL" className="font-semibold text-slate-500 italic">ผู้ใช้ทั้งหมด (All Users)</SelectItem>
+            <SelectItem value="ALL" className="font-semibold text-slate-500 italic">
+              {isEn ? "All Users" : "ผู้ใช้ทั้งหมด (All Users)"}
+            </SelectItem>
             {users.map((user) => (
               <SelectItem key={user.id} value={user.id} className="font-semibold text-slate-700">
-                {user.full_name || user.email || "Unknown User"}
+                {user.full_name || user.email || (isEn ? "Unknown User" : "ไม่ระบุชื่อ")}
               </SelectItem>
             ))}
           </SelectContent>
@@ -251,7 +263,9 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
 
       {/* Date Range Picker */}
       <div className="space-y-1.5 xl:space-y-0">
-         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">ช่วงเวลา (Time Range)</label>
+        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">
+          {isEn ? "Time Range" : "ช่วงเวลา (Time Range)"}
+        </label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -266,14 +280,14 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
               {date?.from ? (
                 date.to ? (
                   <>
-                    {format(date.from, "dd MMM yyyy", { locale: th })} -{" "}
-                    {format(date.to, "dd MMM yyyy", { locale: th })}
+                    {format(date.from, "dd MMM yyyy", { locale: isEn ? enUS : th })} -{" "}
+                    {format(date.to, "dd MMM yyyy", { locale: isEn ? enUS : th })}
                   </>
                 ) : (
-                  format(date.from, "dd MMM yyyy", { locale: th })
+                  format(date.from, "dd MMM yyyy", { locale: isEn ? enUS : th })
                 )
               ) : (
-                <span>เลือกช่วงเวลา (Date range)</span>
+                <span>{isEn ? "Select date range" : "เลือกช่วงเวลา (Date range)"}</span>
               )}
             </Button>
           </PopoverTrigger>
@@ -299,19 +313,19 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
           className="xl:ml-auto text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-11 xl:h-10 font-semibold transition-all px-4"
         >
           <X className="h-4 w-4 mr-1.5" />
-          ล้างตัวกรอง (Clear filters)
+          {isEn ? "Clear filters" : "ล้างตัวกรอง (Clear filters)"}
         </Button>
       )}
 
       <div className="pt-4 xl:hidden border-t border-slate-100 mt-2">
-         <Button 
+        <Button 
           className="w-full bg-slate-900 hover:bg-slate-800 text-white h-12 rounded-2xl font-semibold shadow-lg shadow-slate-200 transition-all active:scale-95"
           onClick={() => setIsMobileMenuOpen(false)}
           disabled={isNavigating}
-         >
-           {isNavigating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-           ดูผลลัพธ์ข้อมูลระบบ (Apply Filter)
-         </Button>
+        >
+          {isNavigating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          {isEn ? "Apply Filters" : "ดูผลลัพธ์ข้อมูลระบบ (Apply Filter)"}
+        </Button>
       </div>
     </div>
   );
@@ -324,80 +338,89 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
         hasActiveFilters && "border-blue-100 bg-blue-50/20"
       )}>
         <div className="px-4 border-r border-slate-200/60 mr-1 flex items-center gap-2.5">
-           <div className={cn(
-             "p-1.5 rounded-xl transition-all",
-             hasActiveFilters ? "bg-blue-500 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-400"
-           )}>
-             <Filter className="h-4 w-4" />
-           </div>
-           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] italic">
-            Search
-           </span>
-           {totalCount !== undefined && (
-             <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 border-blue-100 rounded-lg">
-                {totalCount.toLocaleString()}
-             </Badge>
-           )}
+          <div className={cn(
+            "p-1.5 rounded-xl transition-all",
+            hasActiveFilters ? "bg-blue-500 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-400"
+          )}>
+            <Filter className="h-4 w-4" />
+          </div>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] italic">
+            {isEn ? "Filter" : "Search"}
+          </span>
+          {totalCount !== undefined && (
+            <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 border-blue-100 rounded-lg">
+              {totalCount.toLocaleString()}
+            </Badge>
+          )}
         </div>
         {filterContent}
       </div>
 
       {/* 📱 Mobile Container */}
       <div className="xl:hidden flex items-center justify-between gap-3 p-2 bg-white/70 backdrop-blur-md border border-slate-100 rounded-[28px] shadow-sm">
-         <ResponsiveDialog
-            open={isMobileMenuOpen}
-            onOpenChange={setIsMobileMenuOpen}
-            title={
-              <div className="flex items-center gap-3">
-                 <div className="p-2.5 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm">
-                    <HistoryIcon className="h-5 w-5 text-blue-600" />
-                 </div>
-                 <span className="font-semibold text-xl">ตัวกรองประวัติระบบ</span>
+        <ResponsiveDialog
+          open={isMobileMenuOpen}
+          onOpenChange={setIsMobileMenuOpen}
+          title={
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm">
+                <HistoryIcon className="h-5 w-5 text-blue-600" />
               </div>
-            }
-            description="ระบุเงื่อนไขการค้นหาเพื่อตรวจสอบประวัติการใช้งาน (Audit Logs) ทั้งหมดในระบบ"
-            trigger={
-              <Button 
-                variant="outline" 
-                className={cn(
-                  "flex-1 h-14 rounded-[22px] border-slate-200 font-semibold gap-3 transition-all active:scale-95 shadow-sm bg-white/80",
-                  hasActiveFilters && "border-blue-500 bg-blue-50/50 text-blue-600 ring-2 ring-blue-100"
-                )}
-              >
-                <div className={cn(
-                  "p-1.5 rounded-lg",
-                  hasActiveFilters ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-400"
-                )}>
-                  <Filter className="h-4 w-4" />
-                </div>
-                <span className="italic">กรองข้อมูลที่ต้องการตรวจสอบ</span>
-                {isNavigating ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                ) : hasActiveFilters && (
-                  <Badge className="ml-1 h-5 w-5 flex items-center justify-center p-0 bg-blue-600 text-[10px] rounded-lg">
-                    {activeFilterCount}
-                  </Badge>
-                )}
-              </Button>
-            }
-         >
-           <div className="p-6">
-              {filterContent}
-           </div>
-         </ResponsiveDialog>
-         
-         {hasActiveFilters && (
+              <span className="font-semibold text-xl">
+                {isEn ? "Audit Log Filters" : "ตัวกรองประวัติระบบ"}
+              </span>
+            </div>
+          }
+          description={
+            isEn
+              ? "Filter criteria to inspect system events and historical change logs"
+              : "ระบุเงื่อนไขการค้นหาเพื่อตรวจสอบประวัติการใช้งาน (Audit Logs) ทั้งหมดในระบบ"
+          }
+          trigger={
             <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={clearFilters}
-              className="h-14 w-14 rounded-[22px] bg-red-50 text-red-500 border border-red-100 shadow-sm transition-all active:scale-95"
+              variant="outline" 
+              className={cn(
+                "flex-1 h-14 rounded-[22px] border-slate-200 font-semibold gap-3 transition-all active:scale-95 shadow-sm bg-white/80",
+                hasActiveFilters && "border-blue-500 bg-blue-50/50 text-blue-600 ring-2 ring-blue-100"
+              )}
             >
-              <X className="h-5 w-5" />
+              <div className={cn(
+                "p-1.5 rounded-lg",
+                hasActiveFilters ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-400"
+              )}>
+                <Filter className="h-4 w-4" />
+              </div>
+              <span className="italic">
+                {isEn ? "Filter audit logs" : "กรองข้อมูลที่ต้องการตรวจสอบ"}
+              </span>
+              {isNavigating ? (
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+              ) : hasActiveFilters && (
+                <Badge className="ml-1 h-5 w-5 flex items-center justify-center p-0 bg-blue-600 text-[10px] rounded-lg">
+                  {activeFilterCount}
+                </Badge>
+              )}
             </Button>
-         )}
+          }
+        >
+          <div className="p-6">
+            {filterContent}
+          </div>
+        </ResponsiveDialog>
+        
+        {hasActiveFilters && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={clearFilters}
+            className="h-14 w-14 rounded-[22px] bg-red-50 text-red-500 border border-red-100 shadow-sm transition-all active:scale-95"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
       </div>
     </div>
   );
 }
+
 

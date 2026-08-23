@@ -1,9 +1,15 @@
-import { Users, Users2, Plus } from "lucide-react";
+"use client";
+
+import { Users, Users2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site-config";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function UsersPageHeader() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/40 backdrop-blur-xl border border-white/40 p-8 rounded-3xl shadow-xl shadow-slate-200/50">
       <div className="space-y-4">
@@ -13,7 +19,7 @@ export function UsersPageHeader() {
            </div>
            <div className="hidden sm:block h-10 w-[2px] bg-slate-200 rounded-full mx-1" />
            <div className="space-y-0.5">
-              <h1 className="text-3xl font-semibold   bg-linear-to-br  from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-semibold bg-linear-to-br from-slate-900 to-slate-700 bg-clip-text text-transparent">
                 USER MANAGEMENT
               </h1>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] pl-0.5">
@@ -22,7 +28,9 @@ export function UsersPageHeader() {
            </div>
         </div>
         <p className="text-slate-500 font-medium max-w-xl leading-relaxed italic">
-          ตรวจสอบและจัดการบทบาทของสมาชิกทีม <span className="text-slate-900 font-bold not-italic">{siteConfig.company}</span> เพื่อความปลอดภัยและการเข้าถึงข้อมูลระดับสูงสุด
+          {isEn 
+            ? `Review and manage team roles for ${siteConfig.company} with enterprise security and access control.` 
+            : `ตรวจสอบและจัดการบทบาทของสมาชิกทีม ${siteConfig.company} เพื่อความปลอดภัยและการเข้าถึงข้อมูลระดับสูงสุด`}
         </p>
       </div>
 
@@ -30,15 +38,16 @@ export function UsersPageHeader() {
         <Link href="/protected/settings/teams" className="w-full sm:w-auto">
           <Button 
             variant="outline" 
-            className="rounded-2xl w-full  h-12 px-6 border-slate-200 bg-white/50 hover:bg-white hover:border-slate-300 transition-all duration-300 flex items-center gap-2 group shadow-sm"
+            className="rounded-2xl w-full h-12 px-6 border-slate-200 bg-white/50 hover:bg-white hover:border-slate-300 transition-all duration-300 flex items-center gap-2 group shadow-sm"
           >
             <div className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-blue-50 transition-colors">
               <Users2 className="h-4 w-4 text-slate-600 group-hover:text-blue-600" />
             </div>
-            <span className="font-semibold text-slate-700">จัดการทีม</span>
+            <span className="font-semibold text-slate-700">{isEn ? "Manage Teams" : "จัดการทีม"}</span>
           </Button>
         </Link>
       </div>
     </div>
   );
 }
+

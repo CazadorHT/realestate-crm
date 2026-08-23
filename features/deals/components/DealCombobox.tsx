@@ -14,6 +14,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export type DealItem = {
   id: string;
@@ -41,9 +42,14 @@ type Props = {
 export function DealCombobox({
   value,
   onChange,
-  placeholder = "คลิกเพื่อเลือกดีลที่ปิดการขาย/เช่าแล้ว",
+  placeholder,
   status,
 }: Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const defaultPlaceholder = placeholder || (isEn ? "Click to select closed deal" : "คลิกเพื่อเลือกดีลที่ปิดการขาย/เช่าแล้ว");
+
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -79,8 +85,8 @@ export function DealCombobox({
       const pageItems: DealItem[] = (payload.data ?? []).map((x: DealWithProperty) => ({
         id: x.id,
         property_id: x.property_id || x.property?.id,
-        property_title: x.property?.title ?? "ไม่ระบุทรัพย์",
-        lead_name: x.lead?.full_name ?? "ไม่ระบุลูกค้า",
+        property_title: x.property?.title ?? (isEn ? "Untitled Property" : "ไม่ระบุทรัพย์"),
+        lead_name: x.lead?.full_name ?? (isEn ? "Unnamed Lead" : "ไม่ระบุลูกค้า"),
         deal_type: x.deal_type,
         price: x.property?.price,
         original_price: x.property?.original_price,
@@ -91,7 +97,7 @@ export function DealCombobox({
           x.property?.images?.find((img) => img.is_cover)?.image_url ||
           x.property?.images?.[0]?.image_url,
         location:
-          x.property?.popular_area || x.property?.province || "ไม่ระบุทำเล",
+          x.property?.popular_area || x.property?.province || (isEn ? "Unspecified Location" : "ไม่ระบุทำเล"),
         tenant_id: x.tenant_id,
       }));
 
@@ -137,8 +143,8 @@ export function DealCombobox({
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="เลือกดีล"
-      description="ค้นหาและเลือกดีลที่ปิดการขาย/เช่าแล้ว"
+      title={isEn ? "Select Deal" : "เลือกดีล"}
+      description={isEn ? "Search and select a closed won deal" : "ค้นหาและเลือกดีลที่ปิดการขาย/เช่าแล้ว"}
       className="sm:max-w-[750px]"
       trigger={
         <div className="relative flex items-center w-full group">
@@ -146,7 +152,7 @@ export function DealCombobox({
             type="button"
             variant="outline"
             className={cn(
-              "w-full justify-between h-auto py-2 px-3 text-left border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200 shadow-sm",
+              "w-full justify-between h-auto py-2 px-3 text-left border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200 shadow-sm cursor-pointer",
               value && "pr-10 border-blue-200 bg-blue-50/20",
             )}
           >
@@ -173,7 +179,7 @@ export function DealCombobox({
                     <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium truncate w-full">
                       <span>{selected.location}</span>
                       <span className="opacity-30">•</span>
-                      <span>ลูกค้า: {selected.lead_name}</span>
+                      <span>{isEn ? "Lead: " : "ลูกค้า: "}{selected.lead_name}</span>
                       <span className="opacity-30">•</span>
                       <span
                         className={cn(
@@ -183,7 +189,7 @@ export function DealCombobox({
                             : "text-emerald-600",
                         )}
                       >
-                        {selected.deal_type === "RENT" ? "เช่า" : "ขาย"} ฿
+                        {selected.deal_type === "RENT" ? (isEn ? "Rent " : "เช่า ") : (isEn ? "Sale " : "ขาย ")} ฿
                         {(
                           selected.rental_price ??
                           selected.price ??
@@ -195,7 +201,7 @@ export function DealCombobox({
                 </>
               ) : (
                 <span className="text-slate-400 font-normal">
-                  {placeholder}
+                  {defaultPlaceholder}
                 </span>
               )}
             </div>
@@ -208,12 +214,12 @@ export function DealCombobox({
             <Button
               size="icon"
               variant="ghost"
-              className="absolute right-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-7 w-7 rounded-md transition-colors"
+              className="absolute right-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-7 w-7 rounded-md transition-colors cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 onChange(null, null);
               }}
-              title="ล้างการเลือก"
+              title={isEn ? "Clear selection" : "ล้างการเลือก"}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -226,7 +232,7 @@ export function DealCombobox({
       <div className="flex flex-col h-full">
         <Command>
           <CommandInput
-            placeholder="ค้นหาดีล (ชื่อทรัพย์, ชื่อลูกค้า)..."
+            placeholder={isEn ? "Search deal (Property, Lead)..." : "ค้นหาดีล (ชื่อทรัพย์, ชื่อลูกค้า)..."}
             value={q}
             onValueChange={setQ}
           />
@@ -234,11 +240,10 @@ export function DealCombobox({
             <CommandEmpty className="py-20 text-center">
               {isLoading ? (
                  <div className="flex flex-col items-center gap-3">
-                   {/* This is a fallback but ResponsiveDialog overlay handles most of it */}
-                   <span className="text-slate-400">กำลังค้นหา...</span>
+                   <span className="text-slate-400">{isEn ? "Searching..." : "กำลังค้นหา..."}</span>
                  </div>
               ) : (
-                "ไม่พบดีล"
+                isEn ? "No deals found" : "ไม่พบดีล"
               )}
             </CommandEmpty>
 
@@ -281,11 +286,11 @@ export function DealCombobox({
                     </span>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-500">
                       <span className="text-xs font-medium truncate max-w-[120px] sm:max-w-[150px]">
-                        ย่าน : {item.location}
+                        {isEn ? "Area: " : "ย่าน : "}{item.location}
                       </span>
                       <span className="opacity-30 hidden sm:inline">•</span>
                       <span className="text-xs font-medium truncate max-w-[120px] sm:max-w-[150px]">
-                        ลูกค้า: {item.lead_name}
+                        {isEn ? "Lead: " : "ลูกค้า: "}{item.lead_name}
                       </span>
                     </div>
                   </div>
@@ -293,7 +298,7 @@ export function DealCombobox({
                   <div className="flex flex-col items-end gap-1 ml-auto">
                     <div className="flex items-center gap-1 justify-end">
                       <span className="text-[10px] text-slate-400 font-medium">
-                        {item.deal_type === "RENT" ? "เช่า" : "ขาย"}:
+                        {item.deal_type === "RENT" ? (isEn ? "Rent" : "เช่า") : (isEn ? "Sale" : "ขาย")}:
                       </span>
                       {((item.deal_type === "RENT"
                         ? item.original_rental_price
@@ -337,12 +342,12 @@ export function DealCombobox({
                   <div className="flex flex-col items-center gap-2">
                      <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                       กำลังโหลดข้อมูล...
+                       {isEn ? "Loading more deals..." : "กำลังโหลดข้อมูล..."}
                      </span>
                   </div>
                 ) : (
                    <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">
-                     เลื่อนเพื่อโหลดเพิ่มเติม...
+                     {isEn ? "Scroll for more..." : "เลื่อนเพื่อโหลดเพิ่มเติม..."}
                    </span>
                 )}
               </div>
@@ -353,3 +358,4 @@ export function DealCombobox({
     </ResponsiveDialog>
   );
 }
+

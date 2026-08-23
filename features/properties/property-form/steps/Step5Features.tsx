@@ -28,59 +28,44 @@ import { FeaturesManagementDialog } from "@/features/amenities/components/Featur
 import { PropertyFormValues } from "../../schema";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 type Feature = {
   id: string;
   name: string;
+  name_en?: string | null;
   icon_key: string | null;
   category: string | null;
 };
 
-const CATEGORY_ICONS: Record<string, any> = {
-  "ที่พักอาศัย (Residential)": Home,
-  "สำนักงาน (Office)": Briefcase,
-  "ส่วนกลาง (Facilities)": Building2,
-  "ในยูนิต (Unit Features)": Layout,
-  "ความปลอดภัย (Security)": Shield,
-  "ความสะดวกสบาย (Comfort)": Armchair,
-  "ครัว (Kitchen)": Utensils,
-  "ห้องน้ำ (Bathroom)": Bath,
-  "ภายนอก (Exterior)": Trees,
-  "เทคโนโลยี (Tech)": Wifi,
-  "สันทนาการ (Recreation)": Dumbbell,
-  "สถานที่ใกล้เคียง (Nearby)": MapPin,
-  "ทั่วไป (General)": Box,
-  "อื่นๆ (Other)": MoreHorizontal,
-  "สำหรับเด็ก (Kids)": Baby,
-  "บริการ (Services)": ConciergeBell,
-};
-
-const CATEGORY_MAPPING: Record<string, string> = {
-  RESIDENTIAL: "ที่พักอาศัย (Residential)",
-  OFFICE: "สำนักงาน (Office)",
-  FACILITY: "ส่วนกลาง (Facilities)",
-  UNIT: "ในยูนิต (Unit Features)",
-  EXTERIOR: "ภายนอก (Exterior)",
-  INTERIOR: "ในยูนิต (Unit Features)",
-  FACILITIES: "ส่วนกลาง (Facilities)",
-  COMFORT: "ความสะดวกสบาย (Comfort)",
-  GENERAL: "ทั่วไป (General)",
-  SECURITY: "ความปลอดภัย (Security)",
-  KITCHEN: "ครัว (Kitchen)",
-  BATHROOM: "ห้องน้ำ (Bathroom)",
-  TECH: "เทคโนโลยี (Tech)",
-  TECHNOLOGY: "เทคโนโลยี (Tech)",
-  RECREATION: "สันทนาการ (Recreation)",
-  NEARBY: "สถานที่ใกล้เคียง (Nearby)",
-  OTHER: "อื่นๆ (Other)",
-  KIDS: "สำหรับเด็ก (Kids)",
-  SERVICES: "บริการ (Services)",
+const CATEGORY_MAP: Record<string, { th: string; en: string; icon: any }> = {
+  RESIDENTIAL: { th: "ที่พักอาศัย (Residential)", en: "Residential Features", icon: Home },
+  OFFICE: { th: "สำนักงาน (Office)", en: "Office Features", icon: Briefcase },
+  FACILITY: { th: "ส่วนกลาง (Facilities)", en: "Building Facilities", icon: Building2 },
+  FACILITIES: { th: "ส่วนกลาง (Facilities)", en: "Building Facilities", icon: Building2 },
+  UNIT: { th: "ในยูนิต (Unit Features)", en: "In-Unit Features", icon: Layout },
+  INTERIOR: { th: "ในยูนิต (Unit Features)", en: "In-Unit Features", icon: Layout },
+  EXTERIOR: { th: "ภายนอก (Exterior)", en: "Exterior Features", icon: Trees },
+  COMFORT: { th: "ความสะดวกสบาย (Comfort)", en: "Comfort & Living", icon: Armchair },
+  GENERAL: { th: "ทั่วไป (General)", en: "General", icon: Box },
+  SECURITY: { th: "ความปลอดภัย (Security)", en: "Security", icon: Shield },
+  KITCHEN: { th: "ครัว (Kitchen)", en: "Kitchen", icon: Utensils },
+  BATHROOM: { th: "ห้องน้ำ (Bathroom)", en: "Bathroom", icon: Bath },
+  TECH: { th: "เทคโนโลยี (Tech)", en: "Technology & Smart Home", icon: Wifi },
+  TECHNOLOGY: { th: "เทคโนโลยี (Tech)", en: "Technology & Smart Home", icon: Wifi },
+  RECREATION: { th: "สันทนาการ (Recreation)", en: "Recreation & Sports", icon: Dumbbell },
+  NEARBY: { th: "สถานที่ใกล้เคียง (Nearby)", en: "Nearby Places", icon: MapPin },
+  OTHER: { th: "อื่นๆ (Other)", en: "Other", icon: MoreHorizontal },
+  KIDS: { th: "สำหรับเด็ก (Kids)", en: "Kids & Family", icon: Baby },
+  SERVICES: { th: "บริการ (Services)", en: "Services", icon: ConciergeBell },
 };
 
 export const Step5Features = React.memo(Step5FeaturesComponent);
 function Step5FeaturesComponent() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const { watch, setValue } = useFormContext<PropertyFormValues>();
   const [features, setFeatures] = useState<Feature[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,14 +161,19 @@ function Step5FeaturesComponent() {
       shouldDirty: true,
       shouldValidate: true,
     });
-    toast.success(`เลือกสิ่งอำนวยความสะดวกสำหรับ${
-      type === "condo" ? "คอนโด" : type === "house" ? "บ้านเดี่ยว" : "สำนักงาน"
-    }สำเร็จแล้ว! (${matchedIds.length} รายการ)`);
+    const typeLabel = isEn
+      ? (type === "condo" ? "Condo" : type === "house" ? "House" : "Office")
+      : (type === "condo" ? "คอนโด" : type === "house" ? "บ้านเดี่ยว" : "สำนักงาน");
+    toast.success(
+      isEn
+        ? `Applied ${typeLabel} preset! (${matchedIds.length} items)`
+        : `เลือกสิ่งอำนวยความสะดวกสำหรับ${typeLabel}สำเร็จแล้ว! (${matchedIds.length} รายการ)`
+    );
   };
 
   const handleAiDetectFeatures = async () => {
     if (!formTitle && !formDescription) {
-      toast.error("กรุณากรอกชื่อหัวข้อหรือคำอธิบายทรัพย์สินก่อนครับ");
+      toast.error(isEn ? "Please enter a listing title or description first." : "กรุณากรอกชื่อหัวข้อหรือคำอธิบายทรัพย์สินก่อนครับ");
       return;
     }
 
@@ -196,13 +186,17 @@ function Step5FeaturesComponent() {
           shouldDirty: true,
           shouldValidate: true,
         });
-        toast.success(`AI ตรวจพบสิ่งอำนวยความสะดวกที่เหมาะสม ${res.matchedFeatureIds.length} รายการ! ✨`);
+        toast.success(
+          isEn
+            ? `AI detected ${res.matchedFeatureIds.length} suitable amenities! ✨`
+            : `AI ตรวจพบสิ่งอำนวยความสะดวกที่เหมาะสม ${res.matchedFeatureIds.length} รายการ! ✨`
+        );
       } else {
-        throw new Error(res.message || "ไม่สามารถวิเคราะห์ได้");
+        throw new Error(res.message || (isEn ? "Cannot analyze features" : "ไม่สามารถวิเคราะห์ได้"));
       }
     } catch (err: any) {
       console.error("AI Feature detection failed:", err);
-      toast.error(err.message || "วิเคราะห์สิ่งอำนวยความสะดวกด้วย AI ล้มเหลว");
+      toast.error(err.message || (isEn ? "AI amenity analysis failed" : "วิเคราะห์สิ่งอำนวยความสะดวกด้วย AI ล้มเหลว"));
     } finally {
       setIsDetecting(false);
     }
@@ -216,8 +210,8 @@ function Step5FeaturesComponent() {
         // Normalize category key
         const rawCat = feature.category || "General";
         const upperCat = rawCat.toUpperCase();
-        // Try to find a mapped Thai Name, otherwise use raw
-        const cat = CATEGORY_MAPPING[upperCat] || rawCat;
+        const mapped = CATEGORY_MAP[upperCat];
+        const cat = mapped ? (isEn ? mapped.en : mapped.th) : rawCat;
 
         if (!acc[cat]) acc[cat] = [];
         acc[cat].push(feature);
@@ -225,7 +219,7 @@ function Step5FeaturesComponent() {
       },
       {} as Record<string, Feature[]>,
     );
-  }, [features]);
+  }, [features, isEn]);
 
   if (loading) {
     return (
@@ -245,10 +239,12 @@ function Step5FeaturesComponent() {
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold text-blue-900 leading-tight">
-                สิ่งอำนวยความสะดวก
+                {isEn ? "Facilities & Amenities" : "สิ่งอำนวยความสะดวก"}
               </h3>
               <p className="text-[10px] sm:text-xs text-blue-700/70 font-medium">
-                เลือกสิ่งอำนวยความสะดวกที่ทรัพย์สินนี้มี (ระบบจะช่วยดึงรายการจากโครงการที่เลือกให้อัตโนมัติ ✨)
+                {isEn
+                  ? "Select features available for this listing (auto-populated from selected project ✨)"
+                  : "เลือกสิ่งอำนวยความสะดวกที่ทรัพย์สินนี้มี (ระบบจะช่วยดึงรายการจากโครงการที่เลือกให้อัตโนมัติ ✨)"}
               </p>
             </div>
           </div>
@@ -262,7 +258,7 @@ function Step5FeaturesComponent() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/70 p-4 rounded-2xl border border-slate-100 shadow-xs">
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest mr-1.5">
-            เลือกด่วน (Presets):
+            {isEn ? "Presets:" : "เลือกด่วน (Presets):"}
           </span>
           <Button
             type="button"
@@ -271,7 +267,7 @@ function Step5FeaturesComponent() {
             onClick={() => applyPreset("condo")}
             className="h-8 text-xs font-semibold bg-white border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/20 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            🏢 คอนโด (Condo)
+            🏢 {isEn ? "Condo" : "คอนโด (Condo)"}
           </Button>
           <Button
             type="button"
@@ -280,7 +276,7 @@ function Step5FeaturesComponent() {
             onClick={() => applyPreset("house")}
             className="h-8 text-xs font-semibold bg-white border-slate-200 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50/20 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            🏡 บ้าน / ทาวน์โฮม (House)
+            🏡 {isEn ? "House / Townhome" : "บ้าน / ทาวน์โฮม (House)"}
           </Button>
           <Button
             type="button"
@@ -289,7 +285,7 @@ function Step5FeaturesComponent() {
             onClick={() => applyPreset("office")}
             className="h-8 text-xs font-semibold bg-white border-slate-200 hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50/20 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            💼 สำนักงาน (Office)
+            💼 {isEn ? "Office" : "สำนักงาน (Office)"}
           </Button>
         </div>
 
@@ -305,25 +301,30 @@ function Step5FeaturesComponent() {
             ) : (
               <Sparkles className="w-3.5 h-3.5" />
             )}
-            {isDetecting ? "กำลังวิเคราะห์..." : "AI วิเคราะห์สิ่งอำนวยความสะดวก"}
+            {isDetecting
+              ? (isEn ? "Analyzing..." : "กำลังวิเคราะห์...")
+              : (isEn ? "AI Analyze Amenities" : "AI วิเคราะห์สิ่งอำนวยความสะดวก")}
           </Button>
           {!formTitle && !formDescription && (
             <span className="text-[10px] text-slate-400 italic hidden sm:inline">
-              💡 กรอกชื่อหรือรายละเอียดก่อนใช้ AI
+              {isEn ? "💡 Enter title or description before using AI" : "💡 กรอกชื่อหรือรายละเอียดก่อนใช้ AI"}
             </span>
           )}
         </div>
       </div>
 
       {Object.entries(groupedFeatures).map(([category, categoryFeatures]) => {
-        const CategoryIcon = CATEGORY_ICONS[category] || Box;
+        const matchingKey = Object.keys(CATEGORY_MAP).find(
+          (k) => CATEGORY_MAP[k].th === category || CATEGORY_MAP[k].en === category
+        );
+        const CategoryIcon = matchingKey ? CATEGORY_MAP[matchingKey].icon : Box;
         return (
           <div key={category} className="space-y-3 sm:space-y-4">
             <h4 className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100 pb-2 sm:pb-3">
               <CategoryIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
               {category}
               <span className="ml-auto text-[9px] font-normal text-slate-400 lowercase">
-                {categoryFeatures.length} items
+                {categoryFeatures.length} {isEn ? "items" : "รายการ"}
               </span>
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 sm:gap-4">
@@ -363,7 +364,7 @@ function Step5FeaturesComponent() {
                           : "text-slate-600 group-hover:text-slate-900",
                       )}
                     >
-                      {feature.name}
+                      {isEn && feature.name_en ? feature.name_en : feature.name}
                     </span>
                     {isSelected && (
                       <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-in zoom-in" />
@@ -379,7 +380,7 @@ function Step5FeaturesComponent() {
       {features.length === 0 && (
         <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border-dashed border-2 border-slate-200">
           <Box className="w-12 h-12 mx-auto mb-3 opacity-20" />
-          <p>ไม่พบรายการในระบบ</p>
+          <p>{isEn ? "No amenities found in system" : "ไม่พบรายการในระบบ"}</p>
         </div>
       )}
     </div>

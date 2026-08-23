@@ -19,6 +19,7 @@ import { LinePostPreview } from "./LinePostPreview";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 import { SMART_TAGS } from "./constants";
 
@@ -79,6 +80,8 @@ export function TemplateEditorCard({
   metaConnected,
   metaPageName,
 }: TemplateEditorCardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [showSmartTags, setShowSmartTags] = useState(false);
 
   const isInvalid = (activePlatform === "instagram" && 
@@ -136,12 +139,12 @@ export function TemplateEditorCard({
                 </CardTitle>
                 <CardDescription className="text-white/80 text-xs sm:text-sm max-w-[280px] sm:max-w-md mx-auto md:mx-0">
                   {activePlatform === "facebook"
-                    ? "แก้ไขรูปแบบข้อความสำหรับโพสต์ลง Facebook"
+                    ? (isEn ? "Customize template for Facebook auto-posts" : "แก้ไขรูปแบบข้อความสำหรับโพสต์ลง Facebook")
                     : activePlatform === "instagram"
-                      ? "แก้ไขรูปแบบข้อความสำหรับโพสต์ลง Instagram"
+                      ? (isEn ? "Customize template for Instagram auto-posts" : "แก้ไขรูปแบบข้อความสำหรับโพสต์ลง Instagram")
                       : activePlatform === "tiktok"
-                        ? "แก้ไข Caption สำหรับโพสต์ลง TikTok"
-                        : "แก้ไขเนื้อหาที่จะแสดงใน Line Flex Message"}
+                        ? (isEn ? "Customize caption template for TikTok posts" : "แก้ไข Caption สำหรับโพสต์ลง TikTok")
+                        : (isEn ? "Customize message template for Line Flex messages" : "แก้ไขเนื้อหาที่จะแสดงใน Line Flex Message")}
                 </CardDescription>
               </div>
             </div>
@@ -223,7 +226,7 @@ export function TemplateEditorCard({
               ) : (
                 <Sparkles className="h-3 w-3" />
               )}
-              สร้างด้วย AI ({activeTab.toUpperCase()})
+              {isEn ? `Generate with AI (${activeTab.toUpperCase()})` : `สร้างด้วย AI (${activeTab.toUpperCase()})`}
             </Button>
           </div>
         </CardHeader>
@@ -246,7 +249,7 @@ export function TemplateEditorCard({
                   )}
                 >
                   <span className="text-base sm:text-lg shrink-0">🇹🇭</span>
-                  <span className="text-[11px] sm:text-xs">ไทย</span>
+                  <span className="text-[11px] sm:text-xs">{isEn ? "Thai" : "ไทย"}</span>
                   {templates[activePlatform].th && (
                     <div className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white shadow-xs" title="Template exists" />
                   )}
@@ -300,7 +303,7 @@ export function TemplateEditorCard({
               {/* Left Column: Editor (lg:col-span-7) */}
               <div className="lg:col-span-7">
                 {["th", "en", "cn", "ru"].map((lang) => (
-                  <TabsContent key={lang} value={lang} className="m-0 max-h-[ุ650px] overflow-y-auto no-scrollbar border-r border-slate-200/50">
+                  <TabsContent key={lang} value={lang} className="m-0 max-h-[650px] overflow-y-auto no-scrollbar border-r border-slate-200/50">
                     <div className="p-6 space-y-4">
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -326,12 +329,12 @@ export function TemplateEditorCard({
                           {isPending ? (
                             <span className="flex items-center gap-1">
                               <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                              SAVING
+                              {isEn ? "SAVING..." : "กำลังบันทึก..."}
                             </span>
                           ) : !hasChanges ? (
-                            "SAVED"
+                            (isEn ? "SAVED" : "บันทึกแล้ว")
                           ) : (
-                            "CHANGING..."
+                            (isEn ? "CHANGES PENDING" : "รอการบันทึก...")
                           )}
                         </Badge>
                       </div>
@@ -354,13 +357,13 @@ export function TemplateEditorCard({
                             {activePlatform === "instagram" && 
                              templates[activePlatform][lang as "th" | "en" | "cn" | "ru"].length > 2200 && (
                               <span className="text-red-500 font-bold flex items-center gap-1 animate-pulse">
-                                ⚠️ ยาวเกินกำหนด IG (จำกัด 2,200)
+                                {isEn ? "⚠️ Exceeds IG limit (Max 2,200)" : "⚠️ ยาวเกินกำหนด IG (จำกัด 2,200)"}
                               </span>
                             )}
                             {activePlatform === "tiktok" && 
                              templates[activePlatform][lang as "th" | "en" | "cn" | "ru"].length > 4000 && (
                               <span className="text-red-500 font-bold flex items-center gap-1 animate-pulse">
-                                ⚠️ ยาวเกินกำหนด TikTok (จำกัด 4,000)
+                                {isEn ? "⚠️ Exceeds TikTok limit (Max 4,000)" : "⚠️ ยาวเกินกำหนด TikTok (จำกัด 4,000)"}
                               </span>
                             )}
                           </div>
@@ -372,7 +375,7 @@ export function TemplateEditorCard({
                               : "text-slate-500 border-slate-200"
                           )}>
                             {templates[activePlatform][lang as "th" | "en" | "cn" | "ru"].length.toLocaleString()} 
-                            {activePlatform === "instagram" ? " / 2,200" : activePlatform === "tiktok" ? " / 4,000" : ""} ตัวอักษร
+                            {activePlatform === "instagram" ? " / 2,200" : activePlatform === "tiktok" ? " / 4,000" : ""} {isEn ? "characters" : "ตัวอักษร"}
                           </div>
                         </div>
 
@@ -383,8 +386,8 @@ export function TemplateEditorCard({
                               TikTok Caption Tips:
                             </p>
                             <ul className="list-disc pl-4 space-y-0.5 text-[10px] opacity-80">
-                              <li>ควรสั้น กระชับ และใช้ประโยค Hook ที่น่าสนใจใน 3-5 คำแรก</li>
-                              <li>ใส่ Hashtag 3-5 อัน (เช่น #อสังหา #บ้านเช่า)</li>
+                              <li>{isEn ? "Keep it short & punchy with an engaging hook in the first 3-5 words" : "ควรสั้น กระชับ และใช้ประโยค Hook ที่น่าสนใจใน 3-5 คำแรก"}</li>
+                              <li>{isEn ? "Include 3-5 relevant hashtags (e.g. #realestate #condoforrent)" : "ใส่ Hashtag 3-5 อัน (เช่น #อสังหา #บ้านเช่า)"}</li>
                             </ul>
                           </div>
                         )}
@@ -396,8 +399,8 @@ export function TemplateEditorCard({
                               Instagram Caption Tips:
                             </p>
                             <ul className="list-disc pl-4 space-y-0.5 text-[10px] opacity-80">
-                              <li>IG จำกัดที่ 2,200 ตัวอักษร พยายามอย่าให้ยาวจนเกินไป</li>
-                              <li>ใส่รายละเอียดสำคัญ (ห้องนอน, ห้องน้ำ, พื้นที่) ให้ชัดเจน</li>
+                              <li>{isEn ? "IG limit is 2,200 chars. Keep structure clean and readable." : "IG จำกัดที่ 2,200 ตัวอักษร พยายามอย่าให้ยาวจนเกินไป"}</li>
+                              <li>{isEn ? "Include essential specs (Beds, Baths, Sqm, Price) clearly" : "ใส่รายละเอียดสำคัญ (ห้องนอน, ห้องน้ำ, พื้นที่) ให้ชัดเจน"}</li>
                             </ul>
                           </div>
                         )}
@@ -452,8 +455,11 @@ export function TemplateEditorCard({
                 </div>
 
                 <div className="mt-6 p-4 bg-blue-50/40 border border-blue-100/40 rounded-2xl text-[11px] text-blue-600/70 text-center max-w-[320px] leading-relaxed">
-                  💡 <b>Pro Tip:</b> ใช้ตัวแปร {"{{...}}"}{" "}
-                  เพื่อดึงข้อมูลทรัพย์สินมาแสดงโดยอัตโนมัติในตอนที่กดโพสต์จริง
+                  {isEn ? (
+                    <>💡 <b>Pro Tip:</b> Use variables {"{{...}}"} to automatically pull property attributes when posting.</>
+                  ) : (
+                    <>💡 <b>Pro Tip:</b> ใช้ตัวแปร {"{{...}}"} เพื่อดึงข้อมูลทรัพย์สินมาแสดงโดยอัตโนมัติในตอนที่กดโพสต์จริง</>
+                  )}
                 </div>
               </div>
             </div>
@@ -463,7 +469,7 @@ export function TemplateEditorCard({
           <div className="px-6 pb-6 pt-0 border-t border-slate-100 pt-4">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                รายการตัวแปรที่ใช้ได้ (Smart Tags)
+                {isEn ? "Available Variables (Smart Tags)" : "รายการตัวแปรที่ใช้ได้ (Smart Tags)"}
               </span>
               <Button
                 variant="outline"
@@ -471,7 +477,9 @@ export function TemplateEditorCard({
                 onClick={() => setShowSmartTags(!showSmartTags)}
                 className="h-8 text-xs font-semibold rounded-xl text-slate-600 border-slate-200"
               >
-                {showSmartTags ? "ซ่อนตัวแปร" : "แสดงตัวแปร"}
+                {showSmartTags 
+                  ? (isEn ? "Hide Variables" : "ซ่อนตัวแปร") 
+                  : (isEn ? "Show Variables" : "แสดงตัวแปร")}
                 {showSmartTags ? <ChevronUp className="ml-1.5 h-3.5 w-3.5" /> : <ChevronDown className="ml-1.5 h-3.5 w-3.5" />}
               </Button>
             </div>
@@ -482,11 +490,11 @@ export function TemplateEditorCard({
                   <div
                     key={item.tag}
                     className="flex items-center justify-between p-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] group/tag cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-95"
-                    title={`คลิกเพื่อคัดลอก: ${item.label}`}
+                    title={isEn ? `Click to copy: ${item.label_en || item.label}` : `คลิกเพื่อคัดลอก: ${item.label}`}
                     onClick={() => {
                       navigator.clipboard.writeText(item.tag);
-                      toast.success(`คัดลอก ${item.tag} แล้ว`, {
-                        description: `ใช้ปุ่ม Ctrl+V หรือ Cmd+V เพื่อวางในกล่องข้อความ`,
+                      toast.success(isEn ? `Copied ${item.tag}` : `คัดลอก ${item.tag} แล้ว`, {
+                        description: isEn ? "Press Ctrl+V or Cmd+V to paste" : `ใช้ปุ่ม Ctrl+V หรือ Cmd+V เพื่อวางในกล่องข้อความ`,
                         duration: 2000,
                       });
                     }}
@@ -495,7 +503,7 @@ export function TemplateEditorCard({
                       {item.tag}
                     </code>
                     <span className="text-slate-400 group-hover/tag:text-slate-500">
-                      {item.label}
+                      {isEn ? (item.label_en || item.label) : item.label}
                     </span>
                   </div>
                 ))}
@@ -507,7 +515,9 @@ export function TemplateEditorCard({
             <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md border border-slate-200 shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300 w-11/12 max-w-2xl">
               <div className="flex items-center gap-3">
                 <div className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-sm font-semibold text-slate-700">มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</span>
+                <span className="text-sm font-semibold text-slate-700">
+                  {isEn ? "Unsaved changes pending" : "มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก"}
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -520,7 +530,7 @@ export function TemplateEditorCard({
                   ) : (
                     <Save className="h-4 w-4 mr-2" />
                   )}
-                  บันทึกเทมเพลตทั้งหมด
+                  {isEn ? "Save All Templates" : "บันทึกเทมเพลตทั้งหมด"}
                 </Button>
               </div>
             </div>
@@ -530,3 +540,4 @@ export function TemplateEditorCard({
     </div>
   );
 }
+

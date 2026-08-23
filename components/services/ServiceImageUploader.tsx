@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useImageUpload } from "@/features/services/hooks/useImageUpload";
 import { ServiceImageCropper } from "@/features/services/components/ServiceImageCropper";
-import { Area } from "react-easy-crop";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ServiceImageUploaderProps {
   value?: string | string[];
@@ -33,6 +33,9 @@ export function ServiceImageUploader({
   aspectRatio = 16 / 9,
   maxCount = 1,
 }: ServiceImageUploaderProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const {
     isUploading,
     uploadProgress,
@@ -92,7 +95,7 @@ export function ServiceImageUploader({
             <div className="relative w-full h-full">
               <Image
                 src={url}
-                alt={`รูปภาพแกลเลอรี ${idx + 1}`}
+                alt={isEn ? `Gallery image ${idx + 1}` : `รูปภาพแกลเลอรี ${idx + 1}`}
                 fill
                 className="object-cover"
                 sizes="(max-width: 640px) 50vw, 25vw"
@@ -102,8 +105,9 @@ export function ServiceImageUploader({
               <Button
                 variant="destructive"
                 size="icon"
-                className="h-8 w-8 rounded-xl"
+                className="h-8 w-8 rounded-xl cursor-pointer"
                 onClick={() => removeImage(url)}
+                title={isEn ? "Remove image" : "ลบรูปภาพ"}
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -117,7 +121,7 @@ export function ServiceImageUploader({
              <div className="relative w-full h-full">
                <Image
                  src={value}
-                 alt="รูปภาพหน้าปก"
+                 alt={isEn ? "Cover image" : "รูปภาพหน้าปก"}
                  fill
                  className="object-cover"
                  sizes="(max-width: 1024px) 100vw, 50vw"
@@ -127,17 +131,18 @@ export function ServiceImageUploader({
               <Button
                 variant="secondary"
                 size="sm"
-                className="rounded-xl h-8 text-xs font-bold"
+                className="rounded-xl h-8 text-xs font-bold cursor-pointer"
                 onClick={() => setImageToCrop(value)}
               >
                 <Edit className="w-4 h-4 mr-2" />
-                แก้ไขรูปภาพ
+                {isEn ? "Edit Image" : "แก้ไขรูปภาพ"}
               </Button>
               <Button
                 variant="destructive"
                 size="icon"
-                className="h-8 w-8 rounded-xl"
+                className="h-8 w-8 rounded-xl cursor-pointer"
                 onClick={() => removeImage(value)}
+                title={isEn ? "Remove image" : "ลบรูปภาพ"}
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -152,7 +157,7 @@ export function ServiceImageUploader({
             disabled={disabled || isUploading}
             onClick={() => inputRef.current?.click()}
             className={cn(
-              "relative flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed transition-all",
+              "relative flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed transition-all cursor-pointer",
               "hover:border-indigo-400 hover:bg-indigo-50/30 group",
               isGallery ? "aspect-square" : "aspect-video col-span-2 md:col-span-3",
               isUploading ? "bg-slate-50 border-slate-200" : "bg-white border-slate-300"
@@ -165,7 +170,7 @@ export function ServiceImageUploader({
                 </div>
                 <Progress value={45} className="h-1.5" />
                 <p className="text-[10px] text-slate-400 font-bold uppercase text-center">
-                   กำลังอัปโหลด...
+                   {isEn ? "Uploading..." : "กำลังอัปโหลด..."}
                 </p>
               </div>
             ) : (
@@ -175,10 +180,10 @@ export function ServiceImageUploader({
                 </div>
                 <div className="text-center">
                   <p className="text-xs font-bold text-slate-600">
-                    อัปโหลดรูปภาพ
+                    {isEn ? "Upload Image" : "อัปโหลดรูปภาพ"}
                   </p>
                   <p className="text-[9px] text-slate-400 uppercase tracking-tighter mt-0.5">
-                    รองรับ JPG, PNG (ไม่เกิน 2MB)
+                    {isEn ? "Supports JPG, PNG (Max 2MB)" : "รองรับ JPG, PNG (ไม่เกิน 2MB)"}
                   </p>
                 </div>
               </>
@@ -203,3 +208,4 @@ export function ServiceImageUploader({
     </div>
   );
 }
+

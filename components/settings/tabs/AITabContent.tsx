@@ -15,8 +15,12 @@ import {
   CardDescription, 
   CardContent 
 } from "@/components/ui/card";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function AITabContent() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -29,9 +33,19 @@ export function AITabContent() {
                 <Cpu className="h-8 w-8 text-white" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-semibold text-white">ศูนย์รวมการจัดการ AI <span className="text-indigo-100/70 font-normal italic">(AI Control Center)</span></CardTitle>
+                <CardTitle className="text-2xl font-semibold text-white">
+                  {isEn ? (
+                    "AI Control Center"
+                  ) : (
+                    <>
+                      ศูนย์รวมการจัดการ AI <span className="text-indigo-100/70 font-normal italic">(AI Control Center)</span>
+                    </>
+                  )}
+                </CardTitle>
                 <CardDescription className="text-indigo-50/80 font-medium italic mt-1">
-                  ติดตามสถานะและควบคุมการทำงานของปัญญาประดิษฐ์ในระดับองค์กร
+                  {isEn
+                    ? "Monitor status and orchestrate enterprise AI models and features"
+                    : "ติดตามสถานะและควบคุมการทำงานของปัญญาประดิษฐ์ในระดับองค์กร"}
                 </CardDescription>
               </div>
             </div>
@@ -39,18 +53,24 @@ export function AITabContent() {
           <CardContent className="relative z-10 pb-8">
             <div className="flex flex-wrap gap-4">
               <div className="px-6 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col gap-1 transition-all hover:bg-white/20 shadow-sm">
-                <span className="text-[10px] font-semibold uppercase tracking-widest opacity-60">LLM Provider (ผู้ให้บริการ)</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest opacity-60">
+                  {isEn ? "LLM Provider" : "LLM Provider (ผู้ให้บริการ)"}
+                </span>
                 <span className="text-xl font-semibold italic">Claude 3.5 Sonnet / Gemini</span>
               </div>
               <div className="px-6 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col gap-1 transition-all hover:bg-white/20 shadow-sm">
-                <span className="text-[10px] font-semibold uppercase tracking-widest opacity-60">Status (สถานะ)</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest opacity-60">
+                  {isEn ? "Status" : "Status (สถานะ)"}
+                </span>
                 <span className="text-xl font-semibold italic flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  พร้อมใช้งาน (Ready)
+                  {isEn ? "Ready" : "พร้อมใช้งาน (Ready)"}
                 </span>
               </div>
               <div className="px-6 py-4 rounded-2xl bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 flex flex-col gap-1 transition-all hover:bg-emerald-500/30 shadow-sm">
-                <span className="text-[10px] font-semibold uppercase tracking-widest opacity-80 text-emerald-200">โหมดประมวลผล (Processing Mode)</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest opacity-80 text-emerald-200">
+                  {isEn ? "Processing Mode" : "โหมดประมวลผล (Processing Mode)"}
+                </span>
                 <span className="text-xl font-semibold italic text-white flex items-center gap-2">
                   <Zap className="h-4 w-4 fill-emerald-300 text-emerald-300" />
                   Enterprise High-Speed
@@ -67,7 +87,15 @@ export function AITabContent() {
                 <Activity className="h-6 w-6 text-blue-600 group-hover:text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">เฝ้าระวัง AI <span className="text-slate-400 font-normal block text-xs">(AI Monitor)</span></CardTitle>
+                <CardTitle className="text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                  {isEn ? (
+                    "AI Monitor"
+                  ) : (
+                    <>
+                      เฝ้าระวัง AI <span className="text-slate-400 font-normal block text-xs">(AI Monitor)</span>
+                    </>
+                  )}
+                </CardTitle>
                 <CardDescription className="text-[11px] font-semibold text-slate-500 truncate italic mt-0.5 uppercase tracking-wide opacity-70">
                   Performance Tracking
                 </CardDescription>
@@ -84,7 +112,15 @@ export function AITabContent() {
                 <Cpu className="h-6 w-6 text-purple-600 group-hover:text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-lg font-semibold text-slate-900 group-hover:text-purple-600 transition-colors truncate">ตั้งค่าโมเดล <span className="text-slate-400 font-normal block text-xs">(AI Model Config)</span></CardTitle>
+                <CardTitle className="text-lg font-semibold text-slate-900 group-hover:text-purple-600 transition-colors truncate">
+                  {isEn ? (
+                    "AI Model Config"
+                  ) : (
+                    <>
+                      ตั้งค่าโมเดล <span className="text-slate-400 font-normal block text-xs">(AI Model Config)</span>
+                    </>
+                  )}
+                </CardTitle>
                 <CardDescription className="text-[11px] font-semibold text-slate-500 truncate italic mt-0.5 uppercase tracking-wide opacity-70">
                   LLM & Prompt Tuning
                 </CardDescription>
@@ -101,7 +137,15 @@ export function AITabContent() {
                 <Sparkles className="h-6 w-6 text-amber-600 group-hover:text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-lg font-semibold text-slate-900 group-hover:text-amber-600 transition-colors truncate">จับคู่ทรัพย์อัจฉริยะ <span className="text-slate-400 font-normal block text-xs">(SmartMatch)</span></CardTitle>
+                <CardTitle className="text-lg font-semibold text-slate-900 group-hover:text-amber-600 transition-colors truncate">
+                  {isEn ? (
+                    "SmartMatch"
+                  ) : (
+                    <>
+                      จับคู่ทรัพย์อัจฉริยะ <span className="text-slate-400 font-normal block text-xs">(SmartMatch)</span>
+                    </>
+                  )}
+                </CardTitle>
                 <CardDescription className="text-[11px] font-semibold text-slate-500 truncate italic mt-0.5 uppercase tracking-wide opacity-70">
                   Autopilot Recommendations
                 </CardDescription>
@@ -114,3 +158,4 @@ export function AITabContent() {
     </div>
   );
 }
+

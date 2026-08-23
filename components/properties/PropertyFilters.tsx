@@ -22,6 +22,7 @@ import { FaUser } from "react-icons/fa";
 import { exportPropertiesAction } from "@/features/properties/export-action";
 import { downloadBase64File, MIME_TYPES } from "@/lib/download-utils";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type Filters = {
   q: string;
@@ -80,13 +81,15 @@ export function PropertyFilters({
 }: PropertyFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isInitialMount = useRef(true);
 
   const handleExportAllWithFilters = async () => {
-    const processId = startProcess("กำลังส่งออกข้อมูล Excel", { type: "EXPORT" });
+    const processId = startProcess(isEn ? "Exporting to Excel..." : "กำลังส่งออกข้อมูล Excel", { type: "EXPORT" });
     setIsExporting(true);
     try {
       const result = await exportPropertiesAction(undefined, filters);
@@ -97,15 +100,15 @@ export function PropertyFilters({
           MIME_TYPES.EXCEL,
         );
         if (downloaded) {
-          finishProcess(processId, "SUCCESS", `Export ทั้งหมด ${result.count} รายการสำเร็จ`);
+          finishProcess(processId, "SUCCESS", isEn ? `Successfully exported ${result.count} listings` : `Export ทั้งหมด ${result.count} รายการสำเร็จ`);
         } else {
-          finishProcess(processId, "ERROR", "ดาวน์โหลดไฟล์ไม่สำเร็จ");
+          finishProcess(processId, "ERROR", isEn ? "File download failed" : "ดาวน์โหลดไฟล์ไม่สำเร็จ");
         }
       } else {
-        finishProcess(processId, "ERROR", result.message || "Export ไม่สำเร็จ");
+        finishProcess(processId, "ERROR", result.message || (isEn ? "Export failed" : "Export ไม่สำเร็จ"));
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการ Export";
+      const msg = err instanceof Error ? err.message : (isEn ? "An error occurred during export" : "เกิดข้อผิดพลาดในการ Export");
       finishProcess(processId, "ERROR", msg);
     } finally {
       setIsExporting(false);
@@ -245,30 +248,30 @@ export function PropertyFilters({
           {[
             {
               id: "ALL",
-              label: "🌐 ทั้งหมด (All)",
+              label: isEn ? "🌐 All" : "🌐 ทั้งหมด (All)",
               activeClass: "bg-white text-slate-800 shadow-sm font-bold",
             },
             {
               id: "ACTIVE",
-              label: "🟢 ใช้งาน (Active)",
+              label: isEn ? "🟢 Active" : "🟢 ใช้งาน (Active)",
               activeClass:
                 "bg-emerald-500 text-white shadow-md shadow-emerald-100 font-bold",
             },
             {
               id: "DRAFT",
-              label: "⚠️ แบบร่าง (Draft)",
+              label: isEn ? "⚠️ Draft" : "⚠️ แบบร่าง (Draft)",
               activeClass:
                 "bg-amber-500 text-white shadow-md shadow-amber-100 font-bold",
             },
             {
               id: "ARCHIVED",
-              label: "📦 เก็บถาวร (Archived)",
+              label: isEn ? "📦 Archived" : "📦 เก็บถาวร (Archived)",
               activeClass:
                 "bg-slate-700 text-white shadow-md shadow-slate-200 font-bold",
             },
             {
               id: "SOLD",
-              label: "🤝 ปิดการขาย (Sold)",
+              label: isEn ? "🤝 Sold" : "🤝 ปิดการขาย (Sold)",
               activeClass:
                 "bg-blue-600 text-white shadow-md shadow-blue-100 font-bold",
             },
@@ -303,7 +306,7 @@ export function PropertyFilters({
             );
           })}
         </div>
-        <div className="flex flex-wrap justify-between  lg:justify-start items-center gap-2">
+        <div className="flex flex-wrap justify-between lg:justify-start items-center gap-2">
           {/* ✨ Sentinel Quick Filter Chip */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -327,7 +330,7 @@ export function PropertyFilters({
                   });
                 }}
                 className={cn(
-                  "h-9 rounded-full px-4 border-dashed transition-all duration-300",
+                  "h-9 rounded-full px-4 border-dashed transition-all duration-300 cursor-pointer",
                   filters.needsAiReview === "true"
                     ? "bg-indigo-50 border-indigo-400 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
                     : "bg-white text-slate-500 hover:border-indigo-300 hover:bg-slate-50 hover:text-indigo-600",
@@ -341,14 +344,14 @@ export function PropertyFilters({
                       : "bg-slate-300",
                   )}
                 />
-                ✨ ตรวจร่าง AI
+                {isEn ? "✨ AI Review Drafts" : "✨ ตรวจร่าง AI"}
               </Button>
             </TooltipTrigger>
             <TooltipContent
               side="bottom"
               className="bg-slate-900 border-slate-800 text-white font-medium"
             >
-              แสดงเฉพาะรายการที่ AI ร่างข้อมูลให้ (รอคุณตรวจสอบ)
+              {isEn ? "Show only listings auto-drafted by AI awaiting your review" : "แสดงเฉพาะรายการที่ AI ร่างข้อมูลให้ (รอคุณตรวจสอบ)"}
             </TooltipContent>
           </Tooltip>
 
@@ -374,7 +377,7 @@ export function PropertyFilters({
                   });
                 }}
                 className={cn(
-                  "h-9 rounded-full px-4 border-dashed transition-all duration-300",
+                  "h-9 rounded-full px-4 border-dashed transition-all duration-300 cursor-pointer",
                   filters.assignedToMe === "true"
                     ? "bg-blue-50/50 border-blue-400 text-blue-700 shadow-sm ring-1 ring-blue-200"
                     : "bg-white text-slate-500 hover:border-blue-300 hover:bg-slate-50 hover:text-blue-600",
@@ -388,14 +391,14 @@ export function PropertyFilters({
                       : "bg-slate-300",
                   )}
                 />
-                <FaUser className="w-3 h-3 mr-1.5" /> ทรัพย์ของฉัน
+                <FaUser className="w-3 h-3 mr-1.5" /> {isEn ? "My Listings" : "ทรัพย์ของฉัน"}
               </Button>
             </TooltipTrigger>
             <TooltipContent
               side="bottom"
               className="bg-slate-900 border-slate-800 text-white font-medium"
             >
-              แสดงเฉพาะรายการทรัพย์สินที่คุณได้รับมอบหมาย
+              {isEn ? "Show only properties assigned to you" : "แสดงเฉพาะรายการทรัพย์สินที่คุณได้รับมอบหมาย"}
             </TooltipContent>
           </Tooltip>
 
@@ -405,14 +408,14 @@ export function PropertyFilters({
             size="sm"
             onClick={handleExportAllWithFilters}
             disabled={isExporting}
-            className="h-9 px-4 text-xs font-bold border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 transition-all rounded-xl shadow-xs shrink-0 flex items-center gap-1.5"
+            className="h-9 px-4 text-xs font-bold border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 transition-all rounded-xl shadow-xs shrink-0 flex items-center gap-1.5 cursor-pointer"
           >
             {isExporting ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <Download className="h-3.5 w-3.5" />
             )}
-            Export รายการที่เลือกตามฟิลเตอร์ (Excel/CSV)
+            {isEn ? "Export Filtered Listings (Excel)" : "Export รายการที่เลือกตามฟิลเตอร์ (Excel/CSV)"}
           </Button>
         </div>
       </div>
@@ -572,7 +575,7 @@ export function PropertyFilters({
                 htmlFor="all-branches-switch"
                 className="text-xs font-semibold text-blue-700 cursor-pointer"
               >
-                ค้นหาทุกสาขา
+                {isEn ? "Search All Branches" : "ค้นหาทุกสาขา"}
               </Label>
             </div>
           )}

@@ -6,6 +6,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { PopularAreaForm } from "./PopularAreaForm";
 import { createPopularArea } from "../popular-areas-actions";
 import { MapPin, Plus } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface CreatePopularAreaDialogProps {
   onSuccess: () => void;
@@ -14,6 +15,9 @@ interface CreatePopularAreaDialogProps {
 export function CreatePopularAreaDialog({
   onSuccess,
 }: CreatePopularAreaDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
 
   const handleSuccess = () => {
@@ -33,10 +37,10 @@ export function CreatePopularAreaDialog({
           </div>
           <div className="flex flex-col text-left">
             <span className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
-              เพิ่มทำเลยอดนิยม
+              {isEn ? "Add Popular Area" : "เพิ่มทำเลยอดนิยม"}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">
-              Add New Popular Area
+              {isEn ? "New Location Entry" : "Add New Popular Area"}
             </span>
           </div>
         </div>
@@ -44,14 +48,14 @@ export function CreatePopularAreaDialog({
       trigger={
         <Button
           size="lg"
-          className="bg-white text-slate-800 hover:bg-white/90 shadow-lg font-bold rounded-xl gap-2 px-6"
+          className="bg-white text-slate-800 hover:bg-white/90 shadow-lg font-bold rounded-xl gap-2 px-6 cursor-pointer"
         >
           <Plus className="h-5 w-5" />
-          เพิ่มทำเล
+          {isEn ? "Add Area" : "เพิ่มทำเล"}
         </Button>
       }
     >
-      <div className="p-6  bg-white rounded-b-2xl">
+      <div className="p-6 bg-white rounded-b-2xl">
         <PopularAreaForm
           onSuccess={handleSuccess}
           onCancel={() => setOpen(false)}
@@ -61,3 +65,4 @@ export function CreatePopularAreaDialog({
     </ResponsiveDialog>
   );
 }
+

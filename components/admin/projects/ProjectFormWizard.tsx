@@ -20,6 +20,7 @@ import { Step3Facilities } from "./wizard-steps/Step3Facilities";
 import { Step4Description } from "./wizard-steps/Step4Description";
 import { Step5SeoSettings } from "./wizard-steps/Step5SeoSettings";
 import { TransitStationSelector } from "./TransitStationSelector";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ProjectFormWizardProps {
   isOpen: boolean;
@@ -38,6 +39,9 @@ export function ProjectFormWizard({
   dbFeatures,
   onSaveSuccess,
 }: ProjectFormWizardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const {
     isSaving,
     isFormDirty,
@@ -204,17 +208,21 @@ export function ProjectFormWizard({
         onOpenChange={(open) => { if (!open) { onClose(false); setIsFormDirty(false); } }}
         confirmOnClose={isFormDirty}
         isLoading={isSaving}
-        loadingText="กำลังบันทึกข้อมูล..."
+        loadingText={isEn ? "Saving project..." : "กำลังบันทึกข้อมูล..."}
         title={
           <span className="flex items-center gap-2 text-slate-900">
             <Building2 className="h-5.5 w-5.5 text-indigo-600" />
-            {project ? `แก้ไขโครงการ: ${project.name.th}` : "สร้างโครงการใหม่"}
+            {project 
+              ? (isEn ? `Edit Project: ${project.name.en || project.name.th}` : `แก้ไขโครงการ: ${project.name.th}`) 
+              : (isEn ? "Create New Project" : "สร้างโครงการใหม่")}
           </span>
         }
         description={
           <div className="space-y-4 mt-2">
             <p className="text-[13px] text-slate-500 font-medium leading-relaxed">
-              กรอกข้อมูลโครงการทีละขั้นตอนเพื่อให้ผูกกับรายการทรัพย์สินและสร้างหน้า Landing Page สำหรับทำ SEO
+              {isEn
+                ? "Complete project information step-by-step to link property listings and generate SEO landing pages."
+                : "กรอกข้อมูลโครงการทีละขั้นตอนเพื่อให้ผูกกับรายการทรัพย์สินและสร้างหน้า Landing Page สำหรับทำ SEO"}
             </p>
             <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-100/50">
               <div className="flex items-center justify-between relative">
@@ -226,7 +234,7 @@ export function ProjectFormWizard({
                         if (nameTh.trim() || nameEn.trim()) {
                           setFormStep(step);
                         } else {
-                          toast.error("กรุณาระบุชื่อโครงการขั้นต้นก่อนสลับขั้นตอนครับ");
+                          toast.error(isEn ? "Please enter a project name first" : "กรุณาระบุชื่อโครงการขั้นต้นก่อนสลับขั้นตอนครับ");
                         }
                       }}
                       className={cn(
@@ -241,7 +249,15 @@ export function ProjectFormWizard({
                       {step}
                     </button>
                     <span className="text-[10px] mt-1.5 font-bold text-slate-500 hidden sm:inline">
-                      {step === 1 ? "ข้อมูลทั่วไป" : step === 2 ? "ที่ตั้ง & การเดินทาง" : step === 3 ? "สิ่งอำนวยความสะดวก" : step === 4 ? "รายละเอียด" : "SEO & ตั้งค่า"}
+                      {step === 1
+                        ? (isEn ? "General" : "ข้อมูลทั่วไป")
+                        : step === 2
+                        ? (isEn ? "Location" : "ที่ตั้ง & การเดินทาง")
+                        : step === 3
+                        ? (isEn ? "Facilities" : "สิ่งอำนวยความสะดวก")
+                        : step === 4
+                        ? (isEn ? "Description" : "รายละเอียด")
+                        : (isEn ? "SEO & Config" : "SEO & ตั้งค่า")}
                     </span>
                   </div>
                 ))}
@@ -264,7 +280,7 @@ export function ProjectFormWizard({
               disabled={isSaving}
               className="w-full sm:w-auto h-11 sm:h-10.5 rounded-xl font-bold border-slate-200 text-slate-650 cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             
             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -277,7 +293,7 @@ export function ProjectFormWizard({
                   className="w-full sm:w-auto h-11 sm:h-10.5 rounded-xl font-semibold border-slate-200 text-slate-650 cursor-pointer flex items-center gap-1"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  ย้อนกลับ
+                  {isEn ? "Back" : "ย้อนกลับ"}
                 </Button>
               )}
               
@@ -288,12 +304,12 @@ export function ProjectFormWizard({
                     if (nameTh.trim() && nameEn.trim()) {
                       setFormStep(prev => prev + 1);
                     } else {
-                      toast.error("กรุณาระบุชื่อโครงการก่อนสลับขั้นตอนครับ");
+                      toast.error(isEn ? "Please enter project names in Thai and English" : "กรุณาระบุชื่อโครงการก่อนสลับขั้นตอนครับ");
                     }
                   }}
                   className="w-full sm:w-auto h-11 sm:h-10.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md shadow-indigo-500/20 cursor-pointer flex items-center gap-1"
                 >
-                  ถัดไป
+                  {isEn ? "Next" : "ถัดไป"}
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               ) : (
@@ -306,12 +322,12 @@ export function ProjectFormWizard({
                   {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      กำลังบันทึก...
+                      {isEn ? "Saving..." : "กำลังบันทึก..."}
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="h-4 w-4" />
-                      บันทึกโครงการ
+                      {isEn ? "Save Project" : "บันทึกโครงการ"}
                     </>
                   )}
                 </Button>
@@ -336,3 +352,4 @@ export function ProjectFormWizard({
     </>
   );
 }
+

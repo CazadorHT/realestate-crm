@@ -4,20 +4,28 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { User, Trophy, BarChart2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AgentPerformanceData } from "@/features/dashboard/queries";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface AgentPerformanceProps {
   data: AgentPerformanceData[];
 }
 
 export function AgentPerformance({ data }: AgentPerformanceProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Card className="border-none shadow-soft bg-white/50 backdrop-blur-sm overflow-hidden h-full">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-amber-500" />
-          <CardTitle className="text-lg font-semibold text-slate-800">Agent Performance</CardTitle>
+          <CardTitle className="text-lg font-semibold text-slate-800">
+            {isEn ? "Agent Performance" : "ผลงานของเอเจนท์ (Agent Performance)"}
+          </CardTitle>
         </div>
-        <CardDescription>ผู้นำด้านการจัดการ Lead และปิดการขาย (Leaderboard)</CardDescription>
+        <CardDescription>
+          {isEn ? "Top performers in lead management & deal closures (Leaderboard)" : "ผู้นำด้านการจัดการ Lead และปิดการขาย (Leaderboard)"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-3 mt-4">
@@ -41,7 +49,7 @@ export function AgentPerformance({ data }: AgentPerformanceProps) {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-700">{agent.name}</p>
-                  <p className="text-[10px] text-slate-400 font-medium">BRANCH ASSIGNED AGENT</p>
+                  <p className="text-[10px] text-slate-400 font-medium">{isEn ? "BRANCH ASSIGNED AGENT" : "เจ้าหน้าที่ประจำสาขา"}</p>
                 </div>
               </div>
 
@@ -62,13 +70,15 @@ export function AgentPerformance({ data }: AgentPerformanceProps) {
           {data.length === 0 && (
             <div className="py-12 flex flex-col items-center justify-center text-center">
                <User className="h-10 w-10 text-slate-200 mb-2" />
-               <p className="text-sm text-slate-400 italic">— ยังไม่มีข้อมูลเจ้าหน้าที่สาขาในระบบขณะนี้ —</p>
+               <p className="text-sm text-slate-400 italic">
+                 {isEn ? "— No agent performance data available yet —" : "— ยังไม่มีข้อมูลเจ้าหน้าที่สาขาในระบบขณะนี้ —"}
+               </p>
             </div>
           )}
           
           <div className="mt-2 text-center">
               <button className="text-[11px] font-bold text-blue-500 hover:text-blue-700 transition-colors uppercase tracking-widest flex items-center gap-1 mx-auto">
-                 <BarChart2 className="h-3 w-3" /> View All Agents
+                 <BarChart2 className="h-3 w-3" /> {isEn ? "View All Agents" : "ดูเอเจนท์ทั้งหมด"}
               </button>
           </div>
         </div>
@@ -76,3 +86,4 @@ export function AgentPerformance({ data }: AgentPerformanceProps) {
     </Card>
   );
 }
+

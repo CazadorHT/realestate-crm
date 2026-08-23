@@ -4,19 +4,12 @@ import React from "react";
 import { StatsCard } from "./StatsCard";
 import { DollarSign, TrendingUp, Briefcase, PieChart as PieChartIcon } from "lucide-react";
 import { ExecutiveStats } from "../../executive-queries";
-
-interface PerformanceStatsProps {
-  stats: ExecutiveStats;
-  compareStats?: ExecutiveStats | null;
-  allBranches: { id: string; name: string }[];
-  compareTenantId?: string | null;
-}
-
 import { 
   calculateTrendPercentage, 
   calculateWeightedEfficiencyScore, 
   getComparisonDisplayLabel 
 } from "../../executive-utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PerformanceStatsProps {
   stats: ExecutiveStats;
@@ -31,6 +24,9 @@ export function PerformanceStats({
   allBranches, 
   compareTenantId 
 }: PerformanceStatsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   // BI Logic Delegation
   const compareLabel = getComparisonDisplayLabel(compareTenantId, allBranches);
   
@@ -43,30 +39,30 @@ export function PerformanceStats({
   return (
     <div id="tour-stats" className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       <StatsCard
-        title="ยอดขายรวม (Revenue)"
+        title={isEn ? "Total Revenue" : "ยอดขายรวม (Revenue)"}
         value={stats.totalRevenue}
         icon={DollarSign}
-        description={`รวมยอดขายและยอดเช่าทั้งหมด (${stats.totalDeals} ดีล)`}
+        description={isEn ? `Gross sales & leases combined (${stats.totalDeals} deals)` : `รวมยอดขายและยอดเช่าทั้งหมด (${stats.totalDeals} ดีล)`}
         trend={revenueTrend.text}
         trendValue={revenueTrend.value}
         color="blue"
         compareValue={compareStats?.totalRevenue}
       />
       <StatsCard
-        title="ค่าคอมมิชชั่นรวม"
+        title={isEn ? "Total Commission" : "ค่าคอมมิชชั่นรวม"}
         value={stats.totalCommission}
         icon={TrendingUp}
-        description="รายได้จริงจากค่าคอมมิชชั่น"
+        description={isEn ? "Net earned agency commission" : "รายได้จริงจากค่าคอมมิชชั่น"}
         trend={commissionTrend.text}
         trendValue={commissionTrend.value}
         color="emerald"
         compareValue={compareStats?.totalCommission}
       />
       <StatsCard
-        title="จำนวนธุรกรรมรวม"
+        title={isEn ? "Total Transactions" : "จำนวนธุรกรรมรวม"}
         value={stats.totalDeals}
         icon={Briefcase}
-        description={`ยอดขาย ${stats.salesCount} | ยอดเช่า ${stats.rentalCount}`}
+        description={isEn ? `Sales: ${stats.salesCount} | Leases: ${stats.rentalCount}` : `ยอดขาย ${stats.salesCount} | ยอดเช่า ${stats.rentalCount}`}
         trend={dealsTrend.text}
         trendValue={dealsTrend.value}
         color="indigo"
@@ -77,7 +73,7 @@ export function PerformanceStats({
         title="Performance Score"
         value={scoreData.score}
         icon={PieChartIcon}
-        description="ดัชนีชี้วัดประสิทธิภาพรายปี"
+        description={isEn ? "Annual executive efficiency index" : "ดัชนีชี้วัดประสิทธิภาพรายปี"}
         trend={scoreData.trend}
         trendValue={scoreData.value}
         color="amber"

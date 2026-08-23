@@ -4,8 +4,12 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Cpu, Sparkles, Activity, Zap, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function AiControlTab() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -22,7 +26,7 @@ export function AiControlTab() {
                   AI Control Center
                 </CardTitle>
                 <CardDescription className="text-indigo-50 font-medium italic">
-                  สถานะการทำงานของปัญญาประดิษฐ์ในระบบ
+                  {isEn ? "Artificial intelligence system runtime & orchestrator" : "สถานะการทำงานของปัญญาประดิษฐ์ในระบบ"}
                 </CardDescription>
               </div>
             </div>
@@ -70,7 +74,7 @@ export function AiControlTab() {
                   AI Monitor
                 </CardTitle>
                 <CardDescription className="text-[13px] font-medium text-slate-500 truncate italic">
-                  ตรวจสอบสถานะการทำงาน
+                  {isEn ? "System status & telemetry" : "ตรวจสอบสถานะการทำงาน"}
                 </CardDescription>
               </div>
               <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
@@ -89,7 +93,7 @@ export function AiControlTab() {
                   AI Model Config
                 </CardTitle>
                 <CardDescription className="text-[13px] font-medium text-slate-500 truncate italic">
-                  จัดการ Model และ Prompt
+                  {isEn ? "Manage models and prompts" : "จัดการ Model และ Prompt"}
                 </CardDescription>
               </div>
               <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-purple-500 transition-colors" />
@@ -108,7 +112,7 @@ export function AiControlTab() {
                   SmartMatch
                 </CardTitle>
                 <CardDescription className="text-[13px] font-medium text-slate-500 truncate italic">
-                  ตั้งค่าแนะนำทรัพย์อัตโนมัติ
+                  {isEn ? "Configure automated property matching" : "ตั้งค่าแนะนำทรัพย์อัตโนมัติ"}
                 </CardDescription>
               </div>
               <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-amber-500 transition-colors" />
@@ -119,3 +123,4 @@ export function AiControlTab() {
     </div>
   );
 }
+

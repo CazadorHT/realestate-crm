@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { uploadServiceImageAction } from "@/features/services/actions";
 import { Area } from "react-easy-crop";
 import getCroppedImg from "@/lib/utils/cropImage";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface UseImageUploadProps {
   mode: "single" | "gallery";
@@ -13,6 +14,8 @@ interface UseImageUploadProps {
 }
 
 export function useImageUpload({ mode, onChange, value }: UseImageUploadProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState<{ [key: string]: number }>({});
   
@@ -28,7 +31,7 @@ export function useImageUpload({ mode, onChange, value }: UseImageUploadProps) {
 
   const handleSingleUpload = async (file: File) => {
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 2MB)");
+      toast.error(isEn ? "File size too large (max 2MB)" : "ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 2MB)");
       return;
     }
     const reader = new FileReader();
@@ -44,7 +47,7 @@ export function useImageUpload({ mode, onChange, value }: UseImageUploadProps) {
     
     const uploadPromises = files.map(async (file, index) => {
       if (file.size > 2 * 1024 * 1024) {
-        toast.error(`${file.name} มีขนาดใหญ่เกินไป (สูงสุด 2MB)`);
+        toast.error(isEn ? `${file.name} is too large (max 2MB)` : `${file.name} มีขนาดใหญ่เกินไป (สูงสุด 2MB)`);
         return null;
       }
       const fileId = `${file.name}-${index}`;
@@ -60,11 +63,11 @@ export function useImageUpload({ mode, onChange, value }: UseImageUploadProps) {
           setUploadProgress(prev => ({ ...prev, [fileId]: 100 }));
           return res.data.publicUrl;
         } else {
-          toast.error(`ไม่สามารถอัปโหลด ${file.name} ได้`);
+          toast.error(isEn ? `Failed to upload ${file.name}` : `ไม่สามารถอัปโหลด ${file.name} ได้`);
           return null;
         }
       } catch (error) {
-        toast.error(`เกิดข้อผิดพลาดในการอัปโหลด ${file.name}`);
+        toast.error(isEn ? `Error uploading ${file.name}` : `เกิดข้อผิดพลาดในการอัปโหลด ${file.name}`);
         return null;
       }
     });
@@ -75,7 +78,11 @@ export function useImageUpload({ mode, onChange, value }: UseImageUploadProps) {
     if (newUrls.length > 0) {
       const currentGallery = Array.isArray(value) ? value : [];
       onChange([...currentGallery, ...newUrls]);
-      toast.success(`อัปโหลดสำเร็จ ${newUrls.length} รูป ✨`);
+      toast.success(
+        isEn
+          ? `Uploaded ${newUrls.length} image(s) successfully ✨`
+          : `อัปโหลดสำเร็จ ${newUrls.length} รูป ✨`
+      );
     }
     
     setIsUploading(false);
@@ -90,7 +97,7 @@ export function useImageUpload({ mode, onChange, value }: UseImageUploadProps) {
     
     try {
       const blob = await getCroppedImg(imageToCrop, croppedAreaPixels);
-      if (!blob) throw new Error("ไม่สามารถประมวลผลรูปภาพได้");
+      if (!blob) throw new Error(isEn ? "Failed to process image" : "ไม่สามารถประมวลผลรูปภาพได้");
       
       const file = new File([blob], cropFile.name, { type: "image/jpeg" });
       
@@ -101,18 +108,19 @@ export function useImageUpload({ mode, onChange, value }: UseImageUploadProps) {
       
       if (res.success && res.data?.publicUrl) {
         onChange(res.data.publicUrl);
-        toast.success("อัปโหลดรูปภาพสำเร็จ ✨");
+        toast.success(isEn ? "Image uploaded successfully ✨" : "อัปโหลดรูปภาพสำเร็จ ✨");
       } else {
-        toast.error(res.message || "การอัปโหลดขัดข้อง");
+        toast.error(res.message || (isEn ? "Upload failed" : "การอัปโหลดขัดข้อง"));
       }
     } catch (error: any) {
-      toast.error(error.message || "เกิดข้อผิดพลาดในการประมวลผลรูปภาพ");
+      toast.error(error.message || (isEn ? "Error processing image" : "เกิดข้อผิดพลาดในการประมวลผลรูปภาพ"));
     } finally {
       setIsUploading(false);
       setCropFile(null);
       setCroppedAreaPixels(null);
     }
   };
+
 
   return {
     isUploading,

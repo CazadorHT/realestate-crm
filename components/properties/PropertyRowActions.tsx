@@ -44,6 +44,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface SocialActionResult {
   success: boolean;
   message: string;
@@ -70,6 +72,8 @@ export function PropertyRowActions({
   className?: string;
   cannotEdit?: boolean;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isMobile = useIsMobile();
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -126,19 +130,19 @@ export function PropertyRowActions({
   const copyPublicLink = async () => {
     const url = `${window.location.origin}/properties/${slug || id}`;
     await navigator.clipboard.writeText(url);
-    toast.success("คัดลอกลิงก์หน้า Public แล้ว");
+    toast.success(isEn ? "Public link copied to clipboard" : "คัดลอกลิงก์หน้า Public แล้ว");
   };
 
   const handleRenew = async () => {
     const promise = renewPropertyAction(id);
 
     toast.promise(promise, {
-      loading: "กำลังดันประกาศ (Renew)...",
+      loading: isEn ? "Renewing listing..." : "กำลังดันประกาศ (Renew)...",
       success: (res) => {
-        if (res.success) return "ดันประกาศสำเร็จ";
-        throw new Error(res.message || "เกิดข้อผิดพลาด");
+        if (res.success) return isEn ? "Listing renewed successfully" : "ดันประกาศสำเร็จ";
+        throw new Error(res.message || (isEn ? "Error renewing" : "เกิดข้อผิดพลาด"));
       },
-      error: (err) => err.message || "เกิดข้อผิดพลาดในการดันประกาศ",
+      error: (err) => err.message || (isEn ? "Failed to renew listing" : "เกิดข้อผิดพลาดในการดันประกาศ"),
     });
   };
 
@@ -152,11 +156,11 @@ export function PropertyRowActions({
   const onConfirmDelete = async () => {
     const res = await softDeleteProperty(id);
     if (res.success) {
-      toast.success("ย้ายทรัพย์ลงถังขยะเรียบร้อยแล้ว");
+      toast.success(isEn ? "Property moved to trash" : "ย้ายทรัพย์ลงถังขยะเรียบร้อยแล้ว");
       handleSuccessFeedback();
     } else {
-      toast.error(res.error || "เกิดข้อผิดพลาดในการลบ");
-      throw new Error(res.error || "เกิดข้อผิดพลาดในการลบ");
+      toast.error(res.error || (isEn ? "Error deleting property" : "เกิดข้อผิดพลาดในการลบ"));
+      throw new Error(res.error || (isEn ? "Error deleting property" : "เกิดข้อผิดพลาดในการลบ"));
     }
   };
 
@@ -166,13 +170,13 @@ export function PropertyRowActions({
         className="xl:w-2xl"
         open={isMenuOpen}
         onOpenChange={setIsMenuOpen}
-        title={title || "จัดการทรัพย์สิน"}
+        title={title || (isEn ? "Manage Property" : "จัดการทรัพย์สิน")}
         trigger={
           <Button
             ref={triggerRef}
             variant="ghost"
-            className={cn("h-8 w-8 p-0", className)}
-            title="เปิดเมนู"
+            className={cn("h-8 w-8 p-0 cursor-pointer", className)}
+            title={isEn ? "Open menu" : "เปิดเมนู"}
           >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
@@ -182,19 +186,19 @@ export function PropertyRowActions({
           {/* Management Section */}
           <div className="grid grid-cols-2 gap-2 p-1">
             <p className="col-span-2 text-xs font-medium text-slate-400 uppercase tracking-wider px-1 mb-1">
-              การจัดการทั่วไป
+              {isEn ? "General Management" : "การจัดการทั่วไป"}
             </p>
 
             {/* Action: View */}
             <Button
               variant="outline"
-              className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50 transition-all font-medium"
+              className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50 transition-all font-medium cursor-pointer"
               asChild
               onClick={() => setIsMenuOpen(false)}
             >
               <Link href={`/protected/properties/${id}`}>
                 <Eye className="mr-3 h-5 w-5" />
-                <span className="text-[14px]">ดูข้อมูล</span>
+                <span className="text-[14px]">{isEn ? "View Details" : "ดูข้อมูล"}</span>
               </Link>
             </Button>
 
@@ -210,25 +214,25 @@ export function PropertyRowActions({
                         disabled
                       >
                         <Edit className="mr-3 h-5 w-5 text-slate-300" />
-                        <span className="text-[14px]">แก้ไข</span>
+                        <span className="text-[14px]">{isEn ? "Edit" : "แก้ไข"}</span>
                       </Button>
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
-                    ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้
+                    {isEn ? "Cannot edit properties owned by other agents" : "ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             ) : (
               <Button
                 variant="outline"
-                className="justify-start h-12 text-slate-700! border-slate-200 hover:bg-slate-50 transition-all font-medium"
+                className="justify-start h-12 text-slate-700! border-slate-200 hover:bg-slate-50 transition-all font-medium cursor-pointer"
                 asChild
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Link href={`/protected/properties/${id}/edit`}>
                   <Edit className="mr-3 h-5 w-5 text-slate-400" />
-                  <span className="text-[14px]">แก้ไข</span>
+                  <span className="text-[14px]">{isEn ? "Edit" : "แก้ไข"}</span>
                 </Link>
               </Button>
             )}
@@ -236,14 +240,14 @@ export function PropertyRowActions({
             {/* Action: Copy Link */}
             <Button
               variant="outline"
-              className="justify-start h-12 text-slate-700! border-slate-200 hover:bg-slate-50 transition-all font-medium"
+              className="justify-start h-12 text-slate-700! border-slate-200 hover:bg-slate-50 transition-all font-medium cursor-pointer"
               onClick={() => {
                 setIsMenuOpen(false);
                 copyPublicLink();
               }}
             >
               <Share2 className="mr-3 h-5 w-5 text-slate-400" />
-              <span className="text-[14px]">คัดลอกลิงก์</span>
+              <span className="text-[14px]">{isEn ? "Copy Link" : "คัดลอกลิงก์"}</span>
             </Button>
 
             {/* Action: Renew */}
@@ -272,19 +276,19 @@ export function PropertyRowActions({
                           <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
                           <path d="M16 16h5v5" />
                         </svg>
-                        <span className="text-[14px]">ดันประกาศ</span>
+                        <span className="text-[14px]">{isEn ? "Renew Listing" : "ดันประกาศ"}</span>
                       </Button>
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
-                    ไม่สามารถดันประกาศทรัพย์สินของผู้อื่นได้
+                    {isEn ? "Cannot renew properties owned by other agents" : "ไม่สามารถดันประกาศทรัพย์สินของผู้อื่นได้"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             ) : (
               <Button
                 variant="outline"
-                className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50 transition-all font-medium"
+                className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50 transition-all font-medium cursor-pointer"
                 onClick={() => {
                   setIsMenuOpen(false);
                   handleRenew();
@@ -305,7 +309,7 @@ export function PropertyRowActions({
                   <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
                   <path d="M16 16h5v5" />
                 </svg>
-                <span className="text-[14px]">ดันประกาศ</span>
+                <span className="text-[14px]">{isEn ? "Renew Listing" : "ดันประกาศ"}</span>
               </Button>
             )}
           </div>
@@ -313,11 +317,11 @@ export function PropertyRowActions({
           {/* Social Actions Group */}
           <div className="grid grid-cols-2 gap-2 p-1">
             <p className="col-span-2 text-xs font-medium text-slate-400 uppercase tracking-wider px-1 mb-1">
-              การแชร์และโปรโมท
+              {isEn ? "Social & Sharing" : "การแชร์และโปรโมท"}
             </p>
             <Button
               variant="outline"
-              className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50"
+              className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50 cursor-pointer"
               disabled={postStatus["FACEBOOK"] === "loading"}
               onClick={() => {
                 if (isMobile) {
@@ -338,7 +342,7 @@ export function PropertyRowActions({
 
             <Button
               variant="outline"
-              className="justify-start h-12 text-pink-600! border-pink-100 hover:bg-pink-50"
+              className="justify-start h-12 text-pink-600! border-pink-100 hover:bg-pink-50 cursor-pointer"
               disabled={postStatus["INSTAGRAM"] === "loading"}
               onClick={() => {
                 if (isMobile) {
@@ -359,7 +363,7 @@ export function PropertyRowActions({
 
             <Button
               variant="outline"
-              className="justify-start h-12 text-green-600! border-green-100 hover:bg-green-50"
+              className="justify-start h-12 text-green-600! border-green-100 hover:bg-green-50 cursor-pointer"
               disabled={postStatus["LINE"] === "loading"}
               onClick={() => {
                 if (isMobile) {
@@ -380,7 +384,7 @@ export function PropertyRowActions({
 
             <Button
               variant="outline"
-              className="justify-start h-12 text-slate-900! border-slate-200 hover:bg-slate-50"
+              className="justify-start h-12 text-slate-900! border-slate-200 hover:bg-slate-50 cursor-pointer"
               disabled={postStatus["TIKTOK"] === "loading"}
               onClick={() => {
                 if (isMobile) {
@@ -406,14 +410,14 @@ export function PropertyRowActions({
               {showTransferButton && (
                 <Button
                   variant="ghost"
-                  className="w-full justify-start h-11 px-4 text-[15px] font-medium text-blue-600! hover:bg-blue-50 transition-colors"
+                  className="w-full justify-start h-11 px-4 text-[15px] font-medium text-blue-600! hover:bg-blue-50 transition-colors cursor-pointer"
                   onClick={() => {
                     setIsMenuOpen(false);
                     setNextAction(() => () => setShowTransferDialog(true));
                   }}
                 >
                   <ArrowRightLeft className="mr-3 h-5 w-5" />
-                  ย้ายสาขา
+                  {isEn ? "Transfer Branch" : "ย้ายสาขา"}
                 </Button>
               )}
 
@@ -439,7 +443,7 @@ export function PropertyRowActions({
           open={showTransferDialog}
           onOpenChangeAction={setShowTransferDialog}
           entityId={id}
-          entityName={title || "ทรัพย์สิน"}
+          entityName={title || (isEn ? "Property" : "ทรัพย์สิน")}
           currentTenantId={tenantId}
           onTransferAction={transferPropertyBranchAction}
         />
@@ -462,17 +466,19 @@ export function PropertyRowActions({
           setShowDeleteDialog(val);
           if (!val) setIsDeleteConfirmed(false);
         }}
-        title="ยืนยันการลบ"
+        title={isEn ? "Confirm Delete" : "ยืนยันการลบ"}
         description={
           <div className="space-y-4">
             <div className="space-y-2">
               <p>
-                คุณต้องการย้ายทรัพย์นี้ลงถังขยะใช่หรือไม่?
-                คุณสามารถกู้คืนได้ภายหลังในหน้าถังขยะ (Trash)
+                {isEn
+                  ? "Are you sure you want to move this property to the trash? You can restore it later from Trash."
+                  : "คุณต้องการย้ายทรัพย์นี้ลงถังขยะใช่หรือไม่? คุณสามารถกู้คืนได้ภายหลังในหน้าถังขยะ (Trash)"}
               </p>
               <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 font-medium leading-relaxed">
-                ⚠️ หมายเหตุ: รายการที่มีสถานะ ขายแล้ว/เช่าแล้ว
-                หรือมีดีลที่ปิดแล้ว ไม่สามารถลบได้
+                {isEn
+                  ? "⚠️ Note: Sold/Rented listings or closed deals cannot be deleted."
+                  : "⚠️ หมายเหตุ: รายการที่มีสถานะ ขายแล้ว/เช่าแล้ว หรือมีดีลที่ปิดแล้ว ไม่สามารถลบได้"}
               </p>
             </div>
 
@@ -488,12 +494,14 @@ export function PropertyRowActions({
                 htmlFor={`confirm-delete-${id}`}
                 className="text-sm font-medium text-slate-700 cursor-pointer select-none"
               >
-                ยืนยันความต้องการที่จะลบรายการนี้จริงๆ
+                {isEn
+                  ? "I confirm that I want to delete this listing"
+                  : "ยืนยันความต้องการที่จะลบรายการนี้จริงๆ"}
               </Label>
             </div>
           </div>
         }
-        confirmText="ย้ายลงถังขยะ"
+        confirmText={isEn ? "Move to Trash" : "ย้ายลงถังขยะ"}
         confirmDisabled={!isDeleteConfirmed}
         variant="destructive"
         onConfirm={onConfirmDelete}

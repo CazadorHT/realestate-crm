@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, TrendingUp, AlertTriangle, Lightbulb } from "lucide-react";
 import { ExecutiveData } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ExecutiveAiInsightsProps {
   data: ExecutiveData[];
@@ -15,6 +16,9 @@ export function ExecutiveAiInsights({
   totalLeads,
   totalDeals,
 }: ExecutiveAiInsightsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   // 🛡️ Safe Data Analysis Logic
   if (data.length === 0) return null;
 
@@ -37,7 +41,7 @@ export function ExecutiveAiInsights({
       <CardHeader className="pb-3 border-b border-white/10">
         <CardTitle className="text-sm font-semibold flex items-center gap-2 text-blue-400 uppercase tracking-widest">
           <Sparkles className="h-4 w-4 animate-pulse" />
-          AI EXECUTIVE BRIEFING
+          {isEn ? "AI Executive Briefing" : "AI Executive Briefing"}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
@@ -45,21 +49,33 @@ export function ExecutiveAiInsights({
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
             <TrendingUp className="h-3.5 w-3.5" />
-            บทวิเคราะห์ภาพรวม
+            {isEn ? "Executive Overview" : "บทวิเคราะห์ภาพรวม"}
           </div>
           <p className="text-sm text-slate-200 leading-relaxed font-medium">
-            ปัจจุบันองค์กรมีอัตราการปิดดีลเฉลี่ยที่{" "}
-            <span className="text-emerald-400 font-semibold">
-              {avgConversion.toFixed(1)}%
-            </span>
-            โดยสาขา{" "}
-            <span className="text-blue-400 font-semibold">
-              {topBranch?.tenantName}
-            </span>{" "}
-            มีประสิทธิภาพสูงสุด ขณะที่ภาพรวมลีด{" "}
-            {totalLeads > 50
-              ? "จัดอยู่ในเกณฑ์ที่น่าพอใจ"
-              : "แนะนำให้เร่งการทำตลาด"}
+            {isEn ? (
+              <>
+                Organization average deal closure rate is currently at{" "}
+                <span className="text-emerald-400 font-semibold">{avgConversion.toFixed(1)}%</span>.{" "}
+                Branch <span className="text-blue-400 font-semibold">{topBranch?.tenantName}</span>{" "}
+                demonstrates top conversion efficiency, while total lead volume is{" "}
+                {totalLeads > 50 ? "performing satisfactorily" : "recommended for targeted marketing boost"}.
+              </>
+            ) : (
+              <>
+                ปัจจุบันองค์กรมีอัตราการปิดดีลเฉลี่ยที่{" "}
+                <span className="text-emerald-400 font-semibold">
+                  {avgConversion.toFixed(1)}%
+                </span>{" "}
+                โดยสาขา{" "}
+                <span className="text-blue-400 font-semibold">
+                  {topBranch?.tenantName}
+                </span>{" "}
+                มีประสิทธิภาพสูงสุด ขณะที่ภาพรวมลีด{" "}
+                {totalLeads > 50
+                  ? "จัดอยู่ในเกณฑ์ที่น่าพอใจ"
+                  : "แนะนำให้เร่งการทำตลาด"}
+              </>
+            )}
           </p>
         </div>
 
@@ -67,15 +83,24 @@ export function ExecutiveAiInsights({
         <div className="p-4 bg-white/5 rounded-xl border border-white/5 space-y-2 group hover:bg-white/10 transition-colors">
           <div className="flex items-center gap-2 text-xs font-semibold text-amber-500 uppercase tracking-wider">
             <AlertTriangle className="h-3.5 w-3.5" />
-            Strategic Warning
+            {isEn ? "Strategic Warning" : "Strategic Warning"}
           </div>
           <p className="text-xs text-slate-300 leading-relaxed">
-            สาขา{" "}
-            <span className="text-rose-400 font-semibold">
-              {bottomBranch?.tenantName}
-            </span>{" "}
-            มีประสิทธิภาพต่ำกว่าเกณฑ์เฉลี่ย
-            ควรตรวจสอบกระบวนการโอนย้ายลีดและประสิทธิภาพเซลล์รายบุคคลเป็นการเร่งด่วน
+            {isEn ? (
+              <>
+                Branch <span className="text-rose-400 font-semibold">{bottomBranch?.tenantName}</span>{" "}
+                is performing below historical benchmark. Recommend reviewing lead distribution workflows and individual sales agent performance.
+              </>
+            ) : (
+              <>
+                สาขา{" "}
+                <span className="text-rose-400 font-semibold">
+                  {bottomBranch?.tenantName}
+                </span>{" "}
+                มีประสิทธิภาพต่ำกว่าเกณฑ์เฉลี่ย
+                ควรตรวจสอบกระบวนการโอนย้ายลีดและประสิทธิภาพเซลล์รายบุคคลเป็นการเร่งด่วน
+              </>
+            )}
           </p>
         </div>
 
@@ -83,18 +108,20 @@ export function ExecutiveAiInsights({
         <div className="space-y-3 pt-2">
           <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider">
             <Lightbulb className="h-3.5 w-3.5" />
-            ข้อเสนอแนะเชิงกลยุทธ์
+            {isEn ? "Strategic Recommendations" : "ข้อเสนอแนะเชิงกลยุทธ์"}
           </div>
           <ul className="space-y-2.5">
             <li className="flex items-start gap-2 text-[11px] text-slate-400 italic">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-              ศึกษา Best Practice จาก {topBranch?.tenantName}{" "}
-              เพื่อปรับใช้กับสาขาอื่นๆ
+              {isEn
+                ? `Adopt and share best practices from ${topBranch?.tenantName} across other branch teams.`
+                : `ศึกษา Best Practice จาก ${topBranch?.tenantName} เพื่อปรับใช้กับสาขาอื่นๆ`}
             </li>
             <li className="flex items-start gap-2 text-[11px] text-slate-400 italic">
               <div className="h-1.5 w-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-              พิจารณาการขยายงบการตลาดในสาขาที่มี Conversion Rate สูง (High
-              Efficiency)
+              {isEn
+                ? "Consider increasing marketing allocation in high-conversion branches."
+                : "พิจารณาการขยายงบการตลาดในสาขาที่มี Conversion Rate สูง (High Efficiency)"}
             </li>
           </ul>
         </div>
@@ -102,3 +129,4 @@ export function ExecutiveAiInsights({
     </Card>
   );
 }
+

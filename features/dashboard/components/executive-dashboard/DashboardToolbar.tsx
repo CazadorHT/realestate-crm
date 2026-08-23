@@ -22,6 +22,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ExecutiveAiInsights } from "../../executive-ai-actions";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DashboardToolbarProps {
   allBranches: { id: string; name: string }[];
@@ -45,6 +46,8 @@ export function DashboardToolbar({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   // Year Selection Logic
   const currentYear = new Date().getFullYear();
@@ -82,22 +85,22 @@ export function DashboardToolbar({
                 value={selectedTenantId}
                 onValueChange={(val) => updateParam("tenantId", val)}
                 options={[
-                  { value: "ALL", label: "ทุกสาขา (Overall)" },
+                  { value: "ALL", label: isEn ? "All Branches (Overall)" : "ทุกสาขา (Overall)" },
                   ...allBranches.map((b) => ({ value: b.id, label: b.name })),
                 ]}
                 trigger={
                   <Button
                     variant="outline"
-                    className="w-full h-10 sm:h-11 justify-start gap-2 sm:gap-3 bg-white border-slate-200 shadow-xs rounded-xl px-3 sm:px-4 font-semibold hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/30 transition-all text-xs sm:text-sm"
+                    className="w-full h-10 sm:h-11 justify-start gap-2 sm:gap-3 bg-white border-slate-200 shadow-xs rounded-xl px-3 sm:px-4 font-semibold hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/30 transition-all text-xs sm:text-sm cursor-pointer"
                   >
                     <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
                     <span className="truncate">
                       {allBranches.find((b) => b.id === selectedTenantId)
-                        ?.name || "ทุกสาขา (Overall)"}
+                        ?.name || (isEn ? "All Branches (Overall)" : "ทุกสาขา (Overall)")}
                     </span>
                   </Button>
                 }
-                title="เลือกสาขา"
+                title={isEn ? "Select Branch" : "เลือกสาขา"}
               />
             </div>
 
@@ -107,10 +110,10 @@ export function DashboardToolbar({
                 value={compareTenantId || "none"}
                 onValueChange={(val) => updateParam("compareId", val)}
                 options={[
-                  { value: "none", label: "-- ไม่เปรียบเทียบ --" },
+                  { value: "none", label: isEn ? "-- No Comparison --" : "-- ไม่เปรียบเทียบ --" },
                   {
                     value: "ALL",
-                    label: "ทุกสาขา (Overall)",
+                    label: isEn ? "All Branches (Overall)" : "ทุกสาขา (Overall)",
                     disabled: selectedTenantId === "ALL",
                   },
                   ...allBranches
@@ -120,18 +123,18 @@ export function DashboardToolbar({
                 trigger={
                   <Button
                     variant="outline"
-                    className="w-full h-10 sm:h-11 justify-start gap-2 sm:gap-3 bg-white border-indigo-100 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 shadow-xs rounded-xl px-3 sm:px-4 font-semibold hover:bg-indigo-50/50 transition-all text-xs sm:text-sm"
+                    className="w-full h-10 sm:h-11 justify-start gap-2 sm:gap-3 bg-white border-indigo-100 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 shadow-xs rounded-xl px-3 sm:px-4 font-semibold hover:bg-indigo-50/50 transition-all text-xs sm:text-sm cursor-pointer"
                   >
                     <PieChartIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-400" />
                     <span className="truncate">
                       {compareTenantId === "ALL"
-                        ? "ทุกสาขา (Overall)"
+                        ? (isEn ? "All Branches (Overall)" : "ทุกสาขา (Overall)")
                         : allBranches.find((b) => b.id === compareTenantId)
-                            ?.name || "เปรียบเทียบกับ..."}
+                            ?.name || (isEn ? "Compare with..." : "เปรียบเทียบกับ...")}
                     </span>
                   </Button>
                 }
-                title="เปรียบเทียบข้อมูล"
+                title={isEn ? "Compare Data" : "เปรียบเทียบข้อมูล"}
               />
             </div>
           </>
@@ -146,18 +149,18 @@ export function DashboardToolbar({
             onValueChange={handleYearChange}
             options={years.map((y) => ({
               value: y,
-              label: `ปี ${parseInt(y) + 543}`,
+              label: isEn ? `Year ${y}` : `ปี ${parseInt(y) + 543}`,
             }))}
             trigger={
               <Button
                 variant="outline"
-                className="w-full sm:w-auto h-10 sm:h-11 gap-2 sm:gap-3 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 border-slate-200 rounded-xl bg-white font-semibold hover:bg-slate-50 transition-all text-xs sm:text-sm"
+                className="w-full sm:w-auto h-10 sm:h-11 gap-2 sm:gap-3 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 border-slate-200 rounded-xl bg-white font-semibold hover:bg-slate-50 transition-all text-xs sm:text-sm cursor-pointer"
               >
                 <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-500" />
-                ปี {parseInt(selectedYear) + 543}
+                {isEn ? `Year ${selectedYear}` : `ปี ${parseInt(selectedYear) + 543}`}
               </Button>
             }
-            title="เลือกปีงบประมาณ"
+            title={isEn ? "Select Budget Year" : "เลือกปีงบประมาณ"}
           />
         </div>
 
@@ -165,22 +168,22 @@ export function DashboardToolbar({
           onClick={onGenerateAi}
           disabled={isGeneratingAi}
           variant="outline"
-          className="h-10 sm:h-11 gap-2 sm:gap-3 border-indigo-100 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-xs rounded-xl bg-indigo-50/30 font-semibold transition-all text-xs sm:text-sm"
+          className="h-10 sm:h-11 gap-2 sm:gap-3 border-indigo-100 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-xs rounded-xl bg-indigo-50/30 font-semibold transition-all text-xs sm:text-sm cursor-pointer"
         >
           <Sparkles
             className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isGeneratingAi && "animate-pulse")}
           />
           <span className="hidden sm:inline">
-            {aiInsights ? "Analyze" : "AI Analysis"}
+            {aiInsights ? (isEn ? "Analyze" : "วิเคราะห์") : (isEn ? "AI Analysis" : "วิเคราะห์ด้วย AI")}
           </span>
           <span className="sm:hidden">AI</span>
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button className="h-10 sm:h-11 col-span-2 sm:col-auto gap-2 sm:gap-3 bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-100 transition-all rounded-xl font-semibold text-xs sm:text-sm">
+            <Button className="h-10 sm:h-11 col-span-2 sm:col-auto gap-2 sm:gap-3 bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-100 transition-all rounded-xl font-semibold text-xs sm:text-sm cursor-pointer">
               <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Export <span className="hidden md:inline">Report</span>
+              {isEn ? "Export Report" : "ส่งออกรายงาน"}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-xl p-1 shadow-xl border-slate-200/60">
@@ -188,13 +191,13 @@ export function DashboardToolbar({
               onClick={() => onExport("excel")}
               className="gap-3 focus:bg-slate-50 rounded-lg py-2.5 font-semibold cursor-pointer text-sm"
             >
-              <FileText className="h-4 w-4 text-emerald-600" /> Excel Report (Full)
+              <FileText className="h-4 w-4 text-emerald-600" /> {isEn ? "Excel Report (Full)" : "Excel Report (ฉบับเต็ม)"}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onExport("pdf")}
               className="gap-3 focus:bg-slate-50 rounded-lg py-2.5 font-semibold cursor-pointer text-sm"
             >
-              <FileText className="h-4 w-4 text-rose-600" /> PDF Summary
+              <FileText className="h-4 w-4 text-rose-600" /> {isEn ? "PDF Summary" : "PDF Summary (สรุป)"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -234,7 +237,7 @@ function ResponsiveSelect({
               key={option.value}
               variant="ghost"
               className={cn(
-                "w-full justify-between items-center h-12 rounded-xl px-4",
+                "w-full justify-between items-center h-12 rounded-xl px-4 cursor-pointer",
                 value === option.value
                   ? "bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 font-bold"
                   : "text-slate-600 font-semibold",

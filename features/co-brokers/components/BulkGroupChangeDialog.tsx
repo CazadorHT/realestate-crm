@@ -10,6 +10,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { 
   Handshake, 
@@ -35,15 +36,18 @@ export function BulkGroupChangeDialog({
   selectedCount,
   onConfirm
 }: BulkGroupChangeDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [targetGroup, setTargetGroup] = useState("GENERAL");
   const [isOperating, setIsOperating] = useState(false);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
   const groups = [
-    { v: "GENERAL", label: "คู่ค้าทั่วไป", desc: "พาร์ทเนอร์ทั่วไปในระบบ", icon: User, color: "text-slate-500", bg: "bg-slate-50" },
-    { v: "VIP", label: "คู่ค้า VIP", desc: "ลำดับความสำคัญสูงสุด (Priority)", icon: Star, color: "text-amber-500", bg: "bg-amber-50" },
-    { v: "PARTNER", label: "พันธมิตรหลัก", desc: "คู่ค้าที่ได้รับการยืนยันระดับองค์กร", icon: ShieldCheck, color: "text-blue-500", bg: "bg-blue-50" },
-    { v: "BLACKLIST", label: "บัญชีดำ", desc: "งดร่วมงาน/ระงับการเข้าถึงข้อมูล", icon: UserX, color: "text-rose-500", bg: "bg-rose-50" },
+    { v: "GENERAL", label: isEn ? "General Partner" : "คู่ค้าทั่วไป", desc: isEn ? "Standard partner in system" : "พาร์ทเนอร์ทั่วไปในระบบ", icon: User, color: "text-slate-500", bg: "bg-slate-50" },
+    { v: "VIP", label: isEn ? "VIP Partner" : "คู่ค้า VIP", desc: isEn ? "Highest priority partner" : "ลำดับความสำคัญสูงสุด (Priority)", icon: Star, color: "text-amber-500", bg: "bg-amber-50" },
+    { v: "PARTNER", label: isEn ? "Corporate Alliance" : "พันธมิตรหลัก", desc: isEn ? "Verified corporate partner" : "คู่ค้าที่ได้รับการยืนยันระดับองค์กร", icon: ShieldCheck, color: "text-blue-500", bg: "bg-blue-50" },
+    { v: "BLACKLIST", label: isEn ? "Blacklist" : "บัญชีดำ", desc: isEn ? "Suspended from collaboration" : "งดร่วมงาน/ระงับการเข้าถึงข้อมูล", icon: UserX, color: "text-rose-500", bg: "bg-rose-50" },
   ];
 
   const selectedGroupData = groups.find(g => g.v === targetGroup) || groups[0];
@@ -59,18 +63,18 @@ export function BulkGroupChangeDialog({
       open={isOpen} 
       className="max-w-md!"
       onOpenChange={onOpenChange}
-      title="เปลี่ยนกลุ่มพาร์ทเนอร์"
+      title={isEn ? "Change Partner Group" : "เปลี่ยนกลุ่มพาร์ทเนอร์"}
       footer={
         <div className="flex gap-3 pt-6">
-          <Button variant="ghost" className="flex-1 h-14 rounded-2xl font-bold text-slate-500" onClick={() => onOpenChange(false)}>
-            ยกเลิก
+          <Button variant="ghost" className="flex-1 h-14 rounded-2xl font-bold text-slate-500 cursor-pointer" onClick={() => onOpenChange(false)}>
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
           <Button 
-            className="flex-[1.5] h-14 bg-slate-900 hover:bg-slate-800 shadow-xl shadow-slate-200 rounded-2xl font-bold text-white transition-all active:scale-95"
+            className="flex-[1.5] h-14 bg-slate-900 hover:bg-slate-800 shadow-xl shadow-slate-200 rounded-2xl font-bold text-white transition-all active:scale-95 cursor-pointer"
             onClick={handleConfirm}
             disabled={isOperating}
           >
-            {isOperating ? "กำลังบันทึก..." : "ยืนยันการเปลี่ยนกลุ่ม"}
+            {isOperating ? (isEn ? "Saving..." : "กำลังบันทึก...") : (isEn ? "Confirm Group Change" : "ยืนยันการเปลี่ยนกลุ่ม")}
           </Button>
         </div>
       }
@@ -84,22 +88,22 @@ export function BulkGroupChangeDialog({
                 <Handshake className="w-6 h-6" />
             </div>
             <div>
-                <p className="text-sm font-bold text-slate-900 leading-none mb-1">จัดการพาร์ทเนอร์แบบกลุ่ม</p>
-                <p className="text-xs text-slate-500 font-medium">เปลี่ยนสถานะคู่ค้า <span className="font-bold text-blue-600 underline decoration-blue-200 decoration-2 underline-offset-4">{selectedCount} รายการ</span></p>
+                <p className="text-sm font-bold text-slate-900 leading-none mb-1">{isEn ? "Bulk Partner Group Update" : "จัดการพาร์ทเนอร์แบบกลุ่ม"}</p>
+                <p className="text-xs text-slate-500 font-medium">{isEn ? "Updating status for " : "เปลี่ยนสถานะคู่ค้า "}<span className="font-bold text-blue-600 underline decoration-blue-200 decoration-2 underline-offset-4">{selectedCount} {isEn ? "items" : "รายการ"}</span></p>
             </div>
         </div>
 
         <div className="space-y-3">
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">เลือกกลุ่มเป้าหมายใหม่</label>
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{isEn ? "Select Target Group" : "เลือกกลุ่มเป้าหมายใหม่"}</label>
           
           <ResponsiveDialog
             open={isSelectorOpen}
             onOpenChange={setIsSelectorOpen}
-            title="เลือกเป้าหมายกลุ่มใหม่"
+            title={isEn ? "Select Target Group" : "เลือกเป้าหมายกลุ่มใหม่"}
             className="max-w-sm!"
-            description="พาร์ทเนอร์ที่เลือกจะถูกย้ายเข้าสู่กลุ่มนี้ทันที"
+            description={isEn ? "Selected partners will be moved to this group immediately" : "พาร์ทเนอร์ที่เลือกจะถูกย้ายเข้าสู่กลุ่มนี้ทันที"}
             trigger={
-              <button className="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 bg-slate-50/50 hover:bg-white hover:border-blue-500 transition-all group">
+              <button className="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 bg-slate-50/50 hover:bg-white hover:border-blue-500 transition-all group cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", selectedGroupData.bg)}>
                     <selectedGroupData.icon className={cn("h-5 w-5", selectedGroupData.color)} />
@@ -113,7 +117,7 @@ export function BulkGroupChangeDialog({
               </button>
             }
           >
-            <div className="p-6 space-y-3 ">
+            <div className="p-6 space-y-3">
                {groups.map((group) => {
                  const isSelected = targetGroup === group.v;
                  return (
@@ -125,7 +129,7 @@ export function BulkGroupChangeDialog({
                        setIsSelectorOpen(false);
                      }}
                      className={cn(
-                       "w-full flex items-center justify-between p-4 rounded-2xl transition-all border-2",
+                       "w-full flex items-center justify-between p-4 rounded-2xl transition-all border-2 cursor-pointer",
                        isSelected 
                          ? "border-blue-500 bg-blue-50/30 ring-4 ring-blue-500/5" 
                          : "border-slate-50 hover:border-slate-100 bg-white"
@@ -151,9 +155,8 @@ export function BulkGroupChangeDialog({
             </div>
           </ResponsiveDialog>
         </div>
-
-        
       </div>
     </ResponsiveDialog>
   );
 }
+

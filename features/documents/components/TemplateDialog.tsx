@@ -53,151 +53,12 @@ import { ContractFinancialsCard } from "./ContractFinancialsCard";
 import { LandlordPaymentCard } from "./LandlordPaymentCard";
 import { TaxCalculationsCard } from "./TaxCalculationsCard";
 import { TenantOverridesCard } from "./TenantOverridesCard";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
-const NATIONALITY_MAP_TH_TO_EN: Record<string, string> = {
-  "ไทย": "THA, Thailand",
-  "จีน": "CHN, China",
-  "ญี่ปุ่น": "JPN, Japan",
-  "เกาหลี": "KOR, South Korea",
-  "อเมริกัน": "USA, United States",
-  "อังกฤษ": "GBR, United Kingdom",
-  "ฝรั่งเศส": "FRA, France",
-  "เยอรมัน": "DEU, Germany",
-  "รัสเซีย": "RUS, Russia",
-  "อินเดีย": "IND, India",
-  "สิงคโปร์": "SGP, Singapore",
-  "มาเลเซีย": "MYS, Malaysia",
-  "พม่า": "MMR, Myanmar",
-  "กัมพูชา": "KHM, Cambodia",
-  "ลาว": "LAO, Laos",
-  "เวียดนาม": "VNM, Vietnam",
-  "ฟิลิปปินส์": "PHL, Philippines",
-  "อินโดนีเซีย": "IDN, Indonesia",
-  "สเปน": "ESP, Spain",
-  "ไต้หวัน": "TWN, Taiwan",
-  "ฮ่องกง": "HKG, Hong Kong",
-  "ออสเตรเลีย": "AUS, Australia"
-};
-
-const NATIONALITY_MAP_EN_TO_TH: Record<string, string> = {
-  "thai": "ไทย",
-  "thailand": "ไทย",
-  "tha": "ไทย",
-  "tha, thailand": "ไทย",
-  "chinese": "จีน",
-  "china": "จีน",
-  "chn": "จีน",
-  "chn, china": "จีน",
-  "japanese": "ญี่ปุ่น",
-  "japan": "ญี่ปุ่น",
-  "jpn": "ญี่ปุ่น",
-  "jpn, japan": "ญี่ปุ่น",
-  "korean": "เกาหลี",
-  "south korea": "เกาหลี",
-  "kor": "เกาหลี",
-  "kor, south korea": "เกาหลี",
-  "american": "อเมริกัน",
-  "united states": "อเมริกัน",
-  "usa": "อเมริกัน",
-  "usa, united states": "อเมริกัน",
-  "british": "อังกฤษ",
-  "united kingdom": "อังกฤษ",
-  "gbr": "อังกฤษ",
-  "gbr, united kingdom": "อังกฤษ",
-  "french": "ฝรั่งเศส",
-  "france": "ฝรั่งเศส",
-  "fra": "ฝรั่งเศส",
-  "fra, france": "ฝรั่งเศส",
-  "german": "เยอรมัน",
-  "germany": "เยอรมัน",
-  "deu": "เยอรมัน",
-  "deu, germany": "เยอรมัน",
-  "russian": "รัสเซีย",
-  "russia": "รัสเซีย",
-  "rus": "รัสเซีย",
-  "rus, russia": "รัสเซีย",
-  "indian": "อินเดีย",
-  "india": "อินเดีย",
-  "ind": "อินเดีย",
-  "ind, india": "อินเดีย",
-  "singaporean": "สิงคโปร์",
-  "singapore": "สิงคโปร์",
-  "sgp": "สิงคโปร์",
-  "sgp, singapore": "สิงคโปร์",
-  "malaysian": "มาเลเซีย",
-  "malaysia": "มาเลเซีย",
-  "mys": "มาเลเซีย",
-  "mys, malaysia": "มาเลเซีย",
-  "burmese": "พม่า",
-  "myanmar": "พม่า",
-  "mmr": "พม่า",
-  "mmr, myanmar": "พม่า",
-  "cambodian": "กัมพูชา",
-  "cambodia": "กัมพูชา",
-  "khm": "กัมพูชา",
-  "khm, cambodia": "กัมพูชา",
-  "laotian": "ลาว",
-  "laos": "ลาว",
-  "lao": "ลาว",
-  "lao, laos": "ลาว",
-  "vietnamese": "เวียดนาม",
-  "vietnam": "เวียดนาม",
-  "vnm": "เวียดนาม",
-  "vnm, vietnam": "เวียดนาม",
-  "filipino": "ฟิลิปปินส์",
-  "philippines": "ฟิลิปปินส์",
-  "phl": "ฟิลิปปินส์",
-  "phl, philippines": "ฟิลิปปินส์",
-  "indonesian": "อินโดนีเซีย",
-  "indonesia": "อินโดนีเซีย",
-  "idn": "อินโดนีเซีย",
-  "idn, indonesia": "อินโดนีเซีย",
-  "spanish": "สเปน",
-  "spain": "สเปน",
-  "esp": "สเปน",
-  "esp, spain": "สเปน",
-  "taiwanese": "ไต้หวัน",
-  "taiwan": "ไต้หวัน",
-  "twn": "ไต้หวัน",
-  "twn, taiwan": "ไต้หวัน",
-  "hong konger": "ฮ่องกง",
-  "hong kong": "ฮ่องกง",
-  "hkg": "ฮ่องกง",
-  "hkg, hong kong": "ฮ่องกง",
-  "australian": "ออสเตรเลีย",
-  "australia": "ออสเตรเลีย",
-  "aus": "ออสเตรเลีย",
-  "aus, australia": "ออสเตรเลีย"
-};
-
-function translateToThai(text: string): string {
-  if (!text) return "";
-  let temp = text.toLowerCase();
-  
-  const keys = Object.keys(NATIONALITY_MAP_EN_TO_TH).sort((a, b) => b.length - a.length);
-  const result: string[] = [];
-  
-  for (const key of keys) {
-    if (temp.includes(key)) {
-      result.push(NATIONALITY_MAP_EN_TO_TH[key]);
-      temp = temp.replace(new RegExp(key, 'g'), '');
-    }
-  }
-  
-  const remaining = temp.split(",").map(p => p.trim()).filter(p => p && !/^[,\s]*$/.test(p));
-  if (remaining.length > 0) {
-    result.push(...remaining);
-  }
-  
-  return result.join(", ");
-}
-
-function translateToEnglish(text: string): string {
-  if (!text) return "";
-  const parts = text.split(",").map(p => p.trim());
-  const converted = parts.map(part => NATIONALITY_MAP_TH_TO_EN[part] || part);
-  return converted.join(", ");
-}
+import {
+  translateToThai,
+  translateToEnglish,
+} from "@/lib/constants/nationalities";
 
 interface TemplateDialogProps {
   ownerId?: string;
@@ -212,6 +73,9 @@ export function TemplateDialog({
   trigger,
   onGenerateComplete,
 }: TemplateDialogProps) {
+  const { language: currentLang } = useLanguage();
+  const isEn = currentLang === "en";
+
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -380,7 +244,7 @@ export function TemplateDialog({
         setSelectedTemplateId(data[0].id);
       }
     } catch (err) {
-      toast.error("โหลดต้นแบบสัญญาไม่สำเร็จ");
+      toast.error(isEn ? "Failed to load contract templates" : "โหลดต้นแบบสัญญาไม่สำเร็จ");
     }
   }
 
@@ -484,7 +348,7 @@ export function TemplateDialog({
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error("ไฟล์ต้องมีขนาดไม่เกิน 5MB");
+        toast.error(isEn ? "File size must not exceed 5MB" : "ไฟล์ต้องมีขนาดไม่เกิน 5MB");
         return;
       }
 
@@ -506,7 +370,9 @@ export function TemplateDialog({
         reader.readAsDataURL(result.compressedFile);
 
         toast.success(
-          `บีบอัดรูปภาพเรียบร้อย ประหยัดพื้นที่ได้ ${result.compressionRatio.toFixed(0)}%`,
+          isEn
+            ? `Image compressed successfully (saved ${result.compressionRatio.toFixed(0)}%)`
+            : `บีบอัดรูปภาพเรียบร้อย ประหยัดพื้นที่ได้ ${result.compressionRatio.toFixed(0)}%`,
         );
       } catch (err) {
         console.error("Compression error:", err);
@@ -527,29 +393,45 @@ export function TemplateDialog({
     const finalOwnerType = initialOwnerId ? initialOwnerType : targetOwnerType;
 
     if (!finalOwnerId) {
-      toast.error("กรุณาเลือกผู้รับเอกสาร (ลูกค้า/ดีล/ทรัพย์สิน)");
+      toast.error(
+        isEn
+          ? "Please select document recipient (Client/Deal/Property)"
+          : "กรุณาเลือกผู้รับเอกสาร (ลูกค้า/ดีล/ทรัพย์สิน)",
+      );
       return;
     }
 
     if (templateSource === "standard" && !selectedTemplateId) {
-      toast.error("กรุณาเลือกต้นแบบสัญญา");
+      toast.error(
+        isEn ? "Please select a contract template" : "กรุณาเลือกต้นแบบสัญญา",
+      );
       return;
     }
     if (templateSource === "custom") {
       if (!customFile) {
-        toast.error("กรุณาอัปโหลดไฟล์ด็อก (DOCX) เป็นต้นแบบ");
+        toast.error(
+          isEn
+            ? "Please upload a DOCX template file"
+            : "กรุณาอัปโหลดไฟล์ด็อก (DOCX) เป็นต้นแบบ",
+        );
         return;
       }
 
       const fileExt = customFile.name.split(".").pop()?.toLowerCase();
       if (fileExt !== "docx") {
-        toast.error("รูปแบบไฟล์ไม่ถูกต้อง รองรับเฉพาะไฟล์ .docx เท่านั้น");
+        toast.error(
+          isEn
+            ? "Invalid file format. Only .docx is supported."
+            : "รูปแบบไฟล์ไม่ถูกต้อง รองรับเฉพาะไฟล์ .docx เท่านั้น",
+        );
         return;
       }
 
       const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
       if (customFile.size > MAX_FILE_SIZE) {
-        toast.error("ขนาดไฟล์ต้องไม่เกิน 5 MB");
+        toast.error(
+          isEn ? "File size must not exceed 5 MB" : "ขนาดไฟล์ต้องไม่เกิน 5 MB",
+        );
         return;
       }
     }
@@ -572,7 +454,11 @@ export function TemplateDialog({
           filePath,
         );
         if (!uploadRes.success) {
-          throw new Error(`อัปโหลดสลิปไม่สำเร็จ: ${uploadRes.error}`);
+          throw new Error(
+            isEn
+              ? `Failed to upload slip: ${uploadRes.error}`
+              : `อัปโหลดสลิปไม่สำเร็จ: ${uploadRes.error}`,
+          );
         }
 
         // Record the Slip as a separate document so it can be managed (deleted)
@@ -642,7 +528,11 @@ export function TemplateDialog({
           filePath,
         );
         if (!uploadRes.success) {
-          throw new Error(`อัปโหลดไฟล์เทมเพลตไม่สำเร็จ: ${uploadRes.error}`);
+          throw new Error(
+            isEn
+              ? `Failed to upload template file: ${uploadRes.error}`
+              : `อัปโหลดไฟล์เทมเพลตไม่สำเร็จ: ${uploadRes.error}`,
+          );
         }
 
         res = await generateDocxDocumentFromTemplateAction(
@@ -680,16 +570,28 @@ export function TemplateDialog({
       }
 
       if (res.success) {
-        toast.success("สร้างเอกสารสำเร็จแล้ว!");
+        toast.success(
+          isEn
+            ? "Document generated successfully!"
+            : "สร้างเอกสารสำเร็จแล้ว!",
+        );
         setOpen(false);
         if (onGenerateComplete) onGenerateComplete();
         router.refresh();
       } else {
-        toast.error(res.message || "สร้างเอกสารไม่สำเร็จ");
+        toast.error(
+          res.message ||
+            (isEn ? "Failed to generate document" : "สร้างเอกสารไม่สำเร็จ"),
+        );
       }
     } catch (err: any) {
       console.error("Generate Document UI Error:", err);
-      toast.error(err.message || "เกิดข้อผิดพลาดในการสร้างเอกสาร");
+      toast.error(
+        err.message ||
+          (isEn
+            ? "An error occurred while generating document"
+            : "เกิดข้อผิดพลาดในการสร้างเอกสาร"),
+      );
     } finally {
       setLoading(false);
     }
@@ -714,7 +616,7 @@ export function TemplateDialog({
               className="gap-2 rounded-2xl font-semibold h-12 shadow-sm border-slate-200 hover:text-blue-700 hover:bg-slate-50!"
             >
               <FileText className="h-4.5 w-4.5 text-blue-600" />
-              สร้างจาก Template
+              {isEn ? "Generate from Template" : "สร้างจาก Template"}
             </Button>
           )
         }
@@ -747,7 +649,7 @@ export function TemplateDialog({
                     currentStep >= 1 ? "text-blue-600" : "text-slate-450",
                   )}
                 >
-                  แหล่งข้อมูล
+                  {isEn ? "Source" : "แหล่งข้อมูล"}
                 </span>
                 <span
                   className={cn(
@@ -755,15 +657,15 @@ export function TemplateDialog({
                     currentStep >= 2 ? "text-blue-600" : "text-slate-450",
                   )}
                 >
-                  ต้นแบบ
+                  {isEn ? "Template" : "ต้นแบบ"}
                 </span>
                 <span
                   className={cn(
-                    "text-[9px] font-bold uppercase tracking-wider  truncate",
+                    "text-[9px] font-bold uppercase tracking-wider truncate",
                     currentStep >= 3 ? "text-blue-600" : "text-slate-450",
                   )}
                 >
-                  การชำระเงิน
+                  {isEn ? "Payment" : "การชำระเงิน"}
                 </span>
                 <span
                   className={cn(
@@ -771,7 +673,7 @@ export function TemplateDialog({
                     currentStep >= 4 ? "text-blue-600" : "text-slate-450",
                   )}
                 >
-                  ข้อมูลผู้เช่า
+                  {isEn ? "Tenant Info" : "ข้อมูลผู้เช่า"}
                 </span>
                 <span
                   className={cn(
@@ -779,7 +681,7 @@ export function TemplateDialog({
                     currentStep >= 5 ? "text-blue-600" : "text-slate-450",
                   )}
                 >
-                  คำนวณภาษี
+                  {isEn ? "Taxes" : "คำนวณภาษี"}
                 </span>
                 <span
                   className={cn(
@@ -787,7 +689,7 @@ export function TemplateDialog({
                     currentStep >= 6 ? "text-blue-600" : "text-slate-450",
                   )}
                 >
-                  ตรวจสอบ
+                  {isEn ? "Review" : "ตรวจสอบ"}
                 </span>
               </div>
             </div>
@@ -798,12 +700,14 @@ export function TemplateDialog({
                   <Wand2 className="h-5 w-5" />
                 </div>
                 <span className="text-base font-semibold text-slate-900 tracking-tight">
-                  สร้างเอกสารอัตโนมัติ
+                  {isEn ? "Automatic Document Generator" : "สร้างเอกสารอัตโนมัติ"}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-100 rounded-full text-xs font-medium text-slate-500">
                 <span>
-                  ขั้นตอน {currentStep} จาก {totalSteps}
+                  {isEn
+                    ? `Step ${currentStep} of ${totalSteps}`
+                    : `ขั้นตอน ${currentStep} จาก ${totalSteps}`}
                 </span>
                 <div className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
               </div>
@@ -817,7 +721,11 @@ export function TemplateDialog({
             </div>
           </div>
         }
-        description="เลือกต้นแบบและข้อมูลที่ต้องการ ระบบจะสร้างไฟล์เอกสารให้ทันที"
+        description={
+          isEn
+            ? "Select template and required data. System will generate document instantly."
+            : "เลือกต้นแบบและข้อมูลที่ต้องการ ระบบจะสร้างไฟล์เอกสารให้ทันที"
+        }
         footer={
           <div className="flex flex-row gap-3 w-full shrink-0 pt-4 px-6 pb-6 border-t border-slate-50 bg-slate-50/30">
             <Button
@@ -832,7 +740,13 @@ export function TemplateDialog({
               }}
               className="flex-1 h-12 rounded-xl font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100/50 active:scale-[0.98] transition-all"
             >
-              {currentStep === (initialOwnerId ? 2 : 1) ? "ยกเลิก" : "ย้อนกลับ"}
+              {currentStep === (initialOwnerId ? 2 : 1)
+                ? isEn
+                  ? "Cancel"
+                  : "ยกเลิก"
+                : isEn
+                  ? "Back"
+                  : "ย้อนกลับ"}
             </Button>
 
             {currentStep < totalSteps ? (
@@ -840,7 +754,11 @@ export function TemplateDialog({
                 type="button"
                 onClick={() => {
                   if (currentStep === 1 && !activeOwnerId && !initialOwnerId) {
-                    toast.error("กรุณาเลือกผู้รับเอกสารก่อนไปขั้นตอนถัดไป");
+                    toast.error(
+                      isEn
+                        ? "Please select recipient before proceeding"
+                        : "กรุณาเลือกผู้รับเอกสารก่อนไปขั้นตอนถัดไป",
+                    );
                     return;
                   }
                   if (
@@ -848,14 +766,18 @@ export function TemplateDialog({
                     templateSource === "standard" &&
                     !selectedTemplateId
                   ) {
-                    toast.error("กรุณาเลือกต้นแบบสัญญาก่อนไปขั้นตอนถัดไป");
+                    toast.error(
+                      isEn
+                        ? "Please select template before proceeding"
+                        : "กรุณาเลือกต้นแบบสัญญาก่อนไปขั้นตอนถัดไป",
+                    );
                     return;
                   }
                   setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
                 }}
                 className="flex-2 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-xl shadow-blue-100 transition-all active:scale-[0.98]"
               >
-                ถัดไป
+                {isEn ? "Next" : "ถัดไป"}
               </Button>
             ) : (
               <Button
@@ -867,10 +789,10 @@ export function TemplateDialog({
                 {loading ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>กำลังสร้างเอกสาร...</span>
+                    <span>{isEn ? "Generating Document..." : "กำลังสร้างเอกสาร..."}</span>
                   </div>
                 ) : (
-                  "ยืนยันและสร้างเอกสาร"
+                  isEn ? "Confirm & Generate" : "ยืนยันและสร้างเอกสาร"
                 )}
               </Button>
             )}
@@ -886,7 +808,7 @@ export function TemplateDialog({
                   <Search className="h-4 w-4" />
                 </div>
                 <Label className="text-sm font-semibold text-slate-700 uppercase tracking-widest">
-                  ข้อมูลอ้างอิง (Reference)
+                  {isEn ? "Reference Entity" : "ข้อมูลอ้างอิง (Reference)"}
                 </Label>
               </div>
 
@@ -908,10 +830,10 @@ export function TemplateDialog({
                     }}
                   >
                     {type === "DEAL"
-                      ? "ดีล"
+                      ? isEn ? "Deal" : "ดีล"
                       : type === "LEAD"
-                        ? "ลูกค้า"
-                        : "ทรัพย์สิน"}
+                        ? isEn ? "Client" : "ลูกค้า"
+                        : isEn ? "Property" : "ทรัพย์สิน"}
                   </Button>
                 ))}
               </div>
@@ -923,7 +845,7 @@ export function TemplateDialog({
                     setSelectedDealId(val || "");
                     setOwnerSearch(
                       picked
-                        ? `${picked.property_title || "ดีล"} (${picked.lead_name || ""})`
+                        ? `${picked.property_title || (isEn ? "Deal" : "ดีล")} (${picked.lead_name || ""})`
                         : "",
                     );
                     if (picked) {
@@ -1083,14 +1005,18 @@ export function TemplateDialog({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold text-slate-500 uppercase tracking-widest ml-1">
-                        เลือกต้นแบบ
+                        {isEn ? "Select Template" : "เลือกต้นแบบ"}
                       </Label>
                       <ResponsiveDialog
                         open={templateDialogOpen}
                         onOpenChange={setTemplateDialogOpen}
                         className="sm:max-w-md!"
-                        title="เลือกต้นแบบสัญญา"
-                        description="ค้นหาและเลือกต้นแบบที่ต้องการใช้สร้างเอกสาร"
+                        title={isEn ? "Select Contract Template" : "เลือกต้นแบบสัญญา"}
+                        description={
+                          isEn
+                            ? "Search and select template to generate document"
+                            : "ค้นหาและเลือกต้นแบบที่ต้องการใช้สร้างเอกสาร"
+                        }
                         trigger={
                           <Button
                             variant="outline"
@@ -1106,7 +1032,7 @@ export function TemplateDialog({
                             >
                               {templates.find(
                                 (t) => t.id === selectedTemplateId,
-                              )?.name || "เลือกต้นแบบ..."}
+                              )?.name || (isEn ? "Select template..." : "เลือกต้นแบบ...")}
                             </span>
                             <Loader2
                               className={cn(
@@ -1190,7 +1116,7 @@ export function TemplateDialog({
 
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold text-slate-500 uppercase tracking-widest ml-1">
-                        ภาษาที่แสดง (Localization)
+                        {isEn ? "Language" : "ภาษาที่แสดง (Localization)"}
                       </Label>
                       <div className="grid grid-cols-4 gap-2 p-1 bg-slate-100/50 rounded-2xl border border-slate-200/50">
                         {[
@@ -1224,7 +1150,7 @@ export function TemplateDialog({
                   <div className="p-6 border-2 border-dashed rounded-3xl bg-blue-50/30 border-blue-200 transition-colors group hover:border-blue-400">
                     <Label className="font-semibold flex items-center gap-2 mb-3 text-blue-900 uppercase tracking-widest text-[10px]">
                       <FileText className="h-4 w-4" />
-                      อัปโหลดไฟล์ Word ของท่าน
+                      {isEn ? "Upload Word File (.docx)" : "อัปโหลดไฟล์ Word ของท่าน"}
                     </Label>
                     <Input
                       type="file"
@@ -1237,7 +1163,7 @@ export function TemplateDialog({
 
                     <div className="mt-5 p-5 bg-white rounded-2xl border border-blue-100 text-xs text-slate-600 shadow-sm">
                       <p className="font-semibold text-blue-900 mb-3 border-b border-blue-50 pb-2">
-                        คู่มือการใส่ตัวแปร (Smart Tags):
+                        {isEn ? "Smart Tags Guide:" : "คู่มือการใส่ตัวแปร (Smart Tags):"}
                       </p>
                       <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 font-mono text-[10px] p-1">
                         <li className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
@@ -1245,7 +1171,7 @@ export function TemplateDialog({
                             {"{{lead.full_name}}"}
                           </span>
                           <span className="font-sans text-slate-400 text-[9px] font-semibold">
-                            ชื่อลูกค้า
+                            {isEn ? "Client Name" : "ชื่อลูกค้า"}
                           </span>
                         </li>
                         <li className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
@@ -1253,7 +1179,7 @@ export function TemplateDialog({
                             {"{{property.name}}"}
                           </span>
                           <span className="font-sans text-slate-400 text-[9px] font-semibold">
-                            ชื่อทรัพย์
+                            {isEn ? "Property Name" : "ชื่อทรัพย์"}
                           </span>
                         </li>
                         <li className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
@@ -1261,7 +1187,7 @@ export function TemplateDialog({
                             {"{{deal.formatted_price}}"}
                           </span>
                           <span className="font-sans text-slate-400 text-[9px] font-semibold">
-                            ราคาดีล
+                            {isEn ? "Deal Price" : "ราคาดีล"}
                           </span>
                         </li>
                         <li className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
@@ -1269,7 +1195,7 @@ export function TemplateDialog({
                             {"{{date.today}}"}
                           </span>
                           <span className="font-sans text-slate-400 text-[9px] font-semibold">
-                            วันนี้
+                            {isEn ? "Today" : "วันนี้"}
                           </span>
                         </li>
                       </ul>
@@ -1368,7 +1294,7 @@ export function TemplateDialog({
                 <div className="space-y-2 p-5 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all hover:bg-slate-100/50">
                   <Label className="text-xs font-semibold flex items-center gap-2 mb-2 text-slate-700 uppercase tracking-wider">
                     <ImageIcon className="h-4 w-4 text-emerald-600" />
-                    อัปโหลดหลักฐานการโอน (Transfer Slip)
+                    {isEn ? "Upload Transfer Slip" : "อัปโหลดหลักฐานการโอน (Transfer Slip)"}
                   </Label>
                   <div className="space-y-3">
                     <div className="flex-1">
@@ -1379,7 +1305,9 @@ export function TemplateDialog({
                         className="bg-white h-11 border-slate-200 rounded-xl"
                       />
                       <p className="text-[10px] text-slate-500 mt-2 font-medium">
-                        รองรับ JPG, PNG (ไม่เกิน 5MB) - รูปจะปรากฏกลางใบเสร็จ
+                        {isEn
+                          ? "Supports JPG, PNG (Max 5MB) - Image will appear on receipt"
+                          : "รองรับ JPG, PNG (ไม่เกิน 5MB) - รูปจะปรากฏกลางใบเสร็จ"}
                       </p>
                     </div>
                     {slipPreview && (
@@ -1417,7 +1345,7 @@ export function TemplateDialog({
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
                   <p className="font-semibold text-[10px] text-blue-900 uppercase tracking-widest leading-none">
-                    ระบบเตรียมข้อมูลอัตโนมัติ:
+                    {isEn ? "Automated Data Preparation:" : "ระบบเตรียมข้อมูลอัตโนมัติ:"}
                   </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-y-3 gap-x-6 text-[11px] text-blue-900/80 font-semibold tracking-tight">
@@ -1425,32 +1353,32 @@ export function TemplateDialog({
                     <div className="h-5 w-5 rounded-lg bg-blue-600 border border-blue-100 flex items-center justify-center shadow-xs">
                       <Check className="h-3 w-3 text-white" />
                     </div>
-                    ข้อมูลลูกค้าและที่อยู่
+                    {isEn ? "Client Info & Address" : "ข้อมูลลูกค้าและที่อยู่"}
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="h-5 w-5 rounded-lg bg-blue-600 border border-blue-100 flex items-center justify-center shadow-xs">
                       <Check className="h-3 w-3 text-white" />
                     </div>
-                    รายละเอียดทรัพย์
+                    {isEn ? "Property Details" : "รายละเอียดทรัพย์"}
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="h-5 w-5 rounded-lg bg-blue-600 border border-blue-100 flex items-center justify-center shadow-xs">
                       <Check className="h-3 w-3 text-white" />
                     </div>
-                    ราคา (แปลงเป็นตัวอักษร)
+                    {isEn ? "Price (Words format)" : "ราคา (แปลงเป็นตัวอักษร)"}
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="h-5 w-5 rounded-lg bg-blue-600 border border-blue-100 flex items-center justify-center shadow-xs">
                       <Check className="h-3 w-3 text-white" />
                     </div>
-                    วันที่ปัจจุบัน (Localization)
+                    {isEn ? "Current Date (Localized)" : "วันที่ปัจจุบัน (Localization)"}
                   </div>
                   {slipFile && (
                     <div className="flex items-center gap-3 text-emerald-700">
                       <div className="h-5 w-5 rounded-lg bg-blue-600 border border-blue-100 flex items-center justify-center shadow-xs">
                         <Check className="h-3 w-3 text-white" />
                       </div>
-                      รูปภาพสลิปการโอน
+                      {isEn ? "Payment Slip Image" : "รูปภาพสลิปการโอน"}
                     </div>
                   )}
                 </div>
@@ -1464,15 +1392,19 @@ export function TemplateDialog({
       <ResponsiveDialog
         open={isBankSelectorOpen}
         onOpenChange={setIsBankSelectorOpen}
-        title="เลือกธนาคารที่รับเงิน"
-        description="กรุณาค้นหาและเลือกธนาคารสำหรับรับชำระเงิน"
+        title={isEn ? "Select Receiving Bank" : "เลือกธนาคารที่รับเงิน"}
+        description={
+          isEn
+            ? "Please search and select receiving bank account"
+            : "กรุณาค้นหาและเลือกธนาคารสำหรับรับชำระเงิน"
+        }
         className="max-w-md"
       >
         <div className="p-6 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="ค้นหาชื่อหรือรหัสย่อธนาคาร..."
+              placeholder={isEn ? "Search bank name or code..." : "ค้นหาชื่อหรือรหัสย่อธนาคาร..."}
               value={bankSearchQuery}
               onChange={(e) => setBankSearchQuery(e.target.value)}
               className="pl-9 h-10 rounded-xl border-slate-200"
@@ -1504,10 +1436,10 @@ export function TemplateDialog({
                 >
                   <div className="space-y-0.5">
                     <p className="text-sm font-semibold text-slate-800">
-                      {bank.name_th}
+                      {isEn ? bank.name_en || bank.name_th : bank.name_th}
                     </p>
                     <p className="text-xs text-slate-400 font-medium">
-                      {bank.name_en} ({bank.code})
+                      {isEn ? bank.name_th : bank.name_en} ({bank.code})
                     </p>
                   </div>
                   {bankName === bank.name_th && (
@@ -1523,23 +1455,29 @@ export function TemplateDialog({
       <ResponsiveDialog
         open={isManageBanksOpen}
         onOpenChange={setIsManageBanksOpen}
-        title="จัดการรายการธนาคาร"
-        description="เพิ่ม แก้ไข หรือลบธนาคารที่แสดงในระบบเพื่อความสะดวกในการเลือกใช้งาน"
+        title={isEn ? "Manage Bank List" : "จัดการรายการธนาคาร"}
+        description={
+          isEn
+            ? "Add, edit, or delete banks available in the system"
+            : "เพิ่ม แก้ไข หรือลบธนาคารที่แสดงในระบบเพื่อความสะดวกในการเลือกใช้งาน"
+        }
         className="max-w-md"
       >
         <div className="p-6 space-y-4">
           {/* Add / Edit Bank Form */}
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
             <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              {isEditingBank ? "แก้ไขธนาคาร" : "เพิ่มธนาคารใหม่"}
+              {isEditingBank
+                ? isEn ? "Edit Bank" : "แก้ไขธนาคาร"
+                : isEn ? "Add New Bank" : "เพิ่มธนาคารใหม่"}
             </h4>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
                 <Label className="text-[10px] font-semibold text-slate-500">
-                  รหัสย่อ
+                  {isEn ? "Code" : "รหัสย่อ"}
                 </Label>
                 <Input
-                  placeholder="เช่น KBANK"
+                  placeholder={isEn ? "e.g. KBANK" : "เช่น KBANK"}
                   value={bankForm.code}
                   onChange={(e) =>
                     setBankForm({ ...bankForm, code: e.target.value })
@@ -1549,10 +1487,10 @@ export function TemplateDialog({
               </div>
               <div className="space-y-1 col-span-2">
                 <Label className="text-[10px] font-semibold text-slate-500">
-                  ชื่อภาษาไทย
+                  {isEn ? "Thai Name" : "ชื่อภาษาไทย"}
                 </Label>
                 <Input
-                  placeholder="เช่น ธนาคารกสิกรไทย"
+                  placeholder={isEn ? "e.g. Kasikorn Bank (TH)" : "เช่น ธนาคารกสิกรไทย"}
                   value={bankForm.name_th}
                   onChange={(e) =>
                     setBankForm({ ...bankForm, name_th: e.target.value })
@@ -1563,10 +1501,10 @@ export function TemplateDialog({
             </div>
             <div className="space-y-1">
               <Label className="text-[10px] font-semibold text-slate-500">
-                ชื่อภาษาอังกฤษ
+                {isEn ? "English Name" : "ชื่อภาษาอังกฤษ"}
               </Label>
               <Input
-                placeholder="เช่น Kasikornbank"
+                placeholder={isEn ? "e.g. Kasikornbank" : "เช่น Kasikornbank"}
                 value={bankForm.name_en}
                 onChange={(e) =>
                   setBankForm({ ...bankForm, name_en: e.target.value })
@@ -1586,7 +1524,7 @@ export function TemplateDialog({
                   }}
                   className="h-8 text-xs text-slate-500"
                 >
-                  ยกเลิก
+                  {isEn ? "Cancel" : "ยกเลิก"}
                 </Button>
               )}
               <Button
@@ -1598,7 +1536,9 @@ export function TemplateDialog({
                     !bankForm.name_th ||
                     !bankForm.name_en
                   ) {
-                    toast.error("กรุณากรอกข้อมูลให้ครบถ้วน");
+                    toast.error(
+                      isEn ? "Please fill in all required fields" : "กรุณากรอกข้อมูลให้ครบถ้วน",
+                    );
                     return;
                   }
                   setIsSubmittingBank(true);
@@ -1610,7 +1550,9 @@ export function TemplateDialog({
                         name_en: bankForm.name_en,
                       });
                       if (res.success) {
-                        toast.success("แก้ไขข้อมูลธนาคารสำเร็จ");
+                        toast.success(
+                          isEn ? "Bank updated successfully" : "แก้ไขข้อมูลธนาคารสำเร็จ",
+                        );
                         setIsEditingBank(false);
                         setBankForm({
                           id: "",
@@ -1620,7 +1562,9 @@ export function TemplateDialog({
                         });
                         loadBanks();
                       } else {
-                        toast.error(res.error || "เกิดข้อผิดพลาด");
+                        toast.error(
+                          res.error || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"),
+                        );
                       }
                     } else {
                       const res = await createBankAction({
@@ -1629,7 +1573,9 @@ export function TemplateDialog({
                         name_en: bankForm.name_en,
                       });
                       if (res.success) {
-                        toast.success("เพิ่มธนาคารสำเร็จ");
+                        toast.success(
+                          isEn ? "Bank added successfully" : "เพิ่มธนาคารสำเร็จ",
+                        );
                         setBankForm({
                           id: "",
                           code: "",
@@ -1638,11 +1584,13 @@ export function TemplateDialog({
                         });
                         loadBanks();
                       } else {
-                        toast.error(res.error || "เกิดข้อผิดพลาด");
+                        toast.error(
+                          res.error || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"),
+                        );
                       }
                     }
                   } catch (err) {
-                    toast.error("เกิดข้อผิดพลาด");
+                    toast.error(isEn ? "An error occurred" : "เกิดข้อผิดพลาด");
                   } finally {
                     setIsSubmittingBank(false);
                   }
@@ -1653,9 +1601,9 @@ export function TemplateDialog({
                 {isSubmittingBank ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
                 ) : isEditingBank ? (
-                  "บันทึก"
+                  isEn ? "Save" : "บันทึก"
                 ) : (
-                  "เพิ่ม"
+                  isEn ? "Add" : "เพิ่ม"
                 )}
               </Button>
             </div>
@@ -1664,7 +1612,7 @@ export function TemplateDialog({
           {/* Banks List */}
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
             <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">
-              รายการทั้งหมด
+              {isEn ? "All Banks" : "รายการทั้งหมด"}
             </h4>
             {banks.map((bank) => (
               <div
@@ -1673,10 +1621,10 @@ export function TemplateDialog({
               >
                 <div className="space-y-0.5">
                   <p className="text-xs font-semibold text-slate-800">
-                    {bank.name_th}
+                    {isEn ? bank.name_en || bank.name_th : bank.name_th}
                   </p>
                   <p className="text-[10px] text-slate-400 font-medium">
-                    {bank.name_en} ({bank.code})
+                    {isEn ? bank.name_th : bank.name_en} ({bank.code})
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
@@ -1702,17 +1650,29 @@ export function TemplateDialog({
                     variant="ghost"
                     size="icon"
                     onClick={async () => {
-                      if (confirm(`ยืนยันการลบธนาคาร ${bank.name_th}?`)) {
+                      if (
+                        confirm(
+                          isEn
+                            ? `Are you sure you want to delete ${bank.name_en || bank.name_th}?`
+                            : `ยืนยันการลบธนาคาร ${bank.name_th}?`,
+                        )
+                      ) {
                         try {
                           const res = await deleteBankAction(bank.id);
                           if (res.success) {
-                            toast.success("ลบธนาคารสำเร็จ");
+                            toast.success(
+                              isEn ? "Bank deleted successfully" : "ลบธนาคารสำเร็จ",
+                            );
                             loadBanks();
                           } else {
-                            toast.error(res.error || "เกิดข้อผิดพลาด");
+                            toast.error(
+                              res.error || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"),
+                            );
                           }
                         } catch (err) {
-                          toast.error("เกิดข้อผิดพลาด");
+                          toast.error(
+                            isEn ? "An error occurred" : "เกิดข้อผิดพลาด",
+                          );
                         }
                       }
                     }}

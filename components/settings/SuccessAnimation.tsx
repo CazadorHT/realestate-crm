@@ -5,7 +5,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 
+import { useLanguage } from "@/lib/i18n/language-context";
+
 export function SuccessAnimation() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const searchParams = useSearchParams();
   const router = useRouter();
   const [show, setShow] = useState(false);
@@ -61,15 +65,15 @@ export function SuccessAnimation() {
               className="text-xl font-bold text-slate-900"
             >
               {successVal === "true"
-                ? "บันทึกข้อมูลสำเร็จ!"
+                ? (isEn ? "Saved successfully!" : "บันทึกข้อมูลสำเร็จ!")
                 : successVal === "tiktok_connected"
-                  ? "เชื่อมต่อ TikTok สำเร็จแล้ว"
+                  ? (isEn ? "TikTok connected successfully!" : "เชื่อมต่อ TikTok สำเร็จแล้ว")
                   : successVal === "facebook_connected"
-                    ? "เชื่อมต่อ Facebook สำเร็จแล้ว"
+                    ? (isEn ? "Facebook connected successfully!" : "เชื่อมต่อ Facebook สำเร็จแล้ว")
                     : successVal === "google_connected"
-                      ? "เชื่อมต่อ Google สำเร็จแล้ว"
+                      ? (isEn ? "Google connected successfully!" : "เชื่อมต่อ Google สำเร็จแล้ว")
                       : successVal === "line_connected"
-                        ? "เชื่อมต่อ LINE สำเร็จแล้ว"
+                        ? (isEn ? "LINE connected successfully!" : "เชื่อมต่อ LINE สำเร็จแล้ว")
                         : successVal}
             </m.p>
           </div>

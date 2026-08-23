@@ -6,6 +6,7 @@ import type { TopAgent } from "@/features/dashboard/queries";
 import { Trophy, Medal, Target, TrendingUp, Crown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface CommissionLeaderboardProps {
   data: TopAgent[];
@@ -16,6 +17,9 @@ export function CommissionLeaderboard({
   data,
   title = "Agent Leaderboard",
 }: CommissionLeaderboardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   // Find highest commission for progress bar scaling
   const maxCommission =
     data.length > 0 ? Math.max(...data.map((a) => a.total_commission)) : 1;
@@ -62,7 +66,7 @@ export function CommissionLeaderboard({
               {title}
             </CardTitle>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-9 xs:pl-11">
-              สะสมคอมมิชชั่นสุทธิ (เดือนนี้)
+              {isEn ? "Accumulated Commission (This Month)" : "สะสมคอมมิชชั่นสุทธิ (เดือนนี้)"}
             </p>
           </div>
           <div className="flex flex-col items-end">
@@ -117,7 +121,7 @@ export function CommissionLeaderboard({
                       </div>
                       <p className="text-[10px] xs:text-[11px] text-slate-400 font-bold mt-1 flex items-center gap-1">
                         <Target className="h-2.5 w-2.5 xs:h-3 xs:w-3 text-slate-300" />
-                        {agent.deals_count} ดีล
+                        {agent.deals_count} {isEn ? "Deals" : "ดีล"}
                       </p>
                     </div>
                   </div>
@@ -163,7 +167,7 @@ export function CommissionLeaderboard({
               </div>
               <div>
                 <p className="text-lg font-semibold text-slate-300">
-                  ยังไม่มีข้อมูลยอดขาย
+                  {isEn ? "No sales data available yet" : "ยังไม่มีข้อมูลยอดขาย"}
                 </p>
                 <p className="text-xs text-slate-400 uppercase tracking-widest">
                   START CLOSING DEALS TO RANK UP!
@@ -176,7 +180,7 @@ export function CommissionLeaderboard({
 
       <div className="px-4 xs:px-6 py-3 xs:py-4 bg-slate-50/50 border-t border-slate-100 relative z-10 flex items-center justify-between">
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-          อัปเดตแบบเรียลไทม์
+          {isEn ? "Updated in Real-time" : "อัปเดตแบบเรียลไทม์"}
         </p>
         <div className="flex items-center gap-1">
           <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />

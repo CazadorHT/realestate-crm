@@ -34,6 +34,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 function statusTone(status: PropertyStatus) {
   const style = PROPERTY_STATUS_STYLES[status] || PROPERTY_STATUS_STYLES.DRAFT;
   return cn(style.bg, style.border, style.hover);
@@ -48,9 +50,15 @@ export function PropertyStatusSelect(props: {
   const [value, setValue] = useState<PropertyStatus>(props.value);
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const router = useRouter();
-  const label = useMemo(() => PROPERTY_STATUS_LABELS[value]?.th || value, [value]);
+  const label = useMemo(
+    () => PROPERTY_STATUS_LABELS[value]?.[language] || PROPERTY_STATUS_LABELS[value]?.en || value,
+    [value, language]
+  );
+
   if (props.disabled) {
     const style = PROPERTY_STATUS_STYLES[value] || PROPERTY_STATUS_STYLES.DRAFT;
     return (
@@ -82,7 +90,7 @@ export function PropertyStatusSelect(props: {
             </span>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
-            ไม่สามารถเปลี่ยนสถานะทรัพย์สินของผู้อื่นได้
+            {isEn ? "Cannot change status of listings owned by other agents" : "ไม่สามารถเปลี่ยนสถานะทรัพย์สินของผู้อื่นได้"}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -140,11 +148,11 @@ export function PropertyStatusSelect(props: {
 
       if (!res.success) {
         setValue(prev); // revert
-        toast.error(res.message || "อัปเดตสถานะไม่สำเร็จ");
+        toast.error(res.message || (isEn ? "Failed to update status" : "อัปเดตสถานะไม่สำเร็จ"));
         return;
       }
 
-      toast.success("อัปเดตสถานะเรียบร้อย");
+      toast.success(isEn ? "Status updated successfully" : "อัปเดตสถานะเรียบร้อย");
       
       // If the new status is ACTIVE, show the redirection dialog
       if (nextStatus === "ACTIVE") {
@@ -179,54 +187,57 @@ export function PropertyStatusSelect(props: {
   }: {
     s: PropertyStatus;
     onClick: () => void;
-  }) => (
-    <button
-      key={s}
-      onClick={onClick}
-      disabled={isPending}
-      className={cn(
-        "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border border-transparent",
-        value === s
-          ? "bg-blue-50 border-blue-100 shadow-sm"
-          : "hover:bg-slate-200 hover:border-slate-100",
-      )}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            "h-3 w-3 rounded-full shrink-0 shadow-sm",
-            PROPERTY_STATUS_STYLES[s].dot,
-          )}
-        />
-        <div className="flex flex-col items-start gap-0.5 min-w-0 ">
-          <span
+  }) => {
+    const sLabel = PROPERTY_STATUS_LABELS[s]?.[language] || PROPERTY_STATUS_LABELS[s]?.en || s;
+    return (
+      <button
+        key={s}
+        onClick={onClick}
+        disabled={isPending}
+        className={cn(
+          "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border border-transparent cursor-pointer",
+          value === s
+            ? "bg-blue-50 border-blue-100 shadow-sm"
+            : "hover:bg-slate-200 hover:border-slate-100",
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div
             className={cn(
-              "text-sm font-bold text-slate-900",
-              value === s && "text-blue-600",
+              "h-3 w-3 rounded-full shrink-0 shadow-sm",
+              PROPERTY_STATUS_STYLES[s].dot,
             )}
-          >
-            {PROPERTY_STATUS_LABELS[s]?.th || s}
-          </span>
-          <p className="text-[10px] text-slate-400 font-medium text-left truncate max-w-[200px]">
-            เปลี่ยนสถานะเป็น {PROPERTY_STATUS_LABELS[s]?.th || s}
-          </p>
+          />
+          <div className="flex flex-col items-start gap-0.5 min-w-0 ">
+            <span
+              className={cn(
+                "text-sm font-bold text-slate-900",
+                value === s && "text-blue-600",
+              )}
+            >
+              {sLabel}
+            </span>
+            <p className="text-[10px] text-slate-400 font-medium text-left truncate max-w-[200px]">
+              {isEn ? `Change status to ${sLabel}` : `เปลี่ยนสถานะเป็น ${sLabel}`}
+            </p>
+          </div>
         </div>
-      </div>
-      {value === s && (
-        <div className="bg-blue-600 rounded-full p-0.5">
-          <Check className="h-3 w-3 text-white" />
-        </div>
-      )}
-    </button>
-  );
+        {value === s && (
+          <div className="bg-blue-600 rounded-full p-0.5">
+            <Check className="h-3 w-3 text-white" />
+          </div>
+        )}
+      </button>
+    );
+  };
 
   return (
     <>
       <ResponsiveDialog
         open={open}
         onOpenChange={setOpen}
-        title="เปลี่ยนสถานะทรัพย์"
-        description="เลือกสถานะที่ต้องการแสดงสำหรับทรัพย์นี้ (เลือกสถานะเพื่ออัปเดต)"
+        title={isEn ? "Change Property Status" : "เปลี่ยนสถานะทรัพย์"}
+        description={isEn ? "Select the status to display for this property" : "เลือกสถานะที่ต้องการแสดงสำหรับทรัพย์นี้ (เลือกสถานะเพื่ออัปเดต)"}
         trigger={
           <Button
             id={`status-trigger-${props.id}`}
@@ -234,7 +245,7 @@ export function PropertyStatusSelect(props: {
             size="sm"
             disabled={isPending}
             className={cn(
-              "h-8 rounded-full w-full px-3 shadow-sm font-bold text-[11px] border-slate-200",
+              "h-8 rounded-full w-full px-3 shadow-sm font-bold text-[11px] border-slate-200 cursor-pointer",
               "transition-all active:scale-95 hover:text-slate-600 group",
               statusTone(value),
               props.className,
@@ -256,19 +267,19 @@ export function PropertyStatusSelect(props: {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-4 px-6 mb-10 sm:px-1 max-w-lg mx-auto sm:max-w-none h-[calc(70vh-200px)] lg:h-full overflow-y-auto">
           {[
             {
-              title: "สถานะการขาย (Active)",
+              title: isEn ? "For Sale / Rent (Active)" : "สถานะการขาย (Active)",
               statuses: ["ACTIVE"] as PropertyStatus[],
             },
             {
-              title: "อยู่ระหว่างจอง (Negotiating)",
+              title: isEn ? "Under Negotiation" : "อยู่ระหว่างจอง (Negotiating)",
               statuses: ["UNDER_OFFER", "RESERVED"] as PropertyStatus[],
             },
             {
-              title: "ปิดดีล (Closed Deal)",
+              title: isEn ? "Closed Deals" : "ปิดดีล (Closed Deal)",
               statuses: ["SOLD", "RENTED"] as PropertyStatus[],
             },
             {
-              title: "อื่น ๆ (Others)",
+              title: isEn ? "Others (Draft / Archived)" : "อื่น ๆ (Others)",
               statuses: ["DRAFT", "ARCHIVED"] as PropertyStatus[],
             },
           ].map((group) => (
@@ -309,30 +320,30 @@ export function PropertyStatusSelect(props: {
               </div>
               <div className="space-y-1.5">
                 <AlertDialogTitle className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                  ยืนยันการตั้งเป็น ACTIVE?
+                  {isEn ? "Confirm setting as ACTIVE?" : "ยืนยันการตั้งเป็น ACTIVE?"}
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-500 leading-relaxed font-semibold text-sm sm:text-base">
-                  เมื่อเป็น **ACTIVE** ทรัพย์นี้จะถูกแสดงบนหน้า Public
-                  และผู้ใช้ทั่วไปสามารถมองเห็นได้
-                  กรุณาตรวจสอบรายละเอียดให้เรียบร้อย
+                  {isEn
+                    ? "When ACTIVE, this property will be publicly visible to website visitors. Please make sure all details are accurate."
+                    : "เมื่อเป็น ACTIVE ทรัพย์นี้จะถูกแสดงบนหน้า Public และผู้ใช้ทั่วไปสามารถมองเห็นได้ กรุณาตรวจสอบรายละเอียดให้เรียบร้อย"}
                 </AlertDialogDescription>
               </div>
             </AlertDialogHeader>
 
             <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-3 mt-8 pt-2">
               <AlertDialogCancel
-                className="w-full sm:w-1/2 rounded-2xl h-12 font-bold border-slate-100 bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all active:scale-95 border-none"
+                className="w-full sm:w-1/2 rounded-2xl h-12 font-bold border-slate-100 bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all active:scale-95 border-none cursor-pointer"
                 onClick={() => {
                   setPendingStatus(null);
                   setConfirmOpen(false);
                 }}
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </AlertDialogCancel>
 
               <AlertDialogAction
                 disabled={isPending}
-                className="w-full sm:w-1/2 h-12 rounded-2xl bg-blue-600 font-bold hover:bg-blue-700 shadow-xl shadow-blue-200/50 text-white transition-all active:scale-95"
+                className="w-full sm:w-1/2 h-12 rounded-2xl bg-blue-600 font-bold hover:bg-blue-700 shadow-xl shadow-blue-200/50 text-white transition-all active:scale-95 cursor-pointer"
                 onClick={() => {
                   if (!pendingStatus) return;
                   setConfirmOpen(false);
@@ -341,7 +352,7 @@ export function PropertyStatusSelect(props: {
                   commitChange(nextStatus);
                 }}
               >
-                ยืนยันการออนไลน์
+                {isEn ? "Publish Online" : "ยืนยันการออนไลน์"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </div>
@@ -359,10 +370,12 @@ export function PropertyStatusSelect(props: {
               </div>
               <div className="space-y-1.5">
                 <AlertDialogTitle className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
-                  อสังหาริมทรัพย์ออนไลน์แล้ว!
+                  {isEn ? "Listing is now ACTIVE!" : "อสังหาริมทรัพย์ออนไลน์แล้ว!"}
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-500 leading-relaxed font-semibold text-sm sm:text-base">
-                  อัปเดตสถานะเป็น **ACTIVE** สำเร็จ ทรัพย์นี้เผยแพร่เรียบร้อยแล้ว คุณต้องการเลือกดูหน้าแสดงผลใด?
+                  {isEn
+                    ? "Updated status to ACTIVE successfully. Which page would you like to open?"
+                    : "อัปเดตสถานะเป็น ACTIVE สำเร็จ ทรัพย์นี้เผยแพร่เรียบร้อยแล้ว คุณต้องการเลือกดูหน้าแสดงผลใด?"}
                 </AlertDialogDescription>
               </div>
             </AlertDialogHeader>
@@ -372,27 +385,27 @@ export function PropertyStatusSelect(props: {
                 onClick={() => {
                   window.open(`${window.location.origin}/properties/${props.id}`, "_blank");
                 }}
-                className="w-full h-12 rounded-2xl bg-blue-600 font-semibold hover:bg-blue-700 shadow-lg shadow-blue-200/50 text-white! transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-2xl bg-blue-600 font-semibold hover:bg-blue-700 shadow-lg shadow-blue-200/50 text-white! transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Eye className="h-4 w-4" /> ดูหน้าประกาศ (Public Page)
+                <Eye className="h-4 w-4" /> {isEn ? "View Public Page" : "ดูหน้าประกาศ (Public Page)"}
               </button>
               
               <button
                 onClick={() => {
                   window.open(`/protected/properties/${props.id}`, "_blank");
                 }}
-                className="w-full h-12 rounded-2xl bg-slate-800 font-semibold hover:bg-slate-950 text-white! transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-2xl bg-slate-800 font-semibold hover:bg-slate-950 text-white! transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Building2 className="h-4 w-4" /> ดูหน้ารายละเอียด (Detail Page)
+                <Building2 className="h-4 w-4" /> {isEn ? "View Detail Page" : "ดูหน้ารายละเอียด (Detail Page)"}
               </button>
             </div>
 
             <AlertDialogFooter className="mt-6 pt-2">
               <AlertDialogCancel
-                className="w-full rounded-2xl h-12 font-semibold border-slate-100 bg-slate-100 hover:bg-slate-200 text-slate-600! transition-all active:scale-95 border-none"
+                className="w-full rounded-2xl h-12 font-semibold border-slate-100 bg-slate-100 hover:bg-slate-200 text-slate-600! transition-all active:scale-95 border-none cursor-pointer"
                 onClick={handleCloseSuccessDialog}
               >
-                กลับไปที่ตารางทรัพย์
+                {isEn ? "Back to Properties Table" : "กลับไปที่ตารางทรัพย์"}
               </AlertDialogCancel>
             </AlertDialogFooter>
           </div>

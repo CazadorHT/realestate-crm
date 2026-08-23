@@ -12,21 +12,12 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Search, Eye, Mail, Chrome } from "lucide-react";
-import Link from "next/link";
+import { Search, Eye, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserRoleBadge } from "./UserRoleBadge";
 import { UserRoleSelect } from "./UserRoleSelect";
 import { UserTeamSelect } from "./UserTeamSelect";
 import { UserDeleteDialog } from "./UserDeleteDialog";
-import { type UserRole } from "@/lib/auth-shared";
 import { formatDate } from "@/lib/utils";
 import { type EliteUser, maskSensitiveData } from "@/lib/users-utils";
 import {
@@ -50,6 +41,7 @@ import {
 import { useRouter } from "next/navigation";
 import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // ── Auth Provider Badge ───────────────────────────────────────────────────────
 function AuthProviderBadge({ provider }: { provider: string }) {
@@ -115,6 +107,9 @@ export function UsersTable({
   teams,
   isMultiTenant = true,
 }: UsersTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
@@ -124,7 +119,7 @@ export function UsersTable({
   const roleOptions = [
     {
       value: "ALL",
-      label: "ทุกบทบาท",
+      label: isEn ? "All Roles" : "ทุกบทบาท",
       icon: ListFilter,
       color: "text-slate-600",
       bgColor: "bg-slate-50",
@@ -132,7 +127,7 @@ export function UsersTable({
     },
     {
       value: "ADMIN",
-      label: "ผู้ดูแลระบบ (Admin)",
+      label: isEn ? "Admin" : "ผู้ดูแลระบบ (Admin)",
       icon: Shield,
       color: "text-indigo-600",
       bgColor: "bg-indigo-50",
@@ -140,7 +135,7 @@ export function UsersTable({
     },
     {
       value: "MANAGER",
-      label: "หัวหน้าทีม (Manager)",
+      label: isEn ? "Manager" : "หัวหน้าทีม (Manager)",
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
@@ -148,7 +143,7 @@ export function UsersTable({
     },
     {
       value: "AGENT",
-      label: "เอเจนท์ (Agent)",
+      label: isEn ? "Agent" : "เอเจนท์ (Agent)",
       icon: UserCheck,
       color: "text-emerald-600",
       bgColor: "bg-emerald-50",
@@ -156,7 +151,7 @@ export function UsersTable({
     },
     {
       value: "USER",
-      label: "ผู้ใช้งาน (User)",
+      label: isEn ? "User" : "ผู้ใช้งาน (User)",
       icon: UserIcon,
       color: "text-amber-600",
       bgColor: "bg-amber-50",
@@ -188,7 +183,7 @@ export function UsersTable({
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <p className="text-muted-foreground">ยังไม่มีผู้ใช้ในระบบ</p>
+          <p className="text-muted-foreground">{isEn ? "No users found in the system" : "ยังไม่มีผู้ใช้ในระบบ"}</p>
         </CardContent>
       </Card>
     );
@@ -202,7 +197,7 @@ export function UsersTable({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             type="search"
-            placeholder="ค้นหาสมาชิกทีมด้วยชื่อ หรือเบอร์โทร..."
+            placeholder={isEn ? "Search team members by name or phone..." : "ค้นหาสมาชิกทีมด้วยชื่อ หรือเบอร์โทร..."}
             className="pl-10 w-full bg-white/50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-500/10 h-11 rounded-xl transition-all font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -211,14 +206,14 @@ export function UsersTable({
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] hidden md:block">
-            ตัวกรองบทบาท:
+            {isEn ? "Role Filter:" : "ตัวกรองบทบาท:"}
           </span>
 
           <ResponsiveDialog
             open={isRoleDialogOpen}
             onOpenChange={setIsRoleDialogOpen}
-            title="เลือกตัวกรองบทบาท"
-            description="แสดงผลสมาชิกเฉพาะตามบทบาทที่คุณเลือก"
+            title={isEn ? "Select Role Filter" : "เลือกตัวกรองบทบาท"}
+            description={isEn ? "Filter team members by selected role" : "แสดงผลสมาชิกเฉพาะตามบทบาทที่คุณเลือก"}
             trigger={
               <Button
                 variant="outline"
@@ -295,30 +290,30 @@ export function UsersTable({
               <TableHeader className="sticky top-0 z-20 bg-slate-50/80 backdrop-blur-md border-b">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
-                    ชื่อ-นามสกุล / อีเมล
+                    {isEn ? "Full Name / Email" : "ชื่อ-นามสกุล / อีเมล"}
                   </TableHead>
                   <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
-                    เบอร์โทร
+                    {isEn ? "Phone" : "เบอร์โทร"}
                   </TableHead>
                   <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
-                    บทบาท
+                    {isEn ? "Role" : "บทบาท"}
                   </TableHead>
                   {isMultiTenant && (
                     <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
-                      สาขาที่สังกัด
+                      {isEn ? "Branch" : "สาขาที่สังกัด"}
                     </TableHead>
                   )}
                   <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
-                    ช่องทางสมัคร
+                    {isEn ? "Provider" : "ช่องทางสมัคร"}
                   </TableHead>
                   <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
-                    ทีมสมาชิก
+                    {isEn ? "Team" : "ทีมสมาชิก"}
                   </TableHead>
                   <TableHead className="py-5 px-6 font-bold text-[11px] uppercase tracking-widest text-slate-500">
-                    วันที่เข้าร่วม
+                    {isEn ? "Joined Date" : "วันที่เข้าร่วม"}
                   </TableHead>
                   <TableHead className="py-5 px-6 text-right font-bold text-[11px] uppercase tracking-widest text-slate-500">
-                    จัดการ
+                    {isEn ? "Actions" : "จัดการ"}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -332,7 +327,7 @@ export function UsersTable({
                       <div className="flex flex-col items-center gap-3">
                         <Search className="h-10 w-10 text-slate-200" />
                         <p className="font-medium">
-                          ไม่พบข้อมูลผู้ใช้ที่ตรงกับเงื่อนไข
+                          {isEn ? "No team members match your criteria" : "ไม่พบข้อมูลผู้ใช้ที่ตรงกับเงื่อนไข"}
                         </p>
                       </div>
                     </TableCell>
@@ -367,7 +362,7 @@ export function UsersTable({
                             </Avatar>
                             <div className="flex flex-col min-w-0">
                               <span className="font-semibold text-slate-800 flex items-center gap-2 truncate">
-                                {user.full_name || "ไม่มีชื่อ"}
+                                {user.full_name || (isEn ? "Unnamed" : "ไม่มีชื่อ")}
                                 {isCurrentUser && (
                                   <span className="shrink-0 text-[9px] bg-blue-600 text-white py-0.5 px-2 rounded-full font-bold uppercase tracking-widest shadow-sm">
                                     YOU
@@ -469,7 +464,7 @@ export function UsersTable({
                                 variant="ghost"
                                 size="icon"
                                 className="h-9 w-9 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all rounded-lg"
-                                title="ดูรายละเอียดโปรไฟล์"
+                                title={isEn ? "View Profile Details" : "ดูรายละเอียดโปรไฟล์"}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -502,7 +497,7 @@ export function UsersTable({
         {filteredUsers.length === 0 ? (
           <Card className="rounded-2xl border-dashed border-slate-200">
             <CardContent className="py-20 text-center text-slate-400 italic">
-              ไม่พบข้อมูลผู้ใช้
+              {isEn ? "No users found" : "ไม่พบข้อมูลผู้ใช้"}
             </CardContent>
           </Card>
         ) : (
@@ -537,11 +532,11 @@ export function UsersTable({
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-slate-900 truncate">
-                            {user.full_name || "ไม่มีชื่อ"}
+                            {user.full_name || (isEn ? "Unnamed" : "ไม่มีชื่อ")}
                           </span>
                           {isCurrentUser && (
                             <span className="shrink-0 text-[10px] bg-blue-500 text-white py-0.5 px-2 rounded-full font-bold">
-                              ตัวคุณ
+                              {isEn ? "You" : "ตัวคุณ"}
                             </span>
                           )}
                         </div>
@@ -564,7 +559,7 @@ export function UsersTable({
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        เบอร์โทรศัพท์
+                        {isEn ? "Phone Number" : "เบอร์โทรศัพท์"}
                       </span>
                       <p className="text-sm font-semibold text-slate-700">
                         {user.phone || "-"}
@@ -572,7 +567,7 @@ export function UsersTable({
                     </div>
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        วันที่เข้าร่วม
+                        {isEn ? "Joined Date" : "วันที่เข้าร่วม"}
                       </span>
                       <p className="text-xs font-medium text-slate-500">
                         {formatDate(user.created_at)}
@@ -582,7 +577,7 @@ export function UsersTable({
 
                   <div className="space-y-1 pt-4 border-t border-slate-50">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                      การสังกัดทีม
+                      {isEn ? "Team Assignment" : "การสังกัดทีม"}
                     </span>
                     <UserTeamSelect
                       userId={user.id}
@@ -608,7 +603,7 @@ export function UsersTable({
                       ) : (
                         <>
                           <Eye className="h-4 w-4" />
-                          <span>ดูรายละเอียด</span>
+                          <span>{isEn ? "View Details" : "ดูรายละเอียด"}</span>
                         </>
                       )}
                     </Button>
@@ -637,9 +632,13 @@ export function UsersTable({
       </div>
 
       <div className="text-xs text-slate-400 text-center font-medium bg-white/50 py-2 rounded-lg border border-slate-100 border-dashed">
-        แสดง <span className="text-slate-900">{filteredUsers.length}</span> จาก{" "}
-        <span className="text-slate-900">{users.length}</span> ผู้ใช้งานในระบบ
+        {isEn ? (
+          <>Showing <span className="text-slate-900">{filteredUsers.length}</span> of <span className="text-slate-900">{users.length}</span> team members</>
+        ) : (
+          <>แสดง <span className="text-slate-900">{filteredUsers.length}</span> จาก <span className="text-slate-900">{users.length}</span> ผู้ใช้งานในระบบ</>
+        )}
       </div>
     </div>
   );
 }
+

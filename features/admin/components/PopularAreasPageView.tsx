@@ -1,0 +1,95 @@
+"use client";
+
+import { MapPin } from "lucide-react";
+import { CreatePopularAreaDialog } from "@/features/admin/components/CreatePopularAreaDialog";
+import { PopularAreasStats } from "@/features/admin/components/PopularAreasStats";
+import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
+import { PopularAreaSearchHeader } from "@/features/admin/components/PopularAreaSearchHeader";
+import { PopularAreasTable, type PopularArea } from "@/features/admin/components/PopularAreasTable";
+import { useLanguage } from "@/lib/i18n/language-context";
+
+interface PopularAreasPageViewProps {
+  mappedAreas: PopularArea[];
+  totalCount: number;
+  totalProperties: number;
+  onRefresh: () => Promise<void>;
+}
+
+export function PopularAreasPageView({
+  mappedAreas,
+  totalCount,
+  totalProperties,
+  onRefresh,
+}: PopularAreasPageViewProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  return (
+    <div className="space-y-6">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 md:p-8 shadow-xl">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white/5 rounded-full blur-xl" />
+
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 text-left">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+                <MapPin className="h-6 w-6 text-white" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                {isEn ? "Manage Popular Areas" : "จัดการทำเลยอดนิยม"}
+              </h1>
+            </div>
+            <p className="text-white/80 text-sm md:text-base max-w-md text-left">
+              {isEn ? (
+                <>
+                  Add, edit, or remove popular locations across the system • Total of{" "}
+                  <span className="font-bold text-white">{totalCount}</span> areas
+                </>
+              ) : (
+                <>
+                  เพิ่ม ลบ แก้ไข รายชื่อทำเลยอดนิยมที่ใช้ในระบบ • มีทั้งหมด{" "}
+                  <span className="font-bold text-white">{totalCount}</span> ทำเล
+                </>
+              )}
+            </p>
+          </div>
+
+          <CreatePopularAreaDialog onSuccess={onRefresh} />
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <PopularAreasStats
+        totalAreas={totalCount}
+        totalProperties={totalProperties}
+      />
+
+      {/* Modern Search & Stats Header */}
+      <PopularAreaSearchHeader totalCount={totalCount} />
+
+      <div className="rounded-xl overflow-hidden">
+        <PopularAreasTable 
+          initialData={mappedAreas} 
+          totalCount={totalCount} 
+        />
+      </div>
+
+      {/* Footer Stats */}
+      {totalCount > 0 && (
+        <TableFooterStats
+          totalCount={totalCount}
+          unitLabel={isEn ? "areas" : "ทำเล"}
+          secondaryStats={[
+            {
+              label: isEn ? "Properties" : "ทรัพย์",
+              value: totalProperties,
+              color: "blue",
+            },
+          ]}
+        />
+      )}
+    </div>
+  );
+}

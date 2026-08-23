@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AdminSystemSettings } from "@/components/settings/AdminSystemSettings";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface AdminTabContentProps {
   summary: {
@@ -27,6 +28,9 @@ interface AdminTabContentProps {
 }
 
 export function AdminTabContent({ summary }: AdminTabContentProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <AdminSystemSettings />
@@ -44,7 +48,9 @@ export function AdminTabContent({ summary }: AdminTabContentProps) {
                 <Shield className="h-6 w-6" />
               </div>
               <div className="space-y-1.5">
-                <CardTitle className="text-lg font-semibold text-slate-900">จัดการรายชื่อผู้ใช้ <span className="text-slate-400 font-normal lg:block xl:inline">(User Management)</span></CardTitle>
+                <CardTitle className="text-lg font-semibold text-slate-900">
+                  {isEn ? "User Management" : "จัดการรายชื่อผู้ใช้"}
+                </CardTitle>
                 <CardDescription className="text-[10px] font-semibold text-slate-500 tracking-wider uppercase italic opacity-60">
                   Roles, Teams & Permissions
                 </CardDescription>
@@ -65,7 +71,9 @@ export function AdminTabContent({ summary }: AdminTabContentProps) {
                 <Building2 className="h-6 w-6" />
               </div>
               <div className="space-y-1.5">
-                <CardTitle className="text-lg font-semibold text-slate-900">โครงสร้างสาขา <span className="text-slate-400 font-normal lg:block xl:inline">(Branch Control)</span></CardTitle>
+                <CardTitle className="text-lg font-semibold text-slate-900">
+                  {isEn ? "Branch Control" : "โครงสร้างสาขา"}
+                </CardTitle>
                 <CardDescription className="text-[10px] font-semibold text-blue-500/70 tracking-wider uppercase italic opacity-60">
                   Multi-Office Hierarchy
                 </CardDescription>
@@ -86,7 +94,9 @@ export function AdminTabContent({ summary }: AdminTabContentProps) {
                 <Users className="h-6 w-6" />
               </div>
               <div className="space-y-1.5">
-                <CardTitle className="text-lg font-semibold text-slate-900">จัดการสายงาน <span className="text-slate-400 font-normal lg:block xl:inline">(Team Setup)</span></CardTitle>
+                <CardTitle className="text-lg font-semibold text-slate-900">
+                  {isEn ? "Team Setup" : "จัดการสายงาน"}
+                </CardTitle>
                 <CardDescription className="text-[10px] font-semibold text-indigo-500/70 tracking-wider uppercase italic opacity-60">
                   Groups & Resource Mgmt
                 </CardDescription>
@@ -102,7 +112,9 @@ export function AdminTabContent({ summary }: AdminTabContentProps) {
                 <History className="h-6 w-6" />
               </div>
               <div className="space-y-1.5">
-                <CardTitle className="text-lg font-semibold text-slate-900">บันทึกประวัติ <span className="text-slate-400 font-normal lg:block xl:inline">(Audit Logs)</span></CardTitle>
+                <CardTitle className="text-lg font-semibold text-slate-900">
+                  {isEn ? "Audit Logs" : "บันทึกประวัติ"}
+                </CardTitle>
                 <CardDescription className="text-[10px] font-semibold text-slate-500/70 tracking-wider uppercase italic opacity-60">
                   Security Event Tracing
                 </CardDescription>
@@ -122,7 +134,9 @@ export function AdminTabContent({ summary }: AdminTabContentProps) {
                 <Database className="h-6 w-6 text-blue-400" />
               </div>
               <div>
-                <h4 className="font-semibold text-lg leading-none mb-1">สถานะระบบ (System Health)</h4>
+                <h4 className="font-semibold text-lg leading-none mb-1">
+                  {isEn ? "System Health" : "สถานะระบบ (System Health)"}
+                </h4>
                 <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">All database nodes optimized • 12ms latency</p>
               </div>
             </div>
@@ -140,7 +154,9 @@ export function AdminTabContent({ summary }: AdminTabContentProps) {
                 <Shield className="h-6 w-6 text-indigo-400" />
               </div>
               <div>
-                <h4 className="font-semibold text-lg leading-none mb-1">ความปลอดภัย (Security)</h4>
+                <h4 className="font-semibold text-lg leading-none mb-1">
+                  {isEn ? "Security" : "ความปลอดภัย (Security)"}
+                </h4>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-400/20 px-1.5 py-0.5 rounded font-semibold">OAuth 2.0 Secure</span>
                   <span className="text-[9px] bg-blue-500/20 text-blue-300 border border-blue-400/20 px-1.5 py-0.5 rounded font-semibold">SSL v1.3</span>
@@ -159,3 +175,4 @@ export function AdminTabContent({ summary }: AdminTabContentProps) {
     </div>
   );
 }
+

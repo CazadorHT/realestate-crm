@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface IntegrationDisconnectButtonProps {
   provider: IntegrationProvider;
@@ -40,6 +41,9 @@ export function IntegrationDisconnectButton({
   className = "",
   showLabel = true,
 }: IntegrationDisconnectButtonProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -61,7 +65,7 @@ export function IntegrationDisconnectButton({
         toast.error(res.message);
       }
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      toast.error(isEn ? "Error disconnecting integration" : "เกิดข้อผิดพลาดในการเชื่อมต่อ");
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +81,7 @@ export function IntegrationDisconnectButton({
           disabled={isLoading}
         >
           <Link2Off className={cn("h-4 w-4", showLabel && "mr-1")} />
-          {showLabel && "ยกเลิกการเชื่อมต่อ"}
+          {showLabel && (isEn ? "Disconnect" : "ยกเลิกการเชื่อมต่อ")}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="max-w-[400px]">
@@ -87,17 +91,25 @@ export function IntegrationDisconnectButton({
               <AlertTriangle className="h-6 w-6" />
             </div>
             <AlertDialogTitle className="text-xl">
-              ยืนยันการยกเลิกการเชื่อมต่อ
+              {isEn ? "Confirm Disconnection" : "ยืนยันการยกเลิกการเชื่อมต่อ"}
             </AlertDialogTitle>
           </div>
           <AlertDialogDescription className="text-base text-slate-600">
-            คุณต้องการยกเลิกการเชื่อมต่อกับ <b>{providerNames[provider]}</b>{" "}
-            ใช่หรือไม่? การดำเนินการนี้จะลบการเข้าถึงข้อมูลของระบบ
+            {isEn ? (
+              <>
+                Are you sure you want to disconnect from <b>{providerNames[provider]}</b>? This will revoke system data access.
+              </>
+            ) : (
+              <>
+                คุณต้องการยกเลิกการเชื่อมต่อกับ <b>{providerNames[provider]}</b>{" "}
+                ใช่หรือไม่? การดำเนินการนี้จะลบการเข้าถึงข้อมูลของระบบ
+              </>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4 gap-2">
           <AlertDialogCancel className="font-bold border-slate-200">
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </AlertDialogCancel>
           <Button
             onClick={handleDisconnect}
@@ -110,10 +122,11 @@ export function IntegrationDisconnectButton({
             ) : (
               <Link2Off className="h-4 w-4 mr-2" />
             )}
-            ยืนยันการลบ
+            {isEn ? "Confirm Disconnect" : "ยืนยันการลบ"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
+

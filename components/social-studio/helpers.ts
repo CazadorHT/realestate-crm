@@ -2,12 +2,12 @@ import type { StudioLanguage, StudioPriceFormatStyle, AvailableBadgeItem } from 
 import { formatPrice } from "@/lib/property-utils";
 
 export const AVAILABLE_BADGES: AvailableBadgeItem[] = [
-  { id: "pet_friendly", label: "🐾 เลี้ยงสัตว์ได้" },
-  { id: "foreigner_quota", label: "🌍 Foreigner Quota" },
-  { id: "hot_deal", label: "🔥 Hot Deal" },
-  { id: "near_transit", label: "🚆 ใกล้รถไฟฟ้า" },
-  { id: "furnished", label: "🛋️ แต่งครบพร้อมอยู่" },
-  { id: "high_yield", label: "💰 High Yield 6%+" },
+  { id: "pet_friendly", label: "🐾 เลี้ยงสัตว์ได้", labelEn: "🐾 Pet Friendly" },
+  { id: "foreigner_quota", label: "🌍 Foreigner Quota", labelEn: "🌍 Foreigner Quota" },
+  { id: "hot_deal", label: "🔥 Hot Deal", labelEn: "🔥 Hot Deal" },
+  { id: "near_transit", label: "🚆 ใกล้รถไฟฟ้า", labelEn: "🚆 Near Transit" },
+  { id: "furnished", label: "🛋️ แต่งครบพร้อมอยู่", labelEn: "🛋️ Fully Furnished" },
+  { id: "high_yield", label: "💰 High Yield 6%+", labelEn: "💰 High Yield 6%+" },
 ];
 
 // Multilingual Dictionary for Transit Stations

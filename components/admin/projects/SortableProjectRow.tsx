@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { ProjectAdminItem } from "@/features/properties/actions/projects";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface SortableProjectRowProps {
   project: ProjectAdminItem;
@@ -21,6 +22,9 @@ export function SortableProjectRow({
   onDelete,
   isDraggingEnabled,
 }: SortableProjectRowProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const {
     attributes,
     listeners,
@@ -37,7 +41,7 @@ export function SortableProjectRow({
     position: "relative" as const,
   };
 
-  const typeLabel = 
+  const typeLabelTh = 
     project.property_type === 1 ? "คอนโด" : 
     project.property_type === 2 ? "บ้านเดี่ยว" : 
     project.property_type === 3 ? "ทาวน์โฮม" : 
@@ -47,6 +51,19 @@ export function SortableProjectRow({
     project.property_type === 7 ? "ออฟฟิศ" : 
     project.property_type === 8 ? "วิลล่า" : 
     project.property_type === 9 ? "พูลวิลล่า" : "อื่นๆ";
+
+  const typeLabelEn = 
+    project.property_type === 1 ? "Condo" : 
+    project.property_type === 2 ? "House" : 
+    project.property_type === 3 ? "Townhome" : 
+    project.property_type === 4 ? "Land" : 
+    project.property_type === 5 ? "Commercial" : 
+    project.property_type === 6 ? "Warehouse" : 
+    project.property_type === 7 ? "Office" : 
+    project.property_type === 8 ? "Villa" : 
+    project.property_type === 9 ? "Pool Villa" : "Other";
+
+  const typeLabel = isEn ? typeLabelEn : typeLabelTh;
 
   return (
     <tr 
@@ -64,14 +81,18 @@ export function SortableProjectRow({
               {...attributes}
               {...listeners}
               className="p-2 cursor-grab active:cursor-grabbing text-slate-355 hover:text-indigo-650 transition-colors rounded-lg hover:bg-slate-50 border border-transparent shrink-0"
-              title="ลากเพื่อจัดเรียงลำดับ"
+              title={isEn ? "Drag to reorder" : "ลากเพื่อจัดเรียงลำดับ"}
             >
               <GripVertical className="h-4.5 w-4.5" />
             </div>
           )}
           <div>
-            <span className="font-bold text-slate-900 block">{project.name.th}</span>
-            <span className="text-xs text-slate-400 block">{project.name.en}</span>
+            <span className="font-bold text-slate-900 block">
+              {isEn ? (project.name.en || project.name.th) : project.name.th}
+            </span>
+            <span className="text-xs text-slate-400 block">
+              {isEn ? project.name.th : project.name.en}
+            </span>
           </div>
         </div>
       </td>
@@ -98,7 +119,7 @@ export function SortableProjectRow({
       </td>
       <td className="px-6 py-4 text-center">
         <span className="font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-md text-xs line-clamp-1">
-          {project.property_count || 0} ทรัพย์
+          {project.property_count || 0} {isEn ? "Units" : "ทรัพย์"}
         </span>
       </td>
       <td className="px-6 py-4 text-center">
@@ -110,13 +131,14 @@ export function SortableProjectRow({
             className="h-8.5 rounded-lg border-slate-200 text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 cursor-pointer"
           >
             <Edit2 className="h-3.5 w-3.5 mr-1.5" />
-            แก้ไข
+            {isEn ? "Edit" : "แก้ไข"}
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onDelete(project.id!, project.name.th)}
+            onClick={() => onDelete(project.id!, isEn ? (project.name.en || project.name.th) : project.name.th)}
             className="h-8.5 w-8.5 p-0 rounded-lg border-slate-200 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200 cursor-pointer"
+            title={isEn ? "Delete project" : "ลบโครงการ"}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -126,7 +148,7 @@ export function SortableProjectRow({
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center h-8.5 w-8.5 rounded-lg border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-slate-50 transition-colors"
-              title="เปิดดูหน้าเว็บจริง"
+              title={isEn ? "View live public page" : "เปิดดูหน้าเว็บจริง"}
             >
               <ExternalLink className="h-4 w-4" />
             </a>
@@ -136,3 +158,4 @@ export function SortableProjectRow({
     </tr>
   );
 }
+

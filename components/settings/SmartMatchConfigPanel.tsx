@@ -32,6 +32,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/language-context";
 import {
   getBudgetRanges,
   getPropertyTypes,
@@ -56,6 +57,9 @@ import {
 type Tab = "budget" | "property" | "office" | "settings";
 
 export function SmartMatchConfigPanel() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [activeTab, setActiveTab] = useState<Tab>("budget");
   const [loading, setLoading] = useState(true);
 
@@ -104,7 +108,7 @@ export function SmartMatchConfigPanel() {
           className="gap-2"
         >
           <DollarSign className="h-4 w-4" />
-          ช่วงงบประมาณ
+          {isEn ? "Budget Ranges" : "ช่วงงบประมาณ"}
         </Button>
         <Button
           variant={activeTab === "property" ? "default" : "ghost"}
@@ -112,7 +116,7 @@ export function SmartMatchConfigPanel() {
           className="gap-2"
         >
           <Building2 className="h-4 w-4" />
-          ประเภททรัพย์
+          {isEn ? "Property Types" : "ประเภททรัพย์"}
         </Button>
         <Button
           variant={activeTab === "office" ? "default" : "ghost"}
@@ -120,7 +124,7 @@ export function SmartMatchConfigPanel() {
           className="gap-2"
         >
           <Building2 className="h-4 w-4" />
-          ขนาดออฟฟิศ
+          {isEn ? "Office Sizes" : "ขนาดออฟฟิศ"}
         </Button>
         <Button
           variant={activeTab === "settings" ? "default" : "ghost"}
@@ -128,7 +132,7 @@ export function SmartMatchConfigPanel() {
           className="gap-2"
         >
           <Settings className="h-4 w-4" />
-          ตั้งค่าทั่วไป
+          {isEn ? "General Settings" : "ตั้งค่าทั่วไป"}
         </Button>
       </div>
 
@@ -170,6 +174,9 @@ function BudgetRangesTab({
   data: BudgetRange[];
   onRefresh: () => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<BudgetRange | null>(null);
   const [saving, setSaving] = useState(false);
@@ -222,7 +229,7 @@ function BudgetRangesTab({
 
   const handleSave = async () => {
     if (!form.label) {
-      toast.error("กรุณากรอก Label");
+      toast.error(isEn ? "Please enter a label" : "กรุณากรอก Label");
       return;
     }
 
@@ -230,24 +237,24 @@ function BudgetRangesTab({
     try {
       if (editItem) {
         await updateBudgetRange(editItem.id, form);
-        toast.success("อัปเดตเรียบร้อย");
+        toast.success(isEn ? "Budget range updated" : "อัปเดตเรียบร้อย");
       } else {
         await createBudgetRange(form);
-        toast.success("เพิ่มเรียบร้อย");
+        toast.success(isEn ? "Budget range created" : "เพิ่มเรียบร้อย");
       }
       setDialogOpen(false);
       onRefresh();
     } catch {
-      toast.error("เกิดข้อผิดพลาด");
+      toast.error(isEn ? "An error occurred" : "เกิดข้อผิดพลาด");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("ยืนยันการลบ?")) return;
+    if (!confirm(isEn ? "Are you sure you want to delete this budget range?" : "ยืนยันการลบ?")) return;
     await deleteBudgetRange(id);
-    toast.success("ลบเรียบร้อย");
+    toast.success(isEn ? "Deleted successfully" : "ลบเรียบร้อย");
     onRefresh();
   };
 
@@ -259,10 +266,12 @@ function BudgetRangesTab({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">จัดการช่วงงบประมาณ</h3>
+        <h3 className="text-lg font-semibold">
+          {isEn ? "Manage Budget Ranges" : "จัดการช่วงงบประมาณ"}
+        </h3>
         <Button onClick={openCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          เพิ่มช่วงราคา
+          {isEn ? "Add Range" : "เพิ่มช่วงราคา"}
         </Button>
       </div>
 
@@ -271,7 +280,7 @@ function BudgetRangesTab({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Badge className="bg-green-100 text-green-700">ซื้อ</Badge>
+              <Badge className="bg-green-100 text-green-700">{isEn ? "Buy" : "ซื้อ"}</Badge>
               Budget Ranges
             </CardTitle>
           </CardHeader>
@@ -287,7 +296,7 @@ function BudgetRangesTab({
             ))}
             {buyRanges.length === 0 && (
               <p className="text-sm text-muted-foreground py-4 text-center">
-                ยังไม่มีข้อมูล
+                {isEn ? "No data available" : "ยังไม่มีข้อมูล"}
               </p>
             )}
           </CardContent>
@@ -297,7 +306,7 @@ function BudgetRangesTab({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Badge className="bg-blue-100 text-blue-700">เช่า</Badge>
+              <Badge className="bg-blue-100 text-blue-700">{isEn ? "Rent" : "เช่า"}</Badge>
               Budget Ranges
             </CardTitle>
           </CardHeader>
@@ -313,7 +322,7 @@ function BudgetRangesTab({
             ))}
             {rentRanges.length === 0 && (
               <p className="text-sm text-muted-foreground py-4 text-center">
-                ยังไม่มีข้อมูล
+                {isEn ? "No data available" : "ยังไม่มีข้อมูล"}
               </p>
             )}
           </CardContent>
@@ -325,12 +334,14 @@ function BudgetRangesTab({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editItem ? "แก้ไขช่วงราคา" : "เพิ่มช่วงราคาใหม่"}
+              {editItem 
+                ? (isEn ? "Edit Budget Range" : "แก้ไขช่วงราคา") 
+                : (isEn ? "Add New Budget Range" : "เพิ่มช่วงราคาใหม่")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>ประเภท</Label>
+              <Label>{isEn ? "Purpose" : "ประเภท"}</Label>
               <Select
                 value={form.purpose}
                 onValueChange={(v) =>
@@ -341,9 +352,9 @@ function BudgetRangesTab({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="BUY">ซื้อ</SelectItem>
-                  <SelectItem value="RENT">เช่า</SelectItem>
-                  <SelectItem value="INVEST">ลงทุน</SelectItem>
+                  <SelectItem value="BUY">{isEn ? "Buy" : "ซื้อ"}</SelectItem>
+                  <SelectItem value="RENT">{isEn ? "Rent" : "เช่า"}</SelectItem>
+                  <SelectItem value="INVEST">{isEn ? "Invest" : "ลงทุน"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -389,7 +400,7 @@ function BudgetRangesTab({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>ราคาต่ำสุด</Label>
+                <Label>{isEn ? "Min Value" : "ราคาต่ำสุด"}</Label>
                 <Input
                   type="number"
                   value={form.min_value}
@@ -399,7 +410,7 @@ function BudgetRangesTab({
                 />
               </div>
               <div className="space-y-2">
-                <Label>ราคาสูงสุด</Label>
+                <Label>{isEn ? "Max Value" : "ราคาสูงสุด"}</Label>
                 <Input
                   type="number"
                   value={form.max_value}
@@ -410,7 +421,7 @@ function BudgetRangesTab({
               </div>
             </div>
             <div className="space-y-2">
-              <Label>ลำดับ</Label>
+              <Label>{isEn ? "Sort Order" : "ลำดับ"}</Label>
               <Input
                 type="number"
                 value={form.sort_order}
@@ -424,18 +435,18 @@ function BudgetRangesTab({
                 checked={form.is_active}
                 onCheckedChange={(v) => setForm({ ...form, is_active: v })}
               />
-              <Label>เปิดใช้งาน</Label>
+              <Label>{isEn ? "Active" : "เปิดใช้งาน"}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              บันทึก
+              {isEn ? "Save" : "บันทึก"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -455,12 +466,16 @@ function BudgetRangeRow({
   onDelete: () => void;
   onToggle: () => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const displayLabel = isEn ? (item.label_en || item.label) : item.label;
+
   return (
     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
       <div className="flex items-center gap-3">
         <Switch checked={item.is_active ?? false} onCheckedChange={onToggle} />
         <div>
-          <p className="font-medium text-sm">{item.label}</p>
+          <p className="font-medium text-sm">{displayLabel}</p>
           <p className="text-xs text-muted-foreground">
             {item.min_value.toLocaleString()} -{" "}
             {item.max_value.toLocaleString()}
@@ -493,6 +508,9 @@ function PropertyTypesTab({
   data: PropertyTypeOption[];
   onRefresh: () => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<PropertyTypeOption | null>(null);
   const [saving, setSaving] = useState(false);
@@ -536,7 +554,7 @@ function PropertyTypesTab({
 
   const handleSave = async () => {
     if (!form.label || !form.value) {
-      toast.error("กรุณากรอกข้อมูลให้ครบ");
+      toast.error(isEn ? "Please fill in all required fields" : "กรุณากรอกข้อมูลให้ครบ");
       return;
     }
 
@@ -544,24 +562,24 @@ function PropertyTypesTab({
     try {
       if (editItem) {
         await updatePropertyType(editItem.id, form);
-        toast.success("อัปเดตเรียบร้อย");
+        toast.success(isEn ? "Property type updated" : "อัปเดตเรียบร้อย");
       } else {
         await createPropertyType(form);
-        toast.success("เพิ่มเรียบร้อย");
+        toast.success(isEn ? "Property type created" : "เพิ่มเรียบร้อย");
       }
       setDialogOpen(false);
       onRefresh();
     } catch {
-      toast.error("เกิดข้อผิดพลาด");
+      toast.error(isEn ? "An error occurred" : "เกิดข้อผิดพลาด");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("ยืนยันการลบ?")) return;
+    if (!confirm(isEn ? "Are you sure you want to delete this property type?" : "ยืนยันการลบ?")) return;
     await deletePropertyType(id);
-    toast.success("ลบเรียบร้อย");
+    toast.success(isEn ? "Deleted successfully" : "ลบเรียบร้อย");
     onRefresh();
   };
 
@@ -573,54 +591,59 @@ function PropertyTypesTab({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">จัดการประเภททรัพย์</h3>
+        <h3 className="text-lg font-semibold">
+          {isEn ? "Manage Property Types" : "จัดการประเภททรัพย์"}
+        </h3>
         <Button onClick={openCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          เพิ่มประเภท
+          {isEn ? "Add Type" : "เพิ่มประเภท"}
         </Button>
       </div>
 
       <Card>
         <CardContent className="pt-6 space-y-2">
-          {data.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-            >
-              <div className="flex items-center gap-3">
-                <Switch
-                  checked={item.is_active ?? false}
-                  onCheckedChange={() => handleToggle(item)}
-                />
-                <div>
-                  <p className="font-medium text-sm">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Value: {item.value}
-                  </p>
+          {data.map((item) => {
+            const displayLabel = isEn ? (item.label_en || item.label) : item.label;
+            return (
+              <div
+                key={item.id}
+                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={item.is_active ?? false}
+                    onCheckedChange={() => handleToggle(item)}
+                  />
+                  <div>
+                    <p className="font-medium text-sm">{displayLabel}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Value: {item.value}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => openEdit(item)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDelete(item.id)}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => openEdit(item)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => handleDelete(item.id)}
-                  className="text-red-500 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {data.length === 0 && (
             <p className="text-sm text-muted-foreground py-4 text-center">
-              ยังไม่มีข้อมูล
+              {isEn ? "No data available" : "ยังไม่มีข้อมูล"}
             </p>
           )}
         </CardContent>
@@ -631,7 +654,9 @@ function PropertyTypesTab({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editItem ? "แก้ไขประเภททรัพย์" : "เพิ่มประเภททรัพย์ใหม่"}
+              {editItem 
+                ? (isEn ? "Edit Property Type" : "แก้ไขประเภททรัพย์") 
+                : (isEn ? "Add New Property Type" : "เพิ่มประเภททรัพย์ใหม่")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -676,13 +701,13 @@ function PropertyTypesTab({
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Value (ค่า Enum)</Label>
+              <Label>{isEn ? "Value (Enum)" : "Value (ค่า Enum)"}</Label>
               <Select
                 value={form.value}
                 onValueChange={(v) => setForm({ ...form, value: v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="เลือก Property Type" />
+                  <SelectValue placeholder={isEn ? "Select Property Type" : "เลือก Property Type"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="HOUSE">HOUSE</SelectItem>
@@ -701,7 +726,7 @@ function PropertyTypesTab({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>ลำดับ</Label>
+              <Label>{isEn ? "Sort Order" : "ลำดับ"}</Label>
               <Input
                 type="number"
                 value={form.sort_order}
@@ -715,18 +740,18 @@ function PropertyTypesTab({
                 checked={form.is_active}
                 onCheckedChange={(v) => setForm({ ...form, is_active: v })}
               />
-              <Label>เปิดใช้งาน</Label>
+              <Label>{isEn ? "Active" : "เปิดใช้งาน"}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              บันทึก
+              {isEn ? "Save" : "บันทึก"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -744,6 +769,9 @@ function OfficeSizesTab({
   data: OfficeSizeOption[];
   onRefresh: () => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editItem, setEditItem] = useState<OfficeSizeOption | null>(null);
@@ -800,7 +828,7 @@ function OfficeSizesTab({
 
   const handleSave = async () => {
     if (!form.label) {
-      toast.error("กรุณากรอกชื่อขนาด");
+      toast.error(isEn ? "Please enter a size label" : "กรุณากรอกชื่อขนาด");
       return;
     }
 
@@ -819,7 +847,7 @@ function OfficeSizesTab({
           is_active: form.is_active,
         });
         if (!res.success) throw new Error(res.error);
-        toast.success("อัปเดตขนาดออฟฟิศเรียบร้อย");
+        toast.success(isEn ? "Office size updated" : "อัปเดตขนาดออฟฟิศเรียบร้อย");
       } else {
         // Create
         const res = await createOfficeSize({
@@ -833,29 +861,29 @@ function OfficeSizesTab({
           is_active: form.is_active,
         });
         if (!res.success) throw new Error(res.error);
-        toast.success("สร้างขนาดออฟฟิศใหม่เรียบร้อย");
+        toast.success(isEn ? "New office size created" : "สร้างขนาดออฟฟิศใหม่เรียบร้อย");
       }
       setDialogOpen(false);
       onRefresh();
     } catch (e) {
       console.error(e);
-      toast.error("เกิดข้อผิดพลาดในการบันทึก");
+      toast.error(isEn ? "Error saving changes" : "เกิดข้อผิดพลาดในการบันทึก");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("คุณต้องการลบขนาดออฟฟิศนี้ใช่หรือไม่?")) return;
+    if (!confirm(isEn ? "Are you sure you want to delete this office size?" : "คุณต้องการลบขนาดออฟฟิศนี้ใช่หรือไม่?")) return;
 
     try {
       const res = await deleteOfficeSize(id);
       if (!res.success) throw new Error(res.error);
-      toast.success("ลบข้อมูลเรียบร้อย");
+      toast.success(isEn ? "Deleted successfully" : "ลบข้อมูลเรียบร้อย");
       onRefresh();
     } catch (e) {
       console.error(e);
-      toast.error("เกิดข้อผิดพลาดในการลบ");
+      toast.error(isEn ? "Error deleting item" : "เกิดข้อผิดพลาดในการลบ");
     }
   };
 
@@ -868,24 +896,26 @@ function OfficeSizesTab({
       onRefresh();
     } catch (e) {
       console.error(e);
-      toast.error("เกิดข้อผิดพลาด");
+      toast.error(isEn ? "An error occurred" : "เกิดข้อผิดพลาด");
     }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">ขนาดออฟฟิศ</h2>
+        <h2 className="text-xl font-semibold">
+          {isEn ? "Office Sizes" : "ขนาดออฟฟิศ"}
+        </h2>
         <Button onClick={openCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          เพิ่มขนาด
+          {isEn ? "Add Size" : "เพิ่มขนาด"}
         </Button>
       </div>
 
       <div className="space-y-2">
         {data.length === 0 ? (
           <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-lg">
-            ยังไม่มีข้อมูลขนาดออฟฟิศ
+            {isEn ? "No office size options configured" : "ยังไม่มีข้อมูลขนาดออฟฟิศ"}
           </div>
         ) : (
           data.map((item) => (
@@ -904,7 +934,9 @@ function OfficeSizesTab({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editItem ? "แก้ไขขนาดออฟฟิศ" : "เพิ่มขนาดออฟฟิศใหม่"}
+              {editItem 
+                ? (isEn ? "Edit Office Size" : "แก้ไขขนาดออฟฟิศ") 
+                : (isEn ? "Add New Office Size" : "เพิ่มขนาดออฟฟิศใหม่")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -950,7 +982,7 @@ function OfficeSizesTab({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>ขนาดต่ำสุด (ตร.ม.)</Label>
+                <Label>{isEn ? "Min Size (sqm)" : "ขนาดต่ำสุด (ตร.ม.)"}</Label>
                 <Input
                   type="number"
                   value={form.min_sqm}
@@ -960,7 +992,7 @@ function OfficeSizesTab({
                 />
               </div>
               <div className="space-y-2">
-                <Label>ขนาดสูงสุด (ตร.ม.)</Label>
+                <Label>{isEn ? "Max Size (sqm)" : "ขนาดสูงสุด (ตร.ม.)"}</Label>
                 <Input
                   type="number"
                   value={form.max_sqm}
@@ -971,7 +1003,7 @@ function OfficeSizesTab({
               </div>
             </div>
             <div className="space-y-2">
-              <Label>ลำดับ</Label>
+              <Label>{isEn ? "Sort Order" : "ลำดับ"}</Label>
               <Input
                 type="number"
                 value={form.sort_order || 0}
@@ -985,18 +1017,18 @@ function OfficeSizesTab({
                 checked={form.is_active}
                 onCheckedChange={(v) => setForm({ ...form, is_active: v })}
               />
-              <Label>เปิดใช้งาน</Label>
+              <Label>{isEn ? "Active" : "เปิดใช้งาน"}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              บันทึก
+              {isEn ? "Save" : "บันทึก"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1016,15 +1048,19 @@ function OfficeSizeItem({
   onDelete: () => void;
   onToggle: () => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const displayLabel = isEn ? (item.label_en || item.label) : item.label;
+
   return (
     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
       <div className="flex items-center gap-3">
         <Switch checked={item.is_active || false} onCheckedChange={onToggle} />
         <div>
-          <p className="font-medium text-sm">{item.label}</p>
+          <p className="font-medium text-sm">{displayLabel}</p>
           <p className="text-xs text-muted-foreground">
             {item.min_sqm.toLocaleString()} -{" "}
-            {item.max_sqm >= 9999 ? "MAX" : item.max_sqm.toLocaleString()} ตร.ม.
+            {item.max_sqm >= 9999 ? "MAX" : item.max_sqm.toLocaleString()} {isEn ? "sqm" : "ตร.ม."}
           </p>
         </div>
       </div>
@@ -1062,6 +1098,9 @@ function SettingsTab({
   data: SmartMatchSettings;
   onUpdate: (settings: SmartMatchSettings) => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(data);
 
@@ -1087,9 +1126,9 @@ function SettingsTab({
         updateSmartMatchSetting("pdpa_text_ru", form.pdpa_text_ru),
       ]);
       onUpdate(form);
-      toast.success("บันทึกเรียบร้อย");
+      toast.success(isEn ? "Settings saved successfully" : "บันทึกเรียบร้อย");
     } catch {
-      toast.error("เกิดข้อผิดพลาด");
+      toast.error(isEn ? "An error occurred" : "เกิดข้อผิดพลาด");
     } finally {
       setSaving(false);
     }
@@ -1098,14 +1137,16 @@ function SettingsTab({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">ตั้งค่าทั่วไป</h3>
+        <h3 className="text-lg font-semibold">
+          {isEn ? "General Settings" : "ตั้งค่าทั่วไป"}
+        </h3>
         <Button onClick={handleSave} disabled={saving} className="gap-2">
           {saving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Save className="h-4 w-4" />
           )}
-          บันทึก
+          {isEn ? "Save" : "บันทึก"}
         </Button>
       </div>
 
@@ -1113,9 +1154,13 @@ function SettingsTab({
         <CardContent className="pt-6 space-y-6">
           <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
             <div>
-              <p className="font-medium">คำถามใกล้รถไฟฟ้า</p>
+              <p className="font-medium">
+                {isEn ? "Transit Proximity Question" : "คำถามใกล้รถไฟฟ้า"}
+              </p>
               <p className="text-sm text-muted-foreground">
-                แสดงคำถาม "ต้องการเน้นใกล้รถไฟฟ้าไหม?" ใน Wizard
+                {isEn 
+                  ? 'Show "Prefer near transit?" prompt in Wizard' 
+                  : 'แสดงคำถาม "ต้องการเน้นใกล้รถไฟฟ้าไหม?" ใน Wizard'}
               </p>
             </div>
             <Switch
@@ -1253,3 +1298,4 @@ function SettingsTab({
     </div>
   );
 }
+

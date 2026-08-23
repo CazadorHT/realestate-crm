@@ -13,6 +13,7 @@ import { PriceInput } from "@/components/ui/price-input";
 import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 import { ContractFormInput } from "@/features/rental-contracts/schema";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface Step3Props {
   isSale: boolean;
@@ -21,6 +22,9 @@ interface Step3Props {
 export function Step3Financials({
   isSale,
 }: Step3Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const form = useFormContext<ContractFormInput>();
   const rentPrice = form.watch("rent_price") || 0;
   const depositAmount = form.watch("deposit_amount") || 0;
@@ -36,7 +40,7 @@ export function Step3Financials({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center justify-between text-sm font-bold text-slate-700 ml-1">
-                  <span>เงินประกัน / มัดจำ</span>
+                  <span>{isEn ? "Security Deposit" : "เงินประกัน / มัดจำ"}</span>
                   <div className="flex gap-1.5">
                     {[1, 2, 3].map((m) => (
                       <button
@@ -44,13 +48,13 @@ export function Step3Financials({
                         type="button"
                         onClick={() => field.onChange(m * (rentPrice || 0))}
                         className={cn(
-                          "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all",
+                          "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer",
                           field.value === m * (rentPrice || 0)
                             ? "bg-blue-600 text-white shadow-sm"
                             : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                         )}
                       >
-                        {m} ด.
+                        {m} {isEn ? "mo" : "ด."}
                       </button>
                     ))}
                   </div>
@@ -72,7 +76,7 @@ export function Step3Financials({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center justify-between text-sm font-bold text-slate-700 ml-1">
-                  <span>เงินล่วงหน้า</span>
+                  <span>{isEn ? "Advance Rent" : "เงินล่วงหน้า"}</span>
                   <div className="flex gap-1.5">
                     {[1, 2, 3].map((m) => (
                       <button
@@ -80,13 +84,13 @@ export function Step3Financials({
                         type="button"
                         onClick={() => field.onChange(m * (rentPrice || 0))}
                         className={cn(
-                          "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all",
+                          "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer",
                           field.value === m * (rentPrice || 0)
                             ? "bg-blue-600 text-white shadow-sm"
                             : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                         )}
                       >
-                        {m} ด.
+                        {m} {isEn ? "mo" : "ด."}
                       </button>
                     ))}
                   </div>
@@ -104,15 +108,15 @@ export function Step3Financials({
 
           <div className="sm:col-span-2 bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-3">
             <div className="flex items-center justify-between text-slate-500">
-              <span className="text-sm font-medium">เงินประกัน</span>
+              <span className="text-sm font-medium">{isEn ? "Security Deposit" : "เงินประกัน"}</span>
               <span className="text-sm font-bold">฿{depositAmount.toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between text-slate-500 pb-3 border-b border-slate-200/50">
-              <span className="text-sm font-medium">เงินล่วงหน้า</span>
+              <span className="text-sm font-medium">{isEn ? "Advance Rent" : "เงินล่วงหน้า"}</span>
               <span className="text-sm font-bold">฿{advanceAmount.toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between pt-1">
-              <span className="text-base font-bold text-slate-800">รวมยอดชำระแรกเข้า</span>
+              <span className="text-base font-bold text-slate-800">{isEn ? "Total Move-in Payment" : "รวมยอดชำระแรกเข้า"}</span>
               <span className="text-xl font-black text-blue-600">
                 ฿{(depositAmount + advanceAmount).toLocaleString()}
               </span>
@@ -122,7 +126,7 @@ export function Step3Financials({
       ) : (
         <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 space-y-3">
           <div className="flex items-center justify-between pt-1">
-            <span className="text-base font-bold text-slate-800">ราคาขายสุทธิ</span>
+            <span className="text-base font-bold text-slate-800">{isEn ? "Net Sale Price" : "ราคาขายสุทธิ"}</span>
             <span className="text-xl font-black text-emerald-600">
               ฿{(rentPrice || 0).toLocaleString()}
             </span>
@@ -137,28 +141,28 @@ export function Step3Financials({
           <FormItem className="sm:col-span-2">
             <div className="flex items-center justify-between mb-1.5 ml-1">
               <FormLabel className="text-sm font-bold text-slate-700">
-                {isSale ? "เงื่อนไขการโอน" : "ข้อกำหนดอื่นๆ"}
+                {isSale ? (isEn ? "Transfer Terms" : "เงื่อนไขการโอน") : (isEn ? "Other Terms & Conditions" : "ข้อกำหนดอื่นๆ")}
               </FormLabel>
               {isSale && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg"
+                  className="h-7 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg cursor-pointer"
                   onClick={() => {
-                    const term = "ค่าธรรมเนียมการโอน 50/50";
+                    const term = isEn ? "Transfer fees 50/50" : "ค่าธรรมเนียมการโอน 50/50";
                     if (!(field.value || "").includes(term)) {
                       field.onChange(field.value ? `${field.value}, ${term}` : term);
                     }
                   }}
                 >
-                  + โอน 50/50
+                  {isEn ? "+ Transfer 50/50" : "+ โอน 50/50"}
                 </Button>
               )}
             </div>
             <FormControl>
               <Input
-                placeholder={isSale ? "ระบุค่าใช้จ่ายการโอน..." : "เช่น จ่ายล่วงหน้า 1 เดือน"}
+                placeholder={isSale ? (isEn ? "Specify transfer fees & terms..." : "ระบุค่าใช้จ่ายการโอน...") : (isEn ? "e.g. 1 month advance payment" : "เช่น จ่ายล่วงหน้า 1 เดือน")}
                 {...field}
                 className="h-11 rounded-xl"
               />
@@ -170,3 +174,4 @@ export function Step3Financials({
     </div>
   );
 }
+

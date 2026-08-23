@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Instagram, Images, X, RefreshCw } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export interface InstagramPost {
   id: string;
@@ -29,6 +30,9 @@ export function PostPickerDialog({
   selectedPostId,
   onSelect,
 }: PostPickerDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +53,7 @@ export function PostPickerDialog({
         setHasFetched(true);
       }
     } catch {
-      setError("เกิดข้อผิดพลาด กรุณาลองใหม่");
+      setError(isEn ? "Error fetching posts. Please retry." : "เกิดข้อผิดพลาด กรุณาลองใหม่");
     } finally {
       setIsLoading(false);
     }
@@ -75,10 +79,10 @@ export function PostPickerDialog({
   }, [posts, search, filterType]);
 
   const filterLabels: Record<string, string> = {
-    ALL: "ทั้งหมด",
-    IMAGE: "รูปภาพ",
-    VIDEO: "วิดีโอ",
-    CAROUSEL_ALBUM: "อัลบั้ม",
+    ALL: isEn ? "All" : "ทั้งหมด",
+    IMAGE: isEn ? "Photos" : "รูปภาพ",
+    VIDEO: isEn ? "Videos" : "วิดีโอ",
+    CAROUSEL_ALBUM: isEn ? "Carousels" : "อัลบั้ม",
   };
 
   return (
@@ -90,21 +94,23 @@ export function PostPickerDialog({
           <div className="p-2 bg-violet-600 rounded-xl shadow-lg shadow-violet-200">
             <Instagram className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold">เลือกโพสต์ที่ต้องการผูก Keyword</span>
+          <span className="font-bold">
+            {isEn ? "Select Linked Post for Keyword" : "เลือกโพสต์ที่ต้องการผูก Keyword"}
+          </span>
         </div>
       }
-      description="Keyword นี้จะตอบกลับเฉพาะ Comment ที่เข้ามาในโพสต์ที่คุณเลือก"
+      description={isEn ? "Auto-reply will only trigger for comments on the selected post" : "Keyword นี้จะตอบกลับเฉพาะ Comment ที่เข้ามาในโพสต์ที่คุณเลือก"}
       footer={
         <div className="flex items-center justify-between w-full gap-3">
           <span className="text-xs text-slate-400">
-            {posts.length > 0 && `${filteredPosts.length} / ${posts.length} โพสต์`}
+            {posts.length > 0 && (isEn ? `${filteredPosts.length} / ${posts.length} Posts` : `${filteredPosts.length} / ${posts.length} โพสต์`)}
           </span>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="rounded-2xl font-semibold"
           >
-            ปิด
+            {isEn ? "Close" : "ปิด"}
           </Button>
         </div>
       }
@@ -115,10 +121,10 @@ export function PostPickerDialog({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="ค้นหาจาก caption หรือ Post ID..."
+              placeholder={isEn ? "Search caption or Post ID..." : "ค้นหาจาก caption หรือ Post ID..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 rounded-xl border-slate-200  bg-slate-50/50 focus:bg-white"
+              className="pl-9 h-10 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white"
             />
             {search && (
               <button
@@ -137,7 +143,7 @@ export function PostPickerDialog({
             className="h-10 rounded-xl gap-1.5 px-4 shrink-0"
           >
             {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-            โหลดใหม่
+            {isEn ? "Reload" : "โหลดใหม่"}
           </Button>
         </div>
 
@@ -167,7 +173,9 @@ export function PostPickerDialog({
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Loader2 className="h-8 w-8 text-violet-500 animate-spin" />
-            <p className="text-sm text-slate-500 font-medium">กำลังโหลดโพสต์...</p>
+            <p className="text-sm text-slate-500 font-medium">
+              {isEn ? "Loading posts..." : "กำลังโหลดโพสต์..."}
+            </p>
           </div>
         )}
 
@@ -179,7 +187,7 @@ export function PostPickerDialog({
             </div>
             <p className="text-sm font-semibold text-red-500">{error}</p>
             <Button variant="outline" size="sm" onClick={fetchPosts} className="rounded-xl mt-1">
-              ลองใหม่
+              {isEn ? "Retry" : "ลองใหม่"}
             </Button>
           </div>
         )}
@@ -189,7 +197,9 @@ export function PostPickerDialog({
           <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
             <Images className="h-8 w-8 text-slate-300" />
             <p className="text-sm text-slate-400 font-medium">
-              {search || filterType !== "ALL" ? "ไม่พบโพสต์ที่ตรงกับเงื่อนไข" : "ไม่พบโพสต์"}
+              {search || filterType !== "ALL" 
+                ? (isEn ? "No matching posts found" : "ไม่พบโพสต์ที่ตรงกับเงื่อนไข") 
+                : (isEn ? "No posts found" : "ไม่พบโพสต์")}
             </p>
           </div>
         )}
@@ -258,7 +268,7 @@ export function PostPickerDialog({
                   {/* Caption */}
                   <div className={`p-2.5 border-t ${isSelected ? "bg-violet-50 border-violet-100" : "bg-white border-slate-100"}`}>
                     <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed font-medium min-h-[30px]">
-                      {post.caption || <span className="text-slate-300 italic">ไม่มี Caption</span>}
+                      {post.caption || <span className="text-slate-300 italic">{isEn ? "No caption" : "ไม่มี Caption"}</span>}
                     </p>
                     <div className="flex items-center justify-between mt-1.5 gap-1">
                       <Badge
@@ -270,11 +280,15 @@ export function PostPickerDialog({
                             : "bg-emerald-100 text-emerald-600"
                         }`}
                       >
-                        {post.media_type === "CAROUSEL_ALBUM" ? "อัลบั้ม" : post.media_type === "VIDEO" ? "วิดีโอ" : "รูป"}
+                        {post.media_type === "CAROUSEL_ALBUM" 
+                          ? (isEn ? "Album" : "อัลบั้ม") 
+                          : post.media_type === "VIDEO" 
+                          ? (isEn ? "Video" : "วิดีโอ") 
+                          : (isEn ? "Photo" : "รูป")}
                       </Badge>
                       {post.timestamp && (
                         <span className="text-[9px] text-slate-400">
-                          {new Date(post.timestamp).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}
+                          {new Date(post.timestamp).toLocaleDateString(isEn ? "en-US" : "th-TH", { day: "numeric", month: "short" })}
                         </span>
                       )}
                     </div>
@@ -288,3 +302,4 @@ export function PostPickerDialog({
     </ResponsiveDialog>
   );
 }
+

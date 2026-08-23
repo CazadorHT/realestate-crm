@@ -44,40 +44,39 @@ describe('LoginForm Component', () => {
 
   it('renders login view by default', () => {
     render(<LoginForm />);
-    expect(screen.getByText('เข้าสู่ระบบ')).toBeInTheDocument();
-    expect(screen.getByLabelText(/อีเมล/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/รหัสผ่าน/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
   });
 
   it('shows validation error for invalid email', async () => {
     render(<LoginForm />);
     
-    const emailInput = screen.getByLabelText(/อีเมล/i);
-    const submitButton = screen.getByRole('button', { name: /เข้าสู่ระบบ/i });
+    const emailInput = screen.getByLabelText(/email address/i);
 
     fireEvent.input(emailInput, { target: { value: 'invalid-email' } });
-    fireEvent.submit((screen.getByRole('button', { name: /เข้าสู่ระบบ/i }) as HTMLButtonElement).form!);
+    fireEvent.submit((screen.getByRole('button', { name: /sign in/i }) as HTMLButtonElement).form!);
 
-    expect(await screen.findByText(/กรุณากรอกอีเมลให้ถูกต้อง/i, {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(await screen.findByText(/please enter a valid email address/i, {}, { timeout: 4000 })).toBeInTheDocument();
   });
 
   it('switches to signup view', async () => {
     render(<LoginForm />);
-    const signupLink = screen.getByText(/สมัครสมาชิกที่นี่/i);
+    const signupLink = screen.getByText(/sign up here/i);
     
     await user.click(signupLink);
     
-    expect(screen.getByText('สร้างบัญชีใหม่')).toBeInTheDocument();
-    expect(screen.getByLabelText(/ยืนยันรหัสผ่าน/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
   });
 
   it('validates password matching on signup', async () => {
     render(<LoginForm defaultView="signup" />);
     
-    const emailInput = screen.getByLabelText(/อีเมล/i);
-    const passwordInput = screen.getByLabelText('รหัสผ่าน');
-    const confirmPasswordInput = screen.getByLabelText(/ยืนยันรหัสผ่าน/i);
-    const submitButton = screen.getByRole('button', { name: /ลงทะเบียน/i });
+    const emailInput = screen.getByLabelText(/email address/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+    const submitButton = screen.getByRole('button', { name: /create account/i });
 
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
@@ -85,7 +84,7 @@ describe('LoginForm Component', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText('รหัสผ่านไม่ตรงกัน')).toBeInTheDocument();
+      expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
     });
   });
 
@@ -97,10 +96,10 @@ describe('LoginForm Component', () => {
 
     render(<LoginForm />);
     
-    const emailInput = screen.getByLabelText(/อีเมล/i);
-    const passwordInput = screen.getByLabelText('รหัสผ่าน');
+    const emailInput = screen.getByLabelText(/email address/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
     const honeypotInput = document.querySelector('input[name="honeypot"]');
-    const submitButton = screen.getByRole('button', { name: /เข้าสู่ระบบ/i });
+    const submitButton = screen.getByRole('button', { name: /sign in/i });
 
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
@@ -114,3 +113,4 @@ describe('LoginForm Component', () => {
     expect(mockSignIn).not.toHaveBeenCalled();
   });
 });
+

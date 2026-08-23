@@ -13,6 +13,7 @@ import { ExecutiveStats } from "../../executive-queries";
 
 import { PieChart as PieChartIcon, TrendingUp, Handshake, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface TransactionTableProps {
   stats: ExecutiveStats;
@@ -20,15 +21,18 @@ interface TransactionTableProps {
 }
 
 export function TransactionTable({ stats, className }: TransactionTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Card className={cn("border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm", className)}>
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <Zap className="h-5 w-5 text-amber-500" />
-          Transaction Overview
+          {isEn ? "Transaction Overview" : "ภาพรวมธุรกรรม (Transactions)"}
         </CardTitle>
         <CardDescription className="text-xs">
-          สรุปจำนวนดีลและมูลค่าแยกตามประเภทธุรกรรม
+          {isEn ? "Summary of closed deal volume and commission by transaction type" : "สรุปจำนวนดีลและมูลค่าแยกตามประเภทธุรกรรม"}
         </CardDescription>
       </CardHeader>
       <CardContent className="px-4 sm:px-6">
@@ -37,22 +41,22 @@ export function TransactionTable({ stats, className }: TransactionTableProps) {
           <table className="w-full text-sm text-left">
             <thead className="text-[10px] text-slate-500 uppercase bg-slate-50/80 tracking-widest font-semibold">
               <tr>
-                <th className="px-6 py-4 font-semibold">ประเภทธุรกรรม</th>
-                <th className="px-6 py-4 font-semibold text-center">จำนวนดีล</th>
-                <th className="px-6 py-4 font-semibold text-right">ยอดรวม (Gross)</th>
-                <th className="px-6 py-4 font-semibold text-right">คอมมิชชั่น</th>
+                <th className="px-6 py-4 font-semibold">{isEn ? "Transaction Type" : "ประเภทธุรกรรม"}</th>
+                <th className="px-6 py-4 font-semibold text-center">{isEn ? "Deals Count" : "จำนวนดีล"}</th>
+                <th className="px-6 py-4 font-semibold text-right">{isEn ? "Gross Volume" : "ยอดรวม (Gross)"}</th>
+                <th className="px-6 py-4 font-semibold text-right">{isEn ? "Commission" : "คอมมิชชั่น"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               <TransactionRow
-                label="การขาย (Sales)"
+                label={isEn ? "Sales" : "การขาย (Sales)"}
                 count={stats.salesCount}
                 revenue={stats.salesRevenue}
                 commission={stats.salesCommission}
                 color="blue"
               />
               <TransactionRow
-                label="การเช่า (Rentals)"
+                label={isEn ? "Rentals" : "การเช่า (Rentals)"}
                 count={stats.rentalCount}
                 revenue={stats.rentalRevenue}
                 commission={stats.rentalCommission}
@@ -78,7 +82,7 @@ export function TransactionTable({ stats, className }: TransactionTableProps) {
         <div className="lg:hidden space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TransactionMobileCard
-              label="Sales"
+              label={isEn ? "Sales" : "การขาย (Sales)"}
               count={stats.salesCount}
               revenue={stats.salesRevenue}
               commission={stats.salesCommission}
@@ -86,7 +90,7 @@ export function TransactionTable({ stats, className }: TransactionTableProps) {
               color="blue"
             />
             <TransactionMobileCard
-              label="Rentals"
+              label={isEn ? "Rentals" : "การเช่า (Rentals)"}
               count={stats.rentalCount}
               revenue={stats.rentalRevenue}
               commission={stats.rentalCommission}

@@ -19,18 +19,21 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import type { AgentTask } from "../../queries/agent-dashboard";
 import { generateFollowUpScriptAction } from "../../actions/agent-actions";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface AgentTaskBoardProps {
   tasks: AgentTask[];
 }
 
 export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [selectedTask, setSelectedTask] = useState<AgentTask | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedScript, setGeneratedScript] = useState<string | null>(null);
@@ -47,11 +50,11 @@ export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
       if (result.success && result.script) {
         setGeneratedScript(result.script);
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาดในการเจนบทความ");
+        toast.error(result.message || (isEn ? "Failed to generate script" : "เกิดข้อผิดพลาดในการเจนบทความ"));
       }
     } catch (error) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ AI");
+      toast.error(isEn ? "AI connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อ AI");
     } finally {
       setIsGenerating(false);
     }
@@ -59,7 +62,7 @@ export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("คัดลอกไปยังคลิปบอร์ดแล้ว");
+    toast.success(isEn ? "Copied to clipboard" : "คัดลอกไปยังคลิปบอร์ดแล้ว");
   };
 
   if (tasks.length === 0) {
@@ -68,9 +71,9 @@ export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
         <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
           <CheckCircle2 className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900">ยอดเยี่ยมมาก!</h3>
+        <h3 className="text-lg font-bold text-slate-900">{isEn ? "Great Job!" : "ยอดเยี่ยมมาก!"}</h3>
         <p className="text-slate-500 text-sm max-w-[200px]">
-          ไม่มีงานด่วนหรือลูกค้าที่ค้างการติดต่อในตอนนี้
+          {isEn ? "No urgent tasks or pending follow-ups right now." : "ไม่มีงานด่วนหรือลูกค้าที่ค้างการติดต่อในตอนนี้"}
         </p>
       </div>
     );
@@ -80,13 +83,13 @@ export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between px-2">
         <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-          งานด่วนวันนี้
+          {isEn ? "Urgent Tasks Today" : "งานด่วนวันนี้"}
           <span className="bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full">
             {tasks.length}
           </span>
         </h2>
         <Link href="/protected/calendar" className="text-xs font-bold text-blue-600 hover:underline">
-          ดูปฏิทินทั้งหมด
+          {isEn ? "View Full Calendar" : "ดูปฏิทินทั้งหมด"}
         </Link>
       </div>
 
@@ -122,7 +125,7 @@ export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
                     "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
                     isHigh ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600"
                   )}>
-                    {isHigh ? "ด่วนมาก" : "แจ้งเตือน"}
+                    {isHigh ? (isEn ? "Urgent" : "ด่วนมาก") : (isEn ? "Reminder" : "แจ้งเตือน")}
                   </span>
                   {task.ai_score && (
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
@@ -132,7 +135,7 @@ export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
                   {task.dueDate && (
                     <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true, locale: th })}
+                      {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true, locale: isEn ? enUS : th })}
                     </span>
                   )}
                 </div>
@@ -151,7 +154,7 @@ export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
                     size="icon"
                     variant="ghost"
                     onClick={() => handleGenAIScript(task)}
-                    className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 shadow-sm"
+                    className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 shadow-sm cursor-pointer"
                   >
                     <Sparkles className="h-4 w-4" />
                   </Button>
@@ -182,12 +185,12 @@ export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
         title={
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-500" />
-            <span>สคริปต์แนะนำสำหรับคุณ {selectedTask?.customerName || "ลูกค้า"}</span>
+            <span>{isEn ? `Suggested Script for ${selectedTask?.customerName || "Customer"}` : `สคริปต์แนะนำสำหรับคุณ ${selectedTask?.customerName || "ลูกค้า"}`}</span>
           </div>
         }
-        description={`บทสนทนาที่เหมาะสมสำหรับติดตามคุณ ${selectedTask?.title || "ลูกค้า"}`}
+        description={isEn ? `Follow-up conversation for ${selectedTask?.title || "Customer"}` : `บทสนทนาที่เหมาะสมสำหรับติดตามคุณ ${selectedTask?.title || "ลูกค้า"}`}
         isLoading={isGenerating}
-        loadingText="AI กำลังร่างข้อความที่ดีที่สุดให้คุณ..."
+        loadingText={isEn ? "AI is drafting the best message..." : "AI กำลังร่างข้อความที่ดีที่สุดให้คุณ..."}
       >
         <div className="p-6">
           {generatedScript ? (
@@ -199,28 +202,28 @@ export function AgentTaskBoard({ tasks }: AgentTaskBoardProps) {
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
-                  className="rounded-2xl h-12 font-bold gap-2"
+                  className="rounded-2xl h-12 font-bold gap-2 cursor-pointer"
                   onClick={() => copyToClipboard(generatedScript)}
                 >
                   <Copy className="w-4 h-4" />
-                  คัดลอกข้อความ
+                  {isEn ? "Copy Message" : "คัดลอกข้อความ"}
                 </Button>
                 {selectedTask?.line_id && (
                   <Button
-                    className="rounded-2xl h-12 font-bold gap-2 bg-[#06C755] hover:bg-[#05b34c] text-white border-none shadow-lg shadow-emerald-100"
+                    className="rounded-2xl h-12 font-bold gap-2 bg-[#06C755] hover:bg-[#05b34c] text-white border-none shadow-lg shadow-emerald-100 cursor-pointer"
                     onClick={() => {
                       window.open(`https://line.me/ti/p/~${selectedTask.line_id}`, "_blank");
                     }}
                   >
                     <MessageCircle className="w-4 h-4" />
-                    ส่งเข้า Line
+                    {isEn ? "Send via LINE" : "ส่งเข้า Line"}
                   </Button>
                 )}
               </div>
             </div>
           ) : (
             <div className="h-40 flex items-center justify-center text-slate-400 text-sm">
-              กำลังรอข้อความจาก AI...
+              {isEn ? "Waiting for AI script..." : "กำลังรอข้อความจาก AI..."}
             </div>
           )}
         </div>

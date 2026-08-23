@@ -11,11 +11,14 @@ import {
   cleanupOrphanedServiceImagesAction,
   emptyServiceTrashAction
 } from "@/features/services/actions";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function useServicesActions() {
   const router = useRouter();
   const pathname = usePathname(); 
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -42,13 +45,13 @@ export function useServicesActions() {
       try {
         const res = await deleteService(deletingId);
         if (res.success) {
-          toast.success("ย้ายบริการลงถังขยะเรียบร้อยแล้ว");
+          toast.success(isEn ? "Service moved to trash" : "ย้ายบริการลงถังขยะเรียบร้อยแล้ว");
           router.refresh();
         } else {
-          toast.error(res.message || "ไม่สามารถลบข้อมูลได้");
+          toast.error(res.message || (isEn ? "Failed to delete service" : "ไม่สามารถลบข้อมูลได้"));
         }
       } catch (error: any) {
-        toast.error(error.message || "เกิดข้อผิดพลาด");
+        toast.error(error.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
       } finally {
         setIsDeleting(false);
         setDeletingId(null);
@@ -61,13 +64,13 @@ export function useServicesActions() {
       try {
         const res = await restoreServiceAction(id);
         if (res.success) {
-          toast.success("กู้คืนข้อมูลบริการสำเร็จ");
+          toast.success(isEn ? "Service restored successfully" : "กู้คืนข้อมูลบริการสำเร็จ");
           router.refresh();
         } else {
-          toast.error(res.message || "กู้คืนข้อมูลไม่สำเร็จ");
+          toast.error(res.message || (isEn ? "Failed to restore service" : "กู้คืนข้อมูลไม่สำเร็จ"));
         }
       } catch (error: any) {
-        toast.error(error.message || "เกิดข้อผิดพลาด");
+        toast.error(error.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
       }
     });
   };
@@ -79,13 +82,13 @@ export function useServicesActions() {
       try {
         const res = await permanentDeleteServiceAction(permanentDeletingId);
         if (res.success) {
-          toast.success("ลบข้อมูลออกจากระบบถาวรแล้ว");
+          toast.success(isEn ? "Service permanently deleted" : "ลบข้อมูลออกจากระบบถาวรแล้ว");
           router.refresh();
         } else {
-          toast.error(res.message || "เกิดข้อผิดพลาดในการลบข้อมูลถาวร");
+          toast.error(res.message || (isEn ? "Error permanently deleting service" : "เกิดข้อผิดพลาดในการลบข้อมูลถาวร"));
         }
       } catch (error: any) {
-        toast.error(error.message || "เกิดข้อผิดพลาด");
+        toast.error(error.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
       } finally {
         setIsDeleting(false);
         setPermanentDeletingId(null);
@@ -96,21 +99,30 @@ export function useServicesActions() {
 
   const handleEmptyTrash = async () => {
     if (confirmName !== "DELETE_ALL") return;
-    const processId = startProcess("กำลังล้างถังขยะบริการทั้งหมด", {
-      type: "BULK_ACTION"
-    });
+    const processId = startProcess(
+      isEn ? "Emptying all services trash..." : "กำลังล้างถังขยะบริการทั้งหมด",
+      { type: "BULK_ACTION" }
+    );
     startTransition(async () => {
       setIsDeleting(true);
       try {
         const res = await emptyServiceTrashAction();
         if (res.success) {
-          finishProcess(processId, "SUCCESS", res.message || "ล้างถังขยะเรียบร้อยแล้ว ✨");
+          finishProcess(
+            processId,
+            "SUCCESS",
+            res.message || (isEn ? "Trash emptied successfully ✨" : "ล้างถังขยะเรียบร้อยแล้ว ✨")
+          );
           router.refresh();
         } else {
-          finishProcess(processId, "ERROR", res.message || "ไม่สามารถล้างถังขยะได้");
+          finishProcess(
+            processId,
+            "ERROR",
+            res.message || (isEn ? "Failed to empty trash" : "ไม่สามารถล้างถังขยะได้")
+          );
         }
       } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการล้างถังขยะ";
+        const msg = error instanceof Error ? error.message : (isEn ? "Error emptying trash" : "เกิดข้อผิดพลาดในการล้างถังขยะ");
         finishProcess(processId, "ERROR", msg);
       } finally {
         setIsDeleting(false);
@@ -121,9 +133,10 @@ export function useServicesActions() {
   };
 
   const handleCleanup = async () => {
-    const processId = startProcess("กำลังดูแลรักษาพื้นที่จัดเก็บ (ล้างรูปภาพส่วนเกิน)", {
-      type: "MAINTENANCE"
-    });
+    const processId = startProcess(
+      isEn ? "Cleaning up storage (orphaned service images)..." : "กำลังดูแลรักษาพื้นที่จัดเก็บ (ล้างรูปภาพส่วนเกิน)",
+      { type: "MAINTENANCE" }
+    );
     startTransition(async () => {
       try {
         const res = await cleanupOrphanedServiceImagesAction();
@@ -131,14 +144,18 @@ export function useServicesActions() {
           finishProcess(
             processId, 
             "SUCCESS", 
-            res.message || "ดูแลรักษาพื้นที่จัดเก็บสำเร็จ ✨ (รูปภาพส่วนเกินถูกลบทิ้ง)"
+            res.message || (isEn ? "Storage maintenance completed ✨" : "ดูแลรักษาพื้นที่จัดเก็บสำเร็จ ✨ (รูปภาพส่วนเกินถูกลบทิ้ง)")
           );
           router.refresh();
         } else {
-          finishProcess(processId, "ERROR", res.message || "ไม่สามารถดำเนินการดูแลรักษาได้");
+          finishProcess(
+            processId,
+            "ERROR",
+            res.message || (isEn ? "Maintenance failed" : "ไม่สามารถดำเนินการดูแลรักษาได้")
+          );
         }
       } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการดูแลรักษา";
+        const msg = error instanceof Error ? error.message : (isEn ? "Maintenance error" : "เกิดข้อผิดพลาดในการดูแลรักษา");
         finishProcess(processId, "ERROR", msg);
       }
     });
@@ -165,3 +182,4 @@ export function useServicesActions() {
     handleCleanup,
   };
 }
+

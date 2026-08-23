@@ -1,6 +1,9 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Shield, UserCheck, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface UsersStatsSummaryProps {
   totalUsers: number;
@@ -15,42 +18,45 @@ export function UsersStatsSummary({
   totalAgents,
   totalUsersWaiting,
 }: UsersStatsSummaryProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const stats = [
     {
-      title: "ผู้ใช้ทั้งหมด",
+      title: isEn ? "Total Users" : "ผู้ใช้ทั้งหมด",
       value: totalUsers,
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-400/5",
       borderColor: "border-blue-200/50",
-      description: "รวมทุกบทบาท",
+      description: isEn ? "All roles combined" : "รวมทุกบทบาท",
     },
     {
-      title: "ผู้ดูแลระบบ (Admin)",
+      title: isEn ? "Admins (Admin)" : "ผู้ดูแลระบบ (Admin)",
       value: totalAdmins,
       icon: Shield,
       color: "text-indigo-600",
       bgColor: "bg-indigo-400/5",
       borderColor: "border-indigo-200/50",
-      description: "สิทธิ์การเข้าถึงสูงสุด",
+      description: isEn ? "Highest system access" : "สิทธิ์การเข้าถึงสูงสุด",
     },
     {
-      title: "เอเจนท์ (Agent)",
+      title: isEn ? "Agents (Agent)" : "เอเจนท์ (Agent)",
       value: totalAgents,
       icon: UserCheck,
       color: "text-emerald-600",
       bgColor: "bg-emerald-400/5",
       borderColor: "border-emerald-200/50",
-      description: "ทีมงานขายและดูแลลีด",
+      description: isEn ? "Sales & lead managers" : "ทีมงานขายและดูแลลีด",
     },
     {
-      title: "รอการตรวจสอบ",
+      title: isEn ? "Pending Review" : "รอการตรวจสอบ",
       value: totalUsersWaiting,
       icon: Clock,
       color: "text-amber-600",
       bgColor: "bg-amber-400/5",
       borderColor: "border-amber-200/50",
-      description: "ต้องกำหนดบทบาท",
+      description: isEn ? "Role assignment needed" : "ต้องกำหนดบทบาท",
     },
   ];
 
@@ -114,3 +120,4 @@ export function UsersStatsSummary({
     </div>
   );
 }
+

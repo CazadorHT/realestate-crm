@@ -5,6 +5,7 @@ import { PopularAreaForm } from "./PopularAreaForm";
 import { updatePopularArea } from "../popular-areas-actions";
 import { Edit, MapPin } from "lucide-react";
 import { type PopularArea } from "./PopularAreasTable";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface EditPopularAreaDialogProps {
   area: PopularArea | null;
@@ -19,6 +20,9 @@ export function EditPopularAreaDialog({
   onOpenChange,
   onSuccess,
 }: EditPopularAreaDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <ResponsiveDialog
       open={open}
@@ -31,10 +35,10 @@ export function EditPopularAreaDialog({
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
-              แก้ไขข้อมูลทำเล
+              {isEn ? "Edit Popular Area" : "แก้ไขข้อมูลทำเล"}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">
-              Edit Popular Area Information
+              {isEn ? "Edit Location Details & SEO" : "Edit Popular Area Information"}
             </span>
           </div>
         </div>
@@ -46,12 +50,12 @@ export function EditPopularAreaDialog({
           </span>
           <MapPin className="h-3 w-3 text-slate-300" />
           <span className="text-[11px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded">
-            {area?.name}
+            {isEn ? (area?.name_en || area?.name) : area?.name}
           </span>
         </div>
       }
     >
-      <div className="p-6  bg-white rounded-b-2xl">
+      <div className="p-6 bg-white rounded-b-2xl">
         {area && (
           <PopularAreaForm
             initialData={area}
@@ -67,3 +71,4 @@ export function EditPopularAreaDialog({
     </ResponsiveDialog>
   );
 }
+

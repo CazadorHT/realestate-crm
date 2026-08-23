@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Metadata } from "next";
 import { CoBrokerTour } from "@/features/co-brokers/_components/CoBrokerTour";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: "เครือข่ายคู่ค้า | Real Estate CRM",
@@ -17,17 +18,21 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CoBrokersPage() {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
       <CoBrokerTour />
       <PageHeader
-        title="เครือข่ายคู่ค้า (Co-Brokers)"
-        subtitle="จัดการข้อมูลพาร์ทเนอร์, ตรวจสอบผลงาน และตำแหน่งพื้นที่เชี่ยวชาญ"
+        title={isEn ? "Co-Brokers Network" : "เครือข่ายคู่ค้า (Co-Brokers)"}
+        subtitle={isEn ? "Manage partner profiles, track performance, and specialized areas" : "จัดการข้อมูลพาร์ทเนอร์, ตรวจสอบผลงาน และตำแหน่งพื้นที่เชี่ยวชาญ"}
         icon="users"
         gradient="blue"
         breadcrumbs={[
-          { label: "แดชบอร์ด", href: "/protected" },
-          { label: "เครือข่ายคู่ค้า" },
+          { label: isEn ? "Dashboard" : "แดชบอร์ด", href: "/protected" },
+          { label: isEn ? "Co-Brokers" : "เครือข่ายคู่ค้า" },
         ]}
       />
 
@@ -43,7 +48,6 @@ async function CoBrokersContentWrapper() {
   const initialData = result.success ? result.data : [];
   return <CoBrokersContent initialData={initialData as any} />;
 }
-
 
 function CoBrokersLoading() {
   return (
@@ -63,3 +67,4 @@ function CoBrokersLoading() {
     </div>
   );
 }
+

@@ -4,6 +4,7 @@ import { Settings, CheckCircle2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface BreadcrumbItem {
   label: string;
@@ -23,6 +24,9 @@ export function SettingsHeader({
   subPath = [],
   actions,
 }: SettingsHeaderProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="relative mb-6 md:mb-10 overflow-hidden rounded-[32px] bg-white p-5 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/80">
       {/* Decorative Background Elements */}
@@ -43,9 +47,9 @@ export function SettingsHeader({
             <nav className="flex flex-wrap items-center gap-1 text-[8px] md:text-[10px] font-semibold uppercase tracking-widest md:tracking-[0.2em] text-slate-400">
               <Link
                 href="/protected/settings"
-                className=" hover:text-blue-600 transition-colors whitespace-nowrap italic"
+                className="hover:text-blue-600 transition-colors whitespace-nowrap italic"
               >
-                การตั้งค่า (Settings)
+                {isEn ? "Settings" : "การตั้งค่า (Settings)"}
               </Link>
 
               <AnimatePresence mode="popLayout">
@@ -78,7 +82,7 @@ export function SettingsHeader({
                 <>
                   <ChevronRight className="h-3 w-3 text-slate-300" />
                   <span className="text-blue-600/80 whitespace-nowrap italic">
-                    ระบบควบคุมความปลอดภัย (System Control)
+                    {isEn ? "System Control" : "ระบบควบคุมความปลอดภัย (System Control)"}
                   </span>
                 </>
               )}
@@ -92,7 +96,7 @@ export function SettingsHeader({
               <h1 className="text-xl md:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-900 leading-tight">
                 {title || (
                   <>
-                    การตั้งค่าระบบ{" "}
+                    {isEn ? "System Settings " : "การตั้งค่าระบบ "}
                     <span className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent italic pr-1">
                       (System Settings)
                     </span>
@@ -106,8 +110,9 @@ export function SettingsHeader({
               )}
               {!description && (
                 <p className="text-xs md:text-sm font-medium text-slate-500 italic mt-1 hidden sm:block">
-                  จัดการพารามิเตอร์และฟีเจอร์ระดับองค์กร (Enterprise Control)
-                  ทั้งหมดในจุดเดียว
+                  {isEn
+                    ? "Manage enterprise parameters and organizational features all in one place."
+                    : "จัดการพารามิเตอร์และฟีเจอร์ระดับองค์กร (Enterprise Control) ทั้งหมดในจุดเดียว"}
                 </p>
               )}
             </m.div>
@@ -126,7 +131,7 @@ export function SettingsHeader({
                 <span className="relative inline-flex h-2 w-2 md:h-2.5 md:w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
               </div>
               <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider">
-                สถานะ: ปกติ (Operational)
+                {isEn ? "Status: Operational" : "สถานะ: ปกติ (Operational)"}
               </span>
             </m.div>
 
@@ -152,3 +157,4 @@ export function SettingsHeader({
     </div>
   );
 }
+

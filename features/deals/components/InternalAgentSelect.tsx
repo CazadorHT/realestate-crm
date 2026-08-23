@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Users, Loader2 } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface InternalAgent {
   id: string;
@@ -24,6 +25,9 @@ interface InternalAgent {
 }
 
 export function InternalAgentSelect() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const { control, setValue } = useFormContext();
   const [agents, setAgents] = useState<InternalAgent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +71,7 @@ export function InternalAgentSelect() {
         <FormItem className="space-y-2">
           <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight flex items-center gap-2">
             <Users className="w-3 h-3 text-blue-600" />
-            เลือกพนักงานร่วมงานภายในบริษัท (Internal Agent)
+            {isEn ? "Select Internal Agent" : "เลือกพนักงานร่วมงานภายในบริษัท (Internal Agent)"}
           </FormLabel>
           <Select
             value={field.value || "NONE"}
@@ -77,16 +81,16 @@ export function InternalAgentSelect() {
             }}
           >
             <FormControl>
-              <SelectTrigger className="h-11! w-full rounded-xl bg-white border-slate-200">
-                <SelectValue placeholder={isLoading ? "กำลังโหลดพนักงาน..." : "เลือกพนักงาน..."} />
+              <SelectTrigger className="h-11! w-full rounded-xl bg-white border-slate-200 cursor-pointer">
+                <SelectValue placeholder={isLoading ? (isEn ? "Loading agents..." : "กำลังโหลดพนักงาน...") : (isEn ? "Select agent..." : "เลือกพนักงาน...")} />
               </SelectTrigger>
             </FormControl>
             <SelectContent className="bg-white rounded-xl shadow-xl max-h-[300px]">
-              <SelectItem value="NONE" className="italic text-slate-400">
-                {isLoading ? "กำลังโหลดรายชื่อ..." : "-- ไม่ระบุพนักงานภายใน --"}
+              <SelectItem value="NONE" className="italic text-slate-400 cursor-pointer">
+                {isLoading ? (isEn ? "Loading agents..." : "กำลังโหลดรายชื่อ...") : (isEn ? "-- None (No Internal Agent) --" : "-- ไม่ระบุพนักงานภายใน --")}
               </SelectItem>
               {agents.map((agent) => (
-                <SelectItem key={agent.id} value={agent.id} className="py-2.5">
+                <SelectItem key={agent.id} value={agent.id} className="py-2.5 cursor-pointer">
                   <div className="flex items-center gap-2">
                     {agent.avatar_url ? (
                       <img
@@ -110,3 +114,4 @@ export function InternalAgentSelect() {
     />
   );
 }
+

@@ -46,6 +46,7 @@ import {
 import { generateSocialBannerContentAction } from "@/features/properties/actions/social";
 import type { BannerContentResult } from "@/features/properties/actions/social";
 import { siteConfig } from "@/lib/site-config";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // Subcomponents
 import { StudioPreviewPanel } from "./components/StudioPreviewPanel";
@@ -77,6 +78,9 @@ export function SocialStudioModal({
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const [theme, setTheme] = useState<StudioTheme>("luxury");
   const [layout, setLayout] = useState<StudioLayout>("single");
+
+  const { language: uiLang } = useLanguage();
+  const isEn = uiLang === "en";
 
   // 4-Languages Support (TH, EN, ZH, RU)
   const [language, setLanguage] = useState<StudioLanguage>("th");
@@ -403,7 +407,11 @@ export function SocialStudioModal({
           : newLang === "ru"
             ? "Русский 🇷🇺"
             : "ภาษาไทย 🇹🇭";
-    toast.success(`เปลี่ยนภาษาเป็น ${langName} แล้ว! 🌐`);
+    toast.success(
+      isEn
+        ? `Language changed to ${langName}! 🌐`
+        : `เปลี่ยนภาษาเป็น ${langName} แล้ว! 🌐`
+    );
   };
 
   const hasFetchedInitialAI = useRef(false);
@@ -584,17 +592,20 @@ export function SocialStudioModal({
     showContact,
     showAgentAvatar,
     currentSlotImageUrls,
-    customTitle,
-    customProjectName,
-    customTransitText,
-    locationDisplay,
-    property,
-    headline,
-    highlights,
-    priceDisplay,
-    originalPriceDisplay,
+    topScrimOpacity,
+    scrimOpacity,
+    priceFormatStyle,
+    photoFilter,
+    promoPosition,
     selectedBadges,
-    qrCodeImageUrl,
+    customProjectName,
+    customTitle,
+    customTransitText,
+    customCardBgColor,
+    activeCarouselPage,
+    property,
+    imageUrls,
+    slotIndices,
   ]);
 
   useEffect(() => {
@@ -604,12 +615,39 @@ export function SocialStudioModal({
   }, [isOpen, drawCanvas]);
 
   // Handlers for slot changes
-  const handleSelectImageForSlot = (imageIdx: number) => {
+  const handleSelectLayout = (newLayout: StudioLayout) => {
+    setLayout(newLayout);
+    const slotsCount =
+      newLayout === "single"
+        ? 1
+        : newLayout === "split_two"
+          ? 2
+          : newLayout === "hero_plus_two"
+            ? 3
+            : newLayout === "four_grid"
+              ? 4
+              : newLayout === "five_grid"
+                ? 5
+                : 6;
     setSlotIndices((prev) => {
-      const updated = [...prev];
-      updated[activeSlot] = imageIdx;
-      return updated;
+      const next = [...prev];
+      while (next.length < slotsCount) {
+        next.push(next.length % Math.max(imageUrls.length, 1));
+      }
+      return next.slice(0, slotsCount);
     });
+  };
+
+  const handleSelectSlotImage = (slotIdx: number, imgIdx: number) => {
+    setSlotIndices((prev) => {
+      const next = [...prev];
+      next[slotIdx] = imgIdx;
+      return next;
+    });
+  };
+
+  const handleSelectImageForSlot = (imgIdx: number) => {
+    handleSelectSlotImage(activeSlot, imgIdx);
   };
 
   const handleShuffleImages = () => {
@@ -618,7 +656,7 @@ export function SocialStudioModal({
       const shuffled = [...prev].map(() => Math.floor(Math.random() * imageUrls.length));
       return shuffled;
     });
-    toast.success("สลับรูปภาพใน Layout แล้ว! 🔀");
+    toast.success(isEn ? "Images randomized across layout! 🔀" : "สลับรูปภาพใน Layout แล้ว! 🔀");
   };
 
   const handleToggleBadge = (badgeLabel: string) => {
@@ -627,7 +665,7 @@ export function SocialStudioModal({
         return prev.filter((b) => b !== badgeLabel);
       }
       if (prev.length >= 2) {
-        toast.info("เลือกสติกเกอร์ได้สูงสุด 2 รายการครับ");
+        toast.info(isEn ? "Maximum 2 stickers allowed." : "เลือกสติกเกอร์ได้สูงสุด 2 รายการครับ");
         return prev;
       }
       return [...prev, badgeLabel];
@@ -643,7 +681,7 @@ export function SocialStudioModal({
     link.download = `vcc-poster-${property.slug || property.id}-${aspectRatio.replace(":", "x")}.png`;
     link.href = canvas.toDataURL("image/png", 1.0);
     link.click();
-    toast.success("ดาวน์โหลดภาพโปสเตอร์ HD เรียบร้อยแล้ว! 📥");
+    toast.success(isEn ? "HD Poster downloaded successfully! 📥" : "ดาวน์โหลดภาพโปสเตอร์ HD เรียบร้อยแล้ว! 📥");
   };
 
   // Copy Image to Clipboard
@@ -658,21 +696,31 @@ export function SocialStudioModal({
           new ClipboardItem({ "image/png": blob }),
         ]);
         setCopiedImage(true);
-        toast.success("คัดลอกรูปภาพแล้ว! สามารถกด Ctrl+V วางใน LINE หรือ Facebook ได้ทันที 📋");
+        toast.success(
+          isEn
+            ? "Image copied! Press Ctrl+V to paste directly into LINE or Facebook 📋"
+            : "คัดลอกรูปภาพแล้ว! สามารถกด Ctrl+V วางใน LINE หรือ Facebook ได้ทันที 📋"
+        );
         setTimeout(() => setCopiedImage(false), 2000);
       }, "image/png");
     } catch (err) {
       console.error("Failed to copy image to clipboard:", err);
-      toast.error("เบราว์เซอร์ไม่รองรับการก๊อปปี้รูป ให้ใช้ปุ่มดาวน์โหลดแทนครับ");
+      toast.error(
+        isEn
+          ? "Browser does not support direct image copying. Please use download button."
+          : "เบราว์เซอร์ไม่รองรับการก๊อปปี้รูป ให้ใช้ปุ่มดาวน์โหลดแทนครับ"
+      );
     }
   };
 
   // Copy Caption to Clipboard
   const handleCopyCaption = async () => {
-    const fullCaptionText = `${caption}\n\n${hashtags.join(" ")}\n\n👉 ดูรูปเพิ่มเติม & พิกัด: ${propertyUrl}`;
+    const fullCaptionText = isEn
+      ? `${caption}\n\n${hashtags.join(" ")}\n\n👉 See more photos & details: ${propertyUrl}`
+      : `${caption}\n\n${hashtags.join(" ")}\n\n👉 ดูรูปเพิ่มเติม & พิกัด: ${propertyUrl}`;
     await navigator.clipboard.writeText(fullCaptionText);
     setCopiedCaption(true);
-    toast.success("คัดลอกแคปชั่น & แฮชแท็กเรียบร้อยแล้ว! ✍️");
+    toast.success(isEn ? "Caption & hashtags copied! ✍️" : "คัดลอกแคปชั่น & แฮชแท็กเรียบร้อยแล้ว! ✍️");
     setTimeout(() => setCopiedCaption(false), 2000);
   };
 
@@ -697,7 +745,11 @@ export function SocialStudioModal({
     if (!canvas) return;
 
     setIsExportingAlbum(true);
-    const toastId = toast.loading("กำลังจัดชุดภาพ (ภาพปก + ภาพจริง) เป็นไฟล์ ZIP...");
+    const toastId = toast.loading(
+      isEn
+        ? "Packing image set (cover + real photos) as ZIP file..."
+        : "กำลังจัดชุดภาพ (ภาพปก + ภาพจริง) เป็นไฟล์ ZIP..."
+    );
 
     try {
       const zip = new JSZip();
@@ -732,7 +784,9 @@ export function SocialStudioModal({
       }
 
       // 3. Caption file
-      const fullCaptionText = `${caption}\n\n${hashtags.join(" ")}\n\n👉 ดูข้อมูลเพิ่มเติม: ${propertyUrl}`;
+      const fullCaptionText = isEn
+        ? `${caption}\n\n${hashtags.join(" ")}\n\n👉 More Information: ${propertyUrl}`
+        : `${caption}\n\n${hashtags.join(" ")}\n\n👉 ดูข้อมูลเพิ่มเติม: ${propertyUrl}`;
       zip.file("caption_and_hashtags.txt", fullCaptionText);
 
       // Auto-copy caption
@@ -748,12 +802,14 @@ export function SocialStudioModal({
       URL.revokeObjectURL(downloadUrl);
 
       toast.success(
-        `ดาวน์โหลดชุดภาพอัลบั้ม (${targetIndices.length + 1} รูป) พร้อมคัดลอกแคปชั่นแล้ว! 📦✨`,
+        isEn
+          ? `Downloaded album set (${targetIndices.length + 1} photos) & copied caption! 📦✨`
+          : `ดาวน์โหลดชุดภาพอัลบั้ม (${targetIndices.length + 1} รูป) พร้อมคัดลอกแคปชั่นแล้ว! 📦✨`,
         { id: toastId }
       );
     } catch (err) {
       console.error("ZIP export error:", err);
-      toast.error("เกิดข้อผิดพลาดในการสร้างไฟล์ ZIP", { id: toastId });
+      toast.error(isEn ? "Error creating ZIP file" : "เกิดข้อผิดพลาดในการสร้างไฟล์ ZIP", { id: toastId });
     } finally {
       setIsExportingAlbum(false);
     }
@@ -765,7 +821,9 @@ export function SocialStudioModal({
     if (!canvas) return;
 
     setIsSharingAlbum(true);
-    const toastId = toast.loading("กำลังเตรียมชุดภาพและหน้าต่างแชร์...");
+    const toastId = toast.loading(
+      isEn ? "Preparing image set and share window..." : "กำลังเตรียมชุดภาพและหน้าต่างแชร์..."
+    );
 
     try {
       const coverDataUrl = canvas.toDataURL("image/png", 1.0);
@@ -783,7 +841,7 @@ export function SocialStudioModal({
       setIsShareDialogOpen(true);
     } catch (err: any) {
       console.warn("Prepare share dialog failed:", err);
-      toast.error("ไม่สามารถเปิดหน้าต่างแชร์ได้", { id: toastId });
+      toast.error(isEn ? "Unable to open share window" : "ไม่สามารถเปิดหน้าต่างแชร์ได้", { id: toastId });
     } finally {
       setIsSharingAlbum(false);
     }
@@ -795,7 +853,11 @@ export function SocialStudioModal({
     const coverDataUrl = canvas.toDataURL("image/png", 1.0);
     if (onApplyCoverToPost) {
       onApplyCoverToPost(coverDataUrl);
-      toast.success("นำภาพปก Social Studio ใส่ในโพสต์โซเชียลเรียบร้อยแล้ว! 🖼️✨");
+      toast.success(
+        isEn
+          ? "Applied Social Studio cover to social post! 🖼️✨"
+          : "นำภาพปก Social Studio ใส่ในโพสต์โซเชียลเรียบร้อยแล้ว! 🖼️✨"
+      );
       onClose();
     }
   };
@@ -830,7 +892,9 @@ export function SocialStudioModal({
                   </Badge>
                 </DialogTitle>
                 <DialogDescription className="text-[11px] text-slate-400">
-                  เลือก Layouts จัดเรียงภาพ ใส่สติกเกอร์ไฮไลท์ และสร้างแคปชั่น AI ในคลิกเดียว
+                  {isEn
+                    ? "Select layouts, arrange photos, add highlight stickers, and generate AI captions with 1-click"
+                    : "เลือก Layouts จัดเรียงภาพ ใส่สติกเกอร์ไฮไลท์ และสร้างแคปชั่น AI ในคลิกเดียว"}
                 </DialogDescription>
               </div>
             </div>

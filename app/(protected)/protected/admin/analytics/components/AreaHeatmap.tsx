@@ -4,12 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { AreaAnalytics } from "@/features/dashboard/queries";
 import { cn } from "@/lib/utils";
 import { MapPin, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface AreaHeatmapProps {
   data: AreaAnalytics[];
 }
 
 export function AreaHeatmap({ data }: AreaHeatmapProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const maxViews = Math.max(...data.map(d => d.view_count), 1);
   
   return (
@@ -17,13 +21,17 @@ export function AreaHeatmap({ data }: AreaHeatmapProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
            <MapPin className="h-5 w-5 text-blue-500" />
-           <CardTitle className="text-lg font-semibold text-slate-800">Area Heatmap (ความหนาแน่นรายพื้นที่)</CardTitle>
+           <CardTitle className="text-lg font-semibold text-slate-800">
+             {isEn ? "Area Heatmap & Density" : "Area Heatmap (ความหนาแน่นรายพื้นที่)"}
+           </CardTitle>
         </div>
-        <CardDescription>วิเคราะห์ความนิยมรายย่านด้วยความร้อนของข้อมูล (Enterprise View)</CardDescription>
+        <CardDescription>
+          {isEn ? "Visual geographic popularity distribution (Enterprise View)" : "วิเคราะห์ความนิยมรายย่านด้วยความร้อนของข้อมูล (Enterprise View)"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
-          {data.map((area, index) => {
+          {data.map((area) => {
             const intensity = area.view_count / maxViews;
             
             return (
@@ -65,7 +73,7 @@ export function AreaHeatmap({ data }: AreaHeatmapProps) {
           
           {data.length === 0 && (
             <div className="col-span-full py-12 text-center text-slate-400 italic">
-              — ยังไม่มีข้อมูลย่านยอดนิยมในขณะนี้ —
+              {isEn ? "— No area analytics recorded at this time —" : "— ยังไม่มีข้อมูลย่านยอดนิยมในขณะนี้ —"}
             </div>
           )}
         </div>
@@ -73,3 +81,4 @@ export function AreaHeatmap({ data }: AreaHeatmapProps) {
     </Card>
   );
 }
+

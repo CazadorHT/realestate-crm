@@ -6,52 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { DealStatus } from "../types";
-
-const DEAL_STATUS_CONFIG: Record<
-  DealStatus,
-  { label: string; description: string; dot: string; text: string; bg: string; border: string }
-> = {
-  NEGOTIATING: {
-    label: "เจรจาต่อรอง",
-    description: "กำลังพูดคุยและเสนอเงื่อนไข",
-    dot: "bg-slate-400",
-    text: "text-slate-600",
-    bg: "bg-slate-50",
-    border: "border-slate-200",
-  },
-  SIGNED: {
-    label: "ทำสัญญาแล้ว (รอดำเนินการ)",
-    description: "เซ็นสัญญาแล้ว รอโอนหรือส่งมอบ",
-    dot: "bg-blue-500",
-    text: "text-blue-600",
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-  },
-  CLOSED_WIN: {
-    label: "โอน/ส่งมอบ/ได้รับคอม",
-    description: "ปิดการขายสำเร็จและได้รับค่าคอมมิชชั่น",
-    dot: "bg-emerald-500",
-    text: "text-emerald-600",
-    bg: "bg-emerald-50",
-    border: "border-emerald-200",
-  },
-  CLOSED_LOSS: {
-    label: "ปิดการขายล้มเหลว",
-    description: "ลีดไม่สนใจหรือเลือกทรัพย์อื่น",
-    dot: "bg-rose-500",
-    text: "text-rose-600",
-    bg: "bg-rose-50",
-    border: "border-rose-200",
-  },
-  CANCELLED: {
-    label: "ยกเลิกดีล",
-    description: "ยกเลิกการเจรจาหรือดีลโมฆะ",
-    dot: "bg-slate-400",
-    text: "text-slate-500",
-    bg: "bg-slate-50",
-    border: "border-slate-100",
-  },
-};
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealStatusPickerProps {
   value: DealStatus;
@@ -61,6 +16,55 @@ interface DealStatusPickerProps {
 
 export function DealStatusPicker({ value, onChange, disabled }: DealStatusPickerProps) {
   const [open, setOpen] = useState(false);
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const DEAL_STATUS_CONFIG: Record<
+    DealStatus,
+    { label: string; description: string; dot: string; text: string; bg: string; border: string }
+  > = {
+    NEGOTIATING: {
+      label: isEn ? "Negotiating" : "เจรจาต่อรอง",
+      description: isEn ? "In discussion and proposing terms" : "กำลังพูดคุยและเสนอเงื่อนไข",
+      dot: "bg-slate-400",
+      text: "text-slate-600",
+      bg: "bg-slate-50",
+      border: "border-slate-200",
+    },
+    SIGNED: {
+      label: isEn ? "Contract Signed (Pending)" : "ทำสัญญาแล้ว (รอดำเนินการ)",
+      description: isEn ? "Contract signed, awaiting transfer or delivery" : "เซ็นสัญญาแล้ว รอโอนหรือส่งมอบ",
+      dot: "bg-blue-500",
+      text: "text-blue-600",
+      bg: "bg-blue-50",
+      border: "border-blue-200",
+    },
+    CLOSED_WIN: {
+      label: isEn ? "Transferred / Commission Earned" : "โอน/ส่งมอบ/ได้รับคอม",
+      description: isEn ? "Successfully closed and commission collected" : "ปิดการขายสำเร็จและได้รับค่าคอมมิชชั่น",
+      dot: "bg-emerald-500",
+      text: "text-emerald-600",
+      bg: "bg-emerald-50",
+      border: "border-emerald-200",
+    },
+    CLOSED_LOSS: {
+      label: isEn ? "Closed Lost" : "ปิดการขายล้มเหลว",
+      description: isEn ? "Lead dropped out or chose another property" : "ลีดไม่สนใจหรือเลือกทรัพย์อื่น",
+      dot: "bg-rose-500",
+      text: "text-rose-600",
+      bg: "bg-rose-50",
+      border: "border-rose-200",
+    },
+    CANCELLED: {
+      label: isEn ? "Deal Cancelled" : "ยกเลิกดีล",
+      description: isEn ? "Negotiation terminated or deal voided" : "ยกเลิกการเจรจาหรือดีลโมฆะ",
+      dot: "bg-slate-400",
+      text: "text-slate-500",
+      bg: "bg-slate-50",
+      border: "border-slate-100",
+    },
+  };
+
   const current = DEAL_STATUS_CONFIG[value] || DEAL_STATUS_CONFIG.NEGOTIATING;
 
   const handleSelect = (status: DealStatus) => {
@@ -72,8 +76,8 @@ export function DealStatusPicker({ value, onChange, disabled }: DealStatusPicker
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="สถานะดีล"
-      description="เลือกสถานะปัจจุบันเพื่อติดตามความคืบหน้าของดีล"
+      title={isEn ? "Deal Status" : "สถานะดีล"}
+      description={isEn ? "Select current stage to track pipeline progress" : "เลือกสถานะปัจจุบันเพื่อติดตามความคืบหน้าของดีล"}
       className="sm:max-w-sm!"
       trigger={
         <Button
@@ -81,7 +85,7 @@ export function DealStatusPicker({ value, onChange, disabled }: DealStatusPicker
           variant="outline"
           disabled={disabled}
           className={cn(
-            "w-full h-11 justify-between px-4 rounded-xl border-slate-200 bg-white hover:bg-slate-50 transition-all group",
+            "w-full h-11 justify-between px-4 rounded-xl border-slate-200 bg-white hover:bg-slate-50 transition-all group cursor-pointer",
             current.bg,
             current.border
           )}
@@ -104,7 +108,7 @@ export function DealStatusPicker({ value, onChange, disabled }: DealStatusPicker
                 type="button"
                 onClick={() => handleSelect(status)}
                 className={cn(
-                  "w-full flex items-center justify-between p-4 rounded-2xl transition-all active:scale-[0.98] border text-left",
+                  "w-full flex items-center justify-between p-4 rounded-2xl transition-all active:scale-[0.98] border text-left cursor-pointer",
                   isSelected
                     ? "bg-blue-50 border-blue-200 shadow-sm"
                     : "border-transparent bg-white hover:bg-slate-50"
@@ -132,3 +136,4 @@ export function DealStatusPicker({ value, onChange, disabled }: DealStatusPicker
     </ResponsiveDialog>
   );
 }
+

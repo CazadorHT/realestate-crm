@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { DrawerClose } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface OwnerMobileViewProps {
   form: UseFormReturn<any>;
@@ -55,22 +56,33 @@ export function OwnerMobileView({
   duplicateOwner,
   onUseExisting,
 }: OwnerMobileViewProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="flex flex-col h-full bg-white">
       {duplicateOwner && onUseExisting && (
         <div className="mx-6 mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
           <div className="text-sm text-amber-800 font-bold flex items-center gap-2">
-            ⚠️ ตรวจพบข้อมูลซ้ำ
+            ⚠️ {isEn ? "Duplicate Data Detected" : "ตรวจพบข้อมูลซ้ำ"}
           </div>
           <p className="text-xs text-amber-700">
-            K. {duplicateOwner.name} มีในระบบแล้ว คุณต้องการใช้ข้อมูลเดิมหรือไม่?
+            {isEn ? (
+              <>
+                K. {duplicateOwner.name} already exists in the system. Would you like to use this record?
+              </>
+            ) : (
+              <>
+                K. {duplicateOwner.name} มีในระบบแล้ว คุณต้องการใช้ข้อมูลเดิมหรือไม่?
+              </>
+            )}
           </p>
           <Button
             type="button"
             onClick={onUseExisting}
-            className="w-full h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors"
+            className="w-full h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
           >
-            ใช้เจ้าของเดิมทันที
+            {isEn ? "Use Existing Record" : "ใช้เจ้าของเดิมทันที"}
           </Button>
         </div>
       )}
@@ -79,7 +91,9 @@ export function OwnerMobileView({
       <div className="px-6 pt-4 pb-2">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-slate-900">
-            {mode === "create" ? "เพิ่มเจ้าของใหม่" : "แก้ไขข้อมูลเจ้าของ"}
+            {mode === "create"
+              ? (isEn ? "Add New Owner" : "เพิ่มเจ้าของใหม่")
+              : (isEn ? "Edit Owner Details" : "แก้ไขข้อมูลเจ้าของ")}
           </h2>
           <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-wider">
             Step {currentStep}/{totalSteps}
@@ -112,16 +126,16 @@ export function OwnerMobileView({
                       <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                         <User size={16} />
                       </div>
-                      ข้อมูลพื้นฐาน
+                      {isEn ? "Basic Information" : "ข้อมูลพื้นฐาน"}
                     </div>
 
                     <div className="space-y-4 pt-2">
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">
-                          ชื่อเจ้าของ <span className="text-red-500">*</span>
+                          {isEn ? "Owner Name" : "ชื่อเจ้าของ"} <span className="text-red-500">*</span>
                         </label>
                         <Input
-                          placeholder="กรอกชื่อ-นามสกุล"
+                          placeholder={isEn ? "Enter full name" : "กรอกชื่อ-นามสกุล"}
                           className="h-13 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
                           {...form.register("full_name")}
                         />
@@ -134,12 +148,12 @@ export function OwnerMobileView({
 
                       <div className="space-y-3">
                         <label className="text-sm font-semibold text-slate-700">
-                          ประเภทเจ้าของ
+                          {isEn ? "Owner Type" : "ประเภทเจ้าของ"}
                         </label>
                         <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-50 rounded-2xl border border-slate-100">
                           {[
-                            { id: "individual", label: "บุคคลธรรมดา" },
-                            { id: "corporate", label: "นิติบุคคล / บริษัท" },
+                            { id: "individual", label: isEn ? "Individual" : "บุคคลธรรมดา" },
+                            { id: "corporate", label: isEn ? "Company" : "นิติบุคคล / บริษัท" },
                           ].map((type) => {
                             const isActive =
                               form.watch("owner_type") === type.id;
@@ -153,7 +167,7 @@ export function OwnerMobileView({
                                   })
                                 }
                                 className={cn(
-                                  "py-3 px-2 rounded-xl text-xs font-bold transition-all duration-300",
+                                  "py-3 px-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer",
                                   isActive
                                     ? "bg-white text-emerald-600 shadow-sm border border-emerald-100 ring-4 ring-emerald-500/5"
                                     : "text-slate-500 hover:text-slate-700 hover:bg-slate-100/50",
@@ -168,12 +182,12 @@ export function OwnerMobileView({
 
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">
-                          ชื่อบริษัท (ถ้ามี)
+                          {isEn ? "Company Name (Optional)" : "ชื่อบริษัท (ถ้ามี)"}
                         </label>
                         <div className="relative">
                           <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input
-                            placeholder="กรอกชื่อบริษัท"
+                            placeholder={isEn ? "Enter company name" : "กรอกชื่อบริษัท"}
                             className="h-13 pl-11 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-medium"
                             {...form.register("company_name")}
                           />
@@ -191,13 +205,13 @@ export function OwnerMobileView({
                       <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
                         <Phone size={16} />
                       </div>
-                      ช่องทางติดต่อหลัก
+                      {isEn ? "Primary Contact" : "ช่องทางติดต่อหลัก"}
                     </div>
 
                     <div className="space-y-4 pt-2">
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">
-                          เบอร์โทรศัพท์
+                          {isEn ? "Phone Number" : "เบอร์โทรศัพท์"}
                         </label>
                         <Input
                           placeholder="08X-XXX-XXXX"
@@ -216,7 +230,9 @@ export function OwnerMobileView({
                         )}
                         {liveValidation?.phone?.isDuplicate && (
                           <p className="text-xs text-amber-600 font-semibold ml-1">
-                            ⚠️ เบอร์โทรศัพท์นี้ถูกใช้งานแล้วโดย K. {liveValidation.phone.ownerName}
+                            {isEn
+                              ? `⚠️ This phone number is already used by K. ${liveValidation.phone.ownerName}`
+                              : `⚠️ เบอร์โทรศัพท์นี้ถูกใช้งานแล้วโดย K. ${liveValidation.phone.ownerName}`}
                           </p>
                         )}
                       </div>
@@ -240,7 +256,9 @@ export function OwnerMobileView({
                         </div>
                         {liveValidation?.line_id?.isDuplicate && (
                           <p className="text-xs text-amber-600 font-semibold ml-1">
-                            ⚠️ Line ID นี้ถูกใช้งานแล้วโดย K. {liveValidation.line_id.ownerName}
+                            {isEn
+                              ? `⚠️ This Line ID is already used by K. ${liveValidation.line_id.ownerName}`
+                              : `⚠️ Line ID นี้ถูกใช้งานแล้วโดย K. ${liveValidation.line_id.ownerName}`}
                           </p>
                         )}
                       </div>
@@ -256,7 +274,7 @@ export function OwnerMobileView({
                       <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                         <Globe size={16} />
                       </div>
-                      โซเชียลและช่องทางอื่นๆ
+                      {isEn ? "Social & Other Channels" : "โซเชียลและช่องทางอื่นๆ"}
                     </div>
 
                     <div className="space-y-4 pt-2">
@@ -276,12 +294,12 @@ export function OwnerMobileView({
 
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">
-                          ช่องทางอื่นๆ
+                          {isEn ? "Other Channels" : "ช่องทางอื่นๆ"}
                         </label>
                         <div className="relative">
                           <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input
-                            placeholder="WhatsApp, WeChat, ฯลฯ"
+                            placeholder={isEn ? "WhatsApp, WeChat, etc." : "WhatsApp, WeChat, ฯลฯ"}
                             className="h-13 pl-11 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-medium"
                             {...form.register("other_contact")}
                           />
@@ -302,10 +320,10 @@ export function OwnerMobileView({
               type="button"
               variant="ghost"
               onClick={prevStep}
-              className="h-14 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
+              className="h-14 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all cursor-pointer"
             >
               <ChevronLeft className="mr-2 h-5 w-5" />
-              กลับ
+              {isEn ? "Back" : "กลับ"}
             </Button>
           ) : (
             <>
@@ -314,9 +332,9 @@ export function OwnerMobileView({
                   <Button
                     type="button"
                     variant="ghost"
-                    className="h-14 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
+                    className="h-14 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all cursor-pointer"
                   >
-                    ยกเลิก
+                    {isEn ? "Cancel" : "ยกเลิก"}
                   </Button>
                 </DrawerClose>
               ) : (
@@ -324,9 +342,9 @@ export function OwnerMobileView({
                   type="button"
                   variant="ghost"
                   onClick={handleCancel}
-                  className="h-14 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
+                  className="h-14 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all cursor-pointer"
                 >
-                  ยกเลิก
+                  {isEn ? "Cancel" : "ยกเลิก"}
                 </Button>
               )}
             </>
@@ -336,9 +354,9 @@ export function OwnerMobileView({
             <Button
               type="button"
               onClick={nextStep}
-              className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xl shadow-blue-600/20 active:scale-95 transition-all"
+              className="flex-1 h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xl shadow-blue-600/20 active:scale-95 transition-all cursor-pointer"
             >
-              ถัดไป
+              {isEn ? "Next" : "ถัดไป"}
               <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
           ) : (
@@ -346,7 +364,7 @@ export function OwnerMobileView({
               type="button"
               onClick={onSubmit}
               disabled={isPending || !form.formState.isValid}
-              className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xl shadow-emerald-600/20 active:scale-95 transition-all gap-2"
+              className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xl shadow-emerald-600/20 active:scale-95 transition-all gap-2 cursor-pointer"
             >
               {isPending ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -354,10 +372,10 @@ export function OwnerMobileView({
                 <Save className="h-5 w-5" />
               )}
               {isPending
-                ? "กำลังบันทึก..."
+                ? (isEn ? "Saving..." : "กำลังบันทึก...")
                 : mode === "create"
-                  ? "เพิ่มเจ้าของ"
-                  : "บันทึกข้อมูล"}
+                  ? (isEn ? "Add Owner" : "เพิ่มเจ้าของ")
+                  : (isEn ? "Save Changes" : "บันทึกข้อมูล")}
             </Button>
           )}
         </div>

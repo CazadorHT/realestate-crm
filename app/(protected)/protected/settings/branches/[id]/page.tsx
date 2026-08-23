@@ -14,12 +14,12 @@ import {
   updateTenantAction,
   createTenantInvitationAction,
 } from "@/lib/actions/tenant-management";
-import { Database } from "@/lib/database.types.generated";
 import { toast } from "sonner";
 import { useTenant } from "@/components/providers/TenantProvider";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Settings2 } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // 🧩 Elite Components
 import { BranchStatsDashboard } from "@/components/settings/branches/BranchStatsDashboard";
@@ -112,6 +112,8 @@ export default function BranchDetailPage({
 }) {
   const { id } = use(params);
   const { refresh: refreshTenants } = useTenant();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   // --- States ---
   const [branch, setBranch] = useState<TenantBranch | null>(null);
@@ -163,8 +165,8 @@ export default function BranchDetailPage({
       if (pRes.data) setAllProfiles(pRes.data as unknown as IdentityV3[]);
       if (iRes.data) setInvitations(iRes.data as unknown as TenantInvitation[]);
       
-    } catch (err) {
-      toast.error("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+    } catch {
+      toast.error(isEn ? "Failed to load data. Please try again." : "ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsLoading(false);
     }
@@ -178,11 +180,11 @@ export default function BranchDetailPage({
   const handleUpdateBranch = async (data: { name: string; slug: string }) => {
     const res = await updateTenantAction(id, data);
     if (res.data) {
-      toast.success("อัปเดตข้อมูลสาขาสำเร็จ");
+      toast.success(isEn ? "Branch details updated successfully" : "อัปเดตข้อมูลสาขาสำเร็จ");
       setEditOpen(false);
       fetchData();
     } else {
-      toast.error(res.error || "ไม่สามารถอัปเดตข้อมูลได้");
+      toast.error(res.error || (isEn ? "Failed to update data" : "ไม่สามารถอัปเดตข้อมูลได้"));
     }
   };
 
@@ -206,12 +208,16 @@ export default function BranchDetailPage({
     }
 
     if (res.success) {
-      toast.success(isExisting ? "เพิ่มสมาชิกเรียบร้อย" : "ส่งคำเชิญเรียบร้อย (พนักงานยังไม่มีบัญชี)");
+      toast.success(
+        isExisting 
+          ? (isEn ? "Member added successfully" : "เพิ่มสมาชิกเรียบร้อย")
+          : (isEn ? "Invitation sent successfully (user has no account yet)" : "ส่งคำเชิญเรียบร้อย (พนักงานยังไม่มีบัญชี)")
+      );
       setAddOpen(false);
       fetchData();
       refreshTenants();
     } else {
-      toast.error(res.error || "ไม่สามารถดำเนินการได้");
+      toast.error(res.error || (isEn ? "Failed to perform action" : "ไม่สามารถดำเนินการได้"));
     }
   };
 
@@ -224,12 +230,12 @@ export default function BranchDetailPage({
       role: transferMember.role as BranchRole,
     });
     if (res.success) {
-      toast.success("ย้ายสาขาเรียบร้อย");
+      toast.success(isEn ? "Member transferred successfully" : "ย้ายสาขาเรียบร้อย");
       setTransferOpen(false);
       fetchData();
       refreshTenants();
     } else {
-      toast.error(res.error || "ไม่สามารถย้ายสาขาได้");
+      toast.error(res.error || (isEn ? "Failed to transfer member" : "ไม่สามารถย้ายสาขาได้"));
     }
   };
 
@@ -241,17 +247,17 @@ export default function BranchDetailPage({
       const member = data as TenantMember;
       const res = await removeTenantMemberAction(id, member.identity_id);
       if (res.success) {
-        toast.success("ลบสมาชิกเรียบร้อย");
+        toast.success(isEn ? "Member removed successfully" : "ลบสมาชิกเรียบร้อย");
         fetchData();
         refreshTenants();
-      } else toast.error(res.error || "ล้มเหลว");
+      } else toast.error(res.error || (isEn ? "Failed" : "ล้มเหลว"));
     } else {
       const invite = data as TenantInvitation;
       const res = await cancelTenantInvitationAction(invite.id);
       if (res.success) {
-        toast.success("ยกเลิกคำเชิญเรียบร้อย");
+        toast.success(isEn ? "Invitation cancelled successfully" : "ยกเลิกคำเชิญเรียบร้อย");
         fetchData();
-      } else toast.error(res.error || "ล้มเหลว");
+      } else toast.error(res.error || (isEn ? "Failed" : "ล้มเหลว"));
     }
     setDeleteConfirm({ ...deleteConfirm, open: false });
   };
@@ -259,11 +265,11 @@ export default function BranchDetailPage({
   return (
     <div className="min-h-screen bg-slate-50/30">
       <SettingsHeader
-        title={branch?.name || "กำลังโหลด..."}
-        description="บริหารจัดการสมาชิกและสิทธิ์การเข้าถึงข้อมูลรายสาขา"
+        title={branch?.name || (isEn ? "Loading..." : "กำลังโหลด...")}
+        description={isEn ? "Manage branch members and access control" : "บริหารจัดการสมาชิกและสิทธิ์การเข้าถึงข้อมูลรายสาขา"}
         subPath={[
-          { label: "System Control", href: "/protected/settings" },
-          { label: "จัดการสาขา", href: "/protected/settings/branches" },
+          { label: isEn ? "System Control" : "System Control", href: "/protected/settings" },
+          { label: isEn ? "Branches" : "จัดการสาขา", href: "/protected/settings/branches" },
           { label: branch?.name || "..." }
         ]}
         actions={
@@ -274,14 +280,14 @@ export default function BranchDetailPage({
               onClick={() => setEditOpen(true)}
             >
               <Settings2 className="mr-2 h-4 w-4" />
-              ตั้งค่าสาขา
+              {isEn ? "Branch Settings" : "ตั้งค่าสาขา"}
             </Button>
             <Button 
               className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11 px-6 shadow-lg shadow-slate-200 transition-all active:scale-95 font-bold"
               onClick={() => setAddOpen(true)}
             >
               <UserPlus className="mr-2 h-4 w-4" />
-              เพิ่มพนักงาน
+              {isEn ? "Add Staff" : "เพิ่มพนักงาน"}
             </Button>
           </div>
         }
@@ -319,7 +325,7 @@ export default function BranchDetailPage({
                   setTransferMember({ 
                     profileId: m.identity_id, 
                     role: m.role || "AGENT", 
-                    name: m.identity?.display_name || m.identity?.full_name || "ไม่ระบุชื่อ", 
+                    name: m.identity?.display_name || m.identity?.full_name || (isEn ? "Unnamed" : "ไม่ระบุชื่อ"), 
                     avatarUrl: m.identity?.avatar_url
                   });
                   setTransferOpen(true);
@@ -367,14 +373,23 @@ export default function BranchDetailPage({
       <DeleteConfirmationDialog 
         open={deleteConfirm.open}
         onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}
-        title={deleteConfirm.type === "MEMBER" ? "ลบพนักงานออกจากสาขา" : "ยกเลิกคำเชิญพนักงาน"}
+        title={
+          deleteConfirm.type === "MEMBER" 
+            ? (isEn ? "Remove Staff from Branch" : "ลบพนักงานออกจากสาขา")
+            : (isEn ? "Cancel Staff Invitation" : "ยกเลิกคำเชิญพนักงาน")
+        }
         description={
             deleteConfirm.type === "MEMBER" 
-            ? `คุณแน่ใจหรือไม่ว่าต้องการลบ ${(deleteConfirm.data as TenantMember)?.identity?.display_name || (deleteConfirm.data as TenantMember)?.identity?.full_name} ออกจากสาขานี้?` 
-            : `คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำเชิญของ ${(deleteConfirm.data as TenantInvitation)?.email}?`
+            ? (isEn 
+                ? `Are you sure you want to remove ${(deleteConfirm.data as TenantMember)?.identity?.display_name || (deleteConfirm.data as TenantMember)?.identity?.full_name} from this branch?` 
+                : `คุณแน่ใจหรือไม่ว่าต้องการลบ ${(deleteConfirm.data as TenantMember)?.identity?.display_name || (deleteConfirm.data as TenantMember)?.identity?.full_name} ออกจากสาขานี้?`)
+            : (isEn 
+                ? `Are you sure you want to cancel invitation for ${(deleteConfirm.data as TenantInvitation)?.email}?` 
+                : `คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำเชิญของ ${(deleteConfirm.data as TenantInvitation)?.email}?`)
         }
         onConfirm={handleConfirmDelete}
       />
     </div>
   );
 }
+

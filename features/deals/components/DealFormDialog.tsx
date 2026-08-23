@@ -18,6 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { DealForm } from "./DealForm";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealFormDialogProps {
   leadId: string;
@@ -43,6 +44,8 @@ export function DealFormDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const isEditing = !!deal;
 
@@ -144,7 +147,7 @@ export function DealFormDialog({
     if (isValid) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      toast.error("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
+      toast.error(isEn ? "Please fill in all required fields" : "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
     }
   };
 
@@ -162,7 +165,7 @@ export function DealFormDialog({
         : await createDealAction(pendingData);
 
       if (result.success) {
-        toast.success(isEditing ? "อัปเดตดีลเรียบร้อย" : "สร้างดีลเรียบร้อย");
+        toast.success(isEditing ? (isEn ? "Deal updated successfully" : "อัปเดตดีลเรียบร้อย") : (isEn ? "Deal created successfully" : "สร้างดีลเรียบร้อย"));
         setIsConfirmOpen(false);
         setOpen(false);
         if (!isEditing) form.reset();
@@ -174,11 +177,11 @@ export function DealFormDialog({
           router.refresh();
         }
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาด");
+        toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
         setIsConfirmOpen(false);
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการบันทึก";
+      const message = err instanceof Error ? err.message : (isEn ? "Error saving deal" : "เกิดข้อผิดพลาดในการบันทึก");
       toast.error(message);
       setIsConfirmOpen(false);
     } finally {
@@ -195,18 +198,18 @@ export function DealFormDialog({
               type="button"
               variant="outline"
               onClick={() => setCurrentStep((prev) => prev - 1)}
-              className="flex-1 h-12 rounded-xl font-bold border-slate-200"
+              className="flex-1 h-12 rounded-xl font-bold border-slate-200 cursor-pointer"
             >
-              ย้อนกลับ
+              {isEn ? "Back" : "ย้อนกลับ"}
             </Button>
           ) : (
             <DrawerClose asChild>
               <Button
                 type="button"
                 variant="ghost"
-                className="flex-1 h-12 rounded-xl font-bold text-slate-500"
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 cursor-pointer"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DrawerClose>
           )}
@@ -215,9 +218,9 @@ export function DealFormDialog({
             <Button
               type="button"
               onClick={handleNext}
-              className="flex-2 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all"
+              className="flex-2 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all cursor-pointer"
             >
-              ถัดไป
+              {isEn ? "Next" : "ถัดไป"}
             </Button>
           ) : (
             <Button
@@ -225,19 +228,19 @@ export function DealFormDialog({
               disabled={isSubmitting}
               onClick={form.handleSubmit(onSubmit, (errors) => {
                 const firstError = Object.values(errors)[0]?.message;
-                toast.error(firstError ? String(firstError) : "กรุณากรอกข้อมูลให้ถูกต้อง");
+                toast.error(firstError ? String(firstError) : (isEn ? "Please check form errors" : "กรุณากรอกข้อมูลให้ถูกต้อง"));
               })}
-              className="flex-2 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-200 transition-all gap-2"
+              className="flex-2 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-200 transition-all gap-2 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  กำลังบันทึก...
+                  {isEn ? "Saving..." : "กำลังบันทึก..."}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  บันทึกข้อมูลดีล
+                  {isEn ? "Save Deal" : "บันทึกข้อมูลดีล"}
                 </>
               )}
             </Button>
@@ -255,18 +258,18 @@ export function DealFormDialog({
               type="button"
               variant="outline"
               onClick={() => setCurrentStep((prev) => prev - 1)}
-              className="flex-1 sm:flex-none h-12 px-6 rounded-xl font-bold border-slate-200"
+              className="flex-1 sm:flex-none h-12 px-6 rounded-xl font-bold border-slate-200 cursor-pointer"
             >
-              ย้อนกลับ
+              {isEn ? "Back" : "ย้อนกลับ"}
             </Button>
           ) : (
             <DialogClose asChild>
               <Button
                 type="button"
                 variant="ghost"
-                className="flex-1 sm:flex-none h-12 px-6 text-slate-500 hover:text-slate-800 font-bold rounded-xl border border-slate-100"
+                className="flex-1 sm:flex-none h-12 px-6 text-slate-500 hover:text-slate-800 font-bold rounded-xl border border-slate-100 cursor-pointer"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DialogClose>
           )}
@@ -276,9 +279,9 @@ export function DealFormDialog({
           <Button
             type="button"
             onClick={handleNext}
-            className="flex-1 sm:flex-none h-12 px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20 transition-all"
+            className="flex-1 sm:flex-none h-12 px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
           >
-            ขั้นตอนถัดไป
+            {isEn ? "Next Step" : "ขั้นตอนถัดไป"}
           </Button>
         ) : (
           <Button
@@ -286,19 +289,19 @@ export function DealFormDialog({
             disabled={isSubmitting}
             onClick={form.handleSubmit(onSubmit, (errors) => {
               const firstError = Object.values(errors)[0]?.message;
-              toast.error(firstError ? String(firstError) : "กรุณากรอกข้อมูลให้ถูกต้อง");
+              toast.error(firstError ? String(firstError) : (isEn ? "Please check form errors" : "กรุณากรอกข้อมูลให้ถูกต้อง"));
             })}
-            className="flex-1 sm:flex-none h-12 px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transition-all gap-2 font-bold disabled:opacity-50 disabled:grayscale"
+            className="flex-1 sm:flex-none h-12 px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transition-all gap-2 font-bold disabled:opacity-50 disabled:grayscale cursor-pointer"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                กำลังบันทึก...
+                {isEn ? "Saving..." : "กำลังบันทึก..."}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                บันทึกข้อมูลดีล
+                {isEn ? "Save Deal" : "บันทึกข้อมูลดีล"}
               </>
             )}
           </Button>
@@ -313,19 +316,19 @@ export function DealFormDialog({
         return {
           icon: <Building2 className="w-5 h-5 text-blue-600" />,
           iconBg: "bg-blue-50 ring-1 ring-blue-100/50",
-          title: "ข้อมูลทรัพย์และลูกค้า",
+          title: isEn ? "Property & Lead Info" : "ข้อมูลทรัพย์และลูกค้า",
         };
       case 2:
         return {
           icon: <Briefcase className="w-5 h-5 text-emerald-600" />,
           iconBg: "bg-emerald-50 ring-1 ring-emerald-100/50",
-          title: "รายละเอียดดีล",
+          title: isEn ? "Deal Details" : "รายละเอียดดีล",
         };
       case 3:
         return {
           icon: <Calendar className="w-5 h-5 text-orange-600" />,
           iconBg: "bg-orange-50 ring-1 ring-orange-100/50",
-          title: "ระยะเวลาและข้อมูลอื่น",
+          title: isEn ? "Timeline & Info" : "ระยะเวลาและข้อมูลอื่น",
         };
       default:
         return null;
@@ -354,10 +357,10 @@ export function DealFormDialog({
           <span className="flex flex-col">
             <span className="flex items-center gap-2">
               <span className="text-base font-bold text-slate-900">
-                {isEditing ? "แก้ไขดีล" : "สร้างดีลใหม่"}
+                {isEditing ? (isEn ? "Edit Deal" : "แก้ไขดีล") : (isEn ? "Create New Deal" : "สร้างดีลใหม่")}
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 font-semibold leading-none">
-                ขั้นตอนที่ {currentStep}/3
+                {isEn ? `Step ${currentStep}/3` : `ขั้นตอนที่ ${currentStep}/3`}
               </span>
             </span>
             {stepHeader && (
@@ -378,12 +381,12 @@ export function DealFormDialog({
         (deal ? (
           <Button className="bg-white/20 h-11 cursor-pointer text-white border-0 hover:bg-white/30 transition-all hover:scale-105 active:scale-95 rounded-xl">
             <RiEdit2Line className="h-4 w-4 mr-2" />
-            แก้ไข
+            {isEn ? "Edit" : "แก้ไข"}
           </Button>
         ) : (
-          <Button size="sm" className="rounded-xl px-4 font-bold h-11">
+          <Button size="sm" className="rounded-xl px-4 font-bold h-11 cursor-pointer">
             <Plus className="mr-2 h-4 w-4" />
-            สร้าง Deal
+            {isEn ? "Create Deal" : "สร้าง Deal"}
           </Button>
         ))
       }
@@ -397,12 +400,13 @@ export function DealFormDialog({
       <ConfirmDialog
         open={isConfirmOpen}
         onOpenChange={setIsConfirmOpen}
-        title={isEditing ? "ยืนยันการแก้ไขดีล" : "ยืนยันการสร้างดีล"}
-        description={isEditing ? "คุณต้องการบันทึกการเปลี่ยนแปลงของดีลนี้ใช่หรือไม่?" : "ข้อมูลดีลถูกต้องและคุณต้องการบันทึกข้อมูลใช่หรือไม่?"}
-        confirmText={isEditing ? "บันทึกการแก้ไข" : "บันทึกดีล"}
-        cancelText="ตรวจสอบอีกรอบ"
+        title={isEditing ? (isEn ? "Confirm Deal Update" : "ยืนยันการแก้ไขดีล") : (isEn ? "Confirm Deal Creation" : "ยืนยันการสร้างดีล")}
+        description={isEditing ? (isEn ? "Are you sure you want to save changes to this deal?" : "คุณต้องการบันทึกการเปลี่ยนแปลงของดีลนี้ใช่หรือไม่?") : (isEn ? "Are all deal details correct and ready to be saved?" : "ข้อมูลดีลถูกต้องและคุณต้องการบันทึกข้อมูลใช่หรือไม่?")}
+        confirmText={isEditing ? (isEn ? "Save Changes" : "บันทึกการแก้ไข") : (isEn ? "Create Deal" : "บันทึกดีล")}
+        cancelText={isEn ? "Review Again" : "ตรวจสอบอีกรอบ"}
         onConfirm={handleConfirmSave}
       />
     </ResponsiveDialog>
   );
 }
+

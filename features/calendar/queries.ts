@@ -4,6 +4,7 @@ import { cache } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { Database } from "@/lib/database.types.generated";
 import { formatISO } from "date-fns";
+import { cookies } from "next/headers";
 
 export type EventType =
   | "viewing"
@@ -51,6 +52,10 @@ export const getCalendarEvents = cache(async (
   leadId?: string,
   agentId?: string,
 ): Promise<CalendarEvent[]> => {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const { supabase, tenantId, role } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
@@ -98,7 +103,7 @@ export const getCalendarEvents = cache(async (
         .in("id", leadIds);
       (leadsData || []).forEach((l: any) => {
         leadsMap[l.id] = { 
-          full_name: l.identity?.display_name || "Unknown Lead",
+          full_name: l.identity?.display_name || (isEn ? "Unknown Lead" : "ไม่ระบุชื่อ"),
           tenant_id: l.tenant_id
         };
       });
@@ -114,7 +119,7 @@ export const getCalendarEvents = cache(async (
         .in("id", propIds);
       (propsData || []).forEach((p: any) => {
         propsMap[p.id] = {
-          title: p.title || "Unknown Property",
+          title: p.title || (isEn ? "Unknown Property" : "ทรัพย์ไม่ระบุชื่อ"),
           image_url: p.images?.[0]?.image_url || null
         };
       });
@@ -123,25 +128,25 @@ export const getCalendarEvents = cache(async (
     viewings.forEach((v: any) => {
       if (!v.created_at) return;
       let type: EventType = "viewing";
-      let titlePrefix = "นัดชม";
+      let titlePrefix = isEn ? "Viewing" : "นัดชม";
       let color = "bg-blue-500";
 
       if (v.activity_type === "FOLLOW_UP") {
         type = "follow_up";
-        titlePrefix = "ติดตามผล";
+        titlePrefix = isEn ? "Follow-up" : "ติดตามผล";
         color = "bg-amber-500";
       } else if (v.activity_type === "CALL") {
         type = "call";
-        titlePrefix = "โทรหา";
+        titlePrefix = isEn ? "Call" : "โทรหา";
         color = "bg-green-500";
       } else if (v.activity_type === "LINE_CHAT") {
         type = "line_chat";
-        titlePrefix = "ไลน์หา";
+        titlePrefix = isEn ? "LINE Chat" : "ไลน์หา";
         color = "bg-green-600";
       }
 
-      const leadInfo = leadsMap[v.target_id] || { full_name: "Unknown Lead" };
-      const propInfo = propsMap[(v.metadata as any)?.property_id] || { title: "Unknown Property", image_url: null };
+      const leadInfo = leadsMap[v.target_id] || { full_name: isEn ? "Unknown Lead" : "ไม่ระบุชื่อ" };
+      const propInfo = propsMap[(v.metadata as any)?.property_id] || { title: isEn ? "Unknown Property" : "ทรัพย์ไม่ระบุชื่อ", image_url: null };
 
       events.push({
         id: v.id,
@@ -194,12 +199,12 @@ export const getCalendarEvents = cache(async (
       const meta = (c.metadata || {}) as Record<string, any>;
       if (!meta.contract_number && c.deal_type !== "RENTAL") return;
 
-      const propertyTitle = c.property?.title || "Unknown Property";
+      const propertyTitle = c.property?.title || (isEn ? "Unknown Property" : "ทรัพย์ไม่ระบุชื่อ");
       const propertyImage = c.property?.images?.[0]?.image_url || null;
 
       events.push({
         id: `${c.id}-start`,
-        title: `เริ่มสัญญา: ${propertyTitle}`,
+        title: `${isEn ? "Lease Start" : "เริ่มสัญญา"}: ${propertyTitle}`,
         start: c.transaction_date,
         type: "contract_start",
         color: "bg-emerald-500",
@@ -248,12 +253,12 @@ export const getCalendarEvents = cache(async (
       const meta = (c.metadata || {}) as Record<string, any>;
       if (!meta.contract_number && c.deal_type !== "RENTAL") return;
 
-      const propertyTitle = c.property?.title || "Unknown Property";
+      const propertyTitle = c.property?.title || (isEn ? "Unknown Property" : "ทรัพย์ไม่ระบุชื่อ");
       const propertyImage = c.property?.images?.[0]?.image_url || null;
 
       events.push({
         id: `${c.id}-end`,
-        title: `สิ้นสุดสัญญา: ${propertyTitle}`,
+        title: `${isEn ? "Lease End" : "สิ้นสุดสัญญา"}: ${propertyTitle}`,
         start: c.transaction_end_date,
         type: "contract_end",
         color: "bg-red-500",
@@ -301,12 +306,12 @@ export const getCalendarEvents = cache(async (
       if (!meta.check_out_date) return;
       if (meta.check_out_date < startIso || meta.check_out_date > endIso) return;
 
-      const propertyTitle = c.property?.title || "Unknown Property";
+      const propertyTitle = c.property?.title || (isEn ? "Unknown Property" : "ทรัพย์ไม่ระบุชื่อ");
       const propertyImage = c.property?.images?.[0]?.image_url || null;
 
       events.push({
         id: `${c.id}-terminated`,
-        title: `ยุติสัญญา: ${propertyTitle}`,
+        title: `${isEn ? "Terminated" : "ยุติสัญญา"}: ${propertyTitle}`,
         start: meta.check_out_date,
         type: "early_termination",
         color: "bg-orange-500",
@@ -354,7 +359,7 @@ export const getCalendarEvents = cache(async (
       if (!d.transaction_date) return;
       events.push({
         id: d.id,
-        title: `ปิดดีล: ${d.property?.title || "Unknown Property"}`,
+        title: `${isEn ? "Deal Closed" : "ปิดดีล"}: ${d.property?.title || (isEn ? "Unknown Property" : "ทรัพย์ไม่ระบุชื่อ")}`,
         start: d.transaction_date,
         type: "deal_closing",
         color: "bg-purple-500",
@@ -372,6 +377,7 @@ export const getCalendarEvents = cache(async (
     (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
   );
 });
+
 
 export const getCompactProperties = cache(async (): Promise<{ id: string; title: string }[]> => {
   const { supabase, tenantId, role } = await requireAuthContext();

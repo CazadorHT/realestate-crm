@@ -8,8 +8,9 @@ import {
   generateAIProjectDataAction,
   type ProjectAdminItem
 } from "@/features/properties/actions/projects";
+import { useLanguage } from "@/lib/i18n/language-context";
 
-const CATEGORY_MAPPING: Record<string, string> = {
+const CATEGORY_MAPPING_TH: Record<string, string> = {
   RESIDENTIAL: "ที่พักอาศัย (Residential)",
   OFFICE: "สำนักงาน (Office)",
   FACILITY: "ส่วนกลาง (Facilities)",
@@ -29,6 +30,28 @@ const CATEGORY_MAPPING: Record<string, string> = {
   OTHER: "อื่นๆ (Other)",
   KIDS: "สำหรับเด็ก (Kids)",
   SERVICES: "บริการ (Services)",
+};
+
+const CATEGORY_MAPPING_EN: Record<string, string> = {
+  RESIDENTIAL: "Residential",
+  OFFICE: "Office",
+  FACILITY: "Facilities",
+  UNIT: "Unit Features",
+  EXTERIOR: "Exterior",
+  INTERIOR: "Unit Features",
+  FACILITIES: "Facilities",
+  COMFORT: "Comfort",
+  GENERAL: "General",
+  SECURITY: "Security",
+  KITCHEN: "Kitchen",
+  BATHROOM: "Bathroom",
+  TECH: "Tech",
+  TECHNOLOGY: "Tech",
+  RECREATION: "Recreation",
+  NEARBY: "Nearby",
+  OTHER: "Other",
+  KIDS: "Kids",
+  SERVICES: "Services",
 };
 
 function parseCoordinatesFromGoogleMaps(url: string): { lat: number; lng: number } | null {
@@ -63,6 +86,9 @@ export function useProjectForm({
   onClose,
   onSaveSuccess,
 }: UseProjectFormProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isSaving, setIsSaving] = React.useState(false);
   const [isFormDirty, setIsFormDirty] = React.useState(false);
   const [formStep, setFormStep] = React.useState(1);
@@ -236,18 +262,19 @@ export function useProjectForm({
 
   const groupedFeatures = React.useMemo(() => {
     if (!dbFeatures || dbFeatures.length === 0) return {};
+    const mapping = isEn ? CATEGORY_MAPPING_EN : CATEGORY_MAPPING_TH;
     return dbFeatures.reduce(
       (acc, feature) => {
         const rawCat = feature.category || "General";
         const upperCat = rawCat.toUpperCase();
-        const cat = CATEGORY_MAPPING[upperCat] || rawCat;
+        const cat = mapping[upperCat] || rawCat;
         if (!acc[cat]) acc[cat] = [];
         acc[cat].push(feature);
         return acc;
       },
       {} as Record<string, any[]>,
     );
-  }, [dbFeatures]);
+  }, [dbFeatures, isEn]);
 
   const handleFacilityToggle = (value: string) => {
     setIsFormDirty(true);
@@ -269,12 +296,12 @@ export function useProjectForm({
   const handleAiAutoFill = async () => {
     const nameToUse = nameEn || nameTh;
     if (!nameToUse.trim()) {
-      toast.error("กรุณาระบุชื่อโครงการ (ไทย หรือ อังกฤษ) เพื่อให้ AI ค้นข้อมูลครับ");
+      toast.error(isEn ? "Please enter a project name in Thai or English for AI lookup." : "กรุณาระบุชื่อโครงการ (ไทย หรือ อังกฤษ) เพื่อให้ AI ค้นข้อมูลครับ");
       return;
     }
 
     setIsAiGenerating(true);
-    const toastId = toast.loading("🤖 Gemini กำลังค้นหาและเจนข้อมูลโครงการทั้งหมดให้คุณ...");
+    const toastId = toast.loading(isEn ? "🤖 Gemini is searching and generating all project details..." : "🤖 Gemini กำลังค้นหาและเจนข้อมูลโครงการทั้งหมดให้คุณ...");
     try {
       const res = await generateAIProjectDataAction(nameToUse);
       if (res.success && res.data) {
@@ -342,13 +369,13 @@ export function useProjectForm({
           setSlug(generated);
         }
 
-        toast.success("AI กรอกข้อมูลโครงการสำเร็จเสร็จสิ้น! ✨", { id: toastId });
+        toast.success(isEn ? "AI project auto-fill complete! ✨" : "AI กรอกข้อมูลโครงการสำเร็จเสร็จสิ้น! ✨", { id: toastId });
       } else {
-        throw new Error(res.message || "ล้มเหลวในการดึงข้อมูล");
+        throw new Error(res.message || (isEn ? "Failed to retrieve project information" : "ล้มเหลวในการดึงข้อมูล"));
       }
     } catch (err: any) {
       console.error(err);
-      toast.error("AI ไม่สามารถค้นหาข้อมูลโครงการได้: " + (err.message || ""), { id: toastId });
+      toast.error((isEn ? "AI failed to find project details: " : "AI ไม่สามารถค้นหาข้อมูลโครงการได้: ") + (err.message || ""), { id: toastId });
     } finally {
       setIsAiGenerating(false);
     }
@@ -356,11 +383,11 @@ export function useProjectForm({
 
   const handleSave = async () => {
     if (!nameTh.trim() || !nameEn.trim()) {
-      toast.error("กรุณาระบุชื่อโครงการ (ไทย และ อังกฤษ)");
+      toast.error(isEn ? "Please enter project names in Thai and English" : "กรุณาระบุชื่อโครงการ (ไทย และ อังกฤษ)");
       return;
     }
     if (!slug.trim()) {
-      toast.error("กรุณาระบุ URL Slug");
+      toast.error(isEn ? "Please enter a URL slug" : "กรุณาระบุ URL Slug");
       return;
     }
 
@@ -415,15 +442,15 @@ export function useProjectForm({
 
       const res = await upsertProjectAction(payload);
       if (res.success) {
-        toast.success(res.message);
+        toast.success(res.message || (isEn ? "Project saved successfully" : "บันทึกโครงการสำเร็จ"));
         setIsFormDirty(false);
         onClose(false);
         onSaveSuccess();
       } else {
-        toast.error(res.message);
+        toast.error(res.message || (isEn ? "Failed to save project" : "ไม่สามารถบันทึกโครงการได้"));
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } catch {
+      toast.error(isEn ? "An error occurred while saving project" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setIsSaving(false);
     }
@@ -496,3 +523,4 @@ export function useProjectForm({
     groupedFeatures,
   };
 }
+

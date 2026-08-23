@@ -39,6 +39,7 @@ import {
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table as TableComponent } from "@/components/ui/table";
 import { usePayoutStore } from "@/features/finance/stores/payoutStore";
 import { PayoutSkeleton } from "@/features/finance/components/PayoutSkeleton";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import dynamic from "next/dynamic";
 
 const FinanceAnalytics = dynamic(() => import("@/features/finance/components/FinanceAnalytics").then(mod => mod.FinanceAnalytics), {
@@ -46,7 +47,7 @@ const FinanceAnalytics = dynamic(() => import("@/features/finance/components/Fin
   loading: () => (
     <div className="flex flex-col items-center justify-center min-h-[400px] bg-white/50 backdrop-blur-xl rounded-[2.5rem] border border-dashed border-slate-200">
       <Loader2 className="h-10 w-10 animate-spin text-indigo-500 mb-4" />
-      <p className="text-sm font-medium text-slate-500 font-sarabun">กำลังเตรียมเครื่องมือวิเคราะห์การเงิน...</p>
+      <p className="text-sm font-medium text-slate-500 font-sarabun">Preparing financial analytics...</p>
     </div>
   ),
 });
@@ -58,7 +59,11 @@ import { PayoutHistoryDrawer } from "@/features/finance/components/PayoutHistory
 import { PayoutAdjustmentDialog } from "@/features/finance/components/PayoutAdjustmentDialog";
 import { PayoutCompletionDialog } from "@/features/finance/components/PayoutCompletionDialog";
 import { RecalculateConfirmDialog } from "@/features/finance/components/RecalculateConfirmDialog";
+
 export default function PayoutDashboardPage() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [loading, setLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [payouts, setPayouts] = useState<CommissionPayoutRecord[]>([]);
@@ -166,7 +171,7 @@ export default function PayoutDashboardPage() {
         setTargetId(id);
         setIsPreviewOpen(true);
       } else {
-        toast.error(res.error || "ไม่สามารถดึงข้อมูลพรีวิวได้");
+        toast.error(res.error || (isEn ? "Failed to fetch preview data" : "ไม่สามารถดึงข้อมูลพรีวิวได้"));
       }
     } else {
       // Confirmed Recalculation
@@ -178,7 +183,7 @@ export default function PayoutDashboardPage() {
         setTargetId(null);
         fetchPayouts();
       } else {
-        toast.error(res.error || "คำนวณใหม่ไม่สำเร็จ");
+        toast.error(res.error || (isEn ? "Recalculation failed" : "คำนวณใหม่ไม่สำเร็จ"));
       }
     }
 
@@ -207,7 +212,7 @@ export default function PayoutDashboardPage() {
   };
 
   const formatCurrency = (amt: number) => {
-    return new Intl.NumberFormat("th-TH", {
+    return new Intl.NumberFormat(isEn ? "en-US" : "th-TH", {
       style: "currency",
       currency: "THB",
       maximumFractionDigits: 0
@@ -222,37 +227,37 @@ export default function PayoutDashboardPage() {
         title={
           <div className="flex flex-col gap-1">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-[10px] font-semibold uppercase tracking-widest w-fit mb-1 border border-white/10">
-              <ShieldCheck className="w-3 h-3" /> ศูนย์กลางการเงินปลอดภัย
+              <ShieldCheck className="w-3 h-3" /> {isEn ? "Secure Financial Hub" : "ศูนย์กลางการเงินปลอดภัย"}
             </div>
-            <span>จัดการเงินและคอมมิชชัน</span>
+            <span>{isEn ? "Finance & Commission" : "จัดการเงินและคอมมิชชัน"}</span>
           </div>
         }
-        subtitle="แดชบอร์ดบริหารจัดการคอมมิชชันและภาษีระดับองค์กร"
+        subtitle={isEn ? "Enterprise commission and tax management dashboard" : "แดชบอร์ดบริหารจัดการคอมมิชชันและภาษีระดับองค์กร"}
         icon="pieChart"
         gradient="purple"
         breadcrumbs={[
-          { label: "แดชบอร์ด", href: "/protected" },
-          { label: "การเงิน", href: "/protected/finance/payouts" },
-          { label: "การเบิกจ่ายเอเยนต์" }
+          { label: isEn ? "Dashboard" : "แดชบอร์ด", href: "/protected" },
+          { label: isEn ? "Finance" : "การเงิน", href: "/protected/finance/payouts" },
+          { label: isEn ? "Agent Payouts" : "การเบิกจ่ายเอเยนต์" }
         ]}
         actionSlot={
           <div className="flex items-center gap-3">
             {view === 'LIST' && (
               <Button 
                 onClick={() => setView('ANALYTICS')}
-                className="bg-white h-12 text-slate-800 hover:bg-white/90 shadow-lg font-semibold rounded-xl"
+                className="bg-white h-12 text-slate-800 hover:bg-white/90 shadow-lg font-semibold rounded-xl cursor-pointer"
               >
                 <PieChart className="w-4 h-4 mr-2" />
-                วิเคราะห์การเงิน
+                {isEn ? "Analytics" : "วิเคราะห์การเงิน"}
               </Button>
             )}
             <Button 
               onClick={() => setIsAdjustmentOpen(true)}
-              className="bg-white h-12 text-slate-800 hover:bg-white/90 shadow-lg font-semibold rounded-xl"
+              className="bg-white h-12 text-slate-800 hover:bg-white/90 shadow-lg font-semibold rounded-xl cursor-pointer"
               disabled={isAllBranches}
             >
               <PlusIcon className="w-4 h-4 mr-2" />
-              เพิ่มรายการปรับปรุง
+              {isEn ? "Add Adjustment" : "เพิ่มรายการปรับปรุง"}
             </Button>
           </div>
         }
@@ -264,21 +269,24 @@ export default function PayoutDashboardPage() {
               <AlertCircle className="w-5 h-5" />
            </div>
            <div>
-              <p className="font-semibold text-sm">โหมดดูภาพรวม (Read-only)</p>
-              <p className="text-[10px] opacity-80">คุณกำลังดูข้อมูลรวมทุกสาขา ระบบจะไม่อนุญาตให้แก้ไขตัวเลขหรือโอนเงินจนกว่าจะสลับสาขาให้ถูกต้อง</p>
+              <p className="font-semibold text-sm">{isEn ? "Overview Mode (Read-only)" : "โหมดดูภาพรวม (Read-only)"}</p>
+              <p className="text-[10px] opacity-80">
+                {isEn 
+                  ? "You are viewing aggregated data across all branches. Editing or payouts are disabled until switched to a specific branch." 
+                  : "คุณกำลังดูข้อมูลรวมทุกสาขา ระบบจะไม่อนุญาตให้แก้ไขตัวเลขหรือโอนเงินจนกว่าจะสลับสาขาให้ถูกต้อง"}
+              </p>
            </div>
            <Button 
               variant="outline" 
               size="sm" 
-              className="ml-auto bg-white border-amber-200 text-amber-700 hover:bg-amber-100 rounded-xl font-semibold h-8 text-[10px]"
+              className="ml-auto bg-white border-amber-200 text-amber-700 hover:bg-amber-100 rounded-xl font-semibold h-8 text-[10px] cursor-pointer"
               onClick={() => {
-                // Focus sidebar or dispatch a branch selector event
                 const sidebar = document.getElementById('sidebar-nav');
                 if (sidebar) sidebar.scrollIntoView({ behavior: 'smooth' });
-                toast.info("กรุณาสลับสาขาที่เมนูด้านซ้าย");
+                toast.info(isEn ? "Please switch branch on the left sidebar" : "กรุณาสลับสาขาที่เมนูด้านซ้าย");
               }}
            >
-              สลับสาขาเดี๋ยวนี้
+              {isEn ? "Switch Branch Now" : "สลับสาขาเดี๋ยวนี้"}
            </Button>
         </div>
       )}
@@ -301,7 +309,7 @@ export default function PayoutDashboardPage() {
               <div className="relative group flex-1 max-w-md">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                 <Input
-                  placeholder="ค้นหาชื่อเอเยนต์ หรือ รายการ..."
+                  placeholder={isEn ? "Search agent or property..." : "ค้นหาชื่อเอเยนต์ หรือ รายการ..."}
                   className="w-full h-12 pl-12 bg-slate-100/50 border-none rounded-2xl ring-0 focus-visible:ring-2 focus-visible:ring-indigo-100 transition-all font-medium"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -319,15 +327,15 @@ export default function PayoutDashboardPage() {
                     variant={statusFilter === status ? "secondary" : "ghost"}
                     size="sm"
                     className={cn(
-                      "h-9 px-4 rounded-xl text-[10px] uppercase font-semibold tracking-wider transition-all",
+                      "h-9 px-4 rounded-xl text-[10px] uppercase font-semibold tracking-wider transition-all cursor-pointer",
                       statusFilter === status 
                         ? "bg-white text-indigo-700 shadow-sm" 
                         : "text-slate-500 hover:text-slate-900"
                     )}
                   >
-                    {status === 'ALL' ? 'ทั้งหมด' : 
-                     status === 'UNPAID' ? 'รอดำเนินการ' : 
-                     status === 'READY_TO_PAY' ? 'พร้อมจ่าย' : 'ชำระแล้ว'}
+                    {status === 'ALL' ? (isEn ? 'All' : 'ทั้งหมด') : 
+                     status === 'UNPAID' ? (isEn ? 'Pending' : 'รอดำเนินการ') : 
+                     status === 'READY_TO_PAY' ? (isEn ? 'Ready to Pay' : 'พร้อมจ่าย') : (isEn ? 'Paid' : 'ชำระแล้ว')}
                   </Button>
                 ))}
               </div>
@@ -397,39 +405,41 @@ export default function PayoutDashboardPage() {
         return (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom duration-300 border border-slate-800">
             <div className="flex flex-col">
-              <span className="text-[10px] font-semibold text-slate-400">เลือกแล้ว {selectedIds.size} รายการ</span>
+              <span className="text-[10px] font-semibold text-slate-400">
+                {isEn ? `Selected ${selectedIds.size} items` : `เลือกแล้ว ${selectedIds.size} รายการ`}
+              </span>
               <span className="text-sm font-bold text-indigo-400">
-                ยอดสุทธิรวม: {formatCurrency(currentTotal)}
+                {isEn ? "Total Net Payout:" : "ยอดสุทธิรวม:"} {formatCurrency(currentTotal)}
               </span>
             </div>
             <div className="flex items-center gap-2">
               {allUnpaid && (
                 <Button
                   size="sm"
-                  className="bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl px-4 h-10 border-none"
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl px-4 h-10 border-none cursor-pointer"
                   onClick={async () => {
                     const ids = Array.from(selectedIds);
                     setLoading(true);
                     const res = await bulkMarkAsReadyToPayAction(ids);
                     if (res.success) {
-                      toast.success(res.message || "อนุมัติรายการสำเร็จ");
+                      toast.success(res.message || (isEn ? "Approved successfully" : "อนุมัติรายการสำเร็จ"));
                       clearSelection();
                       fetchPayouts();
                     } else {
-                      toast.error(res.error || "เกิดข้อผิดพลาดในการอนุมัติ");
+                      toast.error(res.error || (isEn ? "Failed to approve" : "เกิดข้อผิดพลาดในการอนุมัติ"));
                     }
                     setLoading(false);
                   }}
                   disabled={loading || isAllBranches}
                 >
-                  อนุมัติพร้อมจ่าย (Approve Ready)
+                  {isEn ? "Approve Ready" : "อนุมัติพร้อมจ่าย (Approve Ready)"}
                 </Button>
               )}
 
               {allReadyToPay && (
                 <Button
                   size="sm"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl px-4 h-10 border-none flex items-center gap-1"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl px-4 h-10 border-none flex items-center gap-1 cursor-pointer"
                   onClick={() => {
                     setSelectedPayout(selectedPayoutsList);
                     setIsReceiptDialogOpen(true);
@@ -437,21 +447,23 @@ export default function PayoutDashboardPage() {
                   disabled={loading || isAllBranches}
                 >
                   <ArrowUpRight className="w-4 h-4" />
-                  บันทึกการโอนเงิน (Bulk Pay)
+                  {isEn ? "Bulk Pay" : "บันทึกการโอนเงิน (Bulk Pay)"}
                 </Button>
               )}
 
               {!allUnpaid && !allReadyToPay && (
-                <span className="text-[11px] text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-700/50">กรุณาเลือกสถานะเดียวเพื่อทำรายการกลุ่ม</span>
+                <span className="text-[11px] text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-700/50">
+                  {isEn ? "Please select items with identical status for bulk actions" : "กรุณาเลือกสถานะเดียวเพื่อทำรายการกลุ่ม"}
+                </span>
               )}
 
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl px-4 h-10 font-semibold"
+                className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl px-4 h-10 font-semibold cursor-pointer"
                 onClick={clearSelection}
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </div>
           </div>

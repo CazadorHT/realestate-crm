@@ -13,6 +13,7 @@ import { DealWithProperty, DealPropertyOption } from "../types";
 import { DealStatusBadge } from "./DealStatusBadge";
 import { DealFormDialog } from "./DealFormDialog";
 import { DeleteDealButton } from "./DeleteDealButton";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealsTableRowProps {
   deal: DealWithProperty;
@@ -30,6 +31,9 @@ export function DealsTableRow({
   onRefresh,
 }: DealsTableRowProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const isNew =
     deal.created_at &&
@@ -54,7 +58,7 @@ export function DealsTableRow({
           variant={deal.deal_type === "RENT" ? "secondary" : "default"}
           className="font-normal w-[60px] justify-center"
         >
-          {deal.deal_type === "RENT" ? "เช่า" : "ขาย"}
+          {deal.deal_type === "RENT" ? (isEn ? "Rent" : "เช่า") : (isEn ? "Sale" : "ขาย")}
         </Badge>
       </TableCell>
       <TableCell>
@@ -91,12 +95,12 @@ export function DealsTableRow({
             setNavigatingId(`lead-${deal.lead_id}`);
             router.push(`/protected/leads/${deal.lead_id}`);
           }}
-          className="text-xs font-bold text-slate-600 hover:text-blue-600 hover:underline transition-colors line-clamp-1  tracking-tight cursor-pointer relative"
+          className="text-xs font-bold text-slate-600 hover:text-blue-600 hover:underline transition-colors line-clamp-1 tracking-tight cursor-pointer relative"
         >
           {navigatingId === `lead-${deal.lead_id}` && (
             <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-0.5" />
           )}
-          คุณ {deal.lead?.full_name || "ไม่ได้ระบุ"}
+          {deal.lead?.full_name ? `${isEn ? "" : "คุณ "}${deal.lead.full_name}` : (isEn ? "Unassigned" : "ไม่ได้ระบุ")}
         </div>
       </TableCell>
       <TableCell className="font-bold text-slate-700 text-[11px]">
@@ -132,11 +136,11 @@ export function DealsTableRow({
       </TableCell>
       <TableCell>
         <div className="flex flex-col">
-          <span className="text-green-600 font-bold text-[11.5px] whitespace-nowrap" title="ค่าคอมมิชชันหลังหัก Co-Broker">
+          <span className="text-green-600 font-bold text-[11.5px] whitespace-nowrap" title={isEn ? "Net Commission (after Co-Broker)" : "ค่าคอมมิชชันหลังหัก Co-Broker"}>
             {netComm.toLocaleString()} ฿
           </span>
           {deal.commission_total && Number(deal.commission_total) > Number(netComm) && (
-            <span className="text-[9px] text-slate-400 line-through whitespace-nowrap" title="ค่าคอมมิชชันก่อนหัก Co-Broker (Gross)">
+            <span className="text-[9px] text-slate-400 line-through whitespace-nowrap" title={isEn ? "Gross Commission (before Co-Broker)" : "ค่าคอมมิชชันก่อนหัก Co-Broker (Gross)"}>
               {Number(deal.commission_total).toLocaleString()} ฿
             </span>
           )}
@@ -145,7 +149,7 @@ export function DealsTableRow({
       <TableCell className="text-slate-500 text-[11px] font-bold">
         {deal.deal_type === "RENT" && deal.duration_months ? (
           <span className="whitespace-nowrap uppercase">
-            {deal.duration_months} เดือน
+            {deal.duration_months} {isEn ? "Mo." : "เดือน"}
           </span>
         ) : (
           <span className="text-slate-300">-</span>
@@ -164,7 +168,7 @@ export function DealsTableRow({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+            className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
             onClick={() => {
               setNavigatingId(`view-${deal.id}`);
               router.push(`/protected/deals/${deal.id}`);
@@ -186,7 +190,7 @@ export function DealsTableRow({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 hover:bg-purple-50 hover:text-purple-600"
+                className="h-8 w-8 hover:bg-purple-50 hover:text-purple-600 cursor-pointer"
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -206,3 +210,4 @@ export function DealsTableRow({
     </TableRow>
   );
 }
+

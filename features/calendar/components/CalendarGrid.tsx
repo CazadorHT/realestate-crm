@@ -10,6 +10,7 @@ import { CalendarEvent } from "../queries";
 import { updateEventDate } from "../actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import "./calendar-custom.css";
 
 interface CalendarGridProps {
@@ -31,6 +32,8 @@ export function CalendarGrid({
 }: CalendarGridProps) {
   const calendarRef = useRef<FullCalendar>(null);
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   // Sync viewMode when it changes from props
   useEffect(() => {
@@ -107,7 +110,7 @@ export function CalendarGrid({
           if (originalEvent) onEventClick(originalEvent);
         }}
         firstDay={1} // Monday
-        locale="th"
+        locale={isEn ? "en" : "th"}
         dayMaxEvents={3}
         height="auto"
         stickyHeaderDates={true}
@@ -122,11 +125,11 @@ export function CalendarGrid({
               event.extendedProps.type
             );
             if (result.success) {
-               toast.success("เลื่อนวันนัดหมายเรียบร้อย");
+               toast.success(isEn ? "Event rescheduled successfully" : "เลื่อนวันนัดหมายเรียบร้อย");
             }
           } catch (error) {
             info.revert();
-            toast.error("ไม่สามารถเลื่อนวันนัดหมายได้");
+            toast.error(isEn ? "Failed to reschedule event" : "ไม่สามารถเลื่อนวันนัดหมายได้");
           }
         }}
         eventResize={async (info) => {

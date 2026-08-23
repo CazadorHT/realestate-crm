@@ -16,12 +16,14 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, TrendingUp, BarChart3, PieChart as PieChartIcon } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertyDistributionChartsProps {
   typeData: any[];
   statusData: any[];
   handleTypeClick: (data: any) => void;
   handleStatusClick: (data: any) => void;
+  isEn?: boolean;
 }
 
 const renderCustomLabel = (props: any) => {
@@ -50,7 +52,10 @@ export default function PropertyDistributionCharts({
   statusData,
   handleTypeClick,
   handleStatusClick,
+  isEn: propIsEn,
 }: PropertyDistributionChartsProps) {
+  const { language } = useLanguage();
+  const isEn = propIsEn !== undefined ? propIsEn : language === "en";
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -77,10 +82,10 @@ export default function PropertyDistributionCharts({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg font-bold text-slate-800">
-                สัดส่วนประเภททรัพย์
+                {isEn ? "Property Type Distribution" : "สัดส่วนประเภททรัพย์"}
               </CardTitle>
               <p className="text-xs text-slate-400 font-medium mt-0.5">
-                คลิกที่กราฟเพื่อกรองตามประเภท
+                {isEn ? "Click chart slices to filter by type" : "คลิกที่กราฟเพื่อกรองตามประเภท"}
               </p>
             </div>
             <div className="p-2 bg-blue-50 rounded-xl">
@@ -133,7 +138,7 @@ export default function PropertyDistributionCharts({
                   </Pie>
                   <Tooltip
                     formatter={(value: any, name: any) => [
-                      <span key="val" className="font-bold">{value} รายการ</span>,
+                      <span key="val" className="font-bold">{value} {isEn ? "listings" : "รายการ"}</span>,
                       name,
                     ]}
                     contentStyle={{
@@ -163,8 +168,8 @@ export default function PropertyDistributionCharts({
               <div className="p-3 bg-slate-100 text-slate-400 rounded-full mb-3 shadow-inner">
                 <PieChartIcon className="h-6 w-6" />
               </div>
-              <h4 className="text-sm font-bold text-slate-700 mb-1">ยังไม่มีข้อมูลประเภททรัพย์</h4>
-              <p className="text-xs text-slate-500 max-w-xs">ไม่พบรายการอสังหาริมทรัพย์สำหรับตัวกรองหรือช่วงเวลาที่คุณเลือกในขณะนี้</p>
+              <h4 className="text-sm font-bold text-slate-700 mb-1">{isEn ? "No Property Type Data" : "ยังไม่มีข้อมูลประเภททรัพย์"}</h4>
+              <p className="text-xs text-slate-500 max-w-xs">{isEn ? "No properties match your current filters or selected period." : "ไม่พบรายการอสังหาริมทรัพย์สำหรับตัวกรองหรือช่วงเวลาที่คุณเลือกในขณะนี้"}</p>
             </div>
           )}
         </CardContent>
@@ -176,10 +181,10 @@ export default function PropertyDistributionCharts({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg font-bold text-slate-800">
-                สถานะทรัพย์สิน
+                {isEn ? "Property Status" : "สถานะทรัพย์สิน"}
               </CardTitle>
               <p className="text-xs text-slate-400 font-medium mt-0.5">
-                คลิกที่แท่งกราฟเพื่อกรองตามสถานะ
+                {isEn ? "Click bar to filter by status" : "คลิกที่แท่งกราฟเพื่อกรองตามสถานะ"}
               </p>
             </div>
             <div className="p-2 bg-emerald-50 rounded-xl">
@@ -238,8 +243,8 @@ export default function PropertyDistributionCharts({
                   <Tooltip
                     cursor={{ fill: "rgba(59, 130, 246, 0.05)", radius: 8 }}
                     formatter={(value: any) => [
-                      <span key="val" className="font-bold">{value} รายการ</span>,
-                      "จำนวน",
+                      <span key="val" className="font-bold">{value} {isEn ? "listings" : "รายการ"}</span>,
+                      isEn ? "Count" : "จำนวน",
                     ]}
                     contentStyle={{
                       borderRadius: "12px",
@@ -274,8 +279,8 @@ export default function PropertyDistributionCharts({
               <div className="p-3 bg-slate-100 text-slate-400 rounded-full mb-3 shadow-inner">
                 <BarChart3 className="h-6 w-6" />
               </div>
-              <h4 className="text-sm font-bold text-slate-700 mb-1">ยังไม่มีข้อมูลสถานะทรัพย์สิน</h4>
-              <p className="text-xs text-slate-500 max-w-xs">ไม่พบการระบุสถานะทรัพย์สินสำหรับตัวกรองหรือช่วงเวลาที่คุณเลือกในขณะนี้</p>
+              <h4 className="text-sm font-bold text-slate-700 mb-1">{isEn ? "No Property Status Data" : "ยังไม่มีข้อมูลสถานะทรัพย์สิน"}</h4>
+              <p className="text-xs text-slate-500 max-w-xs">{isEn ? "No property status records found for your current filters." : "ไม่พบการระบุสถานะทรัพย์สินสำหรับตัวกรองหรือช่วงเวลาที่คุณเลือกในขณะนี้"}</p>
             </div>
           )}
         </CardContent>

@@ -123,6 +123,10 @@ export default async function DashboardPage(props: {
   const teamId = searchParams.teamId as string | undefined;
   const agentId = searchParams.agentId as string | undefined;
 
+  const cookieStore = await (await import("next/headers")).cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const supabase = await createClient();
 
   // [ประสิทธิภาพ] การดึงข้อมูลแบบขนาน: การตรวจสอบสิทธิ์และบริบทหลัก
@@ -218,7 +222,7 @@ export default async function DashboardPage(props: {
           profile?.role === "AGENT" ? "min-h-[400px]" : "min-h-[600px]"
         )}>
           {/* ตัวกรอง */}
-          <ErrorBoundary fallback={<div className="p-4 bg-white rounded-2xl shadow-sm border border-red-100 text-red-500 text-xs">ตัวกรองขัดข้อง</div>}>
+          <ErrorBoundary fallback={<div className="p-4 bg-white rounded-2xl shadow-sm border border-red-100 text-red-500 text-xs">{isEn ? "Filter error" : "ตัวกรองขัดข้อง"}</div>}>
             <DashboardFilters
               role={profile?.role}
               multiTenantEnabled={multiTenantEnabled}
@@ -230,7 +234,7 @@ export default async function DashboardPage(props: {
             <div className="xl:col-span-2 flex flex-col gap-6">
               {/* สรุปอัจฉริยะ (AI Gated) */}
               {showSmartSummary ? (
-                <ErrorBoundary fallback={<MiniErrorFallback />}>
+                <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                   <Suspense
                     fallback={<Skeleton className="h-32 w-full rounded-3xl animate-shimmer" />}
                   >
@@ -246,12 +250,12 @@ export default async function DashboardPage(props: {
                 </ErrorBoundary>
               ) : (
                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-500 text-sm italic">
-                  ภาพรวมแดชบอร์ด (ฉบับย่อ)
+                  {isEn ? "Dashboard Overview (Summary)" : "ภาพรวมแดชบอร์ด (ฉบับย่อ)"}
                 </div>
               )}
               {/* กระดานงานตัวแทน (เด่นสำหรับตัวแทน หรือเมื่อ Admin ดูรายพนักงาน) */}
               {(profile?.role === "AGENT" || view === "staff") && (
-                <ErrorBoundary fallback={<MiniErrorFallback />}>
+                <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                   <Suspense
                     fallback={
                       <div className="h-40 animate-shimmer bg-slate-50 rounded-[2.5rem]" />
@@ -277,7 +281,7 @@ export default async function DashboardPage(props: {
 
                   {/* แถวงานและความเสี่ยง */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <ErrorBoundary fallback={<MiniErrorFallback />}>
+                    <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                       <Suspense
                         fallback={
                           <div className="h-48 animate-shimmer bg-slate-50 rounded-3xl" />
@@ -290,7 +294,7 @@ export default async function DashboardPage(props: {
                         />
                       </Suspense>
                     </ErrorBoundary>
-                    <ErrorBoundary fallback={<MiniErrorFallback />}>
+                    <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                       <Suspense
                         fallback={
                           <div className="h-48 animate-shimmer bg-slate-50 rounded-3xl" />
@@ -307,7 +311,7 @@ export default async function DashboardPage(props: {
 
                   {/* ตัวแทนยอดเยี่ยม */}
                   {profile?.role !== "AGENT" && (
-                    <ErrorBoundary fallback={<MiniErrorFallback />}>
+                    <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                       <Suspense fallback={<ListSkeleton />}>
                         <TopAgentsWrapper
                           tenantId={tenantId}
@@ -321,7 +325,7 @@ export default async function DashboardPage(props: {
                     </ErrorBoundary>
                   )}
                   {/* การจัดการรายวัน */}
-              <ErrorBoundary fallback={<MiniErrorFallback />}>
+              <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                 <Suspense
                   fallback={
                     <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
@@ -334,7 +338,7 @@ export default async function DashboardPage(props: {
                   />
                 </Suspense>
               </ErrorBoundary>
-              <ErrorBoundary fallback={<MiniErrorFallback />}>
+              <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                 <Suspense
                   fallback={
                     <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
@@ -352,10 +356,12 @@ export default async function DashboardPage(props: {
               ) : (
                 <div className="p-8 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center justify-center text-center">
                   <div className="text-slate-400 mb-2 font-medium">
-                    ยังไม่ได้เปิดใช้งานการวิเคราะห์
+                    {isEn ? "Analytics Not Enabled" : "ยังไม่ได้เปิดใช้งานการวิเคราะห์"}
                   </div>
                   <p className="text-xs text-slate-500 max-w-xs">
-                    อัปเกรดแผนของคุณเพื่อปลดล็อกการติดตามรายได้แบบเรียลไทม์และข้อมูลเชิงลึกด้านประสิทธิภาพ
+                    {isEn
+                      ? "Upgrade your plan to unlock real-time revenue tracking and performance insights."
+                      : "อัปเกรดแผนของคุณเพื่อปลดล็อกการติดตามรายได้แบบเรียลไทม์และข้อมูลเชิงลึกด้านประสิทธิภาพ"}
                   </p>
                 </div>
               )}
@@ -366,7 +372,7 @@ export default async function DashboardPage(props: {
               <QuickActions />
 
               {/* ข้อมูลเชิงลึกและการแจ้งเตือนโดย AI */}
-              <ErrorBoundary fallback={<MiniErrorFallback />}>
+              <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                 <ExecutiveAISummary
                   tenantId={tenantId}
                   role={profile?.role}
@@ -375,7 +381,7 @@ export default async function DashboardPage(props: {
                 />
               </ErrorBoundary>
 
-              <ErrorBoundary fallback={<MiniErrorFallback />}>
+              <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                 <Suspense fallback={<ChartSkeleton />}>
                   <MarketingROIWrapper
                     tenantId={tenantId}
@@ -387,7 +393,7 @@ export default async function DashboardPage(props: {
                   />
                 </Suspense>
               </ErrorBoundary>
-              <ErrorBoundary fallback={<MiniErrorFallback />}>
+              <ErrorBoundary fallback={<MiniErrorFallback isEn={isEn} />}>
                 <Suspense
                   fallback={
                     <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
@@ -420,13 +426,13 @@ export default async function DashboardPage(props: {
 }
 
 // 🛡️ Error Fallback สำหรับ Widget ขนาดเล็ก
-const MiniErrorFallback = () => (
+const MiniErrorFallback = ({ isEn }: { isEn?: boolean }) => (
   <div className="p-6 border border-dashed border-red-200 bg-red-50/50 rounded-3xl text-center animate-in fade-in duration-500">
     <div className="flex justify-center mb-2">
       <AlertCircle className="h-5 w-5 text-red-400" />
     </div>
     <p className="text-[11px] font-bold text-red-600 uppercase tracking-wider">Widget Error</p>
-    <p className="text-[10px] text-red-400 mt-1">ไม่สามารถโหลดข้อมูลส่วนนี้ได้</p>
+    <p className="text-[10px] text-red-400 mt-1">{isEn ? "Failed to load this section" : "ไม่สามารถโหลดข้อมูลส่วนนี้ได้"}</p>
   </div>
 );
 

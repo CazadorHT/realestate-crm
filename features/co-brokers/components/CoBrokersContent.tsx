@@ -32,59 +32,56 @@ import {
 } from "../actions";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { CoBrokerStats } from "./CoBrokerStats";
 import { CoBrokerFilters } from "./CoBrokerFilters";
 import { BulkGroupChangeDialog } from "./BulkGroupChangeDialog";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface CoBrokersContentProps {
   initialData: CoBroker[];
+  initialTrash?: CoBroker[];
+  stats?: any;
 }
 
-export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
+export function CoBrokersContent({
+  initialData,
+  initialTrash,
+  stats
+}: CoBrokersContentProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [data, setData] = useState<CoBroker[]>(initialData);
   const [search, setSearch] = useState("");
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [showTrash, setShowTrash] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedBroker, setSelectedBroker] = useState<CoBroker | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [editBroker, setEditBroker] = useState<CoBroker | null>(null);
-  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
-
-  // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isBulkOperating, setIsBulkOperating] = useState(false);
 
-  // Stats calculation
-  const stats = useMemo(() => {
-    return {
-      total: data.length,
-      highRated: data.filter(d => (d.rating || 0) >= 4).length,
-      active: data.filter(d => d.is_active).length,
-    };
-  }, [data]);
+  // Dialog & Drawer States
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [editBroker, setEditBroker] = useState<CoBroker | null>(null);
 
-  // Filtering logic
+  const [selectedBroker, setSelectedBroker] = useState<CoBroker | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+
+  // Filtering Logic
   const filteredData = useMemo(() => {
-    let result = data;
-    
-    if (search) {
-      const lowerSearch = search.toLowerCase();
+    let result = [...data];
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
       result = result.filter(item => 
-        item.name.toLowerCase().includes(lowerSearch) ||
-        (item.company_name?.toLowerCase().includes(lowerSearch)) ||
-        (item.phone?.includes(search)) ||
-        (item.specialized_areas?.some((a: string) => a.toLowerCase().includes(lowerSearch)))
+        item.name.toLowerCase().includes(q) ||
+        (item.company_name && item.company_name.toLowerCase().includes(q)) ||
+        (item.phone && item.phone.includes(q)) ||
+        (item.email && item.email.toLowerCase().includes(q)) ||
+        (item.line_id && item.line_id.toLowerCase().includes(q)) ||
+        (item.specialized_areas && item.specialized_areas.some(a => a.toLowerCase().includes(q)))
       );
     }
 
@@ -103,7 +100,7 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
         setData(result.data!);
       }
     } catch (error) {
-      toast.error("ล้มเหลวในการดึงข้อมูลล่าสุด");
+      toast.error(isEn ? "Failed to fetch latest data" : "ล้มเหลวในการดึงข้อมูลล่าสุด");
     } finally {
       setIsRefreshing(false);
     }
@@ -111,11 +108,14 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
 
   const handleExportCSV = () => {
     if (filteredData.length === 0) {
-      toast.error("ไม่มีข้อมูลให้ส่งออก");
+      toast.error(isEn ? "No data to export" : "ไม่มีข้อมูลให้ส่งออก");
       return;
     }
 
-    const headers = ["ชื่อ", "บริษัท", "เบอร์โทร", "Email", "Rating", "พื้นที่เชี่ยวชาญ", "Tax ID"];
+    const headers = isEn 
+      ? ["Name", "Company", "Phone", "Email", "Rating", "Specialized Areas", "Tax ID"]
+      : ["ชื่อ", "บริษัท", "เบอร์โทร", "Email", "Rating", "พื้นที่เชี่ยวชาญ", "Tax ID"];
+
     const csvContent = [
       headers.join(","),
       ...filteredData.map(item => [
@@ -136,24 +136,35 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success("ดาวน์โหลด CSV เรียบร้อยแล้ว");
+    toast.success(isEn ? "CSV report downloaded successfully" : "ดาวน์โหลด CSV เรียบร้อยแล้ว");
   };
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    const actionText = showTrash ? "ลบถาวร" : "ย้ายลงถังขยะ";
-    if (!confirm(`ยืนยันการ${actionText}จำนวน ${selectedIds.size} รายการ?`)) return;
+    const actionText = showTrash 
+      ? (isEn ? "permanently delete" : "ลบถาวร") 
+      : (isEn ? "move to trash" : "ย้ายลงถังขยะ");
+
+    const confirmMsg = isEn 
+      ? `Are you sure you want to ${actionText} ${selectedIds.size} selected item(s)?`
+      : `ยืนยันการ${actionText}จำนวน ${selectedIds.size} รายการ?`;
+
+    if (!confirm(confirmMsg)) return;
 
     setIsBulkOperating(true);
     const ids = Array.from(selectedIds);
     try {
       const res = await bulkDeleteCoBrokersAction(ids);
       if (res.success) {
-        toast.success(`${actionText}เรียบร้อยแล้ว`);
+        toast.success(
+          isEn 
+            ? `Successfully ${showTrash ? "permanently deleted" : "moved to trash"}`
+            : `${actionText}เรียบร้อยแล้ว`
+        );
         setSelectedIds(new Set());
         refreshData();
       } else {
-        toast.error(res.error || "เกิดข้อผิดพลาด");
+        toast.error(res.error || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
       }
     } finally {
       setIsBulkOperating(false);
@@ -167,7 +178,11 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
     try {
       const res = await bulkRestoreCoBrokersAction(ids);
       if (res.success) {
-        toast.success(`กู้คืนข้อมูล ${ids.length} รายการเรียบร้อยแล้ว`);
+        toast.success(
+          isEn 
+            ? `Successfully restored ${ids.length} item(s)` 
+            : `กู้คืนข้อมูล ${ids.length} รายการเรียบร้อยแล้ว`
+        );
         setSelectedIds(new Set());
         refreshData();
       }
@@ -181,13 +196,17 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
     try {
       const res = await bulkUpdateCoBrokerGroupAction(Array.from(selectedIds), targetGroup);
       if (res.success) {
-        toast.success(`เปลี่ยนกลุ่มเป็น ${targetGroup} สำเร็จ`);
+        toast.success(
+          isEn 
+            ? `Changed group to ${targetGroup} successfully` 
+            : `เปลี่ยนกลุ่มเป็น ${targetGroup} สำเร็จ`
+        );
         setIsGroupDialogOpen(false);
         setSelectedIds(new Set());
         refreshData();
       }
     } catch (e) {
-      toast.error("เกิดข้อผิดพลาดในการเปลี่ยนกลุ่ม");
+      toast.error(isEn ? "Failed to change group" : "เกิดข้อผิดพลาดในการเปลี่ยนกลุ่ม");
     }
   };
 
@@ -213,25 +232,27 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
           <CardHeader className="p-8 border-b border-slate-100/50 bg-white/50">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
               <TabsList className="bg-slate-100 p-1.5 rounded-2xl h-12 w-fit">
-                <TabsTrigger value="active" className="px-8 rounded-xl font-bold h-9">รายชื่อคู่ค้า</TabsTrigger>
-                <TabsTrigger value="trash" className="px-8 rounded-xl font-bold h-9 text-slate-500">
-                  <Trash2 className="mr-2 h-4 w-4" /> ถังขยะ
+                <TabsTrigger value="active" className="px-8 rounded-xl font-bold h-9 cursor-pointer">
+                  {isEn ? "Partner List" : "รายชื่อคู่ค้า"}
+                </TabsTrigger>
+                <TabsTrigger value="trash" className="px-8 rounded-xl font-bold h-9 text-slate-500 cursor-pointer">
+                  <Trash2 className="mr-2 h-4 w-4" /> {isEn ? "Trash" : "ถังขยะ"}
                 </TabsTrigger>
               </TabsList>
               
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" className="h-12 bg-white shadow-sm font-bold px-6 rounded-2xl border-slate-200" onClick={handleExportCSV}>
+                <Button variant="outline" size="sm" className="h-12 bg-white shadow-sm font-bold px-6 rounded-2xl border-slate-200 cursor-pointer" onClick={handleExportCSV}>
                   <Download className="mr-2 h-4 w-4" />
-                  รายงาน CSV
+                  {isEn ? "Export CSV" : "รายงาน CSV"}
                 </Button>
                 <Button 
                    id="tour-cobrokers-add"
                    onClick={() => setIsDialogOpen(true)} 
-                   className="bg-blue-600 hover:bg-blue-700 h-12 shadow-xl shadow-blue-100 font-bold px-8 rounded-2xl"
+                   className="bg-blue-600 hover:bg-blue-700 h-12 shadow-xl shadow-blue-100 font-bold px-8 rounded-2xl cursor-pointer"
                    disabled={showTrash}
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  เพิ่มคู่ค้าใหม่
+                  {isEn ? "Add Partner" : "เพิ่มคู่ค้าใหม่"}
                 </Button>
               </div>
             </div>
@@ -248,7 +269,7 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
             {isRefreshing ? (
                <div className="p-32 text-center text-slate-400 animate-pulse flex flex-col items-center">
                   <RotateCcw className="h-10 w-10 animate-spin mb-4 text-blue-200" />
-                  <p className="text-sm font-bold uppercase tracking-widest">กำลังดึงข้อมูลคู่ค้า...</p>
+                  <p className="text-sm font-bold uppercase tracking-widest">{isEn ? "Fetching partner data..." : "กำลังดึงข้อมูลคู่ค้า..."}</p>
                </div>
             ) : (
               <CoBrokersTable 
@@ -276,30 +297,30 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
         onDelete={handleBulkDelete}
-        entityName="คู่ค้า"
+        entityName={isEn ? "partner(s)" : "คู่ค้า"}
         extraActions={
           <div className="flex items-center space-x-3">
             {showTrash ? (
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-12 bg-white text-emerald-600 border-emerald-100 hover:bg-emerald-50 font-bold rounded-2xl px-6"
+                className="h-12 bg-white text-emerald-600 border-emerald-100 hover:bg-emerald-50 font-bold rounded-2xl px-6 cursor-pointer"
                 onClick={handleBulkRestore}
                 disabled={isBulkOperating}
               >
                 <RotateCcw className="mr-2 h-4 w-4" />
-                กู้คืนที่เลือก
+                {isEn ? "Restore Selected" : "กู้คืนที่เลือก"}
               </Button>
             ) : (
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-12 bg-white text-blue-600! border-blue-100 hover:bg-blue-50 font-bold rounded-2xl px-6"
+                className="h-12 bg-white text-blue-600! border-blue-100 hover:bg-blue-50 font-bold rounded-2xl px-6 cursor-pointer"
                 onClick={() => setIsGroupDialogOpen(true)}
                 disabled={isBulkOperating}
               >
                 <Handshake className="mr-2 h-4 w-4" />
-                เปลี่ยนกลุ่ม
+                {isEn ? "Change Group" : "เปลี่ยนกลุ่ม"}
               </Button>
             )}
           </div>

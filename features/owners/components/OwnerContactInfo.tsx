@@ -1,5 +1,8 @@
+"use client";
+
 import { Phone, ExternalLink } from "lucide-react";
 import { FaFacebook, FaLine } from "react-icons/fa";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface OwnerContactInfoProps {
   owner: {
@@ -11,6 +14,9 @@ interface OwnerContactInfoProps {
 }
 
 export function OwnerContactInfo({ owner }: OwnerContactInfoProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap gap-6">
       {owner.phone && (
@@ -51,13 +57,13 @@ export function OwnerContactInfo({ owner }: OwnerContactInfoProps) {
 
       {owner.other_contact && (
         <div className="flex items-center gap-2 text-sm text-slate-600">
-          <span className="text-slate-400">อื่นๆ:</span>
+          <span className="text-slate-400">{isEn ? "Other:" : "อื่นๆ:"}</span>
           <span>{owner.other_contact}</span>
         </div>
       )}
 
-      {!owner.phone && !owner.line_id && !owner.facebook_url && (
-        <p className="text-sm text-slate-400">ไม่มีข้อมูลการติดต่อ</p>
+      {!owner.phone && !owner.line_id && !owner.facebook_url && !owner.other_contact && (
+        <p className="text-sm text-slate-400">{isEn ? "No contact information" : "ไม่มีข้อมูลการติดต่อ"}</p>
       )}
     </div>
   );

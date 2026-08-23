@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCcw, Home } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function Error({
   error,
@@ -13,6 +14,17 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  let isEn = false;
+  try {
+    const { language } = useLanguage();
+    isEn = language === "en";
+  } catch {
+    // Fallback if rendered outside LanguageProvider
+    if (typeof document !== "undefined") {
+      isEn = document.cookie.includes("NEXT_LOCALE=en");
+    }
+  }
+
   useEffect(() => {
     // 🛡️ บันทึก Error ลง Sentry อัตโนมัติ
     console.error(error);
@@ -28,9 +40,13 @@ export default function Error({
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-slate-900">เกิดข้อผิดพลาดบางอย่าง</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isEn ? "Something went wrong" : "เกิดข้อผิดพลาดบางอย่าง"}
+          </h1>
           <p className="text-slate-500">
-            ระบบพบปัญหาขัดข้องชั่วคราว เราได้บันทึกข้อมูลและแจ้งทีมวิศวกรแล้ว
+            {isEn
+              ? "A temporary error occurred. The incident has been recorded and our team has been notified."
+              : "ระบบพบปัญหาขัดข้องชั่วคราว เราได้บันทึกข้อมูลและแจ้งทีมวิศวกรแล้ว"}
           </p>
         </div>
 
@@ -45,35 +61,37 @@ export default function Error({
           <Button
             onClick={() => Sentry.showReportDialog({ eventId: error.digest })}
             variant="default"
-            className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 transition-all active:scale-95"
+            className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 transition-all active:scale-95 cursor-pointer"
           >
-            ส่งรายงานปัญหาให้เรา
+            {isEn ? "Send Error Report" : "ส่งรายงานปัญหาให้เรา"}
           </Button>
           
           <div className="grid grid-cols-2 gap-3">
             <Button
               onClick={() => reset()}
               variant="outline"
-              className="h-11 rounded-xl border-slate-200 font-semibold gap-2"
+              className="h-11 rounded-xl border-slate-200 font-semibold gap-2 cursor-pointer"
             >
               <RefreshCcw className="h-4 w-4" />
-              ลองอีกครั้ง
+              {isEn ? "Try Again" : "ลองอีกครั้ง"}
             </Button>
             <Button
               asChild
               variant="ghost"
-              className="h-11 rounded-xl font-semibold gap-2"
+              className="h-11 rounded-xl font-semibold gap-2 cursor-pointer"
             >
               <Link href="/">
                 <Home className="h-4 w-4" />
-                หน้าหลัก
+                {isEn ? "Home" : "หน้าหลัก"}
               </Link>
             </Button>
           </div>
         </div>
 
         <p className="text-[10px] text-slate-400">
-          * ข้อมูลทางเทคนิคถูกเก็บเข้าระบบความปลอดภัยเพื่อการพัฒนาแก้ไข
+          {isEn
+            ? "* Technical diagnostic data has been securely logged for debugging"
+            : "* ข้อมูลทางเทคนิคถูกเก็บเข้าระบบความปลอดภัยเพื่อการพัฒนาแก้ไข"}
         </p>
       </div>
     </div>

@@ -47,8 +47,12 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 import { SortableProjectRow } from "@/components/admin/projects/SortableProjectRow";
 import { ProjectFormWizard } from "@/components/admin/projects/ProjectFormWizard";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function ProjectsAdminPage() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [projects, setProjects] = React.useState<ProjectAdminItem[]>([]);
   const [stations, setStations] = React.useState<MasterDataTransitStation[]>([]);
   const [dbFeatures, setDbFeatures] = React.useState<any[]>([]);
@@ -80,12 +84,12 @@ export default function ProjectsAdminPage() {
       if (featsRes.data) {
         setDbFeatures(featsRes.data);
       }
-    } catch (err) {
-      toast.error("ไม่สามารถโหลดข้อมูลโครงการและสถานีได้");
+    } catch {
+      toast.error(isEn ? "Failed to load projects and transit stations" : "ไม่สามารถโหลดข้อมูลโครงการและสถานีได้");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isEn]);
 
   React.useEffect(() => {
     loadData();
@@ -103,9 +107,9 @@ export default function ProjectsAdminPage() {
       const ids = newProjects.map((item) => item.id!);
       const res = await reorderProjectsAction(ids, 0);
       if (res.success) {
-        toast.success(res.message);
+        toast.success(res.message || (isEn ? "Projects reordered successfully" : "จัดเรียงโครงการสำเร็จ"));
       } else {
-        toast.error(res.message);
+        toast.error(res.message || (isEn ? "Failed to reorder projects" : "เกิดข้อผิดพลาดในการจัดเรียง"));
         loadData();
       }
     }
@@ -126,9 +130,9 @@ export default function ProjectsAdminPage() {
     const ids = sorted.map((p) => p.id!);
     const res = await reorderProjectsAction(ids, 0);
     if (res.success) {
-      toast.success("จัดเรียงโครงการที่มีทรัพย์สินอยู่ขึ้นก่อนหน้าสำเร็จ 🚀");
+      toast.success(isEn ? "Projects with properties sorted to top 🚀" : "จัดเรียงโครงการที่มีทรัพย์สินอยู่ขึ้นก่อนหน้าสำเร็จ 🚀");
     } else {
-      toast.error(res.message);
+      toast.error(res.message || (isEn ? "Failed to sort projects" : "เกิดข้อผิดพลาดในการจัดเรียง"));
       loadData();
     }
   };
@@ -145,9 +149,9 @@ export default function ProjectsAdminPage() {
     const ids = sorted.map((p) => p.id!);
     const res = await reorderProjectsAction(ids, 0);
     if (res.success) {
-      toast.success("จัดเรียงโครงการจากใหม่ไปเก่าสำเร็จ 📅");
+      toast.success(isEn ? "Projects sorted newest first 📅" : "จัดเรียงโครงการจากใหม่ไปเก่าสำเร็จ 📅");
     } else {
-      toast.error(res.message);
+      toast.error(res.message || (isEn ? "Failed to sort projects" : "เกิดข้อผิดพลาดในการจัดเรียง"));
       loadData();
     }
   };
@@ -163,18 +167,18 @@ export default function ProjectsAdminPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`คุณต้องการลบโครงการ "${name}" ใช่หรือไม่?`)) return;
+    if (!confirm(isEn ? `Are you sure you want to delete project "${name}"?` : `คุณต้องการลบโครงการ "${name}" ใช่หรือไม่?`)) return;
 
     try {
       const res = await deleteProjectAction(id);
       if (res.success) {
-        toast.success(res.message);
+        toast.success(res.message || (isEn ? "Project deleted successfully" : "ลบโครงการสำเร็จ"));
         loadData();
       } else {
-        toast.error(res.message);
+        toast.error(res.message || (isEn ? "Failed to delete project" : "ไม่สามารถลบโครงการได้"));
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการลบข้อมูล");
+    } catch {
+      toast.error(isEn ? "An error occurred while deleting project" : "เกิดข้อผิดพลาดในการลบข้อมูล");
     }
   };
 
@@ -202,10 +206,12 @@ export default function ProjectsAdminPage() {
         <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight">
-              จัดการโครงการอสังหาฯ (Projects)
+              {isEn ? "Project Directory (Projects)" : "จัดการโครงการอสังหาฯ (Projects)"}
             </h1>
             <p className="text-sm text-indigo-200/80 max-w-xl font-medium">
-              เพิ่ม แก้ไข และจัดกลุ่มทรัพย์สินตามชื่อโครงการ ปรับแต่งข้อมูล SEO พิกัด GPS ข้อมูลส่วนกลาง และคีย์เวิร์ด
+              {isEn
+                ? "Add, edit, and organize properties by development project. Manage SEO, GPS coordinates, amenities, and keywords."
+                : "เพิ่ม แก้ไข และจัดกลุ่มทรัพย์สินตามชื่อโครงการ ปรับแต่งข้อมูล SEO พิกัด GPS ข้อมูลส่วนกลาง และคีย์เวิร์ด"}
             </p>
           </div>
           <Button
@@ -213,7 +219,7 @@ export default function ProjectsAdminPage() {
             className="rounded-xl h-11 bg-white hover:bg-slate-100 text-indigo-900 font-bold border-none shadow-md shadow-white/5 cursor-pointer"
           >
             <Plus className="h-4.5 w-4.5 mr-1.5" />
-            สร้างโครงการใหม่
+            {isEn ? "Add New Project" : "สร้างโครงการใหม่"}
           </Button>
         </div>
       </div>
@@ -223,7 +229,7 @@ export default function ProjectsAdminPage() {
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
           <Input
-            placeholder="ค้นหาโครงการ หรือดีเวลลอปเปอร์..."
+            placeholder={isEn ? "Search project or developer name..." : "ค้นหาโครงการ หรือดีเวลลอปเปอร์..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
@@ -232,23 +238,25 @@ export default function ProjectsAdminPage() {
 
         <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
           <div className="flex items-center gap-2">
-            <Label className="text-sm font-semibold text-slate-600 shrink-0">ประเภทโครงการ:</Label>
+            <Label className="text-sm font-semibold text-slate-600 shrink-0">
+              {isEn ? "Property Type:" : "ประเภทโครงการ:"}
+            </Label>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-full sm:w-48 h-10.5 rounded-xl border-slate-200">
-                <SelectValue placeholder="เลือกประเภททรัพย์" />
+                <SelectValue placeholder={isEn ? "Select type" : "เลือกประเภททรัพย์"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                <SelectItem value="1">คอนโดมิเนียม</SelectItem>
-                <SelectItem value="2">บ้านเดี่ยว</SelectItem>
-                <SelectItem value="3">ทาวน์โฮม</SelectItem>
-                <SelectItem value="8">วิลล่า</SelectItem>
-                <SelectItem value="9">พูลวิลล่า</SelectItem>
-                <SelectItem value="7">อาคารสำนักงาน</SelectItem>
-                <SelectItem value="4">ที่ดิน</SelectItem>
-                <SelectItem value="6">โกดัง / โรงงาน</SelectItem>
-                <SelectItem value="5">อาคารพาณิชย์</SelectItem>
-                <SelectItem value="10">อื่นๆ</SelectItem>
+                <SelectItem value="ALL">{isEn ? "All Types" : "ทั้งหมด"}</SelectItem>
+                <SelectItem value="1">{isEn ? "Condominium" : "คอนโดมิเนียม"}</SelectItem>
+                <SelectItem value="2">{isEn ? "Detached House" : "บ้านเดี่ยว"}</SelectItem>
+                <SelectItem value="3">{isEn ? "Townhome" : "ทาวน์โฮม"}</SelectItem>
+                <SelectItem value="8">{isEn ? "Villa" : "วิลล่า"}</SelectItem>
+                <SelectItem value="9">{isEn ? "Pool Villa" : "พูลวิลล่า"}</SelectItem>
+                <SelectItem value="7">{isEn ? "Office Building" : "อาคารสำนักงาน"}</SelectItem>
+                <SelectItem value="4">{isEn ? "Land" : "ที่ดิน"}</SelectItem>
+                <SelectItem value="6">{isEn ? "Warehouse / Factory" : "โกดัง / โรงงาน"}</SelectItem>
+                <SelectItem value="5">{isEn ? "Commercial Building" : "อาคารพาณิชย์"}</SelectItem>
+                <SelectItem value="10">{isEn ? "Other" : "อื่นๆ"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -257,20 +265,20 @@ export default function ProjectsAdminPage() {
             variant="outline"
             onClick={handleSortByPropertiesFirst}
             className="h-10.5 rounded-xl border-slate-200 text-slate-700 hover:text-indigo-650 hover:bg-indigo-50 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xs"
-            title="จัดเรียงให้โครงการที่มีจำนวนทรัพย์สินอยู่ขึ้นก่อน"
+            title={isEn ? "Sort projects with active listings first" : "จัดเรียงให้โครงการที่มีจำนวนทรัพย์สินอยู่ขึ้นก่อน"}
           >
             <ArrowUpDown className="h-4 w-4 text-indigo-500" />
-            มีทรัพย์ขึ้นก่อน
+            {isEn ? "Properties First" : "มีทรัพย์ขึ้นก่อน"}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={handleSortByNewestFirst}
             className="h-10.5 rounded-xl border-slate-200 text-slate-700 hover:text-indigo-650 hover:bg-indigo-50 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xs"
-            title="จัดเรียงโครงการที่เพิ่งสร้างล่าสุดขึ้นก่อน"
+            title={isEn ? "Sort recently created projects first" : "จัดเรียงโครงการที่เพิ่งสร้างล่าสุดขึ้นก่อน"}
           >
             <ArrowUpDown className="h-4 w-4 text-indigo-500" />
-            ใหม่ไปเก่า
+            {isEn ? "Newest First" : "ใหม่ไปเก่า"}
           </Button>
         </div>
       </div>
@@ -280,13 +288,19 @@ export default function ProjectsAdminPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" />
-            <span className="text-sm text-slate-500 font-medium animate-pulse">กำลังโหลดข้อมูลโครงการ...</span>
+            <span className="text-sm text-slate-500 font-medium animate-pulse">
+              {isEn ? "Loading projects data..." : "กำลังโหลดข้อมูลโครงการ..."}
+            </span>
           </div>
         ) : filteredProjects.length === 0 ? (
           <div className="text-center py-16">
             <AlertCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-slate-700">ไม่พบข้อมูลโครงการตามเงื่อนไข</h3>
-            <p className="text-sm text-slate-400 mt-1">ลองพิมพ์คำค้นหาอื่น</p>
+            <h3 className="text-lg font-semibold text-slate-700">
+              {isEn ? "No matching projects found" : "ไม่พบข้อมูลโครงการตามเงื่อนไข"}
+            </h3>
+            <p className="text-sm text-slate-400 mt-1">
+              {isEn ? "Try adjusting your search criteria" : "ลองพิมพ์คำค้นหาอื่น"}
+            </p>
           </div>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
@@ -294,12 +308,12 @@ export default function ProjectsAdminPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/75 border-b border-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                    <th className="px-6 py-4">โครงการ</th>
-                    <th className="px-6 py-4 w-36">ประเภท</th>
+                    <th className="px-6 py-4">{isEn ? "Project" : "โครงการ"}</th>
+                    <th className="px-6 py-4 w-36">{isEn ? "Type" : "ประเภท"}</th>
                     <th className="px-6 py-4">URL Slug</th>
-                    <th className="px-6 py-4">ผู้พัฒนา (Developer)</th>
-                    <th className="px-6 py-4 text-center">ยูนิตเชื่อมโยง</th>
-                    <th className="px-6 py-4 text-center">จัดการ</th>
+                    <th className="px-6 py-4">{isEn ? "Developer" : "ผู้พัฒนา (Developer)"}</th>
+                    <th className="px-6 py-4 text-center">{isEn ? "Units" : "ยูนิตเชื่อมโยง"}</th>
+                    <th className="px-6 py-4 text-center">{isEn ? "Actions" : "จัดการ"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
@@ -333,3 +347,4 @@ export default function ProjectsAdminPage() {
     </div>
   );
 }
+

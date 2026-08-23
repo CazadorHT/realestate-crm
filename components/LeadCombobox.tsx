@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { searchLeadsAction } from "@/features/leads/actions";
 
@@ -39,13 +40,18 @@ type Props = {
 export function LeadCombobox({
   value,
   onChangeAction,
-  placeholder = "เลือกลูกค้า...",
+  placeholder,
   className,
   initialLead,
   tenantId,
   required,
   name,
 }: Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const defaultPlaceholder = placeholder || (isEn ? "Select customer (lead)..." : "เลือกลูกค้า...");
+
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<LeadPickItem[]>([]);
@@ -113,7 +119,7 @@ export function LeadCombobox({
       <button
         type="button"
         className={cn(
-          "w-full flex items-center gap-3 text-left rounded-xl border px-3 py-2.5 transition-all duration-200 shadow-sm group",
+          "w-full flex items-center gap-3 text-left rounded-xl border px-3 py-2.5 transition-all duration-200 shadow-sm group cursor-pointer",
           "hover:border-blue-400 hover:bg-blue-50/20",
           selected
             ? "border-blue-200 bg-blue-50/30 "
@@ -146,7 +152,7 @@ export function LeadCombobox({
             </>
           ) : (
             <span className="text-slate-400 text-sm font-normal">
-              {placeholder}
+              {defaultPlaceholder}
             </span>
           )}
         </div>
@@ -157,7 +163,7 @@ export function LeadCombobox({
             <span
               role="button"
               onClick={handleClear}
-              className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors"
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors cursor-pointer"
             >
               <X className="h-3.5 w-3.5" />
             </span>
@@ -174,8 +180,8 @@ export function LeadCombobox({
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="เลือกหาลูกค้า (Lead)"
-      description="พิมพ์ชื่อหรือเบอร์โทรศัพท์เพื่อค้นหา"
+      title={isEn ? "Select Lead" : "เลือกหาลูกค้า (Lead)"}
+      description={isEn ? "Search by customer name or phone number" : "พิมพ์ชื่อหรือเบอร์โทรศัพท์เพื่อค้นหา"}
       className="sm:max-w-[500px]"
       trigger={trigger}
       isLoading={isLoading}
@@ -190,7 +196,7 @@ export function LeadCombobox({
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="ชื่อลูกค้า หรือ เบอร์โทรศัพท์..."
+              placeholder={isEn ? "Customer name or phone number..." : "ชื่อลูกค้า หรือ เบอร์โทรศัพท์..."}
               className="pl-9 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20"
             />
           </div>
@@ -200,7 +206,7 @@ export function LeadCombobox({
           {items.length === 0 && !isLoading ? (
             <div className="py-12 text-center text-slate-400">
               <User className="h-10 w-10 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">ไม่พบรายชื่อที่ต้องการ</p>
+              <p className="text-sm">{isEn ? "No leads found" : "ไม่พบรายชื่อที่ต้องการ"}</p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -212,7 +218,7 @@ export function LeadCombobox({
                     type="button"
                     onClick={() => handleSelect(item)}
                     className={cn(
-                      "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left",
+                      "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left cursor-pointer",
                       isSelected
                         ? "bg-blue-50 text-blue-700 ring-1 ring-blue-100"
                         : "hover:bg-slate-200 text-slate-700 hover:text-slate-900"
@@ -252,3 +258,4 @@ export function LeadCombobox({
     </ResponsiveDialog>
   );
 }
+

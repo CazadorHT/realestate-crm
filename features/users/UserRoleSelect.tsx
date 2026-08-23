@@ -18,7 +18,8 @@ import { useRouter } from "next/navigation";
 import { type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { m, AnimatePresence } from "framer-motion";
+import { m } from "framer-motion";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface UserRoleSelectProps {
   userId: string;
@@ -33,6 +34,9 @@ export function UserRoleSelect({
   disabled,
   className,
 }: UserRoleSelectProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(currentRole);
@@ -46,7 +50,7 @@ export function UserRoleSelect({
       color: "bg-indigo-500",
       lightColor: "bg-indigo-50",
       textColor: "text-indigo-600",
-      description: "เจ้าของสาขา มีสิทธิ์สูงสุดในสาขา",
+      description: isEn ? "Branch Owner with full administrative rights" : "เจ้าของสาขา มีสิทธิ์สูงสุดในสาขา",
     },
     {
       id: "ADMIN",
@@ -55,7 +59,7 @@ export function UserRoleSelect({
       color: "bg-rose-500",
       lightColor: "bg-rose-50",
       textColor: "text-rose-600",
-      description: "ควบคุุมทุุกอย่างในระบบ",
+      description: isEn ? "Full system control & configuration" : "ควบคุมทุกอย่างในระบบ",
     },
     {
       id: "MANAGER",
@@ -64,7 +68,7 @@ export function UserRoleSelect({
       color: "bg-amber-500",
       lightColor: "bg-amber-50",
       textColor: "text-amber-600",
-      description: "ดูแลสาขาและพนักงาน",
+      description: isEn ? "Branch supervision & agent management" : "ดูแลสาขาและพนักงาน",
     },
     {
       id: "AGENT",
@@ -73,7 +77,7 @@ export function UserRoleSelect({
       color: "bg-blue-500",
       lightColor: "bg-blue-50",
       textColor: "text-blue-600",
-      description: "จัดการทรัพย์และลีด",
+      description: isEn ? "Property listings & lead workflows" : "จัดการทรัพย์และลีด",
     },
     {
       id: "USER",
@@ -82,7 +86,7 @@ export function UserRoleSelect({
       color: "bg-slate-500",
       lightColor: "bg-slate-50",
       textColor: "text-slate-600",
-      description: "สมาชิกทั่วไป",
+      description: isEn ? "Standard member (Waiting role assignment)" : "สมาชิกทั่วไป",
     },
   ];
 
@@ -99,16 +103,15 @@ export function UserRoleSelect({
       const result = await updateUserRoleAction(userId, newRole);
 
       if (result.success) {
-        toast.success("อัปเดตบทบาทสำเร็จ");
+        toast.success(isEn ? "Role updated successfully" : "อัปเดตบทบาทสำเร็จ");
         setOpen(false);
         router.refresh();
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาดในการอัปเดตบทบาท");
+        toast.error(result.message || (isEn ? "Failed to update role" : "เกิดข้อผิดพลาดในการอัปเดตบทบาท"));
         setSelectedRole(currentRole);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการอัปเดตบทบาท");
+    } catch {
+      toast.error(isEn ? "Failed to update role" : "เกิดข้อผิดพลาดในการอัปเดตบทบาท");
       setSelectedRole(currentRole);
     } finally {
       setIsLoading(false);
@@ -123,8 +126,8 @@ export function UserRoleSelect({
       <ResponsiveDialog
         open={open}
         onOpenChange={setOpen}
-        title="เปลี่ยนบทบาทผู้ใช้ (Change Role)"
-        description="เลือกบทบาทใหม่เพื่อเปลี่ยนสิทธิ์การเข้าถึงระบบ"
+        title={isEn ? "Change User Role" : "เปลี่ยนบทบาทผู้ใช้ (Change Role)"}
+        description={isEn ? "Select a new role to change system access permissions" : "เลือกบทบาทใหม่เพื่อเปลี่ยนสิทธิ์การเข้าถึงระบบ"}
         trigger={
           <Button
             variant="outline"
@@ -225,3 +228,4 @@ export function UserRoleSelect({
     </div>
   );
 }
+

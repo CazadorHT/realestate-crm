@@ -18,6 +18,7 @@ import {
   updateTeamAction,
   TeamWithManager,
 } from "../actions/teamActions";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TeamDialogProps {
   isOpen: boolean;
@@ -34,6 +35,9 @@ export function TeamDialog({
   potentialManagers,
   onSuccess,
 }: TeamDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [name, setName] = useState("");
   const [managerId, setManagerId] = useState<string>("none");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +55,7 @@ export function TeamDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!name.trim()) {
-      toast.error("กรุณาระบุชื่อทีม");
+      toast.error(isEn ? "Please provide a team name" : "กรุณาระบุชื่อทีม");
       return;
     }
 
@@ -65,7 +69,7 @@ export function TeamDialog({
         });
 
         if (result.success) {
-          toast.success("อัปเดตข้อมูลทีมแล้ว");
+          toast.success(isEn ? "Team updated successfully" : "อัปเดตข้อมูลทีมแล้ว");
           // สร้าง object จำลองเพื่ออัปเดต UI ทันที
           const managerObj =
             managerId === "none"
@@ -79,7 +83,7 @@ export function TeamDialog({
           });
           onClose();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาดในการอัปเดตทีม");
+          toast.error(result.message || (isEn ? "Failed to update team" : "เกิดข้อผิดพลาดในการอัปเดตทีม"));
         }
       } else {
         // สร้างทีมใหม่
@@ -89,7 +93,7 @@ export function TeamDialog({
         );
 
         if (result.success) {
-          toast.success("สร้างทีมสำเร็จ");
+          toast.success(isEn ? "Team created successfully" : "สร้างทีมสำเร็จ");
           const managerObj =
             managerId === "none"
               ? null
@@ -101,11 +105,11 @@ export function TeamDialog({
           });
           onClose();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาดในการสร้างทีม");
+          toast.error(result.message || (isEn ? "Failed to create team" : "เกิดข้อผิดพลาดในการสร้างทีม"));
         }
       }
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } catch {
+      toast.error(isEn ? "Failed to save team data" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setIsLoading(false);
     }
@@ -115,8 +119,16 @@ export function TeamDialog({
     <ResponsiveDialog
       open={isOpen}
       onOpenChange={(val) => !val && onClose()}
-      title={team ? "แก้ไขข้อมูลทีม" : "สร้างทีมใหม่"}
-      description="ระบุชื่อทีมและเลือกหัวหน้าทีมที่ต้องการมอบหมาย"
+      title={
+        team
+          ? isEn ? "Edit Team Information" : "แก้ไขข้อมูลทีม"
+          : isEn ? "Create New Team" : "สร้างทีมใหม่"
+      }
+      description={
+        isEn
+          ? "Specify team name and assign a team leader"
+          : "ระบุชื่อทีมและเลือกหัวหน้าทีมที่ต้องการมอบหมาย"
+      }
       footer={
         <div className="flex flex-col sm:flex-row gap-2 w-full">
           <Button
@@ -126,7 +138,7 @@ export function TeamDialog({
             className="flex-1 sm:flex-none rounded-xl h-11 font-bold border-slate-200 text-slate-500"
             disabled={isLoading}
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
           <Button
             type="button"
@@ -134,17 +146,21 @@ export function TeamDialog({
             className="flex-1 rounded-xl h-11 px-8 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-95"
             disabled={isLoading}
           >
-            {isLoading ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+            {isLoading
+              ? isEn ? "Saving..." : "กำลังบันทึก..."
+              : isEn ? "Save Team" : "บันทึกข้อมูล"}
           </Button>
         </div>
       }
     >
       <div className="space-y-6 py-2 text-left">
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-slate-700 font-bold">ชื่อทีม</Label>
+          <Label htmlFor="name" className="text-slate-700 font-bold">
+            {isEn ? "Team Name" : "ชื่อทีม"}
+          </Label>
           <Input
             id="name"
-            placeholder="เช่น Team Silom, Team Sukhumvit"
+            placeholder={isEn ? "e.g. Team Silom, Team Sukhumvit" : "เช่น Team Silom, Team Sukhumvit"}
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="rounded-xl border-slate-200 h-11 focus:ring-indigo-500/10 placeholder:text-slate-300"
@@ -152,20 +168,24 @@ export function TeamDialog({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="manager" className="text-slate-700 font-bold">หัวหน้าทีม (Manager)</Label>
+          <Label htmlFor="manager" className="text-slate-700 font-bold">
+            {isEn ? "Team Leader (Manager)" : "หัวหน้าทีม (Manager)"}
+          </Label>
           <Select
             value={managerId}
             onValueChange={setManagerId}
             disabled={isLoading}
           >
             <SelectTrigger className="rounded-xl border-slate-200 h-11 bg-white">
-              <SelectValue placeholder="เลือกหัวหน้าทีม" />
+              <SelectValue placeholder={isEn ? "Select team leader" : "เลือกหัวหน้าทีม"} />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-slate-200">
-              <SelectItem value="none" className="py-3">--- ไม่ระบุ ---</SelectItem>
+              <SelectItem value="none" className="py-3">
+                {isEn ? "--- Unassigned ---" : "--- ไม่ระบุ ---"}
+              </SelectItem>
               {potentialManagers.map((manager) => (
                 <SelectItem key={manager.id} value={manager.id} className="py-3">
-                  {manager.full_name || "ไม่มีชื่อ"}
+                  {manager.full_name || (isEn ? "No Name" : "ไม่มีชื่อ")}
                 </SelectItem>
               ))}
             </SelectContent>

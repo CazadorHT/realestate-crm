@@ -18,8 +18,12 @@ import { InventoryStats } from "./components/InventoryStats";
 import { InventoryFilters } from "./components/InventoryFilters";
 import { InventoryTable } from "./components/InventoryTable";
 import { InventoryProperty, InventoryFilterCounts } from "./types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function GlobalInventoryPage() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -70,8 +74,8 @@ export default function GlobalInventoryPage() {
       });
       setData(result.tableData as InventoryProperty[]);
       setCount(result.count);
-    } catch (error) {
-      toast.error("ไม่สามารถดึงข้อมูลคลังทรัพย์สินรวมได้");
+    } catch {
+      toast.error(isEn ? "Failed to fetch global property inventory" : "ไม่สามารถดึงข้อมูลคลังทรัพย์สินรวมได้");
     } finally {
       // 🛡️ Smooth UX Transition delay
       setTimeout(() => setLoading(false), 300);
@@ -109,14 +113,18 @@ export default function GlobalInventoryPage() {
     <div className="space-y-8 animate-in fade-in duration-700 pb-12">
       {/* 🛡️ Standardized Elite Header */}
       <PageHeader
-        title="คลังทรัพย์สินรวม (Global Inventory)"
-        subtitle="ศูนย์รวมข้อมูลอสังหาริมทรัพย์จากทุกสาขา เพื่อการทำงานแบบไร้พรมแดน"
+        title={isEn ? "Global Property Inventory" : "คลังทรัพย์สินรวม (Global Inventory)"}
+        subtitle={
+          isEn
+            ? "Unified property catalog across all company branches for seamless cross-branch collaboration"
+            : "ศูนย์รวมข้อมูลอสังหาริมทรัพย์จากทุกสาขา เพื่อการทำงานแบบไร้พรมแดน"
+        }
         icon="layers"
         gradient="blue"
         breadcrumbs={[
-          { label: "หน้าแรก", href: "/protected" },
-          { label: "ผู้ดูแลระบบ", href: "/protected/admin/analytics" },
-          { label: "คลังทรัพย์สินรวม" },
+          { label: isEn ? "Home" : "หน้าแรก", href: "/protected" },
+          { label: isEn ? "Admin" : "ผู้ดูแลระบบ", href: "/protected/admin/analytics" },
+          { label: isEn ? "Global Inventory" : "คลังทรัพย์สินรวม" },
         ]}
       />
 
@@ -166,3 +174,4 @@ export default function GlobalInventoryPage() {
     </div>
   );
 }
+

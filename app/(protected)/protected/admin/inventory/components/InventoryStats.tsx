@@ -1,8 +1,9 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Target, Layers, Building2, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface InventoryStatsProps {
   totalCount: number;
@@ -30,13 +31,15 @@ export function InventoryStats({
   onFilterClick,
   currentStatus,
 }: InventoryStatsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Total Inventory Card */}
       <button 
         onClick={() => onFilterClick?.({ status: "ALL" })}
-        className="text-left outline-hidden transition-all duration-300 active:scale-[0.98]"
+        className="text-left outline-hidden transition-all duration-300 active:scale-[0.98] cursor-pointer"
       >
         <Card className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group overflow-hidden relative">
           <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-blue-50 rounded-full opacity-50 group-hover:scale-125 transition-transform" />
@@ -49,7 +52,7 @@ export function InventoryStats({
                   <Target className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                  ทรัพย์สินทั้งหมด
+                  {isEn ? "Total Properties" : "ทรัพย์สินทั้งหมด"}
                 </div>
                 <div className="text-3xl font-semibold text-slate-900">
                   {totalCount.toLocaleString()}
@@ -64,7 +67,7 @@ export function InventoryStats({
       {/* Online/Active Card - Interactive */}
       <button 
         onClick={() => onFilterClick?.({ status: "ACTIVE" })}
-        className="text-left outline-hidden transition-all duration-300 active:scale-[0.98]"
+        className="text-left outline-hidden transition-all duration-300 active:scale-[0.98] cursor-pointer"
       >
         <Card className={cn(
           "bg-white p-5 rounded-2xl border transition-all duration-300 group overflow-hidden relative shadow-sm hover:shadow-md",
@@ -81,7 +84,7 @@ export function InventoryStats({
                   <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-emerald-500 rounded-full animate-ping" />
                 </div>
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                  ระบบออนไลน์ (Active)
+                  {isEn ? "Active Online" : "ระบบออนไลน์ (Active)"}
                 </div>
                 <div className="text-3xl font-semibold text-slate-900">
                   {activeCount.toLocaleString()}
@@ -105,7 +108,7 @@ export function InventoryStats({
                 <Building2 className="h-4 w-4 text-orange-600" />
               </div>
               <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                สาขาที่ร่วมรายการ
+                {isEn ? "Connected Branches" : "สาขาที่ร่วมรายการ"}
               </div>
               <div className="text-3xl font-semibold text-slate-900">
                 {branchCount}
@@ -118,3 +121,4 @@ export function InventoryStats({
     </div>
   );
 }
+

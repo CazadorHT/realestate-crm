@@ -1,5 +1,6 @@
 import { ArrowDown, AlertCircle } from "lucide-react";
 import { SocialKeyword } from "@/features/site-settings/schema";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface KeywordChipProps {
   index: number;
@@ -9,6 +10,8 @@ interface KeywordChipProps {
 }
 
 export function KeywordChip({ index, item, error, onClick }: KeywordChipProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isEnabled = item.enabled !== false;
   
   return (
@@ -24,7 +27,7 @@ export function KeywordChip({ index, item, error, onClick }: KeywordChipProps) {
     >
       <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)] ${!isEnabled ? "bg-slate-300" : error ? "bg-red-500" : "bg-blue-500"}`} />
       <span className={`text-[15px] font-semibold ${!isEnabled ? "text-slate-400" : error ? "text-red-700" : "text-slate-700 group-hover:text-blue-600"}`}>
-        {item.keyword || "ยังไม่ได้ตั้งค่า"}
+        {item.keyword || (isEn ? "Not configured" : "ยังไม่ได้ตั้งค่า")}
       </span>
       {error ? (
         <AlertCircle className="h-3.5 w-3.5 text-red-500 animate-pulse" />

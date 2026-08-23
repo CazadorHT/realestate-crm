@@ -14,19 +14,20 @@ import {
 import slugify from "slugify";
 import { useThaiAddress } from "@/hooks/useThaiAddress";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // Property types mapping
 const PROPERTY_TYPES = [
-  { value: "1", label: "คอนโด (Condo)" },
-  { value: "2", label: "บ้านเดี่ยว (House)" },
-  { value: "3", label: "ทาวน์โฮม (Townhome)" },
-  { value: "4", label: "ที่ดิน (Land)" },
-  { value: "5", label: "อาคารพาณิชย์ (Commercial)" },
-  { value: "6", label: "โกดัง / โรงงาน (Warehouse)" },
-  { value: "7", label: "สำนักงาน (Office)" },
-  { value: "8", label: "วิลล่า (Villa)" },
-  { value: "9", label: "พูลวิลล่า (Pool Villa)" },
-  { value: "10", label: "อื่นๆ (Other)" },
+  { value: "1", label: "คอนโด (Condo)", labelEn: "Condo" },
+  { value: "2", label: "บ้านเดี่ยว (House)", labelEn: "Detached House" },
+  { value: "3", label: "ทาวน์โฮม (Townhome)", labelEn: "Townhome" },
+  { value: "4", label: "ที่ดิน (Land)", labelEn: "Land" },
+  { value: "5", label: "อาคารพาณิชย์ (Commercial)", labelEn: "Commercial Building" },
+  { value: "6", label: "โกดัง / โรงงาน (Warehouse)", labelEn: "Warehouse / Factory" },
+  { value: "7", label: "สำนักงาน (Office)", labelEn: "Office" },
+  { value: "8", label: "วิลล่า (Villa)", labelEn: "Villa" },
+  { value: "9", label: "พูลวิลล่า (Pool Villa)", labelEn: "Pool Villa" },
+  { value: "10", label: "อื่นๆ (Other)", labelEn: "Other" },
 ];
 
 function parseCoordinatesFromGoogleMaps(url: string): { lat: number; lng: number } | null {
@@ -74,6 +75,8 @@ export function QuickCreateProjectDialog({
   defaultSubdistrict,
   onCreated,
 }: QuickCreateProjectDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isSaving, setIsSaving] = React.useState(false);
   const [isAiGenerating, setIsAiGenerating] = React.useState(false);
 
@@ -107,34 +110,62 @@ export function QuickCreateProjectDialog({
   const [districtSearch, setDistrictSearch] = React.useState("");
   const [subdistrictSearch, setSubdistrictSearch] = React.useState("");
 
-  React.useEffect(() => {
-    ensureDistrictsLoaded();
-    ensureSubDistrictsLoaded();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Active province ID (matched by cleaned name_th)
+  const activeProvinceId = React.useMemo(() => {
+    if (!province) return null;
+    const target = cleanAddressWord(province);
+    const p = provinces.find((item) => cleanAddressWord(item.name_th) === target || item.name_en?.toLowerCase() === target.toLowerCase());
+    return p ? p.id : null;
+  }, [province, provinces]);
 
-  // Derived cascading options
-  const activeProvinceId = provinces.find((p) => p.name_th === province)?.id;
-  const districtOptions = activeProvinceId ? getDistricts(activeProvinceId) : [];
-  const activeDistrictId = districtOptions.find((d) => d.name_th === district)?.id;
-  const subDistrictOptions = activeDistrictId ? getSubDistricts(activeDistrictId) : [];
+  // Load districts when activeProvinceId changes
+  React.useEffect(() => {
+    if (activeProvinceId) {
+      ensureDistrictsLoaded();
+    }
+  }, [activeProvinceId, ensureDistrictsLoaded]);
+
+  const districtOptions = React.useMemo(() => {
+    if (!activeProvinceId) return [];
+    return getDistricts(activeProvinceId);
+  }, [activeProvinceId, getDistricts]);
+
+  // Active district ID
+  const activeDistrictId = React.useMemo(() => {
+    if (!district || !activeProvinceId) return null;
+    const target = cleanAddressWord(district);
+    const d = districtOptions.find((item) => cleanAddressWord(item.name_th) === target || item.name_en?.toLowerCase() === target.toLowerCase());
+    return d ? d.id : null;
+  }, [district, activeProvinceId, districtOptions]);
+
+  // Load subdistricts when activeDistrictId changes
+  React.useEffect(() => {
+    if (activeDistrictId) {
+      ensureSubDistrictsLoaded();
+    }
+  }, [activeDistrictId, ensureSubDistrictsLoaded]);
+
+  const subDistrictOptions = React.useMemo(() => {
+    if (!activeDistrictId) return [];
+    return getSubDistricts(activeDistrictId);
+  }, [activeDistrictId, getSubDistricts]);
 
   // Filtered options for search
   const filteredProvinces = React.useMemo(() => {
-    const q = provinceSearch.trim().toLowerCase();
-    if (!q) return provinces;
+    if (!provinceSearch.trim()) return provinces;
+    const q = provinceSearch.toLowerCase();
     return provinces.filter((p) => p.name_th.toLowerCase().includes(q) || p.name_en.toLowerCase().includes(q));
   }, [provinces, provinceSearch]);
 
   const filteredDistricts = React.useMemo(() => {
-    const q = districtSearch.trim().toLowerCase();
-    if (!q) return districtOptions;
+    if (!districtSearch.trim()) return districtOptions;
+    const q = districtSearch.toLowerCase();
     return districtOptions.filter((d) => d.name_th.toLowerCase().includes(q) || d.name_en.toLowerCase().includes(q));
   }, [districtOptions, districtSearch]);
 
   const filteredSubDistricts = React.useMemo(() => {
-    const q = subdistrictSearch.trim().toLowerCase();
-    if (!q) return subDistrictOptions;
+    if (!subdistrictSearch.trim()) return subDistrictOptions;
+    const q = subdistrictSearch.toLowerCase();
     return subDistrictOptions.filter((s) => s.name_th.toLowerCase().includes(q) || s.name_en.toLowerCase().includes(q));
   }, [subDistrictOptions, subdistrictSearch]);
 
@@ -173,12 +204,12 @@ export function QuickCreateProjectDialog({
   const handleAiAutoFill = async () => {
     const searchName = nameEn || nameTh;
     if (!searchName.trim()) {
-      toast.error("กรุณาระบุชื่อโครงการ (ไทย หรือ อังกฤษ) เพื่อให้ AI ค้นข้อมูลครับ");
+      toast.error(isEn ? "Please enter a project name (TH or EN) for AI search." : "กรุณาระบุชื่อโครงการ (ไทย หรือ อังกฤษ) เพื่อให้ AI ค้นข้อมูลครับ");
       return;
     }
 
     setIsAiGenerating(true);
-    const toastId = toast.loading("🤖 Gemini กำลังค้นหาข้อมูลโครงการมาลงให้คุณ...");
+    const toastId = toast.loading(isEn ? "🤖 Gemini is searching project details..." : "🤖 Gemini กำลังค้นหาข้อมูลโครงการมาลงให้คุณ...");
     try {
       const res = await generateAIProjectDataAction(searchName);
       if (res.success && res.data) {
@@ -194,13 +225,13 @@ export function QuickCreateProjectDialog({
         if (d.subdistrict) setSubdistrict(cleanAddressWord(d.subdistrict));
         // Google Maps URL — ให้ user กรอกเอง ไม่ให้ AI override
         setAiData(d);
-        toast.success("AI กรอกข้อมูลโครงการสำเร็จเสร็จสิ้น! ✨", { id: toastId });
+        toast.success(isEn ? "AI auto-fill completed! ✨" : "AI กรอกข้อมูลโครงการสำเร็จเสร็จสิ้น! ✨", { id: toastId });
       } else {
-        throw new Error(res.message || "ล้มเหลวในการสร้างข้อมูล");
+        throw new Error(res.message || (isEn ? "Failed to generate project data" : "ล้มเหลวในการสร้างข้อมูล"));
       }
     } catch (err: any) {
       console.error(err);
-      toast.error("AI ไม่สามารถค้นหาข้อมูลโครงการได้: " + (err.message || ""), { id: toastId });
+      toast.error((isEn ? "AI search failed: " : "AI ไม่สามารถค้นหาข้อมูลโครงการได้: ") + (err.message || ""), { id: toastId });
     } finally {
       setIsAiGenerating(false);
     }
@@ -208,13 +239,13 @@ export function QuickCreateProjectDialog({
 
   const handleSave = async () => {
     if (!nameTh.trim() || !nameEn.trim()) {
-      toast.error("กรุณาระบุชื่อโครงการ (ทั้งภาษาไทย และ อังกฤษ)");
+      toast.error(isEn ? "Please provide project name in both Thai and English" : "กรุณาระบุชื่อโครงการ (ทั้งภาษาไทย และ อังกฤษ)");
       return;
     }
 
     const generatedSlug = slugify(nameEn.trim(), { lower: true, strict: true });
     if (!generatedSlug) {
-      toast.error("ไม่สามารถสร้าง URL Slug จากชื่อภาษาอังกฤษได้");
+      toast.error(isEn ? "Cannot generate URL slug from English name" : "ไม่สามารถสร้าง URL Slug จากชื่อภาษาอังกฤษได้");
       return;
     }
 
@@ -259,7 +290,7 @@ export function QuickCreateProjectDialog({
 
       const res = await upsertProjectAction(payload);
       if (res.success) {
-        toast.success("สร้างโครงการใหม่เรียบร้อยแล้ว! 🚀");
+        toast.success(isEn ? "New project created successfully! 🚀" : "สร้างโครงการใหม่เรียบร้อยแล้ว! 🚀");
         
         onCreated({
           id: res.id || "",
@@ -276,7 +307,7 @@ export function QuickCreateProjectDialog({
       }
     } catch (err) {
       console.error(err);
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      toast.error(isEn ? "Error saving project data" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setIsSaving(false);
     }
@@ -287,19 +318,21 @@ export function QuickCreateProjectDialog({
       open={isOpen}
       onOpenChange={(open) => { if (!open) onClose(false); }}
       isLoading={isSaving}
-      loadingText="กำลังบันทึกและสร้างโครงการ..."
+      loadingText={isEn ? "Saving and creating project..." : "กำลังบันทึกและสร้างโครงการ..."}
       title={
         <span className="flex items-center gap-2 text-slate-900 font-semibold text-base">
           <span className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
             <Building2 className="h-4.5 w-4.5" />
           </span>
-          สร้างโครงการใหม่เข้าระบบ
+          {isEn ? "Create New Project" : "สร้างโครงการใหม่เข้าระบบ"}
         </span>
       }
       description={
         <div className="space-y-3 text-left">
           <p className="text-slate-450 text-[11px] leading-relaxed">
-            ระบุข้อมูลที่จำเป็นขั้นต้น โครงการจะถูกเพิ่มลงระบบส่วนกลางเพื่อให้คุณผูกกับทรัพย์สินได้ทันที
+            {isEn
+              ? "Provide essential details. The project will be saved to the global directory for immediate linking with listings."
+              : "ระบุข้อมูลที่จำเป็นขั้นต้น โครงการจะถูกเพิ่มลงระบบส่วนกลางเพื่อให้คุณผูกกับทรัพย์สินได้ทันที"}
           </p>
           
           {/* AI Autofill banner inside Header to prevent scroll! */}
@@ -309,9 +342,13 @@ export function QuickCreateProjectDialog({
                 <Sparkles className="w-4 h-4 animate-pulse" />
               </div>
               <div className="text-left">
-                <h4 className="text-[11px] font-semibold text-white tracking-wide">กรอกข้อมูลอัตโนมัติด้วย AI</h4>
+                <h4 className="text-[11px] font-semibold text-white tracking-wide">
+                  {isEn ? "Auto-fill with AI" : "กรอกข้อมูลอัตโนมัติด้วย AI"}
+                </h4>
                 <p className="text-[10px] text-indigo-100 mt-0.5 leading-relaxed">
-                  ระบุชื่อโครงการหลัก (ไทย/อังกฤษ) และให้ Gemini ช่วยค้นหาพิกัด ค้นหาผู้พัฒนา และสิ่งอำนวยความสะดวกทั้งหมดลงฟอร์มให้ทันที
+                  {isEn
+                    ? "Enter the project name (TH/EN) and let Gemini discover coordinates, developer, and amenities automatically."
+                    : "ระบุชื่อโครงการหลัก (ไทย/อังกฤษ) และให้ Gemini ช่วยค้นหาพิกัด ค้นหาผู้พัฒนา และสิ่งอำนวยความสะดวกทั้งหมดลงฟอร์มให้ทันที"}
                 </p>
               </div>
             </div>
@@ -325,12 +362,12 @@ export function QuickCreateProjectDialog({
               {isAiGenerating ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
-                  กำลังดึงข้อมูล...
+                  {isEn ? "Retrieving..." : "กำลังดึงข้อมูล..."}
                 </>
               ) : (
                 <>
                   <Sparkles className="w-3 h-3 mr-1.5 text-indigo-600" />
-                  ดึงข้อมูลด้วย AI
+                  {isEn ? "Auto-fill AI" : "ดึงข้อมูลด้วย AI"}
                 </>
               )}
             </Button>
@@ -347,7 +384,7 @@ export function QuickCreateProjectDialog({
             disabled={isSaving}
             className="rounded-xl font-semibold text-xs px-4 h-9 text-slate-600! border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
           <Button
             type="button"
@@ -358,10 +395,10 @@ export function QuickCreateProjectDialog({
             {isSaving ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                กำลังสร้าง...
+                {isEn ? "Creating..." : "กำลังสร้าง..."}
               </>
             ) : (
-              "บันทึกโครงการ"
+              isEn ? "Save Project" : "บันทึกโครงการ"
             )}
           </Button>
         </div>
@@ -372,7 +409,7 @@ export function QuickCreateProjectDialog({
         <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-slate-50/30 p-4">
           <h4 className="text-[11px] font-semibold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
             <Building2 className="w-3.5 h-3.5 text-indigo-500" />
-            <span>ข้อมูลโครงการพื้นฐาน</span>
+            <span>{isEn ? "Basic Project Information" : "ข้อมูลโครงการพื้นฐาน"}</span>
           </h4>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -380,12 +417,12 @@ export function QuickCreateProjectDialog({
             <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>ชื่อโครงการภาษาไทย *</span>
+                <span>{isEn ? "Project Name (Thai) *" : "ชื่อโครงการภาษาไทย *"}</span>
               </Label>
               <Input 
                 value={nameTh} 
                 onChange={(e) => setNameTh(e.target.value)} 
-                placeholder="เช่น เอลิโอ เดล เนสท์" 
+                placeholder={isEn ? "e.g. Elio Del Nest" : "เช่น เอลิโอ เดล เนสท์"} 
                 className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
@@ -394,12 +431,12 @@ export function QuickCreateProjectDialog({
             <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>ชื่อโครงการภาษาอังกฤษ *</span>
+                <span>{isEn ? "Project Name (English) *" : "ชื่อโครงการภาษาอังกฤษ *"}</span>
               </Label>
               <Input 
                 value={nameEn} 
                 onChange={(e) => setNameEn(e.target.value)} 
-                placeholder="เช่น Elio Del Nest" 
+                placeholder="e.g. Elio Del Nest" 
                 className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
@@ -408,7 +445,7 @@ export function QuickCreateProjectDialog({
             <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>ประเภทโครงการ</span>
+                <span>{isEn ? "Project Type" : "ประเภทโครงการ"}</span>
               </Label>
               <div className="relative">
                 <select
@@ -417,7 +454,7 @@ export function QuickCreateProjectDialog({
                   className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 pr-9 text-xs font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-150 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-xs"
                 >
                   {PROPERTY_TYPES.map(t => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
+                    <option key={t.value} value={t.value}>{isEn ? t.labelEn : t.label}</option>
                   ))}
                 </select>
                 <div className="absolute right-3 top-2.5 pointer-events-none text-slate-400">
@@ -430,12 +467,12 @@ export function QuickCreateProjectDialog({
             <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>ผู้พัฒนา (Developer)</span>
+                <span>{isEn ? "Developer" : "ผู้พัฒนา (Developer)"}</span>
               </Label>
               <Input 
                 value={developer} 
                 onChange={(e) => setDeveloper(e.target.value)} 
-                placeholder="เช่น Ananda Development" 
+                placeholder={isEn ? "e.g. Ananda Development" : "เช่น Ananda Development"} 
                 className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
@@ -444,13 +481,13 @@ export function QuickCreateProjectDialog({
             <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>ปีที่สร้างเสร็จ</span>
+                <span>{isEn ? "Completion Year" : "ปีที่สร้างเสร็จ"}</span>
               </Label>
               <Input 
                 type="number"
                 value={yearCompleted} 
                 onChange={(e) => setYearCompleted(e.target.value)} 
-                placeholder="เช่น 2020" 
+                placeholder={isEn ? "e.g. 2020" : "เช่น 2020"} 
                 className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
@@ -459,13 +496,13 @@ export function QuickCreateProjectDialog({
             <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>จำนวนยูนิตทั้งหมด</span>
+                <span>{isEn ? "Total Units" : "จำนวนยูนิตทั้งหมด"}</span>
               </Label>
               <Input 
                 type="number"
                 value={totalUnits} 
                 onChange={(e) => setTotalUnits(e.target.value)} 
-                placeholder="เช่น 1459" 
+                placeholder={isEn ? "e.g. 1459" : "เช่น 1459"} 
                 className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
@@ -476,7 +513,7 @@ export function QuickCreateProjectDialog({
         <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-slate-50/30 p-4">
           <h4 className="text-[11px] font-semibold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
             <MapPin className="w-3.5 h-3.5 text-indigo-500" />
-            <span>ตำแหน่งที่ตั้งและพิกัด</span>
+            <span>{isEn ? "Location & Coordinates" : "ตำแหน่งที่ตั้งและพิกัด"}</span>
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
@@ -484,12 +521,12 @@ export function QuickCreateProjectDialog({
             <div className="col-span-1 sm:col-span-6 space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <MapPin className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>พิกัดแผนที่ (Google Maps Link)</span>
+                <span>{isEn ? "Google Maps URL" : "พิกัดแผนที่ (Google Maps Link)"}</span>
               </Label>
               <Input 
                 value={googleMapsUrl} 
                 onChange={(e) => handleGoogleMapsUrlChange(e.target.value)} 
-                placeholder="วางลิงก์ Google Maps เช่น https://maps.app.goo.gl/..." 
+                placeholder={isEn ? "Paste Google Maps link e.g. https://maps.app.goo.gl/..." : "วางลิงก์ Google Maps เช่น https://maps.app.goo.gl/..."} 
                 className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
@@ -497,15 +534,16 @@ export function QuickCreateProjectDialog({
             {/* Province */}
             <div className="col-span-1 sm:col-span-2">
               <AddressCascadeField
-                label="จังหวัด"
+                label={isEn ? "Province" : "จังหวัด"}
                 value={province}
                 options={filteredProvinces}
                 allOptions={provinces}
                 search={provinceSearch}
                 onSearch={setProvinceSearch}
                 loading={addressLoading}
+                isEn={isEn}
                 onSelect={(opt) => {
-                  setProvince(opt.name_th);
+                  setProvince(isEn && opt.name_en ? opt.name_en : opt.name_th);
                   setDistrict("");
                   setSubdistrict("");
                   setDistrictSearch("");
@@ -556,9 +594,6 @@ export function QuickCreateProjectDialog({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Inline helper: cascading address dropdown with built-in search
-// ─────────────────────────────────────────────────────────────────────────────
 interface AddressCascadeFieldProps {
   label: string;
   value: string;
@@ -570,6 +605,7 @@ interface AddressCascadeFieldProps {
   disabled?: boolean;
   placeholder?: string;
   loading?: boolean;
+  isEn?: boolean;
   formatOptionName?: (name: string) => string;
 }
 
@@ -582,12 +618,14 @@ function AddressCascadeField({
   onSearch,
   onSelect,
   disabled = false,
-  placeholder = "เลือก...",
+  placeholder,
   loading = false,
+  isEn = false,
   formatOptionName = (n) => n,
 }: AddressCascadeFieldProps) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
+  const defaultPlaceholder = placeholder || (isEn ? "Select..." : "เลือก...");
 
   // Close on outside click
   React.useEffect(() => {
@@ -625,7 +663,7 @@ function AddressCascadeField({
                   : "border-slate-200 bg-white text-slate-400 hover:border-slate-300"
           )}
         >
-          <span className="truncate">{value || placeholder}</span>
+          <span className="truncate">{value || defaultPlaceholder}</span>
           <ChevronDown className={cn("w-3.5 h-3.5 shrink-0 text-slate-400 transition-transform", open && "rotate-180")} />
         </button>
 
@@ -638,21 +676,26 @@ function AddressCascadeField({
                 autoFocus
                 value={search}
                 onChange={(e) => onSearch(e.target.value)}
-                placeholder={`ค้นหา${label}...`}
+                placeholder={isEn ? `Search ${label}...` : `ค้นหา${label}...`}
                 className="flex-1 bg-transparent text-xs text-slate-800 placeholder:text-slate-400 outline-none font-medium"
               />
             </div>
             {/* Options list */}
             <div className="max-h-48 overflow-y-auto py-1">
               {allOptions.length === 0 ? (
-                <p className="px-3 py-5 text-center text-xs text-slate-400">กรุณาเลือกข้อมูลก่อนหน้า</p>
+                <p className="px-3 py-5 text-center text-xs text-slate-400">
+                  {isEn ? "Please select preceding location first" : "กรุณาเลือกข้อมูลก่อนหน้า"}
+                </p>
               ) : options.length === 0 ? (
-                <p className="px-3 py-5 text-center text-xs text-slate-400">ไม่พบ{label}ที่ค้นหา</p>
+                <p className="px-3 py-5 text-center text-xs text-slate-400">
+                  {isEn ? `No ${label} found` : `ไม่พบ${label}ที่ค้นหา`}
+                </p>
               ) : (
                 options.map((opt) => {
+                  const optDisplayName = isEn && opt.name_en ? opt.name_en : opt.name_th;
                   const cleanedOptName = opt.name_th.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
                   const cleanedValue = value.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
-                  const selected = cleanedOptName === cleanedValue;
+                  const selected = cleanedOptName === cleanedValue || (opt.name_en && opt.name_en.toLowerCase() === value.toLowerCase());
                   return (
                     <button
                       key={opt.id}
@@ -669,7 +712,7 @@ function AddressCascadeField({
                           : "text-slate-700 hover:bg-slate-50 font-medium"
                       )}
                     >
-                      <span>{formatOptionName(opt.name_th)}</span>
+                      <span>{isEn && opt.name_en ? opt.name_en : formatOptionName(opt.name_th)}</span>
                       {selected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
                     </button>
                   );

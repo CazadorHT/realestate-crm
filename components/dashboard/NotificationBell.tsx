@@ -138,7 +138,7 @@ export function NotificationBell() {
             {stackedNotifications.slice(0, 15).map((n) => {
               const config = TYPE_CONFIG[n.type || "INFO"] || TYPE_CONFIG.INFO;
               const IconComp = config.icon;
-              const timeAgo = formatDistanceToNowThai(n.created_at);
+              const timeAgo = formatDistanceToNowThai(n.created_at, isEn);
 
               const content = (
                 <div

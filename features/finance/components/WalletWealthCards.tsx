@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { CreditCard, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface WalletWealthCardsProps {
   stats: {
@@ -14,6 +15,9 @@ interface WalletWealthCardsProps {
 }
 
 export function WalletWealthCards({ stats }: WalletWealthCardsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="col-span-1 md:col-span-2 relative overflow-hidden bg-slate-900 rounded-4xl p-8 text-white shadow-2xl animate-in fade-in zoom-in-95 duration-700">
@@ -21,7 +25,9 @@ export function WalletWealthCards({ stats }: WalletWealthCardsProps) {
           <div>
             <div className="flex items-center gap-2 mb-2 opacity-70">
               <CreditCard className="w-4 h-4" />
-              <span className="text-xs font-semibold uppercase tracking-widest">รายได้ทั้งหมด (สุทธิ)</span>
+              <span className="text-xs font-semibold uppercase tracking-widest">
+                {isEn ? "Total Earnings (Net)" : "รายได้ทั้งหมด (สุทธิ)"}
+              </span>
             </div>
             <h2 className="text-5xl sm:text-6xl font-semibold tracking-tighter">
               {formatCurrency(stats?.totalEarnings || 0)}
@@ -30,12 +36,16 @@ export function WalletWealthCards({ stats }: WalletWealthCardsProps) {
           
           <div className="flex items-center gap-6">
             <div className="flex flex-col border-white/10">
-              <span className="text-[10px] uppercase font-semibold text-slate-400">ปิดดีลได้</span>
+              <span className="text-[10px] uppercase font-semibold text-slate-400">
+                {isEn ? "Deals Closed" : "ปิดดีลได้"}
+              </span>
               <span className="text-2xl font-semibold">{stats?.closedDealsCount || 0}</span>
             </div>
             <div className="w-px h-8 bg-white/10" />
             <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-semibold text-slate-400">จำนวนเคสทั้งหมด</span>
+              <span className="text-[10px] uppercase font-semibold text-slate-400">
+                {isEn ? "Total Cases" : "จำนวนเคสทั้งหมด"}
+              </span>
               <span className="text-2xl font-semibold">{stats?.totalCommissionsCount || 0}</span>
             </div>
           </div>
@@ -51,12 +61,17 @@ export function WalletWealthCards({ stats }: WalletWealthCardsProps) {
         <div className="mx-auto p-4 bg-white rounded-2xl shadow-sm mb-4 group-hover:scale-110 transition-transform duration-500">
           <TrendingUp className="w-8 h-8 text-indigo-600" />
         </div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">ยอดรอโอน (พักรายได้)</p>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+          {isEn ? "Pending Payout" : "ยอดรอโอน (พักรายได้)"}
+        </p>
         <h3 className="text-3xl font-semibold text-indigo-900">
           {formatCurrency(stats?.pendingAmount || 0)}
         </h3>
-        <p className="text-[10px] text-indigo-600/70 mt-2 font-semibold">รอการยืนยันจากฝ่ายบัญชี</p>
+        <p className="text-[10px] text-indigo-600/70 mt-2 font-semibold">
+          {isEn ? "Pending accounting verification" : "รอการยืนยันจากฝ่ายบัญชี"}
+        </p>
       </Card>
     </div>
   );
 }
+

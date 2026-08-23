@@ -35,6 +35,7 @@ import {
 } from "@/features/site-settings/actions";
 import { SiteSettings } from "@/features/site-settings/schema";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface SettingItemProps {
   id: string;
@@ -117,6 +118,9 @@ const SettingItem = ({
 };
 
 export function SiteSettingsPanel() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [settings, setSettings] = useState<SiteSettings>({
     smart_match_wizard_enabled: true,
     chatbot_enabled: true,
@@ -156,13 +160,13 @@ export function SiteSettingsPanel() {
         setSettings(data);
         setOriginalSettings(data);
       } catch (error) {
-        toast.error("ไม่สามารถโหลดการตั้งค่าได้");
+        toast.error(isEn ? "Failed to load settings" : "ไม่สามารถโหลดการตั้งค่าได้");
       } finally {
         setIsLoading(false);
       }
     }
     loadSettings();
-  }, []);
+  }, [isEn]);
 
   const handleToggle = (key: keyof SiteSettings) => {
     const newSettings = {
@@ -186,11 +190,11 @@ export function SiteSettingsPanel() {
     startTransition(async () => {
       const result = await updateSiteSettings(settings);
       if (result.success) {
-        toast.success("บันทึกการตั้งค่าเรียบร้อย");
+        toast.success(isEn ? "Settings saved successfully" : "บันทึกการตั้งค่าเรียบร้อย");
         setOriginalSettings(settings);
         setHasChanges(false);
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาดในการบันทึก");
+        toast.error(result.message || (isEn ? "Error saving settings" : "เกิดข้อผิดพลาดในการบันทึก"));
       }
     });
   };
@@ -226,14 +230,14 @@ export function SiteSettingsPanel() {
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
               <span className="text-sm font-bold text-amber-700">
-                มีข้อมูลที่รอการบันทึก
+                {isEn ? "Unsaved changes pending" : "มีข้อมูลที่รอการบันทึก"}
               </span>
             </div>
           ) : (
-            <div className="flex  items-center gap-2">
+            <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               <span className="text-sm font-medium text-slate-500">
-                การตั้งค่าเป็นปัจจุบันแล้ว
+                {isEn ? "Settings up to date" : "การตั้งค่าเป็นปัจจุบันแล้ว"}
               </span>
             </div>
           )}
@@ -247,7 +251,7 @@ export function SiteSettingsPanel() {
               className="rounded-xl font-bold text-slate-600 hover:bg-slate-100"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              ยกเลิก
+              {isEn ? "Reset" : "ยกเลิก"}
             </Button>
           )}
           <Button
@@ -265,7 +269,7 @@ export function SiteSettingsPanel() {
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
-            บันทึกการตั้งค่าทั้งหมด
+            {isEn ? "Save All Settings" : "บันทึกการตั้งค่าทั้งหมด"}
           </Button>
         </div>
       </div>
@@ -273,16 +277,16 @@ export function SiteSettingsPanel() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Public Website Features */}
         <Card className="border-none shadow-sm bg-transparent p-6">
-          <div className="flex  items-center gap-3 mb-4 px-2">
+          <div className="flex items-center gap-3 mb-4 px-2">
             <div className="h-10 w-10 bg-blue-100 rounded-xl flex items-center justify-center">
               <Home className="h-5 w-5 text-blue-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 leading-tight">
-                ฟีเจอร์หน้าเว็บไซต์สาธารณะ
+                {isEn ? "Public Website Features" : "ฟีเจอร์หน้าเว็บไซต์สาธารณะ"}
               </h2>
               <p className="text-sm text-slate-500">
-                ปรับแต่งการแสดงผลและฟีเจอร์ที่ลูกค้าจะเห็นบนเว็บไซต์
+                {isEn ? "Configure front-facing website widgets and user features" : "ปรับแต่งการแสดงผลและฟีเจอร์ที่ลูกค้าจะเห็นบนเว็บไซต์"}
               </p>
             </div>
           </div>
@@ -295,7 +299,7 @@ export function SiteSettingsPanel() {
               iconColor="text-purple-600"
               bgColor="bg-purple-100"
               title="Smart Match Wizard"
-              description="ระบบ AI วิเคราะห์ความต้องการลูกค้าและแนะนำอสังหาริมทรัพย์ที่เหมาะสมที่สุดให้ทันที"
+              description={isEn ? "AI-powered requirements matching recommending best properties directly to clients" : "ระบบ AI วิเคราะห์ความต้องการลูกค้าและแนะนำอสังหาริมทรัพย์ที่เหมาะสมที่สุดให้ทันที"}
               isEnabled={settings.smart_match_wizard_enabled}
               onToggle={handleToggle}
             />
@@ -307,7 +311,7 @@ export function SiteSettingsPanel() {
               iconColor="text-blue-600"
               bgColor="bg-blue-100"
               title="AI Real Estate Assistant"
-              description="ผู้ช่วยอัจฉริยะที่พร้อมตอบคำถามโครงการและข้อมูลทรัพย์กับลูกค้าตลอด 24 ชั่วโมง"
+              description={isEn ? "Intelligent assistant ready to answer project questions 24/7" : "ผู้ช่วยอัจฉริยะที่พร้อมตอบคำถามโครงการและข้อมูลทรัพย์กับลูกค้าตลอด 24 ชั่วโมง"}
               isEnabled={settings.chatbot_enabled}
               onToggle={handleToggle}
             />
@@ -319,7 +323,7 @@ export function SiteSettingsPanel() {
               iconColor="text-emerald-600"
               bgColor="bg-emerald-100"
               title="Floating Contact Widgets"
-              description="ปุ่มติดต่อด่วน (LINE/โทร) ที่ลอยอยู่มุมล่าง ช่วยให้ลูกค้าเข้าถึงคุณได้ง่ายขึ้นทุกขณะ"
+              description={isEn ? "Floating call/LINE buttons for rapid conversion and customer reach" : "ปุ่มติดต่อด่วน (LINE/โทร) ที่ลอยอยู่มุมล่าง ช่วยให้ลูกค้าเข้าถึงคุณได้ง่ายขึ้นทุกขณะ"}
               isEnabled={settings.floating_contact_enabled}
               onToggle={handleToggle}
             />
@@ -334,11 +338,10 @@ export function SiteSettingsPanel() {
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 leading-tight">
-                การแยกส่วนข้อมูลและความปลอดภัย
+                {isEn ? "Data Isolation & Security" : "การแยกส่วนข้อมูลและความปลอดภัย"}
               </h2>
               <p className="text-sm text-slate-500">
-                จำกัดการมองเห็นข้อมูลระหว่าง Agent
-                เพื่อความเป็นระเบียบและความปลอดภัย
+                {isEn ? "Restrict data visibility between agents for security and focus" : "จำกัดการมองเห็นข้อมูลระหว่าง Agent เพื่อความเป็นระเบียบและความปลอดภัย"}
               </p>
             </div>
           </div>
@@ -351,7 +354,7 @@ export function SiteSettingsPanel() {
               iconColor="text-indigo-600"
               bgColor="bg-indigo-100"
               title="Property Privacy Mode"
-              description="Agent จะสามารถเข้าถึงและจัดการได้เฉพาะข้อมูลอสังหาริมทรัพย์ที่ตนเองดูแลเท่านั้น"
+              description={isEn ? "Agents can only view and manage property listings assigned to them" : "Agent จะสามารถเข้าถึงและจัดการได้เฉพาะข้อมูลอสังหาริมทรัพย์ที่ตนเองดูแลเท่านั้น"}
               isEnabled={settings.isolation_properties_enabled}
               onToggle={handleToggle}
             />
@@ -363,7 +366,7 @@ export function SiteSettingsPanel() {
               iconColor="text-emerald-600"
               bgColor="bg-emerald-50"
               title="Lead Management Isolation"
-              description="แยกฐานข้อมูลลูกค้าอย่างชัดเจน Agent จะเห็นเฉพาะลูกค้าที่ได้รับมอบหมายหรือหามาเอง"
+              description={isEn ? "Isolates client base so agents only see leads assigned to or created by them" : "แยกฐานข้อมูลลูกค้าอย่างชัดเจน Agent จะเห็นเฉพาะลูกค้าที่ได้รับมอบหมายหรือหามาเอง"}
               isEnabled={settings.isolation_leads_enabled}
               onToggle={handleToggle}
             />
@@ -375,7 +378,7 @@ export function SiteSettingsPanel() {
               iconColor="text-amber-600"
               bgColor="bg-amber-100"
               title="Deal & Contract Protection"
-              description="จำกัดการเข้าถึงข้อมูลการปิดดีลและสัญญาเฉพาะเจ้าของเคสและผู้ดูแลระบบเท่านั้น"
+              description={isEn ? "Restricts deal and contract access strictly to case owners and administrators" : "จำกัดการเข้าถึงข้อมูลการปิดดีลและสัญญาเฉพาะเจ้าของเคสและผู้ดูแลระบบเท่านั้น"}
               isEnabled={settings.isolation_deals_enabled}
               onToggle={handleToggle}
             />
@@ -391,13 +394,12 @@ export function SiteSettingsPanel() {
           </div>
           <div className="space-y-1">
             <h4 className="text-sm font-bold text-slate-800">
-              ข้อมูลความปลอดภัย
+              {isEn ? "Security Notice" : "ข้อมูลความปลอดภัย"}
             </h4>
             <p className="text-xs text-slate-500 leading-relaxed">
-              การตั้งค่าเหล่านี้จะมีผลกับพนักงานทุกคนในระบบทันทีที่ทำการบันทึก
-              สำหรับผู้ดูแลระบบ (Admin)
-              จะได้รับสิทธิ์ในการมองเห็นข้อมูลทั้งหมดของบริษัท (Full Access)
-              โดยไม่มีการแยกส่วนข้อมูลเหล่านี้
+              {isEn
+                ? "These settings take immediate effect for all staff members once saved. Administrators maintain Full Access privileges to all organizational data across all branches."
+                : "การตั้งค่าเหล่านี้จะมีผลกับพนักงานทุกคนในระบบทันทีที่ทำการบันทึก สำหรับผู้ดูแลระบบ (Admin) จะได้รับสิทธิ์ในการมองเห็นข้อมูลทั้งหมดของบริษัท (Full Access) โดยไม่มีการแยกส่วนข้อมูลเหล่านี้"}
             </p>
           </div>
         </div>
@@ -405,3 +407,4 @@ export function SiteSettingsPanel() {
     </div>
   );
 }
+

@@ -144,9 +144,11 @@ export async function getRecentNotifications(
     // 1. New Leads
     recentLeads.forEach((lead) => {
       const displayName = lead.identity?.display_name || "ลูกค้า";
+      const displayNameEn = lead.identity?.display_name || "Lead";
       notifications.push({
         id: `lead-${lead.id}`,
         message: `Lead ใหม่จากหน้าเว็บ: ${displayName}`,
+        messageEn: `New website lead: ${displayNameEn}`,
         type: "success",
         time: formatTimeAgo(lead.created_at || new Date().toISOString()),
         read: false,
@@ -171,6 +173,7 @@ export async function getRecentNotifications(
         notifications.push({
           id: `price-${log.id}`,
           message: `ลดราคา! ${String(meta.title || "ทรัพย์")}: ฿${Number(meta.old_price || 0).toLocaleString()} → ฿${Number(meta.new_price || 0).toLocaleString()}`,
+          messageEn: `Price Drop! ${String(meta.title || "Property")}: ฿${Number(meta.old_price || 0).toLocaleString()} → ฿${Number(meta.new_price || 0).toLocaleString()}`,
           type: "warning",
           time: timeStr,
           read: false,
@@ -189,6 +192,7 @@ export async function getRecentNotifications(
         notifications.push({
           id: `status-${log.id}`,
           message: `เปลี่ยนสถานะ ${log.target_entity}: ${String(meta.new_stage || meta.new_status || "")}`,
+          messageEn: `Status updated for ${log.target_entity}: ${String(meta.new_stage || meta.new_status || "")}`,
           type: "info",
           time: timeStr,
           read: false,
@@ -203,6 +207,7 @@ export async function getRecentNotifications(
         notifications.push({
           id: `login-${log.id}`,
           message: `เข้าสู่ระบบ: ${String(meta?.email || "User")}`,
+          messageEn: `User Login: ${String(meta?.email || "User")}`,
           type: "info",
           time: timeStr,
           read: false,
@@ -215,9 +220,11 @@ export async function getRecentNotifications(
     recentActivities.forEach((act) => {
       const meta = (act.metadata as Record<string, unknown>) || {};
       const leadName = String(meta.lead_name || meta.full_name || "ลูกค้า");
+      const leadNameEn = String(meta.lead_name || meta.full_name || "Lead");
       notifications.push({
         id: `act-${act.id}`,
         message: `กิจกรรมใน Lead ${leadName}: ${act.activity_type}`,
+        messageEn: `Activity on Lead ${leadNameEn}: ${act.activity_type}`,
         type: "info",
         time: formatTimeAgo(act.created_at || new Date().toISOString()),
         read: false,
@@ -229,9 +236,11 @@ export async function getRecentNotifications(
 
     // 4. New Registrations (Profiles)
     recentProfiles.forEach((profile) => {
+      const userName = profile.full_name || profile.email || "Member";
       notifications.push({
         id: `user-${profile.id}`,
-        message: `สมาชิกใหม่: ${profile.full_name || profile.email}`,
+        message: `สมาชิกใหม่: ${userName}`,
+        messageEn: `New Member: ${userName}`,
         type: "info",
         time: formatTimeAgo(profile.created_at || new Date().toISOString()),
         read: false,
@@ -253,17 +262,20 @@ export async function getRecentNotifications(
       // Only show contracts expiring within 30 days
       if (daysUntilExpiry > 0 && daysUntilExpiry <= 30) {
         const propertyTitle = contract.property?.title || "ทรัพย์สิน";
+        const propertyTitleEn = contract.property?.title || "Property";
         const type = daysUntilExpiry <= 7 ? "alert" : "warning";
 
         notifications.push({
           id: `contract-${contract.id}`,
           message: `สัญญาใกล้หมดอายุ: ${propertyTitle} (อีก ${daysUntilExpiry} วัน)`,
+          messageEn: `Contract Expiring Soon: ${propertyTitleEn} (in ${daysUntilExpiry} ${daysUntilExpiry === 1 ? "day" : "days"})`,
           type,
           time: `${daysUntilExpiry} วันข้างหน้า`,
           read: false,
           href: `/protected/deals/${contract.id}`,
           createdAt: endDate.getTime(), // Sort by expiry date
           category: "contract_expiry",
+          daysUntilExpiry,
         });
       }
     });

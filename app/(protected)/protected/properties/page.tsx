@@ -14,6 +14,12 @@ import { InventoryListTour } from "@/features/properties/_components/InventoryLi
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 
+import {
+  PropertiesSectionHeader,
+  PropertiesNotFoundState,
+  AddPropertyMobileButton,
+} from "./_components/PropertiesSectionHeader";
+
 export const metadata: Metadata = {
   title: "จัดการทรัพย์",
   description: "จัดการ เพิ่ม แก้ไข และติดตามอสังหาริมทรัพย์ทั้งหมดในระบบ",
@@ -99,18 +105,7 @@ export default async function PropertiesPage({
 
       <div id="table" className="space-y-4 scroll-mt-4">
         {/* Section Title */}
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-indigo-500 rounded-lg blur-sm opacity-50" />
-            <div className="relative w-1.5 h-8 bg-linear-to-b from-blue-500 to-indigo-600 rounded-full" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-800">รายการทรัพย์สิน</h2>
-            <p className="text-xs text-slate-400 font-medium">
-              คลิกที่แถวเพื่อดูรายละเอียดหรือแก้ไข
-            </p>
-          </div>
-        </div>
+        <PropertiesSectionHeader />
 
         {/* TABLE & FILTERS STREAMING */}
         <Suspense fallback={<div className="h-96 animate-pulse bg-slate-100 rounded-2xl" />}>
@@ -127,10 +122,7 @@ export default async function PropertiesPage({
         </Suspense>
       </div>
 
-      <MobileFloatingAction
-        href="/protected/properties/new"
-        label="เพิ่มทรัพย์ใหม่"
-      />
+      <AddPropertyMobileButton />
     </div>
   );
 }
@@ -202,17 +194,7 @@ async function TableWrapper({
         isMultiTenant={isMultiTenant}
       />
       {tableData.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-3xl border border-slate-100 shadow-sm animate-fade-in">
-          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-bold text-slate-800 mb-1">ไม่พบข้อมูลที่ตรงตามเงื่อนไข</h3>
-          <p className="text-slate-500 text-sm text-center max-w-xs">
-            ลองปรับเปลี่ยนคำค้นหา หรือใช้ตัวกรองแบบอื่นดูนะครับ
-          </p>
-        </div>
+        <PropertiesNotFoundState />
       ) : (
         <PropertiesTable
           data={tableData}

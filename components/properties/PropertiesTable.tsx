@@ -54,6 +54,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { PropertyTypeBadge } from "./PropertyTypeBadge";
 import { PropertyRowActions } from "./PropertyRowActions";
 import { formatDistanceToNowThai } from "@/lib/utils";
+import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
 import Link from "next/link";
 import { PropertyPrice } from "./PropertyPrice";
 import { PropertiesEmptyState } from "./PropertiesEmptyState";
@@ -87,6 +88,8 @@ import { cn } from "@/lib/utils";
 import { FaLine, FaTiktok, FaFacebook } from "react-icons/fa";
 import { RiInstagramFill } from "react-icons/ri";
 import { downloadBase64File, MIME_TYPES } from "@/lib/download-utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface PropertiesTableProps {
   data: PropertyTableData[];
   isAdmin?: boolean;
@@ -100,7 +103,6 @@ interface PropertiesTableProps {
   currentUserEmail?: string;
   currentUserId?: string;
 }
-// ... (SortableHead code omitted for brevity as it is unchanged) ...
 
 /** 🏷️ Listing Age Warning — Badge for stale ACTIVE listings */
 function getListingAgeBadge(status: string, createdAt: string) {
@@ -130,6 +132,8 @@ function SortableHead({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const currentBy = searchParams.get("sortBy") || "created_at";
   const currentOrder = (searchParams.get("sortOrder") || "desc") as
@@ -161,7 +165,7 @@ function SortableHead({
 
     params.set("sortBy", sortKey);
     params.set("sortOrder", nextOrder);
-    params.delete("page"); // เปลี่ยน sort แล้วกลับหน้า 1
+    params.delete("page");
 
     router.push(`/protected/properties?${params.toString()}`);
   };
@@ -171,11 +175,11 @@ function SortableHead({
       type="button"
       onClick={onClick}
       className={[
-        "inline-flex items-center gap-1.5 text-left font-semibold hover:text-foreground transition-colors",
+        "inline-flex items-center gap-1.5 text-left font-semibold hover:text-foreground transition-colors cursor-pointer",
         className || "",
       ].join(" ")}
-      aria-label={`เรียงตาม ${label}`}
-      title={`เรียงตาม ${label}`}
+      aria-label={isEn ? `Sort by ${label}` : `เรียงตาม ${label}`}
+      title={isEn ? `Sort by ${label}` : `เรียงตาม ${label}`}
     >
       {label}
       {icon}
@@ -200,6 +204,8 @@ export function PropertiesTable({
 }: PropertiesTableProps): React.ReactElement {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const currentPage = Number(searchParams.get("page")) || 1;
   const pathname = usePathname();
   const allIds = useMemo(() => data.map((p) => p.id), [data]);
@@ -219,18 +225,18 @@ export function PropertiesTable({
   const [isTransitionPending, startTransition] = useTransition();
 
   const handleSelectAllGlobal = async () => {
-    const processId = startProcess("เลือกทรัพย์ทั้งหมดในระบบ", { type: "SELECTION" });
+    const processId = startProcess(isEn ? "Selecting all properties in system" : "เลือกทรัพย์ทั้งหมดในระบบ", { type: "SELECTION" });
     setIsGlobalLoading(true);
     try {
       const result = await getAllPropertyIdsAction(filters);
       if (result.success && result.ids) {
         toggleSelectAll(result.ids.filter(Boolean) as string[]);
-        finishProcess(processId, "SUCCESS", `เลือกทั้งหมด ${result.ids.length} รายการเรียบร้อยแล้ว`);
+        finishProcess(processId, "SUCCESS", isEn ? `Selected all ${result.ids.length} properties successfully` : `เลือกทั้งหมด ${result.ids.length} รายการเรียบร้อยแล้ว`);
       } else {
-        finishProcess(processId, "ERROR", "ไม่สามารถเลือกทั้งหมดได้");
+        finishProcess(processId, "ERROR", isEn ? "Failed to select all properties" : "ไม่สามารถเลือกทั้งหมดได้");
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเลือกทั้งหมด";
+      const msg = err instanceof Error ? err.message : (isEn ? "Error selecting all properties" : "เกิดข้อผิดพลาดในการเลือกทั้งหมด");
       finishProcess(processId, "ERROR", msg);
     } finally {
       setIsGlobalLoading(false);
@@ -259,23 +265,33 @@ export function PropertiesTable({
       return (
         <span className="space-y-2 block">
           <span>
-            คุณกำลังจะลบ <strong className="text-foreground">{total}</strong>{" "}
-            รายการ
+            {isEn ? (
+              <>You are about to delete <strong className="text-foreground">{total}</strong> listings</>
+            ) : (
+              <>คุณกำลังจะลบ <strong className="text-foreground">{total}</strong> รายการ</>
+            )}
           </span>
           <span className="block text-amber-600 text-sm bg-amber-50 p-2 rounded border border-amber-200">
-            ⚠️ มี {blockedCount} รายการที่มีสถานะ "ขายแล้ว" หรือ "เช่าแล้ว"
-            ซึ่งจะไม่ถูกลบออกจากระบบ
+            {isEn ? (
+              <>⚠️ {blockedCount} listings are marked "Sold" or "Rented" and will not be removed from the system.</>
+            ) : (
+              <>⚠️ มี {blockedCount} รายการที่มีสถานะ "ขายแล้ว" หรือ "เช่าแล้ว" ซึ่งจะไม่ถูกลบออกจากระบบ</>
+            )}
           </span>
           {canDelete > 0 && (
             <span className="block text-emerald-600 text-sm font-medium">
-              ✅ ระบบจะทำการลบเฉพาะ {canDelete} รายการที่เหลือเท่านั้น
+              {isEn ? (
+                <>✅ Only the remaining {canDelete} listings will be moved to trash.</>
+              ) : (
+                <>✅ ระบบจะทำการลบเฉพาะ {canDelete} รายการที่เหลือเท่านั้น</>
+              )}
             </span>
           )}
         </span>
       );
     }
     return null;
-  }, [selectedCount, blockedCount]);
+  }, [selectedCount, blockedCount, isEn]);
 
   const pullConfirmMessage = useMemo(() => {
     const selectedProperties = Array.from(selectedIds)
@@ -298,9 +314,9 @@ export function PropertiesTable({
     const skippedBranches = Array.from(
       new Set(
         skipped.map((p) => {
-          const name = p.tenant_name || "ไม่ระบุสาขา";
+          const name = p.tenant_name || (isEn ? "Unassigned Branch" : "ไม่ระบุสาขา");
           if (currentTenantId && p.tenant_id === currentTenantId) {
-            return `${name} (สาขาคุณ)`;
+            return `${name} ${isEn ? "(Your Branch)" : "(สาขาคุณ)"}`;
           }
           return name;
         }),
@@ -310,14 +326,17 @@ export function PropertiesTable({
     return (
       <span className="space-y-2 block text-left">
         <span>
-          คุณกำลังจะดึง <strong className="text-foreground">{canPull}</strong>{" "}
-          ทรัพย์สินที่ยังไม่มีสาขา มายังสาขาของคุณ
+          {isEn ? (
+            <>You are about to assign <strong className="text-foreground">{canPull}</strong> unassigned properties to your branch.</>
+          ) : (
+            <>คุณกำลังจะดึง <strong className="text-foreground">{canPull}</strong> ทรัพย์สินที่ยังไม่มีสาขา มายังสาขาของคุณ</>
+          )}
         </span>
         {skipped.length > 0 && (
           <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 mt-2">
             <p className="font-medium mb-1 flex items-center gap-1">
               <AlertTriangle className="h-3 w-3" />
-              ⚠️ ระบบจะข้าม {skipped.length} รายการที่มีสาขาอยู่แล้ว:
+              {isEn ? `⚠️ System will skip ${skipped.length} properties already assigned to other branches:` : `⚠️ ระบบจะข้าม ${skipped.length} รายการที่มีสาขาอยู่แล้ว:`}
             </p>
             <ul className="list-disc list-inside pl-1 space-y-0.5 opacity-80 decoration-amber-300">
               {skippedBranches.map((name, i) => (
@@ -328,7 +347,7 @@ export function PropertiesTable({
         )}
       </span>
     );
-  }, [selectedIds, data, selectedCount]);
+  }, [selectedIds, data, selectedCount, currentTenantId, isEn]);
 
 
 
@@ -341,7 +360,7 @@ export function PropertiesTable({
 
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
-    const processId = startProcess(`ลบข้อมูลทรัพย์ (${ids.length} รายการ)`, { 
+    const processId = startProcess(isEn ? `Deleting properties (${ids.length} listings)` : `ลบข้อมูลทรัพย์ (${ids.length} รายการ)`, { 
       type: "BULK_DELETE",
       onRetry: handleBulkDelete 
     });
@@ -353,11 +372,11 @@ export function PropertiesTable({
         clearSelection();
         handleSuccessFeedback();
       } else {
-        finishProcess(processId, "ERROR", result.message || "เกิดข้อผิดพลาดในการลบ");
-        throw new Error(result.message || "เกิดข้อผิดพลาด");
+        finishProcess(processId, "ERROR", result.message || (isEn ? "Error deleting properties" : "เกิดข้อผิดพลาดในการลบ"));
+        throw new Error(result.message || (isEn ? "Error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการลบ";
+      const msg = err instanceof Error ? err.message : (isEn ? "Error deleting properties" : "เกิดข้อผิดพลาดในการลบ");
       finishProcess(processId, "ERROR", msg);
       throw err;
     }
@@ -365,7 +384,7 @@ export function PropertiesTable({
 
   const handleBulkApproveAiReview = async () => {
     const ids = Array.from(selectedIds);
-    const processId = startProcess(`ยืนยันข้อมูล AI (${ids.length} รายการ)`, { 
+    const processId = startProcess(isEn ? `Approving AI drafts (${ids.length} listings)` : `ยืนยันข้อมูล AI (${ids.length} รายการ)`, { 
       type: "BULK_AI_APPROVE",
       onRetry: handleBulkApproveAiReview
     });
@@ -377,11 +396,11 @@ export function PropertiesTable({
         clearSelection();
         handleSuccessFeedback();
       } else {
-        finishProcess(processId, "ERROR", result.message || "เกิดข้อผิดพลาด");
-        throw new Error(result.message || "เกิดข้อผิดพลาด");
+        finishProcess(processId, "ERROR", result.message || (isEn ? "Error approving AI data" : "เกิดข้อผิดพลาด"));
+        throw new Error(result.message || (isEn ? "Error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการยืนยันข้อมูล";
+      const msg = err instanceof Error ? err.message : (isEn ? "Error approving AI data" : "เกิดข้อผิดพลาดในการยืนยันข้อมูล");
       finishProcess(processId, "ERROR", msg);
       throw err;
     }
@@ -389,7 +408,7 @@ export function PropertiesTable({
 
   const handleBulkMove = async () => {
     const ids = Array.from(selectedIds);
-    const processId = startProcess(`ดึงทรัพย์มายังสาขา (${ids.length} รายการ)`, { 
+    const processId = startProcess(isEn ? `Pulling properties to branch (${ids.length} listings)` : `ดึงทรัพย์มายังสาขา (${ids.length} รายการ)`, { 
       type: "BULK_MOVE",
       onRetry: handleBulkMove
     });
@@ -401,11 +420,11 @@ export function PropertiesTable({
         clearSelection();
         handleSuccessFeedback();
       } else {
-        finishProcess(processId, "ERROR", result.message || "เกิดข้อผิดพลาด");
-        throw new Error(result.message || "เกิดข้อผิดพลาด");
+        finishProcess(processId, "ERROR", result.message || (isEn ? "Error pulling properties" : "เกิดข้อผิดพลาด"));
+        throw new Error(result.message || (isEn ? "Error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการดึงข้อมูล";
+      const msg = err instanceof Error ? err.message : (isEn ? "Error pulling properties" : "เกิดข้อผิดพลาดในการดึงข้อมูล");
       finishProcess(processId, "ERROR", msg);
       throw err;
     }
@@ -431,7 +450,7 @@ export function PropertiesTable({
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
-        onDeleteLabel="ย้ายลงถังขยะ"
+        onDeleteLabel={isEn ? "Move to Trash" : "ย้ายลงถังขยะ"}
         onExport={() => exportPropertiesAction(Array.from(selectedIds))}
         onPull={
           isMultiTenant &&
@@ -441,10 +460,10 @@ export function PropertiesTable({
             ? handleBulkMove 
             : undefined
         }
-        onPullLabel="ดึงมาสาขาตัวเอง"
+        onPullLabel={isEn ? "Pull to Branch" : "ดึงมาสาขาตัวเอง"}
         onPullConfirmMessage={pullConfirmMessage}
         onAiApprove={hasAiReviewItems ? handleBulkApproveAiReview : undefined}
-        onAiApproveLabel="ยืนยันข้อมูล AI"
+        onAiApproveLabel={isEn ? "Approve AI Drafts" : "ยืนยันข้อมูล AI"}
         extraActions={
           <BulkPropertyStatusDropdown
             selectedIds={Array.from(selectedIds)}
@@ -454,7 +473,7 @@ export function PropertiesTable({
             }}
           />
         }
-        entityName="ทรัพย์"
+        entityName={isEn ? "properties" : "ทรัพย์"}
         actionableCount={selectedCount - blockedCount}
         className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}
       />
@@ -465,17 +484,17 @@ export function PropertiesTable({
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
           <div className="flex items-center gap-3 text-sm text-blue-800">
             <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
-            <span>เลือกทั้งหมด {selectedCount} ทรัพย์ในหน้านี้แล้ว</span>
+            <span>{isEn ? `Selected all ${selectedCount} properties on this page` : `เลือกทั้งหมด ${selectedCount} ทรัพย์ในหน้านี้แล้ว`}</span>
           </div>
           <button
             onClick={handleSelectAllGlobal}
             disabled={isGlobalLoading}
-            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             {isGlobalLoading ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : null}
-            เลือกทั้งหมด {totalCount} ทรัพย์ในระบบ
+            {isEn ? `Select all ${totalCount} properties in system` : `เลือกทั้งหมด ${totalCount} ทรัพย์ในระบบ`}
           </button>
         </div>
       )}
@@ -484,13 +503,17 @@ export function PropertiesTable({
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300">
           <div className="flex items-center gap-3 text-sm text-emerald-800">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span>คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> ทรัพย์ในระบบแล้ว (ทุกหน้า)</span>
+            <span>{isEn ? (
+              <>You have selected all <strong>{totalCount}</strong> properties in system (all pages)</>
+            ) : (
+              <>คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> ทรัพย์ในระบบแล้ว (ทุกหน้า)</>
+            )}</span>
           </div>
           <button
             onClick={clearSelection}
-            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all cursor-pointer"
           >
-            ยกเลิกการเลือก
+            {isEn ? "Clear selection" : "ยกเลิกการเลือก"}
           </button>
         </div>
       )}
@@ -507,7 +530,7 @@ export function PropertiesTable({
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={() => toggleSelectAll(allIds)}
-                      aria-label="เลือกทั้งหมด"
+                      aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
                       className={
                         isPartialSelected
                           ? "data-[state=checked]:bg-primary/50"
@@ -517,28 +540,28 @@ export function PropertiesTable({
                   </div>
                 </TableHead>
                 <TableHead className="w-[280px] px-2">
-                  <SortableHead label="ทรัพย์" sortKey="created_at" />
+                  <SortableHead label={isEn ? "Property" : "ทรัพย์"} sortKey="created_at" />
                 </TableHead>
                 <TableHead className="w-[90px] px-2 text-[11px]">
-                  <SortableHead label="ชนิด" sortKey="property_type" />
+                  <SortableHead label={isEn ? "Type" : "ชนิด"} sortKey="property_type" />
                 </TableHead>
-                <TableHead className="w-[140px] px-2 text-[11px]">ทำเล</TableHead>
+                <TableHead className="w-[140px] px-2 text-[11px]">{isEn ? "Location" : "ทำเล"}</TableHead>
                 <TableHead className="w-[111px] px-2 text-[11px]">
-                  <SortableHead label="ราคา" sortKey="price" />
+                  <SortableHead label={isEn ? "Price" : "ราคา"} sortKey="price" />
                 </TableHead>
                 <TableHead className="w-[85px] px-2 text-[11px]">Leads</TableHead>
                 <TableHead className="w-[100px] px-2 text-[11px]">
-                  <SortableHead label="Update" sortKey="updated_at" />
+                  <SortableHead label={isEn ? "Updated" : "Update"} sortKey="updated_at" />
                 </TableHead>
                 <TableHead className="w-[150px] px-2 text-[11px]">
-                  ดูแล
+                  {isEn ? "Agent" : "ดูแล"}
                 </TableHead>
                 <TableHead className="w-[90px] px-2 text-[11px]">
-                  <SortableHead label="สถานะ" sortKey="status" />
+                  <SortableHead label={isEn ? "Status" : "สถานะ"} sortKey="status" />
                 </TableHead>
                 <TableHead className="w-[90px] px-2 text-[11px]">Social</TableHead>
                 <TableHead className="w-[80px] px-2 text-right pr-4 text-[11px]">
-                  จัดการ
+                  {isEn ? "Actions" : "จัดการ"}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -554,9 +577,9 @@ export function PropertiesTable({
                 );
                 const agentDisplayText = (() => {
                   const roleStr = property.agent_role ? `${property.agent_role}, ` : "";
-                  const nameOrEmail = property.agent_name || property.agent_email || "ไม่มีผู้ดูแล";
+                  const nameOrEmail = property.agent_name || property.agent_email || (isEn ? "Unassigned" : "ไม่มีผู้ดูแล");
                   if (isSelf) {
-                    return `(คุณ) ${roleStr}${currentUserEmail}`;
+                    return `${isEn ? "(You) " : "(คุณ) "}${roleStr}${currentUserEmail}`;
                   }
                   return roleStr ? `${roleStr}${nameOrEmail}` : nameOrEmail;
                 })();
@@ -594,7 +617,7 @@ export function PropertiesTable({
                     <Checkbox
                       checked={isSelected(property.id)}
                       onCheckedChange={() => toggleSelect(property.id)}
-                      aria-label={`เลือก ${property.title}`}
+                      aria-label={isEn ? `Select ${property.title}` : `เลือก ${property.title}`}
                     />
                   </TableCell>
                   {/* PROPERTY NAME & COVER */}
@@ -617,7 +640,7 @@ export function PropertiesTable({
                             <DialogContent className="max-w-2xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
                               <VisuallyHidden>
                                 <DialogTitle>
-                                  {property.title || "Property Image"}
+                                  {property.title || (isEn ? "Property Image" : "รูปภาพทรัพย์")}
                                 </DialogTitle>
                               </VisuallyHidden>
                               <div className="relative w-full h-[70vh] flex items-center justify-center bg-transparent">
@@ -637,7 +660,7 @@ export function PropertiesTable({
                           </div>
                         )}
                         {property.is_new && (
-                          <Badge className="absolute top-0.5 left-0.5 h-4 px-1 text-[11px] bg-blue-500 hover:bg-blue-600 border-0 pointer-events-none shadow-sm">
+                          <Badge className="absolute top-0.5 left-0.5 h-4 px-1 text-[11px] bg-blue-500 hover:bg-blue-600 border-0 pointer-events-none shadow-sm font-bold">
                             NEW
                           </Badge>
                         )}
@@ -654,7 +677,9 @@ export function PropertiesTable({
                                   <p className="font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
                                     <Sparkles className="h-3 w-3" /> Sentinel Verification Needed
                                   </p>
-                                  <p className="text-slate-300 leading-relaxed font-medium">คำบรรยายหรือข้อมูลสำคัญถูกสร้างโดย AI และยังไม่ผ่านการตรวจสอบโดยแอดมิน</p>
+                                  <p className="text-slate-300 leading-relaxed font-medium">
+                                    {isEn ? "Description or key data drafted by AI and awaiting review by agent/admin" : "คำบรรยายหรือข้อมูลสำคัญถูกสร้างโดย AI และยังไม่ผ่านการตรวจสอบโดยแอดมิน"}
+                                  </p>
                                   <div className="pt-1.5 border-t border-white/10 mt-1.5 flex items-center justify-between opacity-80 italic">
                                     <span>Status: Pending Audit</span>
                                     <span>V1.0</span>
@@ -676,8 +701,8 @@ export function PropertiesTable({
                           {navigatingId === property.id && (
                             <Loader2 className="h-4 w-4 animate-spin text-blue-600 absolute -left-6 top-1/2 -translate-y-1/2" />
                           )}
-                          <span className="line-clamp-1 overflow-hidden w-[310px] text-slate-900 font-semibold" title={property.title || "ไม่ระบุชื่อ"}>
-                            {property.title || "ไม่ระบุชื่อ"}
+                          <span className="line-clamp-1 overflow-hidden w-[310px] text-slate-900 font-semibold" title={property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ")}>
+                            {property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ")}
                           </span>
                         </div>
                         {property.project_name ? (
@@ -687,17 +712,20 @@ export function PropertiesTable({
                           </div>
                         ) : null}
                         <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
-                          {[property.popular_area, property.province]
+                          {[
+                            getDistrictName(property.popular_area || "", isEn ? "en" : "th"),
+                            getProvinceName(property.province || "", isEn ? "en" : "th"),
+                          ]
                             .filter(Boolean)
                             .join(" • ") || property.description || "-"}
                         </span>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                           <span className="text-[11px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1 py-0.5 rounded border border-slate-100 shrink-0">
                             <Clock className="h-2.5 w-2.5" />
-                            {formatDistanceToNowThai(property.created_at)}
+                            {formatDistanceToNowThai(property.created_at, isEn)}
                           </span>
                           {ageBadge && (
-                            <span className={cn("text-[10px] font-bold flex items-center gap-1 px-1.5 py-0.5 rounded border shrink-0", ageBadge.color)} title="จำนวนวันที่ประกาศอยู่ในระบบ">
+                            <span className={cn("text-[10px] font-bold flex items-center gap-1 px-1.5 py-0.5 rounded border shrink-0", ageBadge.color)} title={isEn ? "Days listing has been active" : "จำนวนวันที่ประกาศอยู่ในระบบ"}>
                               <span className={cn("h-1.5 w-1.5 rounded-full animate-pulse shrink-0", ageBadge.dot)} />
                               <Timer className="h-2.5 w-2.5 shrink-0" />
                               {ageBadge.label}
@@ -720,10 +748,10 @@ export function PropertiesTable({
                       <PropertyTypeBadge type={property.property_type} className="py-1 text-[11px] px-3" />
                       <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
                         {property.listing_type === "SALE"
-                          ? "ขาย"
+                          ? (isEn ? "Sale" : "ขาย")
                           : property.listing_type === "RENT"
-                            ? "เช่า"
-                            : "ขาย/เช่า"}
+                            ? (isEn ? "Rent" : "เช่า")
+                            : (isEn ? "Sale/Rent" : "ขาย/เช่า")}
                       </span>
                     </div>
                   </TableCell>
@@ -732,7 +760,10 @@ export function PropertiesTable({
                   <TableCell className="px-2">
                     <div className="flex flex-col gap-0.5">
                       <div className="font-medium text-[11px] text-slate-700 line-clamp-1">
-                        {property.popular_area || property.subdistrict || property.district || "-"}
+                        {getDistrictName(
+                          property.popular_area || property.subdistrict || property.district || "",
+                          isEn ? "en" : "th"
+                        ) || "-"}
                       </div>
                       <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
                         {property.size_sqm ? (
@@ -743,12 +774,12 @@ export function PropertiesTable({
                         ) : null}
                       </div>
                       <div className="text-[11px] text-slate-400 flex gap-1.5">
-                        {property.bedrooms ? <span>{property.bedrooms}น.</span> : null}
-                        {property.bathrooms ? <span>{property.bathrooms}น้ำ</span> : null}
+                        {property.bedrooms ? <span>{property.bedrooms}{isEn ? " bd" : "น."}</span> : null}
+                        {property.bathrooms ? <span>{property.bathrooms}{isEn ? " ba" : "น้ำ"}</span> : null}
                         {property.office_capacity ? (
                           <span className="flex items-center gap-0.5 text-blue-600 font-bold">
                             <Users className="h-2.5 w-2.5" />
-                            {property.office_capacity}ที่นั่ง
+                            {property.office_capacity}{isEn ? " seats" : "ที่นั่ง"}
                           </span>
                         ) : null}
                       </div>
@@ -778,7 +809,7 @@ export function PropertiesTable({
                           {rentPriceChange && (
                             <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-teal-700 bg-teal-50 px-1 py-0.5 rounded border border-teal-200">
                               <TrendingDown className="h-2.5 w-2.5" />
-                              -{rentPriceChange.pct}% เช่า
+                              -{rentPriceChange.pct}% {isEn ? "Rent" : "เช่า"}
                             </span>
                           )}
                         </div>
@@ -809,8 +840,8 @@ export function PropertiesTable({
 
                   {/* UPDATED */}
                   <TableCell className="px-2">
-                    <div className="text-[11px] text-slate-500 line-clamp-1 opacity-80 max-w-[80px] truncate" title={new Date(property.updated_at).toLocaleString("th-TH")}>
-                      {formatDistanceToNowThai(property.updated_at)}
+                    <div className="text-[11px] text-slate-500 whitespace-nowrap opacity-80" title={new Date(property.updated_at).toLocaleString(isEn ? "en-US" : "th-TH")}>
+                      {formatDistanceToNowThai(property.updated_at, isEn)}
                     </div>
                   </TableCell>
 
@@ -835,7 +866,7 @@ export function PropertiesTable({
                                   ) : (
                                     <Users className="h-3 w-3 text-emerald-500 shrink-0" />
                                   )}
-                                  <span className="truncate leading-tight">คุณ {property.closed_lead_name}</span>
+                                  <span className="truncate leading-tight">{isEn ? `Customer: ${property.closed_lead_name}` : `คุณ ${property.closed_lead_name}`}</span>
                                 </div>
                                 <div className="text-[9px] text-slate-400 font-medium px-1 truncate max-w-[120px] flex items-center gap-1.5">
                                   <div className={cn("h-1 w-1 rounded-full shrink-0", isSelf ? "bg-indigo-400" : "bg-slate-300")} />
@@ -852,7 +883,7 @@ export function PropertiesTable({
                                   {agentDisplayText}
                                 </span>
                                 <span className="text-[9px] text-slate-400 opacity-70 ml-4.5 pl-4.5">
-                                  ผู้ดูแลทรัพย์
+                                  {isEn ? "Listing Agent" : "ผู้ดูแลทรัพย์"}
                                 </span>
                               </div>
                             )}
@@ -862,16 +893,16 @@ export function PropertiesTable({
                           <div className="space-y-2">
                             {(property.status === "SOLD" || property.status === "RENTED") && property.closed_lead_name && (
                               <div className="space-y-0.5">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ลูกค้า (Lead)</p>
-                                <p className="text-sm font-bold text-emerald-700">คุณ {property.closed_lead_name}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{isEn ? "Customer (Lead)" : "ลูกค้า (Lead)"}</p>
+                                <p className="text-sm font-bold text-emerald-700">{isEn ? property.closed_lead_name : `คุณ ${property.closed_lead_name}`}</p>
                               </div>
                             )}
                             <div className="space-y-1.5 border-t border-slate-100 pt-2">
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ผู้รับผิดชอบ (Agent)</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{isEn ? "Responsible Agent" : "ผู้รับผิดชอบ (Agent)"}</p>
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {isSelf && (
                                   <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded border border-indigo-100">
-                                    คุณ
+                                    {isEn ? "You" : "คุณ"}
                                   </span>
                                 )}
                                 {property.agent_role && (
@@ -880,7 +911,7 @@ export function PropertiesTable({
                                   </span>
                                 )}
                                 <span className="text-xs font-semibold text-slate-700">
-                                  {property.agent_name || property.agent_email || "ยังไม่ได้มอบหมาย"}
+                                  {property.agent_name || property.agent_email || (isEn ? "Unassigned" : "ยังไม่ได้มอบหมาย")}
                                 </span>
                               </div>
                             </div>
@@ -921,7 +952,7 @@ export function PropertiesTable({
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-7 w-7 text-slate-400 hover:text-blue-700 hover:bg-blue-50"
+                              className="h-7 w-7 text-slate-400 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
                               onClick={() => {
                                 setNavigatingId(`view-${property.id}`);
                                 router.push(`/protected/properties/${property.id}`);
@@ -936,7 +967,7 @@ export function PropertiesTable({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
-                            ดูรายละเอียดทรัพย์สิน
+                            {isEn ? "View property details" : "ดูรายละเอียดทรัพย์สิน"}
                           </TooltipContent>
                         </Tooltip>
 
@@ -955,7 +986,7 @@ export function PropertiesTable({
                               </span>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
-                              ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้
+                              {isEn ? "Cannot edit properties owned by other agents" : "ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้"}
                             </TooltipContent>
                           </Tooltip>
                         ) : (
@@ -964,7 +995,7 @@ export function PropertiesTable({
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-7 w-7 text-slate-400 hover:text-amber-700 hover:bg-amber-50"
+                                className="h-7 w-7 text-slate-400 hover:text-amber-700 hover:bg-amber-50 cursor-pointer"
                                 onClick={() => {
                                   setNavigatingId(`edit-${property.id}`);
                                   router.push(`/protected/properties/${property.id}/edit`);
@@ -979,17 +1010,17 @@ export function PropertiesTable({
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
-                              แก้ไขทรัพย์สิน
+                              {isEn ? "Edit property" : "แก้ไขทรัพย์สิน"}
                             </TooltipContent>
                           </Tooltip>
                         )}
 
                         <Tooltip>
                           <TooltipTrigger asChild>
-                              <DuplicatePropertyButton id={property.id} title={property.title} className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50" />
+                              <DuplicatePropertyButton id={property.id} title={property.title} className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50 cursor-pointer" />
                           </TooltipTrigger>
                           <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
-                            คัดลอก/สร้างทรัพย์สินที่คล้ายกัน
+                            {isEn ? "Duplicate / Create similar property" : "คัดลอก/สร้างทรัพย์สินที่คล้ายกัน"}
                           </TooltipContent>
                         </Tooltip>
 
@@ -1000,7 +1031,7 @@ export function PropertiesTable({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
-                            การจัดการเพิ่มเติม
+                            {isEn ? "More actions" : "การจัดการเพิ่มเติม"}
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -1024,9 +1055,9 @@ export function PropertiesTable({
               );
               const agentDisplayText = (() => {
                 const roleStr = property.agent_role ? `${property.agent_role}, ` : "";
-                const nameOrEmail = property.agent_name || property.agent_email || "ไม่มีผู้ดูแล";
+                const nameOrEmail = property.agent_name || property.agent_email || (isEn ? "Unassigned" : "ไม่มีผู้ดูแล");
                 if (isSelf) {
-                  return `(คุณ) ${roleStr}${currentUserEmail}`;
+                  return `${isEn ? "(You) " : "(คุณ) "}${roleStr}${currentUserEmail}`;
                 }
                 return roleStr ? `${roleStr}${nameOrEmail}` : nameOrEmail;
               })();
@@ -1085,7 +1116,7 @@ export function PropertiesTable({
                   className="block relative aspect-16/10 overflow-hidden cursor-pointer"
                 >
                   {property.requires_ai_review && (
-                    <div className="absolute bottom-2.5 right-2.5 z-30 p-1.5 bg-white shadow-md rounded-full flex items-center justify-center border border-amber-200" title="รอยืนยันข้อมูล AI">
+                    <div className="absolute bottom-2.5 right-2.5 z-30 p-1.5 bg-white shadow-md rounded-full flex items-center justify-center border border-amber-200" title={isEn ? "AI Review Draft" : "รอยืนยันข้อมูล AI"}>
                       <Sparkles className="h-4 w-4 text-amber-500" />
                     </div>
                   )}
@@ -1132,7 +1163,7 @@ export function PropertiesTable({
                         }}
                         className="font-bold text-slate-900 text-sm min-[400px]:text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors cursor-pointer"
                       >
-                        {property.title || "ไม่ระบุชื่อ"}
+                        {property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ")}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 text-[10px] min-[400px]:text-xs text-slate-500">
@@ -1189,7 +1220,7 @@ export function PropertiesTable({
                         )}
                       >
                         <Users className={cn("h-3 w-3 shrink-0", isSelf ? "text-indigo-500" : "text-blue-500")} />
-                        <span>ผู้ดูแล: {agentDisplayText}</span>
+                        <span>{isEn ? "Agent: " : "ผู้ดูแล: "}{agentDisplayText}</span>
                       </Badge>
                     </div>
 
@@ -1199,7 +1230,7 @@ export function PropertiesTable({
                           variant="secondary"
                           className="w-full justify-center bg-blue-50/50 text-blue-700 hover:bg-blue-100 border-blue-100/50 text-[10px] min-[400px]:text-[11px] font-bold h-7 rounded-lg"
                         >
-                          สาขา: {property.tenant_name || "ไม่มีสาขา"}
+                          {isEn ? "Branch: " : "สาขา: "}{property.tenant_name || (isEn ? "None" : "ไม่มีสาขา")}
                         </Badge>
                       </div>
                     )}
@@ -1216,14 +1247,14 @@ export function PropertiesTable({
                   {/* Card Actions Footer */}
                   <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-50 mt-1">
                     <span className="text-[10px] min-[400px]:text-[11px] text-slate-400 font-medium">
-                      อัปเดต{" "}
+                      {isEn ? "Updated " : "อัปเดต "}
                       {formatDistanceToNowThai(property.updated_at)}
                     </span>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
                         onClick={() => {
                           setNavigatingId(`view-m-${property.id}`);
                           router.push(`/protected/properties/${property.id}`);
@@ -1252,7 +1283,7 @@ export function PropertiesTable({
                               </span>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
-                              ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้
+                              {isEn ? "Cannot edit properties owned by other agents" : "ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้"}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -1260,7 +1291,7 @@ export function PropertiesTable({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
+                          className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg cursor-pointer"
                           onClick={() => {
                             setNavigatingId(`edit-m-${property.id}`);
                             router.push(`/protected/properties/${property.id}/edit`);

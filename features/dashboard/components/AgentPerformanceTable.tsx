@@ -16,6 +16,7 @@ import { Trophy, Users, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface AgentPerformanceTableProps {
   agents: AgentKpiStats[];
@@ -23,6 +24,8 @@ interface AgentPerformanceTableProps {
 
 export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
   // Sort by revenue for leaderboard
   const sortedAgents = [...agents].sort(
@@ -35,17 +38,19 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
         <div>
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <Trophy className="h-6 w-6 text-yellow-500" />
-            อันดับผลงานตัวแทน
+            {isEn ? "Agent Performance Leaderboard" : "อันดับผลงานตัวแทน"}
           </CardTitle>
           <CardDescription>
-            การจัดอันดับตามประสิทธิภาพและการปิดดีล
+            {isEn
+              ? "Rankings based on deals closed, revenue volume, and conversion efficiency"
+              : "การจัดอันดับตามประสิทธิภาพและการปิดดีล"}
           </CardDescription>
         </div>
         <Badge
           variant="outline"
           className="px-3 py-1 bg-yellow-50 text-yellow-700 border-yellow-200 rounded-full font-semibold"
         >
-          ปี {new Date().getFullYear() + 543}
+          {isEn ? `Year ${new Date().getFullYear()}` : `ปี ${new Date().getFullYear() + 543}`}
         </Badge>
       </CardHeader>
       <CardContent className="p-0">
@@ -55,7 +60,7 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
             <thead className="text-[10px] text-slate-500 uppercase bg-slate-50/50 tracking-widest font-semibold">
               <tr>
                 <th className="px-6 py-4 text-center w-16">Rank</th>
-                <th className="px-6 py-4">ตัวแทน</th>
+                <th className="px-6 py-4">{isEn ? "Agent" : "ตัวแทน"}</th>
                 <th className="px-6 py-4 text-center">Leads</th>
                 <th className="px-6 py-4 text-center">Deals</th>
                 <th className="px-6 py-4 text-center">Conversion</th>
@@ -134,7 +139,7 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
               <div className="flex flex-col xs:grid xs:grid-cols-2 gap-2 sm:gap-4 mb-4 bg-slate-50/50 p-2.5 sm:p-3 rounded-2xl border border-slate-100">
                 <div className="flex flex-col border-b xs:border-b-0 border-slate-100 pb-2 xs:pb-0">
                   <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
-                    สะสมยอดขาย (Revenue)
+                    {isEn ? "Gross Revenue" : "สะสมยอดขาย (Revenue)"}
                   </span>
                   <span className="text-xs sm:text-sm font-bold text-slate-900">
                     {formatThaiCurrency(agent.totalRevenue)}
@@ -155,10 +160,10 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
                   <div className="flex items-center gap-4">
                     <div className="flex flex-col">
                       <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                        ปิดดีลคนสำเร็จ
+                        {isEn ? "Closed Deals" : "ปิดดีลสำเร็จ"}
                       </span>
                       <span className="text-xs font-semibold text-slate-700">
-                        {agent.totalDeals} ดีล (S:{agent.salesCount} | R:
+                        {agent.totalDeals} {isEn ? "Deals" : "ดีล"} (S:{agent.salesCount} | R:
                         {agent.rentCount})
                       </span>
                     </div>
@@ -181,7 +186,7 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
         {sortedAgents.length === 0 && (
           <div className="py-20 text-center text-slate-400">
             <Users className="h-12 w-12 mx-auto mb-3 opacity-20" />
-            <p>ไม่พบข้อมูลผลงานตัวแทนในช่วงเวลานี้</p>
+            <p>{isEn ? "No agent performance data found for this period" : "ไม่พบข้อมูลผลงานตัวแทนในช่วงเวลานี้"}</p>
           </div>
         )}
       </CardContent>

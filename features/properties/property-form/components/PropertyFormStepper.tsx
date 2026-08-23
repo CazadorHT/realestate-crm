@@ -1,7 +1,10 @@
+"use client";
+
 import * as React from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertyFormStepperProps {
   currentStep: number;
@@ -37,7 +40,7 @@ function isStepComplete(step: number, values: PropertyFormValues) {
       values.google_maps_link
     );
   if (step === 4) return (values.images?.length || 0) > 0;
-  if (step === 5) return true; // อุปกรณ์อำนวยความสะดวก (Optional)
+  if (step === 5) return true; // Amenities (Optional)
   if (step === 6) return !!values.status;
   if (step === 7) return true; // Syndication is optional
   return false;
@@ -50,16 +53,18 @@ export function PropertyFormStepper({
   handleNext,
   form,
 }: PropertyFormStepperProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   const steps = [
-    { step: 1, label: "ข้อมูลประกาศ" },
-    { step: 2, label: "รายละเอียด" },
-    { step: 3, label: "ทำเลที่ตั้ง" },
-    { step: 4, label: "รูปภาพ" },
-    { step: 5, label: "สิ่งอำนวยความสะดวก" },
-    { step: 6, label: "ตรวจสอบ" },
-    { step: 7, label: "การส่งข้อมูล" },
+    { step: 1, label: isEn ? "Basic Info" : "ข้อมูลประกาศ" },
+    { step: 2, label: isEn ? "Details" : "รายละเอียด" },
+    { step: 3, label: isEn ? "Location" : "ทำเลที่ตั้ง" },
+    { step: 4, label: isEn ? "Photos" : "รูปภาพ" },
+    { step: 5, label: isEn ? "Amenities" : "สิ่งอำนวยความสะดวก" },
+    { step: 6, label: isEn ? "Review" : "ตรวจสอบ" },
+    { step: 7, label: isEn ? "Syndication" : "การส่งข้อมูล" },
   ];
 
   // Auto-scroll to active step on mobile
@@ -126,7 +131,7 @@ export function PropertyFormStepper({
                   data-step={item.step}
                   role="tab"
                   aria-selected={isCurrent}
-                  aria-label={`ขั้นตอนที่ ${item.step} ${item.label}`}
+                  aria-label={isEn ? `Step ${item.step}: ${item.label}` : `ขั้นตอนที่ ${item.step} ${item.label}`}
                   tabIndex={mode === "edit" || item.step < currentStep ? 0 : -1}
                   className={`flex flex-col items-center gap-2 sm:gap-3 group transition-all duration-300 flex-1 min-w-[100px] sm:min-w-0 ${
                     mode === "edit" || item.step < currentStep
@@ -140,7 +145,7 @@ export function PropertyFormStepper({
                     ) {
                       e.preventDefault();
                       if (form.getValues("is_ai_generating")) {
-                        toast.error("AI กำลังทำงานอยู่ กรุณารอสักครู่ครับ");
+                        toast.error(isEn ? "AI is currently generating content, please wait..." : "AI กำลังทำงานอยู่ กรุณารอสักครู่ครับ");
                         return;
                       }
                       setCurrentStep(item.step);
@@ -148,7 +153,7 @@ export function PropertyFormStepper({
                   }}
                   onClick={async () => {
                     if (form.getValues("is_ai_generating")) {
-                      toast.error("AI กำลังทำงานอยู่ กรุณารอสักครู่ครับ");
+                      toast.error(isEn ? "AI is currently generating content, please wait..." : "AI กำลังทำงานอยู่ กรุณารอสักครู่ครับ");
                       return;
                     }
                     if (mode === "edit") {
@@ -194,3 +199,4 @@ export function PropertyFormStepper({
     </div>
   );
 }
+

@@ -3,6 +3,7 @@
 import React from "react";
 import { Users, UserCheck, Briefcase } from "lucide-react";
 import { m } from "framer-motion";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TeamStatsDashboardProps {
   stats: {
@@ -13,23 +14,26 @@ interface TeamStatsDashboardProps {
 }
 
 export function TeamStatsDashboard({ stats }: TeamStatsDashboardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const cards = [
     {
-      title: "จำนวนทีมทั้งหมด",
+      title: isEn ? "Total Teams" : "จำนวนทีมทั้งหมด",
       value: stats.totalTeams,
       icon: Users,
       gradient: "from-indigo-600 to-blue-500",
       label: "Teams Power",
     },
     {
-      title: "เอเจนท์ในสังกัด",
+      title: isEn ? "Affiliated Agents" : "เอเจนท์ในสังกัด",
       value: stats.totalAgents,
       icon: UserCheck,
       gradient: "from-amber-500 to-orange-400",
       label: "Active Force",
     },
     {
-      title: "Leads ประจำสาขา",
+      title: isEn ? "Branch Leads" : "Leads ประจำสาขา",
       value: stats.totalLeads,
       icon: Briefcase,
       gradient: "from-emerald-500 to-teal-400",
@@ -79,3 +83,4 @@ export function TeamStatsDashboard({ stats }: TeamStatsDashboardProps) {
     </div>
   );
 }
+

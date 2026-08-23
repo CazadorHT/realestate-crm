@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { RiUser3Line } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealLeadCardProps {
   lead: {
@@ -14,9 +17,12 @@ interface DealLeadCardProps {
 }
 
 export function DealLeadCard({ lead }: DealLeadCardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (!lead) return null;
 
-  const name = lead.full_name || lead.display_name || "ไม่ระบุชื่อ";
+  const name = lead.full_name || lead.display_name || (isEn ? "Unnamed Lead" : "ไม่ระบุชื่อ");
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -25,8 +31,8 @@ export function DealLeadCard({ lead }: DealLeadCardProps) {
           <RiUser3Line className="h-5 w-5 text-blue-600" />
         </div>
         <div>
-          <h3 className="font-bold text-lg text-slate-800">ลูกค้า (Lead)</h3>
-          <p className="text-xs text-slate-500">ข้อมูลผู้สนใจทรัพย์</p>
+          <h3 className="font-bold text-lg text-slate-800">{isEn ? "Customer (Lead)" : "ลูกค้า (Lead)"}</h3>
+          <p className="text-xs text-slate-500">{isEn ? "Lead contact details" : "ข้อมูลผู้สนใจทรัพย์"}</p>
         </div>
       </div>
       <div className="p-5">
@@ -50,9 +56,9 @@ export function DealLeadCard({ lead }: DealLeadCardProps) {
               )}
             </div>
           </div>
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="outline" size="sm" className="cursor-pointer" asChild>
             <Link href={`/protected/leads/${lead.id}`}>
-              ดูลีด
+              {isEn ? "View Lead" : "ดูลีด"}
               <ArrowRight className="ml-1 h-3 w-3" />
             </Link>
           </Button>
@@ -61,3 +67,4 @@ export function DealLeadCard({ lead }: DealLeadCardProps) {
     </div>
   );
 }
+

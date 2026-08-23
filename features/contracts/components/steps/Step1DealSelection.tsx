@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 import { ContractFormInput, type ContractDealSummary } from "@/features/rental-contracts/schema";
 import Image from "next/image";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface Step1Props {
   selectedDeal: ContractDealSummary | null;
@@ -25,6 +26,8 @@ export function Step1DealSelection({
   onDealSelect,
   alreadyHasContract,
 }: Step1Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const form = useFormContext<ContractFormInput>();
 
   return (
@@ -36,12 +39,12 @@ export function Step1DealSelection({
           <FormItem className="space-y-2">
             <div className="flex items-center justify-between ml-1 leading-none">
               <FormLabel className="text-sm font-bold text-slate-700">
-                ดีลที่เกี่ยวข้อง
+                {isEn ? "Associated Deal" : "ดีลที่เกี่ยวข้อง"}
               </FormLabel>
               {alreadyHasContract && (
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-lg animate-in fade-in zoom-in duration-300">
                   <AlertCircle className="w-3 h-3" />
-                  <span className="text-[10px] font-bold">ดีลนี้มีสัญญาอยู่แล้ว</span>
+                  <span className="text-[10px] font-bold">{isEn ? "Deal already has a contract" : "ดีลนี้มีสัญญาอยู่แล้ว"}</span>
                 </div>
               )}
             </div>
@@ -81,7 +84,7 @@ export function Step1DealSelection({
                   : "bg-emerald-600 text-white",
               )}
             >
-              {selectedDeal.deal_type === "RENT" ? "เช่า" : "ขาย"}
+              {selectedDeal.deal_type === "RENT" ? (isEn ? "RENT" : "เช่า") : (isEn ? "SALE" : "ขาย")}
             </div>
           </div>
           <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
@@ -91,10 +94,10 @@ export function Step1DealSelection({
               </h4>
               <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
                 <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                <span className="truncate">{selectedDeal.location || "ไม่ระบุทำเล"}</span>
+                <span className="truncate">{selectedDeal.location || (isEn ? "Location unspecified" : "ไม่ระบุทำเล")}</span>
               </div>
               <p className="text-xs text-slate-500 font-medium flex items-center gap-2">
-                <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">ลูกค้า:</span>
+                <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">{isEn ? "Client:" : "ลูกค้า:"}</span>
                 <span className="text-blue-600 font-bold truncate">{selectedDeal.lead_name}</span>
               </p>
             </div>
@@ -102,12 +105,12 @@ export function Step1DealSelection({
             <div className="flex flex-wrap items-center gap-2 pt-2 mt-2 border-t border-slate-50">
               {selectedDeal.deal_type === "RENT" ? (
                 <div className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg border border-blue-100 flex items-center gap-2">
-                  <span className="text-[10px] font-bold opacity-60">ค่าเช่า:</span>
+                  <span className="text-[10px] font-bold opacity-60">{isEn ? "Rent:" : "ค่าเช่า:"}</span>
                   <span className="text-xs font-bold">฿{(selectedDeal.rental_price ?? selectedDeal.original_rental_price ?? 0).toLocaleString()}</span>
                 </div>
               ) : (
                 <div className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-100 flex items-center gap-2">
-                  <span className="text-[10px] font-bold opacity-60">ราคาขาย:</span>
+                  <span className="text-[10px] font-bold opacity-60">{isEn ? "Sale Price:" : "ราคาขาย:"}</span>
                   <span className="text-xs font-bold">฿{(selectedDeal.price ?? selectedDeal.original_price ?? 0).toLocaleString()}</span>
                 </div>
               )}
@@ -117,9 +120,10 @@ export function Step1DealSelection({
       ) : (
         <div className="flex flex-col items-center justify-center py-16 text-slate-400 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200/50">
           <Info className="h-10 w-10 mb-3 opacity-20" />
-          <p className="text-sm font-bold">กรุณาเลือกดีลที่ต้องการสร้างสัญญา</p>
+          <p className="text-sm font-bold">{isEn ? "Please select a deal to create a contract" : "กรุณาเลือกดีลที่ต้องการสร้างสัญญา"}</p>
         </div>
       )}
     </div>
   );
 }
+

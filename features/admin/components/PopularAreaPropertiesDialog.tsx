@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { searchPropertiesAction } from "@/features/leads/actions";
-import { Building2, ExternalLink, MapPin, Tag, Key, Repeat, ArrowUpRight } from "lucide-react";
+import { Building2, MapPin, Tag, Key, Repeat, ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface PopularAreaPropertiesDialogProps {
   area: { id: string; name: string } | null;
@@ -36,6 +37,9 @@ export function PopularAreaPropertiesDialog({
   open,
   onOpenChange,
 }: PopularAreaPropertiesDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [properties, setProperties] = useState<PropertyListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -69,8 +73,16 @@ export function PopularAreaPropertiesDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={area?.name ? `ทรัพย์ในทำเล: ${area.name}` : "รายการทรัพย์"}
-      description="รายการอสังหาริมทรัพย์ทั้งหมดที่อยู่ในพื้นที่ยอดนิยมนี้"
+      title={
+        area?.name 
+          ? (isEn ? `Properties in Area: ${area.name}` : `ทรัพย์ในทำเล: ${area.name}`) 
+          : (isEn ? "Property List" : "รายการทรัพย์")
+      }
+      description={
+        isEn
+          ? "All properties registered in this popular area"
+          : "รายการอสังหาริมทรัพย์ทั้งหมดที่อยู่ในพื้นที่ยอดนิยมนี้"
+      }
       className="max-w-3xl"
     >
       <div className="py-2">
@@ -90,9 +102,13 @@ export function PopularAreaPropertiesDialog({
               <Building2 className="h-10 w-10 text-slate-300" />
             </div>
             <div>
-              <p className="font-bold text-slate-900 text-lg">ไม่พบข้อมูลทรัพย์</p>
+              <p className="font-bold text-slate-900 text-lg">
+                {isEn ? "No properties found" : "ไม่พบข้อมูลทรัพย์"}
+              </p>
               <p className="text-slate-500 text-sm mt-1 max-w-xs mx-auto">
-                ยังไม่มีการผูกทรัพย์ใดๆ เข้ากับทำเลนื้ในระบบ
+                {isEn
+                  ? "There are currently no properties linked to this popular area."
+                  : "ยังไม่มีการผูกทรัพย์ใดๆ เข้ากับทำเลนื้ในระบบ"}
               </p>
             </div>
           </div>
@@ -122,8 +138,8 @@ export function PopularAreaPropertiesDialog({
                     
                     {/* Badge Overlay */}
                     <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                      <ListingTypeBadge type={property.listing_type} />
-                      <StatusBadge status={property.status} />
+                      <ListingTypeBadge type={property.listing_type} isEn={isEn} />
+                      <StatusBadge status={property.status} isEn={isEn} />
                     </div>
 
                     {/* Quick Link Button */}
@@ -160,9 +176,10 @@ export function PopularAreaPropertiesDialog({
                         rentalPrice={property.rental_price}
                         originalRentalPrice={property.original_rental_price}
                         listingType={property.listing_type}
+                        isEn={isEn}
                       />
                       <div className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-                        ดูรายละเอียด
+                        {isEn ? "View Details" : "ดูรายละเอียด"}
                       </div>
                     </div>
                   </Link>
@@ -176,44 +193,44 @@ export function PopularAreaPropertiesDialog({
   );
 }
 
-function ListingTypeBadge({ type }: { type: string | null }) {
+function ListingTypeBadge({ type, isEn }: { type: string | null; isEn: boolean }) {
   if (!type) return null;
 
-  const config: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; class: string }> = {
-    SALE: { label: "ขาย", icon: Tag, class: "bg-blue-600 text-white" },
-    RENT: { label: "เช่า", icon: Key, class: "bg-emerald-600 text-white" },
-    SALE_RENT: { label: "ขาย/เช่า", icon: Repeat, class: "bg-indigo-600 text-white" },
-    SALE_AND_RENT: { label: "ขาย/เช่า", icon: Repeat, class: "bg-indigo-600 text-white" },
+  const config: Record<string, { labelTh: string; labelEn: string; icon: React.ComponentType<{ className?: string }>; class: string }> = {
+    SALE: { labelTh: "ขาย", labelEn: "Sale", icon: Tag, class: "bg-blue-600 text-white" },
+    RENT: { labelTh: "เช่า", labelEn: "Rent", icon: Key, class: "bg-emerald-600 text-white" },
+    SALE_RENT: { labelTh: "ขาย/เช่า", labelEn: "Sale/Rent", icon: Repeat, class: "bg-indigo-600 text-white" },
+    SALE_AND_RENT: { labelTh: "ขาย/เช่า", labelEn: "Sale/Rent", icon: Repeat, class: "bg-indigo-600 text-white" },
   };
 
-  const item = config[type] || { label: type, icon: Building2, class: "bg-slate-600 text-white" };
+  const item = config[type] || { labelTh: type, labelEn: type, icon: Building2, class: "bg-slate-600 text-white" };
   const Icon = item.icon;
 
   return (
     <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm", item.class)}>
       <Icon className="h-3 w-3" />
-      <span>{item.label}</span>
+      <span>{isEn ? item.labelEn : item.labelTh}</span>
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: string | null }) {
+function StatusBadge({ status, isEn }: { status: string | null; isEn: boolean }) {
   if (!status) return null;
 
-  const config: Record<string, { label: string; class: string }> = {
-    ACTIVE: { label: "ว่าง", class: "bg-emerald-500/90 text-white" },
-    RESERVED: { label: "จองแล้ว", class: "bg-amber-500/90 text-white" },
-    UNDER_OFFER: { label: "มัดจำ", class: "bg-amber-500/90 text-white" },
-    SOLD: { label: "ขายแล้ว", class: "bg-slate-500/90 text-white" },
-    RENTED: { label: "เช่าแล้ว", class: "bg-slate-500/90 text-white" },
-    INACTIVE: { label: "ระงับ", class: "bg-slate-400 text-white" },
+  const config: Record<string, { labelTh: string; labelEn: string; class: string }> = {
+    ACTIVE: { labelTh: "ว่าง", labelEn: "Active", class: "bg-emerald-500/90 text-white" },
+    RESERVED: { labelTh: "จองแล้ว", labelEn: "Reserved", class: "bg-amber-500/90 text-white" },
+    UNDER_OFFER: { labelTh: "มัดจำ", labelEn: "Under Offer", class: "bg-amber-500/90 text-white" },
+    SOLD: { labelTh: "ขายแล้ว", labelEn: "Sold", class: "bg-slate-500/90 text-white" },
+    RENTED: { labelTh: "เช่าแล้ว", labelEn: "Rented", class: "bg-slate-500/90 text-white" },
+    INACTIVE: { labelTh: "ระงับ", labelEn: "Inactive", class: "bg-slate-400 text-white" },
   };
 
-  const item = config[status] || { label: status, class: "bg-slate-200 text-slate-800" };
+  const item = config[status] || { labelTh: status, labelEn: status, class: "bg-slate-200 text-slate-800" };
 
   return (
     <Badge variant="outline" className={cn("border-transparent text-[10px] font-bold py-0 h-5 shadow-xs", item.class)}>
-      {item.label}
+      {isEn ? item.labelEn : item.labelTh}
     </Badge>
   );
 }
@@ -224,16 +241,18 @@ function PriceDisplay({
   rentalPrice,
   originalRentalPrice,
   listingType,
+  isEn,
 }: {
   price: number | null;
   originalPrice: number | null;
   rentalPrice: number | null;
   originalRentalPrice: number | null;
   listingType: string | null;
+  isEn: boolean;
 }) {
   const format = (val: number | null | undefined) => {
     if (val === null || val === undefined || isNaN(Number(val))) return "-";
-    return new Intl.NumberFormat("th-TH").format(Number(val));
+    return new Intl.NumberFormat(isEn ? "en-US" : "th-TH").format(Number(val));
   };
 
   const isRent = listingType === "RENT" || listingType === "SALE_RENT" || listingType === "SALE_AND_RENT";
@@ -267,15 +286,16 @@ function PriceDisplay({
           )}
           <span className="text-sm font-bold text-emerald-600 leading-none">
             ฿{format(rentalPrice ?? originalRentalPrice)}
-            <span className="text-[10px] ml-0.5">/ด</span>
+            <span className="text-[10px] ml-0.5">{isEn ? "/mo" : "/ด"}</span>
           </span>
         </div>
       )}
       {((isSale && !hasSalePrice) || (isRent && !hasRentPrice) || (!isSale && !isRent)) && (
         <span className="text-xs font-semibold text-slate-400 italic">
-          สอบถามราคา
+          {isEn ? "Price on Request" : "สอบถามราคา"}
         </span>
       )}
     </div>
   );
 }
+

@@ -19,12 +19,16 @@ import { FinanceMath } from "@/lib/finance/precision";
 import { YearSelectorModal } from "./YearSelectorModal";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FinanceAnalyticsProps {
   onBack: () => void;
 }
 
 export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<FinancialAnalyticsData | null>(null);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -38,7 +42,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
     if (res.success && res.data) {
       setData(res.data);
     } else {
-      toast.error(res.error || "โหลดข้อมูลไม่สำเร็จ");
+      toast.error(res.error || (isEn ? "Failed to load data" : "โหลดข้อมูลไม่สำเร็จ"));
     }
     setLoading(false);
   };
@@ -67,9 +71,9 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
       link.href = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${res.data}`;
       link.download = res.filename || `Finance_Report_${year}.xlsx`;
       link.click();
-      toast.success("ดาวน์โหลดรายงานสำเร็จ");
+      toast.success(isEn ? "Report downloaded successfully" : "ดาวน์โหลดรายงานสำเร็จ");
     } else {
-      toast.error(res.message || "ส่งออกรายงานไม่สำเร็จ");
+      toast.error(res.message || (isEn ? "Failed to export report" : "ส่งออกรายงานไม่สำเร็จ"));
     }
     setIsExporting(false);
   };
@@ -78,7 +82,9 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-        <p className="text-slate-400 text-sm font-semibold animate-pulse">กำลังสกัดข้อมูลบัญชี...</p>
+        <p className="text-slate-400 text-sm font-semibold animate-pulse">
+          {isEn ? "Extracting accounting data..." : "กำลังสกัดข้อมูลบัญชี..."}
+        </p>
       </div>
     );
   }
@@ -88,12 +94,16 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
       {/* 🧭 Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
+          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full cursor-pointer">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">วิเคราะห์ผลกำไรและขาดทุน (P&L)</h2>
-            <p className="text-slate-500 text-sm font-medium">วิเคราะห์กำไร-ขาดทุน และกระแสเงินสดข้ามสาขา</p>
+            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
+              {isEn ? "Profit & Loss Analytics (P&L)" : "วิเคราะห์ผลกำไรและขาดทุน (P&L)"}
+            </h2>
+            <p className="text-slate-500 text-sm font-medium">
+              {isEn ? "Profit & loss and branch-level cashflow analysis" : "วิเคราะห์กำไร-ขาดทุน และกระแสเงินสดข้ามสาขา"}
+            </p>
           </div>
         </div>
         
@@ -108,7 +118,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
                   size="sm"
                   onClick={() => setYear(y)}
                   className={cn(
-                    "px-4 h-8 text-xs font-semibold rounded-lg transition-all",
+                    "px-4 h-8 text-xs font-semibold rounded-lg transition-all cursor-pointer",
                     year === y ? "shadow-sm bg-white" : "text-slate-500"
                   )}
                 >
@@ -121,20 +131,20 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setIsYearModalOpen(true)}
-                className="px-2 h-8 hover:bg-white hover:shadow-sm rounded-lg text-slate-400 hover:text-indigo-600 transition-all ml-1"
-                title="เลือกปีงบประมาณอื่น"
+                className="px-2 h-8 hover:bg-white hover:shadow-sm rounded-lg text-slate-400 hover:text-indigo-600 transition-all ml-1 cursor-pointer"
+                title={isEn ? "Select another fiscal year" : "เลือกปีงบประมาณอื่น"}
             >
                 <Calendar className="w-4 h-4" />
             </Button>
           </div>
           
           <Button 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-10 px-6 rounded-xl shadow-lg shadow-emerald-200"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-10 px-6 rounded-xl shadow-lg shadow-emerald-200 cursor-pointer"
             onClick={handleExport}
             disabled={isExporting}
           >
             {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
-            ส่งออกรายงานบัญชี
+            {isEn ? "Export Financial Report" : "ส่งออกรายงานบัญชี"}
           </Button>
 
           <YearSelectorModal 
@@ -150,39 +160,44 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
       {/* 💰 Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <SummaryCard 
-          title="รายรับทั้งหมด (Gross)" 
+          title={isEn ? "Total Revenue (Gross)" : "รายรับทั้งหมด (Gross)"} 
           value={data?.summary.totalRevenue || 0} 
           icon={<DollarSign className="w-5 h-5" />}
           color="bg-indigo-600"
-          description="คอมมิชชันรวมก่อนหักเอเยนต์"
+          description={isEn ? "Total gross commission before agent split" : "คอมมิชชันรวมก่อนหักเอเยนต์"}
+          activeLabel={isEn ? "+ Active" : "+ มีรายการ"}
         />
         <SummaryCard 
-          title="ยอดจ่ายเอเยนต์" 
+          title={isEn ? "Agent Payouts" : "ยอดจ่ายเอเยนต์"} 
           value={data?.summary.totalPayouts || 0} 
           icon={<TrendingDown className="w-5 h-5" />}
           color="bg-slate-800"
-          description="ส่วนแบ่งที่จ่ายให้เอเยนต์"
+          description={isEn ? "Commission share paid to agents" : "ส่วนแบ่งที่จ่ายให้เอเยนต์"}
+          activeLabel={isEn ? "+ Active" : "+ มีรายการ"}
         />
         <SummaryCard 
-          title="รายการปรับปรุง" 
+          title={isEn ? "Adjustments" : "รายการปรับปรุง"} 
           value={data?.summary.totalAdjustments || 0} 
           icon={<PieChart className="w-5 h-5" />}
           color="bg-indigo-400"
-          description="ยอดปรับปรุง (±)"
+          description={isEn ? "Net adjustments (±)" : "ยอดปรับปรุง (±)"}
+          activeLabel={isEn ? "+ Active" : "+ มีรายการ"}
         />
         <SummaryCard 
-          title="กำไรค้างรับ" 
+          title={isEn ? "Accrued Profit" : "กำไรค้างรับ"} 
           value={data?.summary.accruedProfit || 0} 
           icon={<Clock className="w-5 h-5" />}
           color="bg-amber-500"
-          description="กำไรค้างรับ (ดีลจบแต่ยังไม่จ่าย)"
+          description={isEn ? "Accrued profit (deals closed but pending payout)" : "กำไรค้างรับ (ดีลจบแต่ยังไม่จ่าย)"}
+          activeLabel={isEn ? "+ Active" : "+ มีรายการ"}
         />
         <SummaryCard 
-          title="กำไรที่ได้รับจริง" 
+          title={isEn ? "Realized Profit" : "กำไรที่ได้รับจริง"} 
           value={data?.summary.realizedProfit || 0} 
           icon={<ShieldCheck className="w-5 h-5" />}
           color="bg-emerald-600"
-          description="กำไรที่ได้รับแล้วจริง (Cash-in)"
+          description={isEn ? "Realized cash-in profit" : "กำไรที่ได้รับแล้วจริง (Cash-in)"}
+          activeLabel={isEn ? "+ Active" : "+ มีรายการ"}
           highlight
         />
       </div>
@@ -193,13 +208,17 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
           <CardHeader className="border-b border-slate-50 bg-slate-50/50">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-semibold text-slate-800">แนวโน้มผลประกอบการรายเดือน</CardTitle>
-                <CardDescription className="font-medium">แนวโน้มรายได้เปรียบเทียบกับกำไรสุทธิ (จริง vs ค้างรับ)</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-800">
+                  {isEn ? "Monthly Performance Trends" : "แนวโน้มผลประกอบการรายเดือน"}
+                </CardTitle>
+                <CardDescription className="font-medium">
+                  {isEn ? "Revenue vs Net Profit trends (Realized vs Accrued)" : "แนวโน้มรายได้เปรียบเทียบกับกำไรสุทธิ (จริง vs ค้างรับ)"}
+                </CardDescription>
               </div>
               <div className="flex items-center gap-4 text-[10px] font-semibold uppercase tracking-tighter">
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-indigo-500"/> รายรับ</div>
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"/> รับจริง</div>
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-amber-500"/> ค้างรับ</div>
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-indigo-500"/> {isEn ? "Revenue" : "รายรับ"}</div>
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"/> {isEn ? "Realized" : "รับจริง"}</div>
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-amber-500"/> {isEn ? "Accrued" : "ค้างรับ"}</div>
               </div>
             </div>
           </CardHeader>
@@ -227,7 +246,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
                     axisLine={false} 
                     tickLine={false} 
                     tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
-                    tickFormatter={(str) => new Date(str).toLocaleDateString("th-TH", { month: 'short' })}
+                    tickFormatter={(str) => new Date(str).toLocaleDateString(isEn ? "en-US" : "th-TH", { month: 'short' })}
                   />
                   <YAxis 
                     axisLine={false} 
@@ -239,7 +258,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
                     formatter={(v: TooltipValueType | undefined, name: string | number | undefined) => [
                       FinanceMath.format(Number(v || 0)), 
-                      name === "revenue" ? "รายรับ" : name === "realizedProfit" ? "รับจริง" : "ค้างรับ"
+                      name === "revenue" ? (isEn ? "Revenue" : "รายรับ") : name === "realizedProfit" ? (isEn ? "Realized Profit" : "รับจริง") : (isEn ? "Accrued Profit" : "ค้างรับ")
                     ]}
                   />
                   <Bar dataKey="revenue" name="revenue" fill="url(#revGradient)" radius={[4, 4, 0, 0]} barSize={20} />
@@ -255,7 +274,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
   );
 };
 
-const SummaryCard = ({ title, value, icon, color, description, highlight }: any) => (
+const SummaryCard = ({ title, value, icon, color, description, highlight, activeLabel }: any) => (
   <Card className={cn(
     "border-none shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden group",
     highlight ? "ring-2 ring-emerald-500 ring-offset-2" : "bg-white"
@@ -265,12 +284,12 @@ const SummaryCard = ({ title, value, icon, color, description, highlight }: any)
         <div className={cn("p-2 rounded-xl text-white shadow-lg", color)}>
           {icon}
         </div>
-        {value > 0 && <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">+ มีรายการ</span>}
+        {value > 0 && <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">{activeLabel || "+ มีรายการ"}</span>}
       </div>
       <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">{title}</h3>
       <p className="text-2xl font-semibold text-slate-900 mb-1">฿ {FinanceMath.format(value)}</p>
       <p className="text-[10px] text-slate-400 font-medium leading-relaxed">{description}</p>
-      
     </CardContent>
   </Card>
 );
+

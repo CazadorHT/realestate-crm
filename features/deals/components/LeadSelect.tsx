@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface LeadSelectProps {
   value?: string;
@@ -17,6 +18,9 @@ interface LeadSelectProps {
 }
 
 export function LeadSelect({ value, onChange }: LeadSelectProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [opts, setOpts] = useState<Array<{ id: string; full_name: string }>>(
     []
   );
@@ -50,12 +54,12 @@ export function LeadSelect({ value, onChange }: LeadSelectProps) {
   return (
     <div className="space-y-2">
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger>
-          <SelectValue placeholder={loading ? "กำลังโหลด..." : "เลือกลีด"} />
+        <SelectTrigger className="cursor-pointer">
+          <SelectValue placeholder={loading ? (isEn ? "Loading..." : "กำลังโหลด...") : (isEn ? "Select Lead" : "เลือกลีด")} />
         </SelectTrigger>
         <SelectContent className="max-h-[300px] overflow-y-auto">
           {opts.map((l) => (
-            <SelectItem key={l.id} value={l.id}>
+            <SelectItem key={l.id} value={l.id} className="cursor-pointer">
               {l.full_name}
             </SelectItem>
           ))}
@@ -64,3 +68,4 @@ export function LeadSelect({ value, onChange }: LeadSelectProps) {
     </div>
   );
 }
+

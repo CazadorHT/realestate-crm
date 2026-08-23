@@ -9,12 +9,15 @@ import {
 } from "@/features/properties/labels";
 import { useFormContext, type UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface ListingTypeSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
 }
 
 export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const listingTypeError = form.formState.errors.listing_type;
@@ -42,7 +45,7 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
               listingTypeError ? "text-red-600" : "text-slate-900"
             }`}
           >
-            ประเภทประกาศ <span className="text-red-500">*</span>
+            {isEn ? "Listing Type" : "ประเภทประกาศ"} <span className="text-red-500">*</span>
           </h3>
           <p
             className={`text-sm ${
@@ -50,8 +53,8 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
             }`}
           >
             {listingTypeError
-              ? "กรุณาเลือกรูปแบบประกาศ"
-              : "ระบุรูปแบบสิ่งที่คุณต้องการทำกับทรัพย์สินนี้"}
+              ? (isEn ? "Please select a listing type" : "กรุณาเลือกรูปแบบประกาศ")
+              : (isEn ? "Specify what you want to do with this property" : "ระบุรูปแบบสิ่งที่คุณต้องการทำกับทรัพย์สินนี้")}
           </p>
         </div>
       </div>
@@ -68,7 +71,7 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
                   key={type}
                   type="button"
                   onClick={() => field.onChange(type)}
-                  className={`p-4 rounded-2xl transition-all duration-300 text-left relative group flex flex-col items-center gap-3 border ${
+                  className={`p-4 rounded-2xl transition-all duration-300 text-left relative group flex flex-col items-center gap-3 border cursor-pointer ${
                     field.value === type
                       ? "border-transparent bg-gradient-to-br from-blue-500 via-indigo-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25 scale-[1.03] ring-2 ring-blue-500/20"
                       : listingTypeError
@@ -98,7 +101,7 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
                         field.value === type ? "text-white" : "text-slate-800 group-hover:text-blue-600"
                       }`}
                     >
-                      {LISTING_TYPE_LABELS[type]?.th || type}
+                      {LISTING_TYPE_LABELS[type]?.[language as "th" | "en"] || LISTING_TYPE_LABELS[type]?.th || type}
                     </div>
                   </div>
 
@@ -117,3 +120,4 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
     </div>
   );
 }
+

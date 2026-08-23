@@ -124,7 +124,8 @@ export function ProfileInfoForm({
   score,
 }: ProfileInfoFormProps) {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isEn = language === "en";
   const [isLoading, setIsLoading] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
@@ -169,7 +170,7 @@ export function ProfileInfoForm({
 
   const handleTestLineNotification = async (lineUserId: string) => {
     if (!lineUserId || !lineUserId.trim()) {
-      toast.error("กรุณาระบุรหัสไอดีผู้ใช้ไลน์ (LINE User ID) ก่อนทำการทดสอบ");
+      toast.error(isEn ? "Please enter LINE User ID before testing." : "กรุณาระบุรหัสไอดีผู้ใช้ไลน์ (LINE User ID) ก่อนทำการทดสอบ");
       return;
     }
     setIsTestingLine(true);
@@ -178,11 +179,11 @@ export function ProfileInfoForm({
       if (result.success) {
         toast.success(result.message);
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาดในการส่งข้อความทดสอบ");
+        toast.error(result.message || (isEn ? "Failed to send test message" : "เกิดข้อผิดพลาดในการส่งข้อความทดสอบ"));
       }
     } catch (error: any) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการส่งข้อความทดสอบ");
+      toast.error(isEn ? "Failed to send test message" : "เกิดข้อผิดพลาดในการส่งข้อความทดสอบ");
     } finally {
       setIsTestingLine(false);
     }
@@ -209,10 +210,10 @@ export function ProfileInfoForm({
       formData.append("file", compressedFile);
       const result = await uploadSignatureAction(formData);
       setSignatureUrl(result.publicUrl);
-      toast.success("อัปโหลดลายเซ็นสำเร็จ (บีบอัดเรียบร้อย)");
+      toast.success(isEn ? "Signature uploaded and compressed successfully" : "อัปโหลดลายเซ็นสำเร็จ (บีบอัดเรียบร้อย)");
     } catch (error) {
       console.error(error);
-      toast.error("อัปโหลดลายเซ็นไม่สำเร็จ");
+      toast.error(isEn ? "Failed to upload signature" : "อัปโหลดลายเซ็นไม่สำเร็จ");
     } finally {
       setIsUploadingSignature(false);
     }
@@ -731,17 +732,17 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          วีแชต (WeChat ID)
+                          {isEn ? "WeChat ID" : "วีแชต (WeChat ID)"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          ไอดี WeChat สำหรับแสดงผลและให้ลูกค้าค้นหา
+                          {isEn ? "WeChat ID for display and client lookup" : "ไอดี WeChat สำหรับแสดงผลและให้ลูกค้าค้นหา"}
                         </FormDescription>
                       </div>
                       <FormControl>
                         <div className="relative">
                           <IoLogoWechat className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
                           <Input
-                            placeholder="ระบุ WeChat ID..."
+                            placeholder={isEn ? "Enter WeChat ID..." : "ระบุ WeChat ID..."}
                             className="pl-10.5 pr-10 h-11 rounded-xl border-emerald-100/50 focus-visible:ring-emerald-500/20 font-normal shadow-none transition-all"
                             {...field}
                           />
@@ -760,7 +761,7 @@ export function ProfileInfoForm({
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1.5">
                           <FormLabel className="text-[13px] font-medium text-slate-600">
-                            เทเลแกรม ไอดี (telegram id)
+                            {isEn ? "Telegram ID" : "เทเลแกรม ไอดี (telegram id)"}
                           </FormLabel>
                           <TooltipProvider>
                             <Tooltip>
@@ -769,8 +770,9 @@ export function ProfileInfoForm({
                               </TooltipTrigger>
                               <TooltipContent className="max-w-sm p-3 rounded-xl bg-slate-900 text-white border-none">
                                 <p className="text-xs leading-relaxed font-medium">
-                                  ใช้สำหรับเชื่อมต่อระบบ Back-office
-                                  เพื่อรับแจ้งเตือนและเช็คข้อมูลทรัพย์สิน
+                                  {isEn
+                                    ? "Used for connecting back-office notifications and property checks."
+                                    : "ใช้สำหรับเชื่อมต่อระบบ Back-office เพื่อรับแจ้งเตือนและเช็คข้อมูลทรัพย์สิน"}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -778,11 +780,11 @@ export function ProfileInfoForm({
                         </div>
                         <div className="flex items-center justify-between gap-2 overflow-hidden">
                           <FormDescription className="text-[11px] text-slate-400 truncate">
-                            เลขไอดี Telegram เพื่อรับการแจ้งเตือน
+                            {isEn ? "Telegram User ID for alert notifications" : "เลขไอดี Telegram เพื่อรับการแจ้งเตือน"}
                           </FormDescription>
                           <div className="flex items-center gap-1 shrink-0">
                             <span className="text-[10px] text-slate-300 font-medium">
-                              หา ID:
+                              {isEn ? "Find ID:" : "หา ID:"}
                             </span>
                             <a
                               href="https://t.me/userinfobot"
@@ -799,7 +801,7 @@ export function ProfileInfoForm({
                         <div className="relative">
                           <FaTelegram className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-sky-500" />
                           <Input
-                            placeholder="เช่น 123456789..."
+                            placeholder={isEn ? "e.g. 123456789..." : "เช่น 123456789..."}
                             className="pl-10.5 pr-10 h-11 rounded-xl border-sky-100/50 focus-visible:ring-sky-500/20 font-normal shadow-none transition-all"
                             {...field}
                           />
@@ -828,10 +830,10 @@ export function ProfileInfoForm({
             <section className="space-y-5">
               <div className="flex flex-col gap-1 pl-4 border-l-2 border-indigo-500/50">
                 <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-                  ข้อมูลบัญชีและภาษี
+                  {isEn ? "Accounting & Tax Information" : "ข้อมูลบัญชีและภาษี"}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  ข้อมูลสำคัญสำหรับการเบิกจ่ายและเอกสารทางภาษี
+                  {isEn ? "Essential details for disbursements and tax documents" : "ข้อมูลสำคัญสำหรับการเบิกจ่ายและเอกสารทางภาษี"}
                 </p>
               </div>
 
@@ -843,18 +845,19 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          เลขบัตรประชาชน/เลขผู้เสียภาษี
+                          {isEn ? "National ID / Tax ID" : "เลขบัตรประชาชน/เลขผู้เสียภาษี"}
                         </FormLabel>
                         <FormDescription className="text-[10px] text-slate-400 italic">
-                          ⚠️ เลขประจำตัวผู้เสียภาษี 13 หลัก
-                          สำหรับทำธุรกรรมและออกเอกสาร
+                          {isEn
+                            ? "⚠️ 13-digit Tax ID for transactions and legal documents"
+                            : "⚠️ เลขประจำตัวผู้เสียภาษี 13 หลัก สำหรับทำธุรกรรมและออกเอกสาร"}
                         </FormDescription>
                       </div>
                       <FormControl>
                         <div className="relative">
                           <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600" />
                           <Input
-                            placeholder="เลข 13 หลัก..."
+                            placeholder={isEn ? "13-digit ID..." : "เลข 13 หลัก..."}
                             className="pl-10.5 pr-10 h-11 rounded-xl border-emerald-50 focus-visible:ring-emerald-500/20 font-normal text-base shadow-none transition-all"
                             {...field}
                           />
@@ -884,10 +887,10 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          ธนาคารที่รับเงิน
+                          {isEn ? "Receiving Bank" : "ธนาคารที่รับเงิน"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          เลือกธนาคารมาตรฐาน หรือเลือก "อื่นๆ" หากไม่มีในรายการ
+                          {isEn ? "Select standard bank or choose 'Other' if not listed" : "เลือกธนาคารมาตรฐาน หรือเลือก \"อื่นๆ\" หากไม่มีในรายการ"}
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -896,21 +899,21 @@ export function ProfileInfoForm({
                             open={isBankPickerOpen}
                             className="sm:max-w-md!"
                             onOpenChange={setIsBankPickerOpen}
-                            title="เลือกธนาคาร"
+                            title={isEn ? "Select Bank" : "เลือกธนาคาร"}
                             trigger={
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="w-full justify-between h-11 rounded-xl border-indigo-50 focus:ring-indigo-500/20 font-normal shadow-none transition-all px-3.5 "
+                                className="w-full justify-between h-11 rounded-xl border-indigo-50 focus:ring-indigo-500/20 font-normal shadow-none transition-all px-3.5 cursor-pointer"
                               >
                                 <div className="flex items-center gap-2">
                                   <Globe className="h-4 w-4 text-indigo-500" />
                                   <span className="truncate">
                                     {field.value
-                                      ? banks.find(
-                                          (b) => b.code === field.value,
-                                        )?.name_th || field.value
-                                      : "เลือกธนาคาร..."}
+                                      ? (isEn
+                                          ? banks.find((b) => b.code === field.value)?.name_en || banks.find((b) => b.code === field.value)?.name_th || field.value
+                                          : banks.find((b) => b.code === field.value)?.name_th || field.value)
+                                      : (isEn ? "Select Bank..." : "เลือกธนาคาร...")}
                                   </span>
                                 </div>
                                 <ChevronDown className="h-4 w-4 opacity-50" />
@@ -922,7 +925,7 @@ export function ProfileInfoForm({
                                 <div className="relative">
                                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                   <Input
-                                    placeholder="ค้นหาชื่อธนาคาร..."
+                                    placeholder={isEn ? "Search bank name..." : "ค้นหาชื่อธนาคาร..."}
                                     value={bankSearch}
                                     onChange={(e) =>
                                       setBankSearch(e.target.value)
@@ -936,12 +939,9 @@ export function ProfileInfoForm({
                                   {banks
                                     .filter(
                                       (b) =>
-                                        b.name_th
-                                          .toLowerCase()
-                                          .includes(bankSearch.toLowerCase()) ||
-                                        b.code
-                                          .toLowerCase()
-                                          .includes(bankSearch.toLowerCase()),
+                                        (b.name_th && b.name_th.toLowerCase().includes(bankSearch.toLowerCase())) ||
+                                        (b.name_en && b.name_en.toLowerCase().includes(bankSearch.toLowerCase())) ||
+                                        b.code.toLowerCase().includes(bankSearch.toLowerCase()),
                                     )
                                     .map((bank) => (
                                       <button
@@ -958,7 +958,7 @@ export function ProfileInfoForm({
                                           }
                                         }}
                                         className={cn(
-                                          "flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors text-left group",
+                                          "flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer",
                                           field.value === bank.code &&
                                             "bg-indigo-50/50 ring-1 ring-indigo-100",
                                         )}
@@ -971,7 +971,7 @@ export function ProfileInfoForm({
                                                 "text-indigo-600",
                                             )}
                                           >
-                                            {bank.name_th}
+                                            {isEn && bank.name_en ? bank.name_en : bank.name_th}
                                           </span>
                                           <span className="text-[10px] text-slate-400 font-mono uppercase">
                                             {bank.code}
@@ -1004,12 +1004,12 @@ export function ProfileInfoForm({
                                       <FormControl>
                                         <Input
                                           {...otherField}
-                                          placeholder="ระบุชื่อธนาคารของคุณ..."
+                                          placeholder={isEn ? "Enter your bank name..." : "ระบุชื่อธนาคารของคุณ..."}
                                           className="h-11 rounded-xl border-orange-100 bg-orange-50/30 focus-visible:ring-orange-500/20 font-medium"
                                         />
                                       </FormControl>
                                       <FormDescription className="text-[10px] text-orange-600 font-medium px-1">
-                                        โปรดระบุชื่อธนาคารให้ชัดเจนเพื่อป้องกันความผิดพลาด
+                                        {isEn ? "Please enter a clear bank name to avoid disbursement errors" : "โปรดระบุชื่อธนาคารให้ชัดเจนเพื่อป้องกันความผิดพลาด"}
                                       </FormDescription>
                                       <FormMessage />
                                     </FormItem>
@@ -1032,17 +1032,17 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          เลขที่บัญชี (เฉพาะตัวเลข)
+                          {isEn ? "Account Number (Digits only)" : "เลขที่บัญชี (เฉพาะตัวเลข)"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          ระบุเฉพาะตัวเลข 10-12 หลัก โดยไม่ต้องใส่ขีด
+                          {isEn ? "Enter 10-12 digits without hyphens" : "ระบุเฉพาะตัวเลข 10-12 หลัก โดยไม่ต้องใส่ขีด"}
                         </FormDescription>
                       </div>
                       <FormControl>
                         <div className="relative">
                           <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input
-                            placeholder="เช่น 1234567890"
+                            placeholder={isEn ? "e.g. 1234567890" : "เช่น 1234567890"}
                             className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 font-mono font-bold tracking-wider shadow-none transition-all"
                             {...field}
                             onChange={(e) => {
@@ -1064,17 +1064,17 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          ชื่อบัญชีธนาคาร
+                          {isEn ? "Bank Account Name" : "ชื่อบัญชีธนาคาร"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          ชื่อ-นามสกุลที่ปรากฏในบัญชีธนาคาร
+                          {isEn ? "Full name as shown on bank book/account" : "ชื่อ-นามสกุลที่ปรากฏในบัญชีธนาคาร"}
                         </FormDescription>
                       </div>
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input
-                            placeholder="ระบุชื่อบัญชี..."
+                            placeholder={isEn ? "Enter account name..." : "ระบุชื่อบัญชี..."}
                             className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 font-normal shadow-none transition-all"
                             {...field}
                           />
@@ -1093,17 +1093,17 @@ export function ProfileInfoForm({
                   <FormItem className="space-y-2">
                     <div className="flex flex-col gap-0">
                       <FormLabel className="text-[13px] font-medium text-slate-600">
-                        ที่อยู่ออกเอกสารภาษี
+                        {isEn ? "Tax Invoice Address" : "ที่อยู่ออกเอกสารภาษี"}
                       </FormLabel>
                       <FormDescription className="text-[11px] text-slate-400">
-                        ที่อยู่จดทะเบียนสำหรับทำธุรกรรมและออกเอกสารภาษี
+                        {isEn ? "Registered address for tax invoices and transactions" : "ที่อยู่จดทะเบียนสำหรับทำธุรกรรมและออกเอกสารภาษี"}
                       </FormDescription>
                     </div>
                     <FormControl>
                       <div className="relative">
                         <Globe className="absolute left-3.5 top-4 h-4 w-4 text-slate-400" />
                         <Input
-                          placeholder="ระบุที่อยู่ตามทะเบียนบ้าน หรือที่อยู่จดทะเบียน..."
+                          placeholder={isEn ? "Enter registered address according to official ID/registration..." : "ระบุที่อยู่ตามทะเบียนบ้าน หรือที่อยู่จดทะเบียน..."}
                           className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-indigo-500/20 font-normal shadow-none transition-all"
                           {...field}
                         />
@@ -1131,10 +1131,10 @@ export function ProfileInfoForm({
             <section className="space-y-5">
               <div className="flex flex-col gap-1 pl-4 border-l-2 border-amber-500/50">
                 <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-                  ลายเซ็นดิจิทัล (Digital Signature)
+                  {isEn ? "Digital Signature" : "ลายเซ็นดิจิทัล (Digital Signature)"}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  สำหรับใช้ประทับตราในเอกสารสัญญาและใบจองอัตโนมัติ
+                  {isEn ? "Used for automated stamp on contracts and booking documents" : "สำหรับใช้ประทับตราในเอกสารสัญญาและใบจองอัตโนมัติ"}
                 </p>
               </div>
 
@@ -1152,7 +1152,7 @@ export function ProfileInfoForm({
                       />
                       <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <label className="cursor-pointer px-4 py-2 bg-white text-slate-900 rounded-xl text-xs font-bold shadow-xl">
-                          เปลี่ยนลายเซ็น
+                          {isEn ? "Change Signature" : "เปลี่ยนลายเซ็น"}
                           <input
                             type="file"
                             className="hidden"
@@ -1166,7 +1166,7 @@ export function ProfileInfoForm({
                     <label className="cursor-pointer flex flex-col items-center gap-2 text-slate-400 hover:text-blue-500 transition-colors">
                       <Signature className="h-8 w-8" />
                       <span className="text-[10px] font-bold uppercase tracking-wider">
-                        อัปโหลดลายเซ็น
+                        {isEn ? "Upload Signature" : "อัปโหลดลายเซ็น"}
                       </span>
                       <input
                         type="file"
@@ -1187,15 +1187,23 @@ export function ProfileInfoForm({
                 <div className="flex-1 space-y-3">
                   <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                    ข้อแนะนำการใช้งาน
+                    {isEn ? "Usage Recommendations" : "ข้อแนะนำการใช้งาน"}
                   </h4>
                   <ul className="text-xs text-slate-500 space-y-1.5 list-disc pl-4 font-medium">
                     <li>
-                      ควรใช้รูปภาพลายเซ็นที่มีพื้นหลังโปร่งใส (Transparent PNG)
+                      {isEn
+                        ? "Use signature image with transparent background (Transparent PNG)"
+                        : "ควรใช้รูปภาพลายเซ็นที่มีพื้นหลังโปร่งใส (Transparent PNG)"}
                     </li>
-                    <li>เซ็นด้วยปากกาสีดำหรือน้ำเงินเข้มบนกระดาษขาวสะอาด</li>
                     <li>
-                      ภาพที่ชัดเจนจะช่วยให้เอกสารสัญญาดูเป็นมืออาชีพมากขึ้น
+                      {isEn
+                        ? "Sign with black or dark blue pen on clean white paper"
+                        : "เซ็นด้วยปากกาสีดำหรือน้ำเงินเข้มบนกระดาษขาวสะอาด"}
+                    </li>
+                    <li>
+                      {isEn
+                        ? "Clear high-contrast images enhance professionalism on generated contracts"
+                        : "ภาพที่ชัดเจนจะช่วยให้เอกสารสัญญาดูเป็นมืออาชีพมากขึ้น"}
                     </li>
                   </ul>
                 </div>
@@ -1206,7 +1214,7 @@ export function ProfileInfoForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6 border-t border-slate-100">
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
-                  อีเมลล็อกอิน
+                  {isEn ? "Login Email" : "อีเมลล็อกอิน"}
                 </Label>
                 <div className="relative">
                   <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
@@ -1220,7 +1228,7 @@ export function ProfileInfoForm({
 
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">
-                  บทบาทปัจจุบัน
+                  {isEn ? "Current Role" : "บทบาทปัจจุบัน"}
                 </Label>
                 <div className="relative">
                   <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
@@ -1237,7 +1245,7 @@ export function ProfileInfoForm({
               <Button
                 type="submit"
                 className={cn(
-                  "w-full h-12 transition-all duration-300 font-bold text-sm rounded-xl relative overflow-hidden group shadow-none",
+                  "w-full h-12 transition-all duration-300 font-bold text-sm rounded-xl relative overflow-hidden group shadow-none cursor-pointer",
                   form.formState.isDirty
                     ? "bg-linear-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white duration-300 transition-all hover:scale-[1.005] active:scale-[0.98] shadow-lg shadow-blue-500/20"
                     : "bg-slate-100 text-slate-400 cursor-not-allowed",
@@ -1258,7 +1266,7 @@ export function ProfileInfoForm({
                       className="flex items-center gap-2"
                     >
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>กำลังอัปเดต...</span>
+                      <span>{isEn ? "Updating..." : "กำลังอัปเดต..."}</span>
                     </m.div>
                   ) : (
                     <m.div
@@ -1276,7 +1284,7 @@ export function ProfileInfoForm({
                             : "text-slate-400",
                         )}
                       />
-                      <span>บันทึกการเปลี่ยนแปลง</span>
+                      <span>{isEn ? "Save Changes" : "บันทึกการเปลี่ยนแปลง"}</span>
                     </m.div>
                   )}
                 </AnimatePresence>
@@ -1288,7 +1296,7 @@ export function ProfileInfoForm({
                   animate={{ opacity: 1 }}
                   className="text-[10px] text-center mt-3 text-amber-600 font-bold uppercase tracking-tight"
                 >
-                  ⚠️ มีการแก้ไขที่ยังไม่ได้บันทึก
+                  {isEn ? "⚠️ You have unsaved changes" : "⚠️ มีการแก้ไขที่ยังไม่ได้บันทึก"}
                 </m.p>
               )}
             </div>
@@ -1300,24 +1308,28 @@ export function ProfileInfoForm({
       <ResponsiveDialog
         open={showLeaveDialog}
         onOpenChange={setShowLeaveDialog}
-        title="ยังไม่ได้บันทึกข้อมูล"
-        description="คุณมีการแก้ไขข้อมูลที่ยังไม่ได้บันทึก หากออกจากหน้านี้ข้อมูลที่แก้ไขจะสูญหาย คุณต้องการยืนยันที่จะออกจากหน้านี้ใช่หรือไม่?"
+        title={isEn ? "Unsaved Changes" : "ยังไม่ได้บันทึกข้อมูล"}
+        description={
+          isEn
+            ? "You have unsaved changes. If you leave this page, your edits will be lost. Are you sure you want to leave?"
+            : "คุณมีการแก้ไขข้อมูลที่ยังไม่ได้บันทึก หากออกจากหน้านี้ข้อมูลที่แก้ไขจะสูญหาย คุณต้องการยืนยันที่จะออกจากหน้านี้ใช่หรือไม่?"
+        }
         className="max-w-sm!"
         footer={
           <div className="flex gap-3 w-full">
             <Button
               variant="outline"
-              className="flex-1 rounded-xl"
+              className="flex-1 rounded-xl cursor-pointer"
               onClick={() => setShowLeaveDialog(false)}
             >
-              แก้ไขต่อ
+              {isEn ? "Keep Editing" : "แก้ไขต่อ"}
             </Button>
             <Button
               variant="destructive"
-              className="flex-1 rounded-xl bg-red-600 hover:bg-red-700"
+              className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 cursor-pointer"
               onClick={confirmLeave}
             >
-              ออกจากหน้านี้
+              {isEn ? "Leave Page" : "ออกจากหน้านี้"}
             </Button>
           </div>
         }

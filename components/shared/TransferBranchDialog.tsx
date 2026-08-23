@@ -17,6 +17,7 @@ import { ArrowRightLeft, Building2, Loader2, Plus, AlertTriangle, Check } from "
 import { toast } from "sonner";
 import Link from "next/link";
 import { getTenantsAction } from "@/lib/actions/transfer-branch-action";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 type TransferBranchDialogProps = {
   open: boolean;
@@ -38,6 +39,9 @@ export function TransferBranchDialog({
   currentTenantId,
   onTransferAction,
 }: TransferBranchDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
@@ -53,10 +57,10 @@ export function TransferBranchDialog({
       setLoading(true);
       getTenantsAction()
         .then((data) => setTenants(data))
-        .catch(() => toast.error("ไม่สามารถโหลดรายชื่อสาขาได้"))
+        .catch(() => toast.error(isEn ? "Failed to load branch list" : "ไม่สามารถโหลดรายชื่อสาขาได้"))
         .finally(() => setLoading(false));
     }
-  }, [open]);
+  }, [open, isEn]);
 
   const currentTenant = tenants.find((t) => t.id === currentTenantId);
   const availableTenants = tenants.filter((t) => t.id !== currentTenantId);
@@ -67,14 +71,14 @@ export function TransferBranchDialog({
       try {
         const result = await onTransferAction(entityId, selectedTenantId);
         if (result.success) {
-          toast.success(result.message || "ย้ายสาขาเรียบร้อยแล้ว");
+          toast.success(result.message || (isEn ? "Transferred branch successfully" : "ย้ายสาขาเรียบร้อยแล้ว"));
           onOpenChangeAction(false);
           router.refresh();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
+          toast.error(result.message || (isEn ? "Transfer failed" : "เกิดข้อผิดพลาด"));
         }
       } catch {
-        toast.error("เกิดข้อผิดพลาดในการย้ายสาขา");
+        toast.error(isEn ? "Failed to transfer branch" : "เกิดข้อผิดพลาดในการย้ายสาขา");
       }
     });
   };
@@ -89,12 +93,20 @@ export function TransferBranchDialog({
           <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
             <ArrowRightLeft className="h-5 w-5 text-blue-600" />
           </div>
-          <span className="font-bold text-xl">ย้ายสาขา</span>
+          <span className="font-bold text-xl">{isEn ? "Transfer Branch" : "ย้ายสาขา"}</span>
         </div>
       }
       description={
         <span>
-          เลือกสาขาปลายทางสำหรับ <strong className="text-slate-900 leading-relaxed">"{entityName}"</strong>
+          {isEn ? (
+            <>
+              Select destination branch for <strong className="text-slate-900 leading-relaxed">"{entityName}"</strong>
+            </>
+          ) : (
+            <>
+              เลือกสาขาปลายทางสำหรับ <strong className="text-slate-900 leading-relaxed">"{entityName}"</strong>
+            </>
+          )}
         </span>
       }
       footer={
@@ -104,9 +116,9 @@ export function TransferBranchDialog({
               <Button
                 variant="ghost"
                 disabled={isPending}
-                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DrawerClose>
           ) : (
@@ -114,9 +126,9 @@ export function TransferBranchDialog({
               <Button
                 variant="ghost"
                 disabled={isPending}
-                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DialogClose>
           )}
@@ -124,17 +136,17 @@ export function TransferBranchDialog({
             <Button
               onClick={handleTransfer}
               disabled={!selectedTenantId || isPending}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 h-12 rounded-xl font-bold text-white shadow-lg shadow-blue-100 transition-all active:scale-95"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 h-12 rounded-xl font-bold text-white shadow-lg shadow-blue-100 transition-all active:scale-95 cursor-pointer"
             >
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  กำลังย้าย...
+                  {isEn ? "Transferring..." : "กำลังย้าย..."}
                 </>
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  ยืนยันการย้าย
+                  {isEn ? "Confirm Transfer" : "ยืนยันการย้าย"}
                 </>
               )}
             </Button>
@@ -146,13 +158,15 @@ export function TransferBranchDialog({
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">กำลังโหลดรายชื่อสาขา...</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              {isEn ? "Loading branches..." : "กำลังโหลดรายชื่อสาขา..."}
+            </p>
           </div>
         ) : (
           <>
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                สาขาปัจจุบัน
+                {isEn ? "Current Branch" : "สาขาปัจจุบัน"}
               </label>
               <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner-sm">
                 <Building2 className="h-5 w-5 text-slate-400 shrink-0" />
@@ -166,7 +180,7 @@ export function TransferBranchDialog({
                 ) : (
                   <span className="text-sm text-amber-600 font-bold flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4" />
-                    ยังไม่ได้กำหนดสาขา
+                    {isEn ? "Unassigned Branch" : "ยังไม่ได้กำหนดสาขา"}
                   </span>
                 )}
               </div>
@@ -179,34 +193,36 @@ export function TransferBranchDialog({
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-bold text-slate-800">
-                    ยังไม่มีสาขาอื่นในระบบ
+                    {isEn ? "No other branches in the system" : "ยังไม่มีสาขาอื่นในระบบ"}
                   </p>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    กรุณาสร้างสาขาเพิ่มเติมในหน้าตั้งค่าก่อนจึงจะสามารถย้ายข้อมูลได้
+                    {isEn
+                      ? "Please create additional branches in Settings before transferring data."
+                      : "กรุณาสร้างสาขาเพิ่มเติมในหน้าตั้งค่าก่อนจึงจะสามารถย้ายข้อมูลได้"}
                   </p>
                 </div>
                 <Button
                   variant="outline"
-                  className="h-10 rounded-xl border-amber-200 text-amber-700 bg-white hover:bg-amber-100 font-bold px-6"
+                  className="h-10 rounded-xl border-amber-200 text-amber-700 bg-white hover:bg-amber-100 font-bold px-6 cursor-pointer"
                   asChild
                 >
                   <Link href="/protected/settings/branches">
                     <Plus className="h-4 w-4 mr-2" />
-                    สร้างสาขาใหม่
+                    {isEn ? "Create New Branch" : "สร้างสาขาใหม่"}
                   </Link>
                 </Button>
               </div>
             ) : (
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                  ย้ายไปสาขาปลายทาง
+                  {isEn ? "Destination Branch" : "ย้ายไปสาขาปลายทาง"}
                 </label>
                 <Select
                   value={selectedTenantId}
                   onValueChange={setSelectedTenantId}
                 >
                   <SelectTrigger className="h-14 rounded-2xl border-slate-200 focus:ring-blue-500/10 shadow-sm font-bold text-slate-700">
-                    <SelectValue placeholder="ค้นหาและเลือกสาขา..." />
+                    <SelectValue placeholder={isEn ? "Search & select branch..." : "ค้นหาและเลือกสาขา..."} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-slate-200 shadow-xl p-2 h-[250px]">
                     {availableTenants.map((tenant) => (
@@ -227,3 +243,4 @@ export function TransferBranchDialog({
     </ResponsiveDialog>
   );
 }
+

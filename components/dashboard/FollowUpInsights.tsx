@@ -14,12 +14,51 @@ interface FollowUpInsightsProps {
   view?: string;
 }
 
+const stageLabelsEn: Record<string, string> = {
+  LEAD: "New Lead",
+  NEW_LEAD: "New Lead",
+  CONTACTED: "Contacted",
+  VIEWING: "Viewing",
+  APPOINTMENT: "Viewing",
+  NEGOTIATION: "Negotiation",
+  UNDER_OFFER: "Under Offer",
+  RESERVED: "Reserved",
+  CONTRACT: "Contract",
+  CLOSING: "Closing",
+  CLOSED_WON: "Closed Won",
+  QUALIFIED: "Qualified",
+  PROPOSAL: "Proposal",
+};
+
+const stageLabelsTh: Record<string, string> = {
+  LEAD: "ลีดใหม่",
+  NEW_LEAD: "ลีดใหม่",
+  CONTACTED: "ติดต่อแล้ว",
+  VIEWING: "นัดชมทรัพย์",
+  APPOINTMENT: "นัดชมทรัพย์",
+  NEGOTIATION: "เจรจาต่อรอง",
+  UNDER_OFFER: "กำลังเจรจา",
+  RESERVED: "วางมัดจำ/จอง",
+  CONTRACT: "ทำสัญญา",
+  CLOSING: "รอโอนกรรมสิทธิ์",
+  CLOSED_WON: "ปิดการขาย",
+  QUALIFIED: "ประเมินคุณสมบัติ",
+  PROPOSAL: "ยื่นข้อเสนอ",
+};
+
 export function FollowUpInsights({ leads = [], role, view = "personal" }: FollowUpInsightsProps) {
   const router = useRouter();
   const { language } = useLanguage();
   const isEn = language === "en";
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const isAdminView = (role === "ADMIN" || role === "MANAGER" || role === "OWNER") && view !== "personal";
+
+  const getStageLabel = (stage: string) => {
+    const key = stage.toUpperCase();
+    if (isEn) return stageLabelsEn[key] || stage;
+    return stageLabelsTh[key] || stage;
+  };
+
   return (
     <Card className="shadow-sm h-full border-orange-200 bg-orange-50/50">
       <CardHeader className="pb-2 px-4 sm:px-6">
@@ -44,7 +83,7 @@ export function FollowUpInsights({ leads = [], role, view = "personal" }: Follow
                   <p className="text-sm font-medium">{lead.name}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="secondary" className="text-[10px] h-5 px-1">
-                      {lead.stage}
+                      {getStageLabel(lead.stage)}
                     </Badge>
                     <span className="text-xs text-red-500 font-medium">
                       {isEn ? `Inactive for ${lead.daysQuiet} days` : `หายไป ${lead.daysQuiet} วัน`}

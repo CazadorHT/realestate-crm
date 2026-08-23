@@ -64,6 +64,7 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { FaAirbnb } from "react-icons/fa6";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface SpecialFeaturesSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
@@ -74,6 +75,8 @@ export function SpecialFeaturesSection({
   form: formProp,
   isReadOnly,
 }: SpecialFeaturesSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   
@@ -92,17 +95,17 @@ export function SpecialFeaturesSection({
           </div>
           <div>
             <h3 className="font-bold text-slate-800 text-base sm:text-lg">
-              คุณสมบัติพิเศษ
+              {isEn ? "Special Features" : "คุณสมบัติพิเศษ"}
             </h3>
             <p className="text-xs sm:text-sm text-slate-500">
-              ฟีเจอร์และจุดขายที่ใช้วางแผนการตลาด
+              {isEn ? "Marketing highlights and key property tags" : "ฟีเจอร์และจุดขายที่ใช้วางแผนการตลาด"}
             </p>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-6 sm:space-y-8 px-3 sm:px-6">
-        {/* Verified Listing - ปรับโฉมจาก Switch มาเป็นสไตล์จิ้มกล่องแบบ FeatureChip ชนิดเต็มความกว้าง */}
+        {/* Verified Listing */}
         <FormField
           control={form.control}
           name="verified"
@@ -129,19 +132,20 @@ export function SpecialFeaturesSection({
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div className="space-y-0.5 flex-1">
-                    {/* ใช้ flex และ justify-between เพื่อดันสถานะไปขวาสุด */}
                     <div className="flex items-center justify-between gap-2">
                       <span className={cn("text-base font-bold", isVerified ? "text-blue-700" : "text-slate-700")}>
                         Verified Listing
                       </span>
                       {isVerified && (
                         <span className="text-xs font-medium px-2 py-0.5 bg-blue-600 text-white rounded-full shrink-0">
-                          เปิดใช้งาน
+                          {isEn ? "Enabled" : "เปิดใช้งาน"}
                         </span>
                       )}
                     </div>
                     <p className={cn("text-xs leading-relaxed w-[85%]", isVerified ? "text-blue-600/80" : "text-slate-400")}>
-                      ตรวจสอบเอกสารสิทธิ์และสัญญากับทาง Agent แล้ว (ช่วยเพิ่มความน่าเชื่อถือและการเข้าถึงของลูกค้า)
+                      {isEn
+                        ? "Title deed and contract verified with agent (improves credibility and buyer reach)"
+                        : "ตรวจสอบเอกสารสิทธิ์และสัญญากับทาง Agent แล้ว (ช่วยเพิ่มความน่าเชื่อถือและการเข้าถึงของลูกค้า)"}
                     </p>
                   </div>
                 </button>
@@ -154,7 +158,7 @@ export function SpecialFeaturesSection({
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
             <UserCheck className="h-4 w-4" />
-            <span>กฎระเบียบและทางเลือก</span>
+            <span>{isEn ? "Rules & Conditions" : "กฎระเบียบและทางเลือก"}</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
@@ -168,10 +172,10 @@ export function SpecialFeaturesSection({
               name="is_foreigner_quota"
               label={
                 form.watch("listing_type") === "SALE"
-                  ? "โควต้าต่างชาติ (Foreigner Quota)"
+                  ? (isEn ? "Foreigner Quota" : "โควต้าต่างชาติ (Foreigner Quota)")
                   : form.watch("listing_type") === "RENT"
-                    ? "รับชาวต่างชาติ"
-                    : "โควต้าต่างชาติ / รับชาวต่างชาติ"
+                    ? (isEn ? "Foreigners Welcome" : "รับชาวต่างชาติ")
+                    : (isEn ? "Foreigner Quota / Welcome" : "โควต้าต่างชาติ / รับชาวต่างชาติ")
               }
               icon={Globe2}
               color="blue"
@@ -179,22 +183,26 @@ export function SpecialFeaturesSection({
             />
             <FeatureChip
               name="allow_smoking"
-              label="สูบบุหรี่ได้"
+              label={isEn ? "Smoking Allowed" : "สูบบุหรี่ได้"}
               icon={Cigarette}
               color="red"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="allow_airbnb"
-              label="รองรับ Airbnb"
+              label={isEn ? "Airbnb Friendly" : "รองรับ Airbnb"}
               icon={FaAirbnb}
               color="airbnb"
               disabled={isReadOnly}
-              title="ทรัพย์นี้อนุญาตให้นำไปปล่อยเช่าในรูปแบบ Airbnb หรือ Short-term Rental ได้"
+              title={
+                isEn
+                  ? "This property is permitted for Airbnb or short-term rentals"
+                  : "ทรัพย์นี้อนุญาตให้นำไปปล่อยเช่าในรูปแบบ Airbnb หรือ Short-term Rental ได้"
+              }
             />
             <FeatureChip
               name="is_selling_with_tenant"
-              label="ขายพร้อมผู้เช่า"
+              label={isEn ? "Tenanted / Tenancy Attached" : "ขายพร้อมผู้เช่า"}
               icon={UserCheck}
               color="amber"
               disabled={isReadOnly}
@@ -213,20 +221,24 @@ export function SpecialFeaturesSection({
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
             <MapPin className="h-4 w-4" />
-            <span>ทำเลและการเดินทาง</span>
+            <span>{isEn ? "Location & Transit" : "ทำเลและการเดินทาง"}</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
               name="is_cbd"
-              label="ย่านโซน CBD"
+              label={isEn ? "CBD Zone" : "ย่านโซน CBD"}
               icon={MapPin}
               color="indigo"
               disabled={isReadOnly}
-              title="ย่านศูนย์กลางธุรกิจ (Central Business District) แหล่งรวมออฟฟิศระดับเกรด A และการเดินทางที่สะดวกที่สุด"
+              title={
+                isEn
+                  ? "Central Business District: Prime Grade-A office locations with top transit access"
+                  : "ย่านศูนย์กลางธุรกิจ (Central Business District) แหล่งรวมออฟฟิศระดับเกรด A และการเดินทางที่สะดวกที่สุด"
+              }
             />
             <FeatureChip
               name="near_transit"
-              label="ใกล้รถไฟฟ้า"
+              label={isEn ? "Near Transit / BTS / MRT" : "ใกล้รถไฟฟ้า"}
               icon={TrainFront}
               color="blue"
               disabled={isReadOnly}
@@ -238,54 +250,54 @@ export function SpecialFeaturesSection({
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
             <Armchair className="h-4 w-4" />
-            <span>สภาพและเฟอร์นิเจอร์</span>
+            <span>{isEn ? "Condition & Furnishing" : "สภาพและเฟอร์นิเจอร์"}</span>
           </h4>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <FeatureChip
               name="is_renovated"
-              label="รีโนเวทใหม่"
+              label={isEn ? "Renovated" : "รีโนเวทใหม่"}
               icon={Hammer}
               color="emerald"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_corner_unit"
-              label="ห้องหัวมุม"
+              label={isEn ? "Corner Unit" : "ห้องหัวมุม"}
               icon={LayoutDashboard}
               color="purple"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_fully_furnished"
-              label="เฟอร์ฯ ครบ"
+              label={isEn ? "Fully Furnished" : "เฟอร์ฯ ครบ"}
               icon={Armchair}
               color="indigo"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_bare_shell"
-              label="ห้องเปล่า / พื้นที่เปล่า"
+              label={isEn ? "Bare Shell" : "ห้องเปล่า / พื้นที่เปล่า"}
               icon={BoxSelect}
               color="amber"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_fully_fitted"
-              label="กั้นห้องและแอร์ (Fully Fitted)"
+              label={isEn ? "Fully Fitted" : "กั้นห้องและแอร์ (Fully Fitted)"}
               icon={Layout}
               color="sky"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_never_lived_in"
-              label="มือหนึ่ง / ไม่เคยเข้าอยู่"
+              label={isEn ? "Brand New / Unoccupied" : "มือหนึ่ง / ไม่เคยเข้าอยู่"}
               icon={Gem}
               color="sky"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_high_floor"
-              label="ยูนิตชั้นสูง"
+              label={isEn ? "High Floor" : "ยูนิตชั้นสูง"}
               icon={ArrowUpCircle}
               color="indigo"
               disabled={isReadOnly}
@@ -299,7 +311,7 @@ export function SpecialFeaturesSection({
             />
             <FeatureChip
               name="has_private_pool"
-              label="สระส่วนตัว"
+              label={isEn ? "Private Pool" : "สระส่วนตัว"}
               icon={Waves}
               color="cyan"
               disabled={isReadOnly}
@@ -311,68 +323,68 @@ export function SpecialFeaturesSection({
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
             <CloudSun className="h-4 w-4" />
-            <span>วิวและบรรยากาศ</span>
+            <span>{isEn ? "View & Orientation" : "วิวและบรรยากาศ"}</span>
           </h4>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <FeatureChip
               name="has_garden_view"
-              label="วิวสวน"
+              label={isEn ? "Garden View" : "วิวสวน"}
               icon={TreePine}
               color="green"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_pool_view"
-              label="วิวสระ"
+              label={isEn ? "Pool View" : "วิวสระ"}
               icon={Waves}
               color="cyan"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_city_view"
-              label="วิวเมือง"
+              label={isEn ? "City View" : "วิวเมือง"}
               icon={Building2}
               color="violet"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_unblocked_view"
-              label="วิวไม่บล็อก"
+              label={isEn ? "Unblocked View" : "วิวไม่บล็อก"}
               icon={Scan}
               color="sky"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_river_view"
-              label="วิวแม่น้ำ"
+              label={isEn ? "River View" : "วิวแม่น้ำ"}
               icon={Waves}
               color="blue"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="facing_east"
-              label="ทิศตะวันออก (แดดเช้า/ไม่ร้อนบ่าย)"
+              label={isEn ? "East (Morning Sun)" : "ทิศตะวันออก (แดดเช้า/ไม่ร้อนบ่าย)"}
               icon={Compass}
               color="amber"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="facing_north"
-              label="ทิศเหนือ (ไม่ร้อน)"
+              label={isEn ? "North (Cool)" : "ทิศเหนือ (ไม่ร้อน)"}
               icon={Compass}
               color="blue"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="facing_south"
-              label="ทิศใต้ (ลมดี)"
+              label={isEn ? "South (Breezy)" : "ทิศใต้ (ลมดี)"}
               icon={Wind}
               color="teal"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="facing_west"
-              label="ทิศตก (วิวพระอาทิตย์ตก)"
+              label={isEn ? "West (Sunset View)" : "ทิศตก (วิวพระอาทิตย์ตก)"}
               icon={Sunset}
               color="orange"
               disabled={isReadOnly}
@@ -384,7 +396,7 @@ export function SpecialFeaturesSection({
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            <span>สำนักงานและอาคาร</span>
+            <span>{isEn ? "Building & Office Specs" : "สำนักงานและอาคาร"}</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
@@ -410,82 +422,90 @@ export function SpecialFeaturesSection({
             />
             <FeatureChip
               name="has_raised_floor"
-              label="พื้นยก"
+              label={isEn ? "Raised Floor" : "พื้นยก"}
               icon={Layers}
               color="sky"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_high_ceiling"
-              label="เพดานสูง"
+              label={isEn ? "High Ceiling" : "เพดานสูง"}
               icon={ArrowUpFromLine}
               color="indigo"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_column_free"
-              label="ไม่มีเสากลาง"
+              label={isEn ? "Column-Free" : "ไม่มีเสากลาง"}
               icon={Maximize}
               color="cyan"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_central_air"
-              label="แอร์รวม"
+              label={isEn ? "Central Air" : "แอร์รวม"}
               icon={Wind}
               color="teal"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_split_air"
-              label="แอร์แยก"
+              label={isEn ? "Split Air" : "แอร์แยก"}
               icon={Wind}
               color="cyan"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_247_access"
-              label="เข้า-ออก 24 ชม."
+              label={isEn ? "24/7 Access" : "เข้า-ออก 24 ชม."}
               icon={CheckCircle2}
               color="indigo"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_smart_home"
-              label="ระบบบ้านอัจฉริยะ"
+              label={isEn ? "Smart Automation" : "ระบบบ้านอัจฉริยะ"}
               icon={Cpu}
               color="purple"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_private_elevator"
-              label="ลิฟต์ส่วนตัว"
+              label={isEn ? "Private Elevator" : "ลิฟต์ส่วนตัว"}
               icon={ArrowUpFromLine}
               color="amber"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_handicapped_friendly"
-              label="รองรับผู้สูงอายุ/ผู้พิการ"
+              label={isEn ? "Wheelchair Accessible" : "รองรับผู้สูงอายุ/ผู้พิการ"}
               icon={Accessibility}
               color="emerald"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="is_green_building"
-              label="อาคารสีเขียว (Green Building)"
+              label={isEn ? "Green Building" : "อาคารสีเขียว (Green Building)"}
               icon={Leaf}
               color="green"
               disabled={isReadOnly}
-              title="อาคารประหยัดพลังงานหรือได้รับการรับรองมาตรฐาน LEED/TREES"
+              title={
+                isEn
+                  ? "Energy-efficient or LEED/TREES certified green building"
+                  : "อาคารประหยัดพลังงานหรือได้รับการรับรองมาตรฐาน LEED/TREES"
+              }
             />
             <FeatureChip
               name="has_flexible_lease"
-              label="สัญญาเช่ายืดหยุ่น"
+              label={isEn ? "Flexible Lease Terms" : "สัญญาเช่ายืดหยุ่น"}
               icon={CalendarRange}
               color="orange"
               disabled={isReadOnly}
-              title="เงื่อนไขการเช่าที่ยืดหยุ่นกว่าปกติ (เช่น สัญญาต่ำกว่า 3 ปี หรือ Break Clause)"
+              title={
+                isEn
+                  ? "Flexible leasing terms (e.g. leases under 3 years or break clauses)"
+                  : "เงื่อนไขการเช่าที่ยืดหยุ่นกว่าปกติ (เช่น สัญญาต่ำกว่า 3 ปี หรือ Break Clause)"
+              }
             />
           </div>
         </div>
@@ -494,7 +514,7 @@ export function SpecialFeaturesSection({
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
             <Wifi className="h-4 w-4" />
-            <span>อื่นๆ และบริการ</span>
+            <span>{isEn ? "Services & Utilities" : "อื่นๆ และบริการ"}</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
@@ -506,14 +526,14 @@ export function SpecialFeaturesSection({
             />
             <FeatureChip
               name="is_tax_registered"
-              label="จดทะเบียนภาษี/บริษัทได้"
+              label={isEn ? "Tax / Company Registration Allowed" : "จดทะเบียนภาษี/บริษัทได้"}
               icon={CheckCircle2}
               color="fuchsia"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_multi_parking"
-              label="จอดรถ > 1 คัน"
+              label={isEn ? "Multiple Parking Slots" : "จอดรถ > 1 คัน"}
               icon={CheckCircle2}
               color="blue"
               disabled={isReadOnly}
@@ -521,44 +541,44 @@ export function SpecialFeaturesSection({
           </div>
         </div>
 
-        {/* Group 6: Luxury / Premium (บ้านหรู / พูลวิลล่า / คอนโด) */}
+        {/* Group 6: Luxury / Premium */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
             <Gem className="h-4 w-4" />
-            <span>บ้านหรู / พูลวิลล่า / คอนโด</span>
+            <span>{isEn ? "Luxury & Villa Features" : "บ้านหรู / พูลวิลล่า / คอนโด"}</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
               name="has_large_kitchen"
-              label="ห้องครัวใหญ่"
+              label={isEn ? "Large Kitchen" : "ห้องครัวใหญ่"}
               icon={ChefHat}
               color="amber"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_western_kitchen"
-              label="ครัวฝรั่ง"
+              label={isEn ? "Western Kitchen" : "ครัวฝรั่ง"}
               icon={ChefHat}
               color="orange"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_separate_thai_kitchen"
-              label="ครัวไทยแยกส่วน"
+              label={isEn ? "Separate Thai Kitchen" : "ครัวไทยแยกส่วน"}
               icon={ChefHat}
               color="amber"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_bar_counter"
-              label="เคาท์เตอร์บาร์"
+              label={isEn ? "Bar Counter" : "เคาท์เตอร์บาร์"}
               icon={GlassWater}
               color="purple"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_bathtub"
-              label="อ่างแช่ตัว"
+              label={isEn ? "Bathtub" : "อ่างแช่ตัว"}
               icon={Bath}
               color="cyan"
               disabled={isReadOnly}
@@ -572,21 +592,21 @@ export function SpecialFeaturesSection({
             />
             <FeatureChip
               name="has_private_garden"
-              label="สวนส่วนตัว"
+              label={isEn ? "Private Garden" : "สวนส่วนตัว"}
               icon={Flower2}
               color="green"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_garage"
-              label="โรงจอดรถ (Garage)"
+              label={isEn ? "Garage" : "โรงจอดรถ (Garage)"}
               icon={Car}
               color="sky"
               disabled={isReadOnly}
             />
             <FeatureChip
               name="has_bbq_area"
-              label="พื้นที่ BBQ"
+              label={isEn ? "BBQ Area" : "พื้นที่ BBQ"}
               icon={Flame}
               color="orange"
               disabled={isReadOnly}
@@ -600,7 +620,7 @@ export function SpecialFeaturesSection({
             />
             <FeatureChip
               name="has_private_gym"
-              label="Gym ส่วนตัว"
+              label={isEn ? "Private Gym" : "Gym ส่วนตัว"}
               icon={Dumbbell}
               color="emerald"
               disabled={isReadOnly}

@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -100,32 +101,19 @@ export async function getOwnersAction(allBranches = false) {
 export async function getOwnerByIdAction(id: string) {
   const ctx = await requireAuthContext();
   assertStaff(ctx.role);
-
-  const config = await getSystemConfig();
-  const isMultiTenant = config.multi_tenant_enabled;
-
-  let query = ctx.supabase
+  const { data: owner, error } = await ctx.supabase
     .from("identities_v3")
     .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
     .eq("id", id)
     .eq("category", 2)
-    .eq("role", "OWNER");
-
-  if (isMultiTenant && ctx.tenantId) {
-    query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
-  }
-
-  const { data: owner, error } = await query.single();
+    .eq("role", "OWNER")
+    .single();
 
   if (error || !owner) {
-    console.error("Error fetching owner:", error);
-    throw new Error(mapDbError(error) || "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ");
+    const cookieStore = await cookies();
+    const isEn = (cookieStore.get("language")?.value || "th") === "en";
+    throw new Error(mapDbError(error) || (isEn ? "Requested owner not found" : "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ"));
   }
-
-  assertAuthenticated({
-    userId: ctx.user.id,
-    role: ctx.role,
-  });
 
   const social = (owner.social_links as Record<string, any>) || {};
 
@@ -145,43 +133,55 @@ export async function getOwnerByIdAction(id: string) {
   };
 }
 
-export async function createOwnerAction(input: CreateOwnerInput): Promise<{
-  success: boolean;
-  message: string;
-  id?: string;
-  code?: string;
-  duplicateId?: string;
-  duplicateName?: string;
-}> {
+export type OwnerFormValues = {
+  full_name: string;
+  phone?: string | null;
+  line_id?: string | null;
+  facebook_url?: string | null;
+  other_contact?: string | null;
+  created_by?: string | null;
+  updated_at?: string | null;
+  company_name?: string | null;
+  owner_type?: string | null;
+};
+
+export async function createOwnerAction(input: CreateOwnerInput) {
   try {
+    const cookieStore = await cookies();
+    const isEn = (cookieStore.get("language")?.value || "th") === "en";
+
     const validated = ownerSchema.parse(input);
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
-    
-    let targetTenantId = ctx.tenantId;
-    if (!targetTenantId) {
-      const config = await getSystemConfig();
-      targetTenantId = config.default_tenant_id ?? undefined;
+    const config = await getSystemConfig();
+    const isMultiTenant = config.multi_tenant_enabled;
+    const isAdminUser = ctx.role === "ADMIN";
+
+    let targetTenantId: string | null = null;
+    if (isMultiTenant) {
+      if (!isAdminUser && !ctx.tenantId) {
+        throw new Error("Tenant context required");
+      }
+      targetTenantId = ctx.tenantId || null;
     }
 
-    // ตรวจสอบเบอร์โทรศัพท์และ Line ID ซ้ำในระบบ
-    let duplicateQuery = ctx.supabase
+    let query = ctx.supabase
       .from("identities_v3")
       .select("id, display_name, phone, line_id")
       .eq("category", 2)
       .eq("role", "OWNER");
 
     if (targetTenantId) {
-      duplicateQuery = duplicateQuery.or(`tenant_id.eq.${targetTenantId},tenant_id.is.null`);
+      query = query.or(`tenant_id.eq.${targetTenantId},tenant_id.is.null`);
     } else {
-      duplicateQuery = duplicateQuery.is("tenant_id", null);
+      query = query.is("tenant_id", null);
     }
 
-    const { data: existingOwners } = await duplicateQuery;
+    const { data: existingOwners } = await query;
 
     if (existingOwners) {
-      const inputPhoneNormalized = validated.phone ? validated.phone.trim().replace(/[- ]/g, "") : null;
-      const inputLineNormalized = validated.line_id ? validated.line_id.trim().toLowerCase() : null;
+      const inputPhoneNormalized = validated.phone?.trim().replace(/[- ]/g, "");
+      const inputLineNormalized = validated.line_id?.trim().toLowerCase();
 
       for (const row of existingOwners) {
         const decryptedPhone = decrypt(row.phone);
@@ -190,11 +190,13 @@ export async function createOwnerAction(input: CreateOwnerInput): Promise<{
         if (inputPhoneNormalized && decryptedPhone) {
           const dbPhoneNormalized = decryptedPhone.trim().replace(/[- ]/g, "");
           if (dbPhoneNormalized === inputPhoneNormalized) {
-            const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
+            const ownerName = decrypt(row.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
             return {
               success: false,
               code: "DUPLICATE",
-              message: `เบอร์โทรศัพท์นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+              message: isEn
+                ? `This phone number is already registered in the system (Owner: K. ${ownerName})`
+                : `เบอร์โทรศัพท์นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
               duplicateId: row.id,
               duplicateName: ownerName,
             };
@@ -204,11 +206,13 @@ export async function createOwnerAction(input: CreateOwnerInput): Promise<{
         if (inputLineNormalized && decryptedLine) {
           const dbLineNormalized = decryptedLine.trim().toLowerCase();
           if (dbLineNormalized === inputLineNormalized) {
-            const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
+            const ownerName = decrypt(row.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
             return {
               success: false,
               code: "DUPLICATE",
-              message: `Line ID นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+              message: isEn
+                ? `This Line ID is already registered in the system (Owner: K. ${ownerName})`
+                : `Line ID นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
               duplicateId: row.id,
               duplicateName: ownerName,
             };
@@ -252,21 +256,30 @@ export async function createOwnerAction(input: CreateOwnerInput): Promise<{
     });
 
     revalidatePath("/protected/owners");
-    return { success: true, message: "เพิ่มเจ้าของสำเร็จ", id: owner.id };
+    return {
+      success: true,
+      message: isEn ? "Owner added successfully" : "เพิ่มเจ้าของสำเร็จ",
+      id: owner.id,
+    };
   } catch (err: unknown) {
     if ((err as any)?.name === "AuthzError" || (err as any)?.code === "AUTHZ_ERROR") return authzFail(err);
     console.error("createOwnerAction error:", err);
-    return { 
-      success: false, 
+    const cookieStore = await cookies();
+    const isEn = (cookieStore.get("language")?.value || "th") === "en";
+    return {
+      success: false,
       message: err instanceof z.ZodError 
         ? err.issues[0].message 
-        : mapDbError(err) || "ไม่สามารถสร้างข้อมูลเจ้าของทรัพย์ได้" 
+        : mapDbError(err) || (isEn ? "Failed to create owner" : "ไม่สามารถสร้างข้อมูลเจ้าของทรัพย์ได้"),
     };
   }
 }
 
 export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
   try {
+    const cookieStore = await cookies();
+    const isEn = (cookieStore.get("language")?.value || "th") === "en";
+
     const validated = ownerSchema.parse(input);
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
@@ -288,11 +301,11 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
       .single();
 
     if (findError || !existing) {
-      return { success: false, message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
+      return { success: false, message: isEn ? "Requested owner not found" : "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
     }
 
     if (isMultiTenant && existing.tenant_id && ctx.tenantId && existing.tenant_id !== ctx.tenantId && !isAdminUser) {
-      return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขข้อมูลของสาขาอื่น" };
+      return { success: false, message: isEn ? "You do not have permission to edit records from other branches" : "คุณไม่มีสิทธิ์แก้ไขข้อมูลของสาขาอื่น" };
     }
 
     const existingSocial = (existing.social_links as Record<string, any>) || {};
@@ -300,7 +313,7 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
     const isOwner = existingSocial.created_by === ctx.user.id;
 
     if (!isOwner && !canBypassOwnership) {
-      let creatorName = "ไม่ทราบชื่อผู้สร้าง";
+      let creatorName = isEn ? "Unknown creator" : "ไม่ทราบชื่อผู้สร้าง";
       if (existingSocial.created_by) {
         const { data: creator } = await ctx.supabase
           .from("identities_v3")
@@ -311,7 +324,12 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
           creatorName = decrypt(creator.display_name) || creator.display_name;
         }
       }
-      return { success: false, message: `คุณไม่มีสิทธิ์แก้ไขข้อมูลเจ้าของทรัพย์สินของผู้อื่น (สิทธิ์การจัดการเป็นของ ${creatorName})` };
+      return {
+        success: false,
+        message: isEn
+          ? `You do not have permission to edit another user's owner (Managed by ${creatorName})`
+          : `คุณไม่มีสิทธิ์แก้ไขข้อมูลเจ้าของทรัพย์สินของผู้อื่น (สิทธิ์การจัดการเป็นของ ${creatorName})`,
+      };
     }
     const socialLinks = {
       ...existingSocial,
@@ -351,7 +369,7 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
 
     revalidatePath("/protected/owners");
     revalidatePath("/protected/properties");
-    return { success: true, message: "บันทึกข้อมูลสำเร็จ" };
+    return { success: true, message: isEn ? "Owner updated successfully" : "บันทึกข้อมูลสำเร็จ" };
   } catch (err: unknown) {
     if ((err as any)?.name === "AuthzError" || (err as any)?.code === "AUTHZ_ERROR") return authzFail(err);
     console.error("updateOwnerAction error:", err);
@@ -366,6 +384,9 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
 
 export async function deleteOwnerAction(id: string) {
   try {
+    const cookieStore = await cookies();
+    const isEn = (cookieStore.get("language")?.value || "th") === "en";
+
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
     const config = await getSystemConfig();
@@ -386,11 +407,11 @@ export async function deleteOwnerAction(id: string) {
       .single();
 
     if (findError || !existing) {
-      return { success: false, message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
+      return { success: false, message: isEn ? "Requested owner not found" : "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
     }
 
     if (isMultiTenant && existing.tenant_id && ctx.tenantId && existing.tenant_id !== ctx.tenantId && !isAdminUser) {
-      return { success: false, message: "คุณไม่มีสิทธิ์ลบข้อมูลของสาขาอื่น" };
+      return { success: false, message: isEn ? "You do not have permission to delete records from other branches" : "คุณไม่มีสิทธิ์ลบข้อมูลของสาขาอื่น" };
     }
 
     const existingSocial = (existing.social_links as Record<string, any>) || {};
@@ -398,7 +419,7 @@ export async function deleteOwnerAction(id: string) {
     const isOwner = existingSocial.created_by === ctx.user.id;
 
     if (!isOwner && !canBypassOwnership) {
-      let creatorName = "ไม่ทราบชื่อผู้สร้าง";
+      let creatorName = isEn ? "Unknown creator" : "ไม่ทราบชื่อผู้สร้าง";
       if (existingSocial.created_by) {
         const { data: creator } = await ctx.supabase
           .from("identities_v3")
@@ -409,7 +430,12 @@ export async function deleteOwnerAction(id: string) {
           creatorName = decrypt(creator.display_name) || creator.display_name;
         }
       }
-      return { success: false, message: `คุณไม่มีสิทธิ์ลบข้อมูลเจ้าของทรัพย์สินของผู้อื่น (สิทธิ์การจัดการเป็นของ ${creatorName})` };
+      return {
+        success: false,
+        message: isEn
+          ? `You do not have permission to delete another user's owner (Managed by ${creatorName})`
+          : `คุณไม่มีสิทธิ์ลบข้อมูลเจ้าของทรัพย์สินของผู้อื่น (สิทธิ์การจัดการเป็นของ ${creatorName})`,
+      };
     }
 
     const { count, error: countErr } = await ctx.supabase
@@ -421,7 +447,9 @@ export async function deleteOwnerAction(id: string) {
     if (count && count > 0) {
       return { 
         success: false, 
-        message: `ไม่สามารถลบเจ้าของท่านนี้ได้ เนื่องจากยังมีทรัพย์สินอีก ${count} รายการที่ผูกพันอยู่ กรุณาลบหรือย้ายเจ้าของทรัพย์สินก่อนดำเนินการ` 
+        message: isEn
+          ? `Cannot delete this owner because there are ${count} properties attached. Please reassign or delete the properties first.`
+          : `ไม่สามารถลบเจ้าของท่านนี้ได้ เนื่องจากยังมีทรัพย์สินอีก ${count} รายการที่ผูกพันอยู่ กรุณาลบหรือย้ายเจ้าของทรัพย์สินก่อนดำเนินการ` 
       };
     }
 
@@ -458,7 +486,7 @@ export async function deleteOwnerAction(id: string) {
 
     revalidatePath("/protected/owners");
     revalidatePath("/protected/properties");
-    return { success: true, message: "ลบเจ้าของสำเร็จ" };
+    return { success: true, message: isEn ? "Owner deleted successfully" : "ลบเจ้าของสำเร็จ" };
   } catch (err: unknown) {
     if ((err as any)?.name === "AuthzError" || (err as any)?.code === "AUTHZ_ERROR") return authzFail(err);
     return { success: false, message: mapDbError(err) };
@@ -570,7 +598,9 @@ export async function checkOwnerDuplicateAction(phone?: string | null, lineId?: 
         if (inputPhoneNormalized && decryptedPhone) {
           const dbPhoneNormalized = decryptedPhone.trim().replace(/[- ]/g, "");
           if (dbPhoneNormalized === inputPhoneNormalized) {
-            const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
+            const cookieStore = await cookies();
+            const isEn = (cookieStore.get("language")?.value || "th") === "en";
+            const ownerName = decrypt(row.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
             return {
               success: true,
               isDuplicate: true,
@@ -584,7 +614,9 @@ export async function checkOwnerDuplicateAction(phone?: string | null, lineId?: 
         if (inputLineNormalized && decryptedLine) {
           const dbLineNormalized = decryptedLine.trim().toLowerCase();
           if (dbLineNormalized === inputLineNormalized) {
-            const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
+            const cookieStore = await cookies();
+            const isEn = (cookieStore.get("language")?.value || "th") === "en";
+            const ownerName = decrypt(row.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
             return {
               success: true,
               isDuplicate: true,
@@ -600,7 +632,9 @@ export async function checkOwnerDuplicateAction(phone?: string | null, lineId?: 
     return { success: true, isDuplicate: false };
   } catch (err) {
     console.error("checkOwnerDuplicateAction error:", err);
-    return { success: false, error: "เกิดข้อผิดพลาดในการตรวจสอบข้อมูลซ้ำ" };
+    const cookieStore = await cookies();
+    const isEn = (cookieStore.get("language")?.value || "th") === "en";
+    return { success: false, error: isEn ? "Error checking duplicates" : "เกิดข้อผิดพลาดในการตรวจสอบข้อมูลซ้ำ" };
   }
 }
 

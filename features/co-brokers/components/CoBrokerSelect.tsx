@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { CreateCoBrokerDialog } from "./CreateCoBrokerDialog";
 import { UserPlus, Search, Building2, Phone, Star, Plus, Trash2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface CoBrokerBroker {
   id: string;
@@ -43,6 +44,9 @@ export const CoBrokerSelect = ({
   fieldName = "co_broker_id",
   multiFieldName = "co_broker_ids",
 }: CoBrokerSelectProps) => {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const formContext = useFormContext();
   const form = formProp || formContext;
   const [brokers, setBrokers] = useState<CoBrokerBroker[]>([]);
@@ -123,7 +127,7 @@ export const CoBrokerSelect = ({
             <div className="flex items-center justify-between">
               <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight flex items-center gap-2">
                 <Search className="w-3.5 h-3.5 text-blue-600" />
-                เลือก Co-broker / พาร์ทเนอร์ (เลือกได้มากกว่า 1 คน)
+                {isEn ? "Select Co-broker / Partner (Multiple allowed)" : "เลือก Co-broker / พาร์ทเนอร์ (เลือกได้มากกว่า 1 คน)"}
               </FormLabel>
 
               <div className="flex items-center gap-2">
@@ -132,10 +136,10 @@ export const CoBrokerSelect = ({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsAddingNew(true)}
-                  className="h-8 px-2.5 rounded-lg border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-600 hover:text-white transition-all font-semibold text-xs"
+                  className="h-8 px-2.5 rounded-lg border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-600 hover:text-white transition-all font-semibold text-xs cursor-pointer"
                 >
                   <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                  เพิ่มคู่ค้าใหม่
+                  {isEn ? "Add New Partner" : "เพิ่มคู่ค้าใหม่"}
                 </Button>
 
                 <Button
@@ -143,10 +147,10 @@ export const CoBrokerSelect = ({
                   variant="outline"
                   size="sm"
                   onClick={handleAdd}
-                  className="h-8 px-3 rounded-lg border-slate-200 bg-white text-slate-700 hover:bg-slate-900 hover:text-white transition-all font-semibold text-xs"
+                  className="h-8 px-3 rounded-lg border-slate-200 bg-white text-slate-700 hover:bg-slate-900 hover:text-white transition-all font-semibold text-xs cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5 mr-1" />
-                  เพิ่ม Co-broker
+                  {isEn ? "Add Co-broker" : "เพิ่ม Co-broker"}
                 </Button>
               </div>
             </div>
@@ -155,15 +159,15 @@ export const CoBrokerSelect = ({
             {selectedIds.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-5 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 text-slate-400 space-y-2">
                 <Users className="w-8 h-8 opacity-40" />
-                <p className="text-xs text-slate-500 font-medium">ยังไม่ได้เลือก Co-broker</p>
+                <p className="text-xs text-slate-500 font-medium">{isEn ? "No Co-broker selected" : "ยังไม่ได้เลือก Co-broker"}</p>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={handleAdd}
-                  className="h-8 text-blue-600 hover:bg-blue-50 font-semibold text-xs"
+                  className="h-8 text-blue-600 hover:bg-blue-50 font-semibold text-xs cursor-pointer"
                 >
-                  + คลิกเพื่อเลือกรายชื่อ Co-broker
+                  {isEn ? "+ Click to select Co-broker" : "+ คลิกเพื่อเลือกรายชื่อ Co-broker"}
                 </Button>
               </div>
             ) : (
@@ -185,7 +189,7 @@ export const CoBrokerSelect = ({
                             : "bg-slate-100 text-slate-600 self-start sm:self-center"
                         }
                       >
-                        {isPrimary ? "หลัก" : `คนที่ ${index + 1}`}
+                        {isPrimary ? (isEn ? "Primary" : "หลัก") : (isEn ? `Partner #${index + 1}` : `คนที่ ${index + 1}`)}
                       </Badge>
 
                       <div className="flex-1 min-w-0">
@@ -194,16 +198,16 @@ export const CoBrokerSelect = ({
                           onValueChange={(val) => handleBrokerChange(index, val)}
                         >
                           <FormControl>
-                            <SelectTrigger className="h-10! rounded-xl bg-white border-slate-200">
-                              <SelectValue placeholder="เลือกรายชื่อพาร์ทเนอร์..." />
+                            <SelectTrigger className="h-10! rounded-xl bg-white border-slate-200 cursor-pointer">
+                              <SelectValue placeholder={isEn ? "Select partner..." : "เลือกรายชื่อพาร์ทเนอร์..."} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-white rounded-xl shadow-xl max-h-[280px]">
-                            <SelectItem value="NONE" className="italic text-slate-400">
-                              {isLoading ? "กำลังโหลดรายชื่อ..." : "-- ยกเลิกแถวนี้ --"}
+                            <SelectItem value="NONE" className="italic text-slate-400 cursor-pointer">
+                              {isLoading ? (isEn ? "Loading partners..." : "กำลังโหลดรายชื่อ...") : (isEn ? "-- Remove this row --" : "-- ยกเลิกแถวนี้ --")}
                             </SelectItem>
                             {brokers.map((b) => (
-                              <SelectItem key={b.id} value={b.id} className="py-2.5">
+                              <SelectItem key={b.id} value={b.id} className="py-2.5 cursor-pointer">
                                 <div className="flex flex-col gap-0.5">
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold text-sm text-slate-800">
@@ -262,7 +266,7 @@ export const CoBrokerSelect = ({
                         variant="ghost"
                         size="icon"
                         onClick={() => handleRemove(index)}
-                        className="h-10 w-10 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+                        className="h-10 w-10 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -296,3 +300,4 @@ export const CoBrokerSelect = ({
     />
   );
 };
+

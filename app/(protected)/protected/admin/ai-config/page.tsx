@@ -43,8 +43,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function AiConfigPage() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [initialConfig, setInitialConfig] = useState<AiModelConfig | null>(
@@ -80,10 +84,10 @@ export default function AiConfigPage() {
     setSaving(true);
     const result = await updateAiModelConfig(config);
     if (result.success) {
-      toast.success("บันทึกการตั้งค่า AI สำเร็จ");
+      toast.success(isEn ? "AI settings saved successfully" : "บันทึกการตั้งค่า AI สำเร็จ");
       setInitialConfig(config); // Update initial config to match current
     } else {
-      toast.error("บันทึกไม่สำเร็จ: " + result.message);
+      toast.error(isEn ? `Failed to save: ${result.message}` : `บันทึกไม่สำเร็จ: ${result.message}`);
     }
     setSaving(false);
   };
@@ -97,7 +101,7 @@ export default function AiConfigPage() {
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
           <p className="text-slate-500 font-medium animate-pulse">
-            กำลังโหลดการตั้งค่า...
+            {isEn ? "Loading AI configuration..." : "กำลังโหลดการตั้งค่า..."}
           </p>
         </div>
       </div>
@@ -107,16 +111,27 @@ export default function AiConfigPage() {
   return (
     <div className="p-4 md:p-8 max-w-screen-2xl mx-auto space-y-6 md:space-y-10">
       <SettingsHeader 
-        title={<>จัดการโมเดล <span className="bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">AI Infrastructure</span></>}
-        description="เลือกโมเดล AI ที่เหมาะสมที่สุดสำหรับแต่ละฟีเจอร์ เพื่อความคุ้มค่าและประสิทธิภาพสูงสุด"
+        title={
+          <>
+            {isEn ? "Manage " : "จัดการโมเดล "}
+            <span className="bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              AI Infrastructure
+            </span>
+          </>
+        }
+        description={
+          isEn
+            ? "Configure the most suitable AI models for each feature to maximize cost efficiency and performance"
+            : "เลือกโมเดล AI ที่เหมาะสมที่สุดสำหรับแต่ละฟีเจอร์ เพื่อความคุ้มค่าและประสิทธิภาพสูงสุด"
+        }
         subPath={[
           { label: "System Control", href: "/protected/settings?tab=ai" },
-          { label: "AI Model Config (จัดการโมเดล AI)" }
+          { label: isEn ? "AI Model Config" : "AI Model Config (จัดการโมเดล AI)" }
         ]}
         actions={
           <Button
             size="lg"
-            className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed h-12 px-8 font-bold text-base rounded-2xl transition-all active:scale-95"
+            className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed h-12 px-8 font-bold text-base rounded-2xl transition-all active:scale-95 cursor-pointer"
             onClick={handleSave}
             disabled={saving || !hasChanged}
           >
@@ -125,7 +140,7 @@ export default function AiConfigPage() {
             ) : (
               <Save className="w-5 h-5 mr-2" />
             )}
-            บันทึกการตั้งค่า
+            {isEn ? "Save Changes" : "บันทึกการตั้งค่า"}
           </Button>
         }
       />
@@ -134,48 +149,73 @@ export default function AiConfigPage() {
         {/* Chatbot Config */}
         <ConfigCard
           icon={<Bot className="w-6 h-6 text-blue-600" />}
-          title="AI Chatbot (Customer Inquiries)"
-          description="โมเดลสำหรับตอบคำถามลูกค้าหน้าเว็บไซต์และวิเคราะห์ความต้องการเบื้องต้น"
+          title={isEn ? "AI Chatbot (Customer Inquiries)" : "AI Chatbot (Customer Inquiries)"}
+          description={
+            isEn
+              ? "Model used for website customer inquiries and initial client intent analysis"
+              : "โมเดลสำหรับตอบคำถามลูกค้าหน้าเว็บไซต์และวิเคราะห์ความต้องการเบื้องต้น"
+          }
           value={config.chatbot_model}
           onChange={(val) => setConfig({ ...config, chatbot_model: val })}
+          isEn={isEn}
         />
 
         {/* Blog Generator Config */}
         <ConfigCard
           icon={<FileText className="w-6 h-6 text-pink-600" />}
-          title="Content & Blog Generator"
-          description="โมเดลสำหรับสร้างบทความอสังหาริมทรัพย์และเขียนคำบรรยายทรัพย์ให้โดดเด่น"
+          title={isEn ? "Content & Blog Generator" : "Content & Blog Generator"}
+          description={
+            isEn
+              ? "Model used for generating real estate articles and crafting compelling descriptions"
+              : "โมเดลสำหรับสร้างบทความอสังหาริมทรัพย์และเขียนคำบรรยายทรัพย์ให้โดดเด่น"
+          }
           value={config.blog_generator_model}
           onChange={(val) =>
             setConfig({ ...config, blog_generator_model: val })
           }
+          isEn={isEn}
         />
 
         {/* Translation Config */}
         <ConfigCard
           icon={<Languages className="w-6 h-6 text-emerald-600" />}
-          title="Global Translation Fix"
-          description="โมเดลสำหรับแปลรายละเอียดทรัพย์เป็นภาษาอังกฤษและภาษาจีน (EN/CN)"
+          title={isEn ? "Global Translation Fix" : "Global Translation Fix"}
+          description={
+            isEn
+              ? "Model used for translating property listings into English and Chinese (EN/CN)"
+              : "โมเดลสำหรับแปลรายละเอียดทรัพย์เป็นภาษาอังกฤษและภาษาจีน (EN/CN)"
+          }
           value={config.translation_model}
           onChange={(val) => setConfig({ ...config, translation_model: val })}
+          isEn={isEn}
         />
 
         {/* Description Config */}
         <ConfigCard
           icon={<Zap className="w-6 h-6 text-orange-600" />}
-          title="Property Description Generator"
-          description="โมเดลสำหรับคิดคำพรรณนาทรัพย์สินให้ดึงดูดใจผู้ซื้อตามข้อมูลทางเทคนิค"
+          title={isEn ? "Property Description Generator" : "Property Description Generator"}
+          description={
+            isEn
+              ? "Model for generating persuasive listing descriptions from technical specifications"
+              : "โมเดลสำหรับคิดคำพรรณนาทรัพย์สินให้ดึงดูดใจผู้ซื้อตามข้อมูลทางเทคนิค"
+          }
           value={config.description_model}
           onChange={(val) => setConfig({ ...config, description_model: val })}
+          isEn={isEn}
         />
 
         {/* Lead Analysis Config */}
         <ConfigCard
           icon={<Sparkles className="w-6 h-6 text-violet-600" />}
-          title="Lead Summary Assistant"
-          description="โมเดลสำหรับสรุปพฤติกรรมและความต้องการของลูกค้า (Leads) จากประวัติกิจกรรม"
+          title={isEn ? "Lead Summary Assistant" : "Lead Summary Assistant"}
+          description={
+            isEn
+              ? "Model for synthesizing client behavior and intent from CRM activity timelines"
+              : "โมเดลสำหรับสรุปพฤติกรรมและความต้องการของลูกค้า (Leads) จากประวัติกิจกรรม"
+          }
           value={config.lead_model}
           onChange={(val) => setConfig({ ...config, lead_model: val })}
+          isEn={isEn}
         />
       </div>
 
@@ -187,13 +227,23 @@ export default function AiConfigPage() {
           </div>
           <div className="space-y-1">
             <h4 className="font-bold text-slate-900">
-              เกร็ดความรู้เรื่อง Quota 💡
+              {isEn ? "Quota Insights 💡" : "เกร็ดความรู้เรื่อง Quota 💡"}
             </h4>
             <p className="text-sm text-slate-600 leading-relaxed">
-              <strong className="text-indigo-600">Gemini 3.1 Flash-Lite</strong> เป็นรุ่นที่แนะนำที่สุด
-              เพราะโควต้าฟรีให้สูงถึง <span className="font-bold text-emerald-600 underline">500 ครั้ง/วัน</span> (RPD) 
-              ในขณะที่รุ่นอื่นให้เพียง 20 ครั้ง/วัน เท่านั้น หากต้องการงานที่ไหลลื่นและประหยัด 
-              ควรตั้งค่ารุ่น Flash-Lite เป็นหลักในทุกบริการครับ
+              {isEn ? (
+                <>
+                  <strong className="text-indigo-600">Gemini 3.1 Flash-Lite</strong> is the most recommended model
+                  as it provides up to <span className="font-bold text-emerald-600 underline">500 requests/day</span> (RPD) 
+                  on the free tier, whereas other models provide 20 requests/day.
+                </>
+              ) : (
+                <>
+                  <strong className="text-indigo-600">Gemini 3.1 Flash-Lite</strong> เป็นรุ่นที่แนะนำที่สุด
+                  เพราะโควต้าฟรีให้สูงถึง <span className="font-bold text-emerald-600 underline">500 ครั้ง/วัน</span> (RPD) 
+                  ในขณะที่รุ่นอื่นให้เพียง 20 ครั้ง/วัน เท่านั้น หากต้องการงานที่ไหลลื่นและประหยัด 
+                  ควรตั้งค่ารุ่น Flash-Lite เป็นหลักในทุกบริการครับ
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -204,18 +254,30 @@ export default function AiConfigPage() {
           </div>
           <div className="space-y-2">
             <h4 className="font-bold text-amber-900">
-              วิธีเช็คว่า Model ไหน "เต็ม" 🚩
+              {isEn ? "How to check Rate Limits 🚩" : "วิธีเช็คว่า Model ไหน \"เต็ม\" 🚩"}
             </h4>
             <p className="text-[13px] md:text-sm text-amber-800 leading-relaxed">
-              หากใช้งานแล้วเจอข้อความ <strong>"[RATE_LIMIT] โควต้าเต็ม"</strong>{" "}
-              แสดงว่ารุ่นนั้นถึงขีดจำกัดชั่วคราว:
+              {isEn ? (
+                <>
+                  If you encounter <strong>"[RATE_LIMIT] Quota Exceeded"</strong>, that model has hit its temporary limit:
+                </>
+              ) : (
+                <>
+                  หากใช้งานแล้วเจอข้อความ <strong>"[RATE_LIMIT] โควต้าเต็ม"</strong>{" "}
+                  แสดงว่ารุ่นนั้นถึงขีดจำกัดชั่วคราว:
+                </>
+              )}
             </p>
             <ul className="text-[11px] md:text-xs text-amber-700 space-y-1.5 ml-4 list-disc font-medium">
               <li>
-                ตรวจสอบ <strong>AI Monitor</strong> เพื่อดู Error (Code 429) ย้อนหลัง
+                {isEn ? "Check AI Monitor to view past Error (Code 429) logs" : "ตรวจสอบ AI Monitor เพื่อดู Error (Code 429) ย้อนหลัง"}
               </li>
-              <li>ทางแก้: สลับไปใช้ <strong>Flash-Lite</strong> (หากยังไม่ได้ใช้) หรือสลับไปรุ่น 1.5 Flash</li>
-              <li>หากเต็มทุกรุ่น: แนะนำให้เพิ่ม <strong>API Key</strong> อีก 1 ชุดในไฟล์ .env ครับ</li>
+              <li>
+                {isEn ? "Solution: Switch to Flash-Lite (if not yet used) or 1.5 Flash" : "ทางแก้: สลับไปใช้ Flash-Lite (หากยังไม่ได้ใช้) หรือสลับไปรุ่น 1.5 Flash"}
+              </li>
+              <li>
+                {isEn ? "If all models are exhausted, consider adding another API Key in .env" : "หากเต็มทุกรุ่น: แนะนำให้เพิ่ม API Key อีก 1 ชุดในไฟล์ .env ครับ"}
+              </li>
             </ul>
           </div>
         </div>
@@ -230,16 +292,15 @@ function ConfigCard({
   description,
   value,
   onChange,
+  isEn,
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
   value: AiModelChoice;
   onChange: (val: AiModelChoice) => void;
+  isEn: boolean;
 }) {
-  const selectedInfo = MODEL_INFO[value] || MODEL_INFO["gemini-flash-lite-latest"];
-  const Icon = selectedInfo.icon || Zap;
-
   return (
     <Card className="border-slate-100 shadow-xl shadow-slate-200/50 rounded-2xl md:rounded-3xl overflow-hidden group">
       <CardHeader className="pb-4 p-5 md:p-6">
@@ -270,9 +331,9 @@ function ConfigCard({
                 type="button"
                 onClick={() => onChange(model.id as AiModelChoice)}
                 className={cn(
-                  "relative flex flex-col items-start p-4 md:p-5 rounded-2xl border-2 text-left transition-all duration-300 group",
+                  "relative flex flex-col items-start p-4 md:p-5 rounded-2xl border-2 text-left transition-all duration-300 group cursor-pointer",
                   isSelected
-                    ? "border-indigo-600 bg-indigo-500 shadow-md ring-4 ring-indigo-500/10  "
+                    ? "border-indigo-600 bg-indigo-500 shadow-md ring-4 ring-indigo-500/10"
                     : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm",
                 )}
               >
@@ -288,7 +349,7 @@ function ConfigCard({
                 {/* Selected Indicator */}
                 {isSelected && (
                   <div className="absolute top-3 right-3">
-                    <CheckCircle2 className={cn("w-5 h-5",isSelected ? "text-white" : "text-indigo-600")} />
+                    <CheckCircle2 className={cn("w-5 h-5", isSelected ? "text-white" : "text-indigo-600")} />
                   </div>
                 )}
 
@@ -301,12 +362,12 @@ function ConfigCard({
                   >
                     <ModelIcon className={cn("w-5 h-5", model.color)} />
                   </div>
-                  <span className={cn("font-bold text-slate-900 text-sm md:text-base leading-tight",isSelected ? "text-white" : "text-slate-900")}>
+                  <span className={cn("font-bold text-slate-900 text-sm md:text-base leading-tight", isSelected ? "text-white" : "text-slate-900")}>
                     {model.label}
                   </span>
                 </div>
 
-                <p className={cn("text-[11px] md:text-xs text-slate-500 font-medium leading-relaxed line-clamp-2",isSelected ? "text-white" : "text-slate-500")}>
+                <p className={cn("text-[11px] md:text-xs text-slate-500 font-medium leading-relaxed line-clamp-2", isSelected ? "text-white" : "text-slate-500")}>
                   {model.description}
                 </p>
 
@@ -324,16 +385,20 @@ function ConfigCard({
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[280px] p-3 bg-slate-900 text-white border-slate-800 shadow-xl">
                         <div className="space-y-2">
-                          <p className="font-bold text-xs border-b border-white/10 pb-1">รายละเอียดโควต้า & ราคา</p>
+                          <p className="font-bold text-xs border-b border-white/10 pb-1">
+                            {isEn ? "Quota & Pricing Details" : "รายละเอียดโควต้า & ราคา"}
+                          </p>
                           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
-                            <span className="text-white/60">ราคา (Input):</span>
+                            <span className="text-white/60">{isEn ? "Input Price:" : "ราคา (Input):"}</span>
                             <span>{model.id.includes('lite') ? '$0.25' : model.id.includes('pro') ? '$1.25' : '$0.30'} / 1M Tokens</span>
-                            <span className="text-white/60">โควต้าฟรี (RPD):</span>
-                            <span className="text-emerald-400 font-bold">{model.id === 'gemini-flash-lite-latest' ? '500' : '20-50'} ครั้ง/วัน</span>
-                            <span className="text-white/60">ความเร็ว (RPM):</span>
-                            <span>{model.id === 'gemini-flash-lite-latest' ? '15' : '2-5'} ครั้ง/นาที</span>
+                            <span className="text-white/60">{isEn ? "Free Quota (RPD):" : "โควต้าฟรี (RPD):"}</span>
+                            <span className="text-emerald-400 font-bold">{model.id === 'gemini-flash-lite-latest' ? '500' : '20-50'} {isEn ? "req/day" : "ครั้ง/วัน"}</span>
+                            <span className="text-white/60">{isEn ? "Speed (RPM):" : "ความเร็ว (RPM):"}</span>
+                            <span>{model.id === 'gemini-flash-lite-latest' ? '15' : '2-5'} {isEn ? "req/min" : "ครั้ง/นาที"}</span>
                           </div>
-                          <p className="text-[9px] text-white/40 italic pt-1">* ข้อมูลโดยประมาณจากหน้า Rate Limit</p>
+                          <p className="text-[9px] text-white/40 italic pt-1">
+                            {isEn ? "* Estimated figures from Rate Limit docs" : "* ข้อมูลโดยประมาณจากหน้า Rate Limit"}
+                          </p>
                         </div>
                       </TooltipContent>
                     </Tooltip>
@@ -364,3 +429,4 @@ function ConfigCard({
     </Card>
   );
 }
+

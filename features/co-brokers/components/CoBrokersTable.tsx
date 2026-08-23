@@ -18,6 +18,7 @@ import {
 } from "../actions";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { useTenant } from "@/components/providers/TenantProvider";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { 
@@ -53,12 +54,15 @@ import {
 
 import { CoBroker } from "../schema";
 
-const RATING_LABELS: Record<number, string> = {
-  5: "ดีเยี่ยม/ปิดดีลบ่อย",
-  4: "ดีมาก/คุยง่าย",
-  3: "มาตรฐาน",
-  2: "ต้องระวัง/ส่งงานช้า",
-  1: "Blacklist/ไม่แนะนำ",
+const getRatingLabel = (ratingNum: number, isEn: boolean): string => {
+  switch (ratingNum) {
+    case 5: return isEn ? "Excellent / Frequent Closer" : "ดีเยี่ยม/ปิดดีลบ่อย";
+    case 4: return isEn ? "Great / Responsive" : "ดีมาก/คุยง่าย";
+    case 3: return isEn ? "Standard" : "มาตรฐาน";
+    case 2: return isEn ? "Caution / Slow Delivery" : "ต้องระวัง/ส่งงานช้า";
+    case 1: return isEn ? "Blacklist / Not Recommended" : "Blacklist/ไม่แนะนำ";
+    default: return "";
+  }
 };
 
 interface CoBrokersTableProps {
@@ -80,6 +84,9 @@ export function CoBrokersTable({
   onEdit,
   hasActiveFilters = false
 }: CoBrokersTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const { activeTenant } = useTenant();
   const role = activeTenant?.userRole;
   const isAdmin = role === "ADMIN";
@@ -101,28 +108,31 @@ export function CoBrokersTable({
   }, [selectedIds, onSelectionChange]);
 
   const handleDelete = async (id: string, name: string) => {
-    const actionText = isTrash ? "ลบถาวร" : "ย้ายลงถังขยะ";
-    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการ${actionText}ของ "${name}"?`)) return;
+    const actionText = isTrash ? (isEn ? "permanently delete" : "ลบถาวร") : (isEn ? "move to trash" : "ย้ายลงถังขยะ");
+    const confirmPrompt = isEn 
+      ? `Are you sure you want to ${actionText} "${name}"?` 
+      : `คุณแน่ใจหรือไม่ว่าต้องการ${actionText}ของ "${name}"?`;
+    if (!confirm(confirmPrompt)) return;
 
     const res = isTrash 
       ? await permanentlyDeleteCoBrokerAction(id)
       : await deleteCoBrokerAction(id);
 
     if (res.success) {
-      toast.success(`${actionText}เรียบร้อยแล้ว`);
+      toast.success(isEn ? "Action completed successfully" : `${isTrash ? "ลบถาวร" : "ย้ายลงถังขยะ"}เรียบร้อยแล้ว`);
       onUpdate();
     } else {
-      toast.error(typeof res.error === 'string' ? res.error : (res.error as any)?.message || "เกิดข้อผิดพลาด");
+      toast.error(typeof res.error === 'string' ? res.error : (res.error as any)?.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
 
   const handleRestore = async (id: string) => {
     const res = await restoreCoBrokerAction(id);
     if (res.success) {
-      toast.success("กู้คืนข้อมูลเรียบร้อยแล้ว");
+      toast.success(isEn ? "Partner restored successfully" : "กู้คืนข้อมูลเรียบร้อยแล้ว");
       onUpdate();
     } else {
-      toast.error(typeof res.error === 'string' ? res.error : (res.error as any)?.message || "เกิดข้อผิดพลาด");
+      toast.error(typeof res.error === 'string' ? res.error : (res.error as any)?.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
 
@@ -137,11 +147,11 @@ export function CoBrokersTable({
               className={isPartialSelected ? "opacity-50" : ""}
             />
           </TableHead>
-          <TableHead className="w-[250px]">ชื่อคู่ค้า / บริษัท</TableHead>
-          <TableHead>เรตติ้ง</TableHead>
-          <TableHead>พื้นที่เชี่ยวชาญ</TableHead>
-          <TableHead>เบอร์โทรศัพท์</TableHead>
-          <TableHead className="text-right pr-4">จัดการ</TableHead>
+          <TableHead className="w-[250px]">{isEn ? "Partner / Company" : "ชื่อคู่ค้า / บริษัท"}</TableHead>
+          <TableHead>{isEn ? "Rating" : "เรตติ้ง"}</TableHead>
+          <TableHead>{isEn ? "Specialized Areas" : "พื้นที่เชี่ยวชาญ"}</TableHead>
+          <TableHead>{isEn ? "Phone" : "เบอร์โทรศัพท์"}</TableHead>
+          <TableHead className="text-right pr-4">{isEn ? "Actions" : "จัดการ"}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -159,13 +169,13 @@ export function CoBrokersTable({
                     <div className="space-y-2 max-w-md">
                     <h3 className="text-2xl font-semibold text-slate-800">
                         {hasActiveFilters
-                        ? "ไม่พบคู่ค้าที่ค้นหา"
-                        : "ยังไม่มีชื่อคู่ค้าในระบบ"}
+                        ? (isEn ? "No partners match your search" : "ไม่พบคู่ค้าที่ค้นหา")
+                        : (isEn ? "No partners in system yet" : "ยังไม่มีชื่อคู่ค้าในระบบ")}
                     </h3>
                     <p className="text-slate-500 font-medium leading-relaxed">
                         {hasActiveFilters
-                        ? "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่นเพื่อให้ได้ผลลัพธ์ที่ต้องการ"
-                        : "เริ่มต้นเพิ่มชื่อคู่ค้าหรือเอเยนต์เครือข่ายรายแรกของคุณ เพื่อขยายฐานธุรกิจอสังหาฯ"}
+                        ? (isEn ? "Try adjusting your filters or search terms." : "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่นเพื่อให้ได้ผลลัพธ์ที่ต้องการ")
+                        : (isEn ? "Start by adding your first network partner or agent to expand your business." : "เริ่มต้นเพิ่มชื่อคู่ค้าหรือเอเยนต์เครือข่ายรายแรกของคุณ เพื่อขยายฐานธุรกิจอสังหาฯ")}
                     </p>
                     </div>
                 </div>
@@ -210,7 +220,7 @@ export function CoBrokersTable({
                     </div>
                     <span className="text-xs text-muted-foreground flex items-center mt-1">
                       <Building2 className="h-3 w-3 mr-1" />
-                      {broker.company_name || "อิสระ / ไม่ระบุ"}
+                      {broker.company_name || (isEn ? "Independent / Unspecified" : "อิสระ / ไม่ระบุ")}
                     </span>
                   </div>
                 </TableCell>
@@ -225,28 +235,25 @@ export function CoBrokersTable({
                       </TooltipTrigger>
                       <TooltipContent className="p-3 bg-slate-900 text-slate-100 border-slate-800 shadow-xl rounded-lg w-52">
                         <div className="space-y-1.5">
-                          <p className="font-semibold text-xs text-slate-400 mb-1">เกณฑ์การให้คะแนน</p>
-                          {Object.entries(RATING_LABELS)
-                            .reverse()
-                            .map(([ratingNum, label]) => {
-                              const num = parseInt(ratingNum);
-                              const isCurrent = (broker.rating ?? 0) === num;
-                              return (
-                                <div
-                                  key={ratingNum}
-                                  className={cn(
-                                    "flex items-center text-[11px] justify-between py-0.5 px-1 rounded transition-colors",
-                                    isCurrent ? "bg-amber-500/10 text-amber-400 font-medium" : "text-slate-300"
-                                  )}
-                                >
-                                  <div className="flex items-center space-x-1.5">
-                                    <Star className={cn("h-3 w-3", isCurrent ? "text-amber-400 fill-amber-400" : "text-slate-500")} />
-                                    <span>{ratingNum}</span>
-                                  </div>
-                                  <span className="text-slate-400 text-right">{label}</span>
+                          <p className="font-semibold text-xs text-slate-400 mb-1">{isEn ? "Rating Criteria" : "เกณฑ์การให้คะแนน"}</p>
+                          {[5, 4, 3, 2, 1].map((ratingNum) => {
+                            const isCurrent = (broker.rating ?? 0) === ratingNum;
+                            return (
+                              <div
+                                key={ratingNum}
+                                className={cn(
+                                  "flex items-center text-[11px] justify-between py-0.5 px-1 rounded transition-colors",
+                                  isCurrent ? "bg-amber-500/10 text-amber-400 font-medium" : "text-slate-300"
+                                )}
+                              >
+                                <div className="flex items-center space-x-1.5">
+                                  <Star className={cn("h-3 w-3", isCurrent ? "text-amber-400 fill-amber-400" : "text-slate-500")} />
+                                  <span>{ratingNum}</span>
                                 </div>
-                              );
-                            })}
+                                <span className="text-slate-400 text-right">{getRatingLabel(ratingNum, isEn)}</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </TooltipContent>
                     </Tooltip>
@@ -275,41 +282,41 @@ export function CoBrokersTable({
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[180px]">
-                      <DropdownMenuLabel>การจัดการ</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => onViewPerformance(broker)}>
+                      <DropdownMenuLabel>{isEn ? "Actions" : "การจัดการ"}</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => onViewPerformance(broker)} className="cursor-pointer">
                         <TrendingUp className="mr-2 h-4 w-4 text-blue-500" />
-                        ดูยอดขาย & ผลงาน
+                        {isEn ? "View Performance" : "ดูยอดขาย & ผลงาน"}
                       </DropdownMenuItem>
                       {!isTrash && (
-                        <DropdownMenuItem onClick={() => onEdit(broker)}>
+                        <DropdownMenuItem onClick={() => onEdit(broker)} className="cursor-pointer">
                           <Pencil className="mr-2 h-4 w-4 text-indigo-500" />
-                          แก้ไขข้อมูล
+                          {isEn ? "Edit Details" : "แก้ไขข้อมูล"}
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
                       
                       {isTrash ? (
                         <>
-                          <DropdownMenuItem onClick={() => handleRestore(broker.id)}>
+                          <DropdownMenuItem onClick={() => handleRestore(broker.id)} className="cursor-pointer">
                             <RotateCcw className="mr-2 h-4 w-4 text-emerald-500" />
-                            กู้คืนข้อมูล
+                            {isEn ? "Restore" : "กู้คืนข้อมูล"}
                           </DropdownMenuItem>
                           {isAdmin && (
-                            <DropdownMenuItem onClick={() => handleDelete(broker.id, broker.name)} className="text-red-600">
+                            <DropdownMenuItem onClick={() => handleDelete(broker.id, broker.name)} className="text-red-600 cursor-pointer">
                               <Trash2 className="mr-2 h-4 w-4" />
-                              ลบถาวร
+                              {isEn ? "Permanently Delete" : "ลบถาวร"}
                             </DropdownMenuItem>
                           )}
                         </>
                       ) : (
-                        <DropdownMenuItem onClick={() => handleDelete(broker.id, broker.name)} className="text-red-600">
+                        <DropdownMenuItem onClick={() => handleDelete(broker.id, broker.name)} className="text-red-600 cursor-pointer">
                           <Trash2 className="mr-2 h-4 w-4" />
-                          ย้ายลงถังขยะ
+                          {isEn ? "Move to Trash" : "ย้ายลงถังขยะ"}
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
@@ -323,3 +330,4 @@ export function CoBrokersTable({
     </Table>
   );
 }
+

@@ -29,6 +29,7 @@ import { ProvinceSelector } from "./ProvinceSelector";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { type PopularArea } from "./PopularAreasTable";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 type PopularAreaInput = z.infer<typeof popularAreaSchema>;
 
@@ -45,6 +46,9 @@ export function PopularAreaForm({
   onCancel,
   saveAction,
 }: PopularAreaFormProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isPending, setIsPending] = useState(false);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [activeTab, setActiveTab] = useState("th");
@@ -88,13 +92,13 @@ export function PopularAreaForm({
     try {
       const result = await saveAction(values);
       if (result.success) {
-        toast.success(result.message);
+        toast.success(result.message || (isEn ? "Area saved successfully" : "บันทึกข้อมูลสำเร็จ"));
         onSuccess();
       } else {
-        toast.error(result.message);
+        toast.error(result.message || (isEn ? "Failed to save area" : "ไม่สามารถบันทึกข้อมูลได้"));
       }
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } catch {
+      toast.error(isEn ? "An error occurred while saving data" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setIsPending(false);
     }
@@ -106,7 +110,7 @@ export function PopularAreaForm({
     const province = form.getValues("province");
 
     if (!name) {
-      toast.error("กรุณากรอกชื่อภาษาไทยก่อนสร้างเนื้อหาด้วย AI");
+      toast.error(isEn ? "Please enter Thai name first before generating with AI." : "กรุณากรอกชื่อภาษาไทยก่อนสร้างเนื้อหาด้วย AI");
       return;
     }
 
@@ -148,13 +152,13 @@ export function PopularAreaForm({
         
         // Auto mark as AI draft for review
         form.setValue("is_ai_generated", true, { shouldDirty: true });
-        toast.success("สร้างข้อมูลย่านและ SEO ด้วย AI สำเร็จแล้ว! กรุณาตรวจสอบความถูกต้องก่อนบันทึก");
+        toast.success(isEn ? "AI successfully generated area and SEO content! Please review before saving." : "สร้างข้อมูลย่านและ SEO ด้วย AI สำเร็จแล้ว! กรุณาตรวจสอบความถูกต้องก่อนบันทึก");
       } else {
-        toast.error(res.message || "ไม่สามารถติดต่อ AI ได้");
+        toast.error(res.message || (isEn ? "Failed to contact AI service" : "ไม่สามารถติดต่อ AI ได้"));
       }
     } catch (error) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดจากระบบเชื่อมต่อ AI");
+      toast.error(isEn ? "Error connecting to AI system" : "เกิดข้อผิดพลาดจากระบบเชื่อมต่อ AI");
     } finally {
       setIsGeneratingAi(false);
     }
@@ -166,7 +170,7 @@ export function PopularAreaForm({
     else if (errors.name_cn) setActiveTab("cn");
     else if (errors.name_ru) setActiveTab("ru");
 
-    toast.error("กรุณาตรวจสอบข้อมูลในแท็บที่ระบุ");
+    toast.error(isEn ? "Please review errors in the specified tabs." : "กรุณาตรวจสอบข้อมูลในแท็บที่ระบุ");
   };
 
   const { errors } = form.formState;
@@ -189,7 +193,7 @@ export function PopularAreaForm({
                 <MapPin className="h-4 w-4" />
               </div>
               <h3 className="text-sm font-bold text-slate-700">
-                ข้อมูลพื้นฐาน
+                {isEn ? "Basic Information" : "ข้อมูลพื้นฐาน"}
               </h3>
             </div>
 
@@ -198,7 +202,9 @@ export function PopularAreaForm({
               name="province"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-bold text-slate-700 text-xs">จังหวัด</FormLabel>
+                  <FormLabel className="font-bold text-slate-700 text-xs">
+                    {isEn ? "Province" : "จังหวัด"}
+                  </FormLabel>
                   <FormControl>
                     <ProvinceSelector
                       value={field.value}
@@ -215,10 +221,12 @@ export function PopularAreaForm({
               name="slug"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-bold text-slate-700 text-xs">URL Slug (สำหรับทำ SEO)</FormLabel>
+                  <FormLabel className="font-bold text-slate-700 text-xs">
+                    {isEn ? "URL Slug (For SEO)" : "URL Slug (สำหรับทำ SEO)"}
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="เช่น sukhumvit"
+                      placeholder={isEn ? "e.g. sukhumvit" : "เช่น sukhumvit"}
                       {...field}
                       value={field.value ?? ""}
                       className="h-10 rounded-xl border-slate-200 text-xs font-semibold"
@@ -237,7 +245,7 @@ export function PopularAreaForm({
                   <FormItem>
                     <FormLabel className="font-bold flex items-center gap-2 text-slate-700 text-xs">
                       <ImageIcon className="h-4 w-4 text-slate-400" />
-                      รูปภาพทำเล (Cover)
+                      {isEn ? "Cover Image" : "รูปภาพทำเล (Cover)"}
                     </FormLabel>
                     <FormControl>
                       <SiteAssetUploader
@@ -256,24 +264,26 @@ export function PopularAreaForm({
             {/* AI Generator Assistant & Review Flag */}
             <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl space-y-3.5 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800">ช่วยเขียนด้วย AI (Gemini)</span>
+                <span className="text-xs font-bold text-slate-800">
+                  {isEn ? "AI Writer (Gemini)" : "ช่วยเขียนด้วย AI (Gemini)"}
+                </span>
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
                   disabled={isGeneratingAi || !form.watch("name")}
                   onClick={handleGenerateAiContent}
-                  className="h-8 text-[11px] font-bold text-indigo-600! border-indigo-200 bg-white hover:bg-indigo-50 shrink-0 transition-all"
+                  className="h-8 text-[11px] font-bold text-indigo-600! border-indigo-200 bg-white hover:bg-indigo-50 shrink-0 transition-all cursor-pointer"
                 >
                   {isGeneratingAi ? (
                     <>
                       <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      กำลังร่าง...
+                      {isEn ? "Drafting..." : "กำลังร่าง..."}
                     </>
                   ) : (
                     <>
                       <Sparkles className="mr-1.5 h-3.5 w-3.5 text-indigo-500 animate-pulse" />
-                      สร้าง 4 ภาษา
+                      {isEn ? "Generate 4 Languages" : "สร้าง 4 ภาษา"}
                     </>
                   )}
                 </Button>
@@ -284,16 +294,18 @@ export function PopularAreaForm({
                   <div className="flex items-start gap-2">
                     <span className="shrink-0 text-base">⚠️</span>
                     <span>
-                      ข้อมูลคำอธิบายย่านนี้ถูกสร้างโดย AI กรุณาตรวจทานและกดยืนยันอนุมัติความถูกต้องก่อนบันทึก
+                      {isEn
+                        ? "This description was generated by AI. Please review and approve accuracy before saving."
+                        : "ข้อมูลคำอธิบายย่านนี้ถูกสร้างโดย AI กรุณาตรวจทานและกดยืนยันอนุมัติความถูกต้องก่อนบันทึก"}
                     </span>
                   </div>
                   <Button
                     type="button"
                     size="sm"
                     onClick={() => form.setValue("is_ai_generated", false, { shouldDirty: true })}
-                    className="w-full h-7 mt-1 text-[10px] bg-amber-600 hover:bg-amber-700 text-white border-0 font-bold rounded-lg transition-colors"
+                    className="w-full h-7 mt-1 text-[10px] bg-amber-600 hover:bg-amber-700 text-white border-0 font-bold rounded-lg transition-colors cursor-pointer"
                   >
-                    ตรวจสอบและอนุมัติเนื้อหาแล้ว
+                    {isEn ? "Reviewed & Approved" : "ตรวจสอบและอนุมัติเนื้อหาแล้ว"}
                   </Button>
                 </div>
               )}
@@ -307,7 +319,7 @@ export function PopularAreaForm({
                 <Globe className="h-4 w-4" />
               </div>
               <h3 className="text-sm font-bold text-slate-700">
-                เนื้อหาแบบแยกภาษา & SEO
+                {isEn ? "Multilingual & SEO Content" : "เนื้อหาแบบแยกภาษา & SEO"}
               </h3>
             </div>
 
@@ -319,7 +331,7 @@ export function PopularAreaForm({
               <TabsList className="grid grid-cols-4 bg-slate-100/60 p-1 rounded-xl">
                 <TabsTrigger
                   value="th"
-                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs relative flex items-center justify-center gap-2 text-xs"
+                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs relative flex items-center justify-center gap-2 text-xs cursor-pointer"
                 >
                   <span className="fi fi-th h-3 w-4 rounded-sm shadow-xs shrink-0" />
                   TH
@@ -329,7 +341,7 @@ export function PopularAreaForm({
                 </TabsTrigger>
                 <TabsTrigger
                   value="en"
-                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs relative flex items-center justify-center gap-2 text-xs"
+                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs relative flex items-center justify-center gap-2 text-xs cursor-pointer"
                 >
                   <span className="fi fi-us h-3 w-4 rounded-sm shadow-xs shrink-0" />
                   EN
@@ -339,7 +351,7 @@ export function PopularAreaForm({
                 </TabsTrigger>
                 <TabsTrigger
                   value="cn"
-                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs relative flex items-center justify-center gap-2 text-xs"
+                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs relative flex items-center justify-center gap-2 text-xs cursor-pointer"
                 >
                   <span className="fi fi-cn h-3 w-4 rounded-sm shadow-xs shrink-0" />
                   CN
@@ -349,7 +361,7 @@ export function PopularAreaForm({
                 </TabsTrigger>
                 <TabsTrigger
                   value="ru"
-                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs relative flex items-center justify-center gap-2 text-xs"
+                  className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-xs relative flex items-center justify-center gap-2 text-xs cursor-pointer"
                 >
                   <span className="fi fi-ru h-3 w-4 rounded-sm shadow-xs shrink-0" />
                   RU
@@ -370,11 +382,11 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        ชื่อภาษาไทย *
+                        {isEn ? "Thai Name *" : "ชื่อภาษาไทย *"}
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="เช่น สุขุมวิท, ทองหล่อ"
+                          placeholder={isEn ? "e.g. สุขุมวิท, ทองหล่อ" : "เช่น สุขุมวิท, ทองหล่อ"}
                           {...field}
                           value={field.value ?? ""}
                           className="h-10 rounded-xl border-slate-200 text-xs font-semibold"
@@ -391,11 +403,11 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        ข้อมูลบรรยายทำเล (ไทย)
+                        {isEn ? "Area Description (Thai)" : "ข้อมูลบรรยายทำเล (ไทย)"}
                       </FormLabel>
                       <FormControl>
                         <textarea
-                          placeholder="อธิบายสิ่งน่าสนใจ ไลฟ์สไตล์การอยู่อาศัย และการเดินทาง..."
+                          placeholder={isEn ? "Describe neighborhood highlights, lifestyle, and transit..." : "อธิบายสิ่งน่าสนใจ ไลฟ์สไตล์การอยู่อาศัย และการเดินทาง..."}
                           {...field}
                           value={field.value ?? ""}
                           rows={4}
@@ -414,11 +426,11 @@ export function PopularAreaForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          SEO Title (ไทย)
+                          {isEn ? "SEO Title (Thai)" : "SEO Title (ไทย)"}
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="เช่น คอนโดเด่นและอสังหาฯ ย่านสุขุมวิท"
+                            placeholder={isEn ? "e.g. คอนโดเด่นและอสังหาฯ ย่านสุขุมวิท" : "เช่น คอนโดเด่นและอสังหาฯ ย่านสุขุมวิท"}
                             {...field}
                             value={field.value ?? ""}
                             className="h-10 rounded-xl border-slate-200 text-xs font-semibold"
@@ -434,11 +446,11 @@ export function PopularAreaForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          SEO Description (ไทย)
+                          {isEn ? "SEO Description (Thai)" : "SEO Description (ไทย)"}
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="รวบรวมทรัพย์สินและโครงการยอดนิยม..."
+                            placeholder={isEn ? "e.g. รวบรวมทรัพย์สินและโครงการยอดนิยม..." : "รวบรวมทรัพย์สินและโครงการยอดนิยม..."}
                             {...field}
                             value={field.value ?? ""}
                             className="h-10 rounded-xl border-slate-200 text-xs font-semibold"
@@ -462,7 +474,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        English Name
+                        {isEn ? "English Name" : "ชื่อภาษาอังกฤษ (English Name)"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -483,7 +495,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        Area Description (EN)
+                        {isEn ? "Area Description (EN)" : "ข้อมูลบรรยายทำเล (อังกฤษ)"}
                       </FormLabel>
                       <FormControl>
                         <textarea
@@ -554,7 +566,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        名称 (Chinese)
+                        {isEn ? "Chinese Name" : "名称 (Chinese)"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -575,7 +587,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        描述内容 (CN)
+                        {isEn ? "Description (CN)" : "描述内容 (CN)"}
                       </FormLabel>
                       <FormControl>
                         <textarea
@@ -646,7 +658,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        Имя (Russian)
+                        {isEn ? "Russian Name" : "Имя (Russian)"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -667,7 +679,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        Описание (RU)
+                        {isEn ? "Description (RU)" : "Описание (RU)"}
                       </FormLabel>
                       <FormControl>
                         <textarea
@@ -736,24 +748,24 @@ export function PopularAreaForm({
             variant="ghost"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 rounded-xl h-11 font-bold text-slate-500"
+            className="flex-1 rounded-xl h-11 font-bold text-slate-500 cursor-pointer"
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
           <Button
             type="submit"
             disabled={isPending}
-            className="flex-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-95 rounded-xl h-11 font-bold"
+            className="flex-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-95 rounded-xl h-11 font-bold cursor-pointer"
           >
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                กำลังบันทึก...
+                {isEn ? "Saving..." : "กำลังบันทึก..."}
               </>
             ) : (
               <>
                 <Check className="mr-2 h-4 w-4" />
-                บันทึกข้อมูล
+                {isEn ? "Save Area" : "บันทึกข้อมูล"}
               </>
             )}
           </Button>
@@ -762,3 +774,4 @@ export function PopularAreaForm({
     </Form>
   );
 }
+

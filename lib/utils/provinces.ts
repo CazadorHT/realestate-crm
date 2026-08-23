@@ -80,6 +80,7 @@ export const PROVINCES: Record<string, { en: string; cn: string; ru: string }> =
   "พระราม 9": { en: "Rama 9", cn: "拉玛九", ru: "Рама 9" },
   อ่อนนุช: { en: "On Nut", cn: "翁聿", ru: "Он Нут" },
   บางนา: { en: "Bangna", cn: "邦纳", ru: "Бангна" },
+  อโศก: { en: "Asoke", cn: "阿索克", ru: "Асок" },
   ลาดพร้าว: { en: "Lat Phrao", cn: "叻抛", ru: "Лат Пхрао" },
   สุขุมวิท: { en: "Sukhumvit", cn: "素坤逸", ru: "Сукхумвит" },
   อารีย์: { en: "Ari", cn: "阿里", ru: "Ари" },
@@ -174,6 +175,13 @@ export const PROVINCES: Record<string, { en: string; cn: string; ru: string }> =
   "หัวหิน": { en: "Hua Hin", cn: "华欣", ru: "Хуахин" },
   "ชะอำ": { en: "Cha-am", cn: "七岩", ru: "Чаам" },
   "ปราณบุรี": { en: "Pran Buri", cn: "攀武里", ru: "Пранбури" },
+
+  // Sample / Demo Sandbox Data
+  "ตัวอย่าง": { en: "Sample Location", cn: "示例街道", ru: "Пример района" },
+  "แขวงตัวอย่าง": { en: "Sample Subdistrict", cn: "示例街道", ru: "Пример района" },
+  "เขตตัวอย่าง": { en: "Sample District", cn: "示例区", ru: "Пример округа" },
+  "ตำบลตัวอย่าง": { en: "Sample Subdistrict", cn: "示例街道", ru: "Пример района" },
+  "อำเภอตัวอย่าง": { en: "Sample District", cn: "示例区", ru: "Пример округа" },
 };
 
 /**

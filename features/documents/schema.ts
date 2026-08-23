@@ -30,6 +30,19 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
   SLIP: "หลักฐานการโอน (Slip)",
 };
 
+export const DOC_TYPE_LABELS_EN: Record<string, string> = {
+  ID_CARD: "ID Card",
+  PASSPORT: "Passport",
+  COMPANY_REGISTRATION: "Company Registration",
+  LEASE_CONTRACT: "Lease Contract",
+  SALE_CONTRACT: "Sale Contract",
+  TITLE_DEED: "Title Deed",
+  OTHER: "Other",
+  RESERVATION_DOCUMENT: "Reservation Form",
+  RENT_RECEIPT: "Rent Receipt",
+  SLIP: "Payment Slip",
+};
+
 export const DocumentOwnerTypeEnum = z.enum([
   "LEAD",
   "PROPERTY",
@@ -42,6 +55,13 @@ export const DOC_OWNER_TYPE_LABELS: Record<string, string> = {
   PROPERTY: "จากทรัพย์",
   DEAL: "จากดีล",
   RENTAL_CONTRACT: "จากสัญญาเช่า",
+};
+
+export const DOC_OWNER_TYPE_LABELS_EN: Record<string, string> = {
+  LEAD: "From Lead/Client",
+  PROPERTY: "From Property",
+  DEAL: "From Deal",
+  RENTAL_CONTRACT: "From Rental Contract",
 };
 
 export const createDocumentSchema = z.object({

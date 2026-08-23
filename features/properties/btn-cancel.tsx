@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cleanupUploadSessionAction } from "@/features/properties/actions";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { UseFormReturn } from "react-hook-form";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function CancelButton({
   sessionId,
@@ -15,18 +16,18 @@ export function CancelButton({
   isDirty?: boolean;
   form?: UseFormReturn<any>;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const router = useRouter();
 
   const handleConfirmedCancel = () => {
-    // ล้างสถานะ dirty เพื่อไม่ให้ browser native dialog เด้งซ้ำซ้อน
+    // Clear dirty status
     if (form) {
       form.reset(form.getValues(), { keepValues: true });
     }
 
-    // ออกหน้าให้ไวที่สุด
     router.back();
 
-    // cleanup แบบ fire-and-forget
     void cleanupUploadSessionAction(sessionId).catch((e) => {
       console.error("cleanupUploadSessionAction failed (ignored):", e);
     });
@@ -36,7 +37,6 @@ export function CancelButton({
     if (!isDirty) {
       handleConfirmedCancel();
     }
-    // If dirty, ConfirmDialog handles the click
   };
 
   const button = (
@@ -44,19 +44,19 @@ export function CancelButton({
       variant="cancel"
       onClick={onCancelClick}
       type="button"
-      className="h-14 px-10 rounded-xl font-medium"
+      className="h-14 px-10 rounded-xl font-medium cursor-pointer"
     >
-      ยกเลิก
+      {isEn ? "Cancel" : "ยกเลิก"}
     </Button>
   );
 
   if (isDirty) {
     return (
       <ConfirmDialog
-        title="คุณต้องการออกจากหน้านี้ใช่หรือไม่?"
-        description="ข้อมูลที่คุณกรอกไว้ยังไม่ได้ถูกบันทึก หากคุณออกไปตอนนี้ ข้อมูลทั้งหมดจะสูญหาย"
-        confirmText="ออกโดยไม่บันทึก"
-        cancelText="กลับไปแก้ไข"
+        title={isEn ? "Are you sure you want to leave?" : "คุณต้องการออกจากหน้านี้ใช่หรือไม่?"}
+        description={isEn ? "Your unsaved changes will be lost if you leave now." : "ข้อมูลที่คุณกรอกไว้ยังไม่ได้ถูกบันทึก หากคุณออกไปตอนนี้ ข้อมูลทั้งหมดจะสูญหาย"}
+        confirmText={isEn ? "Leave without saving" : "ออกโดยไม่บันทึก"}
+        cancelText={isEn ? "Stay and edit" : "กลับไปแก้ไข"}
         variant="destructive"
         onConfirm={handleConfirmedCancel}
         trigger={button}
@@ -66,3 +66,4 @@ export function CancelButton({
 
   return button;
 }
+

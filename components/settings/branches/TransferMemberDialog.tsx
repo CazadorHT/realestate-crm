@@ -3,21 +3,6 @@
 import { useState } from "react";
 import { ArrowRightLeft, Building2, ShieldAlert, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -26,6 +11,7 @@ import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/resp
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Search, ChevronDown, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TransferMemberDialogProps {
   open: boolean;
@@ -49,6 +35,9 @@ export function TransferMemberDialog({
   currentBranchName,
   onTransfer,
 }: TransferMemberDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [targetTenantId, setTargetTenantId] = useState("");
   const [isTransferring, setIsTransferring] = useState(false);
   const [branchSearch, setBranchSearch] = useState("");
@@ -77,10 +66,10 @@ export function TransferMemberDialog({
           <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center shadow-inner">
             <ArrowRightLeft className="text-indigo-600" />
           </div>
-          <span>ย้ายสาขาพนักงาน</span>
+          <span>{isEn ? "Transfer Branch Member" : "ย้ายสาขาพนักงาน"}</span>
         </div>
       }
-      description="ดำเนินการย้ายสิทธิ์พนักงานไปยังส่วนงานอื่น in ระบบ"
+      description={isEn ? "Transfer member permissions to another branch within the organization" : "ดำเนินการย้ายสิทธิ์พนักงานไปยังส่วนงานอื่น in ระบบ"}
       footer={
         <div className="flex gap-3 w-full p-4 sm:p-0">
           {isMobile ? (
@@ -89,7 +78,7 @@ export function TransferMemberDialog({
                 variant="ghost"
                 className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DrawerClose>
           ) : (
@@ -98,7 +87,7 @@ export function TransferMemberDialog({
                 variant="ghost"
                 className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DialogClose>
           )}
@@ -112,7 +101,7 @@ export function TransferMemberDialog({
             ) : (
               <ShieldAlert className="mr-2 h-4 w-4" />
             )}
-            ยืนยันการย้ายถิ่นฐาน
+            {isEn ? "Confirm Transfer" : "ยืนยันการย้ายถิ่นฐาน"}
           </Button>
         </div>
       }
@@ -121,7 +110,7 @@ export function TransferMemberDialog({
         <div className="p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100/50 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 mb-2">
-              พนักงาน
+              {isEn ? "Member" : "พนักงาน"}
             </p>
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
@@ -135,7 +124,7 @@ export function TransferMemberDialog({
           </div>
           <div className="flex flex-col items-end">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
-              สาขาปัจจุบัน
+              {isEn ? "Current Branch" : "สาขาปัจจุบัน"}
             </p>
             <Badge
               variant="outline"
@@ -148,12 +137,12 @@ export function TransferMemberDialog({
 
         <div className="grid gap-3">
           <Label className="text-sm font-bold text-slate-900 px-1">
-            เลือกสาขาปลายทาง
+            {isEn ? "Select Destination Branch" : "เลือกสาขาปลายทาง"}
           </Label>
           <ResponsiveDialog
             open={isPickerOpen}
             onOpenChange={setIsPickerOpen}
-            title="เลือกสาขาปลายทาง"
+            title={isEn ? "Select Destination Branch" : "เลือกสาขาปลายทาง"}
             className="sm:max-w-sm!"
             trigger={
               <Button
@@ -168,7 +157,7 @@ export function TransferMemberDialog({
                     </span>
                   ) : (
                     <span className="font-normal">
-                      ค้นหาสาขาปลายทาง...
+                      {isEn ? "Search destination branch..." : "ค้นหาสาขาปลายทาง..."}
                     </span>
                   )}
                 </div>
@@ -181,7 +170,7 @@ export function TransferMemberDialog({
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="ค้นหาชื่อหรือสลักสาขา..."
+                    placeholder={isEn ? "Search by name or slug..." : "ค้นหาชื่อหรือสลักสาขา..."}
                     value={branchSearch}
                     onChange={(e) => setBranchSearch(e.target.value)}
                     className="pl-9 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-500/20"
@@ -239,12 +228,14 @@ export function TransferMemberDialog({
 
         <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100/50">
           <p className="text-[11px] text-rose-600 leading-relaxed font-semibold">
-            ⚠️ <strong className="uppercase">คำเตือน:</strong>{" "}
-            การย้ายสาขาจะตัดสิทธิ์การเข้าถึง Leads
-            และข้อมูลภายในของสาขาเดิมทันที โปรดตรวจสอบให้แน่ใจก่อนกดยืนยัน
+            ⚠️ <strong className="uppercase">{isEn ? "Warning:" : "คำเตือน:"}</strong>{" "}
+            {isEn 
+              ? "Transferring branches will immediately revoke access to current leads and internal branch data. Please ensure accuracy before confirming."
+              : "การย้ายสาขาจะตัดสิทธิ์การเข้าถึง Leads และข้อมูลภายในของสาขาเดิมทันที โปรดตรวจสอบให้แน่ใจก่อนกดยืนยัน"}
           </p>
         </div>
       </div>
     </ResponsiveDialog>
   );
 }
+

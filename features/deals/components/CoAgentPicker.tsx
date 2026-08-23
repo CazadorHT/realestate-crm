@@ -24,8 +24,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CreateDealInput } from "../schema";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function CoAgentPicker() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const form = useFormContext<CreateDealInput>();
   const [open, setOpen] = useState(false);
 
@@ -53,18 +57,18 @@ export function CoAgentPicker() {
             <Handshake className="h-5 w-5 text-blue-600" />
           </div>
           <span className="text-xl font-bold text-slate-900 tracking-tight">
-            ข้อมูล Co-Agent
+            {isEn ? "Co-Agent Details" : "ข้อมูล Co-Agent"}
           </span>
         </div>
       }
-      description="กรอกรายละเอียดผู้ประสานงานร่วม (ข้อมูลเสริม)"
+      description={isEn ? "Enter co-broker / co-agent details (Optional)" : "กรอกรายละเอียดผู้ประสานงานร่วม (ข้อมูลเสริม)"}
       trigger={
         <div className="relative group">
           <Button
             type="button"
             variant="outline"
             className={cn(
-              "w-full h-auto py-5 px-6 rounded-[24px] border-2 flex flex-col items-center gap-3 transition-all duration-500",
+              "w-full h-auto py-5 px-6 rounded-[24px] border-2 flex flex-col items-center gap-3 transition-all duration-500 cursor-pointer",
               hasData
                 ? "border-blue-100 bg-blue-50/20 hover:bg-blue-50/40 shadow-sm"
                 : "border-dashed border-slate-200 bg-slate-50/30 hover:bg-slate-50 hover:border-slate-300",
@@ -78,7 +82,7 @@ export function CoAgentPicker() {
                   </div>
                   <div className="flex flex-col items-start leading-none">
                     <span className="font-bold text-slate-900 text-sm truncate max-w-[180px]">
-                      {coAgentName || "ผู้ประสานงาน"}
+                      {coAgentName || (isEn ? "Coordinator" : "ผู้ประสานงาน")}
                     </span>
                     <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mt-0.5">
                       Co-Agent Partner
@@ -117,10 +121,10 @@ export function CoAgentPicker() {
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-semibold text-slate-600 tracking-tight">
-                    เพิ่มผู้ร่วมงาน (Co-Agent)
+                    {isEn ? "Add Co-Agent" : "เพิ่มผู้ร่วมงาน (Co-Agent)"}
                   </span>
                   <p className="text-[11px] text-slate-400 font-medium">
-                    หากมีพาร์ทเนอร์หรือผู้ประสานงานร่วม
+                    {isEn ? "If you worked with an external partner or co-agent" : "หากมีพาร์ทเนอร์หรือผู้ประสานงานร่วม"}
                   </p>
                 </div>
               </>
@@ -130,7 +134,7 @@ export function CoAgentPicker() {
           {hasData && (
             <button
               onClick={clearData}
-              className="absolute -top-1 -right-1 h-7 w-7 bg-white border-2 border-white rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:scale-110 shadow-lg transition-all z-20 group/close"
+              className="absolute -top-1 -right-1 h-7 w-7 bg-white border-2 border-white rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:scale-110 shadow-lg transition-all z-20 group/close cursor-pointer"
             >
               <div className="h-full w-full bg-slate-50 rounded-full flex items-center justify-center group-hover/close:bg-rose-50">
                 <X className="h-3.5 w-3.5" />
@@ -142,10 +146,10 @@ export function CoAgentPicker() {
       footer={
         <Button
           onClick={() => setOpen(false)}
-          className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 font-bold text-white shadow-xl shadow-blue-200/50 transition-all active:scale-95 gap-2"
+          className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 font-bold text-white shadow-xl shadow-blue-200/50 transition-all active:scale-95 gap-2 cursor-pointer"
         >
           <Check className="h-4 w-4" />
-          ยืนยันข้อมูล
+          {isEn ? "Confirm Details" : "ยืนยันข้อมูล"}
         </Button>
       }
     >
@@ -154,14 +158,14 @@ export function CoAgentPicker() {
         {[
           {
             name: "co_agent_name" as const,
-            label: "ชื่อ Co-Agent",
-            placeholder: "ระบุชื่อผู้ประสานงาน",
+            label: isEn ? "Co-Agent Name" : "ชื่อ Co-Agent",
+            placeholder: isEn ? "Enter coordinator name" : "ระบุชื่อผู้ประสานงาน",
             icon: <User className="h-4 w-4" />,
             color: "blue",
           },
           {
             name: "co_agent_contact" as const,
-            label: "เบอร์โทรศัพท์",
+            label: isEn ? "Phone Number" : "เบอร์โทรศัพท์",
             placeholder: "081-xxx-xxxx",
             icon: <Phone className="h-4 w-4" />,
             color: "cyan",
@@ -169,7 +173,7 @@ export function CoAgentPicker() {
           {
             name: "co_agent_online" as const,
             label: "Facebook / LINE",
-            placeholder: "LINE:@id หรือ FB Name",
+            placeholder: isEn ? "LINE ID or FB Name" : "LINE:@id หรือ FB Name",
             icon: <Globe className="h-4 w-4" />,
             color: "emerald",
           },
@@ -224,11 +228,13 @@ export function CoAgentPicker() {
             <Check className="h-3 w-3" />
           </div>
           <p className="text-[10px] text-amber-700 leading-relaxed font-semibold">
-            ข้อมูล Co-Agent
-            จะถูกนำไปใช้ในส่วนของการแบ่งคอมมิชชั่นและแสดงในหน้ารายละเอียดดีลนี้เท่านั้น
+            {isEn 
+              ? "Co-Agent details will only be used for commission split calculations and displayed on this deal details page."
+              : "ข้อมูล Co-Agent จะถูกนำไปใช้ในส่วนของการแบ่งคอมมิชชั่นและแสดงในหน้ารายละเอียดดีลนี้เท่านั้น"}
           </p>
         </div>
       </div>
     </ResponsiveDialog>
   );
 }
+

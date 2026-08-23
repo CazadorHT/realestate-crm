@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ServiceImageCropperProps {
   open: boolean;
@@ -42,13 +43,16 @@ export function ServiceImageCropper({
   onSave,
   onCancel,
 }: ServiceImageCropperProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl flex flex-col p-0 overflow-hidden rounded-3xl border-none shadow-2xl">
         <DialogHeader className="p-6 bg-white border-b">
           <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-800">
              <ImageIcon className="w-5 h-5 text-indigo-500" />
-             จัดกึ่งกลางและตัดรูปภาพ
+             {isEn ? "Crop & Adjust Image" : "จัดกึ่งกลางและตัดรูปภาพ"}
           </DialogTitle>
         </DialogHeader>
 
@@ -82,13 +86,13 @@ export function ServiceImageCropper({
               className="rounded-xl h-11 px-6 font-bold text-slate-500 border-slate-200"
               onClick={onCancel}
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               className="rounded-xl h-11 px-8 font-bold bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all"
               onClick={onSave}
             >
-              บันทึกการตัดรูปภาพ
+              {isEn ? "Save Crop" : "บันทึกการตัดรูปภาพ"}
             </Button>
           </div>
         </DialogFooter>

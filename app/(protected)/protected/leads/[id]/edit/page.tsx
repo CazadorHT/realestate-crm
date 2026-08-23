@@ -1,4 +1,5 @@
 import { redirect, notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { LeadForm } from "@/features/leads/LeadsForm";
 import { getLeadByIdQuery } from "@/features/leads/queries";
 import { updateLeadAction } from "@/features/leads/actions";
@@ -15,6 +16,10 @@ export default async function LeadEditPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const { id } = await params;
   const lead = await getLeadByIdQuery(id);
   if (!lead) return notFound();
@@ -23,7 +28,9 @@ export default async function LeadEditPage({
     "use server";
     const res = await updateLeadAction({ id, ...values });
     if (!res.success) {
-      return { success: false, message: res.error || "เกิดข้อผิดพลาดในการแก้ไขลีด" };
+      const cStore = await cookies();
+      const currentIsEn = (cStore.get("language")?.value || "th") === "en";
+      return { success: false, message: res.error || (currentIsEn ? "Error updating lead" : "เกิดข้อผิดพลาดในการแก้ไขลีด") };
     }
     redirect(`/protected/leads/${id}?success=true`);
   }
@@ -33,12 +40,12 @@ export default async function LeadEditPage({
       <Breadcrumb
         backHref={`/protected/leads/${id}`}
         items={[
-          { label: "ลีด", href: "/protected/leads" },
+          { label: isEn ? "Leads" : "ลีด", href: "/protected/leads" },
           {
-            label: lead.full_name || "รายละเอียด",
+            label: lead.full_name || (isEn ? "Details" : "รายละเอียด"),
             href: `/protected/leads/${id}`,
           },
-          { label: "แก้ไขข้อมูล" },
+          { label: isEn ? "Edit Lead" : "แก้ไขข้อมูล" },
         ]}
       />
       <div className="flex items-center justify-between gap-4 px-4 py-8 border-b border-slate-200 bg-linear-to-r from-slate-800 to-slate-900 rounded-xl">
@@ -46,11 +53,11 @@ export default async function LeadEditPage({
           <h1 className="text-2xl font-bold text-white">K. {lead.full_name}</h1>
           <div className="flex items-center gap-2 text-sm">
             <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-              {leadStageLabelNullable(lead.stage)}
+              {leadStageLabelNullable(lead.stage, lang)}
             </span>
             <span className="text-white">•</span>
             <span className="text-white">
-              {leadSourceLabelNullable(lead.source)}
+              {leadSourceLabelNullable(lead.source, lang)}
             </span>
           </div>
         </div>

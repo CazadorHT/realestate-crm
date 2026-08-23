@@ -130,70 +130,98 @@ export interface WhtTemplateProps {
     date: string;
     tenantName: string;
     referenceCode: string;
+    isEn?: boolean;
   };
 }
 
-export const WhtCertificateTemplate = ({ data }: WhtTemplateProps) => (
-  <Document title={`WHT_Certificate_${data.referenceCode}`}>
-    <Page size="A4" style={styles.page}>
-      {/* 🏛️ Header Section */}
-      <View style={styles.header}>
-        <Text style={styles.title}>หนังสือรับรองการหักภาษี ณ ที่จ่าย</Text>
-        <Text style={styles.subtitle}>(ตามมาตรา 50 ทวิ แห่งประมวลรัษฎากร)</Text>
-      </View>
+export const WhtCertificateTemplate = ({ data }: WhtTemplateProps) => {
+  const isEn = data.isEn ?? false;
 
-      {/* 🏢 Payor Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ผู้มีหน้าที่หักภาษี ณ ที่จ่าย</Text>
-        <View style={styles.row}>
-          <Text style={styles.label}>บริษัท/ผู้สั่งจ่าย:</Text>
-          <Text style={styles.value}>{data.tenantName}</Text>
+  return (
+    <Document title={`WHT_Certificate_${data.referenceCode}`}>
+      <Page size="A4" style={styles.page}>
+        {/* 🏛️ Header Section */}
+        <View style={styles.header}>
+          <Text style={styles.title}>
+            {isEn ? "Withholding Tax Certificate" : "หนังสือรับรองการหักภาษี ณ ที่จ่าย"}
+          </Text>
+          <Text style={styles.subtitle}>
+            {isEn ? "(Under Section 50 Bis of the Thai Revenue Code)" : "(ตามมาตรา 50 ทวิ แห่งประมวลรัษฎากร)"}
+          </Text>
         </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>เลขที่เอกสารอ้างอิง:</Text>
-          <Text style={styles.value}>{data.referenceCode}</Text>
-        </View>
-      </View>
 
-      {/* 👤 Payee Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ผู้ถูกหักภาษี ณ ที่จ่าย</Text>
-        <View style={styles.row}>
-          <Text style={styles.label}>ชื่อ-นามสกุล:</Text>
-          <Text style={styles.value}>{data.agentName}</Text>
+        {/* 🏢 Payor Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            {isEn ? "Withholding Agent (Payer)" : "ผู้มีหน้าที่หักภาษี ณ ที่จ่าย"}
+          </Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>{isEn ? "Company / Payer:" : "บริษัท/ผู้สั่งจ่าย:"}</Text>
+            <Text style={styles.value}>{data.tenantName}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>{isEn ? "Reference Number:" : "เลขที่เอกสารอ้างอิง:"}</Text>
+            <Text style={styles.value}>{data.referenceCode}</Text>
+          </View>
         </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>ที่อยู่:</Text>
-          <Text style={styles.value}>{data.address}</Text>
+
+        {/* 👤 Payee Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            {isEn ? "Income Recipient (Payee)" : "ผู้ถูกหักภาษี ณ ที่จ่าย"}
+          </Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>{isEn ? "Full Name:" : "ชื่อ-นามสกุล:"}</Text>
+            <Text style={styles.value}>{data.agentName}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>{isEn ? "Address:" : "ที่อยู่:"}</Text>
+            <Text style={styles.value}>{data.address}</Text>
+          </View>
         </View>
-      </View>
 
-      {/* 📊 Payment Details Table */}
-      <View style={[styles.tableRow, styles.tableHeader]}>
-        <Text style={[styles.cellDesc, { paddingLeft: 10 }]}>ประเภทเงินได้</Text>
-        <Text style={styles.cellAmount}>จำนวนเงิน (Gross)</Text>
-        <Text style={[styles.cellAmount, { paddingRight: 10 }]}>ภาษีที่หัก (WHT 3%)</Text>
-      </View>
-      
-      <View style={styles.tableRow}>
-        <Text style={[styles.cellDesc, { paddingLeft: 10 }]}>ค่าคอมมิชชั่น / ค่านายหน้า</Text>
-        <Text style={styles.cellAmount}>{data.grossAmount} บ.</Text>
-        <Text style={[styles.cellAmount, { paddingRight: 10 }]}>{data.taxAmount} บ.</Text>
-      </View>
-
-      {/* 💰 Summary Box */}
-      <View style={styles.totalBox}>
-        <View style={styles.row}>
-          <Text style={styles.totalLabel}>ยอดเงินจ่ายสุทธิ (Net Payout):</Text>
-          <Text style={styles.totalValue}>{data.netAmount} บาท</Text>
+        {/* 📊 Payment Details Table */}
+        <View style={[styles.tableRow, styles.tableHeader]}>
+          <Text style={[styles.cellDesc, { paddingLeft: 10 }]}>
+            {isEn ? "Income Type" : "ประเภทเงินได้"}
+          </Text>
+          <Text style={styles.cellAmount}>
+            {isEn ? "Gross Amount (THB)" : "จำนวนเงิน (Gross)"}
+          </Text>
+          <Text style={[styles.cellAmount, { paddingRight: 10 }]}>
+            {isEn ? "Tax Withheld (WHT 3%)" : "ภาษีที่หัก (WHT 3%)"}
+          </Text>
         </View>
-      </View>
+        
+        <View style={styles.tableRow}>
+          <Text style={[styles.cellDesc, { paddingLeft: 10 }]}>
+            {isEn ? "Sales Commission / Brokerage Fee" : "ค่าคอมมิชชั่น / ค่านายหน้า"}
+          </Text>
+          <Text style={styles.cellAmount}>{data.grossAmount} {isEn ? "THB" : "บ."}</Text>
+          <Text style={[styles.cellAmount, { paddingRight: 10 }]}>{data.taxAmount} {isEn ? "THB" : "บ."}</Text>
+        </View>
 
-      {/* ✍️ Signature Area */}
-      <View style={styles.footer}>
-        <Text>ขอรับรองว่าข้อความข้างต้นถูกต้องตรงกับความเป็นจริงทุกประการ</Text>
-        <Text style={{ marginTop: 20 }}>วันที่ออกเอกสาร: {data.date}</Text>
-      </View>
-    </Page>
-  </Document>
-);
+        {/* 💰 Summary Box */}
+        <View style={styles.totalBox}>
+          <View style={styles.row}>
+            <Text style={styles.totalLabel}>{isEn ? "Net Payout Amount:" : "ยอดเงินจ่ายสุทธิ (Net Payout):"}</Text>
+            <Text style={styles.totalValue}>{data.netAmount} {isEn ? "THB" : "บาท"}</Text>
+          </View>
+        </View>
+
+        {/* ✍️ Signature Area */}
+        <View style={styles.footer}>
+          <Text>
+            {isEn 
+              ? "I hereby certify that the above information is true and correct in all respects." 
+              : "ขอรับรองว่าข้อความข้างต้นถูกต้องตรงกับความเป็นจริงทุกประการ"}
+          </Text>
+          <Text style={{ marginTop: 20 }}>
+            {isEn ? "Issue Date: " : "วันที่ออกเอกสาร: "}{data.date}
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+

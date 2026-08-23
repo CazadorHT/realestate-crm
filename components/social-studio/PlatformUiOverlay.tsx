@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Heart, MessageCircle, Bookmark, Share2, Music, MoreHorizontal, Send, Plus, X } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export type PlatformOverlayType = "none" | "tiktok" | "instagram_story" | "instagram_reel" | "facebook";
 
@@ -16,6 +17,9 @@ export function PlatformUiOverlay({
   aspectRatio,
   accountName = "vcc.asset",
 }: PlatformUiOverlayProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (type === "none") return null;
 
   return (
@@ -25,8 +29,8 @@ export function PlatformUiOverlay({
         <>
           {/* Top Bar */}
           <div className="pt-3 px-4 flex items-center justify-center gap-4 text-white/90 font-bold text-xs drop-shadow-md">
-            <span className="text-white/60">กำลังติดตาม</span>
-            <span className="border-b-2 border-white pb-0.5">สำหรับคุณ</span>
+            <span className="text-white/60">{isEn ? "Following" : "กำลังติดตาม"}</span>
+            <span className="border-b-2 border-white pb-0.5">{isEn ? "For You" : "สำหรับคุณ"}</span>
           </div>
 
           {/* Right Action Sidebar (Compact & Low in the bottom-right corner) */}
@@ -83,11 +87,13 @@ export function PlatformUiOverlay({
           <div className="pb-3 px-3 pr-14 text-white drop-shadow-md">
             <p className="text-[11px] font-bold mb-0.5">@{accountName}</p>
             <p className="text-[9px] text-white/85 line-clamp-1">
-              บ้านเดี่ยวหรู นันทวัน กรุงเทพกรีฑาตัดใหม่ แต่งครบ... #บ้านหรู
+              {isEn ? "Luxury Single House, Prime Location... #LuxuryHome" : "บ้านเดี่ยวหรู นันทวัน กรุงเทพกรีฑาตัดใหม่ แต่งครบ... #บ้านหรู"}
             </p>
             <div className="flex items-center gap-1 text-[8px] text-white/70 mt-0.5">
               <Music className="h-2.5 w-2.5" />
-              <span className="line-clamp-1">เสียงต้นฉบับ - {accountName}</span>
+              <span className="line-clamp-1">
+                {isEn ? `Original Sound - ${accountName}` : `เสียงต้นฉบับ - ${accountName}`}
+              </span>
             </div>
           </div>
         </>
@@ -112,7 +118,7 @@ export function PlatformUiOverlay({
                   VC
                 </div>
                 <span className="text-[11px] font-bold">{accountName}</span>
-                <span className="text-[9px] text-white/70">2ชม.</span>
+                <span className="text-[9px] text-white/70">{isEn ? "2h" : "2ชม."}</span>
               </div>
               <div className="flex items-center gap-2">
                 <MoreHorizontal className="h-3.5 w-3.5" />
@@ -124,7 +130,7 @@ export function PlatformUiOverlay({
           {/* Bottom Reply Bar */}
           <div className="pb-3 px-3 flex items-center gap-2 text-white">
             <div className="flex-1 h-7 rounded-full border border-white/60 bg-black/30 backdrop-blur-xs px-3 flex items-center text-[10px] text-white/80">
-              ส่งข้อความ...
+              {isEn ? "Send message..." : "ส่งข้อความ..."}
             </div>
             <Heart className="h-4.5 w-4.5 drop-shadow-md" />
             <Send className="h-4.5 w-4.5 drop-shadow-md" />
@@ -167,11 +173,11 @@ export function PlatformUiOverlay({
               </div>
               <span className="text-[11px] font-bold">{accountName}</span>
               <button className="px-1.5 py-0.5 rounded border border-white text-[8px] font-bold">
-                ติดตาม
+                {isEn ? "Follow" : "ติดตาม"}
               </button>
             </div>
             <p className="text-[9px] text-white/90 line-clamp-1">
-              บ้านเดี่ยวหรู นันทวัน กรุงเทพกรีฑาตัดใหม่...
+              {isEn ? "Luxury Single House, Prime Location..." : "บ้านเดี่ยวหรู นันทวัน กรุงเทพกรีฑาตัดใหม่..."}
             </p>
           </div>
         </>
@@ -188,7 +194,9 @@ export function PlatformUiOverlay({
               </div>
               <div>
                 <p className="text-[11px] font-bold">VC Connect Asset</p>
-                <p className="text-[8px] text-slate-400">ได้รับการสนับสนุน • 🌍</p>
+                <p className="text-[8px] text-slate-400">
+                  {isEn ? "Sponsored • 🌍" : "ได้รับการสนับสนุน • 🌍"}
+                </p>
               </div>
             </div>
             <MoreHorizontal className="h-4 w-4 text-slate-400" />
@@ -197,13 +205,13 @@ export function PlatformUiOverlay({
           {/* Bottom Engagement Bar */}
           <div className="p-2 bg-slate-950/85 backdrop-blur-md flex items-center justify-around text-slate-300 text-[10px] border-t border-slate-800">
             <span className="flex items-center gap-1 font-semibold">
-              <Heart className="h-3 w-3 text-red-500" /> ถูกใจ
+              <Heart className="h-3 w-3 text-red-500" /> {isEn ? "Like" : "ถูกใจ"}
             </span>
             <span className="flex items-center gap-1 font-semibold">
-              <MessageCircle className="h-3 w-3" /> แสดงความคิดเห็น
+              <MessageCircle className="h-3 w-3" /> {isEn ? "Comment" : "แสดงความคิดเห็น"}
             </span>
             <span className="flex items-center gap-1 font-semibold">
-              <Share2 className="h-3 w-3" /> แชร์
+              <Share2 className="h-3 w-3" /> {isEn ? "Share" : "แชร์"}
             </span>
           </div>
         </>

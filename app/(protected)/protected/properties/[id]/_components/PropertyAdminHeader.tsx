@@ -24,8 +24,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { PropertyWithDetails, PropertyImageV3 } from "@/features/properties/types/v3";
 import { cn } from "@/lib/utils";
-import {toast} from "sonner";
+import { toast } from "sonner";
 import { m } from "framer-motion";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertyAdminHeaderProps {
   property: PropertyWithDetails;
@@ -38,10 +39,11 @@ interface PropertyAdminHeaderProps {
 export function PropertyAdminHeader({ 
   property, 
   images, 
-  language = "th",
   currentUserId,
   isPlatformAdmin = false
 }: PropertyAdminHeaderProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const router = useRouter();
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
 
@@ -50,10 +52,13 @@ export function PropertyAdminHeader({
   // Check if current user is owner of the property OR assigned agent OR is an administrator
   const isOwnerOrAssignee = 
     isPlatformAdmin || 
+    !property.id ||
     (currentUserId && (
       property.assigned_to === currentUserId || 
       property.owner_id === currentUserId ||
-      (property.agents && property.agents.some((a: any) => a.identity?.id === currentUserId))
+      (property as any).created_by === currentUserId ||
+      (property.agent && property.agent.id === currentUserId) ||
+      (property.agents && property.agents.some((a: any) => (a.identity?.id || a.id) === currentUserId))
     ));
 
   const [isStudioOpen, setIsStudioOpen] = useState(false);
@@ -131,13 +136,13 @@ export function PropertyAdminHeader({
           <Breadcrumb
             backHref={`/protected/properties`}
             items={[
-              { label: "โครงการและทรัพย์สิน", href: "/protected/properties" },
-              { label: "จัดการทรัพย์สิน" },
+              { label: isEn ? "Properties" : "โครงการและทรัพย์สิน", href: "/protected/properties" },
+              { label: isEn ? "Manage Property" : "จัดการทรัพย์สิน" },
             ]}
           />
           <div className="flex items-center gap-3 mt-1">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight max-w-[300px] sm:max-w-[500px] truncate">
-              {property.title || "ไม่มีชื่อทรัพย์"}
+              {property.title || (isEn ? "Untitled Property" : "ไม่มีชื่อทรัพย์")}
             </h1>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="bg-slate-100 text-slate-500 font-mono text-[10px] px-2 py-0">
@@ -154,7 +159,7 @@ export function PropertyAdminHeader({
           <Button
             variant="ghost"
             size="sm"
-            className="flex-1 md:flex-none rounded-xl text-slate-500 hover:bg-slate-100 transition-all duration-200 h-10 px-4 font-bold"
+            className="flex-1 md:flex-none rounded-xl text-slate-500 hover:bg-slate-100 transition-all duration-200 h-10 px-4 font-bold cursor-pointer"
             onClick={() => {
               setNavigatingId("view");
               window.open(`/properties/${property.slug || property.id}`, "_blank");
@@ -167,33 +172,33 @@ export function PropertyAdminHeader({
             ) : (
               <Eye className="h-4 w-4 mr-2" />
             )}
-            <span className="hidden sm:inline">ดูหน้าเว็บ</span>
-            <span className="sm:hidden">พรีวิว</span>
+            <span className="hidden sm:inline">{isEn ? "View Web" : "ดูหน้าเว็บ"}</span>
+            <span className="sm:hidden">{isEn ? "Preview" : "พรีวิว"}</span>
           </Button>
  
           <Button
             variant="default"
             size="sm"
-            className="flex-1 md:flex-none rounded-xl bg-slate-900 hover:bg-blue-600 text-white transition-all duration-300 shadow-lg shadow-slate-200/50 h-10 px-5 font-bold disabled:opacity-50 disabled:hover:bg-slate-900"
+            className="flex-1 md:flex-none rounded-xl bg-slate-900 hover:bg-blue-600 text-white transition-all duration-300 shadow-lg shadow-slate-200/50 h-10 px-5 font-bold disabled:opacity-50 disabled:hover:bg-slate-900 cursor-pointer"
             onClick={() => {
               setNavigatingId("edit");
               router.push(`/protected/properties/${property.id}/edit`);
             }}
             disabled={navigatingId === "edit" || !isOwnerOrAssignee}
-            title={!isOwnerOrAssignee ? "สิทธิ์การแก้ไขเฉพาะเจ้าของทรัพย์หรือแอดมินเท่านั้น" : undefined}
+            title={!isOwnerOrAssignee ? (isEn ? "Edit permission is restricted to property owner or admin only" : "สิทธิ์การแก้ไขเฉพาะเจ้าของทรัพย์หรือแอดมินเท่านั้น") : undefined}
           >
             {navigatingId === "edit" ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Edit className="h-4 w-4 mr-2" />
             )}
-            แก้ไขทรัพย์สิน
+            {isEn ? "Edit Property" : "แก้ไขทรัพย์สิน"}
           </Button>
  
           {isOwnerOrAssignee && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 transition-colors">
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
                   <MoreVertical className="h-5 w-5 text-slate-400" />
                 </Button>
               </DropdownMenuTrigger>
@@ -202,17 +207,17 @@ export function PropertyAdminHeader({
                   className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer"
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href);
-                    toast.success("คัดลอกลิงก์เรียบร้อย");
+                    toast.success(isEn ? "Link copied to clipboard" : "คัดลอกลิงก์เรียบร้อย");
                   }}
                 >
-                  <Copy className="h-4 w-4 text-slate-400" /> คัดลอกลิงก์ภายใน
+                  <Copy className="h-4 w-4 text-slate-400" /> {isEn ? "Copy Internal Link" : "คัดลอกลิงก์ภายใน"}
                 </DropdownMenuItem>
                 <DropdownMenuItem className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer">
-                  <Layers className="h-4 w-4 text-slate-400" /> สร้างรายการที่คล้ายกัน
+                  <Layers className="h-4 w-4 text-slate-400" /> {isEn ? "Create Similar Listing" : "สร้างรายการที่คล้ายกัน"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-50" />
                 <DropdownMenuItem className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50">
-                  <Trash2 className="h-4 w-4" /> ลบทรัพย์สินนี้
+                  <Trash2 className="h-4 w-4" /> {isEn ? "Delete Property" : "ลบทรัพย์สินนี้"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -239,13 +244,13 @@ export function PropertyAdminHeader({
               className="h-9 px-4 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-800 hover:text-amber-800 border-amber-200 shadow-xs transition-all font-bold text-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <Sparkles className="h-3.5 w-3.5 text-amber-600! animate-pulse" />
-              <span>สร้างภาพ Social Story</span>
+              <span>{isEn ? "Create Social Story" : "สร้างภาพ Social Story"}</span>
             </Button>
             <DownloadAllImagesButton
               images={images}
               propertyId={property.id}
               propertyTitle={property.title || undefined}
-              className="h-9 px-4 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-200 shadow-xs font-bold text-xs"
+              className="h-9 px-4 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-200 shadow-xs font-bold text-xs cursor-pointer"
             />
             <div className="w-px h-4 bg-slate-200 mx-1 hidden sm:block" />
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden lg:block">Social Posting</p>

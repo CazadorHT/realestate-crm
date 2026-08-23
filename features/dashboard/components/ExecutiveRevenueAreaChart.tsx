@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { formatThaiCurrency } from "@/lib/excel-export";
 import { MonthlyRevenue } from "../executive-queries";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ExecutiveRevenueAreaChartProps {
   monthlyData: MonthlyRevenue[];
@@ -23,6 +24,9 @@ export default function ExecutiveRevenueAreaChart({
   monthlyData,
   compareMonthlyData,
 }: ExecutiveRevenueAreaChartProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <ResponsiveContainer
       width="100%"
@@ -85,7 +89,7 @@ export default function ExecutiveRevenueAreaChart({
         <Area
           type="monotone"
           dataKey="sales"
-          name="ยอดขาย"
+          name={isEn ? "Sales Revenue" : "ยอดขาย"}
           stroke="#3b82f6"
           strokeWidth={3}
           fillOpacity={1}
@@ -95,7 +99,7 @@ export default function ExecutiveRevenueAreaChart({
           <Area
             type="monotone"
             dataKey="salesCompare"
-            name="ยอดขาย (เปรียบเทียบ)"
+            name={isEn ? "Sales Revenue (Compare)" : "ยอดขาย (เปรียบเทียบ)"}
             stroke="#3b82f6"
             strokeWidth={2}
             strokeDasharray="5 5"
@@ -105,7 +109,7 @@ export default function ExecutiveRevenueAreaChart({
         <Area
           type="monotone"
           dataKey="rent"
-          name="ยอดเช่า"
+          name={isEn ? "Rental Revenue" : "ยอดเช่า"}
           stroke="#10b981"
           strokeWidth={3}
           fillOpacity={1}
@@ -115,7 +119,7 @@ export default function ExecutiveRevenueAreaChart({
           <Area
             type="monotone"
             dataKey="rentCompare"
-            name="ยอดเช่า (เปรียบเทียบ)"
+            name={isEn ? "Rental Revenue (Compare)" : "ยอดเช่า (เปรียบเทียบ)"}
             stroke="#10b981"
             strokeWidth={2}
             strokeDasharray="5 5"
@@ -126,3 +130,4 @@ export default function ExecutiveRevenueAreaChart({
     </ResponsiveContainer>
   );
 }
+

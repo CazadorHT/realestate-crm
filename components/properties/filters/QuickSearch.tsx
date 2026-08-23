@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2 } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface QuickSearchProps {
   value: string;
@@ -11,6 +12,8 @@ interface QuickSearchProps {
 
 export function QuickSearch({ value, onChange, onSearch, isPending }: QuickSearchProps) {
   const isInitialMount = useRef(true);
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   // [INSTANT SEARCH] Debounce search execution
   useEffect(() => {
@@ -43,7 +46,7 @@ export function QuickSearch({ value, onChange, onSearch, isPending }: QuickSearc
         )}
       </div>
       <Input
-        placeholder="ค้นหาทรัพย์..."
+        placeholder={isEn ? "Search by title, project, location, ID..." : "ค้นหาทรัพย์..."}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && onSearch()}

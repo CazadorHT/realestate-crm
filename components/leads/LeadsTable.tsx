@@ -16,9 +16,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { LeadRow } from "@/features/leads/types";
 import { LeadRowActions } from "@/components/leads/LeadRowActions";
 import {
-  safeEnumLabel,
-  LEAD_STAGE_LABELS,
-  LEAD_SOURCE_LABELS,
+  leadStageLabelNullable,
+  leadSourceLabelNullable,
 } from "@/features/leads/labels";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
@@ -55,11 +54,12 @@ import { cn } from "@/lib/utils";
 import { type LeadWithJoins } from "@/features/leads/types";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { TransferLeadsDialog } from "@/features/leads/components/TransferLeadsDialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
-function getLeadSubSource(lead: any): string | null {
+function getLeadSubSource(lead: any, isEn?: boolean): string | null {
   const note = (lead.note || lead.ai_summary || "").toLowerCase();
   const utmData = (lead.utm_data as Record<string, any>) || {};
   const prefNote = (utmData.preferences?.note || "").toLowerCase();
@@ -67,10 +67,10 @@ function getLeadSubSource(lead: any): string | null {
   const combined = `${note} ${prefNote} ${utmNote}`;
 
   if (combined.includes("footer newsletter") || combined.includes("subscribe") || combined.includes("ข่าวสาร")) {
-    return "สมัครรับข่าวสาร";
+    return isEn ? "Newsletter" : "สมัครรับข่าวสาร";
   }
   if (combined.includes("feed") || combined.includes("comment") || combined.includes("คอมเมนต์") || combined.includes("คอมเม้น")) {
-    return "คอมเมนต์";
+    return isEn ? "Comment" : "คอมเมนต์";
   }
   if (
     combined.includes("messenger") ||
@@ -82,37 +82,45 @@ function getLeadSubSource(lead: any): string | null {
     combined.includes("profile") ||
     combined.includes("dm")
   ) {
-    return "ช่องแชท";
+    return isEn ? "Chat / DM" : "ช่องแชท";
   }
   if (combined.includes("wechat") || combined.includes("วีแชต") || combined.includes("วีแชท")) {
-    return "วีแชท (WeChat)";
+    return isEn ? "WeChat" : "วีแชท (WeChat)";
   }
   if (combined.includes("leadgen") || combined.includes("lead ad")) {
-    return "โฆษณา Lead Ad";
+    return isEn ? "Lead Ad" : "โฆษณา Lead Ad";
   }
   if (lead.source === "WEBSITE") {
     const hasPropertyType = !!utmData.property_type;
     const hasPropertyId = !!utmData.property_id || !!lead.property_id;
     if (hasPropertyType || combined.includes("ฝาก") || combined.includes("deposit")) {
-      return "ฝากทรัพย์";
+      return isEn ? "Deposit Property" : "ฝากทรัพย์";
     }
     if (hasPropertyId || combined.includes("สนใจ") || combined.includes("inquiry")) {
-      return "สนใจทรัพย์";
+      return isEn ? "Property Inquiry" : "สนใจทรัพย์";
     }
-    return "เว็บทั่วไป";
+    return isEn ? "General Web" : "เว็บทั่วไป";
   }
   return null;
 }
 
 const SUB_SOURCE_STYLES: Record<string, string> = {
   "คอมเมนต์": "text-purple-700 bg-purple-50 border-purple-200/60",
+  "Comment": "text-purple-700 bg-purple-50 border-purple-200/60",
   "ช่องแชท": "text-blue-700 bg-blue-50 border-blue-200/60",
+  "Chat / DM": "text-blue-700 bg-blue-50 border-blue-200/60",
   "โฆษณา Lead Ad": "text-amber-700 bg-amber-50 border-amber-200/60",
+  "Lead Ad": "text-amber-700 bg-amber-50 border-amber-200/60",
   "วีแชท (WeChat)": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
+  "WeChat": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
   "ฝากทรัพย์": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
+  "Deposit Property": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
   "สนใจทรัพย์": "text-blue-700 bg-blue-50 border-blue-200/60",
+  "Property Inquiry": "text-blue-700 bg-blue-50 border-blue-200/60",
   "เว็บทั่วไป": "text-slate-600 bg-slate-50 border-slate-200/60",
+  "General Web": "text-slate-600 bg-slate-50 border-slate-200/60",
   "สมัครรับข่าวสาร": "text-indigo-700 bg-indigo-50 border-indigo-200/60",
+  "Newsletter": "text-indigo-700 bg-indigo-50 border-indigo-200/60",
 };
 
 const SOURCE_STYLES: Record<string, string> = {
@@ -127,19 +135,19 @@ const SOURCE_STYLES: Record<string, string> = {
   OTHER: "text-slate-600 bg-slate-50 border-slate-200/80",
 };
 
-function getRelativeTimeString(dateString: string): string {
+function getRelativeTimeString(dateString: string, isEn?: boolean): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMinutes = differenceInMinutes(now, date);
   
-  if (diffMinutes < 1) return "เมื่อสักครู่";
-  if (diffMinutes < 60) return `${diffMinutes} นาทีที่แล้ว`;
+  if (diffMinutes < 1) return isEn ? "Just now" : "เมื่อสักครู่";
+  if (diffMinutes < 60) return isEn ? `${diffMinutes}m ago` : `${diffMinutes} นาทีที่แล้ว`;
   
   const diffHours = differenceInHours(now, date);
-  if (diffHours < 24) return `${diffHours} ชม.ที่แล้ว`;
+  if (diffHours < 24) return isEn ? `${diffHours}h ago` : `${diffHours} ชม.ที่แล้ว`;
   
   const diffDays = differenceInDays(now, date);
-  return `${diffDays} วันที่แล้ว`;
+  return isEn ? `${diffDays}d ago` : `${diffDays} วันที่แล้ว`;
 }
 
 interface LeadsTableProps {
@@ -159,6 +167,9 @@ export function LeadsTable({
   isMultiTenant,
   filters = {},
 }: LeadsTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const allIds = useMemo(() => leads.map((l) => l.id), [leads]);
   const {
     toggleSelect,
@@ -182,10 +193,10 @@ export function LeadsTable({
       const result = await getAllLeadIdsAction(filters);
       if (result.success && result.ids) {
         toggleSelectAll(result.ids);
-        toast.info(`เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
+        toast.info(isEn ? `Selected all ${result.ids.length} leads` : `เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
       }
     } catch (err) {
-      toast.error("ไม่สามารถเลือกทั้งหมดได้");
+      toast.error(isEn ? "Failed to select all leads" : "ไม่สามารถเลือกทั้งหมดได้");
     } finally {
       setIsGlobalLoading(false);
     }
@@ -213,7 +224,7 @@ export function LeadsTable({
           clearSelection();
           handleSuccessFeedback();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
+          toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
         }
         resolve();
       });
@@ -235,7 +246,7 @@ export function LeadsTable({
             ? () => setIsTransferDialogOpen(true)
             : undefined
         }
-        entityName="ลีด"
+        entityName={isEn ? "leads" : "ลีด"}
         className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}
       />
 
@@ -244,17 +255,23 @@ export function LeadsTable({
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
           <div className="flex items-center gap-3 text-sm text-blue-800">
             <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
-            <span>เลือกทั้งหมด {selectedCount} ลีดในหน้านี้แล้ว</span>
+            <span>
+              {isEn
+                ? `Selected all ${selectedCount} leads on this page`
+                : `เลือกทั้งหมด ${selectedCount} ลีดในหน้านี้แล้ว`}
+            </span>
           </div>
           <button
             onClick={handleSelectAllGlobal}
             disabled={isGlobalLoading}
-            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             {isGlobalLoading ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : null}
-            เลือกทั้งหมด {totalCount} ลีดในระบบ
+            {isEn
+              ? `Select all ${totalCount} leads in system`
+              : `เลือกทั้งหมด ${totalCount} ลีดในระบบ`}
           </button>
         </div>
       )}
@@ -264,15 +281,22 @@ export function LeadsTable({
           <div className="flex items-center gap-3 text-sm text-emerald-800">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             <span>
-              คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> ลีดในระบบแล้ว
-              (ทุกหน้า)
+              {isEn ? (
+                <>
+                  You have selected all <strong>{totalCount}</strong> leads in the system (all pages)
+                </>
+              ) : (
+                <>
+                  คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> ลีดในระบบแล้ว (ทุกหน้า)
+                </>
+              )}
             </span>
           </div>
           <button
             onClick={clearSelection}
-            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all cursor-pointer"
           >
-            ยกเลิกการเลือก
+            {isEn ? "Deselect" : "ยกเลิกการเลือก"}
           </button>
         </div>
       )}
@@ -296,7 +320,7 @@ export function LeadsTable({
                   <Checkbox
                     checked={isAllSelected}
                     onCheckedChange={() => toggleSelectAll(allIds)}
-                    aria-label="เลือกทั้งหมด"
+                    aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
                     className={
                       isPartialSelected
                         ? "data-[state=checked]:bg-primary/50"
@@ -304,17 +328,17 @@ export function LeadsTable({
                     }
                   />
                 </TableHead>
-                <TableHead>ชื่อลูกค้า</TableHead>
-                <TableHead>ข้อมูลติดต่อ</TableHead>
-                <TableHead>วันที่เข้ามา</TableHead>
-                <TableHead>ทรัพย์ที่สนใจ</TableHead>
-                <TableHead>ข้อความ</TableHead>
-                <TableHead>สถานะ</TableHead>
+                <TableHead>{isEn ? "Lead Name" : "ชื่อลูกค้า"}</TableHead>
+                <TableHead>{isEn ? "Contact Info" : "ข้อมูลติดต่อ"}</TableHead>
+                <TableHead>{isEn ? "Date Added" : "วันที่เข้ามา"}</TableHead>
+                <TableHead>{isEn ? "Property of Interest" : "ทรัพย์ที่สนใจ"}</TableHead>
+                <TableHead>{isEn ? "Message / Note" : "ข้อความ"}</TableHead>
+                <TableHead>{isEn ? "Status" : "สถานะ"}</TableHead>
                 <TableHead>AI Score</TableHead>
-                <TableHead>ที่มา / UTM</TableHead>
-                {isMultiTenant && <TableHead>สาขา</TableHead>}
-                <TableHead className="text-center">ดีลที่เกี่ยวข้อง</TableHead>
-                <TableHead className="text-right">จัดการ</TableHead>
+                <TableHead>{isEn ? "Source / UTM" : "ที่มา / UTM"}</TableHead>
+                {isMultiTenant && <TableHead>{isEn ? "Branch" : "สาขา"}</TableHead>}
+                <TableHead className="text-center">{isEn ? "Deals" : "ดีลที่เกี่ยวข้อง"}</TableHead>
+                <TableHead className="text-right">{isEn ? "Actions" : "จัดการ"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -327,7 +351,7 @@ export function LeadsTable({
                     <Checkbox
                       checked={isSelected(l.id)}
                       onCheckedChange={() => toggleSelect(l.id)}
-                      aria-label={`เลือก ${l.full_name}`}
+                      aria-label={`Select ${l.full_name}`}
                     />
                   </TableCell>
                   <TableCell>
@@ -350,7 +374,9 @@ export function LeadsTable({
                           </div>
                           {l.interaction_count && l.interaction_count > 1 && (
                             <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-md border border-blue-200/60 whitespace-nowrap">
-                              ติดต่อ {l.interaction_count} ครั้ง
+                              {isEn
+                                ? `Contacted ${l.interaction_count}x`
+                                : `ติดต่อ ${l.interaction_count} ครั้ง`}
                             </span>
                           )}
                         </div>
@@ -384,11 +410,11 @@ export function LeadsTable({
                       <div className="flex flex-col gap-0.5">
                         <span className="font-semibold text-slate-700">
                           {format(new Date(l.created_at), "d MMM yyyy HH:mm", {
-                            locale: th,
+                            locale: isEn ? enUS : th,
                           })}
                         </span>
                         <span className="text-[10px] text-slate-400">
-                          ({getRelativeTimeString(l.created_at)})
+                          ({getRelativeTimeString(l.created_at, isEn)})
                         </span>
                       </div>
                     ) : (
@@ -425,7 +451,7 @@ export function LeadsTable({
                   </TableCell>
                   {/* Stage */}
                   <TableCell className="text-[11px] font-medium">
-                    {safeEnumLabel(LEAD_STAGE_LABELS as any, l.stage)}
+                    {leadStageLabelNullable(l.stage, language)}
                   </TableCell>
                   {/* AI Score */}
                   <TableCell>
@@ -437,7 +463,7 @@ export function LeadsTable({
                         {l.ai_score ?? 0}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground font-medium">
-                        {l.ai_status_label || "New Visitor"}
+                        {l.ai_status_label || (isEn ? "New Visitor" : "ผู้เข้าชมใหม่")}
                       </span>
                     </div>
                   </TableCell>
@@ -448,14 +474,14 @@ export function LeadsTable({
                         "font-semibold text-[11px] px-1.5 py-0.5 rounded border w-fit shadow-2xs",
                         SOURCE_STYLES[l.source || ""] || "text-slate-600 bg-slate-50 border-slate-200"
                       )}>
-                        {safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}
+                        {leadSourceLabelNullable(l.source, language)}
                       </span>
-                      {getLeadSubSource(l) && (
+                      {getLeadSubSource(l, isEn) && (
                         <span className={cn(
                           "text-[10px] rounded-md px-1.5 py-0.5 w-fit font-bold border mt-0.5",
-                          SUB_SOURCE_STYLES[getLeadSubSource(l) || ""] || "text-slate-500 bg-slate-100 border-slate-200"
+                          SUB_SOURCE_STYLES[getLeadSubSource(l, isEn) || ""] || "text-slate-500 bg-slate-100 border-slate-200"
                         )}>
-                          {getLeadSubSource(l)}
+                          {getLeadSubSource(l, isEn)}
                         </span>
                       )}
                       {l.utm_source && (
@@ -497,7 +523,7 @@ export function LeadsTable({
                     colSpan={11}
                     className="py-10 text-center text-sm text-muted-foreground"
                   >
-                    ไม่พบ Leads
+                    {isEn ? "No leads found" : "ไม่พบ Leads"}
                   </TableCell>
                 </TableRow>
               ) : null}
@@ -592,9 +618,9 @@ export function LeadsTable({
                               {l.created_at ? (
                                 <span>
                                   {format(new Date(l.created_at), "d MMM yy", {
-                                    locale: th,
+                                    locale: isEn ? enUS : th,
                                   })}{" "}
-                                  ({getRelativeTimeString(l.created_at)})
+                                  ({getRelativeTimeString(l.created_at, isEn)})
                                 </span>
                               ) : (
                                 "-"
@@ -619,7 +645,7 @@ export function LeadsTable({
                           variant="outline"
                           className="h-5 text-[10px] px-2 font-semibold border-blue-100 text-blue-600 bg-blue-50/50 uppercase tracking-tighter"
                         >
-                          {safeEnumLabel(LEAD_STAGE_LABELS as any, l.stage)}
+                          {leadStageLabelNullable(l.stage, language)}
                         </Badge>
                         <Badge
                           variant="outline"
@@ -628,17 +654,17 @@ export function LeadsTable({
                             SOURCE_STYLES[l.source || ""] || "border-slate-200 text-slate-600 bg-slate-50"
                           )}
                         >
-                          {safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}
+                          {leadSourceLabelNullable(l.source, language)}
                         </Badge>
-                        {getLeadSubSource(l) && (
+                        {getLeadSubSource(l, isEn) && (
                           <Badge
                             variant="outline"
                             className={cn(
                               "h-5 text-[10px] px-2 font-bold uppercase tracking-tighter border",
-                              SUB_SOURCE_STYLES[getLeadSubSource(l) || ""] || "border-slate-200 text-slate-600 bg-slate-50"
+                              SUB_SOURCE_STYLES[getLeadSubSource(l, isEn) || ""] || "border-slate-200 text-slate-600 bg-slate-50"
                             )}
                           >
-                            {getLeadSubSource(l)}
+                            {getLeadSubSource(l, isEn)}
                           </Badge>
                         )}
                         <Badge
@@ -678,7 +704,7 @@ export function LeadsTable({
                         >
                           <div className="flex items-center gap-3">
                             <FaPhone className="h-3.5 w-3.5 mb-0.5" />
-                            <span>{l.phone || "ไม่มีเบอร์โทร"}</span>
+                            <span>{l.phone || (isEn ? "No phone number" : "ไม่มีเบอร์โทร")}</span>
                           </div>
                           {l.phone && (
                             <FaChevronRight className="h-3 w-3 opacity-50" />
@@ -752,7 +778,7 @@ export function LeadsTable({
           </AnimatePresence>
           {leads.length === 0 && (
             <div className="p-10 text-center text-sm text-slate-400 bg-white rounded-[32px] border border-dashed border-slate-200 mt-4">
-              ไม่พบข้อมูลลูกค้ามุ่งหวัง
+              {isEn ? "No leads found" : "ไม่พบข้อมูลลูกค้ามุ่งหวัง"}
             </div>
           )}
         </div>

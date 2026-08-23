@@ -22,9 +22,9 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { InventoryProperty } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface InventoryTableProps {
   data: InventoryProperty[];
@@ -32,34 +32,34 @@ interface InventoryTableProps {
   onReset: () => void;
 }
 
-// 🛡️ Elite Thai Label Mapping
-const PROPERTY_TYPE_TH = {
-  CONDO: "คอนโด",
-  HOUSE: "บ้านเดี่ยว",
-  TOWNHOME: "ทาวน์โฮม",
-  LAND: "ที่ดิน",
-  VILLA: "วิลล่า",
-  POOL_VILLA: "พูลวิลล่า",
-  COMMERCIAL_BUILDING: "อาคารพาณิชย์",
-  OFFICE_BUILDING: "ออฟฟิศ",
-  WAREHOUSE: "โกดัง",
-  OTHER: "อื่นๆ",
+// 🛡️ Elite Bilingual Mapping
+const PROPERTY_TYPE_MAP: Record<string, { th: string; en: string }> = {
+  CONDO: { th: "คอนโด", en: "Condo" },
+  HOUSE: { th: "บ้านเดี่ยว", en: "House" },
+  TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome" },
+  LAND: { th: "ที่ดิน", en: "Land" },
+  VILLA: { th: "วิลล่า", en: "Villa" },
+  POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa" },
+  COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial" },
+  OFFICE_BUILDING: { th: "ออฟฟิศ", en: "Office" },
+  WAREHOUSE: { th: "โกดัง", en: "Warehouse" },
+  OTHER: { th: "อื่นๆ", en: "Other" },
 };
 
-const LISTING_TYPE_TH = {
-  SALE: "ขาย",
-  RENT: "เช่า",
-  SALE_AND_RENT: "ขาย/เช่า",
+const LISTING_TYPE_MAP: Record<string, { th: string; en: string }> = {
+  SALE: { th: "ขาย", en: "Sale" },
+  RENT: { th: "เช่า", en: "Rent" },
+  SALE_AND_RENT: { th: "ขาย/เช่า", en: "Sale/Rent" },
 };
 
-const STATUS_TH = {
-  DRAFT: "ฉบับร่าง",
-  ACTIVE: "ออนไลน์",
-  UNDER_OFFER: "ติดจอง",
-  RESERVED: "จองแล้ว",
-  SOLD: "ขายแล้ว",
-  RENTED: "เช่าแล้ว",
-  ARCHIVED: "ปิดประกาศ",
+const STATUS_MAP: Record<string, { th: string; en: string }> = {
+  DRAFT: { th: "ฉบับร่าง", en: "Draft" },
+  ACTIVE: { th: "ออนไลน์", en: "Active" },
+  UNDER_OFFER: { th: "ติดจอง", en: "Under Offer" },
+  RESERVED: { th: "จองแล้ว", en: "Reserved" },
+  SOLD: { th: "ขายแล้ว", en: "Sold" },
+  RENTED: { th: "เช่าแล้ว", en: "Rented" },
+  ARCHIVED: { th: "ปิดประกาศ", en: "Archived" },
 };
 
 const STATUS_COLORS = {
@@ -81,8 +81,29 @@ const STATUS_COLORS = {
 // 🛡️ Performance Polish: Memoized to prevent re-renders during search typing
 export const InventoryTable = React.memo(
   ({ data, isLoading, onReset }: InventoryTableProps) => {
+    const { language } = useLanguage();
+    const isEn = language === "en";
+
     const router = useRouter();
     const [navigatingId, setNavigatingId] = useState<string | null>(null);
+
+    const getPropertyTypeLabel = (type?: string | null) => {
+      if (!type) return "-";
+      const item = PROPERTY_TYPE_MAP[type];
+      return item ? (isEn ? item.en : item.th) : type;
+    };
+
+    const getListingTypeLabel = (type?: string | null) => {
+      if (!type) return "-";
+      const item = LISTING_TYPE_MAP[type];
+      return item ? (isEn ? item.en : item.th) : type;
+    };
+
+    const getStatusLabel = (status?: string | null) => {
+      if (!status) return "-";
+      const item = STATUS_MAP[status];
+      return item ? (isEn ? item.en : item.th) : status;
+    };
 
     // 🛡️ Premium Table Skeleton
     const TableSkeleton = () =>
@@ -136,25 +157,25 @@ export const InventoryTable = React.memo(
             <TableHeader>
               <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-100">
                 <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest px-6 py-5 min-w-[300px]">
-                  ข้อมูลทรัพย์สิน
+                  {isEn ? "Property Details" : "ข้อมูลทรัพย์สิน"}
                 </TableHead>
                 <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest">
-                  สาขา
+                  {isEn ? "Branch" : "สาขา"}
                 </TableHead>
                 <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest">
-                  ประเภท
+                  {isEn ? "Type" : "ประเภท"}
                 </TableHead>
                 <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest">
-                  การดีล
+                  {isEn ? "Deal Type" : "การดีล"}
                 </TableHead>
                 <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest">
-                  ราคา
+                  {isEn ? "Price" : "ราคา"}
                 </TableHead>
                 <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest">
-                  สถานะ
+                  {isEn ? "Status" : "สถานะ"}
                 </TableHead>
                 <TableHead className="text-right font-semibold text-slate-500 text-[11px] uppercase tracking-widest px-6">
-                  Action
+                  {isEn ? "Action" : "การจัดการ"}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -200,12 +221,13 @@ export const InventoryTable = React.memo(
                             ID: {item.id.split("-")[0]}
                           </div>
                         </div>
-                        <div className="max-w-[500px] ">
-                          <div className="font-semibold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors text-sm  leading-tight">
+                        <div className="max-w-[500px]">
+                          <div className="font-semibold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors text-sm leading-tight">
                             {item.title}
                           </div>
                           <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-medium italic">
-                            <MapPin className="h-3 w-3" /> แตะเพื่อดูรายละเอียด
+                            <MapPin className="h-3 w-3" />
+                            {isEn ? "Click to view details" : "แตะเพื่อดูรายละเอียด"}
                           </div>
                         </div>
                       </div>
@@ -220,9 +242,7 @@ export const InventoryTable = React.memo(
                     </TableCell>
                     <TableCell>
                       <span className="text-xs font-semibold text-slate-500">
-                        {PROPERTY_TYPE_TH[
-                          item.property_type as keyof typeof PROPERTY_TYPE_TH
-                        ] || item.property_type}
+                        {getPropertyTypeLabel(item.property_type)}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -230,9 +250,7 @@ export const InventoryTable = React.memo(
                         variant="outline"
                         className="text-[10px] font-semibold text-slate-400 border-slate-200"
                       >
-                        {LISTING_TYPE_TH[
-                          item.listing_type as keyof typeof LISTING_TYPE_TH
-                        ] || item.listing_type}
+                        {getListingTypeLabel(item.listing_type)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -246,7 +264,7 @@ export const InventoryTable = React.memo(
                         {item.rental_price && (
                           <div className="text-[10px] font-semibold text-emerald-600 uppercase flex items-center gap-1">
                             <Tag className="h-2.5 w-2.5" />{" "}
-                            {item.rental_price.toLocaleString()} / ด.
+                            {item.rental_price.toLocaleString()} {isEn ? "/ mo" : "/ ด."}
                           </div>
                         )}
                       </div>
@@ -260,20 +278,20 @@ export const InventoryTable = React.memo(
                           ] || STATUS_COLORS.ARCHIVED,
                         )}
                       >
-                        {STATUS_TH[item.status as keyof typeof STATUS_TH] ||
-                          item.status}
+                        {getStatusLabel(item.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right px-6">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all relative"
+                        className="h-10 w-10 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all relative cursor-pointer"
                         onClick={() => {
                           setNavigatingId(item.id);
                           router.push(`/protected/properties/${item.id}`);
                         }}
                         disabled={navigatingId === item.id}
+                        title={isEn ? "View details" : "ดูรายละเอียด"}
                       >
                         {navigatingId === item.id ? (
                           <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
@@ -334,9 +352,7 @@ export const InventoryTable = React.memo(
                         {item.id.split("-")[0]}
                       </Badge>
                       <Badge className="bg-blue-600 border-none text-[10px] font-semibold uppercase">
-                        {PROPERTY_TYPE_TH[
-                          item.property_type as keyof typeof PROPERTY_TYPE_TH
-                        ] || item.property_type}
+                        {getPropertyTypeLabel(item.property_type)}
                       </Badge>
                     </div>
                     <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full shadow-lg border border-slate-100">
@@ -364,8 +380,7 @@ export const InventoryTable = React.memo(
                           ] || STATUS_COLORS.ARCHIVED,
                         )}
                       >
-                        {STATUS_TH[item.status as keyof typeof STATUS_TH] ||
-                          item.status}
+                        {getStatusLabel(item.status)}
                       </Badge>
                     </div>
                   </div>
@@ -384,19 +399,21 @@ export const InventoryTable = React.memo(
               </div>
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold text-slate-800 italic">
-                  "ยอดเขาที่ว่างเปล่า..."
+                  {isEn ? '"No properties found"' : '"ยอดเขาที่ว่างเปล่า..."'}
                 </h3>
                 <p className="text-sm text-slate-400 font-medium">
-                  ดูเหมือนว่าเงื่อนไขการค้นหาของคุณจะละเอียดเกินไปจนไม่พบทรัพย์สินที่ต้องการ
+                  {isEn
+                    ? "Your search filters might be too specific. Try resetting or adjusting criteria."
+                    : "ดูเหมือนว่าเงื่อนไขการค้นหาของคุณจะละเอียดเกินไปจนไม่พบทรัพย์สินที่ต้องการ"}
                 </p>
               </div>
               <Button
                 variant="outline"
                 onClick={onReset}
-                className="rounded-xl px-8 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all font-semibold"
+                className="rounded-xl px-8 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all font-semibold cursor-pointer"
               >
                 <RefreshCcw className="mr-2 h-4 w-4" />
-                ล้างตัวกรองและเริ่มใหม่
+                {isEn ? "Reset Filters & Restart" : "ล้างตัวกรองและเริ่มใหม่"}
               </Button>
             </div>
           </div>
@@ -407,3 +424,4 @@ export const InventoryTable = React.memo(
 );
 
 InventoryTable.displayName = "InventoryTable";
+

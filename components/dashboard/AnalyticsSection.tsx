@@ -255,12 +255,15 @@ export function AnalyticsSection({
               </div>
             )}
             <div className="p-6">
-              <h3 className="font-semibold text-slate-800 flex items-center gap-2 mb-6">
-                <PieChart className="h-4 w-4 text-violet-500" />
-                {isEn ? "Lead Funnel Status" : "สรุปสถานะลีด"} ({getDynamicScopeLabel()}) • 
-                <p className="text-xs text-blue-600">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2 mb-6 min-w-0">
+                <PieChart className="h-4 w-4 text-violet-500 shrink-0" />
+                <span className="truncate" title={`${isEn ? "Lead Funnel Status" : "สรุปสถานะลีด"} (${getDynamicScopeLabel()})`}>
+                  {isEn ? "Lead Funnel Status" : "สรุปสถานะลีด"} ({getDynamicScopeLabel()})
+                </span>
+                <span className="text-slate-400 shrink-0">•</span>
+                <span className="text-xs font-semibold text-blue-600 whitespace-nowrap shrink-0">
                   {rangeLabels[range as keyof typeof rangeLabels]}
-                </p>
+                </span>
               </h3>
               <FunnelChart data={funnelData} />
             </div>
@@ -274,12 +277,15 @@ export function AnalyticsSection({
               </div>
             )}
             <div className="p-6">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6">
-                <TrendingUp className="h-4 w-4 text-emerald-500" />
-                {isEn ? "Pipeline Deals Progress" : "ความคืบหน้าโครงการ"} ({getDynamicScopeLabel()}) • 
-                <p className="text-xs text-blue-600">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6 min-w-0">
+                <TrendingUp className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span className="truncate" title={`${isEn ? "Pipeline Deals Progress" : "ความคืบหน้าโครงการ"} (${getDynamicScopeLabel()})`}>
+                  {isEn ? "Pipeline Deals Progress" : "ความคืบหน้าโครงการ"} ({getDynamicScopeLabel()})
+                </span>
+                <span className="text-slate-400 shrink-0">•</span>
+                <span className="text-xs font-semibold text-blue-600 whitespace-nowrap shrink-0">
                   {rangeLabels[range as keyof typeof rangeLabels]}
-                </p>
+                </span>
               </h3>
               <p className="text-xs text-slate-500 mb-6 font-medium">
                 {isEn ? "Timeframe:" : "ระยะเวลา:"} {rangeLabels[range as keyof typeof rangeLabels]}

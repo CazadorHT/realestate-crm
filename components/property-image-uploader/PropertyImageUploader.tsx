@@ -39,6 +39,7 @@ import { AlertTriangle, Info } from "lucide-react";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { useTenant } from "@/components/providers/TenantProvider";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function PropertyImageUploader({
   sessionId,
@@ -51,6 +52,8 @@ export function PropertyImageUploader({
   cleanupOnUnmount = true,
   allowPaste = true,
 }: PropertyImageUploaderProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [errorDialog, setErrorDialog] = useState<{
     type: "warning" | "error";
     title: string;
@@ -253,7 +256,7 @@ export function PropertyImageUploader({
       if (activeUploadProcessIdRef.current) {
         const pid = activeUploadProcessIdRef.current;
         import("@/lib/process-monitor").then(({ finishProcess }) => {
-          finishProcess(pid, "ERROR", "หยุดอัปโหลดเนื่องจากออกจากหน้าเพจ");
+          finishProcess(pid, "ERROR", isEn ? "Upload stopped due to page navigation" : "หยุดอัปโหลดเนื่องจากออกจากหน้าเพจ");
         });
       }
 
@@ -272,7 +275,7 @@ export function PropertyImageUploader({
       })();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cleanupOnUnmount, sessionId]);
+  }, [cleanupOnUnmount, sessionId, isEn]);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -283,8 +286,10 @@ export function PropertyImageUploader({
       if (acceptedFiles.length > remainingSlots) {
         setErrorDialog({
           type: "warning",
-          title: "จำนวนรูปเกินขีดจำกัด",
-          description: `คุณสามารถเพิ่มได้อีกสูงสุด ${remainingSlots} รูป (สูงสุด ${maxFiles} รูปต่อประกาศ) ระบบจะเลือกเฉพาะ ${remainingSlots} รูปแรกให้โดยอัตโนมัติ`,
+          title: isEn ? "Image limit exceeded" : "จำนวนรูปเกินขีดจำกัด",
+          description: isEn
+            ? `You can upload up to ${remainingSlots} more images (max ${maxFiles} per listing). Only the first ${remainingSlots} images are selected.`
+            : `คุณสามารถเพิ่มได้อีกสูงสุด ${remainingSlots} รูป (สูงสุด ${maxFiles} รูปต่อประกาศ) ระบบจะเลือกเฉพาะ ${remainingSlots} รูปแรกให้โดยอัตโนมัติ`,
         });
         acceptedFiles = acceptedFiles.slice(0, remainingSlots);
       }
@@ -312,7 +317,7 @@ export function PropertyImageUploader({
       setImages((prev) => [...prev, ...newItems]);
 
       const processId = startProcess(
-        `อัปโหลดรูปภาพ (${acceptedFiles.length} รูป)`,
+        isEn ? `Uploading images (${acceptedFiles.length})` : `อัปโหลดรูปภาพ (${acceptedFiles.length} รูป)`,
         {
           type: "IMAGE_UPLOAD",
         },
@@ -329,13 +334,13 @@ export function PropertyImageUploader({
         try {
           // A. Size Validation
           if (file.size > maxFileSizeMB * 1024 * 1024) {
-            throw new Error(`ไฟล์ใหญ่เกิน ${maxFileSizeMB}MB`);
+            throw new Error(isEn ? `File exceeds ${maxFileSizeMB}MB` : `ไฟล์ใหญ่เกิน ${maxFileSizeMB}MB`);
           }
 
           // B. Magic Bytes Validation
           const validation = await validateImageFile(file);
           if (!validation.valid) {
-            throw new Error(validation.error || "ไฟล์ไม่ถูกต้อง");
+            throw new Error(validation.error || (isEn ? "Invalid file" : "ไฟล์ไม่ถูกต้อง"));
           }
 
           // C. Compression
@@ -392,11 +397,13 @@ export function PropertyImageUploader({
           finishProcess(
             processId,
             "PROCESSING",
-            `อัปโหลดสำเร็จแล้ว ${successCount}/${acceptedFiles.length} รูป`,
+            isEn
+              ? `Uploaded ${successCount}/${acceptedFiles.length} images`
+              : `อัปโหลดสำเร็จแล้ว ${successCount}/${acceptedFiles.length} รูป`,
           );
         } catch (error: unknown) {
           console.error(`Error processing ${file.name}:`, error);
-          const rawMsg = error instanceof Error ? error.message : "ล้มเหลว";
+          const rawMsg = error instanceof Error ? error.message : (isEn ? "Failed" : "ล้มเหลว");
           let friendlyMsg = rawMsg;
 
           if (
@@ -406,8 +413,9 @@ export function PropertyImageUploader({
             rawMsg.includes("Payload too large") ||
             rawMsg.includes("413")
           ) {
-            friendlyMsg =
-              "ระบบความปลอดภัยของเซิร์ฟเวอร์ (WAF) ปฏิเสธการอัปโหลดไฟล์รูปนี้เนื่องจากโครงสร้างภาพมีความเสี่ยง หรือขนาดใหญ่เกินไป\n💡 วิธีแก้ไข: กรุณาลองแคปหน้าจอภาพนี้ (Screenshot) แล้วใช้อัพโหลดแทน";
+            friendlyMsg = isEn
+              ? "The server security firewall (WAF) rejected this image due to size or risk.\n💡 Solution: Please take a screenshot of the image and upload the screenshot instead."
+              : "ระบบความปลอดภัยของเซิร์ฟเวอร์ (WAF) ปฏิเสธการอัปโหลดไฟล์รูปนี้เนื่องจากโครงสร้างภาพมีความเสี่ยง หรือขนาดใหญ่เกินไป\n💡 วิธีแก้ไข: กรุณาลองแคปหน้าจอภาพนี้ (Screenshot) แล้วใช้อัพโหลดแทน";
           }
 
           uploadErrors.push(`${friendlyMsg}`);
@@ -432,22 +440,26 @@ export function PropertyImageUploader({
         finishProcess(
           processId,
           "ERROR",
-          `พบข้อผิดพลาด ${uploadErrors.length} รายการ จากทั้งหมด ${acceptedFiles.length} รายการ`,
+          isEn
+            ? `${uploadErrors.length} errors occurred out of ${acceptedFiles.length} files`
+            : `พบข้อผิดพลาด ${uploadErrors.length} รายการ จากทั้งหมด ${acceptedFiles.length} รายการ`,
           {
             errorDetails: uploadErrors.join("\n"),
           },
         );
         setErrorDialog({
           type: "error",
-          title: "พบข้อผิดพลาดขณะอัปโหลด",
-          description: "บางไฟล์ไม่สามารถอัปโหลดได้ กรุณาตรวจสอบ:",
+          title: isEn ? "Upload Error" : "พบข้อผิดพลาดขณะอัปโหลด",
+          description: isEn ? "Some files could not be uploaded. Please verify:" : "บางไฟล์ไม่สามารถอัปโหลดได้ กรุณาตรวจสอบ:",
           errors: uploadErrors,
         });
       } else {
         finishProcess(
           processId,
           "SUCCESS",
-          `อัปโหลดรูปภาพ ${successCount} รูปสำเร็จเรียบร้อย ✨`,
+          isEn
+            ? `Uploaded ${successCount} images successfully ✨`
+            : `อัปโหลดรูปภาพ ${successCount} รูปสำเร็จเรียบร้อย ✨`,
           {
             resultLink:
               typeof window !== "undefined" ? window.location.href : undefined,
@@ -519,10 +531,14 @@ export function PropertyImageUploader({
       if (files.length > 0) {
         e.preventDefault();
         onDrop(files);
-        toast.success(`วางรูปภาพจากคลิปบอร์ดสำเร็จ ${files.length} รูป ✨`);
+        toast.success(
+          isEn
+            ? `Pasted ${files.length} images from clipboard ✨`
+            : `วางรูปภาพจากคลิปบอร์ดสำเร็จ ${files.length} รูป ✨`
+        );
       }
     },
-    [disabled, onDrop],
+    [disabled, onDrop, isEn],
   );
 
   useEffect(() => {
@@ -576,7 +592,7 @@ export function PropertyImageUploader({
       return newImages;
     });
 
-    toast.success("ลบรูปสำเร็จ");
+    toast.success(isEn ? "Image deleted" : "ลบรูปสำเร็จ");
   };
 
   const handleClearAll = () => {
@@ -613,7 +629,7 @@ export function PropertyImageUploader({
       }
     }
 
-    toast.success("ลบรูปภาพทั้งหมดเรียบร้อยแล้ว");
+    toast.success(isEn ? "All images cleared successfully" : "ลบรูปภาพทั้งหมดเรียบร้อยแล้ว");
   };
 
   const handleSetCover = (imageId: string) => {
@@ -627,7 +643,7 @@ export function PropertyImageUploader({
         .map((img) => ({ ...img, is_cover: false }));
       return [target, ...rest];
     });
-    toast.success("ตั้งรูปปกสำเร็จ");
+    toast.success(isEn ? "Cover photo updated" : "ตั้งรูปปกสำเร็จ");
   };
 
   const handleSortImages = (order: "newest" | "oldest") => {
@@ -647,7 +663,11 @@ export function PropertyImageUploader({
       }));
     });
 
-    toast.success(order === "newest" ? "เรียงลำดับรูปภาพ: ใหม่ไปเก่า ✨" : "เรียงลำดับรูปภาพ: เก่าไปใหม่ ✨");
+    toast.success(
+      isEn
+        ? (order === "newest" ? "Sorted: Newest to Oldest ✨" : "Sorted: Oldest to Newest ✨")
+        : (order === "newest" ? "เรียงลำดับรูปภาพ: ใหม่ไปเก่า ✨" : "เรียงลำดับรูปภาพ: เก่าไปใหม่ ✨")
+    );
   };
 
   // @dnd-kit sensors
@@ -688,7 +708,7 @@ export function PropertyImageUploader({
         const newImages = arrayMove(prev, oldIndex, newIndex);
         return newImages;
       });
-      toast.success("จัดเรียงรูปสำเร็จ");
+      toast.success(isEn ? "Images reordered" : "จัดเรียงรูปสำเร็จ");
     }
   };
 
@@ -709,7 +729,7 @@ export function PropertyImageUploader({
               disabled={disabled}
               className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer disabled:cursor-not-allowed"
             />
-            <span>ใส่ลายน้ำโลโก้ VCC ASSET บนภาพถ่าย</span>
+            <span>{isEn ? "Apply VCC ASSET logo watermark on photos" : "ใส่ลายน้ำโลโก้ VCC ASSET บนภาพถ่าย"}</span>
           </label>
         </div>
 
@@ -717,7 +737,7 @@ export function PropertyImageUploader({
           <div className="pt-2 border-t border-slate-200/70 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             {/* Position Selector */}
             <div className="space-y-1">
-              <span className="font-semibold text-slate-600 block">ตำแหน่งลายน้ำ</span>
+              <span className="font-semibold text-slate-600 block">{isEn ? "Watermark Position" : "ตำแหน่งลายน้ำ"}</span>
               <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-slate-200 text-slate-700">
                 <button
                   type="button"
@@ -729,7 +749,7 @@ export function PropertyImageUploader({
                       : "hover:bg-slate-100"
                   }`}
                 >
-                  ↖ ซ้ายบน
+                  {isEn ? "↖ Top Left" : "↖ ซ้ายบน"}
                 </button>
                 <button
                   type="button"
@@ -741,7 +761,7 @@ export function PropertyImageUploader({
                       : "hover:bg-slate-100"
                   }`}
                 >
-                  ↗ ขวาบน
+                  {isEn ? "↗ Top Right" : "↗ ขวาบน"}
                 </button>
                 <button
                   type="button"
@@ -753,7 +773,7 @@ export function PropertyImageUploader({
                       : "hover:bg-slate-100"
                   }`}
                 >
-                  🎯 ตรงกลาง
+                  {isEn ? "🎯 Center" : "🎯 ตรงกลาง"}
                 </button>
                 <button
                   type="button"
@@ -765,7 +785,7 @@ export function PropertyImageUploader({
                       : "hover:bg-slate-100"
                   }`}
                 >
-                  ↙ ซ้ายล่าง
+                  {isEn ? "↙ Bottom Left" : "↙ ซ้ายล่าง"}
                 </button>
                 <button
                   type="button"
@@ -777,14 +797,14 @@ export function PropertyImageUploader({
                       : "hover:bg-slate-100"
                   }`}
                 >
-                  ↘ ขวาล่าง (แนะนำ)
+                  {isEn ? "↘ Bottom Right (Recommended)" : "↘ ขวาล่าง (แนะนำ)"}
                 </button>
               </div>
             </div>
 
             {/* Size Selector */}
             <div className="space-y-1">
-              <span className="font-semibold text-slate-600 block">ขนาดลายน้ำ</span>
+              <span className="font-semibold text-slate-600 block">{isEn ? "Watermark Size" : "ขนาดลายน้ำ"}</span>
               <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-slate-200 text-slate-700">
                 <button
                   type="button"
@@ -796,7 +816,7 @@ export function PropertyImageUploader({
                       : "hover:bg-slate-100"
                   }`}
                 >
-                  เล็ก
+                  {isEn ? "Small" : "เล็ก"}
                 </button>
                 <button
                   type="button"
@@ -808,7 +828,7 @@ export function PropertyImageUploader({
                       : "hover:bg-slate-100"
                   }`}
                 >
-                  ปานกลาง
+                  {isEn ? "Medium" : "ปานกลาง"}
                 </button>
                 <button
                   type="button"
@@ -820,7 +840,7 @@ export function PropertyImageUploader({
                       : "hover:bg-slate-100"
                   }`}
                 >
-                  ใหญ่
+                  {isEn ? "Large" : "ใหญ่"}
                 </button>
               </div>
             </div>
@@ -830,22 +850,22 @@ export function PropertyImageUploader({
               <div className="flex items-center justify-between mb-1.5">
                 <span className="font-semibold text-slate-700 text-xs flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  ตัวอย่างลายน้ำบนรูปจริง (Live Preview)
+                  {isEn ? "Live Watermark Preview" : "ตัวอย่างลายน้ำบนรูปจริง (Live Preview)"}
                 </span>
                 <span className="text-[10px] text-slate-500 font-medium">
-                  ตำแหน่ง: {
+                  {isEn ? "Position: " : "ตำแหน่ง: "}{
                     {
-                      southeast: "มุมขวาล่าง ↘",
-                      center: "ตรงกลาง 🎯",
-                      southwest: "มุมซ้ายล่าง ↙",
-                      northeast: "มุมขวาบน ↗",
-                      northwest: "มุมซ้ายบน ↖",
+                      southeast: isEn ? "Bottom Right ↘" : "มุมขวาล่าง ↘",
+                      center: isEn ? "Center 🎯" : "ตรงกลาง 🎯",
+                      southwest: isEn ? "Bottom Left ↙" : "มุมซ้ายล่าง ↙",
+                      northeast: isEn ? "Top Right ↗" : "มุมขวาบน ↗",
+                      northwest: isEn ? "Top Left ↖" : "มุมซ้ายบน ↖",
                     }[watermarkPosition]
-                  } | ขนาด: {
+                  } | {isEn ? "Size: " : "ขนาด: "}{
                     {
-                      sm: "เล็ก",
-                      md: "ปานกลาง",
-                      lg: "ใหญ่",
+                      sm: isEn ? "Small" : "เล็ก",
+                      md: isEn ? "Medium" : "ปานกลาง",
+                      lg: isEn ? "Large" : "ใหญ่",
                     }[watermarkScale]
                   }
                 </span>
@@ -915,12 +935,13 @@ export function PropertyImageUploader({
           <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
           <p className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2 font-medium">
             {isDragActive
-              ? "วางไฟล์ที่นี่..."
-              : "ลากไฟล์มาวางหรือคลิกเพื่อเลือกรูป"}
+              ? (isEn ? "Drop files here..." : "วางไฟล์ที่นี่...")
+              : (isEn ? "Drag & drop files here, or click to browse" : "ลากไฟล์มาวางหรือคลิกเพื่อเลือกรูป")}
           </p>
           <p className="text-[10px] sm:text-xs text-slate-400">
-            รองรับ JPG, PNG, WebP • ไม่เกิน {maxFileSizeMB}MB ต่อรูป • สูงสุด{" "}
-            {maxFiles} รูป
+            {isEn
+              ? `Supports JPG, PNG, WebP • Max ${maxFileSizeMB}MB per photo • Max ${maxFiles} photos`
+              : `รองรับ JPG, PNG, WebP • ไม่เกิน ${maxFileSizeMB}MB ต่อรูป • สูงสุด ${maxFiles} รูป`}
           </p>
         </div>
       )}
@@ -930,7 +951,7 @@ export function PropertyImageUploader({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 px-1">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <p className="text-xs sm:text-sm font-semibold text-slate-800">
-                รูปภาพทั้งหมด ({images.length}/{maxFiles})
+                {isEn ? `All Photos (${images.length}/${maxFiles})` : `รูปภาพทั้งหมด (${images.length}/${maxFiles})`}
               </p>
 
               {/* Sorting Buttons */}
@@ -943,10 +964,10 @@ export function PropertyImageUploader({
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2 text-[11px] font-medium text-slate-700 hover:text-blue-600 hover:bg-white rounded-md flex items-center gap-1 transition-all"
-                    title="เรียงจากรูปที่เพิ่มล่าสุดไปหารูปแรก"
+                    title={isEn ? "Sort newest to oldest" : "เรียงจากรูปที่เพิ่มล่าสุดไปหารูปแรก"}
                   >
                     <ArrowDownWideNarrow className="w-3 h-3 text-blue-500" />
-                    <span>ใหม่ไปเก่า</span>
+                    <span>{isEn ? "Newest First" : "ใหม่ไปเก่า"}</span>
                   </Button>
                   <div className="w-[1px] h-3.5 bg-slate-300 my-auto" />
                   <Button
@@ -956,10 +977,10 @@ export function PropertyImageUploader({
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2 text-[11px] font-medium text-slate-700 hover:text-blue-600 hover:bg-white rounded-md flex items-center gap-1 transition-all"
-                    title="เรียงจากรูปแรกไปหารูปที่เพิ่มล่าสุด"
+                    title={isEn ? "Sort oldest to newest" : "เรียงจากรูปแรกไปหารูปที่เพิ่มล่าสุด"}
                   >
                     <ArrowUpWideNarrow className="w-3 h-3 text-blue-500" />
-                    <span>เก่าไปใหม่</span>
+                    <span>{isEn ? "Oldest First" : "เก่าไปใหม่"}</span>
                   </Button>
                 </div>
               )}
@@ -974,12 +995,12 @@ export function PropertyImageUploader({
                   className="h-7 text-[11px] font-bold text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg flex items-center gap-1 transition-all"
                 >
                   <Trash2 className="w-3 h-3" />
-                  ล้างทั้งหมด
+                  {isEn ? "Clear All" : "ล้างทั้งหมด"}
                 </Button>
               )}
             </div>
             <p className="text-[10px] sm:text-xs text-slate-500 italic">
-              ลากเพื่อจัดเรียง • ⭐ = รูปปก
+              {isEn ? "Drag to reorder • ⭐ = Cover photo" : "ลากเพื่อจัดเรียง • ⭐ = รูปปก"}
             </p>
           </div>
 
@@ -1036,14 +1057,14 @@ export function PropertyImageUploader({
       {images.length === 0 && (
         <div className="text-center py-10 sm:py-12 text-slate-400 bg-slate-50/50 rounded-lg border border-dashed border-slate-200">
           <ImageIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 mb-2 opacity-20" />
-          <p className="text-xs sm:text-sm font-medium">ยังไม่มีรูปภาพ</p>
+          <p className="text-xs sm:text-sm font-medium">{isEn ? "No images uploaded yet" : "ยังไม่มีรูปภาพ"}</p>
         </div>
       )}
 
       <ResponsiveDialog
         open={!!errorDialog}
         onOpenChange={(open) => !open && setErrorDialog(null)}
-        title={errorDialog?.title || "เกิดข้อผิดพลาด"}
+        title={errorDialog?.title || (isEn ? "Error" : "เกิดข้อผิดพลาด")}
         description={errorDialog?.description}
         className="sm:max-w-md"
       >
@@ -1065,8 +1086,8 @@ export function PropertyImageUploader({
             </div>
             <p className="text-sm font-semibold text-slate-800">
               {errorDialog?.type === "error"
-                ? "พบปัญหาขัดข้อง"
-                : "คำแนะนำเพิ่มเติม"}
+                ? (isEn ? "Problem Detected" : "พบปัญหาขัดข้อง")
+                : (isEn ? "Additional Guidance" : "คำแนะนำเพิ่มเติม")}
             </p>
           </div>
 
@@ -1084,7 +1105,7 @@ export function PropertyImageUploader({
             className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 font-bold shadow-lg"
             onClick={() => setErrorDialog(null)}
           >
-            ตกลง
+            {isEn ? "OK" : "ตกลง"}
           </Button>
         </div>
       </ResponsiveDialog>
@@ -1093,8 +1114,12 @@ export function PropertyImageUploader({
       <ResponsiveDialog
         open={isConfirmClearOpen}
         onOpenChange={setIsConfirmClearOpen}
-        title="ยืนยันการลบรูปภาพทั้งหมด"
-        description="คุณต้องการลบรูปภาพทั้งหมดใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+        title={isEn ? "Confirm Clear All Photos" : "ยืนยันการลบรูปภาพทั้งหมด"}
+        description={
+          isEn
+            ? "Are you sure you want to delete all photos? This action cannot be undone."
+            : "คุณต้องการลบรูปภาพทั้งหมดใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+        }
         className="sm:max-w-md!"
       >
         <div className="flex flex-col gap-4 py-2">
@@ -1103,7 +1128,9 @@ export function PropertyImageUploader({
               <Trash2 className="w-6 h-6" />
             </div>
             <p className="text-sm font-semibold text-slate-800">
-              คุณกำลังจะลบรูปภาพทั้งหมดของประกาศนี้
+              {isEn
+                ? "You are about to delete all uploaded photos for this listing"
+                : "คุณกำลังจะลบรูปภาพทั้งหมดของประกาศนี้"}
             </p>
           </div>
 
@@ -1114,14 +1141,14 @@ export function PropertyImageUploader({
               className="flex-1 rounded-xl h-12 font-bold"
               onClick={() => setIsConfirmClearOpen(false)}
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               type="button"
               className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 font-bold shadow-lg"
               onClick={executeClearAll}
             >
-              ลบทั้งหมด
+              {isEn ? "Delete All" : "ลบทั้งหมด"}
             </Button>
           </div>
         </div>

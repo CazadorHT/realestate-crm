@@ -59,11 +59,15 @@ export class ThaiAddressService {
     endpoint: string,
     schema: z.ZodSchema<T>,
   ): Promise<T[]> {
+    const isBrowser = typeof window !== "undefined";
+    const primaryUrl = isBrowser ? `${PROXY_BASE_URL}/${endpoint}` : `${GITHUB_BASE_URL}/${endpoint}`;
+    const fallbackUrl = isBrowser ? `${GITHUB_BASE_URL}/${endpoint}` : `${PROXY_BASE_URL}/${endpoint}`;
+
     try {
-      const response = await fetch(`${GITHUB_BASE_URL}/${endpoint}`, {
+      const response = await fetch(primaryUrl, {
         next: { revalidate: 31536000 }, // 1 year cache
       });
-      if (!response.ok) throw new Error("GitHub Direct Fetch Failed");
+      if (!response.ok) throw new Error("Primary Fetch Failed");
       const data = await response.json();
       
       // Hardening: Sampling Validation
@@ -71,16 +75,11 @@ export class ThaiAddressService {
       
       return data as T[];
     } catch (error) {
-      console.warn(
-        `[ThaiAddressService] Direct fetch failed for ${endpoint}, switching to proxy.`,
-        error,
-      );
-
       try {
-        const response = await fetch(`${PROXY_BASE_URL}/${endpoint}`, {
+        const response = await fetch(fallbackUrl, {
           next: { revalidate: 31536000 }, // 1 year cache
         });
-        if (!response.ok) throw new Error("Proxy Fetch Failed");
+        if (!response.ok) throw new Error("Fallback Fetch Failed");
         const data = await response.json();
         
         // Hardening: Sampling Validation even on proxy

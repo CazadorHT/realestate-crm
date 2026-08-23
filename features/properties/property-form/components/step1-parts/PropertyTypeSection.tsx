@@ -11,6 +11,7 @@ import {
 } from "@/features/properties/labels";
 import { useFormContext, type UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertyTypeSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
@@ -21,6 +22,8 @@ export function PropertyTypeSection({
   form: formProp,
   onPropertyTypeSelect,
 }: PropertyTypeSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const propertyTypeError = form.formState.errors.property_type;
@@ -48,14 +51,16 @@ export function PropertyTypeSection({
               propertyTypeError ? "text-red-600" : "text-slate-900"
             }`}
           >
-            ประเภทอสังหาฯ <span className="text-red-500">*</span>
+            {isEn ? "Property Type" : "ประเภทอสังหาฯ"} <span className="text-red-500">*</span>
           </h3>
           <p
             className={`text-sm ${
               propertyTypeError ? "text-red-500" : "text-slate-500"
             }`}
           >
-            {propertyTypeError ? "กรุณาเลือกประเภททรัพย์" : "หมวดหมู่ของทรัพย์"}
+            {propertyTypeError
+              ? (isEn ? "Please select a property type" : "กรุณาเลือกประเภททรัพย์")
+              : (isEn ? "Category of property" : "หมวดหมู่ของทรัพย์")}
           </p>
         </div>
       </div>
@@ -80,7 +85,7 @@ export function PropertyTypeSection({
                       field.onChange(type);
                       onPropertyTypeSelect?.();
                     }}
-                    className={`rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center gap-3 p-3 group relative ${
+                    className={`rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center gap-3 p-3 group relative cursor-pointer ${
                       isActive
                         ? "bg-linear-to-br " +
                           gradient +
@@ -100,8 +105,8 @@ export function PropertyTypeSection({
                       <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <span className="text-[10px] sm:text-xs md:text-sm font-semibold tracking-wide text-center w-full">
-                      {PROPERTY_TYPE_LABELS[type]?.th ||
-                        PROPERTY_TYPE_LABELS[type]?.en ||
+                      {PROPERTY_TYPE_LABELS[type]?.[language as "th" | "en"] ||
+                        PROPERTY_TYPE_LABELS[type]?.th ||
                         type}
                     </span>
 
@@ -121,3 +126,4 @@ export function PropertyTypeSection({
     </div>
   );
 }
+

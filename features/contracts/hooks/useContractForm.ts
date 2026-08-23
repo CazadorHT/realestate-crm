@@ -8,16 +8,19 @@ import { useRouter } from "next/navigation";
 import { format, addMonths } from "date-fns";
 import { 
   contractFormSchema, 
-  ContractFormInput,
+  ContractFormInput, 
   type ContractDealSummary 
 } from "@/features/rental-contracts/schema";
 import { upsertContractAction, getContractByDealId } from "@/features/rental-contracts/actions";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // Sub-hooks for specialized logic
 import { useContractPersistence } from "./useContractPersistence";
 import { useContractDateSync } from "./useContractDateSync";
 
 export function useContractForm(onSuccess?: () => void) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDeal, setSelectedDeal] = useState<ContractDealSummary | null>(null);
@@ -72,7 +75,7 @@ export function useContractForm(onSuccess?: () => void) {
   const nextStep = async () => {
     if (currentStep === 1) {
       if (!dealId) {
-        toast.error("กรุณาเลือกดีลก่อนไปขั้นตอนถัดไป");
+        toast.error(isEn ? "Please select a deal before proceeding" : "กรุณาเลือกดีลก่อนไปขั้นตอนถัดไป");
         return;
       }
     } else if (currentStep === 2) {
@@ -83,7 +86,7 @@ export function useContractForm(onSuccess?: () => void) {
         "lease_term_months",
       ]);
       if (!isValidStep) {
-        toast.error("กรุณาระบุข้อมูลให้ถูกต้องครบถ้วน");
+        toast.error(isEn ? "Please fill in all required fields correctly" : "กรุณาระบุข้อมูลให้ถูกต้องครบถ้วน");
         return;
       }
     }
@@ -103,16 +106,16 @@ export function useContractForm(onSuccess?: () => void) {
 
       const res = await upsertContractAction(null, submissionData);
       if (res.success) {
-        toast.success("สร้างสัญญาเรียบร้อย");
+        toast.success(isEn ? "Contract created successfully" : "สร้างสัญญาเรียบร้อย");
         clearDraft(dealId);
         onSuccess?.();
         router.refresh();
       } else {
-        toast.error(res.message || "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองอีกครั้ง");
+        toast.error(res.message || (isEn ? "Unable to save data, please try again" : "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองอีกครั้ง"));
       }
     } catch (err) {
       console.error("Submit Error:", err);
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+      toast.error(isEn ? "Server connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
     } finally {
       setIsSubmitting(false);
     }
@@ -136,3 +139,4 @@ export function useContractForm(onSuccess?: () => void) {
     clearDraft: () => clearDraft(dealId),
   };
 }
+

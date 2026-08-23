@@ -1,7 +1,10 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { CancelButton } from "@/features/properties/btn-cancel";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "../../schema";
@@ -33,6 +36,8 @@ export function PropertyFormNavigation({
   form,
   className,
 }: PropertyFormNavigationProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   return (
     <div
@@ -58,10 +63,10 @@ export function PropertyFormNavigation({
               type="button"
               variant="outline"
               onClick={onBack}
-              aria-label="ย้อนกลับไปขั้นตอนก่อนหน้า"
-              className="h-11 sm:h-14 px-4 sm:px-10 rounded-xl border-slate-200 bg-white/50 hover:bg-slate-50 text-slate-600! font-bold transition-all active:scale-95 flex-1 sm:flex-none text-sm"
+              aria-label={isEn ? "Go back to previous step" : "ย้อนกลับไปขั้นตอนก่อนหน้า"}
+              className="h-11 sm:h-14 px-4 sm:px-10 rounded-xl border-slate-200 bg-white/50 hover:bg-slate-50 text-slate-600! font-bold transition-all active:scale-95 flex-1 sm:flex-none text-sm cursor-pointer"
             >
-              ย้อนกลับ
+              {isEn ? "Back" : "ย้อนกลับ"}
             </Button>
           ) : (
             <div className="sm:hidden flex-1">
@@ -80,27 +85,29 @@ export function PropertyFormNavigation({
                 if (form.getValues("is_ai_generating")) return;
                 onNext();
               }}
-              aria-label="ไปขั้นตอนถัดไป"
-              className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 font-bold text-base sm:text-lg transition-all active:scale-95 flex-[1.5] sm:flex-none disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={isEn ? "Go to next step" : "ไปขั้นตอนถัดไป"}
+              className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 font-bold text-base sm:text-lg transition-all active:scale-95 flex-[1.5] sm:flex-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              ถัดไป
+              {isEn ? "Next" : "ถัดไป"}
             </Button>
           ) : (
             <Button
               type="button"
               onClick={onSubmit}
               aria-label={
-                mode === "create" ? "ยืนยันสร้างประกาศ" : "บันทึกการแก้ไข"
+                mode === "create"
+                  ? (isEn ? "Confirm Create Listing" : "ยืนยันสร้างประกาศ")
+                  : (isEn ? "Save Changes" : "บันทึกการแก้ไข")
               }
               disabled={(mode === "edit" && !isDirty) || isSubmitting}
-              className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 hover:-translate-y-1 text-white shadow-lg shadow-emerald-200 font-bold text-base sm:text-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex-[1.5] sm:flex-none"
+              className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 hover:-translate-y-1 text-white shadow-lg shadow-emerald-200 font-bold text-base sm:text-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex-[1.5] sm:flex-none cursor-pointer"
             >
               {isSubmitting ? (
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               ) : null}
-              {mode === "create" ? "ยืนยัน" : "บันทึก"}
+              {mode === "create" ? (isEn ? "Create" : "ยืนยัน") : (isEn ? "Save" : "บันทึก")}
               <span className="hidden sm:inline ml-1">
-                {mode === "create" ? "สร้างประกาศ" : "การแก้ไข"}
+                {mode === "create" ? (isEn ? "Listing" : "สร้างประกาศ") : (isEn ? "Changes" : "การแก้ไข")}
               </span>
             </Button>
           )}
@@ -109,3 +116,4 @@ export function PropertyFormNavigation({
     </div>
   );
 }
+

@@ -17,6 +17,7 @@ import {
   Check,
 } from "lucide-react";
 import type { StudioLanguage, PromoPosition } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 import { AVAILABLE_BADGES } from "../helpers";
 
 interface StudioContentEditorProps {
@@ -62,10 +63,14 @@ interface StudioContentEditorProps {
   setCustomHeadlineColor?: (c: string) => void;
   customProjectNameColor?: string;
   setCustomProjectNameColor?: (c: string) => void;
+  customLocationColor?: string;
+  setCustomLocationColor?: (c: string) => void;
+  customSpecsColor?: string;
+  setCustomSpecsColor?: (c: string) => void;
 }
 
 export function StudioContentEditor({
-  language,
+  language: _studioLang,
   selectedBadges,
   onToggleBadge,
   customProjectName,
@@ -106,18 +111,25 @@ export function StudioContentEditor({
   setCustomHeadlineColor,
   customProjectNameColor,
   setCustomProjectNameColor,
+  customLocationColor,
+  setCustomLocationColor,
+  customSpecsColor,
+  setCustomSpecsColor,
 }: StudioContentEditorProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   return (
     <div className="space-y-3.5">
       {/* 1. Sticker Badges Selection */}
       <div className="space-y-1.5">
         <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
           <Tag className="h-3.5 w-3.5 text-amber-400" />
-          สติกเกอร์ไฮไลท์บนภาพ (เลือกได้สูงสุด 2)
+          {isEn ? "Image Sticker Badges (Max 2)" : "สติกเกอร์ไฮไลท์บนภาพ (เลือกได้สูงสุด 2)"}
         </Label>
         <div className="flex flex-wrap gap-1.5">
           {AVAILABLE_BADGES.map((b) => {
-            const isSelected = selectedBadges.includes(b.label);
+            const badgeLabel = isEn ? (b.labelEn || b.label) : b.label;
+            const isSelected = selectedBadges.includes(b.label) || selectedBadges.includes(badgeLabel);
             return (
               <button
                 key={b.id}
@@ -129,7 +141,7 @@ export function StudioContentEditor({
                     : "bg-slate-800/70 border-slate-700 text-slate-400 hover:text-slate-200"
                 }`}
               >
-                {b.label}
+                {badgeLabel}
               </button>
             );
           })}
@@ -141,7 +153,7 @@ export function StudioContentEditor({
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-            ปรับแต่งข้อความ & พาดหัว AI (Content Editor)
+            {isEn ? "Customize Text & AI Headline" : "ปรับแต่งข้อความ & พาดหัว AI (Content Editor)"}
           </Label>
           <button
             type="button"
@@ -150,20 +162,20 @@ export function StudioContentEditor({
             className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 disabled:opacity-50 transition-colors cursor-pointer"
           >
             <RefreshCw className={`h-3 w-3 ${isGeneratingAI ? "animate-spin" : ""}`} />
-            ให้ AI คิดใหม่ ({language.toUpperCase()})
+            {isEn ? `Regenerate AI (${language.toUpperCase()})` : `ให้ AI คิดใหม่ (${language.toUpperCase()})`}
           </button>
         </div>
 
         {/* Editable Project Name */}
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-slate-400 font-medium">
-            <span>🏢 ชื่อโครงการ (Project Name)</span>
-            <span className="text-[10px] text-amber-400/80">พิมพ์แก้ไขได้</span>
+            <span>{isEn ? "🏢 Project Name" : "🏢 ชื่อโครงการ (Project Name)"}</span>
+            <span className="text-[10px] text-amber-400/80">{isEn ? "Editable" : "พิมพ์แก้ไขได้"}</span>
           </div>
           <Input
             value={customProjectName}
             onChange={(e) => setCustomProjectName(e.target.value)}
-            placeholder="พิมพ์ชื่อโครงการ เช่น นันทวัน กรุงเทพกรีฑา, The Line..."
+            placeholder={isEn ? "Enter project name e.g. The Line, Ashton..." : "พิมพ์ชื่อโครงการ เช่น นันทวัน กรุงเทพกรีฑา, The Line..."}
             className="bg-slate-800/80 border-slate-700 text-white text-xs h-8 rounded-xl focus-visible:ring-amber-400"
           />
         </div>
@@ -171,13 +183,13 @@ export function StudioContentEditor({
         {/* Editable Title */}
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-slate-400 font-medium">
-            <span>🏠 หัวข้อประกาศ (Property Title)</span>
-            <span className="text-[10px] text-amber-400/80">พิมพ์แก้ไขได้</span>
+            <span>{isEn ? "🏠 Property Title" : "🏠 หัวข้อประกาศ (Property Title)"}</span>
+            <span className="text-[10px] text-amber-400/80">{isEn ? "Editable" : "พิมพ์แก้ไขได้"}</span>
           </div>
           <Input
             value={customTitle}
             onChange={(e) => setCustomTitle(e.target.value)}
-            placeholder="หัวข้อประกาศ..."
+            placeholder={isEn ? "Property title..." : "หัวข้อประกาศ..."}
             className="bg-slate-800/80 border-slate-700 text-white text-xs h-8 rounded-xl focus-visible:ring-amber-400"
           />
         </div>
@@ -185,13 +197,13 @@ export function StudioContentEditor({
         {/* Editable Transit Station */}
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-slate-400 font-medium">
-            <span>🚆 สถานี & ประเภทรถไฟฟ้า (Transit Line & Station)</span>
-            <span className="text-[10px] text-amber-400/80">ระบุสาย/ประเภทได้</span>
+            <span>{isEn ? "🚆 Transit Line & Station" : "🚆 สถานี & ประเภทรถไฟฟ้า (Transit Line & Station)"}</span>
+            <span className="text-[10px] text-amber-400/80">{isEn ? "Specify line/type" : "ระบุสาย/ประเภทได้"}</span>
           </div>
           <Input
             value={customTransitText}
             onChange={(e) => setCustomTransitText(e.target.value)}
-            placeholder={defaultTransitPlaceholder || "เช่น ใกล้ ARL บ้านทับช้าง 400 ม., BTS อ่อนนุช..."}
+            placeholder={defaultTransitPlaceholder || (isEn ? "e.g. Near BTS On Nut 400m..." : "เช่น ใกล้ ARL บ้านทับช้าง 400 ม., BTS อ่อนนุช...")}
             className="bg-slate-800/80 border-slate-700 text-white text-xs h-8 rounded-xl focus-visible:ring-amber-400"
           />
         </div>
@@ -199,13 +211,13 @@ export function StudioContentEditor({
         {/* Editable AI Headline */}
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-slate-400 font-medium">
-            <span>✨ พาดหัวบนภาพ (AI Hook)</span>
-            <span className="text-[10px] text-amber-400/80">สั้น กระชับ ดึงดูด</span>
+            <span>{isEn ? "✨ AI Hook Headline" : "✨ พาดหัวบนภาพ (AI Hook)"}</span>
+            <span className="text-[10px] text-amber-400/80">{isEn ? "Catchy & Short" : "สั้น กระชับ ดึงดูด"}</span>
           </div>
           <Input
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
-            placeholder="ข้อความพาดหัวกระตุ้นความสนใจบนรูปภาพ..."
+            placeholder={isEn ? "Catchy headline on top of the image..." : "ข้อความพาดหัวกระตุ้นความสนใจบนรูปภาพ..."}
             className="bg-slate-800/80 border-slate-700 text-white text-xs h-8 rounded-xl focus-visible:ring-amber-400"
           />
         </div>
@@ -213,23 +225,23 @@ export function StudioContentEditor({
         {/* Custom Text Color Pickers */}
         <div className="pt-2.5 border-t border-slate-800/80 space-y-2">
           <Label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-            <span>🎨 ปรับแต่งสีข้อความทุกส่วน (Custom Text Colors)</span>
+            <span>{isEn ? "🎨 Custom Text Colors" : "🎨 ปรับแต่งสีข้อความทุกส่วน (Custom Text Colors)"}</span>
           </Label>
 
           <div className="grid grid-cols-2 gap-2">
             {/* 1. Title Color */}
             <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
               <div className="flex items-center justify-between text-[10px] text-slate-300 font-bold">
-                <span>🏠 สีหัวข้อประกาศ:</span>
+                <span>{isEn ? "🏠 Title Color:" : "🏠 สีหัวข้อประกาศ:"}</span>
                 <span className="font-mono text-amber-400">{customTitleColor || "#FFFFFF"}</span>
               </div>
               <div className="flex items-center gap-1">
                 {[
-                  { name: "ขาว", hex: "#FFFFFF" },
-                  { name: "ส้ม", hex: "#F97316" },
-                  { name: "ทอง", hex: "#F59E0B" },
-                  { name: "ฟ้า", hex: "#38BDF8" },
-                  { name: "เขียว", hex: "#10B981" },
+                  { name: isEn ? "White" : "ขาว", hex: "#FFFFFF" },
+                  { name: isEn ? "Orange" : "ส้ม", hex: "#F97316" },
+                  { name: isEn ? "Gold" : "ทอง", hex: "#F59E0B" },
+                  { name: isEn ? "Sky" : "ฟ้า", hex: "#38BDF8" },
+                  { name: isEn ? "Emerald" : "เขียว", hex: "#10B981" },
                 ].map((c) => (
                   <button
                     key={c.hex}
@@ -249,7 +261,7 @@ export function StudioContentEditor({
                   value={customTitleColor || "#FFFFFF"}
                   onChange={(e) => setCustomTitleColor && setCustomTitleColor(e.target.value)}
                   className="w-5 h-5 rounded bg-transparent border border-slate-700 cursor-pointer p-0"
-                  title="เลือกสี Custom"
+                  title={isEn ? "Choose custom color" : "เลือกสี Custom"}
                 />
               </div>
             </div>
@@ -257,16 +269,16 @@ export function StudioContentEditor({
             {/* 2. Price Color */}
             <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
               <div className="flex items-center justify-between text-[10px] text-slate-300 font-bold">
-                <span>💰 สีราคาทรัพย์สิน:</span>
+                <span>{isEn ? "💰 Price Color:" : "💰 สีราคาทรัพย์สิน:"}</span>
                 <span className="font-mono text-amber-400">{customPriceColor || "#FFFFFF"}</span>
               </div>
               <div className="flex items-center gap-1">
                 {[
-                  { name: "ขาว", hex: "#FFFFFF" },
-                  { name: "ทอง", hex: "#F59E0B" },
-                  { name: "ส้ม", hex: "#F97316" },
-                  { name: "เขียว", hex: "#10B981" },
-                  { name: "ฟ้า", hex: "#38BDF8" },
+                  { name: isEn ? "White" : "ขาว", hex: "#FFFFFF" },
+                  { name: isEn ? "Gold" : "ทอง", hex: "#F59E0B" },
+                  { name: isEn ? "Orange" : "ส้ม", hex: "#F97316" },
+                  { name: isEn ? "Emerald" : "เขียว", hex: "#10B981" },
+                  { name: isEn ? "Sky" : "ฟ้า", hex: "#38BDF8" },
                 ].map((c) => (
                   <button
                     key={c.hex}
@@ -286,7 +298,7 @@ export function StudioContentEditor({
                   value={customPriceColor || "#FFFFFF"}
                   onChange={(e) => setCustomPriceColor && setCustomPriceColor(e.target.value)}
                   className="w-5 h-5 rounded bg-transparent border border-slate-700 cursor-pointer p-0"
-                  title="เลือกสี Custom"
+                  title={isEn ? "Choose custom color" : "เลือกสี Custom"}
                 />
               </div>
             </div>
@@ -294,16 +306,16 @@ export function StudioContentEditor({
             {/* 3. Headline Color */}
             <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
               <div className="flex items-center justify-between text-[10px] text-slate-300 font-bold">
-                <span>✨ สีพาดหัว AI:</span>
+                <span>{isEn ? "✨ AI Hook Color:" : "✨ สีพาดหัว AI:"}</span>
                 <span className="font-mono text-amber-400">{customHeadlineColor || "#F59E0B"}</span>
               </div>
               <div className="flex items-center gap-1">
                 {[
-                  { name: "ทอง", hex: "#F59E0B" },
-                  { name: "ส้ม", hex: "#F97316" },
-                  { name: "ฟ้า", hex: "#38BDF8" },
-                  { name: "เขียว", hex: "#10B981" },
-                  { name: "ขาว", hex: "#FFFFFF" },
+                  { name: isEn ? "Gold" : "ทอง", hex: "#F59E0B" },
+                  { name: isEn ? "Orange" : "ส้ม", hex: "#F97316" },
+                  { name: isEn ? "Sky" : "ฟ้า", hex: "#38BDF8" },
+                  { name: isEn ? "Emerald" : "เขียว", hex: "#10B981" },
+                  { name: isEn ? "White" : "ขาว", hex: "#FFFFFF" },
                 ].map((c) => (
                   <button
                     key={c.hex}
@@ -323,7 +335,7 @@ export function StudioContentEditor({
                   value={customHeadlineColor || "#F59E0B"}
                   onChange={(e) => setCustomHeadlineColor && setCustomHeadlineColor(e.target.value)}
                   className="w-5 h-5 rounded bg-transparent border border-slate-700 cursor-pointer p-0"
-                  title="เลือกสี Custom"
+                  title={isEn ? "Choose custom color" : "เลือกสี Custom"}
                 />
               </div>
             </div>
@@ -331,16 +343,16 @@ export function StudioContentEditor({
             {/* 4. Project Name Color */}
             <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
               <div className="flex items-center justify-between text-[10px] text-slate-300 font-bold">
-                <span>🏢 สีชื่อโครงการ:</span>
+                <span>{isEn ? "🏢 Project Color:" : "🏢 สีชื่อโครงการ:"}</span>
                 <span className="font-mono text-amber-400">{customProjectNameColor || "#FFFFFF"}</span>
               </div>
               <div className="flex items-center gap-1">
                 {[
-                  { name: "ขาว", hex: "#FFFFFF" },
-                  { name: "ทอง", hex: "#F59E0B" },
-                  { name: "ส้ม", hex: "#F97316" },
-                  { name: "ฟ้า", hex: "#38BDF8" },
-                  { name: "เขียว", hex: "#10B981" },
+                  { name: isEn ? "White" : "ขาว", hex: "#FFFFFF" },
+                  { name: isEn ? "Gold" : "ทอง", hex: "#F59E0B" },
+                  { name: isEn ? "Orange" : "ส้ม", hex: "#F97316" },
+                  { name: isEn ? "Sky" : "ฟ้า", hex: "#38BDF8" },
+                  { name: isEn ? "Emerald" : "เขียว", hex: "#10B981" },
                 ].map((c) => (
                   <button
                     key={c.hex}
@@ -360,7 +372,7 @@ export function StudioContentEditor({
                   value={customProjectNameColor || "#FFFFFF"}
                   onChange={(e) => setCustomProjectNameColor && setCustomProjectNameColor(e.target.value)}
                   className="w-5 h-5 rounded bg-transparent border border-slate-700 cursor-pointer p-0"
-                  title="เลือกสี Custom"
+                  title={isEn ? "Choose custom color" : "เลือกสี Custom"}
                 />
               </div>
             </div>
@@ -380,14 +392,14 @@ export function StudioContentEditor({
         <div className="flex items-center justify-between p-2 rounded-xl bg-slate-800/40 border border-slate-800">
           <Label className="text-[11px] text-slate-300 flex items-center gap-1 cursor-pointer">
             <Phone className="h-3 w-3 text-slate-400" />
-            ข้อมูลติดต่อ
+            {isEn ? "Contact Info" : "ข้อมูลติดต่อ"}
           </Label>
           <Switch checked={showContact} onCheckedChange={setShowContact} />
         </div>
         <div className="flex items-center justify-between p-2 rounded-xl bg-slate-800/40 border border-slate-800">
           <Label className="text-[11px] text-slate-300 flex items-center gap-1 cursor-pointer">
             <UserCheck className="h-3 w-3 text-slate-400" />
-            รูป Agent
+            {isEn ? "Agent Avatar" : "รูป Agent"}
           </Label>
           <Switch checked={showAgentAvatar} onCheckedChange={setShowAgentAvatar} />
         </div>
@@ -396,20 +408,20 @@ export function StudioContentEditor({
       {/* 3.5 Promotional Overlay Badge (Feature 2) */}
       <div className="space-y-1.5 pt-2 border-t border-slate-800">
         <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-          🌟 ป้ายโปรโมชั่น (Promotional Overlay)
+          {isEn ? "🌟 Promotional Overlay Badge" : "🌟 ป้ายโปรโมชั่น (Promotional Overlay)"}
         </Label>
         <Input
           value={promoText}
           onChange={(e) => setPromoText(e.target.value)}
-          placeholder="เช่น 🔥 ลดพิเศษ 2,000,000! หรือ ⚡ ฟรีค่าโอน"
+          placeholder={isEn ? "e.g. 🔥 Special Discount 2M! or ⚡ Free Transfer" : "เช่น 🔥 ลดพิเศษ 2,000,000! หรือ ⚡ ฟรีค่าโอน"}
           className="bg-slate-800/60 border-slate-700 text-xs text-slate-200 rounded-xl"
         />
         <div className="flex flex-wrap gap-1">
           {[
             "🔥 Hot Deal",
-            "🛋️ แต่งครบ พร้อมอยู่",
-            "⚡ ฟรีค่าโอน",
-            "🔑 ห้องหลุดจอง",
+            isEn ? "🛋️ Fully Furnished" : "🛋️ แต่งครบ พร้อมอยู่",
+            isEn ? "⚡ Free Transfer" : "⚡ ฟรีค่าโอน",
+            isEn ? "🔑 Unit Available" : "🔑 ห้องหลุดจอง",
             "🌟 Below Market",
             "💰 High Yield 6%+",
           ].map((preset) => (
@@ -432,7 +444,9 @@ export function StudioContentEditor({
           <div className="flex flex-col gap-2 pt-1.5 border-t border-slate-800/60">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-slate-400 font-medium">ตำแหน่ง:</span>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  {isEn ? "Position:" : "ตำแหน่ง:"}
+                </span>
                 <div className="flex gap-1">
                   {[
                     { id: "top_left", label: "↖️" },
@@ -460,21 +474,21 @@ export function StudioContentEditor({
                 onClick={() => setPromoText("")}
                 className="text-[10px] text-slate-500 hover:text-red-400 cursor-pointer"
               >
-                ลบป้าย
+                {isEn ? "Remove Badge" : "ลบป้าย"}
               </button>
             </div>
 
             {/* Custom Promo BG & Text Color Pickers */}
             <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800/40">
               <div className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-400 font-medium">สีพื้นหลังป้าย:</span>
+                <span className="text-slate-400 font-medium">{isEn ? "Badge BG:" : "สีพื้นหลังป้าย:"}</span>
                 <div className="flex items-center gap-1">
                   {[
-                    { name: "แดง", hex: "#EF4444" },
-                    { name: "ส้ม", hex: "#F97316" },
-                    { name: "ทอง", hex: "#F59E0B" },
-                    { name: "น้ำเงิน", hex: "#2563EB" },
-                    { name: "เขียว", hex: "#10B981" },
+                    { name: isEn ? "Red" : "แดง", hex: "#EF4444" },
+                    { name: isEn ? "Orange" : "ส้ม", hex: "#F97316" },
+                    { name: isEn ? "Gold" : "ทอง", hex: "#F59E0B" },
+                    { name: isEn ? "Blue" : "น้ำเงิน", hex: "#2563EB" },
+                    { name: isEn ? "Green" : "เขียว", hex: "#10B981" },
                   ].map((c) => (
                     <button
                       key={c.hex}
@@ -494,19 +508,19 @@ export function StudioContentEditor({
                     value={promoColor || "#EF4444"}
                     onChange={(e) => setPromoColor(e.target.value)}
                     className="w-5 h-5 rounded bg-transparent border border-slate-700 cursor-pointer p-0"
-                    title="เลือกสี Custom BG"
+                    title={isEn ? "Select custom BG color" : "เลือกสี Custom BG"}
                   />
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-400 font-medium">สีข้อความป้าย:</span>
+                <span className="text-slate-400 font-medium">{isEn ? "Badge Text:" : "สีข้อความป้าย:"}</span>
                 <div className="flex items-center gap-1">
                   {[
-                    { name: "ขาว", hex: "#FFFFFF" },
-                    { name: "ดำ", hex: "#000000" },
-                    { name: "ทอง", hex: "#F59E0B" },
-                    { name: "ส้ม", hex: "#F97316" },
+                    { name: isEn ? "White" : "ขาว", hex: "#FFFFFF" },
+                    { name: isEn ? "Black" : "ดำ", hex: "#000000" },
+                    { name: isEn ? "Gold" : "ทอง", hex: "#F59E0B" },
+                    { name: isEn ? "Orange" : "ส้ม", hex: "#F97316" },
                   ].map((c) => (
                     <button
                       key={c.hex}
@@ -526,7 +540,7 @@ export function StudioContentEditor({
                     value={promoTextColor || "#FFFFFF"}
                     onChange={(e) => setPromoTextColor && setPromoTextColor(e.target.value)}
                     className="w-5 h-5 rounded bg-transparent border border-slate-700 cursor-pointer p-0"
-                    title="เลือกสี Custom Text"
+                    title={isEn ? "Select custom text color" : "เลือกสี Custom Text"}
                   />
                 </div>
               </div>
@@ -540,7 +554,7 @@ export function StudioContentEditor({
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Share2 className="h-3.5 w-3.5 text-amber-400" />
-            แคปชั่นสำหรับโพสต์ (AI Social Caption)
+            {isEn ? "AI Social Caption" : "แคปชั่นสำหรับโพสต์ (AI Social Caption)"}
           </Label>
           <Button
             size="sm"
@@ -553,7 +567,7 @@ export function StudioContentEditor({
             ) : (
               <Copy className="h-3.5 w-3.5 mr-1" />
             )}
-            {copiedCaption ? "คัดลอกแล้ว" : "คัดลอกแคปชั่น"}
+            {copiedCaption ? (isEn ? "Copied" : "คัดลอกแล้ว") : (isEn ? "Copy Caption" : "คัดลอกแคปชั่น")}
           </Button>
         </div>
         <textarea
@@ -561,7 +575,7 @@ export function StudioContentEditor({
           onChange={(e) => setCaption(e.target.value)}
           rows={3}
           className="w-full bg-slate-800/60 border border-slate-700/80 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-400 resize-none font-sans leading-relaxed"
-          placeholder="แคปชั่นที่ AI แต่งให้พร้อมโพสต์..."
+          placeholder={isEn ? "AI-generated caption ready to post..." : "แคปชั่นที่ AI แต่งให้พร้อมโพสต์..."}
         />
         {hashtags.length > 0 && (
           <div className="flex flex-wrap gap-1">

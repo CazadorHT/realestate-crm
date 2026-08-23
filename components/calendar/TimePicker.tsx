@@ -12,6 +12,7 @@ import {
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface TimePickerProps {
   value: string;
@@ -36,12 +37,15 @@ const ALL_SLOTS = Array.from({ length: 96 }).map((_, i) => {
 });
 
 const PERIODS = [
-  { id: "MORNING", label: "เช้า (06:00 - 12:00)", icon: CloudSun, color: "text-amber-500", bg: "bg-amber-50" },
-  { id: "AFTERNOON", label: "บ่าย (12:00 - 17:00)", icon: Sun, color: "text-orange-500", bg: "bg-orange-50" },
-  { id: "EVENING", label: "เย็น/ค่ำ (17:00 - 06:00)", icon: Moon, color: "text-indigo-600", bg: "bg-indigo-50" },
+  { id: "MORNING", labelTh: "เช้า (06:00 - 12:00)", labelEn: "Morning (06:00 - 12:00)", tabTh: "เช้า", tabEn: "Morning", icon: CloudSun, color: "text-amber-500", bg: "bg-amber-50" },
+  { id: "AFTERNOON", labelTh: "บ่าย (12:00 - 17:00)", labelEn: "Afternoon (12:00 - 17:00)", tabTh: "บ่าย", tabEn: "Afternoon", icon: Sun, color: "text-orange-500", bg: "bg-orange-50" },
+  { id: "EVENING", labelTh: "เย็น/ค่ำ (17:00 - 06:00)", labelEn: "Evening (17:00 - 06:00)", tabTh: "เย็น/ค่ำ", tabEn: "Evening", icon: Moon, color: "text-indigo-600", bg: "bg-indigo-50" },
 ] as const;
 
 export function TimePicker({ value, onChange, name, required }: TimePickerProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
   const [activePeriod, setActivePeriod] = useState<typeof PERIODS[number]["id"]>(() => {
     if (!value) return "MORNING";
@@ -67,12 +71,12 @@ export function TimePicker({ value, onChange, name, required }: TimePickerProps)
         variant="outline"
         onClick={() => setOpen(true)}
         className={cn(
-          "w-full h-11 justify-start px-3 rounded-xl border-slate-200 transition-all font-bold",
+          "w-full h-11 justify-start px-3 rounded-xl border-slate-200 transition-all font-bold cursor-pointer",
           value ? "text-slate-900 bg-purple-50/30 border-purple-100" : "text-slate-400 font-normal"
         )}
       >
         <Clock className={cn("mr-2 h-4 w-4", value ? "text-purple-600" : "text-slate-300")} />
-        {value ? `${value} น.` : "เลือกเวลา..."}
+        {value ? `${value}${isEn ? "" : " น."}` : (isEn ? "Select time..." : "เลือกเวลา...")}
         <ChevronRight className="ml-auto h-4 w-4 opacity-50" />
       </Button>
       <input type="hidden" name={name} value={value} required={required} />
@@ -83,8 +87,8 @@ export function TimePicker({ value, onChange, name, required }: TimePickerProps)
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="เลือกเวลา"
-      description="แบ่งตามช่วงเวลาเพื่อให้ค้นหาได้ง่ายขึ้น"
+      title={isEn ? "Select Time" : "เลือกเวลา"}
+      description={isEn ? "Divided by periods for easier selection" : "แบ่งตามช่วงเวลาเพื่อให้ค้นหาได้ง่ายขึ้น"}
       className="sm:max-w-[500px]"
       trigger={trigger}
     >
@@ -99,14 +103,14 @@ export function TimePicker({ value, onChange, name, required }: TimePickerProps)
                 type="button"
                 onClick={() => setActivePeriod(p.id)}
                 className={cn(
-                  "flex-1 min-w-[100px] flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl transition-all border",
+                  "flex-1 min-w-[100px] flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl transition-all border cursor-pointer",
                   isActive 
                     ? cn("bg-white shadow-sm border-slate-200", p.color)
                     : "bg-slate-50 border-transparent text-slate-400 hover:bg-slate-100"
                 )}
               >
                 <p.icon className={cn("h-5 w-5", isActive ? p.color : "opacity-50")} />
-                <span className="text-[10px] font-bold uppercase tracking-tight">{p.label.split(" (")[0]}</span>
+                <span className="text-[10px] font-bold uppercase tracking-tight">{isEn ? p.tabEn : p.tabTh}</span>
               </button>
             );
           })}
@@ -123,7 +127,7 @@ export function TimePicker({ value, onChange, name, required }: TimePickerProps)
                   type="button"
                   onClick={() => handleSelect(slot.time)}
                   className={cn(
-                    "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all active:scale-95 group relative",
+                    "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all active:scale-95 group relative cursor-pointer",
                     isSelected
                       ? "bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-100 z-10"
                       : "bg-white border-slate-100 hover:border-purple-200 hover:bg-purple-50/50 text-slate-600"
@@ -139,7 +143,7 @@ export function TimePicker({ value, onChange, name, required }: TimePickerProps)
                     "text-[8px] font-medium opacity-60 uppercase",
                     isSelected ? "text-white/80" : "text-slate-400"
                   )}>
-                    นัดหมาย
+                    {isEn ? "Slot" : "นัดหมาย"}
                   </span>
                   {isSelected && (
                     <div className="absolute top-1 right-1">
@@ -161,12 +165,12 @@ export function TimePicker({ value, onChange, name, required }: TimePickerProps)
                     <Clock className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-purple-600 font-bold uppercase tracking-wider">เวลาที่เลือก</p>
-                    <p className="text-lg font-bold text-slate-900 leading-tight">{value} น.</p>
+                    <p className="text-[10px] text-purple-600 font-bold uppercase tracking-wider">{isEn ? "Selected Time" : "เวลาที่เลือก"}</p>
+                    <p className="text-lg font-bold text-slate-900 leading-tight">{value}{isEn ? "" : " น."}</p>
                   </div>
                </div>
-               <Button onClick={() => setOpen(false)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md">
-                 ยืนยัน
+               <Button onClick={() => setOpen(false)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md cursor-pointer">
+                 {isEn ? "Confirm" : "ยืนยัน"}
                </Button>
             </div>
           </div>
@@ -175,3 +179,4 @@ export function TimePicker({ value, onChange, name, required }: TimePickerProps)
     </ResponsiveDialog>
   );
 }
+

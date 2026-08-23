@@ -15,6 +15,7 @@ import {
   SocialKeyword,
   SiteSettings,
 } from "@/features/site-settings/schema";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // Extracted Components
 import { KeywordAutomationCard } from "./social-automation/KeywordAutomationCard";
@@ -30,6 +31,9 @@ export function SocialAutomationSettings({
   initialSettings?: SiteSettings;
   mode?: "social" | "automation";
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [keywords, setKeywords] = useState<SocialKeyword[]>(
     initialSettings?.social_automation_keywords || [],
   );
@@ -164,13 +168,13 @@ export function SocialAutomationSettings({
         setMetaPageName(settings.meta_page_name || "");
         setInitialData(settings);
       } catch (err) {
-        toast.error("ไม่สามารถโหลดข้อมูลได้");
+        toast.error(isEn ? "Failed to load automation data" : "ไม่สามารถโหลดข้อมูลได้");
       } finally {
         setIsLoading(false);
       }
     }
     load();
-  }, [initialSettings]);
+  }, [initialSettings, isEn, initialData]);
 
   const addRow = () => {
     setKeywords([
@@ -254,7 +258,7 @@ export function SocialAutomationSettings({
 
   const handleSave = (silent = false) => {
     if (!silent && keywords.some((k) => !k.keyword || !k.dm_content)) {
-      toast.error("กรุณากรอก Keyword และข้อความ DM ให้ครบถ้วน");
+      toast.error(isEn ? "Please fill in all keyword and DM content fields" : "กรุณากรอก Keyword และข้อความ DM ให้ครบถ้วน");
       return;
     }
 
@@ -287,17 +291,17 @@ export function SocialAutomationSettings({
         const allSuccess = results.every((r) => r.success);
 
         if (allSuccess) {
-          if (!silent) toast.success("บันทึกการตั้งค่าเรียบร้อย ✅");
+          if (!silent) toast.success(isEn ? "Settings saved successfully ✅" : "บันทึกการตั้งค่าเรียบร้อย ✅");
           setIsDirty(false);
         } else if (!silent) {
           const failedKeys = results
             .filter((r) => !r.success)
             .map((r) => r.key)
             .join(", ");
-          toast.error(`เกิดข้อผิดพลาดในการบันทึกบางรายการ: ${failedKeys}`);
+          toast.error(isEn ? `Failed to save some items: ${failedKeys}` : `เกิดข้อผิดพลาดในการบันทึกบางรายการ: ${failedKeys}`);
         }
       } catch (error) {
-        if (!silent) toast.error("เกิดข้อผิดพลาดในการบันทึก");
+        if (!silent) toast.error(isEn ? "Error saving settings" : "เกิดข้อผิดพลาดในการบันทึก");
       }
     });
   };
@@ -330,14 +334,14 @@ export function SocialAutomationSettings({
         );
         if (res.success && res.data && index !== undefined) {
           updateRow(index, { dm_content: res.data });
-          toast.success("สร้างข้อความตอบกลับด้วย AI เรียบร้อย");
+          toast.success(isEn ? "AI DM response generated successfully" : "สร้างข้อความตอบกลับด้วย AI เรียบร้อย");
         } else {
-          toast.error(res.message || "เกิดข้อผิดพลาดในการสร้างข้อความ");
+          toast.error(res.message || (isEn ? "Failed to generate message" : "เกิดข้อผิดพลาดในการสร้างข้อความ"));
         }
       } else {
         // Multi-language generation for Global Templates
         const languages: ("th" | "en" | "cn" | "ru")[] = ["th", "en", "cn", "ru"];
-        toast.info("กำลังสร้างเนื้อหาทั้ง 4 ภาษาด้วย AI...");
+        toast.info(isEn ? "Generating content across 4 languages with AI..." : "กำลังสร้างเนื้อหาทั้ง 4 ภาษาด้วย AI...");
 
         const results = await Promise.all(
           languages.map((lang) =>
@@ -366,15 +370,15 @@ export function SocialAutomationSettings({
         });
 
         if (successCount === 4) {
-          toast.success("สร้างเนื้อหาครบทั้ง 4 ภาษาแล้วครับ ✨");
+          toast.success(isEn ? "Generated content in all 4 languages ✨" : "สร้างเนื้อหาครบทั้ง 4 ภาษาแล้วครับ ✨");
         } else if (successCount > 0) {
-          toast.success(`สร้างเนื้อหาสำเร็จ ${successCount}/4 ภาษา`);
+          toast.success(isEn ? `Generated content for ${successCount}/4 languages` : `สร้างเนื้อหาสำเร็จ ${successCount}/4 ภาษา`);
         } else {
-          toast.error("ไม่สามารถสร้างเนื้อหาได้ กรุณาลองใหม่อีกครั้ง");
+          toast.error(isEn ? "Failed to generate content. Please try again." : "ไม่สามารถสร้างเนื้อหาได้ กรุณาลองใหม่อีกครั้ง");
         }
       }
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ AI");
+      toast.error(isEn ? "Error connecting to AI service" : "เกิดข้อผิดพลาดในการเชื่อมต่อ AI");
     } finally {
       setIsGenerating(null);
     }
@@ -435,20 +439,24 @@ export function SocialAutomationSettings({
         <Card className="border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden ring-1 ring-slate-900/5">
           <CardHeader className="bg-linear-to-b from-white to-slate-50/50 border-b border-slate-200 pb-6">
             <CardTitle className="text-lg font-semibold text-slate-900">
-              เงื่อนไขทริกเกอร์และฟีเจอร์ขั้นสูง (Triggers & Gates)
+              {isEn ? "Advanced Triggers & Premium Gates" : "เงื่อนไขทริกเกอร์และฟีเจอร์ขั้นสูง (Triggers & Gates)"}
             </CardTitle>
             <CardDescription className="text-slate-500 font-medium">
-              เปิด/ปิดจุดเชื่อมโยงทริกเกอร์และฟีเจอร์พรีเมียมสำหรับเพจของคุณ
+              {isEn ? "Configure automation triggers and interactive gates for your social channels" : "เปิด/ปิดจุดเชื่อมโยงทริกเกอร์และฟีเจอร์พรีเมียมสำหรับเพจของคุณ"}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             {/* Triggers Section */}
             <div>
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">เงื่อนไขทริกเกอร์ (Automation Triggers)</h4>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                {isEn ? "Automation Triggers" : "เงื่อนไขทริกเกอร์ (Automation Triggers)"}
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
                   <div>
-                    <div className="text-sm font-semibold text-slate-700">ตอบกลับเมื่อคอมเมนต์ใต้สตอรี่</div>
+                    <div className="text-sm font-semibold text-slate-700">
+                      {isEn ? "Story Comments Reply" : "ตอบกลับเมื่อคอมเมนต์ใต้สตอรี่"}
+                    </div>
                     <div className="text-xs text-slate-400">Replies to a story</div>
                   </div>
                   <Switch
@@ -460,7 +468,9 @@ export function SocialAutomationSettings({
 
                 <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
                   <div>
-                    <div className="text-sm font-semibold text-slate-700">ตอบกลับข้อความตรงทันที</div>
+                    <div className="text-sm font-semibold text-slate-700">
+                      {isEn ? "Instant Direct DM Reply" : "ตอบกลับข้อความตรงทันที"}
+                    </div>
                     <div className="text-xs text-slate-400">Direct DMs response</div>
                   </div>
                   <Switch
@@ -474,12 +484,16 @@ export function SocialAutomationSettings({
 
             {/* Premium Gates Section */}
             <div className="pt-4 border-t border-slate-100">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">ระบบประตูกรองแชต (Premium Automation Gates)</h4>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                {isEn ? "Premium Automation Gates" : "ระบบประตูกรองแชต (Premium Automation Gates)"}
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
                   <div>
                     <div className="text-sm font-semibold text-slate-700">Follow Gate</div>
-                    <div className="text-xs text-slate-400">ต้องติดตามบัญชีก่อนรับข้อมูล</div>
+                    <div className="text-xs text-slate-400">
+                      {isEn ? "Must follow account before receiving info" : "ต้องติดตามบัญชีก่อนรับข้อมูล"}
+                    </div>
                   </div>
                   <Switch
                     checked={followGateEnabled}
@@ -491,7 +505,9 @@ export function SocialAutomationSettings({
                 <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
                   <div>
                     <div className="text-sm font-semibold text-slate-700">Lead Capture Gate</div>
-                    <div className="text-xs text-slate-400">ขออีเมล/เบอร์โทรศัพท์ลูกค้าก่อนเฉลยส่งลิงก์</div>
+                    <div className="text-xs text-slate-400">
+                      {isEn ? "Request email/phone before sending links" : "ขออีเมล/เบอร์โทรศัพท์ลูกค้าก่อนเฉลยส่งลิงก์"}
+                    </div>
                   </div>
                   <Switch
                     checked={leadCaptureGateEnabled}
@@ -512,7 +528,11 @@ export function SocialAutomationSettings({
             <span>Live Phone Preview</span>
             <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full dark:bg-blue-900/30 dark:text-blue-400 uppercase tracking-wider">Real-time</span>
           </h3>
-          <p className="text-xs text-slate-500 mt-1">จำลองการแสดงผลของแชทบอทและการตอบกลับอัตโนมัติบนโซเชียลมีเดีย</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {isEn 
+              ? "Simulate chatbot and social automated reply experience" 
+              : "จำลองการแสดงผลของแชทบอทและการตอบกลับอัตโนมัติบนโซเชียลมีเดีย"}
+          </p>
         </div>
         <PhoneSimulator
           activeTab={simulatorTab}
@@ -528,10 +548,12 @@ export function SocialAutomationSettings({
 
       {/* Floating Sticky Save Bar */}
       {hasChanges && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md border border-slate-200  shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300 w-11/12 max-w-2xl">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md border border-slate-200 shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300 w-11/12 max-w-2xl">
           <div className="flex items-center gap-3">
             <div className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-250">มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</span>
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-250">
+              {isEn ? "Unsaved changes pending" : "มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก"}
+            </span>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -544,7 +566,7 @@ export function SocialAutomationSettings({
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
-              บันทึกการตั้งค่าทั้งหมด
+              {isEn ? "Save All Settings" : "บันทึกการตั้งค่าทั้งหมด"}
             </Button>
           </div>
         </div>
@@ -552,3 +574,4 @@ export function SocialAutomationSettings({
     </div>
   );
 }
+

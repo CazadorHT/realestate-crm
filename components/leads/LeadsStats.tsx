@@ -2,7 +2,8 @@
 
 import { Users, UserPlus, Percent, Megaphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LEAD_SOURCE_LABELS } from "@/features/leads/labels";
+import { leadSourceLabelNullable } from "@/features/leads/labels";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface LeadsStatsProps {
   stats: {
@@ -15,45 +16,53 @@ interface LeadsStatsProps {
 }
 
 export function LeadsStats({ stats }: LeadsStatsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   // Calculate top source
   const topSource = Object.entries(stats.bySource).sort(
     (a, b) => b[1] - a[1]
   )[0];
   const topSourceLabel = topSource
-    ? LEAD_SOURCE_LABELS[topSource[0] as keyof typeof LEAD_SOURCE_LABELS] ||
-      topSource[0]
+    ? leadSourceLabelNullable(topSource[0], language)
     : "-";
 
   const statItems = [
     {
-      title: "ลีดทั้งหมด",
+      title: isEn ? "Total Leads" : "ลีดทั้งหมด",
       value: stats.totalLeads,
       icon: Users,
-      desc: "Total Leads",
+      desc: isEn ? "All leads in system" : "ลีดทั้งหมดในระบบ",
       color: "text-blue-600",
       bgConfig: "bg-blue-100",
     },
     {
-      title: "ลีดใหม่เดือนนี้",
+      title: isEn ? "New This Month" : "ลีดใหม่เดือนนี้",
       value: `+${stats.newLeadsMonth}`,
       icon: UserPlus,
-      desc: "New This Month",
+      desc: isEn ? "Created this month" : "สร้างในเดือนนี้",
       color: "text-emerald-600",
       bgConfig: "bg-emerald-100",
     },
     {
-      title: "กำลังดำเนินการ",
+      title: isEn ? "In Progress" : "กำลังดำเนินการ",
       value: stats.activeLeads,
       icon: Percent,
-      desc: "Active (Not Closed)",
+      desc: isEn ? "Active pipeline" : "อยู่ระหว่างดำเนินการ",
       color: "text-amber-600",
       bgConfig: "bg-amber-100",
     },
     {
-      title: "ที่มาสูงสุด",
+      title: isEn ? "Top Source" : "ที่มาสูงสุด",
       value: topSourceLabel,
       icon: Megaphone,
-      desc: topSource ? `${topSource[1]} รายการ` : "No Data",
+      desc: topSource
+        ? isEn
+          ? `${topSource[1]} leads`
+          : `${topSource[1]} รายการ`
+        : isEn
+          ? "No Data"
+          : "ไม่มีข้อมูล",
       color: "text-purple-600",
       bgConfig: "bg-purple-100",
     },

@@ -32,8 +32,12 @@ import {
   getCommissionRulesAction,
   saveCommissionRulesAction,
 } from "../actions/commission-actions";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function CommissionSettings() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [ruleSet, setRuleSet] = useState<CommissionRuleSet>({
     type: "TIERED",
     tiers: [
@@ -65,19 +69,21 @@ export function CommissionSettings() {
         }
       } catch (error) {
         console.error("Failed to load commission rules:", error);
-        toast.error("ไม่สามารถโหลดข้อมูลการตั้งค่าได้");
+        toast.error(isEn ? "Failed to load commission configuration" : "ไม่สามารถโหลดข้อมูลการตั้งค่าได้");
       } finally {
         setLoading(false);
       }
     }
     loadRules();
-  }, []);
+  }, [isEn]);
 
   const addTier = () => {
     const lastTier = ruleSet.tiers?.[ruleSet.tiers.length - 1];
     if (lastTier && lastTier.maxPrice === null) {
       toast.error(
-        "Tier สุดท้ายยังไม่มีขีดจำกัดสูงสุด ไม่สามารถเพิ่ม Tier ใหม่ได้",
+        isEn
+          ? "The last tier has no upper limit. Please set a max price before adding another tier."
+          : "Tier สุดท้ายยังไม่มีขีดจำกัดสูงสุด ไม่สามารถเพิ่ม Tier ใหม่ได้",
       );
       return;
     }
@@ -110,7 +116,7 @@ export function CommissionSettings() {
 
   const validateTiers = (): boolean => {
     if (!ruleSet.tiers || ruleSet.tiers.length === 0) {
-      toast.error("กรุณาเพิ่มอย่างน้อย 1 Tier");
+      toast.error(isEn ? "Please add at least 1 tier" : "กรุณาเพิ่มอย่างน้อย 1 Tier");
       return false;
     }
 
@@ -120,13 +126,13 @@ export function CommissionSettings() {
 
       // 1. Check percentage
       if (tier.percentage < 0 || tier.percentage > 100) {
-        toast.error(`Tier ที่ ${i + 1}: เปอร์เซ็นต์ต้องอยู่ระหว่าง 0-100%`);
+        toast.error(isEn ? `Tier ${i + 1}: Percentage must be between 0-100%` : `Tier ที่ ${i + 1}: เปอร์เซ็นต์ต้องอยู่ระหว่าง 0-100%`);
         return false;
       }
 
       // 2. Check Min < Max
       if (tier.maxPrice !== null && tier.minPrice >= tier.maxPrice) {
-        toast.error(`Tier ที่ ${i + 1}: ราคาเริ่มต้นต้องน้อยกว่าราคาสูงสุด`);
+        toast.error(isEn ? `Tier ${i + 1}: Starting price must be less than max price` : `Tier ที่ ${i + 1}: ราคาเริ่มต้นต้องน้อยกว่าราคาสูงสุด`);
         return false;
       }
 
@@ -134,22 +140,20 @@ export function CommissionSettings() {
       if (prevTier) {
         if (prevTier.maxPrice === null) {
           toast.error(
-            `Tier ที่ ${i}: ต้องมีขีดจำกัดสูงสุดก่อนเพิ่ม Tier ถัดไป`,
+            isEn
+              ? `Tier ${i}: Must have an upper limit before adding the next tier`
+              : `Tier ที่ ${i}: ต้องมีขีดจำกัดสูงสุดก่อนเพิ่ม Tier ถัดไป`,
           );
           return false;
         }
         if (tier.minPrice <= prevTier.maxPrice) {
           toast.error(
-            `Tier ที่ ${i + 1}: ราคาเริ่มต้นต้องมากกว่าราคาสูงสุดของ Tier ก่อนหน้า (${prevTier.maxPrice.toLocaleString()})`,
+            isEn
+              ? `Tier ${i + 1}: Starting price must be greater than previous tier max price (${prevTier.maxPrice.toLocaleString()})`
+              : `Tier ที่ ${i + 1}: ราคาเริ่มต้นต้องมากกว่าราคาสูงสุดของ Tier ก่อนหน้า (${prevTier.maxPrice.toLocaleString()})`,
           );
           return false;
         }
-      }
-
-      // 4. Last tier check
-      if (i === ruleSet.tiers.length - 1 && tier.maxPrice !== null) {
-        // Warning only, or strict? Let's just warn for now or allow it.
-        // Usually the last tier should be null (unlimited), but it's not strictly required.
       }
     }
 
@@ -162,11 +166,11 @@ export function CommissionSettings() {
       (ruleSet.defaultClosingPercent || 0) +
       (ruleSet.defaultAgencyPercent || 0);
 
-    // Allow a small margin of error for Team Pool if it's subtracted differently,
-    // but typically these three should sum to 100.
     if (sum !== 100) {
       toast.error(
-        `ผลรวมของส่วนแบ่ง (Listing + Closing + Agency) ต้องเท่ากับ 100% (ปัจจุบัน: ${sum}%)`,
+        isEn
+          ? `Split ratio sum (Listing + Closing + Agency) must equal 100% (Current: ${sum}%)`
+          : `ผลรวมของส่วนแบ่ง (Listing + Closing + Agency) ต้องเท่ากับ 100% (ปัจจุบัน: ${sum}%)`,
       );
       return false;
     }
@@ -181,13 +185,13 @@ export function CommissionSettings() {
     try {
       const result = await saveCommissionRulesAction(ruleSet);
       if (result.success) {
-        toast.success("บันทึกการตั้งค่าคอมมิชชั่นเรียบร้อยแล้ว");
+        toast.success(isEn ? "Commission settings saved successfully" : "บันทึกการตั้งค่าคอมมิชชั่นเรียบร้อยแล้ว");
       } else {
-        toast.error(result.message || "ไม่สามารถบันทึกข้อมูลได้");
+        toast.error(result.message || (isEn ? "Failed to save settings" : "ไม่สามารถบันทึกข้อมูลได้"));
       }
     } catch (error) {
       console.error("Failed to save commission rules:", error);
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      toast.error(isEn ? "An error occurred while saving" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setSaving(false);
     }
@@ -207,17 +211,19 @@ export function CommissionSettings() {
         <div>
           <CardTitle className="text-xl font-bold flex items-center gap-2">
             <SettingsIcon className="h-6 w-6 text-blue-500" />
-            ตั้งค่าคอมมิชชั่น (Commission Config)
+            {isEn ? "Commission Configuration" : "ตั้งค่าคอมมิชชั่น (Commission Config)"}
           </CardTitle>
           <CardDescription>
-            จัดการรูปแบบและขั้นบันได (Tiers) ของค่าคอมมิชชั่นสำหรับงานขายและเช่า
+            {isEn
+              ? "Manage commission structures, tiers, and split ratios for sales and rental transactions."
+              : "จัดการรูปแบบและขั้นบันได (Tiers) ของค่าคอมมิชชั่นสำหรับงานขายและเช่า"}
           </CardDescription>
         </div>
         <Button
           onClick={handleSave}
           disabled={saving || (ruleSet.enableAdvancedSplit && splitSum !== 100)}
           className={cn(
-            "gap-2 px-6 h-11 transition-all duration-300 font-bold shadow-lg hover:shadow-emerald-500/20",
+            "gap-2 px-6 h-11 transition-all duration-300 font-bold shadow-lg hover:shadow-emerald-500/20 cursor-pointer",
             saving || (ruleSet.enableAdvancedSplit && splitSum !== 100)
               ? "bg-slate-100 text-slate-400"
               : "bg-emerald-600 hover:bg-emerald-700 text-white",
@@ -228,7 +234,7 @@ export function CommissionSettings() {
           ) : (
             <Save className="h-4 w-4" />
           )}
-          {saving ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
+          {saving ? (isEn ? "Saving..." : "กำลังบันทึก...") : (isEn ? "Save Settings" : "บันทึกการตั้งค่า")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -238,10 +244,12 @@ export function CommissionSettings() {
           </div>
           <div>
             <h4 className="font-bold text-blue-900 text-sm sm:text-base">
-              แบบขั้นบันได (Tiered Model)
+              {isEn ? "Tiered Bracket Model" : "แบบขั้นบันได (Tiered Model)"}
             </h4>
             <p className="text-[10px] sm:text-xs text-blue-700">
-              ระบบจะคำนวณค่าคอมมิชชั่นตามช่วงราคาของอสังหาริมทรัพย์ที่คุณกำหนดไว้ด้านล่าง
+              {isEn
+                ? "The CRM calculates gross commission based on property valuation brackets defined below."
+                : "ระบบจะคำนวณค่าคอมมิชชั่นตามช่วงราคาของอสังหาริมทรัพย์ที่คุณกำหนดไว้ด้านล่าง"}
             </p>
           </div>
         </div>
@@ -263,7 +271,7 @@ export function CommissionSettings() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 w-full ml-2">
                 <div className="md:col-span-4 space-y-1.5">
                   <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-                    ราคาเริ่มต้น (Starting Price)
+                    {isEn ? "Starting Price" : "ราคาเริ่มต้น (Starting Price)"}
                   </Label>
                   <PriceInput
                     value={tier.minPrice}
@@ -275,14 +283,14 @@ export function CommissionSettings() {
 
                 <div className="md:col-span-4 space-y-1.5">
                   <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-                    ราคาสูงสุด (Up to)
+                    {isEn ? "Max Price (Up to)" : "ราคาสูงสุด (Up to)"}
                   </Label>
                   <PriceInput
                     value={tier.maxPrice || 0}
                     onChange={(val) =>
                       updateTier(index, "maxPrice", val || null)
                     }
-                    placeholder="ไม่มีจำกัดสูงสุด (Unlimited)"
+                    placeholder={isEn ? "Unlimited" : "ไม่มีจำกัดสูงสุด (Unlimited)"}
                     className="bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-blue-400 h-11 text-lg font-medium"
                     showSuffix={false}
                   />
@@ -290,7 +298,7 @@ export function CommissionSettings() {
 
                 <div className="md:col-span-3 space-y-1.5">
                   <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-                    อัตราคอมมิชชั่น
+                    {isEn ? "Commission Rate" : "อัตราคอมมิชชั่น"}
                   </Label>
                   <div className="relative">
                     <PriceInput
@@ -310,7 +318,7 @@ export function CommissionSettings() {
                     variant="ghost"
                     size="icon"
                     onClick={() => removeTier(index)}
-                    className="text-slate-200 hover:text-red-500 hover:bg-red-50 transition-colors h-11 w-11 rounded-xl"
+                    className="text-slate-200 hover:text-red-500 hover:bg-red-50 transition-colors h-11 w-11 rounded-xl cursor-pointer"
                     disabled={ruleSet.tiers!.length <= 1}
                   >
                     <Trash2 className="h-5 w-5" />
@@ -323,33 +331,35 @@ export function CommissionSettings() {
           <Button
             variant="outline"
             onClick={addTier}
-            className="w-full border-dashed border-2 py-6 text-slate-500  hover:bg-blue-50 border-slate-200 hover:border-blue-300"
+            className="w-full border-dashed border-2 py-6 text-slate-500 hover:bg-blue-50 border-slate-200 hover:border-blue-300 cursor-pointer font-bold"
           >
-            <Plus className="h-4 w-4 mr-2" /> เพิ่มช่วงราคาใหม่ (Add New Tier)
+            <Plus className="h-4 w-4 mr-2" /> {isEn ? "Add New Tier" : "เพิ่มช่วงราคาใหม่ (Add New Tier)"}
           </Button>
         </div>
 
         <div className="pt-6 border-t border-slate-100 italic text-[11px] text-slate-400 flex items-center gap-2">
           <Calculator className="h-3 w-3" />
-          หมายเหตุ: ระบบจะเลือกใช้ Tier แรกที่ราคาอสังหาฯ ตกอยู่ในช่วงนั้นๆ
-          โดยอัตโนมัติ
+          {isEn
+            ? "Note: The system automatically applies the first matching price bracket."
+            : "หมายเหตุ: ระบบจะเลือกใช้ Tier แรกที่ราคาอสังหาฯ ตกอยู่ในช่วงนั้นๆ โดยอัตโนมัติ"}
         </div>
 
         <Separator className="my-8" />
 
         {/* Advanced Split Ratios Section */}
-        <div className="space-y-6 ">
+        <div className="space-y-6">
           <div className="flex items-center gap-4 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
             <div className="p-3 bg-emerald-100 rounded-full text-emerald-600">
               <Users className="h-5 w-5" />
             </div>
             <div>
               <h4 className="font-bold text-emerald-900">
-                สัดส่วนการแบ่งคอมมิชชั่น (Advanced Split Ratios)
+                {isEn ? "Advanced Split Ratios" : "สัดส่วนการแบ่งคอมมิชชั่น (Advanced Split Ratios)"}
               </h4>
               <p className="text-xs text-emerald-700">
-                กำหนดสัดส่วนการแบ่งเค้กมาตรฐานสำหรับ Listing Agent, Closing
-                Agent และบริษัท (Agency)
+                {isEn
+                  ? "Define standard split ratios between Listing Agent, Closing Agent, and Agency."
+                  : "กำหนดสัดส่วนการแบ่งเค้กมาตรฐานสำหรับ Listing Agent, Closing Agent และบริษัท (Agency)"}
               </p>
             </div>
           </div>
@@ -363,7 +373,7 @@ export function CommissionSettings() {
                     htmlFor="enable-advanced-split"
                     className="font-bold text-blue-900 cursor-pointer text-xs sm:text-sm block truncate"
                   >
-                    เปิดการแบ่งคอมมิชชั่นขั้นสูง
+                    {isEn ? "Enable Advanced Commission Split" : "เปิดการแบ่งคอมมิชชั่นขั้นสูง"}
                   </Label>
                   <p className="text-[9px] sm:text-[10px] text-blue-700 truncate">
                     (Listing, Closing, Agency)
@@ -377,11 +387,15 @@ export function CommissionSettings() {
                   setRuleSet({ ...ruleSet, enableAdvancedSplit: checked });
                   if (checked) {
                     toast.success(
-                      "เปิดใช้งานระบบการแบ่งคอมมิชชั่นขั้นสูง (Listing/Closing/Agency)",
+                      isEn
+                        ? "Advanced commission splitting enabled (Listing/Closing/Agency)"
+                        : "เปิดใช้งานระบบการแบ่งคอมมิชชั่นขั้นสูง (Listing/Closing/Agency)",
                     );
                   } else {
                     toast.info(
-                      "ปิดใช้งานระบบการแบ่งคอมมิชชั่นขั้นสูง (ระบบจะใช้ 100% Agency)",
+                      isEn
+                        ? "Advanced splitting disabled (defaulting to 100% Agency)"
+                        : "ปิดใช้งานระบบการแบ่งคอมมิชชั่นขั้นสูง (ระบบจะใช้ 100% Agency)",
                     );
                   }
                 }}
@@ -436,12 +450,12 @@ export function CommissionSettings() {
                   >
                     <div className="flex items-center gap-2">
                       <Calculator className="h-4 w-4 shrink-0" />
-                      <span>ผลรวมทั้งหมด: {splitSum}%</span>
+                      <span>{isEn ? "Total Sum:" : "ผลรวมทั้งหมด:"} {splitSum}%</span>
                     </div>
                     <span>
                       {splitSum === 100
-                        ? "✓ ครบถ้วน (Perfect Split)"
-                        : "⚠ ต้องเท่ากับ 100%"}
+                        ? (isEn ? "✓ Perfect Split (100%)" : "✓ ครบถ้วน (Perfect Split)")
+                        : (isEn ? "⚠ Must equal 100%" : "⚠ ต้องเท่ากับ 100%")}
                     </span>
                   </div>
                 </div>
@@ -465,7 +479,7 @@ export function CommissionSettings() {
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400 italic">
-                      ส่วนแบ่งสำหรับคนหาทรัพย์
+                      {isEn ? "Cut for property acquisition agent" : "ส่วนแบ่งสำหรับคนหาทรัพย์"}
                     </p>
                   </div>
 
@@ -487,7 +501,7 @@ export function CommissionSettings() {
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400 italic">
-                      ส่วนแบ่งสำหรับคนปิดดีล
+                      {isEn ? "Cut for deal closing agent" : "ส่วนแบ่งสำหรับคนปิดดีล"}
                     </p>
                   </div>
 
@@ -509,7 +523,7 @@ export function CommissionSettings() {
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400 italic">
-                      ส่วนหักเข้าบริษัท
+                      {isEn ? "Retention for brokerage house" : "ส่วนหักเข้าบริษัท"}
                     </p>
                   </div>
                 </div>
@@ -527,10 +541,10 @@ export function CommissionSettings() {
                       htmlFor="team-pool"
                       className="font-bold text-amber-900 cursor-pointer"
                     >
-                      ระบบโบนัสทีม (Team Bonus Pool)
+                      {isEn ? "Team Bonus Pool" : "ระบบโบนัสทีม (Team Bonus Pool)"}
                     </Label>
                     <p className="text-[10px] text-amber-700">
-                      หักยอดส่วนหนึ่งเข้ากองกลางสำหรับกิจกรรมทีม
+                      {isEn ? "Allocate a percentage to shared team activities fund." : "หักยอดส่วนหนึ่งเข้ากองกลางสำหรับกิจกรรมทีม"}
                     </p>
                   </div>
                 </div>
@@ -543,9 +557,9 @@ export function CommissionSettings() {
                       enableTeamPoolByDefault: checked,
                     });
                     if (checked) {
-                      toast.success("เปิดใช้งานระบบโบนัสทีม (Team Bonus Pool)");
+                      toast.success(isEn ? "Team Bonus Pool enabled" : "เปิดใช้งานระบบโบนัสทีม (Team Bonus Pool)");
                     } else {
-                      toast.info("ปิดใช้งานระบบโบนัสทีม");
+                      toast.info(isEn ? "Team Bonus Pool disabled" : "ปิดใช้งานระบบโบนัสทีม");
                     }
                   }}
                 />
@@ -555,7 +569,7 @@ export function CommissionSettings() {
                 <div className="flex items-center gap-4 pl-12 animate-in fade-in slide-in-from-left-2 duration-300">
                   <div className="w-32">
                     <Label className="text-[10px] font-bold text-amber-600 uppercase">
-                      อัตราหักกองกลาง
+                      {isEn ? "Pool Deduction" : "อัตราหักกองกลาง"}
                     </Label>
                     <div className="relative mt-1">
                       <PriceInput
@@ -575,7 +589,7 @@ export function CommissionSettings() {
                     </div>
                   </div>
                   <p className="text-[11px] text-amber-600/70 italic mt-4">
-                    * จะถูกหักก่อนแบ่งให้ Agent และ Agency
+                    {isEn ? "* Deducted prior to agent/agency distribution" : "* จะถูกหักก่อนแบ่งให้ Agent และ Agency"}
                   </p>
                 </div>
               )}
@@ -583,8 +597,11 @@ export function CommissionSettings() {
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center gap-3">
             <ShieldCheck className="h-4 w-4 text-slate-400" />
             <p className="text-[11px] text-slate-500">
-              ค่าหักภาษี ณ ที่จ่าย (WHT) จะถูกกำหนดเป็นมาตรฐานที่{" "}
-              <strong>3%</strong> สำหรับบุคคลธรรมดาอัตโนมัติ
+              {isEn ? (
+                <>Withholding Tax (WHT) is set at the statutory standard of <strong>3%</strong> for individuals.</>
+              ) : (
+                <>ค่าหักภาษี ณ ที่จ่าย (WHT) จะถูกกำหนดเป็นมาตรฐานที่ <strong>3%</strong> สำหรับบุคคลธรรมดาอัตโนมัติ</>
+              )}
             </p>
           </div>
         </div>

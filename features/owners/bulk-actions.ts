@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
@@ -21,6 +22,10 @@ export async function bulkDeleteOwnersAction(
   ids: string[]
 ): Promise<BulkDeleteResult> {
   try {
+    const cookieStore = await cookies();
+    const lang = cookieStore.get("language")?.value || "th";
+    const isEn = lang === "en";
+
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
@@ -28,7 +33,7 @@ export async function bulkDeleteOwnersAction(
       return {
         success: false,
         deletedCount: 0,
-        message: "ไม่มีรายการที่เลือก",
+        message: isEn ? "No items selected" : "ไม่มีรายการที่เลือก",
       };
     }
 
@@ -59,7 +64,7 @@ export async function bulkDeleteOwnersAction(
       return {
         success: false,
         deletedCount: 0,
-        message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการลบ",
+        message: isEn ? "No matching owner records found" : "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการลบ",
       };
     }
 
@@ -84,7 +89,9 @@ export async function bulkDeleteOwnersAction(
       return {
         success: false,
         deletedCount: 0,
-        message: "ไม่สามารถลบเจ้าของที่เลือกได้ เนื่องจากทุกท่านยังมีทรัพย์สินผูกพันอยู่ กรุณาลบหรือย้ายเจ้าของทรัพย์สินก่อนดำเนินการ",
+        message: isEn
+          ? "Cannot delete selected owners because all have active property listings attached. Please reassign or delete the listings first."
+          : "ไม่สามารถลบเจ้าของที่เลือกได้ เนื่องจากทุกท่านยังมีทรัพย์สินผูกพันอยู่ กรุณาลบหรือย้ายเจ้าของทรัพย์สินก่อนดำเนินการ",
       };
     }
 
@@ -126,9 +133,13 @@ export async function bulkDeleteOwnersAction(
     revalidatePath("/protected/owners");
 
     const deletedCount = count ?? safeIds.length;
-    const msg = skippedCount > 0
-      ? `ลบเจ้าของทรัพย์สำเร็จ ${deletedCount} รายการ (ข้าม ${skippedCount} รายการที่มีทรัพย์ผูกพันอยู่)`
-      : `ลบเจ้าของทรัพย์สำเร็จ ${deletedCount} รายการ`;
+    const msg = isEn
+      ? skippedCount > 0
+        ? `Successfully deleted ${deletedCount} owners (skipped ${skippedCount} with active listings)`
+        : `Successfully deleted ${deletedCount} owners`
+      : skippedCount > 0
+        ? `ลบเจ้าของทรัพย์สำเร็จ ${deletedCount} รายการ (ข้าม ${skippedCount} รายการที่มีทรัพย์ผูกพันอยู่)`
+        : `ลบเจ้าของทรัพย์สำเร็จ ${deletedCount} รายการ`;
 
     return {
       success: true,
@@ -152,15 +163,19 @@ export async function bulkMoveOwnersToTenantAction(
   ids: string[],
 ): Promise<{ success: boolean; message: string }> {
   try {
+    const cookieStore = await cookies();
+    const lang = cookieStore.get("language")?.value || "th";
+    const isEn = lang === "en";
+
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
 
     if (!ctx.tenantId) {
-      return { success: false, message: "ไม่พบข้อมูลสาขาของคุณ" };
+      return { success: false, message: isEn ? "Branch information not found" : "ไม่พบข้อมูลสาขาของคุณ" };
     }
 
     if (!ids || ids.length === 0) {
-      return { success: false, message: "ไม่มีรายการที่เลือก" };
+      return { success: false, message: isEn ? "No items selected" : "ไม่มีรายการที่เลือก" };
     }
 
     // Only move owners that don't have a tenant_id yet
@@ -191,7 +206,7 @@ export async function bulkMoveOwnersToTenantAction(
 
     return {
       success: true,
-      message: `ดึงข้อมูลสำเร็จ ${count} รายการ`,
+      message: isEn ? `Successfully pulled ${count} owners to your branch` : `ดึงข้อมูลสำเร็จ ${count} รายการ`,
     };
   } catch (error) {
     console.error("bulkMoveOwnersToTenantAction error:", error);

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { 
-  Train, Search, Edit2, Loader2, AlertCircle, ExternalLink, Plus
+  Search, Edit2, Loader2, AlertCircle, ExternalLink, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import {
 } from "@/features/properties/actions/fetch-master-data";
 import { StationEditDialog } from "./components/StationEditDialog";
 import { LOGO_PATHS } from "@/components/public/near-station/helpers/station-selector-helpers";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StationItem {
   id?: string;
@@ -70,6 +71,9 @@ const LINE_COLORS: Record<string, string> = {
 };
 
 export default function TransitStationsAdminPage() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [stations, setStations] = React.useState<StationItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -86,12 +90,12 @@ export default function TransitStationsAdminPage() {
     try {
       const data = await getTransitStationsWithCountsAction();
       setStations(data as StationItem[]);
-    } catch (err) {
-      toast.error("ไม่สามารถโหลดข้อมูลสถานีได้");
+    } catch {
+      toast.error(isEn ? "Failed to load station data" : "ไม่สามารถโหลดข้อมูลสถานีได้");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isEn]);
 
   React.useEffect(() => {
     loadStations();
@@ -158,10 +162,12 @@ export default function TransitStationsAdminPage() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight">
-              จัดการ SEO สถานีรถไฟฟ้า
+              {isEn ? "Transit Stations & SEO Directory" : "จัดการ SEO สถานีรถไฟฟ้า"}
             </h1>
             <p className="text-sm text-indigo-200/80 max-w-xl font-medium">
-              จัดการข้อมูลคำค้นหา คีย์เวิร์ด ชื่อหัวข้อ (SEO Title/Description) และรายละเอียดทำเลของสถานีรถไฟฟ้าสำหรับหน้าค้นหาหลัก
+              {isEn
+                ? "Manage station search keywords, SEO Title/Description, location content, and listings near transit stations."
+                : "จัดการข้อมูลคำค้นหา คีย์เวิร์ด ชื่อหัวข้อ (SEO Title/Description) และรายละเอียดทำเลของสถานีรถไฟฟ้าสำหรับหน้าค้นหาหลัก"}
             </p>
           </div>
 
@@ -171,7 +177,7 @@ export default function TransitStationsAdminPage() {
             className="h-12 px-6 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:scale-105 flex items-center gap-2 self-start md:self-auto shrink-0 cursor-pointer"
           >
             <Plus className="h-5 w-5" />
-            เพิ่มสถานีรถไฟฟ้าใหม่ (Add Station)
+            {isEn ? "Add New Station" : "เพิ่มสถานีรถไฟฟ้าใหม่ (Add Station)"}
           </Button>
         </div>
       </div>
@@ -181,7 +187,7 @@ export default function TransitStationsAdminPage() {
         <div className="relative w-full xl:max-w-md">
           <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
           <Input
-            placeholder="ค้นหาตามรหัส หรือชื่อสถานี..."
+            placeholder={isEn ? "Search by code or station name..." : "ค้นหาตามรหัส หรือชื่อสถานี..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
@@ -191,13 +197,15 @@ export default function TransitStationsAdminPage() {
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
           {/* Line Filter */}
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-            <Label className="text-sm font-semibold text-slate-650 shrink-0">สายรถไฟฟ้า:</Label>
+            <Label className="text-sm font-semibold text-slate-650 shrink-0">
+              {isEn ? "Transit Line:" : "สายรถไฟฟ้า:"}
+            </Label>
             <Select value={lineFilter} onValueChange={setLineFilter}>
               <SelectTrigger className="w-full sm:w-56 h-10.5 rounded-xl border-slate-200 bg-white">
-                <SelectValue placeholder="เลือกสายทั้งหมด" />
+                <SelectValue placeholder={isEn ? "All Transit Lines" : "เลือกสายทั้งหมด"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">ทุกสาย</SelectItem>
+                <SelectItem value="ALL">{isEn ? "All Lines" : "ทุกสาย"}</SelectItem>
                 {Object.entries(LINE_LABELS).map(([key, label]) => (
                   <SelectItem key={key} value={key}>
                     <div className="flex items-center gap-2">
@@ -216,15 +224,17 @@ export default function TransitStationsAdminPage() {
 
           {/* Property Count Filter */}
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-            <Label className="text-sm font-semibold text-slate-650 shrink-0">จำนวนทรัพย์สิน:</Label>
+            <Label className="text-sm font-semibold text-slate-650 shrink-0">
+              {isEn ? "Properties Count:" : "จำนวนทรัพย์สิน:"}
+            </Label>
             <Select value={propertyFilter} onValueChange={setPropertyFilter}>
               <SelectTrigger className="w-full sm:w-48 h-10.5 rounded-xl border-slate-200 bg-white">
-                <SelectValue placeholder="ทั้งหมด" />
+                <SelectValue placeholder={isEn ? "All" : "ทั้งหมด"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">ทั้งหมด</SelectItem>
-                <SelectItem value="HAS_PROPERTIES">มีทรัพย์สิน (≥ 1)</SelectItem>
-                <SelectItem value="NO_PROPERTIES">ไม่มีทรัพย์สิน (0)</SelectItem>
+                <SelectItem value="ALL">{isEn ? "All" : "ทั้งหมด"}</SelectItem>
+                <SelectItem value="HAS_PROPERTIES">{isEn ? "With Listings (≥ 1)" : "มีทรัพย์สิน (≥ 1)"}</SelectItem>
+                <SelectItem value="NO_PROPERTIES">{isEn ? "No Listings (0)" : "ไม่มีทรัพย์สิน (0)"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -236,25 +246,31 @@ export default function TransitStationsAdminPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" />
-            <span className="text-sm text-slate-500 font-medium animate-pulse">กำลังโหลดข้อมูลสถานี...</span>
+            <span className="text-sm text-slate-500 font-medium animate-pulse">
+              {isEn ? "Loading station data..." : "กำลังโหลดข้อมูลสถานี..."}
+            </span>
           </div>
         ) : filteredStations.length === 0 ? (
           <div className="text-center py-16">
             <AlertCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-slate-700">ไม่พบสถานีตามเงื่อนไข</h3>
-            <p className="text-sm text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาหรือสายรถไฟฟ้าอื่น</p>
+            <h3 className="text-lg font-semibold text-slate-700">
+              {isEn ? "No stations found matching criteria" : "ไม่พบสถานีตามเงื่อนไข"}
+            </h3>
+            <p className="text-sm text-slate-400 mt-1">
+              {isEn ? "Try adjusting search query or transit line filter" : "ลองเปลี่ยนคำค้นหาหรือสายรถไฟฟ้าอื่น"}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/75 border-b border-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">สถานี (TH / EN)</th>
-                  <th className="px-6 py-4">สายรถไฟฟ้า</th>
-                  <th className="px-6 py-4">จำนวนทรัพย์</th>
+                  <th className="px-6 py-4">{isEn ? "Station (TH / EN)" : "สถานี (TH / EN)"}</th>
+                  <th className="px-6 py-4">{isEn ? "Transit Line" : "สายรถไฟฟ้า"}</th>
+                  <th className="px-6 py-4">{isEn ? "Properties" : "จำนวนทรัพย์"}</th>
                   <th className="px-6 py-4">URL Slug</th>
-                  <th className="px-6 py-4">สถานะ SEO</th>
-                  <th className="px-6 py-4 text-center">จัดการ</th>
+                  <th className="px-6 py-4">{isEn ? "SEO Status" : "สถานะ SEO"}</th>
+                  <th className="px-6 py-4 text-center">{isEn ? "Actions" : "จัดการ"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -273,8 +289,12 @@ export default function TransitStationsAdminPage() {
                     <tr key={station.code} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <span className="font-semibold text-slate-900 block">{station.label.th}</span>
-                          <span className="text-xs text-slate-400 block">{station.label.en}</span>
+                          <span className="font-semibold text-slate-900 block">
+                            {isEn ? (station.label.en || station.label.th) : station.label.th}
+                          </span>
+                          <span className="text-xs text-slate-400 block">
+                            {isEn ? station.label.th : station.label.en}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -297,7 +317,7 @@ export default function TransitStationsAdminPage() {
                             ? "bg-indigo-50 text-indigo-700 border border-indigo-100" 
                             : "bg-slate-50 text-slate-400 border border-slate-100"
                         }`}>
-                          {station.property_count || 0} รายการ
+                          {station.property_count || 0} {isEn ? "Listings" : "รายการ"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -342,10 +362,10 @@ export default function TransitStationsAdminPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEdit(station)}
-                            className="h-8.5 rounded-lg border-slate-200 text-slate-700  hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200"
+                            className="h-8.5 rounded-lg border-slate-200 text-slate-700  hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 cursor-pointer"
                           >
                             <Edit2 className="h-3.5 w-3.5 mr-1.5" />
-                            แก้ไข SEO
+                            {isEn ? "Edit SEO" : "แก้ไข SEO"}
                           </Button>
                           {meta.slug && (
                             <a
@@ -353,7 +373,7 @@ export default function TransitStationsAdminPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center justify-center h-8.5 w-8.5 rounded-lg border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-slate-50 transition-colors"
-                              title="เปิดดูหน้าร้านค้า"
+                              title={isEn ? "View live public station page" : "เปิดดูหน้าร้านค้า"}
                             >
                               <ExternalLink className="h-4 w-4" />
                             </a>
@@ -379,3 +399,4 @@ export default function TransitStationsAdminPage() {
     </div>
   );
 }
+

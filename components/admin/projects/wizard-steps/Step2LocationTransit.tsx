@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { type MasterDataTransitStation } from "@/features/properties/actions/fetch-master-data";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 function getTransitLogoInfo(code: string, transitType?: string) {
   const c = code.toUpperCase();
@@ -123,6 +124,9 @@ export function Step2LocationTransit({
   onOpenStationSelector,
   setIsFormDirty,
 }: Step2LocationTransitProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const parseDistanceToMeters = React.useCallback((val: string): number => {
     if (!val) return 0;
     const clean = val.replace(/[^\d.]/g, "");
@@ -137,61 +141,83 @@ export function Step2LocationTransit({
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="space-y-4">
-        <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-1">ที่ตั้งและการเดินทาง</h4>
+        <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-1">
+          {isEn ? "Location & Transit Access" : "ที่ตั้งและการเดินทาง"}
+        </h4>
         
         <div className="space-y-2">
-          <Label htmlFor="googleMapsUrl" className="text-sm font-bold text-slate-700">ลิงก์ปักหมุด Google Maps</Label>
+          <Label htmlFor="googleMapsUrl" className="text-sm font-bold text-slate-700">
+            {isEn ? "Google Maps URL Link" : "ลิงก์ปักหมุด Google Maps"}
+          </Label>
           <Input
             id="googleMapsUrl"
             value={googleMapsUrl}
             onChange={(e) => onGoogleMapsUrlChange(e.target.value)}
-            placeholder="วางลิงก์ปักหมุด Google Maps เช่น https://maps.app.goo.gl/... หรือ https://www.google.com/maps/place/..."
+            placeholder={
+              isEn
+                ? "Paste Google Maps pin link e.g. https://maps.app.goo.gl/... or https://www.google.com/maps/place/..."
+                : "วางลิงก์ปักหมุด Google Maps เช่น https://maps.app.goo.gl/... หรือ https://www.google.com/maps/place/..."
+            }
             className="h-10.5 rounded-xl border-slate-200"
           />
-          <p className="text-[10px] text-slate-400 font-medium">ระบบจะแกะพิกัด Latitude และ Longitude ผูกเข้าฐานข้อมูลให้อัตโนมัติ (พิกัดปัจจุบัน: Lat: {lat || "-"} / Lng: {lng || "-"})</p>
+          <p className="text-[10px] text-slate-400 font-medium">
+            {isEn
+              ? `System will auto-parse Latitude and Longitude to database (Current: Lat: ${lat || "-"} / Lng: ${lng || "-"})`
+              : `ระบบจะแกะพิกัด Latitude และ Longitude ผูกเข้าฐานข้อมูลให้อัตโนมัติ (พิกัดปัจจุบัน: Lat: ${lat || "-"} / Lng: ${lng || "-"})`}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="province" className="text-sm font-bold text-slate-700">จังหวัด</Label>
+            <Label htmlFor="province" className="text-sm font-bold text-slate-700">
+              {isEn ? "Province" : "จังหวัด"}
+            </Label>
             <Input
               id="province"
               value={province}
               onChange={(e) => { setProvince(e.target.value); setIsFormDirty(true); }}
-              placeholder="กรุงเทพมหานคร"
+              placeholder={isEn ? "Bangkok" : "กรุงเทพมหานคร"}
               className="h-10.5 rounded-xl border-slate-200"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="district" className="text-sm font-bold text-slate-700">เขต / อำเภอ</Label>
+            <Label htmlFor="district" className="text-sm font-bold text-slate-700">
+              {isEn ? "District" : "เขต / อำเภอ"}
+            </Label>
             <Input
               id="district"
               value={district}
               onChange={(e) => { setDistrict(e.target.value); setIsFormDirty(true); }}
-              placeholder="เช่น เขตวัฒนา"
+              placeholder={isEn ? "e.g. Watthana" : "เช่น เขตวัฒนา"}
               className="h-10.5 rounded-xl border-slate-200"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="subdistrict" className="text-sm font-bold text-slate-700">แขวง / ตำบล</Label>
+            <Label htmlFor="subdistrict" className="text-sm font-bold text-slate-700">
+              {isEn ? "Sub-district" : "แขวง / ตำบล"}
+            </Label>
             <Input
               id="subdistrict"
               value={subdistrict}
               onChange={(e) => { setSubdistrict(e.target.value); setIsFormDirty(true); }}
-              placeholder="เช่น พระโขนงเหนือ"
+              placeholder={isEn ? "e.g. Phra Khanong Nuea" : "เช่น พระโขนงเหนือ"}
               className="h-10.5 rounded-xl border-slate-200"
             />
           </div>
         </div>
 
         <div className="space-y-4 pt-2">
-          <Label className="text-sm font-bold text-slate-700">สถานีรถไฟฟ้าใกล้เคียง & ระยะห่าง</Label>
+          <Label className="text-sm font-bold text-slate-700">
+            {isEn ? "Nearby Transit Stations & Distance" : "สถานีรถไฟฟ้าใกล้เคียง & ระยะห่าง"}
+          </Label>
           
           <div className="space-y-3">
             {selectedStationCodes.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400">
                 <Train className="w-8 h-8 mb-2 text-slate-300" />
-                <span className="text-xs font-semibold">ยังไม่ได้เลือกสถานีรถไฟฟ้าใกล้เคียง</span>
+                <span className="text-xs font-semibold">
+                  {isEn ? "No nearby transit stations selected yet" : "ยังไม่ได้เลือกสถานีรถไฟฟ้าใกล้เคียง"}
+                </span>
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -206,8 +232,8 @@ export function Step2LocationTransit({
                   const parsedMeters = parseDistanceToMeters(distanceVal);
                   const displayFormatted = parsedMeters > 0 
                     ? parsedMeters >= 1000 
-                      ? `${(parsedMeters / 1000).toFixed(1)} กิโลเมตร`
-                      : `${parsedMeters} เมตร`
+                      ? `${(parsedMeters / 1000).toFixed(1)} ${isEn ? "km" : "กิโลเมตร"}`
+                      : `${parsedMeters} ${isEn ? "m" : "เมตร"}`
                     : "";
 
                   return (
@@ -224,14 +250,20 @@ export function Step2LocationTransit({
                           )}
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-slate-900 leading-snug">{labelTh}</span>
-                          <span className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">{labelEn} ({code})</span>
+                          <span className="text-xs font-bold text-slate-900 leading-snug">
+                            {isEn ? (labelEn || labelTh) : labelTh}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">
+                            {isEn ? labelTh : labelEn} ({code})
+                          </span>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3 w-full sm:w-auto">
                         <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
-                          <span className="text-xs text-slate-500 font-bold shrink-0">ระยะห่าง</span>
+                          <span className="text-xs text-slate-500 font-bold shrink-0">
+                            {isEn ? "Distance" : "ระยะห่าง"}
+                          </span>
                           <div className="relative flex items-center">
                             <Input
                               type="text"
@@ -248,7 +280,7 @@ export function Step2LocationTransit({
                             />
                             {distanceVal && (
                               <span className="absolute right-2.5 text-[9px] text-slate-400 font-bold uppercase">
-                                {parseDistanceToMeters(distanceVal) <= 15 ? "กม." : "ม."}
+                                {parseDistanceToMeters(distanceVal) <= 15 ? (isEn ? "km" : "กม.") : (isEn ? "m" : "ม.")}
                               </span>
                             )}
                           </div>
@@ -274,6 +306,7 @@ export function Step2LocationTransit({
                             setIsFormDirty(true);
                           }}
                           className="h-9 w-9 p-0 rounded-xl border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 cursor-pointer shrink-0"
+                          title={isEn ? "Remove station" : "ลบสถานี"}
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -291,7 +324,7 @@ export function Step2LocationTransit({
               className="w-full h-11 rounded-2xl border-slate-200 text-slate-700! hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer mt-1"
             >
               <Train className="w-4.5 h-4.5 text-indigo-600 animate-bounce" style={{ animationDuration: "2.5s" }} />
-              เพิ่มสถานีรถไฟฟ้าใกล้เคียง
+              {isEn ? "Add Nearby Transit Stations" : "เพิ่มสถานีรถไฟฟ้าใกล้เคียง"}
             </Button>
           </div>
         </div>
@@ -299,3 +332,4 @@ export function Step2LocationTransit({
     </div>
   );
 }
+

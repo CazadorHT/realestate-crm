@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FinanceMath } from "@/lib/finance/precision";
 import { RefreshCw, ArrowRight, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface RecalculateConfirmDialogProps {
   isOpen: boolean;
@@ -44,6 +45,9 @@ export const RecalculateConfirmDialog = ({
   isLoading,
   previewData
 }: RecalculateConfirmDialogProps) => {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (!previewData) return null;
 
   const { before, after, reason } = previewData;
@@ -60,7 +64,7 @@ export const RecalculateConfirmDialog = ({
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
               <RefreshCw className={cn("w-5 h-5", isLoading && "animate-spin")} />
-              ตรวจสอบยอดที่จะคำนวณใหม่
+              {isEn ? "Review Recalculation Preview" : "ตรวจสอบยอดที่จะคำนวณใหม่"}
             </DialogTitle>
             <DialogDescription className="text-indigo-100 opacity-80 font-medium line-clamp-2">
               {reason}
@@ -70,11 +74,13 @@ export const RecalculateConfirmDialog = ({
 
         <div className="p-6 space-y-4">
           <div className="bg-slate-50 p-2 rounded-2xl border border-slate-100">
-            <ComparisonRow label="ยอดคอมมิชชันดิบ" oldVal={before.amount} newVal={after.amount} />
-            <ComparisonRow label="ภาษีหัก ณ ที่จ่าย" oldVal={before.wht} newVal={after.wht} />
+            <ComparisonRow label={isEn ? "Gross Commission" : "ยอดคอมมิชชันดิบ"} oldVal={before.amount} newVal={after.amount} />
+            <ComparisonRow label={isEn ? "Withholding Tax (WHT)" : "ภาษีหัก ณ ที่จ่าย"} oldVal={before.wht} newVal={after.wht} />
             <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
                <div>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">ยอดโอนสุทธิใหม่ (Final Net)</p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">
+                    {isEn ? "New Net Payout (Final Net)" : "ยอดโอนสุทธิใหม่ (Final Net)"}
+                  </p>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-semibold text-slate-900 tracking-tighter">฿{FinanceMath.format(after.net)}</span>
                     {!isNeutral && (
@@ -98,7 +104,11 @@ export const RecalculateConfirmDialog = ({
 
           <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100 text-[11px] text-amber-700 font-medium">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-            <p>การยืนยันจะทำการอัปเดตยอดโอนสิทธิและบันทึกหลักฐานการเปลี่ยนแปลงลงใน Audit Log โดยอัตโนมัติ</p>
+            <p>
+              {isEn 
+                ? "Confirming will update payout balances and record changes to the audit log automatically." 
+                : "การยืนยันจะทำการอัปเดตยอดโอนสิทธิและบันทึกหลักฐานการเปลี่ยนแปลงลงใน Audit Log โดยอัตโนมัติ"}
+            </p>
           </div>
         </div>
 
@@ -106,20 +116,21 @@ export const RecalculateConfirmDialog = ({
           <Button 
             variant="ghost" 
             onClick={onClose} 
-            className="flex-1 rounded-xl font-semibold h-12 text-slate-500 hover:bg-slate-50"
+            className="flex-1 rounded-xl font-semibold h-12 text-slate-500 hover:bg-slate-50 cursor-pointer"
             disabled={isLoading}
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
           <Button 
             onClick={onConfirm} 
             disabled={isLoading}
-            className="flex-1 rounded-xl font-semibold h-12 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all active:scale-95"
+            className="flex-1 rounded-xl font-semibold h-12 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all active:scale-95 cursor-pointer"
           >
-            {isLoading ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : "ยืนยันยอดใหม่"}
+            {isLoading ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : (isEn ? "Confirm New Amount" : "ยืนยันยอดใหม่")}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
+

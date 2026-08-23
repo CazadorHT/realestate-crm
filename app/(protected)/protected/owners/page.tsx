@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { cookies } from "next/headers";
 import { OwnersTable } from "@/components/owners/OwnersTable";
 import Link from "next/link";
 import { OwnersStats } from "@/components/owners/OwnersStats";
@@ -31,6 +32,10 @@ type PageProps = {
 };
 
 export default async function OwnersPage({ searchParams }: PageProps) {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const sp = await searchParams;
   const page = Number(sp.page) || 1;
   const q = sp.q || "";
@@ -53,8 +58,8 @@ export default async function OwnersPage({ searchParams }: PageProps) {
       
       {/* 🚀 1. HEADER (Instant with meta info) */}
       <PageHeader
-        title="เจ้าของทรัพย์"
-        subtitle="จัดการข้อมูลเจ้าของทรัพย์และผู้ติดต่อ"
+        title={isEn ? "Property Owners" : "เจ้าของทรัพย์"}
+        subtitle={isEn ? "Manage property owners and contact directory" : "จัดการข้อมูลเจ้าของทรัพย์และผู้ติดต่อ"}
         icon="userCircle"
         actionSlot={<CreateOwnerDialog />}
         gradient="purple"
@@ -86,6 +91,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
           isMultiTenant={isMultiTenant}
           tenantId={tenantId}
           supabase={supabase}
+          isEn={isEn}
         />
       </Suspense>
     </div>
@@ -113,16 +119,18 @@ async function OwnersContentWrapper({
   allBranches, 
   isMultiTenant,
   tenantId,
-  supabase
+  supabase,
+  isEn,
 }: { 
   q: string; 
-  ownerType: string;
+  ownerType: string; 
   page: number; 
   isAdminUser: boolean; 
   allBranches: boolean; 
-  isMultiTenant: boolean;
+  isMultiTenant: boolean; 
   tenantId: string | undefined;
   supabase: any;
+  isEn?: boolean;
 }) {
   // Parallel fetch: Tenant Name + Main Owners Data
   const [ownersResult, tenantResult] = await Promise.all([
@@ -145,8 +153,8 @@ async function OwnersContentWrapper({
     return (
       <EmptyState
         icon="userCircle"
-        title="ยังไม่มีเจ้าของในระบบ"
-        description="เริ่มต้นเพิ่มเจ้าของทรัพย์คนแรกเพื่อจัดการข้อมูลผู้ติดต่อ"
+        title={isEn ? "No owners in system yet" : "ยังไม่มีเจ้าของในระบบ"}
+        description={isEn ? "Add your first property owner to start managing contacts." : "เริ่มต้นเพิ่มเจ้าของทรัพย์คนแรกเพื่อจัดการข้อมูลผู้ติดต่อ"}
         actionSlot={<CreateOwnerDialog />}
       />
     );
@@ -155,8 +163,8 @@ async function OwnersContentWrapper({
   return (
     <div id="table" className="space-y-4 scroll-mt-4">
       <SectionTitle
-        title="รายการเจ้าของทั้งหมด"
-        subtitle="คลิกที่แถวเพื่อดูรายละเอียด"
+        title={isEn ? "All Property Owners" : "รายการเจ้าของทั้งหมด"}
+        subtitle={isEn ? "Click a row to view details or edit" : "คลิกที่แถวเพื่อดูรายละเอียด"}
         color="purple"
       />
       <OwnersTable
@@ -173,4 +181,3 @@ async function OwnersContentWrapper({
     </div>
   );
 }
-

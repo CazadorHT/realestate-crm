@@ -17,6 +17,8 @@ import { UserPlus, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { createTenantInvitationAction } from "@/lib/actions/tenant-management";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface InviteMemberDialogProps {
   tenantId: string;
   onSuccess?: () => void;
@@ -29,6 +31,9 @@ export function InviteMemberDialog({
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isMobile = useIsMobile();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [formData, setFormData] = useState({
     email: "",
     role: "AGENT",
@@ -47,15 +52,15 @@ export function InviteMemberDialog({
       });
 
       if (res.success) {
-        toast.success("ส่งคำเชิญเรียบร้อยแล้ว");
+        toast.success(isEn ? "Invitation sent successfully" : "ส่งคำเชิญเรียบร้อยแล้ว");
         setOpen(false);
         setFormData({ email: "", role: "AGENT" });
         onSuccess?.();
       } else {
-        toast.error(res.error || "ไม่สามารถส่งคำเชิญได้");
+        toast.error(res.error || (isEn ? "Failed to send invitation" : "ไม่สามารถส่งคำเชิญได้"));
       }
     } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการส่งคำเชิญ");
+      toast.error(isEn ? "Error sending invitation" : "เกิดข้อผิดพลาดในการส่งคำเชิญ");
     } finally {
       setIsSubmitting(false);
     }
@@ -65,15 +70,19 @@ export function InviteMemberDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="เชิญสมาชิกใหม่"
-      description="ส่งคำเชิญไปยังพนักงานผ่าน Email เพื่อให้เข้าร่วมสาขานี้"
+      title={isEn ? "Invite Team Member" : "เชิญสมาชิกใหม่"}
+      description={
+        isEn
+          ? "Send an email invitation to an employee to join this branch."
+          : "ส่งคำเชิญไปยังพนักงานผ่าน Email เพื่อให้เข้าร่วมสาขานี้"
+      }
       trigger={
         <Button
           variant="outline"
-          className="gap-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-700 font-semibold rounded-xl transition-all shadow-sm h-11"
+          className="gap-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-700 font-semibold rounded-xl transition-all shadow-sm h-11 cursor-pointer"
         >
           <UserPlus className="h-4 w-4" />
-          เชิญสมาชิกผ่าน Email
+          {isEn ? "Invite Member via Email" : "เชิญสมาชิกผ่าน Email"}
         </Button>
       }
     >
@@ -84,7 +93,7 @@ export function InviteMemberDialog({
               htmlFor="email"
               className="text-sm font-semibold text-slate-700 ml-1"
             >
-              Email พนักงาน
+              {isEn ? "Member Email" : "Email พนักงาน"}
             </Label>
             <div className="relative">
               <Mail className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
@@ -106,22 +115,28 @@ export function InviteMemberDialog({
               htmlFor="role"
               className="text-sm font-semibold text-slate-700 ml-1"
             >
-              ตำแหน่ง (Role)
+              {isEn ? "Role" : "ตำแหน่ง (Role)"}
             </Label>
             <Select
               value={formData.role}
               onValueChange={(val) => setFormData({ ...formData, role: val })}
             >
-              <SelectTrigger className="h-12 rounded-xl border-slate-200 focus:ring-blue-500/10">
-                <SelectValue placeholder="เลือกตำแหน่ง" />
+              <SelectTrigger className="h-12 rounded-xl border-slate-200 focus:ring-blue-500/10 cursor-pointer">
+                <SelectValue placeholder={isEn ? "Select role" : "เลือกตำแหน่ง"} />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
-                <SelectItem value="ADMIN">ผู้ดูแลระบบ (ADMIN)</SelectItem>
-                <SelectItem value="MANAGER">
-                  ผู้จัดการสาขา (MANAGER)
+                <SelectItem value="ADMIN">
+                  {isEn ? "Administrator (ADMIN)" : "ผู้ดูแลระบบ (ADMIN)"}
                 </SelectItem>
-                <SelectItem value="AGENT">พนักงานขาย (AGENT)</SelectItem>
-                <SelectItem value="VIEWER">ผู้เข้าชม (VIEWER)</SelectItem>
+                <SelectItem value="MANAGER">
+                  {isEn ? "Branch Manager (MANAGER)" : "ผู้จัดการสาขา (MANAGER)"}
+                </SelectItem>
+                <SelectItem value="AGENT">
+                  {isEn ? "Sales Agent (AGENT)" : "พนักงานขาย (AGENT)"}
+                </SelectItem>
+                <SelectItem value="VIEWER">
+                  {isEn ? "Viewer (VIEWER)" : "ผู้เข้าชม (VIEWER)"}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -133,9 +148,9 @@ export function InviteMemberDialog({
               <Button
                 type="button"
                 variant="ghost"
-                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DrawerClose>
           ) : (
@@ -143,24 +158,24 @@ export function InviteMemberDialog({
               <Button
                 type="button"
                 variant="ghost"
-                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DialogClose>
           )}
           <Button
             type="submit"
             disabled={isSubmitting || !formData.email}
-            className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-95"
+            className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-95 cursor-pointer"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                กำลังส่ง...
+                {isEn ? "Sending..." : "กำลังส่ง..."}
               </>
             ) : (
-              "ส่งคำเชิญ"
+              isEn ? "Send Invitation" : "ส่งคำเชิญ"
             )}
           </Button>
         </div>

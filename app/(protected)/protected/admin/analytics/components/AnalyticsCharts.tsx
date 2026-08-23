@@ -18,6 +18,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AreaAnalytics, DistributionData } from "@/features/dashboard/queries";
 import { listingTypeLabel, propertyTypeLabel, ListingType, PropertyType } from "@/features/properties/labels";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // Custom Glassmorphism Tooltip
 interface CustomTooltipProps {
@@ -55,6 +56,9 @@ interface ListingDataPoint {
 }
 
 export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }: AnalyticsChartsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -78,14 +82,14 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
 
   // Format data for Listing Types
   const listingData = listingTypeDist.map(item => ({
-    name: listingTypeLabel(item.label as ListingType, "th"),
+    name: listingTypeLabel(item.label as ListingType, isEn ? "en" : "th"),
     value: item.value,
     originalValue: item.label,
   }));
 
   // Format data for Property Types
   const propertyData = propertyTypeDist.map(item => ({
-    name: propertyTypeLabel(item.label as PropertyType, "th"),
+    name: propertyTypeLabel(item.label as PropertyType, isEn ? "en" : "th"),
     value: item.value,
     originalValue: item.label,
   }));
@@ -95,8 +99,12 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
       {/* Area Popularity Chart */}
       <Card className="border-none shadow-soft bg-white/50 backdrop-blur-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-slate-800">ย่านยอดนิยม (Top 5 Areas)</CardTitle>
-          <CardDescription className="text-xs text-slate-500">สัดส่วนการเข้าชมแบ่งตามพื้นที่</CardDescription>
+          <CardTitle className="text-base font-semibold text-slate-800">
+            {isEn ? "Top 5 Popular Areas" : "ย่านยอดนิยม (Top 5 Areas)"}
+          </CardTitle>
+          <CardDescription className="text-xs text-slate-500">
+            {isEn ? "Traffic share broken down by geographic area" : "สัดส่วนการเข้าชมแบ่งตามพื้นที่"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] mt-4">
           <ResponsiveContainer width="100%" height="100%">
@@ -136,8 +144,12 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
       {/* Listing Type Distribution Chart */}
       <Card className="border-none shadow-soft bg-white/50 backdrop-blur-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-slate-800">สัดส่วนตามประเภทดีล</CardTitle>
-          <CardDescription className="text-xs text-slate-500">เปรียบเทียบความสนใจ ขาย vs เช่า</CardDescription>
+          <CardTitle className="text-base font-semibold text-slate-800">
+            {isEn ? "Distribution by Deal Type" : "สัดส่วนตามประเภทดีล"}
+          </CardTitle>
+          <CardDescription className="text-xs text-slate-500">
+            {isEn ? "Comparing buyer/tenant interest (Sale vs Rent)" : "เปรียบเทียบความสนใจ ขาย vs เช่า"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] mt-4 flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
@@ -179,8 +191,12 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
       {/* Property Type Distribution Chart */}
       <Card className="border-none shadow-soft bg-white/50 backdrop-blur-sm lg:col-span-2">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-slate-800">สัดส่วนตามประเภททรัพย์สิน</CardTitle>
-          <CardDescription className="text-xs text-slate-500">วิเคราะห์ความต้องการแยกตามประเภท (คอนโด, บ้าน, ที่ดิน ฯลฯ)</CardDescription>
+          <CardTitle className="text-base font-semibold text-slate-800">
+            {isEn ? "Distribution by Property Type" : "สัดส่วนตามประเภททรัพย์สิน"}
+          </CardTitle>
+          <CardDescription className="text-xs text-slate-500">
+            {isEn ? "Market demand breakdown (Condo, House, Land, etc.)" : "วิเคราะห์ความต้องการแยกตามประเภท (คอนโด, บ้าน, ที่ดิน ฯลฯ)"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="h-[350px] mt-4">
           <ResponsiveContainer width="100%" height="100%">
@@ -221,3 +237,4 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
     </div>
   );
 }
+

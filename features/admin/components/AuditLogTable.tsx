@@ -15,31 +15,43 @@ import { Badge } from "@/components/ui/badge";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-import Link from "next/link";
 import { getReadableSummary } from "@/lib/audit-utils";
-
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { toast } from "sonner";
 
 interface AuditLogTableProps {
   data: AuditLogWithUser[];
 }
 
 export function AuditLogTable({ data }: AuditLogTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const router = useRouter();
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
+
   return (
-    <div className="rounded-[32px] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden italic">
+    <div className="rounded-[32px] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden">
       {/* 🖥️ Desktop Table View */}
       <div className="hidden lg:block">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50/50 border-b border-slate-100">
-              <TableHead className="w-[160px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">เวลา (Time)</TableHead>
-              <TableHead className="w-[200px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">ผู้ใช้งาน (User)</TableHead>
-              <TableHead className="w-[180px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">กิจกรรม (Event)</TableHead>
-              <TableHead className="px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">รายละเอียดกิจกรรม (Activity Summary)</TableHead>
+              <TableHead className="w-[160px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">
+                {isEn ? "Time" : "เวลา (Time)"}
+              </TableHead>
+              <TableHead className="w-[200px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">
+                {isEn ? "User" : "ผู้ใช้งาน (User)"}
+              </TableHead>
+              <TableHead className="w-[180px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">
+                {isEn ? "Event" : "กิจกรรม (Event)"}
+              </TableHead>
+              <TableHead className="px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">
+                {isEn ? "Activity Summary" : "รายละเอียดกิจกรรม (Activity Summary)"}
+              </TableHead>
               <TableHead className="text-right w-[80px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -47,7 +59,7 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
             {data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-32 text-center text-slate-400 font-semibold italic">
-                  ไม่พบข้อมูลประวัติการใช้งาน (No records found)
+                  {isEn ? "No audit log records found" : "ไม่พบข้อมูลประวัติการใช้งาน (No records found)"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -83,7 +95,7 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                       </Avatar>
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-semibold text-slate-700 truncate max-w-[120px] group-hover/user:text-blue-600 transition-colors">
-                          {log.user?.full_name || "Unknown"}
+                          {log.user?.full_name || (isEn ? "Unknown" : "ไม่ระบุชื่อ")}
                         </span>
                       </div>
                     </div>
@@ -109,7 +121,7 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                     </div>
                   </TableCell>
                   <TableCell className="text-right px-6 py-4">
-                    <AuditLogDetailsDialog log={log} />
+                    <AuditLogDetailsDialog log={log} isEn={isEn} />
                   </TableCell>
                 </TableRow>
               ))
@@ -122,7 +134,7 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
       <div className="lg:hidden divide-y divide-slate-100 bg-white">
         {data.length === 0 ? (
           <div className="p-12 text-center text-slate-400 font-semibold italic">
-            ไม่พบข้อมูลประวัติการใช้งาน
+            {isEn ? "No audit log records found" : "ไม่พบข้อมูลประวัติการใช้งาน"}
           </div>
         ) : (
           data.map((log) => (
@@ -153,19 +165,19 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                           <Loader2 className="h-3 w-3 animate-spin text-blue-600" />
                         </div>
                       )}
-                      {log.user?.full_name || "Unknown"}
+                      {log.user?.full_name || (isEn ? "Unknown" : "ไม่ระบุชื่อ")}
                     </span>
                   </div>
                 </div>
-                <AuditLogDetailsDialog log={log} />
+                <AuditLogDetailsDialog log={log} isEn={isEn} />
               </div>
 
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                   <FormatActionBadge action={log.action} />
-                   <span className="px-2 py-0.5 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-mono font-semibold text-slate-400 uppercase">
+                  <FormatActionBadge action={log.action} />
+                  <span className="px-2 py-0.5 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-mono font-semibold text-slate-400 uppercase">
                     {log.entity}
-                   </span>
+                  </span>
                 </div>
                 <p className="text-sm font-semibold text-slate-700 leading-relaxed bg-slate-50/80 p-3 rounded-2xl border border-slate-100/50">
                   {getReadableSummary(log)}
@@ -179,34 +191,51 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
   );
 }
 
-function AuditLogDetailsDialog({ log }: { log: AuditLogWithUser }) {
+function AuditLogDetailsDialog({ log, isEn }: { log: AuditLogWithUser; isEn: boolean }) {
+  const handleCopyRaw = () => {
+    navigator.clipboard.writeText(JSON.stringify(log.metadata, null, 2));
+    toast.success(isEn ? "Technical metadata copied to clipboard" : "คัดลอกข้อมูลทางเทคนิคแล้ว");
+  };
+
   return (
     <ResponsiveDialog
-      title="รายละเอียดประวัติ (Audit log)"
-      description="ข้อมูลทางเทคนิคและสถานะของกิจกรรมที่เกิดขึ้นในระบบเฝ้าระวัง"
+      title={isEn ? "Audit Log Details" : "รายละเอียดประวัติ (Audit log)"}
+      description={
+        isEn
+          ? "Technical metadata and context payload recorded by the surveillance service"
+          : "ข้อมูลทางเทคนิคและสถานะของกิจกรรมที่เกิดขึ้นในระบบเฝ้าระวัง"
+      }
       trigger={
         <Button variant="ghost" size="sm" className="h-10 w-10 p-0 hover:bg-slate-50 rounded-2xl border border-slate-100/50 transition-all active:scale-90 lg:h-8 lg:w-8">
           <Eye className="h-4 w-4 text-slate-400 group-hover:text-blue-500" />
         </Button>
       }
     >
-      <div className="space-y-6 p-6 italic">
+      <div className="space-y-6 p-6">
         {/* Condensed Meta Info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 rounded-[32px] bg-slate-50/50 border border-slate-100">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">การดำเนินการ (Action)</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+              {isEn ? "Action" : "การดำเนินการ (Action)"}
+            </span>
             <span className="text-sm font-semibold text-slate-700">{log.action}</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">หมวดหมู่ (Entity)</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+              {isEn ? "Entity" : "หมวดหมู่ (Entity)"}
+            </span>
             <span className="text-sm font-semibold text-slate-700">{log.entity}</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">ผู้ทำรายการ (User)</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+              {isEn ? "Triggered By" : "ผู้ทำรายการ (User)"}
+            </span>
             <span className="text-sm font-semibold text-slate-700">{log.user?.full_name} ({log.user?.role})</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">วันเวลา (Timestamp)</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+              {isEn ? "Timestamp" : "วันเวลา (Timestamp)"}
+            </span>
             <span className="text-sm font-semibold text-slate-700">
               {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
             </span>
@@ -216,7 +245,9 @@ function AuditLogDetailsDialog({ log }: { log: AuditLogWithUser }) {
         {/* Technical Raw Data */}
         <div className="space-y-2">
           <div className="flex items-center gap-3 px-1">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">ข้อมูลเชิงเทคนิค (Raw Metadata)</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+              {isEn ? "Raw Metadata" : "ข้อมูลเชิงเทคนิค (Raw Metadata)"}
+            </span>
             <div className="h-px flex-1 bg-slate-100" />
           </div>
           <div className="rounded-[32px] bg-slate-950 p-6 shadow-xl overflow-hidden border border-slate-800">
@@ -232,7 +263,13 @@ function AuditLogDetailsDialog({ log }: { log: AuditLogWithUser }) {
           <p className="text-[10px] text-slate-400 font-semibold italic">
             Log ID: {log.id}
           </p>
-          <Button variant="ghost" className="h-8 rounded-xl text-[10px] font-semibold text-slate-400 hover:text-blue-600">คัดลอกข้อมูลทางเทคนิค</Button>
+          <Button 
+            variant="ghost" 
+            onClick={handleCopyRaw}
+            className="h-8 rounded-xl text-[10px] font-semibold text-slate-400 hover:text-blue-600"
+          >
+            {isEn ? "Copy Raw Metadata" : "คัดลอกข้อมูลทางเทคนิค"}
+          </Button>
         </div>
       </div>
     </ResponsiveDialog>
@@ -253,3 +290,4 @@ function FormatActionBadge({ action }: { action: string }) {
     </Badge>
   );
 }
+

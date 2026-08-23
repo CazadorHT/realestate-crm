@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import {
@@ -9,23 +10,27 @@ import {
 } from "@/lib/excel-export";
 import { decrypt } from "@/lib/crypto";
 
-const OWNER_COLUMNS: ExcelColumn[] = [
-  { key: "full_name", header: "ชื่อ-นามสกุล", width: 25 },
-  { key: "phone", header: "เบอร์โทร", width: 15 },
+const getOwnerColumns = (isEn: boolean): ExcelColumn[] => [
+  { key: "full_name", header: isEn ? "Full Name" : "ชื่อ-นามสกุล", width: 25 },
+  { key: "phone", header: isEn ? "Phone Number" : "เบอร์โทร", width: 15 },
   { key: "line_id", header: "Line ID", width: 15 },
-  { key: "company_name", header: "บริษัท", width: 25 },
-  { key: "owner_type", header: "ประเภทเจ้าของ", width: 15 },
+  { key: "company_name", header: isEn ? "Company" : "บริษัท", width: 25 },
+  { key: "owner_type", header: isEn ? "Owner Type" : "ประเภทเจ้าของ", width: 15 },
   { key: "facebook_url", header: "Facebook", width: 25 },
-  { key: "other_contact", header: "การติดต่ออื่นๆ", width: 30 },
+  { key: "other_contact", header: isEn ? "Other Contact" : "การติดต่ออื่นๆ", width: 30 },
   {
     key: "created_at",
-    header: "สร้างเมื่อ",
+    header: isEn ? "Created At" : "สร้างเมื่อ",
     width: 15,
     format: formatThaiDate,
   },
 ];
 
 export async function exportOwnersAction(ids?: string[]) {
+  const cookieStore = await cookies();
+  const lang = cookieStore.get("language")?.value || "th";
+  const isEn = lang === "en";
+
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
@@ -46,7 +51,7 @@ export async function exportOwnersAction(ids?: string[]) {
   }
 
   if (!data || data.length === 0) {
-    return { success: false, message: "ไม่พบข้อมูลสำหรับ export" };
+    return { success: false, message: isEn ? "No data to export" : "ไม่พบข้อมูลสำหรับ export" };
   }
 
   const decryptedData = data.map((o: any) => {
@@ -65,7 +70,7 @@ export async function exportOwnersAction(ids?: string[]) {
     };
   });
 
-  const buffer = await generateExcelBuffer(decryptedData as Record<string, unknown>[], OWNER_COLUMNS, "Owners");
+  const buffer = await generateExcelBuffer(decryptedData as Record<string, unknown>[], getOwnerColumns(isEn), "Owners");
   const base64 = buffer.toString("base64");
 
   return {

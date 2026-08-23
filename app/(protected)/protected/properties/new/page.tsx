@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { PropertyForm } from "@/features/properties/PropertyForm";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { getSystemConfig } from "@/lib/actions/system-config";
@@ -6,6 +7,10 @@ import { requireAuthContext } from "@/lib/authz";
 export const dynamic = "force-dynamic";
 
 export default async function NewPropertyPage() {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const config = await getSystemConfig();
   const { role } = await requireAuthContext();
 
@@ -14,8 +19,8 @@ export default async function NewPropertyPage() {
       <Breadcrumb
         backHref={`/protected/properties`}
         items={[
-          { label: "โครงการและทรัพย์สิน", href: "/protected/properties" },
-          { label: "เพิ่มทรัพย์ใหม่" },
+          { label: isEn ? "Properties" : "โครงการและทรัพย์สิน", href: "/protected/properties" },
+          { label: isEn ? "Add New Property" : "เพิ่มทรัพย์ใหม่" },
         ]}
       />
       <PropertyForm

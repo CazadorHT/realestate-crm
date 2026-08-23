@@ -1,14 +1,20 @@
+"use client";
+
 import { PlusCircle, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertiesHeaderProps {
   count: number;
 }
 
 export function PropertiesHeader({ count }: PropertiesHeaderProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-5 md:p-8 shadow-xl">
       {/* Decorative Elements */}
@@ -22,12 +28,15 @@ export function PropertiesHeader({ count }: PropertiesHeaderProps) {
               <PlusCircle className="h-5 w-5 md:h-6 md:w-6 text-white" />
             </div>
             <h1 className="text-xl md:text-3xl font-bold text-white tracking-tight">
-              ทรัพย์ทั้งหมด
+              {isEn ? "All Properties" : "ทรัพย์ทั้งหมด"}
             </h1>
           </div>
           <p className="text-blue-100/90 text-xs md:text-base max-w-md">
-            จัดการและติดตามทรัพย์สินของคุณ • มีทั้งหมด{" "}
-            <span className="font-bold text-white">{count || 0}</span> รายการ
+            {isEn ? (
+              <>Manage and monitor your property portfolio • Total <span className="font-bold text-white">{count || 0}</span> listings</>
+            ) : (
+              <>จัดการและติดตามทรัพย์สินของคุณ • มีทั้งหมด <span className="font-bold text-white">{count || 0}</span> รายการ</>
+            )}
           </p>
         </div>
 
@@ -39,7 +48,7 @@ export function PropertiesHeader({ count }: PropertiesHeaderProps) {
           >
             <div className="flex flex-col items-end">
               <Label htmlFor="all-branches-mock" className="text-xs font-bold text-white cursor-pointer select-none">
-                ทุกสาขา (Multi-Branch)
+                {isEn ? "All Branches (Multi-Branch)" : "ทุกสาขา (Multi-Branch)"}
               </Label>
               <span className="text-[10px] text-blue-200 font-medium leading-tight">Enterprise Feature</span>
             </div>
@@ -53,11 +62,11 @@ export function PropertiesHeader({ count }: PropertiesHeaderProps) {
           <Button
             asChild
             size="lg"
-            className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 font-bold h-11 md:h-12 rounded-xl"
+            className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 font-bold h-11 md:h-12 rounded-xl cursor-pointer"
           >
             <Link href="/protected/properties/new">
               <PlusCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-              เพิ่มทรัพย์ใหม่
+              {isEn ? "Add Property" : "เพิ่มทรัพย์ใหม่"}
             </Link>
           </Button>
         </div>

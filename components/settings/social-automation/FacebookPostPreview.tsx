@@ -1,27 +1,33 @@
 import { Globe, ChevronDown, ThumbsUp, MessageCircle, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_PROPERTY_DATA } from "./constants";
+import { getMockPropertyData } from "./constants";
 import { type Language } from "@/lib/i18n";
 import { siteConfig } from "@/lib/site-config";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function FacebookPostPreview({
   template,
-  language = "th",
+  language: propLang,
 }: {
   template: string;
   language?: Language;
 }) {
+  const { language: ctxLang } = useLanguage();
+  const activeLang = propLang || ctxLang;
+  const isEn = activeLang === "en";
+  const mockData = getMockPropertyData(isEn);
+
   const renderContent = (text: string) => {
     if (!text)
       return (
         <span className="text-slate-300 italic">
-          กรุณากรอกรูปแบบข้อความเพื่อดูตัวอย่าง...
+          {isEn ? "Please enter a message template to preview..." : "กรุณากรอกรูปแบบข้อความเพื่อดูตัวอย่าง..."}
         </span>
       );
 
     let rendered = text;
-    Object.entries(MOCK_PROPERTY_DATA).forEach(([key, value]) => {
+    Object.entries(mockData).forEach(([key, value]) => {
       const regex = new RegExp(`\\{\\{${key}\\}\\}`, "g");
       rendered = rendered.replace(regex, value || "");
     });
@@ -81,12 +87,12 @@ export function FacebookPostPreview({
         />
         <div className="absolute top-2.5 left-2.5 flex gap-1.5">
           <Badge className="bg-white/90 text-slate-900 border-0 shadow-sm backdrop-blur-xs font-bold text-[9px] px-2 py-0.5 rounded-md">
-            {MOCK_PROPERTY_DATA.listing_type === "Sale"
+            {mockData.listing_type === "Sale"
               ? "FOR SALE"
               : "FOR RENT"}
           </Badge>
           <Badge className="bg-blue-600/90 text-white border-0 shadow-sm backdrop-blur-xs font-bold text-[9px] px-2 py-0.5 rounded-md">
-            {MOCK_PROPERTY_DATA.price}
+            {mockData.price}
           </Badge>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { Check, Trash2, ExternalLink, Info, AlertTriangle, Bell as BellIcon, UserPlus, Building2, ChevronRight, Layers, X, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 import { acceptInvitationAction, declineInvitationAction } from "@/lib/actions/tenant-management";
 
@@ -40,6 +41,9 @@ export function NotificationItem({
   onDelete,
   onBatchMarkRead,
 }: NotificationItemProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [responding, setResponding] = useState(false);
 
@@ -48,7 +52,7 @@ export function NotificationItem({
 
   const timeAgo = formatDistanceToNow(new Date(notification.created_at || new Date().toISOString()), {
     addSuffix: true,
-    locale: th,
+    locale: isEn ? enUS : th,
   });
 
   const handleMarkAsRead = async (e?: React.MouseEvent) => {
@@ -65,16 +69,16 @@ export function NotificationItem({
         await onMarkRead(notification.id);
       }
     } catch (error) {
-      toast.error("ไม่สามารถทำเครื่องหมายว่าอ่านแล้วได้");
+      toast.error(isEn ? "Failed to mark as read" : "ไม่สามารถทำเครื่องหมายว่าอ่านแล้วได้");
     }
   };
 
   const handleDelete = async () => {
     try {
       await onDelete(notification.id);
-      toast.success("ลบการแจ้งเตือนแล้ว");
+      toast.success(isEn ? "Notification deleted" : "ลบการแจ้งเตือนแล้ว");
     } catch (error) {
-      toast.error("ไม่สามารถลบการแจ้งเตือนได้");
+      toast.error(isEn ? "Failed to delete notification" : "ไม่สามารถลบการแจ้งเตือนได้");
     }
   };
 
@@ -90,13 +94,13 @@ export function NotificationItem({
         : await declineInvitationAction(notification.tenant_id);
       
       if (result.success) {
-        toast.success(accept ? "เข้าร่วมสาขาสำเร็จ" : "ปฏิเสธคำเชิญแล้ว");
+        toast.success(accept ? (isEn ? "Joined branch successfully" : "เข้าร่วมสาขาสำเร็จ") : (isEn ? "Invitation declined" : "ปฏิเสธคำเชิญแล้ว"));
         handleDelete(); // Auto delete/clean notification after response
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาด");
+        toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (err) {
-      toast.error("ไม่สามารถดำเนินการได้ในขณะนี้");
+      toast.error(isEn ? "Action failed at this time" : "ไม่สามารถดำเนินการได้ในขณะนี้");
     } finally {
       setResponding(false);
     }
@@ -163,7 +167,9 @@ export function NotificationItem({
           )}>
             {notification.title}
             {notification.isGroup && (
-              <span className="ml-2 text-xs text-slate-400 font-medium">({notification.notifications.length} รายการ)</span>
+              <span className="ml-2 text-xs text-slate-400 font-medium">
+                ({notification.notifications.length} {isEn ? (notification.notifications.length === 1 ? "item" : "items") : "รายการ"})
+              </span>
             )}
           </h4>
           {!notification.is_read && (
@@ -183,7 +189,7 @@ export function NotificationItem({
               onClick={(e) => handleInviteResponse(true, e)}
               className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-9 px-6 shadow-md shadow-emerald-100"
             >
-              {responding ? "กำลังดำเนินการ..." : "ตอบรับ"}
+              {responding ? (isEn ? "Processing..." : "กำลังดำเนินการ...") : (isEn ? "Accept" : "ตอบรับ")}
             </Button>
             <Button 
               size="sm" 
@@ -192,7 +198,7 @@ export function NotificationItem({
               onClick={(e) => handleInviteResponse(false, e)}
               className="rounded-xl h-9 border-slate-200 font-bold px-4 text-slate-500 hover:bg-red-50 hover:text-red-600"
             >
-              ปฏิเสธ
+              {isEn ? "Decline" : "ปฏิเสธ"}
             </Button>
           </div>
         )}
@@ -204,7 +210,7 @@ export function NotificationItem({
           </span>
           {notification.link && !notification.isGroup && (
             <span className="text-[10px] sm:text-xs font-bold text-blue-500 uppercase tracking-wider flex items-center gap-1">
-              คลิกเพื่อดูรายละเอียด
+              {isEn ? "Click for details" : "คลิกเพื่อดูรายละเอียด"}
               <ExternalLink className="h-3 w-3" />
             </span>
           )}
@@ -228,15 +234,20 @@ export function NotificationItem({
             size="icon"
             onClick={handleMarkAsRead}
             className="h-9 w-9 bg-white shadow-sm hover:bg-blue-50 hover:text-blue-600 rounded-xl border border-slate-100"
-            title="ทำเครื่องหมายว่าอ่านแล้ว"
+            title={isEn ? "Mark as read" : "ทำเครื่องหมายว่าอ่านแล้ว"}
           >
             <Check className="h-4 w-4" />
           </Button>
         )}
         <ConfirmDialog
-          title="ลบการแจ้งเตือน"
-          description={notification.isGroup ? `คุณต้องการลบการแจ้งเตือนที่เกี่ยวข้องทั้ง ${notification.notifications.length} รายการใช่หรือไม่?` : "คุณต้องการลบการแจ้งเตือนนี้ใช่หรือไม่?"}
-          confirmText="ลบออก"
+          title={isEn ? "Delete Notification" : "ลบการแจ้งเตือน"}
+          description={
+            notification.isGroup 
+              ? (isEn ? `Are you sure you want to delete all ${notification.notifications.length} related notification(s)?` : `คุณต้องการลบการแจ้งเตือนที่เกี่ยวข้องทั้ง ${notification.notifications.length} รายการใช่หรือไม่?`) 
+              : (isEn ? "Are you sure you want to delete this notification?" : "คุณต้องการลบการแจ้งเตือนนี้ใช่หรือไม่?")
+          }
+          confirmText={isEn ? "Delete" : "ลบออก"}
+          cancelText={isEn ? "Cancel" : "ยกเลิก"}
           variant="destructive"
           onConfirm={handleDelete}
           trigger={
@@ -244,7 +255,7 @@ export function NotificationItem({
               variant="ghost"
               size="icon"
               className="h-9 w-9 bg-white shadow-sm hover:bg-red-50 hover:text-red-500 rounded-xl border border-slate-100"
-              title="ลบการแจ้งเตือน"
+              title={isEn ? "Delete notification" : "ลบการแจ้งเตือน"}
               onClick={(e) => e.stopPropagation()}
             >
               <Trash2 className="h-4 w-4" />
@@ -257,16 +268,20 @@ export function NotificationItem({
       <ResponsiveDialog
         open={showErrorDialog}
         onOpenChange={setShowErrorDialog}
-        title="ไม่พบข้อมูล"
-        description="ขออภัย ข้อมูลข่าวสารหรือรายการนี้อาจถูกลบออกไปจากระบบแล้ว"
+        title={isEn ? "Data Not Found" : "ไม่พบข้อมูล"}
+        description={isEn ? "Sorry, this news or record may have been removed from the system." : "ขออภัย ข้อมูลข่าวสารหรือรายการนี้อาจถูกลบออกไปจากระบบแล้ว"}
       >
         <div className="p-10 flex flex-col items-center text-center space-y-4">
            <div className="h-20 w-20 rounded-full bg-red-50 flex items-center justify-center">
               <AlertTriangle className="h-10 w-10 text-red-500" />
            </div>
-           <p className="text-slate-600">เนื่องจากข้อมูลนี้ไม่มีอยู่ในระบบแล้ว คุณอาจต้องการลบการแจ้งเตือนนี้ออกจากเครื่องของคุณ</p>
+           <p className="text-slate-600">
+             {isEn 
+               ? "Since this data no longer exists in the system, you may want to delete this notification from your device." 
+               : "เนื่องจากข้อมูลนี้ไม่มีอยู่ในระบบแล้ว คุณอาจต้องการลบการแจ้งเตือนนี้ออกจากเครื่องของคุณ"}
+           </p>
            <Button onClick={() => { setShowErrorDialog(false); handleDelete(); }} variant="destructive" className="w-full rounded-2xl h-11">
-              ลบการแจ้งเตือนนี้
+              {isEn ? "Delete this notification" : "ลบการแจ้งเตือนนี้"}
            </Button>
         </div>
       </ResponsiveDialog>
@@ -283,3 +298,4 @@ export function NotificationItem({
 
   return content;
 }
+

@@ -124,7 +124,7 @@ export function UpcomingEvents({ events, role, view = "personal" }: UpcomingEven
             href="/protected/calendar"
             className="group/link w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg transition-all duration-300"
           >
-            ดูปฏิทินทั้งหมด 
+            {isEn ? "View Full Calendar" : "ดูปฏิทินทั้งหมด"} 
             <ArrowRight className="h-3 w-3 transition-transform group-hover/link:translate-x-1" />
           </Link>
         </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { OwnerForm } from "@/features/owners/OwnerForm";
 import { Owner } from "@/features/owners/types";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface EditOwnerDialogProps {
   owner: Owner;
@@ -20,6 +21,8 @@ export function EditOwnerDialog({
 }: EditOwnerDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
@@ -34,7 +37,7 @@ export function EditOwnerDialog({
       open={open}
       onOpenChange={handleOpenChange}
       confirmOnClose={isDirty}
-      title={`แก้ไขข้อมูล: ${owner.full_name}`}
+      title={isEn ? `Edit Owner: ${owner.full_name}` : `แก้ไขข้อมูล: ${owner.full_name}`}
       trigger={trigger}
     >
       <div className="mt-2 pb-6">

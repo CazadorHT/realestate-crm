@@ -4,13 +4,17 @@ import { Printer, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function PrintReportButton() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isPrinting, setIsPrinting] = useState(false);
 
   const handlePrint = () => {
     setIsPrinting(true);
-    toast.info("กำลังจัดเตรียมรายงาน PDF...", { icon: <Printer className="h-4 w-4" /> });
+    toast.info(isEn ? "Preparing PDF report..." : "กำลังจัดเตรียมรายงาน PDF...", { icon: <Printer className="h-4 w-4" /> });
     
     // Brief delay to ensure UI handles the print state if needed
     setTimeout(() => {
@@ -32,7 +36,8 @@ export function PrintReportButton() {
       ) : (
         <Printer className="h-4 w-4 text-blue-500" />
       )}
-      <span className="hidden md:block">ส่งรายงาน (PDF)</span>
+      <span className="hidden md:block">{isEn ? "Print PDF" : "ส่งรายงาน (PDF)"}</span>
     </Button>
   );
 }
+

@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { LeadFormValues } from "../types";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface LeadRequirementsSectionProps {
   form: UseFormReturn<LeadFormValues>;
@@ -33,6 +34,9 @@ interface LeadRequirementsSectionProps {
 export function LeadRequirementsSection({
   form,
 }: LeadRequirementsSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Card className="shadow-lg border-slate-200 overflow-hidden">
       <CardHeader className="bg-linear-to-r from-slate-900 to-slate-800 border-b border-slate-700 pb-6">
@@ -42,10 +46,10 @@ export function LeadRequirementsSection({
           </div>
           <div>
             <CardTitle className="text-xl text-white font-bold">
-              ความต้องการทรัพย์
+              {isEn ? "Property Requirements" : "ความต้องการทรัพย์"}
             </CardTitle>
             <CardDescription className="text-slate-300">
-              รายละเอียด Spec ที่ลูกค้ากำลังมองหา
+              {isEn ? "Specifications the customer is looking for" : "รายละเอียด Spec ที่ลูกค้ากำลังมองหา"}
             </CardDescription>
           </div>
         </div>
@@ -55,7 +59,7 @@ export function LeadRequirementsSection({
           <div className="space-y-4">
             <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100 space-y-4">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-3">
-                <Maximize className="h-3.5 w-3.5" /> พื้นที่ใช้สอย (ตร.ม.)
+                <Maximize className="h-3.5 w-3.5" /> {isEn ? "Usable Area (sqm)" : "พื้นที่ใช้สอย (ตร.ม.)"}
               </Label>
               <div className="flex items-center gap-3">
                 <div className="relative flex-1 group">
@@ -98,7 +102,7 @@ export function LeadRequirementsSection({
 
             <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100 space-y-4">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-3">
-                <Bed className="h-3.5 w-3.5" /> ฟังก์ชันห้อง
+                <Bed className="h-3.5 w-3.5" /> {isEn ? "Room Features" : "ฟังก์ชันห้อง"}
               </Label>
               <div className="flex items-center gap-3">
                 <div className="relative flex-1 group">
@@ -106,7 +110,7 @@ export function LeadRequirementsSection({
                   <Input
                     type="number"
                     className="pl-9 text-center text-sm font-medium h-10 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-blue-500/20"
-                    placeholder="นอน"
+                    placeholder={isEn ? "Beds" : "นอน"}
                     {...form.register("min_bedrooms", { valueAsNumber: true })}
                   />
                   {form.formState.errors.min_bedrooms && (
@@ -120,7 +124,7 @@ export function LeadRequirementsSection({
                   <Input
                     type="number"
                     className="pl-9 text-center text-sm font-medium h-10 border-slate-200 rounded-lg focus:border-blue-500 focus:ring-blue-500/20"
-                    placeholder="น้ำ"
+                    placeholder={isEn ? "Baths" : "น้ำ"}
                     {...form.register("min_bathrooms", { valueAsNumber: true })}
                   />
                   {form.formState.errors.min_bathrooms && (
@@ -132,7 +136,7 @@ export function LeadRequirementsSection({
               </div>
               <div className="pt-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-2">
-                  <Users className="h-3.5 w-3.5" /> จำนวนคนอยู่
+                  <Users className="h-3.5 w-3.5" /> {isEn ? "Occupants" : "จำนวนคนอยู่"}
                 </Label>
                 <div className="flex flex-row gap-2">
                   {[1, 2, 3, 4, 5].map((num) => {
@@ -145,7 +149,7 @@ export function LeadRequirementsSection({
                         type="button"
                         onClick={() => form.setValue("num_occupants", num)}
                         className={`
-                          h-9 w-full px-3 rounded-lg text-sm font-semibold transition-all border
+                          h-9 w-full px-3 rounded-lg text-sm font-semibold transition-all border cursor-pointer
                           ${isSelected ? "bg-slate-800 border-slate-800 text-white shadow-md" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"}
                         `}
                       >
@@ -161,7 +165,7 @@ export function LeadRequirementsSection({
           <div className="space-y-4">
             <div className="space-y-2 h-full flex flex-col">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5" /> ทำเลที่สนใจ
+                <MapPin className="h-3.5 w-3.5" /> {isEn ? "Preferred Locations" : "ทำเลที่สนใจ"}
               </Label>
               <div className="relative flex-1">
                 <Controller
@@ -170,7 +174,7 @@ export function LeadRequirementsSection({
                   render={({ field }) => (
                     <Textarea
                       className="w-full h-full min-h-[140px] p-4 resize-none border-slate-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 bg-slate-50/50 leading-relaxed"
-                      placeholder={"เช่น\n• สุขุมวิท\n• สีลม\n• ทองหล่อ"}
+                      placeholder={isEn ? "e.g.\n• Sukhumvit\n• Silom\n• Thonglor" : "เช่น\n• สุขุมวิท\n• สีลม\n• ทองหล่อ"}
                       value={
                         Array.isArray(field.value)
                           ? field.value.join(", ")
@@ -188,7 +192,7 @@ export function LeadRequirementsSection({
                   )}
                 />
                 <div className="absolute bottom-3 right-3 text-[10px] text-slate-400 bg-white/80 px-2 py-0.5 rounded-md backdrop-blur-sm border border-slate-100">
-                  คั่นด้วยจุลภาค (,)
+                  {isEn ? "Separate with comma (,)" : "คั่นด้วยจุลภาค (,)"}
                 </div>
               </div>
             </div>
@@ -199,7 +203,8 @@ export function LeadRequirementsSection({
           {[
             {
               id: "has_pets",
-              label: "เลี้ยงสัตว์",
+              labelTh: "เลี้ยงสัตว์",
+              labelEn: "Pets Allowed",
               icon: PawPrint,
               color: "text-orange-500",
               bg: "bg-orange-50",
@@ -207,7 +212,8 @@ export function LeadRequirementsSection({
             },
             {
               id: "need_company_registration",
-              label: "จดบริษัท",
+              labelTh: "จดบริษัท",
+              labelEn: "Company Reg.",
               icon: Briefcase,
               color: "text-blue-600",
               bg: "bg-blue-50",
@@ -215,7 +221,8 @@ export function LeadRequirementsSection({
             },
             {
               id: "allow_airbnb",
-              label: "Airbnb",
+              labelTh: "Airbnb",
+              labelEn: "Airbnb Allowed",
               icon: PlaneTakeoff,
               color: "text-rose-500",
               bg: "bg-rose-50",
@@ -229,7 +236,7 @@ export function LeadRequirementsSection({
               <div className="flex items-center gap-3">
                 <item.icon className={`h-4.5 w-4.5 ${item.color}`} />
                 <span className="text-sm font-semibold text-slate-700">
-                  {item.label}
+                  {isEn ? item.labelEn : item.labelTh}
                 </span>
               </div>
               <Switch
@@ -245,7 +252,7 @@ export function LeadRequirementsSection({
             <div className="flex items-center gap-3">
               <Cigarette className="h-4.5 w-4.5 text-slate-500" />
               <span className="text-sm font-semibold text-slate-700">
-                สูบบุหรี่
+                {isEn ? "Smoking" : "สูบบุหรี่"}
               </span>
             </div>
             <Switch

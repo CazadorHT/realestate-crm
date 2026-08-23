@@ -1,26 +1,31 @@
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_PROPERTY_DATA } from "./constants";
-
+import { getMockPropertyData } from "./constants";
 import { type Language } from "@/lib/i18n";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function InstagramPostPreview({
   template,
-  language = "th",
+  language: propLang,
 }: {
   template: string;
   language?: Language;
 }) {
+  const { language: ctxLang } = useLanguage();
+  const activeLang = propLang || ctxLang;
+  const isEn = activeLang === "en";
+  const mockData = getMockPropertyData(isEn);
+
   const renderContent = (text: string) => {
     if (!text)
       return (
         <span className="text-slate-300 italic">
-          กรุณากรอกรูปแบบข้อความเพื่อดูตัวอย่าง...
+          {isEn ? "Please enter a message template to preview..." : "กรุณากรอกรูปแบบข้อความเพื่อดูตัวอย่าง..."}
         </span>
       );
 
     let rendered = text;
-    Object.entries(MOCK_PROPERTY_DATA).forEach(([key, value]) => {
+    Object.entries(mockData).forEach(([key, value]) => {
       const regex = new RegExp(`\\{\\{${key}\\}\\}`, "g");
       rendered = rendered.replace(regex, value || "");
     });

@@ -51,6 +51,8 @@ import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 interface OwnersTableProps {
   owners: (Owner & {
     property_count?: number;
@@ -78,6 +80,9 @@ export function OwnersTable({
   q = "",
   ownerType = "ALL",
 }: OwnersTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const allIds = useMemo(() => owners.map((o) => o.id), [owners]);
   const {
     toggleSelect,
@@ -150,10 +155,10 @@ export function OwnersTable({
       });
       if (result.success && result.ids) {
         toggleSelectAll(result.ids);
-        toast.info(`เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
+        toast.info(isEn ? `Selected all ${result.ids.length} owners` : `เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
       }
     } catch (err) {
-      toast.error("ไม่สามารถเลือกทั้งหมดได้");
+      toast.error(isEn ? "Failed to select all" : "ไม่สามารถเลือกทั้งหมดได้");
     } finally {
       setIsGlobalLoading(false);
     }
@@ -168,7 +173,7 @@ export function OwnersTable({
           toast.success(result.message);
           clearSelection();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
+          toast.error(result.message || (isEn ? "Error occurred" : "เกิดข้อผิดพลาด"));
         }
         resolve();
       });
@@ -195,9 +200,9 @@ export function OwnersTable({
     const skippedBranches = Array.from(
       new Set(
         skippedOwners.map((o) => {
-          const name = o?.tenants?.name || "ไม่ทราบสาขา";
+          const name = o?.tenants?.name || (isEn ? "Unknown branch" : "ไม่ทราบสาขา");
           if (o?.tenant_id === currentTenantId && currentTenantName) {
-            return `${currentTenantName} (สาขาคุณ)`;
+            return isEn ? `${currentTenantName} (Your branch)` : `${currentTenantName} (สาขาคุณ)`;
           }
           return name;
         }),
@@ -207,14 +212,24 @@ export function OwnersTable({
     return (
       <span className="space-y-2 block text-left">
         <span>
-          คุณกำลังจะดึง <strong className="text-foreground">{canPull}</strong>{" "}
-          รายชื่อเจ้าของที่ยังไม่มีสาขา มายังสาขาของคุณ
+          {isEn ? (
+            <>
+              You are about to pull <strong className="text-foreground">{canPull}</strong> unassigned owners to your branch.
+            </>
+          ) : (
+            <>
+              คุณกำลังจะดึง <strong className="text-foreground">{canPull}</strong>{" "}
+              รายชื่อเจ้าของที่ยังไม่มีสาขา มายังสาขาของคุณ
+            </>
+          )}
         </span>
         {total > canPull && (
           <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 mt-2">
             <p className="font-medium mb-1 flex items-center gap-1">
               <AlertTriangle className="h-3 w-3" />
-              ⚠️ ระบบจะข้าม {total - canPull} รายการที่มีสาขาอยู่แล้ว
+              {isEn
+                ? `⚠️ System will skip ${total - canPull} owners already assigned to a branch`
+                : `⚠️ ระบบจะข้าม ${total - canPull} รายการที่มีสาขาอยู่แล้ว`}
             </p>
             {skippedBranches.length > 0 && (
               <div className="mt-1 pl-4 border-l border-amber-200">
@@ -236,6 +251,7 @@ export function OwnersTable({
     owners,
     currentTenantId,
     currentTenantName,
+    isEn,
   ]);
 
   const handleBulkPull = async () => {
@@ -247,7 +263,7 @@ export function OwnersTable({
           toast.success(result.message);
           clearSelection();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
+          toast.error(result.message || (isEn ? "Error occurred" : "เกิดข้อผิดพลาด"));
         }
         resolve();
       });
@@ -260,7 +276,9 @@ export function OwnersTable({
     return (
       <div className="text-center py-12 border rounded-lg bg-muted/20">
         <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">ยังไม่มีเจ้าของทรัพย์</p>
+        <p className="text-muted-foreground">
+          {isEn ? "No owners in system yet" : "ยังไม่มีเจ้าของทรัพย์"}
+        </p>
         <div className="mt-4 flex justify-center">
           <CreateOwnerDialog />
         </div>
@@ -279,7 +297,11 @@ export function OwnersTable({
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
           )}
           <Input
-            placeholder="ค้นหาชื่อเจ้าของ, เบอร์โทร, LINE ID (กด Enter เพื่อค้นหาทันที)..."
+            placeholder={
+              isEn
+                ? "Search owner name, phone, LINE ID (Press Enter)..."
+                : "ค้นหาชื่อเจ้าของ, เบอร์โทร, LINE ID (กด Enter เพื่อค้นหาทันที)..."
+            }
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
@@ -297,7 +319,7 @@ export function OwnersTable({
                 setSearchTerm("");
                 performSearch("", selectedOwnerType);
               }}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 hover:bg-slate-100 p-1 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 hover:bg-slate-100 p-1 rounded-full text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -306,13 +328,13 @@ export function OwnersTable({
 
         <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
           <Select value={selectedOwnerType} onValueChange={setSelectedOwnerType}>
-            <SelectTrigger className="w-full md:w-[180px] h-11 rounded-xl border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-xs">
-              <SelectValue placeholder="ประเภทเจ้าของ" />
+            <SelectTrigger className="w-full md:w-[180px] h-11 rounded-xl border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-xs cursor-pointer">
+              <SelectValue placeholder={isEn ? "Owner Type" : "ประเภทเจ้าของ"} />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
-              <SelectItem value="ALL">ทุกประเภท</SelectItem>
-              <SelectItem value="INDIVIDUAL">บุคคลธรรมดา</SelectItem>
-              <SelectItem value="COMPANY">ในนามบริษัท</SelectItem>
+              <SelectItem value="ALL">{isEn ? "All Types" : "ทุกประเภท"}</SelectItem>
+              <SelectItem value="INDIVIDUAL">{isEn ? "Individual" : "บุคคลธรรมดา"}</SelectItem>
+              <SelectItem value="COMPANY">{isEn ? "Company" : "ในนามบริษัท"}</SelectItem>
               <SelectItem value="CO_BROKER">Co-broker</SelectItem>
               <SelectItem value="VIP">VIP</SelectItem>
             </SelectContent>
@@ -331,10 +353,10 @@ export function OwnersTable({
             ? handleBulkPull
             : undefined
         }
-        onPullLabel="ดึงมาสาขาตัวเอง"
+        onPullLabel={isEn ? "Pull to My Branch" : "ดึงมาสาขาตัวเอง"}
         onPullConfirmMessage={pullConfirmMessage}
         onExport={() => exportOwnersAction(Array.from(selectedIds))}
-        entityName="เจ้าของ"
+        entityName={isEn ? "owner" : "เจ้าของ"}
         className={isPending ? "opacity-50 pointer-events-none" : ""}
       />
 
@@ -343,17 +365,23 @@ export function OwnersTable({
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
           <div className="flex items-center gap-3 text-sm text-blue-800">
             <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
-            <span>เลือกทั้งหมด {selectedCount} รายชื่อในหน้านี้แล้ว</span>
+            <span>
+              {isEn
+                ? `Selected all ${selectedCount} owners on this page`
+                : `เลือกทั้งหมด ${selectedCount} รายชื่อในหน้านี้แล้ว`}
+            </span>
           </div>
           <button
             onClick={handleSelectAllGlobal}
             disabled={isGlobalLoading}
-            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             {isGlobalLoading ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : null}
-            เลือกทั้งหมด {count} รายชื่อในระบบ
+            {isEn
+              ? `Select all ${count} owners in system`
+              : `เลือกทั้งหมด ${count} รายชื่อในระบบ`}
           </button>
         </div>
       )}
@@ -363,15 +391,22 @@ export function OwnersTable({
           <div className="flex items-center gap-3 text-sm text-emerald-800">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             <span>
-              คุณได้เลือกทั้งหมด <strong>{count}</strong> รายชื่อในระบบแล้ว
-              (ทุกหน้า)
+              {isEn ? (
+                <>
+                  You have selected all <strong>{count}</strong> owners in the system (all pages)
+                </>
+              ) : (
+                <>
+                  คุณได้เลือกทั้งหมด <strong>{count}</strong> รายชื่อในระบบแล้ว (ทุกหน้า)
+                </>
+              )}
             </span>
           </div>
           <button
             onClick={clearSelection}
-            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all cursor-pointer"
           >
-            ยกเลิกการเลือก
+            {isEn ? "Clear Selection" : "ยกเลิกการเลือก"}
           </button>
         </div>
       )}
@@ -386,7 +421,7 @@ export function OwnersTable({
                   <Checkbox
                     checked={isAllSelected}
                     onCheckedChange={() => toggleSelectAll(allIds)}
-                    aria-label="เลือกทั้งหมด"
+                    aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
                     className={
                       isPartialSelected
                         ? "data-[state=checked]:bg-primary/50"
@@ -394,14 +429,14 @@ export function OwnersTable({
                     }
                   />
                 </TableHead>
-                <TableHead>ชื่อ</TableHead>
-                {showBranch && <TableHead>สาขา</TableHead>}
-                <TableHead>เบอร์โทร</TableHead>
+                <TableHead>{isEn ? "Name" : "ชื่อ"}</TableHead>
+                {showBranch && <TableHead>{isEn ? "Branch" : "สาขา"}</TableHead>}
+                <TableHead>{isEn ? "Phone" : "เบอร์โทร"}</TableHead>
                 <TableHead>LINE</TableHead>
                 <TableHead>Facebook</TableHead>
-                <TableHead>ผู้บันทึก</TableHead>
-                <TableHead className="text-right">จำนวนทรัพย์</TableHead>
-                <TableHead className="text-right">จัดการ</TableHead>
+                <TableHead>{isEn ? "Created By" : "ผู้บันทึก"}</TableHead>
+                <TableHead className="text-right">{isEn ? "Properties" : "จำนวนทรัพย์"}</TableHead>
+                <TableHead className="text-right">{isEn ? "Actions" : "จัดการ"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -411,7 +446,7 @@ export function OwnersTable({
                     colSpan={showBranch ? 10 : 9}
                     className="text-center py-12 text-slate-400 font-semibold text-sm bg-slate-50/20"
                   >
-                    ไม่พบข้อมูลเจ้าของทรัพย์ที่ตรงตามตัวเลือก
+                    {isEn ? "No property owners match your filters" : "ไม่พบข้อมูลเจ้าของทรัพย์ที่ตรงตามตัวเลือก"}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -424,7 +459,7 @@ export function OwnersTable({
                       <Checkbox
                         checked={isSelected(owner.id)}
                         onCheckedChange={() => toggleSelect(owner.id)}
-                        aria-label={`เลือก ${owner.full_name}`}
+                        aria-label={`${isEn ? "Select" : "เลือก"} ${owner.full_name}`}
                       />
                     </TableCell>
                     {/* ชื่อ Owner */}
@@ -505,7 +540,7 @@ export function OwnersTable({
                           rel="noopener noreferrer"
                           className="hover:underline text-blue-600"
                         >
-                          ดูโปรไฟล์
+                          {isEn ? "View Profile" : "ดูโปรไฟล์"}
                         </a>
                       ) : (
                         <span className="text-muted-foreground">-</span>
@@ -521,7 +556,7 @@ export function OwnersTable({
                         {owner.property_count || 0}
                       </span>{" "}
                       <span className="text-muted-foreground text-sm">
-                        ทรัพย์
+                        {isEn ? "listings" : "ทรัพย์"}
                       </span>
                     </TableCell>
                     {/* จัดการ */}
@@ -548,7 +583,7 @@ export function OwnersTable({
             >
               {owners.length === 0 ? (
                 <div className="col-span-full text-center py-12 text-slate-400 font-semibold text-sm bg-white rounded-2xl border border-slate-200/60 shadow-xs">
-                  ไม่พบข้อมูลเจ้าของทรัพย์ที่ตรงตามตัวเลือก
+                  {isEn ? "No property owners match your filters" : "ไม่พบข้อมูลเจ้าของทรัพย์ที่ตรงตามตัวเลือก"}
                 </div>
               ) : (
                 owners.map((owner, idx) => {
@@ -639,16 +674,16 @@ export function OwnersTable({
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             <div className="bg-blue-50 text-[10px] font-semibold text-blue-700 px-2.5 py-1 rounded-full uppercase tracking-tighter border border-blue-100/50 flex items-center gap-1">
                               <User className="h-2.5 w-2.5" />
-                              {owner.property_count || 0} ทรัพย์สิน
+                              {owner.property_count || 0} {isEn ? "Properties" : "ทรัพย์สิน"}
                             </div>
                             {showBranch && owner.tenants?.name && (
                               <div className="bg-slate-100 text-[10px] font-semibold text-slate-600 px-2.5 py-1 rounded-full uppercase tracking-tighter border border-slate-200/50">
-                                สาขา: {owner.tenants.name}
+                                {isEn ? "Branch: " : "สาขา: "}{owner.tenants.name}
                               </div>
                             )}
                             {owner.created_by_name && (
                               <div className="bg-purple-50 text-[10px] font-semibold text-purple-700 px-2.5 py-1 rounded-full uppercase tracking-tighter border border-purple-100/50">
-                                โดย: {owner.created_by_name}
+                                {isEn ? "By: " : "โดย: "}{owner.created_by_name}
                               </div>
                             )}
                           </div>
@@ -673,7 +708,7 @@ export function OwnersTable({
                           >
                             <div className="flex items-center gap-3">
                               <FaPhone className="h-3.5 w-3.5 mb-0.5" />
-                              <span>{owner.phone || "ไม่มีเบอร์โทร"}</span>
+                              <span>{owner.phone || (isEn ? "No phone" : "ไม่มีเบอร์โทร")}</span>
                             </div>
                             {owner.phone && (
                               <FaChevronRight className="h-3 w-3 opacity-50" />

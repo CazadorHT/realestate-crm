@@ -1,24 +1,30 @@
 import { type Language } from "@/lib/i18n";
 import { LinePreview } from "@/features/properties/components/social-previews/LinePreview";
-import { MOCK_PROPERTY_DATA } from "./constants";
+import { getMockPropertyData } from "./constants";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function LinePostPreview({
   template,
-  language = "th",
+  language: propLang,
 }: {
   template: string;
   language?: Language;
 }) {
+  const { language: ctxLang } = useLanguage();
+  const activeLang = propLang || ctxLang;
+  const isEn = activeLang === "en";
+  const mockData = getMockPropertyData(isEn);
+
   const renderContent = (text: string) => {
     if (!text)
       return (
         <span className="text-slate-300 italic">
-          กรุณากรอกรูปแบบข้อความเพื่อดูตัวอย่าง...
+          {isEn ? "Please enter a message template to preview..." : "กรุณากรอกรูปแบบข้อความเพื่อดูตัวอย่าง..."}
         </span>
       );
 
     let rendered = text;
-    Object.entries(MOCK_PROPERTY_DATA).forEach(([key, value]) => {
+    Object.entries(mockData).forEach(([key, value]) => {
       const regex = new RegExp(`\\{\\{${key}\\}\\}`, "g");
       rendered = rendered.replace(regex, value || "");
     });
@@ -27,14 +33,14 @@ export function LinePostPreview({
   };
 
   const previewData = {
-    title: MOCK_PROPERTY_DATA.title,
-    propertyType: MOCK_PROPERTY_DATA.property_type,
-    listingType_label: MOCK_PROPERTY_DATA.listing_type,
-    priceDisplay: MOCK_PROPERTY_DATA.price,
-    location: MOCK_PROPERTY_DATA.popular_area,
-    bedrooms: MOCK_PROPERTY_DATA.bedrooms,
-    bathrooms: MOCK_PROPERTY_DATA.bathrooms,
-    size_sqm: MOCK_PROPERTY_DATA.size_sqm,
+    title: mockData.title,
+    propertyType: mockData.property_type,
+    listingType_label: mockData.listing_type,
+    priceDisplay: mockData.price,
+    location: mockData.popular_area,
+    bedrooms: mockData.bedrooms,
+    bathrooms: mockData.bathrooms,
+    size_sqm: mockData.size_sqm,
     content: renderContent(template),
   };
 
@@ -47,7 +53,7 @@ export function LinePostPreview({
 
   return (
     <div className="w-[320px] mx-auto sticky top-24">
-      <LinePreview images={images} previewData={previewData} lang={language} />
+      <LinePreview images={images} previewData={previewData} lang={activeLang} />
     </div>
   );
 }

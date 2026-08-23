@@ -14,8 +14,12 @@ import {
 import { getTenantCountAction } from "@/lib/actions/tenant-management";
 import { cn } from "@/lib/utils";
 import { InitialBranchSetupDialogs } from "./InitialBranchSetupDialogs";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function AdminSystemSettings() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [systemConfig, setSystemConfig] = useState<SystemConfig>({
     multi_tenant_enabled: false,
     default_tenant_id: null,
@@ -32,13 +36,13 @@ export function AdminSystemSettings() {
         const config = await getSystemConfig();
         setSystemConfig(config);
       } catch (error) {
-        toast.error("ไม่สามารถโหลดการตั้งค่าระบบได้");
+        toast.error(isEn ? "Failed to load system configuration" : "ไม่สามารถโหลดการตั้งค่าระบบได้");
       } finally {
         setIsLoading(false);
       }
     }
     loadConfig();
-  }, []);
+  }, [isEn]);
 
   const handleToggle = (checked: boolean) => {
     startTransition(async () => {
@@ -58,7 +62,7 @@ export function AdminSystemSettings() {
 
         await saveToggleState(checked);
       } catch (error) {
-        toast.error("เกิดข้อผิดพลาดในการตรวจสอบข้อมูลสาขา");
+        toast.error(isEn ? "Error verifying branch information" : "เกิดข้อผิดพลาดในการตรวจสอบข้อมูลสาขา");
       }
     });
   };
@@ -69,11 +73,13 @@ export function AdminSystemSettings() {
       await updateSystemConfig(newConfig);
       setSystemConfig(newConfig);
       toast.success(
-        checked ? "✅ เปิดใช้งานระบบหลายสาขาแล้ว" : "ปิดใช้งานระบบหลายสาขาแล้ว",
+        checked 
+          ? (isEn ? "✅ Multi-branch system enabled" : "✅ เปิดใช้งานระบบหลายสาขาแล้ว") 
+          : (isEn ? "Multi-branch system disabled" : "ปิดใช้งานระบบหลายสาขาแล้ว"),
       );
       await refreshTenant(); // อัปเดต nav bar ทันที
     } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      toast.error(isEn ? "Failed to save configuration" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     }
   };
 
@@ -116,7 +122,7 @@ export function AdminSystemSettings() {
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-bold text-slate-800">
-                โครงสร้างองค์กร (Multi-Branch)
+                {isEn ? "Organizational Architecture (Multi-Branch)" : "โครงสร้างองค์กร (Multi-Branch)"}
               </h2>
               <Badge
                 className={cn(
@@ -131,9 +137,18 @@ export function AdminSystemSettings() {
               </Badge>
             </div>
             <p className="max-w-lg text-sm text-slate-500">
-              เปิดใช้งานเพื่อจัดการหลายสาขาพร้อมกัน ระบบจะแสดงเมนู{" "}
-              <strong className="text-slate-700">"สลับสาขา"</strong>{" "}
-              บนแถบนำทางโดยอัตโนมัติ
+              {isEn ? (
+                <>
+                  Enable to manage multiple branches simultaneously. The system will automatically display the{" "}
+                  <strong className="text-slate-700">"Branch Switcher"</strong> on the navigation bar.
+                </>
+              ) : (
+                <>
+                  เปิดใช้งานเพื่อจัดการหลายสาขาพร้อมกัน ระบบจะแสดงเมนู{" "}
+                  <strong className="text-slate-700">"สลับสาขา"</strong>{" "}
+                  บนแถบนำทางโดยอัตโนมัติ
+                </>
+              )}
             </p>
 
             {/* Feature chips */}
@@ -170,7 +185,9 @@ export function AdminSystemSettings() {
           )}
         >
           <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            {isEnabled ? "ระบบกำลังทำงาน" : "เปิดใช้งาน"}
+            {isEnabled 
+              ? (isEn ? "Active System" : "ระบบกำลังทำงาน") 
+              : (isEn ? "Enable System" : "เปิดใช้งาน")}
           </p>
           <div className="flex items-center gap-3">
             <span
@@ -202,7 +219,7 @@ export function AdminSystemSettings() {
           </div>
           {isPending && (
             <span className="text-[10px] text-indigo-400 animate-pulse">
-              กำลังบันทึก…
+              {isEn ? "Saving…" : "กำลังบันทึก…"}
             </span>
           )}
         </div>
@@ -210,3 +227,4 @@ export function AdminSystemSettings() {
     </div>
   );
 }
+

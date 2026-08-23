@@ -4,6 +4,7 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Images } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StudioAlbumPackagerProps {
   imageUrls: string[];
@@ -18,6 +19,9 @@ export function StudioAlbumPackager({
   onToggleAlbumImage,
   onSelectAllAlbumImages,
 }: StudioAlbumPackagerProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const totalCount = (selectedAlbumIndices.length > 0 ? selectedAlbumIndices.length : imageUrls.length) + 1;
 
   return (
@@ -25,7 +29,7 @@ export function StudioAlbumPackager({
       <div className="flex items-center justify-between">
         <Label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
           <Images className="h-3.5 w-3.5 text-amber-400" />
-          <span>จัดชุดภาพโพสต์ (Cover + ภาพจริงลงอัลบั้ม)</span>
+          <span>{isEn ? "Package Album (Cover + Property Photos)" : "จัดชุดภาพโพสต์ (Cover + ภาพจริงลงอัลบั้ม)"}</span>
         </Label>
         <button
           type="button"
@@ -33,8 +37,8 @@ export function StudioAlbumPackager({
           className="text-[10px] text-amber-400 hover:text-amber-300 transition-colors cursor-pointer font-medium"
         >
           {selectedAlbumIndices.length === imageUrls.length
-            ? "ล้างการเลือก"
-            : `เลือกภาพจริงทั้งหมด (${imageUrls.length})`}
+            ? (isEn ? "Deselect All" : "ล้างการเลือก")
+            : (isEn ? `Select All Photos (${imageUrls.length})` : `เลือกภาพจริงทั้งหมด (${imageUrls.length})`)}
         </button>
       </div>
 
@@ -45,19 +49,27 @@ export function StudioAlbumPackager({
             1
           </span>
           <div>
-            <p className="text-xs font-bold text-amber-300">⭐ ภาพที่ 1: ภาพปกแบนเนอร์ (Cover Banner)</p>
-            <p className="text-[10px] text-slate-400">ภาพที่สร้างจาก Studio พร้อมพาดหัว สเปก ราคา และ QR Code</p>
+            <p className="text-xs font-bold text-amber-300">
+              {isEn ? "⭐ Slide 1: Studio Cover Banner" : "⭐ ภาพที่ 1: ภาพปกแบนเนอร์ (Cover Banner)"}
+            </p>
+            <p className="text-[10px] text-slate-400">
+              {isEn
+                ? "Generated poster with title, specs, price tag, and QR code"
+                : "ภาพที่สร้างจาก Studio พร้อมพาดหัว สเปก ราคา และ QR Code"}
+            </p>
           </div>
         </div>
-        <Badge className="bg-amber-500 text-slate-950 text-[9px] font-bold shrink-0">ภาพปก</Badge>
+        <Badge className="bg-amber-500 text-slate-950 text-[9px] font-bold shrink-0">
+          {isEn ? "Cover" : "ภาพปก"}
+        </Badge>
       </div>
 
       {/* Slots 2..N: Real Property Photos Thumbnails Grid */}
       <div className="space-y-1">
         <div className="flex items-center justify-between text-[11px] text-slate-400">
-          <span>🖼️ เลือกภาพห้อง/บ้านจริงที่จะโพสต์ต่อจากภาพปก:</span>
+          <span>{isEn ? "🖼️ Select property photos to bundle:" : "🖼️ เลือกภาพห้อง/บ้านจริงที่จะโพสต์ต่อจากภาพปก:"}</span>
           <span className="text-[10px] text-amber-400/90 font-bold">
-            รวมทั้งชุด {totalCount} รูป
+            {isEn ? `Total ${totalCount} photos` : `รวมทั้งชุด ${totalCount} รูป`}
           </span>
         </div>
 
@@ -97,3 +109,4 @@ export function StudioAlbumPackager({
     </div>
   );
 }
+

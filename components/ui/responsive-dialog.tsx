@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/drawer";
 import { m, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 /**
  * 🛰️ ResponsiveDialog Context:
@@ -87,6 +88,9 @@ export function ResponsiveDialog({
   showCloseButton = true,
   confirmOnClose,
 }: ResponsiveDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const isMobile = useIsMobile();
   const [mounted, setMounted] = React.useState(false);
   const isNested = React.useContext(ResponsiveDialogContext);
@@ -164,8 +168,8 @@ export function ResponsiveDialog({
       <ResponsiveDialog
         open={showConfirmClose}
         onOpenChange={setShowConfirmClose}
-        title="ยืนยันการออกจากหน้าต่าง"
-        description="ข้อมูลที่คุณกรอกหรือแก้ไขอาจไม่ได้รับการบันทึก คุณแน่ใจหรือไม่ที่จะออกจากหน้านี้?"
+        title={isEn ? "Confirm Exit" : "ยืนยันการออกจากหน้าต่าง"}
+        description={isEn ? "You have unsaved changes. Are you sure you want to leave?" : "ข้อมูลที่คุณกรอกหรือแก้ไขอาจไม่ได้รับการบันทึก คุณแน่ใจหรือไม่ที่จะออกจากหน้านี้?"}
         className="sm:max-w-sm! z-200"
         confirmOnClose={false}
         footer={
@@ -176,7 +180,7 @@ export function ResponsiveDialog({
               onClick={handleCancelExit}
               className="flex-1 h-12 rounded-xl font-bold border-slate-200 text-slate-600"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               variant="destructive"
@@ -184,7 +188,7 @@ export function ResponsiveDialog({
               onClick={handleConfirmExit}
               className="flex-1 h-12 rounded-xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all"
             >
-              ยืนยันการออก
+              {isEn ? "Confirm Exit" : "ยืนยันการออก"}
             </Button>
           </div>
         }
@@ -256,7 +260,7 @@ export function ResponsiveDialog({
 
                 <div className="flex flex-col items-center gap-1.5 text-center">
                   <p className="text-sm font-bold text-slate-900 tracking-tight">
-                    {loadingText || "กำลังประมวลผล..."}
+                    {loadingText || (isEn ? "Processing..." : "กำลังประมวลผล...")}
                   </p>
                   <p className="text-[10px] font-bold text-blue-600/70 uppercase tracking-widest animate-pulse">
                     Please wait

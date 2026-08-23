@@ -12,11 +12,11 @@ import {
   Cigarette,
   Home,
   Building2,
-  DoorOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type LeadPreferences } from "../types";
 import { FaAirbnb } from "react-icons/fa6";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface LeadRequirementsCardProps {
   lead: {
@@ -37,6 +37,8 @@ interface LeadRequirementsCardProps {
 }
 
 export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   return (
     <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-blue-900/5">
@@ -45,8 +47,12 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
           <Target className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h3 className="font-semibold text-lg text-slate-800 tracking-tight">ความต้องการของลูกค้า</h3>
-          <p className="text-[11px] text-slate-400 font-medium">สเปกและคุณสมบัติอสังหาฯ ที่กำลังมองหา</p>
+          <h3 className="font-semibold text-lg text-slate-800 tracking-tight">
+            {isEn ? "Lead Requirements" : "ความต้องการของลูกค้า"}
+          </h3>
+          <p className="text-[11px] text-slate-400 font-medium">
+            {isEn ? "Property specifications and desired features" : "สเปกและคุณสมบัติอสังหาฯ ที่กำลังมองหา"}
+          </p>
         </div>
       </div>
 
@@ -59,11 +65,13 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
                 <MapPin className="h-4 w-4" />
               </div>
               <div className="flex-1 space-y-1">
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">ทำเลที่สนใจ</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+                  {isEn ? "Preferred Locations" : "ทำเลที่สนใจ"}
+                </span>
                 <p className="text-sm font-semibold text-slate-700 leading-snug">
                   {lead.preferred_locations && lead.preferred_locations.length > 0
                     ? lead.preferred_locations.join(", ")
-                    : <span className="text-slate-300 font-normal">ไม่ระบุ</span>}
+                    : <span className="text-slate-300 font-normal">{isEn ? "Not specified" : "ไม่ระบุ"}</span>}
                 </p>
               </div>
             </div>
@@ -74,7 +82,9 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
                   <Home className="h-4 w-4" />
                 </div>
                 <div className="flex-1 space-y-2">
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">ประเภทอสังหาฯ</span>
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+                    {isEn ? "Property Types" : "ประเภทอสังหาฯ"}
+                  </span>
                   <div className="flex flex-wrap gap-1.5">
                     {lead.preferred_property_types.map((type) => (
                       <span key={type} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-semibold ring-1 ring-blue-100">
@@ -91,16 +101,18 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
                 <DollarSign className="h-4 w-4" />
               </div>
               <div className="flex-1 space-y-1">
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">งบประมาณ</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+                  {isEn ? "Budget" : "งบประมาณ"}
+                </span>
                 <p className="text-sm font-semibold text-emerald-600">
                   {lead.budget_min || lead.budget_max ? (
                     <>
                       {lead.budget_min ? `฿${lead.budget_min.toLocaleString()}` : "0"}
                       {" - "}
-                      {lead.budget_max ? `฿${lead.budget_max.toLocaleString()}` : "ไม่จำกัด"}
+                      {lead.budget_max ? `฿${lead.budget_max.toLocaleString()}` : (isEn ? "Unlimited" : "ไม่จำกัด")}
                     </>
                   ) : (
-                    <span className="text-slate-300 font-normal">ไม่ระบุ</span>
+                    <span className="text-slate-300 font-normal">{isEn ? "Not specified" : "ไม่ระบุ"}</span>
                   )}
                 </p>
               </div>
@@ -111,17 +123,17 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-slate-50/50 rounded-xl p-3 border border-slate-100 flex flex-col items-center gap-1 hover:bg-white hover:shadow-md transition-all duration-300">
               <Bed className="h-4 w-4 text-slate-400" />
-              <span className="text-[10px] font-semibold text-slate-500">ห้องนอน</span>
+              <span className="text-[10px] font-semibold text-slate-500">{isEn ? "Bedrooms" : "ห้องนอน"}</span>
               <span className="text-lg font-semibold text-slate-800">{lead.min_bedrooms ?? "0"}</span>
             </div>
             <div className="bg-slate-50/50 rounded-xl p-3 border border-slate-100 flex flex-col items-center gap-1 hover:bg-white hover:shadow-md transition-all duration-300">
               <Bath className="h-4 w-4 text-slate-400" />
-              <span className="text-[10px] font-semibold text-slate-500">ห้องน้ำ</span>
+              <span className="text-[10px] font-semibold text-slate-500">{isEn ? "Bathrooms" : "ห้องน้ำ"}</span>
               <span className="text-lg font-semibold text-slate-800">{lead.min_bathrooms ?? "0"}</span>
             </div>
             <div className="bg-slate-50/50 rounded-xl p-3 border border-slate-100 flex flex-col items-center gap-1 hover:bg-white hover:shadow-md transition-all duration-300">
               <Ruler className="h-4 w-4 text-slate-400" />
-              <span className="text-[10px] font-semibold text-slate-500">ขนาด (ตร.ม.)</span>
+              <span className="text-[10px] font-semibold text-slate-500">{isEn ? "Size (sqm)" : "ขนาด (ตร.ม.)"}</span>
               <span className="text-sm font-semibold text-slate-800">
                 {lead.min_size_sqm || lead.max_size_sqm 
                   ? `${lead.min_size_sqm ?? 0}-${lead.max_size_sqm ?? "?"}` 
@@ -137,8 +149,14 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
                 <Users className="h-3.5 w-3.5 text-blue-600" />
               </div>
               <div className="space-y-0.5">
-                <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest block">จำนวนผู้พักอาศัย</span>
-                <span className="text-xs font-semibold text-slate-700">{lead.num_occupants ? `${lead.num_occupants} คน` : "-"}</span>
+                <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest block">
+                  {isEn ? "Occupants" : "จำนวนผู้พักอาศัย"}
+                </span>
+                <span className="text-xs font-semibold text-slate-700">
+                  {lead.num_occupants
+                    ? (isEn ? `${lead.num_occupants} persons` : `${lead.num_occupants} คน`)
+                    : "-"}
+                </span>
               </div>
             </div>
             
@@ -150,8 +168,14 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
                 <PawPrint className={cn("h-3.5 w-3.5", lead.has_pets ? "text-amber-600" : "text-slate-400")} />
               </div>
               <div className="space-y-0.5">
-                <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest block">การเลี้ยงสัตว์</span>
-                <span className="text-xs font-semibold text-slate-700">{lead.has_pets ? "เลี้ยงสัตว์" : "ไม่มีสัตว์เลี้ยง"}</span>
+                <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest block">
+                  {isEn ? "Pets" : "การเลี้ยงสัตว์"}
+                </span>
+                <span className="text-xs font-semibold text-slate-700">
+                  {lead.has_pets
+                    ? (isEn ? "Has Pets" : "เลี้ยงสัตว์")
+                    : (isEn ? "No Pets" : "ไม่มีสัตว์เลี้ยง")}
+                </span>
               </div>
             </div>
           </div>
@@ -165,8 +189,12 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
                       <Building2 className="h-3.5 w-3.5 text-indigo-600" />
                     </div>
                     <div className="space-y-0.5">
-                      <span className="text-[9px] font-semibold text-indigo-400 uppercase tracking-widest block leading-none">จดทะเบียนบริษัท</span>
-                      <span className="text-[11px] font-semibold text-indigo-700">ต้องการ</span>
+                      <span className="text-[9px] font-semibold text-indigo-400 uppercase tracking-widest block leading-none">
+                        {isEn ? "Company Reg." : "จดทะเบียนบริษัท"}
+                      </span>
+                      <span className="text-[11px] font-semibold text-indigo-700">
+                        {isEn ? "Required" : "ต้องการ"}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -176,8 +204,12 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
                       <FaAirbnb className="h-4 w-4 text-[#FF5A5F]" />
                     </div>
                     <div className="space-y-0.5">
-                      <span className="text-[9px] font-semibold text-rose-400 uppercase tracking-widest block leading-none">ทำ Airbnb</span>
-                      <span className="text-[11px] font-semibold text-rose-700">ต้องการ</span>
+                      <span className="text-[9px] font-semibold text-rose-400 uppercase tracking-widest block leading-none">
+                        {isEn ? "Airbnb Allowed" : "ทำ Airbnb"}
+                      </span>
+                      <span className="text-[11px] font-semibold text-rose-700">
+                        {isEn ? "Required" : "ต้องการ"}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -189,13 +221,17 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
             <div className="flex items-center justify-between px-3 py-2 bg-slate-50/50 rounded-lg">
               <div className="flex items-center gap-2">
                 <Cigarette className={cn("h-4 w-4", lead.preferences?.is_smoker ? "text-rose-500" : "text-slate-400")} />
-                <span className="text-xs font-semibold text-slate-500">การสูบบุหรี่</span>
+                <span className="text-xs font-semibold text-slate-500">
+                  {isEn ? "Smoking" : "การสูบบุหรี่"}
+                </span>
               </div>
               <span className={cn(
                 "text-[10px] font-semibold px-2 py-0.5 rounded",
                 lead.preferences?.is_smoker ? "bg-rose-50 text-rose-600" : "bg-slate-100 text-slate-500"
               )}>
-                {lead.preferences?.is_smoker ? "สูบบุหรี่" : "ไม่สูบบุหรี่"}
+                {lead.preferences?.is_smoker
+                  ? (isEn ? "Smoker" : "สูบบุหรี่")
+                  : (isEn ? "Non-smoker" : "ไม่สูบบุหรี่")}
               </span>
             </div>
           </div>

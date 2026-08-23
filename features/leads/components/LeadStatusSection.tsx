@@ -34,10 +34,11 @@ import { ResponsiveDialog, DialogClose } from "@/components/ui/responsive-dialog
 import {
   LEAD_STAGE_ORDER,
   LEAD_SOURCE_ORDER,
-  LEAD_STAGE_LABELS,
-  LEAD_SOURCE_LABELS,
+  leadStageLabelNullable,
+  leadSourceLabelNullable,
 } from "../labels";
 import { LeadFormValues } from "../types";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface LeadStatusSectionProps {
   form: UseFormReturn<LeadFormValues>;
@@ -64,6 +65,9 @@ const SOURCE_CONFIG: Record<string, { icon: any; color: string; activeBg: string
 };
 
 export function LeadStatusSection({ form }: LeadStatusSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Card className="shadow-lg border-slate-200 overflow-hidden">
       <CardHeader className="bg-linear-to-r from-violet-600 to-indigo-600 border-b border-white/10 pb-6">
@@ -73,10 +77,10 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
           </div>
           <div>
             <CardTitle className="text-xl text-white font-semibold">
-              สถานะและงบประมาณ
+              {isEn ? "Status & Budget" : "สถานะและงบประมาณ"}
             </CardTitle>
             <CardDescription className="text-indigo-100">
-              ติดตามความคืบหน้าและประเมินงบประมาณ
+              {isEn ? "Track progress and evaluate budget" : "ติดตามความคืบหน้าและประเมินงบประมาณ"}
             </CardDescription>
           </div>
         </div>
@@ -86,15 +90,15 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
           {/* Stage Picker */}
           <div className="space-y-2">
             <Label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 ml-1">
-              Stage (สถานะลูกค้า)
+              {isEn ? "Stage (Lead Status)" : "Stage (สถานะลูกค้า)"}
             </Label>
             <ResponsiveDialog
-              title="เลือกสถานะลูกค้า"
-              description="อัปเดตความคืบหน้าของลีดรายนี้"
+              title={isEn ? "Select Lead Status" : "เลือกสถานะลูกค้า"}
+              description={isEn ? "Update progress stage for this lead" : "อัปเดตความคืบหน้าของลีดรายนี้"}
               trigger={
                 <button
                   type="button"
-                  className="w-full h-12 px-4 border border-slate-200 rounded-2xl bg-white hover:bg-slate-50 transition-all flex items-center justify-between group shadow-sm active:scale-[0.99]"
+                  className="w-full h-12 px-4 border border-slate-200 rounded-2xl bg-white hover:bg-slate-50 transition-all flex items-center justify-between group shadow-sm active:scale-[0.99] cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     {(() => {
@@ -111,7 +115,7 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                              {stage}
                           </div>
                           <span className="text-sm font-semibold text-slate-700">
-                            {LEAD_STAGE_LABELS[stage as keyof typeof LEAD_STAGE_LABELS]}
+                            {leadStageLabelNullable(stage, language)}
                           </span>
                         </>
                       );
@@ -133,7 +137,7 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                         type="button"
                         onClick={() => form.setValue("stage", s as any)}
                         className={cn(
-                          "flex items-center justify-between p-4 rounded-2xl border transition-all text-left group",
+                          "flex items-center justify-between p-4 rounded-2xl border transition-all text-left group cursor-pointer",
                           isSelected
                             ? "bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-200 scale-[1.02] z-10"
                             : "bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600"
@@ -148,7 +152,7 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                           </div>
                           <div className="flex flex-col">
                             <span className="text-xs font-semibold uppercase tracking-wider opacity-60 mb-0.5">{s}</span>
-                            <span className="text-sm font-semibold">{LEAD_STAGE_LABELS[s]}</span>
+                            <span className="text-sm font-semibold">{leadStageLabelNullable(s, language)}</span>
                           </div>
                         </div>
                         {isSelected && <Check className="h-5 w-5 text-white animate-in zoom-in duration-300" />}
@@ -163,15 +167,15 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
           {/* Source Picker */}
           <div className="space-y-2">
             <Label className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 ml-1">
-              Source (ที่มาของลีด)
+              {isEn ? "Source (Lead Origin)" : "Source (ที่มาของลีด)"}
             </Label>
             <ResponsiveDialog
-              title="แหล่งที่มาของลูกค้า"
-              description="ระบุว่าลูกค้ารู้จักเราผ่านช่องทางใด"
+              title={isEn ? "Lead Origin / Channel" : "แหล่งที่มาของลูกค้า"}
+              description={isEn ? "Specify how the customer found us" : "ระบุว่าลูกค้ารู้จักเราผ่านช่องทางใด"}
               trigger={
                 <button
                   type="button"
-                  className="w-full h-12 px-4 border border-slate-200 rounded-2xl bg-white hover:bg-slate-50 transition-all flex items-center justify-between group shadow-sm active:scale-[0.99]"
+                  className="w-full h-12 px-4 border border-slate-200 rounded-2xl bg-white hover:bg-slate-50 transition-all flex items-center justify-between group shadow-sm active:scale-[0.99] cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     {(() => {
@@ -184,7 +188,7 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                             <Icon className="h-4! w-4!" />
                           </div>
                           <span className="text-sm font-semibold text-slate-700">
-                            {LEAD_SOURCE_LABELS[source as keyof typeof LEAD_SOURCE_LABELS]}
+                            {leadSourceLabelNullable(source, language)}
                           </span>
                         </>
                       );
@@ -206,7 +210,7 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                         type="button"
                         onClick={() => form.setValue("source", s as any)}
                         className={cn(
-                          "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center gap-2",
+                          "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center gap-2 cursor-pointer",
                           isSelected
                             ? "bg-blue-700 border-blue-700 text-white shadow-lg active:scale-95"
                             : "bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600"
@@ -218,7 +222,7 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                         )}>
                           <Icon className="h-6! w-6!" />
                         </div>
-                        <span className="text-[11px] font-semibold leading-tight">{LEAD_SOURCE_LABELS[s]}</span>
+                        <span className="text-[11px] font-semibold leading-tight">{leadSourceLabelNullable(s, language)}</span>
                       </button>
                     </DialogClose>
                   );
@@ -231,7 +235,7 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
         <div className="p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100/50 space-y-4">
           <Label className="text-xs font-semibold uppercase tracking-wider text-indigo-900/70 flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-indigo-500" />{" "}
-            งบประมาณที่คาดหวัง (Budget)
+            {isEn ? "Expected Budget" : "งบประมาณที่คาดหวัง (Budget)"}
           </Label>
           <div className="flex items-center gap-4">
             <div className="relative flex-1 group">
@@ -250,7 +254,7 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                 </p>
               )}
             </div>
-            <div className="text-indigo-300 font-medium">ถึง</div>
+            <div className="text-indigo-300 font-medium">{isEn ? "to" : "ถึง"}</div>
             <div className="relative flex-1 group">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-indigo-100 rounded text-[10px] font-semibold text-indigo-600">
                 MAX
@@ -258,7 +262,7 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
               <Input
                 type="number"
                 className="pl-14 text-right pr-4 h-12 text-lg font-semibold text-indigo-900 border-indigo-200 rounded-xl focus:border-indigo-500 focus:ring-indigo-500/20 bg-white shadow-sm"
-                placeholder="ไม่อั้น"
+                placeholder={isEn ? "Unlimited" : "ไม่อั้น"}
                 {...form.register("budget_max", { valueAsNumber: true })}
               />
               {form.formState.errors.budget_max && (
@@ -272,11 +276,11 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
 
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-            <Info className="h-3.5 w-3.5" /> บันทึกเพิ่มเติม
+            <Info className="h-3.5 w-3.5" /> {isEn ? "Additional Notes" : "บันทึกเพิ่มเติม"}
           </Label>
           <Textarea
             className="min-h-[100px] bg-slate-50/50 border-slate-200 rounded-xl resize-y focus:border-slate-400 focus:ring-slate-400/20"
-            placeholder="รายละเอียดอื่นๆ..."
+            placeholder={isEn ? "Other notes or remarks..." : "รายละเอียดอื่นๆ..."}
             {...form.register("note")}
           />
         </div>

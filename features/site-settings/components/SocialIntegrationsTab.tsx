@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { saveManualMetaTokenAction } from "../actions";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface SocialIntegrationsTabProps {
   allSettings: any;
@@ -29,6 +30,8 @@ export function SocialIntegrationsTab({
   isTikTokConnected,
   isFacebookConnected,
 }: SocialIntegrationsTabProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const router = useRouter();
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualToken, setManualToken] = useState("");
@@ -36,7 +39,7 @@ export function SocialIntegrationsTab({
 
   const handleSaveManualToken = async () => {
     if (!manualToken.trim()) {
-      toast.error("กรุณากรอก Token");
+      toast.error(isEn ? "Please enter token" : "กรุณากรอก Token");
       return;
     }
 
@@ -127,12 +130,13 @@ export function SocialIntegrationsTab({
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                  เชื่อมต่อ LINE Official Account
-                  เพื่อยิงบรอดแคสต์ข้อมูลทรัพย์และสื่อสารกับลูกค้าได้โดยตรง
+                  {isEn
+                    ? "Connect your LINE Official Account to broadcast property listings and communicate with clients directly."
+                    : "เชื่อมต่อ LINE Official Account เพื่อยิงบรอดแคสต์ข้อมูลทรัพย์และสื่อสารกับลูกค้าได้โดยตรง"}
                 </p>
                 <Link href="/protected/settings/branches" className="w-full block">
                   <Button className="w-full h-12 rounded-xl bg-linear-to-r from-emerald-500 to-teal-500 text-white font-black hover:opacity-90 shadow-md active:scale-95">
-                    Configure Line
+                    {isEn ? "Configure LINE" : "ตั้งค่า LINE"}
                   </Button>
                 </Link>
               </div>
@@ -213,8 +217,9 @@ export function SocialIntegrationsTab({
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                  ขยายตลาดไปยัง Facebook และ Instagram
-                  พร้อมรับการแจ้งเตือนและการตลาดอัตโนมัติ
+                  {isEn
+                    ? "Expand your marketing to Facebook and Instagram with automated posting and instant notifications."
+                    : "ขยายตลาดไปยัง Facebook และ Instagram พร้อมรับการแจ้งเตือนและการตลาดอัตโนมัติ"}
                 </p>
                 <a href="/api/auth/facebook/login" className="w-full">
                   <Button className="w-full h-12 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white font-black hover:opacity-90 shadow-md shadow-indigo-100">
@@ -232,7 +237,9 @@ export function SocialIntegrationsTab({
                 onClick={() => setShowManualInput(!showManualInput)}
                 className="text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 p-0 h-auto font-bold"
               >
-                {showManualInput ? "✕ ปิดหน้าจอระบุ Token เอง" : "✎ กรอก Page Access Token ด้วยตนเอง (Manual)"}
+                {showManualInput
+                  ? (isEn ? "✕ Close manual token input" : "✕ ปิดหน้าจอระบุ Token เอง")
+                  : (isEn ? "✎ Enter Page Access Token manually" : "✎ กรอก Page Access Token ด้วยตนเอง (Manual)")}
               </Button>
 
               {showManualInput && (
@@ -253,7 +260,9 @@ export function SocialIntegrationsTab({
                     onClick={handleSaveManualToken}
                     className="w-full h-9 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm active:scale-95 transition-all"
                   >
-                    {isPending ? "กำลังบันทึกและตรวจสอบ..." : "บันทึกและเชื่อมต่อ"}
+                    {isPending
+                      ? (isEn ? "Saving and verifying..." : "กำลังบันทึกและตรวจสอบ...")
+                      : (isEn ? "Save & Connect" : "บันทึกและเชื่อมต่อ")}
                   </Button>
                 </div>
               )}
@@ -272,3 +281,4 @@ export function SocialIntegrationsTab({
     </div>
   );
 }
+

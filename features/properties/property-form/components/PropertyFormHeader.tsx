@@ -1,7 +1,10 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { CancelButton } from "@/features/properties/btn-cancel";
 import { Loader2 } from "lucide-react";
 import { SentinelAuditBanner } from "./SentinelAuditBanner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "../../schema";
@@ -31,6 +34,9 @@ export function PropertyFormHeader({
   form,
   isKeyboardOpen = false,
 }: PropertyFormHeaderProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div
       id="tour-property-form-header"
@@ -41,12 +47,12 @@ export function PropertyFormHeader({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mx-auto gap-2 w-full">
         <div className="min-w-0 flex-1 w-full">
           <h1 className="text-lg sm:text-xl font-bold sm:font-medium text-slate-900 truncate">
-            {mode === "edit" ? "แก้ไขข้อมูลทรัพย์สิน" : "สร้างประกาศใหม่"}
+            {mode === "edit" ? (isEn ? "Edit Property Listing" : "แก้ไขข้อมูลทรัพย์สิน") : (isEn ? "Create New Listing" : "สร้างประกาศใหม่")}
           </h1>
           <p className="text-xs sm:text-md font-light text-slate-600 max-w-[300px] xs:max-w-[500px] xl:max-w-[700px] line-clamp-1 truncate">
             {mode === "edit"
-              ? `โครงการ : ${title || "-"}`
-              : "กรอกข้อมูลให้ครบถ้วนเพื่อสร้างประกาศ"}
+              ? `${isEn ? "Project: " : "โครงการ : "}${title || "-"}`
+              : (isEn ? "Fill in the required information to create listing" : "กรอกข้อมูลให้ครบถ้วนเพื่อสร้างประกาศ")}
           </p>
           
           {/* ✨ Sentinel Audit Banner Integration */}
@@ -73,12 +79,12 @@ export function PropertyFormHeader({
             <Button
               onClick={onSubmit}
               disabled={!isDirty || isSubmitting}
-              className="flex-2 bg-emerald-600 hover:bg-emerald-700 text-white h-14 px-4 sm:px-10 rounded-xl font-medium shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none text-sm sm:text-base"
+              className="flex-2 bg-emerald-600 hover:bg-emerald-700 text-white h-14 px-4 sm:px-10 rounded-xl font-medium shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none text-sm sm:text-base cursor-pointer"
             >
               {isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              <span>บันทึก</span><span className="hidden sm:inline">การแก้ไข</span>
+              <span>{isEn ? "Save" : "บันทึก"}</span><span className="hidden sm:inline"> {isEn ? "Changes" : "การแก้ไข"}</span>
             </Button>
           )}
         </div>
@@ -86,3 +92,4 @@ export function PropertyFormHeader({
     </div>
   );
 }
+

@@ -3,6 +3,7 @@
 import { BellOff, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface NotificationEmptyStateProps {
   message?: string;
@@ -10,9 +11,14 @@ interface NotificationEmptyStateProps {
 }
 
 export function NotificationEmptyState({ 
-  message = "ไม่มีการแจ้งเตือน", 
+  message, 
   onRefresh 
 }: NotificationEmptyStateProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const defaultMessage = isEn ? "No notifications" : "ไม่มีการแจ้งเตือน";
+
   return (
     <div className="flex flex-col items-center justify-center py-24 px-6 bg-white rounded-3xl border border-slate-100 shadow-sm text-center animate-in fade-in zoom-in duration-500">
       <div className="relative mb-8">
@@ -24,9 +30,11 @@ export function NotificationEmptyState({
         </div>
       </div>
       
-      <h3 className="text-xl font-bold text-slate-900 mb-3">{message}</h3>
+      <h3 className="text-xl font-bold text-slate-900 mb-3">{message || defaultMessage}</h3>
       <p className="text-slate-500 max-w-sm text-sm leading-relaxed mb-8">
-        ดูเหมือนว่าคุณจะจัดการงานทั้งหมดเสร็จสิ้นแล้ว! เราจะแจ้งให้คุณทราบทันทีเมื่อมีความเคลื่อนไหวใหม่ในระบบอสังหาฯ ของคุณ
+        {isEn 
+          ? "Looks like you are all caught up! We will notify you immediately when new activity occurs in your real estate system."
+          : "ดูเหมือนว่าคุณจะจัดการงานทั้งหมดเสร็จสิ้นแล้ว! เราจะแจ้งให้คุณทราบทันทีเมื่อมีความเคลื่อนไหวใหม่ในระบบอสังหาฯ ของคุณ"}
       </p>
 
       <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -37,7 +45,7 @@ export function NotificationEmptyState({
             className="rounded-xl px-6 h-11 border-slate-200 font-bold text-xs gap-2 hover:bg-slate-50 hover:text-slate-900"
           >
             <RefreshCw className="h-4 w-4" />
-            ตรวจสอบอีกครั้ง
+            {isEn ? "Check Again" : "ตรวจสอบอีกครั้ง"}
           </Button>
         )}
         <Button 
@@ -46,10 +54,11 @@ export function NotificationEmptyState({
         >
           <Link href="/protected">
             <Home className="h-4 w-4" />
-            กลับไปหน้าหลัก
+            {isEn ? "Back to Dashboard" : "กลับไปหน้าหลัก"}
           </Link>
         </Button>
       </div>
     </div>
   );
 }
+

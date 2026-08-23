@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Metadata } from "next";
 import { CalendarTour } from "@/features/calendar/_components/CalendarTour";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: "Calendar | CRM",
@@ -31,6 +32,10 @@ export default async function CalendarPage({
 }: {
   searchParams: Promise<{ month?: string; propertyId?: string; leadId?: string; agentId?: string; mode?: string }>;
 }) {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   // 1. Auth Check (Protect Route)
   const { supabase, tenantId, role, user } = await requireAuthContext();
   const config = await getSystemConfig();
@@ -81,22 +86,23 @@ export default async function CalendarPage({
       <PageHeader
         title={
           <div className="flex items-center gap-2">
-            <span>Calendar</span>
+            <span>{isEn ? "Calendar" : "ปฏิทินกิจกรรม"}</span>
             {isMultiTenant && (
               <Badge variant="outline" className="gap-1.5 py-1 px-3 border-indigo-200 bg-indigo-50/50 text-indigo-700">
                 <Building2 className="h-3.5 w-3.5" />
-                {currentTenantName || "ทุกสาขา"}
+                {currentTenantName || (isEn ? "All Branches" : "ทุกสาขา")}
               </Badge>
             )}
           </div>
         }
-        subtitle="ตารางนัดหมาย สัญญาเช่า และดีลสำคัญ"
+        subtitle={isEn ? "Schedule appointments, rental leases, and key deals" : "ตารางนัดหมาย สัญญาเช่า และดีลสำคัญ"}
         icon="calendarDays"
         gradient="purple"
         actionSlot={
           <CreateEventDialog leads={leads} properties={properties} events={events} />
         }
       />
+
 
       <CalendarView
         initialDate={currentMonth}

@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { PropertyForm } from "@/features/properties/PropertyForm";
 import { getPropertyWithImages } from "@/features/properties/actions";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -9,14 +10,24 @@ export default async function EditPropertyPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const { id } = await params;
 
   const property = await getPropertyWithImages(id);
   if (!property) {
     return (
       <div className="p-10 text-center">
-        <h1 className="text-xl font-bold text-red-600">ไม่พบข้อมูลทรัพย์สิน</h1>
-        <p className="text-slate-500">ทรัพย์สินรายการนี้อาจถูกลบไปแล้ว หรือคุณไม่มีสิทธิ์เข้าถึง</p>
+        <h1 className="text-xl font-bold text-red-600">
+          {isEn ? "Property not found" : "ไม่พบข้อมูลทรัพย์สิน"}
+        </h1>
+        <p className="text-slate-500">
+          {isEn
+            ? "This listing may have been deleted or you do not have permission to access it."
+            : "ทรัพย์สินรายการนี้อาจถูกลบไปแล้ว หรือคุณไม่มีสิทธิ์เข้าถึง"}
+        </p>
       </div>
     );
   }
@@ -37,12 +48,12 @@ export default async function EditPropertyPage({
       <Breadcrumb
         backHref={`/protected/properties/${id}`}
         items={[
-          { label: "โครงการและทรัพย์สิน", href: "/protected/properties" },
+          { label: isEn ? "Properties" : "โครงการและทรัพย์สิน", href: "/protected/properties" },
           {
-            label: property.title || "รายละเอียด",
+            label: property.title || (isEn ? "Details" : "รายละเอียด"),
             href: `/protected/properties/${id}`,
           },
-          { label: "แก้ไขข้อมูล" },
+          { label: isEn ? "Edit Property" : "แก้ไขข้อมูล" },
         ]}
       />
       <PropertyForm

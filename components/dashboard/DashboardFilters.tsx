@@ -463,7 +463,7 @@ export function DashboardFilters({
               {/* 📍 Standard Ranges */}
               <div className="space-y-3">
                 <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest ml-1">
-                  ช่วงเวลายอดนิยม
+                  {isEn ? "Popular Timeframes" : "ช่วงเวลายอดนิยม"}
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {["today", "week", "month", "6months", "all"].map((key) => (
@@ -472,7 +472,7 @@ export function DashboardFilters({
                       variant={range === key ? "default" : "ghost"}
                       onClick={() => updateFilter({ range: key })}
                       className={cn(
-                        "justify-between h-10 rounded-xl text-xs font-semibold transition-all",
+                        "justify-between h-10 rounded-xl text-xs font-semibold transition-all cursor-pointer",
                         range === key
                           ? "bg-blue-600 text-white shadow-md shadow-blue-100"
                           : "hover:bg-blue-50 text-slate-600 hover:text-blue-600",
@@ -488,7 +488,7 @@ export function DashboardFilters({
               {/* 📅 Quarters */}
               <div className="space-y-3">
                 <h4 className="text-[10px] font-semibold text-amber-500 uppercase tracking-widest ml-1">
-                  รายไตรมาส
+                  {isEn ? "Quarterly" : "รายไตรมาส"}
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {["q1", "q2", "q3", "q4"].map((key) => (
@@ -497,7 +497,7 @@ export function DashboardFilters({
                       variant={range === key ? "default" : "ghost"}
                       onClick={() => updateFilter({ range: key })}
                       className={cn(
-                        "flex flex-col items-center justify-center h-14 rounded-xl text-xs font-semibold transition-all gap-0.5",
+                        "flex flex-col items-center justify-center h-14 rounded-xl text-xs font-semibold transition-all gap-0.5 cursor-pointer",
                         range === key
                           ? "bg-amber-500 text-white shadow-md shadow-amber-100"
                           : "hover:bg-amber-50 text-slate-600 hover:text-amber-600",
@@ -511,10 +511,10 @@ export function DashboardFilters({
                         "text-[10px] font-medium opacity-70",
                         range === key ? "text-white" : "text-slate-400"
                       )}>
-                        {key === "q1" ? "(ม.ค. - มี.ค.)" : 
-                         key === "q2" ? "(เม.ย. - มิ.ย.)" : 
-                         key === "q3" ? "(ก.ค. - ก.ย.)" : 
-                         "(ต.ค. - ธ.ค.)"}
+                        {key === "q1" ? (isEn ? "(Jan - Mar)" : "(ม.ค. - มี.ค.)") : 
+                         key === "q2" ? (isEn ? "(Apr - Jun)" : "(เม.ย. - มิ.ย.)") : 
+                         key === "q3" ? (isEn ? "(Jul - Sep)" : "(ก.ค. - ก.ย.)") : 
+                         (isEn ? "(Oct - Dec)" : "(ต.ค. - ธ.ค.)")}
                       </span>
                     </Button>
                   ))}
@@ -524,7 +524,7 @@ export function DashboardFilters({
               {/* 🗓️ Yearly & History */}
               <div className="space-y-3">
                 <h4 className="text-[10px] font-semibold text-violet-500 uppercase tracking-widest ml-1">
-                  รายปีและย้อนหลัง
+                  {isEn ? "Yearly & Historical" : "รายปีและย้อนหลัง"}
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {["year", "lastYear", "year2024", "year2023", "year2022"].map(
@@ -534,7 +534,7 @@ export function DashboardFilters({
                         variant={range === key ? "default" : "ghost"}
                         onClick={() => updateFilter({ range: key })}
                         className={cn(
-                          "justify-between h-10 rounded-xl text-xs font-semibold transition-all",
+                          "justify-between h-10 rounded-xl text-xs font-semibold transition-all cursor-pointer",
                           range === key
                             ? "bg-violet-600 text-white shadow-md shadow-violet-100"
                             : "hover:bg-violet-50 text-slate-600 hover:text-violet-600",
@@ -559,7 +559,7 @@ export function DashboardFilters({
             <div className="flex items-center gap-2 text-slate-400">
               <Filter size={16} />
               <span className="text-xs font-semibold uppercase tracking-wider">
-                เจาะลึกข้อมูล:
+                {isEn ? "Drill down:" : "เจาะลึกข้อมูล:"}
               </span>
             </div>
 
@@ -569,34 +569,38 @@ export function DashboardFilters({
               className="sm:max-w-sm!"
               title={
                 view === "branch"
-                  ? "เลือกสาขา"
+                  ? (isEn ? "Select Branch" : "เลือกสาขา")
                   : view === "team"
-                    ? "เลือกทีม"
-                    : "เลือกพนักงาน"
+                    ? (isEn ? "Select Team" : "เลือกทีม")
+                    : (isEn ? "Select Staff" : "เลือกพนักงาน")
               }
-              description={`เลือก${view === "branch" ? "สาขา" : view === "team" ? "ทีม" : "พนักงาน"}ที่คุณต้องการดูข้อมูล`}
+              description={
+                isEn
+                  ? `Select ${view === "branch" ? "branch" : view === "team" ? "team" : "staff"} to inspect`
+                  : `เลือก${view === "branch" ? "สาขา" : view === "team" ? "ทีม" : "พนักงาน"}ที่คุณต้องการดูข้อมูล`
+              }
               trigger={
                 <Button
                   variant="outline"
                   disabled={isPending || isUpdating}
-                  className="h-10 rounded-xl border-slate-200 bg-slate-50/50 text-sm font-semibold hover:bg-slate-100 text-blue-500!"
+                  className="h-10 rounded-xl border-slate-200 bg-slate-50/50 text-sm font-semibold hover:bg-slate-100 text-blue-500! cursor-pointer"
                 >
                   {isPending || isUpdating ? (
                     <Loader2 size={14} className="mr-2 animate-spin" />
                   ) : (
                     view === "branch"
                       ? branchId === "ALL"
-                        ? "ทุกสาขา"
+                        ? (isEn ? "All Branches" : "ทุกสาขา")
                         : branches.find((b) => b.id === branchId)?.name ||
-                          "เลือกสาขา"
+                          (isEn ? "Select Branch" : "เลือกสาขา")
                       : view === "team"
                         ? teamId === "ALL"
-                          ? "ทุกทีม"
-                          : teams.find((t) => t.id === teamId)?.name || "เลือกทีม"
+                          ? (isEn ? "All Teams" : "ทุกทีม")
+                          : teams.find((t) => t.id === teamId)?.name || (isEn ? "Select Team" : "เลือกทีม")
                         : agentId === "ALL"
-                          ? "พนักงานทุกคน"
+                          ? (isEn ? "All Staff" : "พนักงานทุกคน")
                           : agents.find((a) => a.id === agentId)?.name ||
-                            "เลือกพนักงาน"
+                            (isEn ? "Select Staff" : "เลือกพนักงาน")
                   )}
                   <ChevronRight size={14} className="ml-2 opacity-50" />
                 </Button>
@@ -618,9 +622,9 @@ export function DashboardFilters({
                     else if (view === "team") updateFilter({ teamId: "ALL" });
                     else updateFilter({ agentId: "ALL" });
                   }}
-                  className="justify-start h-12 rounded-xl text-sm font-semibold"
+                  className="justify-start h-12 rounded-xl text-sm font-semibold cursor-pointer"
                 >
-                  ✨ ทั้งหมด (ภาพรวม)
+                  {isEn ? "✨ All (Overview)" : "✨ ทั้งหมด (ภาพรวม)"}
                 </Button>
                 {(view === "branch"
                   ? branches
@@ -648,7 +652,7 @@ export function DashboardFilters({
                             : { agentId: item.id },
                       )
                     }
-                    className="justify-start h-12 rounded-xl text-sm font-semibold"
+                    className="justify-start h-12 rounded-xl text-sm font-semibold cursor-pointer"
                   >
                     {item.name}
                   </Button>
@@ -661,49 +665,48 @@ export function DashboardFilters({
               <div className="flex items-center gap-2 ml-auto pl-4 border-l border-slate-100 group">
                 <div className="flex-col items-end mr-2 text-right hidden sm:flex">
                   <span className="text-[10px] font-bold text-slate-900 leading-tight">
-                    โหมดเปรียบเทียบ
+                    {isEn ? "Compare Mode" : "โหมดเปรียบเทียบ"}
                   </span>
                   <span className="text-[9px] text-slate-400 font-medium">
-                    วิเคราะห์ผลงานเทียบเป้า
+                    {isEn ? "Benchmark vs Target" : "วิเคราะห์ผลงานเทียบเป้า"}
                   </span>
                 </div>
 
                 {isCompareMode && (
                   <ResponsiveDialog
-                    open={false} // Managed by button click if needed or simplify
+                    open={false}
                     onOpenChange={() => {}}
-                    title="เลือกคู่เทียบ"
+                    title={isEn ? "Select Benchmark" : "เลือกคู่เทียบ"}
                     trigger={
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setIsSelectorOpen(true)} // Re-use selector for now or make new
-                        className="h-8 rounded-lg border-slate-200 bg-white text-[10px] font-bold text-blue-500 shadow-sm"
+                        onClick={() => setIsSelectorOpen(true)}
+                        className="h-8 rounded-lg border-slate-200 bg-white text-[10px] font-bold text-blue-500 shadow-sm cursor-pointer"
                       >
-                        เทียบกับ:{" "}
+                        {isEn ? "Compare with: " : "เทียบกับ: "}
                         {compareId === "ALL"
-                          ? "ค่าเฉลี่ย"
+                          ? (isEn ? "Average" : "ค่าเฉลี่ย")
                           : branches.find((b) => b.id === compareId)?.name ||
                             teams.find((t) => t.id === compareId)?.name ||
-                            "เลือก"}
+                            (isEn ? "Select" : "เลือก")}
                       </Button>
                     }
                   >
-                    {/* Selector content similar to drill-down */}
                     <div className="p-4 grid grid-cols-1 gap-2">
                       <Button
                         variant={compareId === "ALL" ? "default" : "ghost"}
                         onClick={() => updateFilter({ compareId: "ALL" })}
-                        className="justify-start h-12 rounded-xl text-sm font-semibold"
+                        className="justify-start h-12 rounded-xl text-sm font-semibold cursor-pointer"
                       >
-                        ✨ ค่าเฉลี่ยบริษัท
+                        {isEn ? "✨ Company Average" : "✨ ค่าเฉลี่ยบริษัท"}
                       </Button>
                       {(view === "branch" ? branches : teams).map((item) => (
                         <Button
                           key={item.id}
                           variant={compareId === item.id ? "default" : "ghost"}
                           onClick={() => updateFilter({ compareId: item.id })}
-                          className="justify-start h-12 rounded-xl text-sm font-semibold"
+                          className="justify-start h-12 rounded-xl text-sm font-semibold cursor-pointer"
                         >
                           {item.name}
                         </Button>
@@ -722,7 +725,7 @@ export function DashboardFilters({
                         })
                       }
                       className={cn(
-                        "h-8 px-3 rounded-xl text-[10px] font-bold transition-all duration-300",
+                        "h-8 px-3 rounded-xl text-[10px] font-bold transition-all duration-300 cursor-pointer",
                         isCompareMode
                           ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
                           : "bg-slate-100 text-slate-500 hover:bg-slate-200",
@@ -735,7 +738,7 @@ export function DashboardFilters({
                           isCompareMode && "animate-pulse",
                         )}
                       />
-                      {isCompareMode ? "ปิดโหมดเทียบ" : "เปิดโหมดเทียบ"}
+                      {isCompareMode ? (isEn ? "Exit Compare" : "ปิดโหมดเทียบ") : (isEn ? "Compare Mode" : "เปิดโหมดเทียบ")}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
@@ -744,7 +747,9 @@ export function DashboardFilters({
                   >
                     <p className="font-bold">Benchmarking</p>
                     <p className="text-[10px] opacity-70">
-                      วิเคราะห์ผลงานเทียบกับเป้าหมายหรือสาขาอื่น
+                      {isEn
+                        ? "Analyze performance compared to target or other branches"
+                        : "วิเคราะห์ผลงานเทียบกับเป้าหมายหรือสาขาอื่น"}
                     </p>
                   </TooltipContent>
                 </Tooltip>

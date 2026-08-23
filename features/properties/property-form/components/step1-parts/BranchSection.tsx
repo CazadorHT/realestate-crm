@@ -13,12 +13,15 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Building2, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PropertyFormValues } from "../../../schema";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface BranchSectionProps {
   branches: Array<{ id: string; name: any }>;
 }
 
 export function BranchSection({ branches }: BranchSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const form = useFormContext<PropertyFormValues>();
   const [open, setOpen] = React.useState(false);
 
@@ -36,9 +39,11 @@ export function BranchSection({ branches }: BranchSectionProps) {
         </div>
         <div>
           <h3 className="text-lg font-medium tracking-tight text-slate-900">
-            สาขาที่ดูแล <span className="text-red-500">*</span>
+            {isEn ? "Managing Branch" : "สาขาที่ดูแล"} <span className="text-red-500">*</span>
           </h3>
-          <p className="text-sm text-slate-500">เลือกสาขาที่จะเป็นเจ้าของทรัพย์นี้</p>
+          <p className="text-sm text-slate-500">
+            {isEn ? "Select the branch that will own this listing" : "เลือกสาขาที่จะเป็นเจ้าของทรัพย์นี้"}
+          </p>
         </div>
       </div>
 
@@ -50,9 +55,9 @@ export function BranchSection({ branches }: BranchSectionProps) {
           const selectedBranch = branches.find((b) => b.id === effectiveBranchId);
           const selectedBranchLabel = selectedBranch
             ? typeof selectedBranch.name === "object"
-              ? selectedBranch.name?.th || selectedBranch.name?.en
+              ? selectedBranch.name?.[language as "th" | "en"] || selectedBranch.name?.th || selectedBranch.name?.en
               : selectedBranch.name
-            : "เลือกสาขา";
+            : (isEn ? "Select Branch" : "เลือกสาขา");
 
           return (
             <FormItem data-field="branch_id">
@@ -61,20 +66,22 @@ export function BranchSection({ branches }: BranchSectionProps) {
                   open={open}
                   onOpenChange={setOpen}
                   className="sm:max-w-md!"
-                  title="เลือกสาขาที่ดูแล"
-                  description="เลือกสาขาที่จะเป็นเจ้าของและดูแลจัดการทรัพย์นี้ (สำหรับ Admin สามารถเลือกสาขาใดก็ได้)"
+                  title={isEn ? "Select Managing Branch" : "เลือกสาขาที่ดูแล"}
+                  description={isEn ? "Choose which branch will own and manage this listing." : "เลือกสาขาที่จะเป็นเจ้าของและดูแลจัดการทรัพย์นี้ (สำหรับ Admin สามารถเลือกสาขาใดก็ได้)"}
                   trigger={
                     <Button
                       variant="outline"
                       type="button"
-                      className="w-full h-[76px] rounded-xl bg-slate-50 hover:bg-white hover:shadow-md border-slate-200 text-slate-800! font-medium px-4 flex items-center justify-between shadow-xs hover:border-blue-100 hover:ring-2 hover:ring-blue-100 transition-all duration-300 group"
+                      className="w-full h-[76px] rounded-xl bg-slate-50 hover:bg-white hover:shadow-md border-slate-200 text-slate-800! font-medium px-4 flex items-center justify-between shadow-xs hover:border-blue-100 hover:ring-2 hover:ring-blue-100 transition-all duration-300 group cursor-pointer"
                     >
                       <div className="flex items-center gap-3 overflow-hidden">
                         <div className="p-2.5 bg-white rounded-full text-blue-600 shadow-xs border border-slate-100 group-hover:scale-110 transition-transform shrink-0">
                           <Building2 className="h-5 w-5" />
                         </div>
                         <div className="text-left truncate">
-                          <div className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">สาขาที่เลือก</div>
+                          <div className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">
+                            {isEn ? "Selected Branch" : "สาขาที่เลือก"}
+                          </div>
                           <div className="text-sm sm:text-base font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{selectedBranchLabel}</div>
                         </div>
                       </div>
@@ -85,14 +92,14 @@ export function BranchSection({ branches }: BranchSectionProps) {
                   <div className="p-4 sm:p-2 max-h-[60vh] overflow-y-auto space-y-2">
                     {branches.length === 0 ? (
                       <div className="p-8 text-center text-slate-400 text-sm font-medium">
-                        ไม่มีสาขาให้เลือก
+                        {isEn ? "No branches available" : "ไม่มีสาขาให้เลือก"}
                       </div>
                     ) : (
                       branches.map((branch) => {
                         const isSelected = field.value === branch.id;
                         const branchName =
                           typeof branch.name === "object"
-                            ? branch.name?.th || branch.name?.en
+                            ? branch.name?.[language as "th" | "en"] || branch.name?.th || branch.name?.en
                             : branch.name;
                         return (
                           <button
@@ -103,7 +110,7 @@ export function BranchSection({ branches }: BranchSectionProps) {
                               setOpen(false);
                             }}
                             className={cn(
-                              "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left",
+                              "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left cursor-pointer",
                               isSelected
                                 ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
                                 : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
@@ -149,4 +156,5 @@ export function BranchSection({ branches }: BranchSectionProps) {
     </div>
   );
 }
+
 

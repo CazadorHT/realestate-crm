@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Download, Copy, Check, FolderArchive, Share } from "lucide-react";
 import { PlatformUiOverlay, type PlatformOverlayType } from "../PlatformUiOverlay";
 import type { AspectRatio } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StudioPreviewPanelProps {
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -41,6 +42,9 @@ export function StudioPreviewPanel({
   onCopyImage,
   onApplyCoverToPost,
 }: StudioPreviewPanelProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div
       className="w-full md:w-1/2 p-4 sm:p-6 flex flex-col items-center justify-center bg-slate-950/70 border-r border-slate-800/80 relative overflow-y-auto min-h-0 shrink-0"
@@ -54,9 +58,11 @@ export function StudioPreviewPanel({
 
       {/* Platform UI Safe Zone Simulator Bar */}
       <div className="flex items-center gap-1 mb-2.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800 shrink-0">
-        <span className="text-[10px] text-slate-400 font-bold px-2">จำลองหน้าจอ:</span>
+        <span className="text-[10px] text-slate-400 font-bold px-2">
+          {isEn ? "Preview on:" : "จำลองหน้าจอ:"}
+        </span>
         {[
-          { id: "none", label: "🚫 คลีน" },
+          { id: "none", label: isEn ? "🚫 Clean" : "🚫 คลีน" },
           { id: "tiktok", label: "🎵 TikTok" },
           { id: "instagram_story", label: "📸 IG Story" },
           { id: "instagram_reel", label: "🎥 Reel" },
@@ -109,7 +115,7 @@ export function StudioPreviewPanel({
             className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold rounded-xl h-11 shadow-lg shadow-emerald-500/20 transition-all active:scale-98 cursor-pointer text-xs flex items-center justify-center gap-2"
           >
             <Check className="h-4 w-4" />
-            <span>✨ นำภาพปกนี้ไปใส่ในโพสต์โซเชียล</span>
+            <span>{isEn ? "✨ Attach Cover to Social Post" : "✨ นำภาพปกนี้ไปใส่ในโพสต์โซเชียล"}</span>
           </Button>
         )}
         {/* Primary Button: Download Full Album (Cover + Real Photos ZIP) */}
@@ -122,8 +128,10 @@ export function StudioPreviewPanel({
           <FolderArchive className={`h-4 w-4 ${isExportingAlbum ? "animate-spin" : ""}`} />
           <span>
             {isExportingAlbum
-              ? "กำลังสร้างไฟล์ ZIP..."
-              : `ดาวน์โหลดทั้งอัลบั้ม (${selectedAlbumCount + 1} รูป + แคปชั่น)`}
+              ? (isEn ? "Generating ZIP file..." : "กำลังสร้างไฟล์ ZIP...")
+              : (isEn
+                  ? `Download Album (${selectedAlbumCount + 1} photos + caption)`
+                  : `ดาวน์โหลดทั้งอัลบั้ม (${selectedAlbumCount + 1} รูป + แคปชั่น)`)}
           </span>
         </Button>
 
@@ -135,10 +143,10 @@ export function StudioPreviewPanel({
             disabled={isSharingAlbum}
             variant="outline"
             className="bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700/80 rounded-xl h-9 text-[11px] font-semibold transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1"
-            title="แชร์ไปยัง Facebook, Instagram, TikTok, LINE"
+            title={isEn ? "Share to Facebook, Instagram, TikTok, LINE" : "แชร์ไปยัง Facebook, Instagram, TikTok, LINE"}
           >
             <Share className={`h-3.5 w-3.5 ${isSharingAlbum ? "animate-spin" : ""}`} />
-            <span>แชร์โซเชียล</span>
+            <span>{isEn ? "Share" : "แชร์โซเชียล"}</span>
           </Button>
 
           <Button
@@ -146,10 +154,10 @@ export function StudioPreviewPanel({
             onClick={onDownloadSingle}
             variant="outline"
             className="bg-slate-800 hover:bg-slate-700 text-white border-slate-700/80 rounded-xl h-9 text-[11px] font-semibold transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1"
-            title="ดาวน์โหลดเฉพาะภาพปก HD"
+            title={isEn ? "Download HD Cover Banner only" : "ดาวน์โหลดเฉพาะภาพปก HD"}
           >
             <Download className="h-3.5 w-3.5" />
-            <span>โหลดเฉพาะปก</span>
+            <span>{isEn ? "Cover Only" : "โหลดเฉพาะปก"}</span>
           </Button>
 
           <Button
@@ -157,13 +165,14 @@ export function StudioPreviewPanel({
             onClick={onCopyImage}
             variant="outline"
             className="bg-slate-800 hover:bg-slate-700 text-white border-slate-700/80 rounded-xl h-9 text-[11px] font-semibold transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1"
-            title="คัดลอกรูปภาพลง Clipboard (Ctrl+V ได้ทันที)"
+            title={isEn ? "Copy image to clipboard (Ready to Ctrl+V)" : "คัดลอกรูปภาพลง Clipboard (Ctrl+V ได้ทันที)"}
           >
             {copiedImage ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-            <span>{copiedImage ? "คัดลอกแล้ว" : "ก๊อปปี้รูป"}</span>
+            <span>{copiedImage ? (isEn ? "Copied" : "คัดลอกแล้ว") : (isEn ? "Copy Image" : "ก๊อปปี้รูป")}</span>
           </Button>
         </div>
       </div>
     </div>
   );
 }
+

@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Filter, Users, TrendingUp, Handshake } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface AnalyticsFunnelProps {
   data: {
@@ -13,6 +14,9 @@ interface AnalyticsFunnelProps {
 }
 
 export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const { views, leads, deals } = data;
   
   const leadRate = views > 0 ? (leads / views) * 100 : 0;
@@ -21,29 +25,29 @@ export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
 
   const funnelSteps = [
     {
-      label: "Potential (Views)",
+      label: isEn ? "Potential (Views)" : "การเข้าชม (Views)",
       value: views,
       icon: <TrendingUp className="h-4 w-4" />,
       color: "bg-blue-500",
       width: "w-full",
-      description: "ผู้เข้าชมทรัพย์สินทั้งหมด"
+      description: isEn ? "Total property views across channels" : "ผู้เข้าชมทรัพย์สินทั้งหมด"
     },
     {
-      label: "Inquiry (Leads)",
+      label: isEn ? "Inquiry (Leads)" : "ความสนใจ (Leads)",
       value: leads,
       icon: <Users className="h-4 w-4" />,
       color: "bg-blue-400",
       width: views > 0 ? `${Math.max((leads / views) * 100, 15)}%` : "w-[60%]",
-      description: "ความสนใจ/ผู้ติดต่อสอบถาม",
+      description: isEn ? "Customer inquiries & interested leads" : "ความสนใจ/ผู้ติดต่อสอบถาม",
       conversion: leadRate
     },
     {
-      label: "Closed (Deals)",
+      label: isEn ? "Closed (Deals)" : "ปิดการขาย (Deals)",
       value: deals,
       icon: <Handshake className="h-4 w-4" />,
       color: "bg-blue-300",
       width: views > 0 ? `${Math.max((deals / views) * 100, 10)}%` : "w-[30%]",
-      description: "ปิดการขายสำเร็จ",
+      description: isEn ? "Successfully closed transactions" : "ปิดการขายสำเร็จ",
       conversion: dealRate
     }
   ];
@@ -53,9 +57,13 @@ export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <Filter className="h-5 w-5 text-blue-500" />
-          <CardTitle className="text-lg font-semibold text-slate-800">Conversion Funnel</CardTitle>
+          <CardTitle className="text-lg font-semibold text-slate-800">
+            {isEn ? "Conversion Funnel" : "กระบวนการแปลงสภาพ (Conversion Funnel)"}
+          </CardTitle>
         </div>
-        <CardDescription>วิเคราะห์ช่องทางและการเปลี่ยนสถานะผู้สนใจ (View-to-Deal)</CardDescription>
+        <CardDescription>
+          {isEn ? "Stage conversion analysis from views to closed deals" : "วิเคราะห์ช่องทางและการเปลี่ยนสถานะผู้สนใจ (View-to-Deal)"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-6 py-4">
@@ -98,10 +106,14 @@ export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
           ))}
           
           <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center bg-blue-50/50 p-3 rounded-2xl">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Overall Efficiency</span>
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {isEn ? "Overall Efficiency" : "ประสิทธิภาพรวม (Overall Efficiency)"}
+            </span>
             <div className="text-right">
                 <span className="text-lg font-bold text-blue-700">{overallRate.toFixed(2)}%</span>
-                <p className="text-[9px] text-slate-400 font-medium italic">Views to Closed Deals</p>
+                <p className="text-[9px] text-slate-400 font-medium italic">
+                  {isEn ? "Views to Closed Deals" : "ยอดเข้าชมสู่การปิดดีล"}
+                </p>
             </div>
           </div>
         </div>
@@ -109,3 +121,4 @@ export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
     </Card>
   );
 }
+

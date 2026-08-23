@@ -13,6 +13,7 @@ import { TeamDialogOrchestrator } from "@/components/settings/teams/TeamDialogOr
 import { Button } from "@/components/ui/button";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 /**
  * 🦴 Elite Skeleton
@@ -31,14 +32,14 @@ function TeamsPageSkeleton() {
 }
 
 export default function TeamsPage() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isLoading, setIsLoading] = useState(true);
   const [teams, setTeams] = useState<TeamWithManager[]>([]);
   const [stats, setStats] = useState({ totalTeams: 0, totalAgents: 0, totalLeads: 0 });
   const [potentialManagers, setPotentialManagers] = useState<any[]>([]);
   const [fetchedWithError, setFetchedWithError] = useState(false);
-
-  // Orchestrator Action Trigger (passed down to components)
-  const [triggerCreate, setTriggerCreate] = useState(0);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -54,7 +55,7 @@ export default function TeamsPage() {
         setTeams(tRes.data || []);
       } else {
         setFetchedWithError(true);
-        toast.error(tRes.message || "ไม่สามารถโหลดข้อมูลรายชื่อทีมได้");
+        toast.error(tRes.message || (isEn ? "Failed to load team list" : "ไม่สามารถโหลดข้อมูลรายชื่อทีมได้"));
       }
       
       if (sRes.data) {
@@ -68,9 +69,9 @@ export default function TeamsPage() {
           );
           setPotentialManagers(filtered);
       }
-    } catch (err) {
+    } catch {
       setFetchedWithError(true);
-      toast.error("ไม่สามารถเชื่อมต่อระบบทีมได้");
+      toast.error(isEn ? "Cannot connect to team service" : "ไม่สามารถเชื่อมต่อระบบทีมได้");
     } finally {
       setIsLoading(false);
     }
@@ -83,12 +84,12 @@ export default function TeamsPage() {
   return (
     <div className="min-h-screen bg-slate-50/30">
       <SettingsHeader 
-        title="จัดการสายงานและทีม (Teams)"
-        description="บริหารจัดการโครงสร้างทีมและมอบหมายหัวหน้าทีมเพื่อควบคุมการทำงาน"
+        title={isEn ? "Team Management (Teams)" : "จัดการสายงานและทีม (Teams)"}
+        description={isEn ? "Manage team structures and assign leaders to supervise operations" : "บริหารจัดการโครงสร้างทีมและมอบหมายหัวหน้าทีมเพื่อควบคุมการทำงาน"}
         subPath={[
-          { label: "System Control", href: "/protected/settings" },
-          { label: "โครงสร้างองค์กร", href: "/protected/settings/branches" },
-          { label: "จัดการทีม" }
+          { label: isEn ? "System Control" : "System Control", href: "/protected/settings" },
+          { label: isEn ? "Organization" : "โครงสร้างองค์กร", href: "/protected/settings/branches" },
+          { label: isEn ? "Teams" : "จัดการทีม" }
         ]}
         actions={
           <Button 
@@ -96,7 +97,7 @@ export default function TeamsPage() {
             className="bg-slate-900 hover:bg-slate-800 text-white rounded-2xl h-11 px-6 font-semibold uppercase tracking-widest shadow-xl shadow-slate-200 transition-all active:scale-95"
           >
             <Plus className="h-5 w-5 mr-2" />
-            สร้างทีมใหม่
+            {isEn ? "Create Team" : "สร้างทีมใหม่"}
           </Button>
         }
       />
@@ -112,7 +113,9 @@ export default function TeamsPage() {
               <div className="p-2 bg-indigo-100 rounded-xl">
                 <Users className="h-5 w-5 text-indigo-600" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900 tracking-tight">รายชื่อทีมปฏิบัติการ</h2>
+              <h2 className="text-xl font-semibold text-slate-900 tracking-tight">
+                {isEn ? "Active Operation Teams" : "รายชื่อทีมปฏิบัติการ"}
+              </h2>
             </div>
 
             <TeamDialogOrchestrator 
@@ -126,3 +129,4 @@ export default function TeamsPage() {
     </div>
   );
 }
+

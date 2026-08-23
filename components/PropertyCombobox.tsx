@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { searchPropertiesAction } from "@/features/leads/actions";
 
@@ -72,11 +73,14 @@ export interface PropertyStats {
 }
 
 function ListingTypeBadge({ type }: { type: string | null | undefined }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const config = {
-    RENT: { label: "เช่า", className: "bg-blue-600 text-white" },
-    SALE: { label: "ขาย", className: "bg-emerald-600 text-white" },
-    SALE_RENT: { label: "ขาย/เช่า", className: "bg-amber-500 text-white" },
-    SALE_AND_RENT: { label: "ขาย/เช่า", className: "bg-amber-500 text-white" },
+    RENT: { label: isEn ? "Rent" : "เช่า", className: "bg-blue-600 text-white" },
+    SALE: { label: isEn ? "Sale" : "ขาย", className: "bg-emerald-600 text-white" },
+    SALE_RENT: { label: isEn ? "Sale/Rent" : "ขาย/เช่า", className: "bg-amber-500 text-white" },
+    SALE_AND_RENT: { label: isEn ? "Sale/Rent" : "ขาย/เช่า", className: "bg-amber-500 text-white" },
   } as const;
 
   const matched = type ? (config as any)[type] : null;
@@ -95,6 +99,9 @@ function ListingTypeBadge({ type }: { type: string | null | undefined }) {
 }
 
 function PriceDisplay({ item }: { item: PropertyPickItem }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const isSaleRent =
     item.listing_type === "SALE_RENT" || item.listing_type === "SALE_AND_RENT";
   const isRent = item.listing_type === "RENT";
@@ -118,7 +125,7 @@ function PriceDisplay({ item }: { item: PropertyPickItem }) {
             <span className="text-[11px] font-semibold">
               ฿{rentalPrice.toLocaleString()}
               <span className="font-normal text-[9px] opacity-70 ml-0.5">
-                /ด.
+                {isEn ? "/mo" : "/ด."}
               </span>
             </span>
           </div>
@@ -131,7 +138,7 @@ function PriceDisplay({ item }: { item: PropertyPickItem }) {
       <div className="inline-flex items-center bg-blue-50 text-blue-700 px-2 py-1 rounded-lg border border-blue-100 shadow-sm">
         <span className="text-sm font-semibold">
           ฿{rentalPrice.toLocaleString()}
-          <span className="text-[10px] font-normal opacity-70 ml-0.5">/ด.</span>
+          <span className="text-[10px] font-normal opacity-70 ml-0.5">{isEn ? "/mo" : "/ด."}</span>
         </span>
       </div>
     );
@@ -146,11 +153,14 @@ function PriceDisplay({ item }: { item: PropertyPickItem }) {
     );
   }
   return (
-    <span className="text-xs text-slate-300 italic px-1">ไม่ระบุราคา</span>
+    <span className="text-xs text-slate-300 italic px-1">{isEn ? "Unpriced" : "ไม่ระบุราคา"}</span>
   );
 }
 
 function StatusBadge({ status }: { status: string | null }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (!status) return null;
 
   const config: Record<
@@ -158,43 +168,43 @@ function StatusBadge({ status }: { status: string | null }) {
     { label: string; dot: string; bg: string; text: string }
   > = {
     ACTIVE: {
-      label: "ว่าง",
+      label: isEn ? "Available" : "ว่าง",
       dot: "bg-emerald-500",
       bg: "bg-emerald-50",
       text: "text-emerald-700",
     },
     RESERVED: {
-      label: "จองแล้ว",
+      label: isEn ? "Reserved" : "จองแล้ว",
       dot: "bg-amber-500",
       bg: "bg-amber-50",
       text: "text-amber-700",
     },
     UNDER_OFFER: {
-      label: "ติดมัดจำ",
+      label: isEn ? "Under Offer" : "ติดมัดจำ",
       dot: "bg-orange-500",
       bg: "bg-orange-50",
       text: "text-orange-700",
     },
     SOLD: {
-      label: "ขายแล้ว",
+      label: isEn ? "Sold" : "ขายแล้ว",
       dot: "bg-slate-400",
       bg: "bg-slate-100",
       text: "text-slate-600",
     },
     RENTED: {
-      label: "เช่าแล้ว",
+      label: isEn ? "Rented" : "เช่าแล้ว",
       dot: "bg-slate-400",
       bg: "bg-slate-100",
       text: "text-slate-600",
     },
     DRAFT: {
-      label: "ฉบับร่าง",
+      label: isEn ? "Draft" : "ฉบับร่าง",
       dot: "bg-slate-300",
       bg: "bg-slate-100",
       text: "text-slate-500",
     },
     ARCHIVED: {
-      label: "เก็บถาวร",
+      label: isEn ? "Archived" : "เก็บถาวร",
       dot: "bg-rose-400",
       bg: "bg-rose-50",
       text: "text-rose-700",
@@ -226,13 +236,18 @@ function StatusBadge({ status }: { status: string | null }) {
 export function PropertyCombobox({
   value,
   onChangeAction,
-  placeholder = "เลือกทรัพย์...",
+  placeholder,
   className,
   initialProperty,
   tenantId,
   name,
   required,
 }: Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const defaultPlaceholder = placeholder || (isEn ? "Select property..." : "เลือกทรัพย์...");
+
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<PropertyPickItem[]>([]);
@@ -313,7 +328,7 @@ export function PropertyCombobox({
     <button
       type="button"
       className={cn(
-        "w-full  flex items-center gap-3 text-left rounded-xl border px-3 py-2.5 transition-all duration-200 shadow-sm group",
+        "w-full flex items-center gap-3 text-left rounded-xl border px-3 py-2.5 transition-all duration-200 shadow-sm group cursor-pointer",
         "hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-md",
         selected
           ? "border-blue-200 bg-blue-50/30 "
@@ -366,7 +381,7 @@ export function PropertyCombobox({
           </>
         ) : (
           <span className="text-slate-400 text-sm font-normal">
-            {placeholder}
+            {defaultPlaceholder}
           </span>
         )}
       </div>
@@ -377,7 +392,7 @@ export function PropertyCombobox({
           <span
             role="button"
             onClick={handleClear}
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors"
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors cursor-pointer"
           >
             <X className="h-3.5 w-3.5" />
           </span>
@@ -398,8 +413,8 @@ export function PropertyCombobox({
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="เลือกทรัพย์"
-      description="ค้นหาและเลือกทรัพย์ที่ต้องการสร้างดีล"
+      title={isEn ? "Select Property" : "เลือกทรัพย์"}
+      description={isEn ? "Search and select a property to link" : "ค้นหาและเลือกทรัพย์ที่ต้องการสร้างดีล"}
       className="sm:max-w-[860px]"
       trigger={trigger}
       isLoading={isLoading}
@@ -415,45 +430,45 @@ export function PropertyCombobox({
                 autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="ค้นหาชื่อทรัพย์, ย่าน, อำเภอ..."
+                placeholder={isEn ? "Search property title, area, district..." : "ค้นหาชื่อทรัพย์, ย่าน, อำเภอ..."}
                 className="pl-9 pr-4 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 text-sm"
               />
               {q && (
                 <button
                   onClick={() => setQ("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar  py-1">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
               {/* Listing Type Filter */}
               <FilterSelector
-                label="ประเภทประกาศ"
-                description="เลือกรูปแบบการประกาศขายหรือเช่า"
+                label={isEn ? "Listing Type" : "ประเภทประกาศ"}
+                description={isEn ? "Filter by sale, rent, or both" : "เลือกรูปแบบการประกาศขายหรือเช่า"}
                 value={listingType}
                 counts={counts?.listing_type}
                 options={[
-                  { id: null, label: "ประกาศทั้งหมด", icon: Search },
+                  { id: null, label: isEn ? "All Listings" : "ประกาศทั้งหมด", icon: Search },
                   {
                     id: "SALE",
-                    label: "ขาย",
+                    label: isEn ? "Sale" : "ขาย",
                     ids: ["SALE", "SALE_RENT", "SALE_AND_RENT"],
                     color: "bg-blue-500",
                     icon: Tag,
                   },
                   {
                     id: "RENT",
-                    label: "เช่า",
+                    label: isEn ? "Rent" : "เช่า",
                     ids: ["RENT", "SALE_RENT", "SALE_AND_RENT"],
                     color: "bg-emerald-500",
                     icon: Key,
                   },
                   {
                     id: "SALE_AND_RENT",
-                    label: "ขาย/เช่า",
+                    label: isEn ? "Sale/Rent" : "ขาย/เช่า",
                     ids: ["SALE_RENT", "SALE_AND_RENT"],
                     color: "bg-indigo-500",
                     icon: Repeat,
@@ -464,55 +479,55 @@ export function PropertyCombobox({
 
               {/* Property Type Filter */}
               <FilterSelector
-                label="ประเภททรัพย์"
-                description="ระบุประเภทอสังหาริมทรัพย์ที่ต้องการ"
+                label={isEn ? "Property Type" : "ประเภททรัพย์"}
+                description={isEn ? "Filter by real estate category" : "ระบุประเภทอสังหาริมทรัพย์ที่ต้องการ"}
                 value={propertyType}
                 counts={counts?.property_type}
                 options={[
-                  { id: null, label: "ทรัพย์ทุกประเภท", icon: Building2 },
-                  { id: "CONDO", label: "คอนโด", icon: Building2 },
-                  { id: "HOUSE", label: "บ้านเดี่ยว", icon: Home },
-                  { id: "TOWNHOME", label: "ทาวน์โฮม", icon: Home },
-                  { id: "VILLA", label: "วิลล่า", icon: Home },
-                  { id: "POOL_VILLA", label: "พูลวิลล่า", icon: Home },
-                  { id: "LAND", label: "ที่ดิน", icon: Map },
+                  { id: null, label: isEn ? "All Types" : "ทรัพย์ทุกประเภท", icon: Building2 },
+                  { id: "CONDO", label: isEn ? "Condo" : "คอนโด", icon: Building2 },
+                  { id: "HOUSE", label: isEn ? "Single House" : "บ้านเดี่ยว", icon: Home },
+                  { id: "TOWNHOME", label: isEn ? "Townhome" : "ทาวน์โฮม", icon: Home },
+                  { id: "VILLA", label: isEn ? "Villa" : "วิลล่า", icon: Home },
+                  { id: "POOL_VILLA", label: isEn ? "Pool Villa" : "พูลวิลล่า", icon: Home },
+                  { id: "LAND", label: isEn ? "Land" : "ที่ดิน", icon: Map },
                   {
                     id: "COMMERCIAL_BUILDING",
-                    label: "อาคารพาณิชย์",
+                    label: isEn ? "Commercial Building" : "อาคารพาณิชย์",
                     icon: Store,
                   },
-                  { id: "OFFICE_BUILDING", label: "ออฟฟิศ", icon: Briefcase },
-                  { id: "WAREHOUSE", label: "โกดัง", icon: Box },
-                  { id: "OTHER", label: "อื่นๆ", icon: CircleEllipsis },
+                  { id: "OFFICE_BUILDING", label: isEn ? "Office Building" : "ออฟฟิศ", icon: Briefcase },
+                  { id: "WAREHOUSE", label: isEn ? "Warehouse" : "โกดัง", icon: Box },
+                  { id: "OTHER", label: isEn ? "Other" : "อื่นๆ", icon: CircleEllipsis },
                 ]}
                 onSelect={setPropertyType}
               />
 
               {/* Status Filter */}
               <FilterSelector
-                label="สถานะทรัพย์"
-                description="กรองรายการตามสถานะความพร้อม"
+                label={isEn ? "Status" : "สถานะทรัพย์"}
+                description={isEn ? "Filter by availability status" : "กรองรายการตามสถานะความพร้อม"}
                 value={status}
                 counts={counts?.status}
                 options={[
-                  { id: null, label: "สถานะทั้งหมด", icon: Search },
+                  { id: null, label: isEn ? "All Statuses" : "สถานะทั้งหมด", icon: Search },
                   {
                     id: ["ACTIVE"],
-                    label: "ว่าง",
+                    label: isEn ? "Available" : "ว่าง",
                     color: "bg-emerald-500",
                     ids: ["ACTIVE"],
                     icon: CheckCircle2,
                   },
                   {
                     id: ["RESERVED", "UNDER_OFFER"],
-                    label: "จอง/มัดจำ",
+                    label: isEn ? "Reserved / Offer" : "จอง/มัดจำ",
                     color: "bg-amber-500",
                     ids: ["RESERVED", "UNDER_OFFER"],
                     icon: Clock,
                   },
                   {
                     id: ["SOLD", "RENTED"],
-                    label: "ปิดแล้ว",
+                    label: isEn ? "Closed" : "ปิดแล้ว",
                     color: "bg-slate-400",
                     ids: ["SOLD", "RENTED"],
                     icon: XCircle,
@@ -520,15 +535,15 @@ export function PropertyCombobox({
                 ]}
                 onSelect={setStatus}
                 renderLabel={(val) => {
-                  if (!val) return "สถานะทั้งหมด";
+                  if (!val) return isEn ? "All Statuses" : "สถานะทั้งหมด";
                   if (JSON.stringify(val) === JSON.stringify(["ACTIVE"]))
-                    return "สถานะ: ว่าง";
+                    return isEn ? "Status: Available" : "สถานะ: ว่าง";
                   if (
                     JSON.stringify(val) ===
                     JSON.stringify(["RESERVED", "UNDER_OFFER"])
                   )
-                    return "สถานะ: จองแล้ว";
-                  return "สถานะ: ปิดแล้ว";
+                    return isEn ? "Status: Reserved" : "สถานะ: จองแล้ว";
+                  return isEn ? "Status: Closed" : "สถานะ: ปิดแล้ว";
                 }}
               />
             </div>
@@ -543,9 +558,9 @@ export function PropertyCombobox({
                 <Building2 className="h-8 w-8 text-slate-300" />
               </div>
               <div>
-                <p className="font-bold text-slate-500">ไม่พบทรัพย์</p>
+                <p className="font-bold text-slate-500">{isEn ? "No properties found" : "ไม่พบทรัพย์"}</p>
                 <p className="text-xs text-slate-400 mt-1">
-                  ลองค้นหาด้วยคำอื่น
+                  {isEn ? "Try searching with a different keyword" : "ลองค้นหาด้วยคำอื่น"}
                 </p>
               </div>
             </div>
@@ -559,7 +574,7 @@ export function PropertyCombobox({
                     type="button"
                     onClick={() => handleSelect(item)}
                     className={cn(
-                      "text-left rounded-2xl border overflow-hidden transition-all duration-200 group relative",
+                      "text-left rounded-2xl border overflow-hidden transition-all duration-200 group relative cursor-pointer",
                       "hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm",
                       isSelected
                         ? "border-blue-400 ring-2 ring-blue-400/20 shadow-md shadow-blue-100"
@@ -685,6 +700,9 @@ function FilterSelector<T>({
   counts?: Record<string, number>;
   className?: string;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
 
   const currentLabel = useMemo(() => {
@@ -707,7 +725,7 @@ function FilterSelector<T>({
           variant="outline"
           size="sm"
           className={cn(
-            "h-9 rounded-xl px-4 text-[11px] font-bold transition-all border-slate-200 shadow-xs gap-2 shrink-0",
+            "h-9 rounded-xl px-4 text-[11px] font-bold transition-all border-slate-200 shadow-xs gap-2 shrink-0 cursor-pointer",
             isActive
               ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100 hover:bg-blue-700 hover:text-white"
               : "bg-white text-slate-600 hover:bg-slate-200 hover:text-slate-700",
@@ -754,7 +772,7 @@ function FilterSelector<T>({
                 setOpen(false);
               }}
               className={cn(
-                "w-full flex h-14 items-center justify-between px-4 py-2 rounded-2xl transition-all active:scale-[0.98] border shrink-0",
+                "w-full flex h-14 items-center justify-between px-4 py-2 rounded-2xl transition-all active:scale-[0.98] border shrink-0 cursor-pointer",
                 selected
                   ? "bg-blue-50 border-blue-100 shadow-sm text-blue-700"
                   : "hover:bg-slate-50 border-transparent text-slate-700",
@@ -795,7 +813,7 @@ function FilterSelector<T>({
                         selected ? "text-blue-500" : "text-emerald-400",
                       )}
                     >
-                      {count} รายการ
+                      {count} {isEn ? "items" : "รายการ"}
                     </span>
                   )}
                 </div>
@@ -812,3 +830,4 @@ function FilterSelector<T>({
     </ResponsiveDialog>
   );
 }
+

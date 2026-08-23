@@ -5,6 +5,7 @@ import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DealPropertyOption } from "@/features/deals/types";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface CreateDealButtonProps {
   properties: DealPropertyOption[];
@@ -12,13 +13,15 @@ interface CreateDealButtonProps {
 
 export function CreateDealButton({ properties }: CreateDealButtonProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   return (
     <DealFormDialog
       trigger={
-        <Button>
+        <Button className="cursor-pointer">
           <Plus className="mr-2 h-4 w-4" />
-          สร้างดีลใหม่
+          {isEn ? "Create New Deal" : "สร้างดีลใหม่"}
         </Button>
       }
       leadId=""
@@ -30,3 +33,4 @@ export function CreateDealButton({ properties }: CreateDealButtonProps) {
     />
   );
 }
+

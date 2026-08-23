@@ -18,6 +18,7 @@ import {
 import { TrendingUp, Building2, Target, Users, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExecutiveData } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ExecutiveBranchListProps {
   data: ExecutiveData[];
@@ -78,22 +79,25 @@ export function ExecutiveBranchList({
   data,
   isLoading,
 }: ExecutiveBranchListProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   // 🛡️ Consolidated Performance Logic (DRY)
   const getBranchPerformance = (row: ExecutiveData) => {
     const rate = row.leadCount > 0 ? (row.dealCount / row.leadCount) * 100 : 0;
 
     let color = "text-rose-600 bg-rose-50 border-rose-100";
     let dot = "bg-rose-500 text-white";
-    let label = "⚠️ Attention";
+    let label = isEn ? "⚠️ Attention" : "⚠️ Attention";
 
     if (rate >= 20) {
       color = "text-emerald-600 bg-emerald-50 border-emerald-100";
       dot = "bg-emerald-500";
-      label = "🔥 Top Star";
+      label = isEn ? "🔥 Top Star" : "🔥 Top Star";
     } else if (rate >= 10) {
       color = "text-amber-600 bg-amber-50 border-amber-100";
       dot = "bg-amber-500";
-      label = "⚡ Normal";
+      label = isEn ? "⚡ Normal" : "⚡ Normal";
     }
 
     return { rate, color, dot, label };
@@ -106,10 +110,10 @@ export function ExecutiveBranchList({
           <div>
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <Building2 className="h-5 w-5 text-slate-400" />
-              รายละเอียดรายสาขา (Branch Breakdown)
+              {isEn ? "Branch Performance Matrix" : "รายละเอียดรายสาขา (Branch Breakdown)"}
             </CardTitle>
             <CardDescription className="text-xs">
-              ข้อมูลวิเคราะห์ประสิทธิภาพเปรียบเทียบเชิงลึก
+              {isEn ? "Detailed comparative branch KPI analysis" : "ข้อมูลวิเคราะห์ประสิทธิภาพเปรียบเทียบเชิงลึก"}
             </CardDescription>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
@@ -132,7 +136,7 @@ export function ExecutiveBranchList({
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-slate-100 font-semibold uppercase tracking-wider">
                 <TableHead className="px-6 py-4 text-slate-600 text-[11px]">
-                  ชื่อสาขา
+                  {isEn ? "Branch Name" : "ชื่อสาขา"}
                 </TableHead>
                 <TableHead className="text-right text-slate-600 text-[11px]">
                   Leads
@@ -252,10 +256,11 @@ export function ExecutiveBranchList({
 
         {data.length === 0 && !isLoading && (
           <div className="h-40 flex items-center justify-center text-slate-400 text-sm italic">
-            ไม่พบข้อมูลสาขาที่ต้องการแสดง
+            {isEn ? "No branch performance data to display" : "ไม่พบข้อมูลสาขาที่ต้องการแสดง"}
           </div>
         )}
       </CardContent>
     </Card>
   );
 }
+

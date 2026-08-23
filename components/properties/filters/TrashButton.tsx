@@ -3,8 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function TrashButton() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Button
       asChild
@@ -13,7 +17,7 @@ export function TrashButton() {
     >
       <Link href="/protected/properties/trash">
         <Trash2 className="h-4 w-4" />
-        <span className="hidden sm:inline">ถังขยะ</span>
+        <span className="hidden sm:inline">{isEn ? "Trash" : "ถังขยะ"}</span>
       </Link>
     </Button>
   );

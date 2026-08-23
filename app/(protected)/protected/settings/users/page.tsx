@@ -2,16 +2,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
-import { SettingsHeader } from "@/components/settings/SettingsHeader";
-import { UsersStatsSummary } from "@/features/users/UsersStatsSummary";
-import { UsersTable } from "@/features/users/UsersTable";
-import { Separator } from "@/components/ui/separator";
 import { calculateUsersStats, type EliteUser } from "@/lib/users-utils";
 import { getSystemConfig } from "@/lib/actions/system-config";
-import { siteConfig } from "@/lib/site-config";
-import { Button } from "@/components/ui/button";
-import { Users2 } from "lucide-react";
-import Link from "next/link";
+import { UsersPageView } from "@/features/users/UsersPageView";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -112,64 +105,13 @@ export default async function UsersManagementPage() {
   const stats = calculateUsersStats(eliteUsers);
 
   return (
-    <div className="relative min-h-[calc(100vh-12rem)] pb-20 overflow-visible">
-      {/* Immersive Background Layer */}
-      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-slate-200/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-blue-100/20 rounded-full blur-3xl" />
-      </div>
-
-      <div className="max-w-screen-2xl mx-auto p-4 md:p-8 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        {/* Elite Header */}
-        <SettingsHeader 
-          title="จัดการรายชื่อสมาชิกพนักงาน"
-          description={`ตรวจสอบและจัดการบทบาทของสมาชิกทีม ${siteConfig.company} เพื่อความปลอดภัยและการเข้าถึงข้อมูลระดับสูงสุด`}
-          subPath={[
-            { label: "System Control", href: "/protected/settings" },
-            { label: "พนักงานทั้งหมด (Users)" }
-          ]}
-          actions={
-            <Link href="/protected/settings/teams" className="w-full sm:w-auto">
-              <Button 
-                variant="outline" 
-                className="rounded-2xl w-full h-12 px-6 border-slate-200 bg-white/50 hover:bg-white hover:border-slate-300 transition-all duration-300 flex items-center gap-2 group shadow-sm"
-              >
-                <div className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-blue-50 transition-colors">
-                  <Users2 className="h-4 w-4 text-slate-600 group-hover:text-blue-600" />
-                </div>
-                <span className="font-semibold text-slate-700 whitespace-nowrap">จัดการทีม</span>
-              </Button>
-            </Link>
-          }
-        />
-
-        {/* Statistics Summary - Elite Glassmorphism */}
-        <UsersStatsSummary
-          totalUsers={stats.totalUsers}
-          totalAdmins={stats.totalAdmins}
-          totalAgents={stats.totalAgents}
-          totalUsersWaiting={stats.totalUsersWaiting}
-        />
-
-        {/* Table Section with Elite title and Glass Table */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-3">
-              <div className="h-5 w-1.5 bg-slate-900 rounded-full" />
-              <h2 className="text-xl font-semibold text-slate-800 tracking-tight">
-                รายชื่อสมาชิกทีมทั้งหมด
-              </h2>
-            </div>
-          </div>
-          
-          <UsersTable
-            users={eliteUsers}
-            currentUserId={user.id}
-            teams={teams || []}
-            isMultiTenant={config.multi_tenant_enabled}
-          />
-        </div>
-      </div>
-    </div>
+    <UsersPageView
+      eliteUsers={eliteUsers}
+      currentUserId={user.id}
+      teams={teams || []}
+      isMultiTenant={config.multi_tenant_enabled}
+      stats={stats}
+    />
   );
 }
+

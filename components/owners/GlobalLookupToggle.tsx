@@ -6,11 +6,15 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Users2, Loader2 } from "lucide-react";
 
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 export function GlobalLookupToggle() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const isGlobal = searchParams.get("all_branches") === "true";
 
@@ -42,14 +46,14 @@ export function GlobalLookupToggle() {
         htmlFor="global-lookup"
         className="text-sm font-semibold text-white cursor-pointer select-none"
       >
-        ค้นหาทุกสาขา
+        {isEn ? "Search All Branches" : "ค้นหาทุกสาขา"}
       </Label>
       <Switch
         id="global-lookup"
         checked={isGlobal}
         onCheckedChange={handleToggle}
         disabled={isPending}
-        className="data-[state=checked]:bg-white data-[state=unchecked]:bg-slate-300 [&>span]:bg-blue-600"
+        className="data-[state=checked]:bg-white data-[state=unchecked]:bg-slate-300 [&>span]:bg-blue-600 cursor-pointer"
       />
     </div>
   );

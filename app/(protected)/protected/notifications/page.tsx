@@ -33,8 +33,12 @@ import { NotificationPreferences } from "./_components/NotificationPreferences";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function NotificationsPage() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const {
     stackedNotifications,
     loading,
@@ -76,10 +80,10 @@ export default function NotificationsPage() {
   // --- Date Grouping Logic ---
   const notificationGroups = useMemo(() => {
     const groups: { title: string; icon: LucideIcon; items: GroupedNotification[] }[] = [
-      { title: "วันนี้", icon: Bell, items: [] },
-      { title: "เมื่อวาน", icon: Calendar, items: [] },
-      { title: "สัปดาห์นี้", icon: Layers, items: [] },
-      { title: "ที่ผ่านมา", icon: Layers, items: [] },
+      { title: isEn ? "Today" : "วันนี้", icon: Bell, items: [] },
+      { title: isEn ? "Yesterday" : "เมื่อวาน", icon: Calendar, items: [] },
+      { title: isEn ? "This Week" : "สัปดาห์นี้", icon: Layers, items: [] },
+      { title: isEn ? "Earlier" : "ที่ผ่านมา", icon: Layers, items: [] },
     ];
 
     filteredNotifications.forEach((n) => {
@@ -91,7 +95,7 @@ export default function NotificationsPage() {
     });
 
     return groups.filter((g) => g.items.length > 0);
-  }, [filteredNotifications]);
+  }, [filteredNotifications, isEn]);
 
   // --- Batch Actions ---
   const handleSelect = (id: string, checked: boolean) => {
@@ -124,8 +128,8 @@ export default function NotificationsPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 min-h-screen pb-32 relative">
       <PageHeader
-        title="การแจ้งเตือน"
-        subtitle="อัปเดตความเคลื่อนไหวล่าสุดผ่านระบบจัดการแจ้งเตือนอัจฉริยะ"
+        title={isEn ? "Notifications" : "การแจ้งเตือน"}
+        subtitle={isEn ? "Real-time activity updates and intelligent alert manager" : "อัปเดตความเคลื่อนไหวล่าสุดผ่านระบบจัดการแจ้งเตือนอัจฉริยะ"}
         icon="bell"
         actionSlot={
           <div className="flex items-center gap-2">
@@ -133,14 +137,15 @@ export default function NotificationsPage() {
               variant="outline"
               onClick={() => setShowPreferences(true)}
               className="rounded-xl h-11 w-11 hover:bg-slate-50 border-slate-200"
-              title="ตั้งค่าแจ้งเตือน"
+              title={isEn ? "Notification Settings" : "ตั้งค่าแจ้งเตือน"}
             >
               <Settings2 className="h-5 w-5 text-slate-600" />
             </Button>
             <ConfirmDialog
-              title="อ่านทั้งหมด"
-              description="คุณต้องการทำเครื่องหมายว่าอ่านแล้วสำหรับแจ้งเตือนทั้งหมดใช่หรือไม่?"
-              confirmText="ยืนยัน"
+              title={isEn ? "Mark All as Read" : "อ่านทั้งหมด"}
+              description={isEn ? "Are you sure you want to mark all notifications as read?" : "คุณต้องการทำเครื่องหมายว่าอ่านแล้วสำหรับแจ้งเตือนทั้งหมดใช่หรือไม่?"}
+              confirmText={isEn ? "Confirm" : "ยืนยัน"}
+              cancelText={isEn ? "Cancel" : "ยกเลิก"}
               onConfirm={markAllAsRead}
               trigger={
                 <Button 
@@ -148,7 +153,7 @@ export default function NotificationsPage() {
                   className="rounded-xl h-11 border-slate-200 font-bold text-xs gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 hidden sm:flex"
                 >
                   <CheckCheck className="h-4 w-4" />
-                  อ่านทั้งหมด
+                  {isEn ? "Mark All as Read" : "อ่านทั้งหมด"}
                 </Button>
               }
             />
@@ -164,13 +169,13 @@ export default function NotificationsPage() {
               value="all" 
               className="rounded-2xl px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold transition-all"
             >
-              ทั้งหมด
+              {isEn ? "All" : "ทั้งหมด"}
             </TabsTrigger>
             <TabsTrigger 
               value="unread" 
               className="rounded-2xl px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold transition-all relative"
             >
-              ยังไม่ได้อ่าน
+              {isEn ? "Unread" : "ยังไม่ได้อ่าน"}
               {unreadCount > 0 && (
                 <span className="ml-2 bg-red-500 text-white text-[10px] px-1.5 rounded-full ring-2 ring-white">
                   {unreadCount}
@@ -183,7 +188,7 @@ export default function NotificationsPage() {
         <div className="relative flex-1 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
           <Input
-            placeholder="ค้นหาข้อความ หรือหัวข้อแจ้งเตือน..."
+            placeholder={isEn ? "Search notification messages or titles..." : "ค้นหาข้อความ หรือหัวข้อแจ้งเตือน..."}
             className="pl-11 h-12 rounded-2xl border-none bg-slate-50/50 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-blue-100 transition-all font-medium"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -198,7 +203,9 @@ export default function NotificationsPage() {
              selectedIds.size > 0 && "bg-blue-50 text-blue-600 border-blue-100"
           )}
         >
-          {selectedIds.size === filteredNotifications.length ? "ยกเลิกเลือกทั้งหมด" : "เลือกทั้งหมด"}
+          {selectedIds.size === filteredNotifications.length 
+            ? (isEn ? "Deselect All" : "ยกเลิกเลือกทั้งหมด")
+            : (isEn ? "Select All" : "เลือกทั้งหมด")}
         </Button>
       </div>
 
@@ -206,7 +213,7 @@ export default function NotificationsPage() {
         <NotificationSkeleton />
       ) : filteredNotifications.length === 0 ? (
         <NotificationEmptyState 
-          message={searchQuery ? "ไม่พบแจ้งเตือนที่ค้นหา" : "ไม่มีแจ้งเตือนในขณะนี้"} 
+          message={searchQuery ? (isEn ? "No matching notifications found" : "ไม่พบแจ้งเตือนที่ค้นหา") : (isEn ? "No notifications at the moment" : "ไม่มีแจ้งเตือนในขณะนี้")} 
           onRefresh={refresh} 
         />
       ) : (
@@ -219,7 +226,9 @@ export default function NotificationsPage() {
                 </div>
                 <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">{group.title}</h3>
                 <div className="h-px flex-1 bg-slate-100" />
-                <span className="text-[10px] font-bold text-slate-300 uppercase">{group.items.length} รายการ</span>
+                <span className="text-[10px] font-bold text-slate-300 uppercase">
+                  {group.items.length} {isEn ? (group.items.length === 1 ? "item" : "items") : "รายการ"}
+                </span>
               </div>
               
               <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-50 transition-all">
@@ -245,7 +254,9 @@ export default function NotificationsPage() {
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-500">
           <div className="bg-slate-900 text-white rounded-3xl p-3 shadow-2xl flex items-center gap-4 border border-white/10 ring-8 ring-slate-900/10">
             <div className="pl-4 pr-2 flex flex-col justify-center border-r border-white/10">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">เลือกแล้ว</span>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">
+                {isEn ? "Selected" : "เลือกแล้ว"}
+              </span>
               <span className="text-lg font-black leading-none">{selectedIds.size}</span>
             </div>
             
@@ -256,13 +267,14 @@ export default function NotificationsPage() {
                 className="rounded-2xl h-11 px-6 hover:bg-white/10 text-xs font-bold gap-2 text-blue-300"
               >
                 <CheckCheck className="h-4 w-4" />
-                อ่านแล้ว
+                {isEn ? "Mark Read" : "อ่านแล้ว"}
               </Button>
 
               <ConfirmDialog
-                 title="ลบรายการที่เลือก"
-                 description={`คุณต้องการลบการแจ้งเตือน ${selectedIds.size} รายการที่เลือกใช่หรือไม่?`}
-                 confirmText="ลบออก"
+                 title={isEn ? "Delete Selected Notifications" : "ลบรายการที่เลือก"}
+                 description={isEn ? `Are you sure you want to delete ${selectedIds.size} selected notification(s)?` : `คุณต้องการลบการแจ้งเตือน ${selectedIds.size} รายการที่เลือกใช่หรือไม่?`}
+                 confirmText={isEn ? "Delete" : "ลบออก"}
+                 cancelText={isEn ? "Cancel" : "ยกเลิก"}
                  variant="destructive"
                  onConfirm={handleBatchDelete}
                  trigger={
@@ -271,7 +283,7 @@ export default function NotificationsPage() {
                     className="rounded-2xl h-11 px-6 hover:bg-red-500/10 hover:text-red-400 text-xs font-bold gap-2"
                   >
                     <Trash2 className="h-4 w-4" />
-                    ลบข้อมูล
+                    {isEn ? "Delete" : "ลบข้อมูล"}
                   </Button>
                  }
               />
@@ -295,7 +307,7 @@ export default function NotificationsPage() {
       <ResponsiveDialog
         open={showPreferences}
         onOpenChange={setShowPreferences}
-        title="การตั้งค่า"
+        title={isEn ? "Preferences" : "การตั้งค่า"}
       >
         <div className="p-4 sm:p-0">
           <NotificationPreferences />
@@ -304,3 +316,4 @@ export default function NotificationsPage() {
     </div>
   );
 }
+

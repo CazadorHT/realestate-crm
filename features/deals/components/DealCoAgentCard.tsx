@@ -1,5 +1,8 @@
+"use client";
+
 import { Phone, Globe } from "lucide-react";
 import { RiUserStarLine } from "react-icons/ri";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealCoAgentCardProps {
   name: string | null;
@@ -12,6 +15,8 @@ export function DealCoAgentCard({
   contact,
   online,
 }: DealCoAgentCardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isInternal = name && !contact && !online;
 
   return (
@@ -21,9 +26,9 @@ export function DealCoAgentCard({
           <RiUserStarLine className="h-5 w-5 text-purple-600" />
         </div>
         <div>
-          <h3 className="font-bold text-lg text-slate-800">ข้อมูล Co-Agent</h3>
+          <h3 className="font-bold text-lg text-slate-800">{isEn ? "Co-Agent Details" : "ข้อมูล Co-Agent"}</h3>
           <p className="text-xs text-slate-500">
-            {isInternal ? "ผู้ร่วมงานภายในบริษัท" : "นายหน้าผู้ร่วมงานภายนอก"}
+            {isInternal ? (isEn ? "Internal company agent" : "ผู้ร่วมงานภายในบริษัท") : (isEn ? "External co-broker agent" : "นายหน้าผู้ร่วมงานภายนอก")}
           </p>
         </div>
       </div>
@@ -38,7 +43,7 @@ export function DealCoAgentCard({
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-xs text-muted-foreground">ชื่อ Co-Agent</p>
+                      <p className="text-xs text-muted-foreground">{isEn ? "Co-Agent Name" : "ชื่อ Co-Agent"}</p>
                       {isInternal && (
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 border border-blue-100">
                           Internal Agent
@@ -70,10 +75,11 @@ export function DealCoAgentCard({
           </div>
         ) : (
           <p className="text-sm text-muted-foreground italic py-4 text-center">
-            ไม่มีข้อมูล Co-Agent
+            {isEn ? "No Co-Agent data available" : "ไม่มีข้อมูล Co-Agent"}
           </p>
         )}
       </div>
     </div>
   );
 }
+

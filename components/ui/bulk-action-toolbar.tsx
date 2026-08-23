@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { downloadBase64File, MIME_TYPES } from "@/lib/download-utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface BulkActionToolbarProps {
   selectedCount: number;
@@ -22,7 +23,7 @@ interface BulkActionToolbarProps {
   onPull?: () => Promise<void>;
   onPullLabel?: string;
   onPullConfirmMessage?: React.ReactNode;
-  entityName?: string; // เช่น "ทรัพย์", "ลีด", "ดีล"
+  entityName?: string; // e.g. "Properties", "Leads", "Deals"
   className?: string;
   confirmMessage?: React.ReactNode;
   actionableCount?: number;
@@ -39,24 +40,30 @@ export function BulkActionToolbar({
   onExport,
   onTransfer,
   onPull,
-  onPullLabel = "ดึงมาที่นี่",
+  onPullLabel,
   onPullConfirmMessage,
-  entityName = "รายการ",
+  entityName,
   className,
   confirmMessage,
   actionableCount,
   onDeleteLabel,
   onAiApprove,
-  onAiApproveLabel = "ยืนยันผล AI",
+  onAiApproveLabel,
   extraActions,
 }: BulkActionToolbarProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const defaultEntityName = entityName || (isEn ? "items" : "รายการ");
+  const defaultPullLabel = onPullLabel || (isEn ? "Pull here" : "ดึงมาที่นี่");
+  const defaultAiApproveLabel = onAiApproveLabel || (isEn ? "Verify AI" : "ยืนยันผล AI");
+
   const [isExporting, setIsExporting] = useState(false);
 
   // Use actionableCount if provided, otherwise fallback to selectedCount
   const countToDelete = actionableCount ?? selectedCount;
 
   if (selectedCount === 0) return null;
-
 
   const handleExport = async () => {
     if (!onExport) return;
@@ -71,15 +78,19 @@ export function BulkActionToolbar({
         );
 
         if (downloaded) {
-          toast.success(`Export สำเร็จ ${selectedCount} ${entityName}`);
+          toast.success(
+            isEn
+              ? `Exported ${selectedCount} ${defaultEntityName} successfully`
+              : `Export สำเร็จ ${selectedCount} ${defaultEntityName}`
+          );
         } else {
-          toast.error("ดาวน์โหลดไฟล์ไม่สำเร็จ");
+          toast.error(isEn ? "Failed to download file" : "ดาวน์โหลดไฟล์ไม่สำเร็จ");
         }
       } else {
-        toast.error(result.message || "Export ไม่สำเร็จ");
+        toast.error(result.message || (isEn ? "Export failed" : "Export ไม่สำเร็จ"));
       }
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการ export");
+    } catch {
+      toast.error(isEn ? "Error during export" : "เกิดข้อผิดพลาดในการ export");
     } finally {
       setIsExporting(false);
     }
@@ -95,7 +106,9 @@ export function BulkActionToolbar({
       >
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold md:font-medium text-white md:text-blue-700">
-            เลือก {selectedCount} {entityName}
+            {isEn
+              ? `Selected ${selectedCount} ${defaultEntityName}`
+              : `เลือก ${selectedCount} ${defaultEntityName}`}
           </span>
         </div>
 
@@ -106,7 +119,7 @@ export function BulkActionToolbar({
               size="sm"
               onClick={handleExport}
               disabled={isExporting}
-              className="h-11 text-xs bg-white hover:bg-green-50! border-green-200! text-green-700!"
+              className="h-11 text-xs bg-white hover:bg-green-50! border-green-200! text-green-700! cursor-pointer"
             >
               {isExporting ? (
                 <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
@@ -119,28 +132,28 @@ export function BulkActionToolbar({
 
           {onPull && (
             <ConfirmDialog
-              title="ยืนยันการดึงข้อมูล"
+              title={isEn ? "Confirm Pull Data" : "ยืนยันการดึงข้อมูล"}
               description={
                 onPullConfirmMessage || (
                   <>
-                    คุณกำลังจะดึง{" "}
+                    {isEn ? "You are about to pull " : "คุณกำลังจะดึง "}
                     <strong className="text-foreground">
-                      {selectedCount} {entityName}
+                      {selectedCount} {defaultEntityName}
                     </strong>{" "}
-                    มายังสาขาของคุณ
+                    {isEn ? "to your branch" : "มายังสาขาของคุณ"}
                   </>
                 )
               }
-              confirmText={onPullLabel}
+              confirmText={defaultPullLabel}
               onConfirm={onPull}
               trigger={
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-11 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
+                  className="h-11 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium cursor-pointer"
                 >
                   <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
-                  {onPullLabel}
+                  {defaultPullLabel}
                 </Button>
               }
             />
@@ -151,20 +164,28 @@ export function BulkActionToolbar({
               title="Sentinel Verification"
               description={
                 <div className="space-y-3">
-                  <p>คุณกำลังจะยืนยันข้อมูลที่สร้างโดย AI ทั้งหมด <strong className="text-indigo-600">{selectedCount} รายการ</strong></p>
-                  <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 italic">การดำเนินการนี้จะล้างสถานะ "ตรวจร่าง AI" และบันทึกข้อมูลย้อนหลัง (Audit) ว่าคุณเป็นผู้ตรวจสอบ</p>
+                  <p>
+                    {isEn
+                      ? `You are about to verify all ${selectedCount} AI-generated items.`
+                      : `คุณกำลังจะยืนยันข้อมูลที่สร้างโดย AI ทั้งหมด ${selectedCount} รายการ`}
+                  </p>
+                  <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 italic">
+                    {isEn
+                      ? "This action will clear the 'AI Review' status and record an audit log with your account as reviewer."
+                      : "การดำเนินการนี้จะล้างสถานะ \"ตรวจร่าง AI\" และบันทึกข้อมูลย้อนหลัง (Audit) ว่าคุณเป็นผู้ตรวจสอบ"}
+                  </p>
                 </div>
               }
-              confirmText={onAiApproveLabel}
+              confirmText={defaultAiApproveLabel}
               onConfirm={onAiApprove}
               trigger={
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-11 text-xs bg-indigo-50 hover:bg-indigo-100! border-indigo-200! text-indigo-700! font-bold shadow-sm"
+                  className="h-11 text-xs bg-indigo-50 hover:bg-indigo-100! border-indigo-200! text-indigo-700! font-bold shadow-sm cursor-pointer"
                 >
                   <span className="mr-1.5 flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
-                  {onAiApproveLabel}
+                  {defaultAiApproveLabel}
                 </Button>
               }
             />
@@ -175,10 +196,10 @@ export function BulkActionToolbar({
               variant="outline"
               size="sm"
               onClick={onTransfer}
-              className="h-11 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
+              className="h-11 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium cursor-pointer"
             >
               <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
-              โอนย้าย {entityName}
+              {isEn ? `Transfer ${defaultEntityName}` : `โอนย้าย ${defaultEntityName}`}
             </Button>
           )}
 
@@ -188,38 +209,47 @@ export function BulkActionToolbar({
             variant="outline"
             size="sm"
             onClick={onClear}
-            className="h-11 text-xs"
+            className="h-11 text-xs cursor-pointer"
           >
             <X className="h-3.5 w-3.5 mr-1" />
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
 
           <ConfirmDialog
-            title={onDeleteLabel ? "ยืนยันการย้ายลงถังขยะ" : "ยืนยันการลบ"}
+            title={
+              onDeleteLabel
+                ? (isEn ? "Confirm Move to Trash" : "ยืนยันการย้ายลงถังขยะ")
+                : (isEn ? "Confirm Deletion" : "ยืนยันการลบ")
+            }
             description={
               confirmMessage || (
                 <>
-                  คุณกำลังจะ{onDeleteLabel ? "ย้าย" : "ลบ"}{" "}
+                  {isEn ? "You are about to " : "คุณกำลังจะ"}
+                  {onDeleteLabel ? (isEn ? "move " : "ย้าย ") : (isEn ? "delete " : "ลบ ")}
                   <strong className="text-foreground">
-                    {selectedCount} {entityName}
+                    {selectedCount} {defaultEntityName}
                   </strong>{" "}
                   {onDeleteLabel
-                    ? "ไปที่ถังขยะ (คุณสามารถกู้คืนได้ภายหลังหน้าถังขยะ)"
-                    : "การดำเนินการนี้ไม่สามารถย้อนกลับได้"}
+                    ? (isEn
+                        ? "to Trash (you can restore it later from Trash)"
+                        : "ไปที่ถังขยะ (คุณสามารถกู้คืนได้ภายหลังหน้าถังขยะ)")
+                    : (isEn
+                        ? "This action cannot be undone."
+                        : "การดำเนินการนี้ไม่สามารถย้อนกลับได้")}
                 </>
               )
             }
             confirmText={
               onDeleteLabel
-                ? `ลบ ${onDeleteLabel} ${countToDelete} รายการ`
-                : `ยืนยันการลบ ${countToDelete} ${entityName}`
+                ? (isEn ? `Delete ${countToDelete} items` : `ลบ ${onDeleteLabel} ${countToDelete} รายการ`)
+                : (isEn ? `Confirm Delete (${countToDelete})` : `ยืนยันการลบ ${countToDelete} ${defaultEntityName}`)
             }
             variant="destructive"
             onConfirm={onDelete}
             trigger={
-              <Button variant="destructive" size="sm" className="h-11 text-xs font-bold">
+              <Button variant="destructive" size="sm" className="h-11 text-xs font-bold cursor-pointer">
                 <Trash2 className="h-3.5 w-3.5 mr-1" />
-                {onDeleteLabel || "ลบทั้งหมด"}
+                {onDeleteLabel || (isEn ? "Delete All" : "ลบทั้งหมด")}
               </Button>
             }
           />
@@ -228,3 +258,4 @@ export function BulkActionToolbar({
     </>
   );
 }
+

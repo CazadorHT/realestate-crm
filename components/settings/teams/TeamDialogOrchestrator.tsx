@@ -7,6 +7,7 @@ import { TeamManagementTable } from "./TeamManagementTable";
 import { TeamMembersDialog } from "@/features/teams/components/TeamMembersDialog";
 import { DeleteConfirmationDialog } from "@/components/settings/branches/DeleteConfirmationDialog";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TeamDialogOrchestratorProps {
   initialTeams: TeamWithManager[];
@@ -19,6 +20,9 @@ export function TeamDialogOrchestrator({
   potentialManagers,
   fetchedWithError = false,
 }: TeamDialogOrchestratorProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [teams, setTeams] = useState(initialTeams);
   
   // Sync teams when initialTeams changes (e.g. after refresh)
@@ -61,11 +65,15 @@ export function TeamDialogOrchestrator({
 
     const res = await deleteTeamAction(deletingTeam.id);
     if (res.success) {
-      toast.success(`ลบทีม ${deletingTeam.name} และปลดสมาชิกออกจากทีมเรียบร้อยแล้ว`);
+      toast.success(
+        isEn 
+          ? `Team ${deletingTeam.name} deleted and members unassigned successfully` 
+          : `ลบทีม ${deletingTeam.name} และปลดสมาชิกออกจากทีมเรียบร้อยแล้ว`
+      );
       setTeams(prev => prev.filter(t => t.id !== deletingTeam.id));
       setDeletingTeam(null);
     } else {
-      toast.error(res.message || "ไม่สามารถลบทีมได้");
+      toast.error(res.message || (isEn ? "Failed to delete team" : "ไม่สามารถลบทีมได้"));
     }
   };
 
@@ -99,14 +107,17 @@ export function TeamDialogOrchestrator({
       <DeleteConfirmationDialog 
         open={!!deletingTeam}
         onOpenChange={(val) => !val && setDeletingTeam(null)}
-        title="ยืนยันการลบทีม"
+        title={isEn ? "Confirm Delete Team" : "ยืนยันการลบทีม"}
         description={
             deletingTeam ? (
                 <>
-                    คุณกำลังจะลบทีม <strong className="text-slate-900">{deletingTeam.name}</strong> ใช่หรือไม่? 
+                    {isEn ? "Are you sure you want to delete team " : "คุณกำลังจะลบทีม "}
+                    <strong className="text-slate-900">{deletingTeam.name}</strong>?
                     <br />
                     <span className="text-rose-500 font-bold mt-2 block">
-                        ⚠️ สมาชิกทั้งหมดในทีมจะถูกปลดออกเป็นสถานะ "ยังไม่มีสังกัดทีม"
+                        {isEn 
+                          ? "⚠️ All team members will be unassigned to 'Unassigned' status" 
+                          : "⚠️ สมาชิกทั้งหมดในทีมจะถูกปลดออกเป็นสถานะ \"ยังไม่มีสังกัดทีม\""}
                     </span>
                 </>
             ) : ""
@@ -116,3 +127,4 @@ export function TeamDialogOrchestrator({
     </>
   );
 }
+

@@ -24,7 +24,7 @@ import {
   TeamWithManager,
 } from "@/features/teams/actions/teamActions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { m, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TeamFormDialogProps {
   open: boolean;
@@ -45,6 +45,9 @@ export function TeamFormDialog({
   potentialManagers,
   onSuccess,
 }: TeamFormDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [name, setName] = useState("");
   const [managerId, setManagerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +81,7 @@ export function TeamFormDialog({
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!name.trim()) {
-      toast.error("กรุณาระบุชื่อทีม");
+      toast.error(isEn ? "Please provide a team name" : "กรุณาระบุชื่อทีม");
       return;
     }
 
@@ -91,7 +94,7 @@ export function TeamFormDialog({
         });
 
         if (result.success) {
-          toast.success("อัปเดตข้อมูลทีมแล้ว");
+          toast.success(isEn ? "Team updated successfully" : "อัปเดตข้อมูลทีมแล้ว");
           const managerObj = potentialManagers.find((m) => m.id === managerId);
           onSuccess({
             ...team,
@@ -106,13 +109,13 @@ export function TeamFormDialog({
           });
           onOpenChange(false);
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาดในการอัปเดตทีม");
+          toast.error(result.message || (isEn ? "Failed to update team" : "เกิดข้อผิดพลาดในการอัปเดตทีม"));
         }
       } else {
         const result = await createTeamAction(name, managerId || undefined);
 
         if (result.success) {
-          toast.success("สร้างทีมสำเร็จ");
+          toast.success(isEn ? "Team created successfully" : "สร้างทีมสำเร็จ");
           const managerObj = potentialManagers.find((m) => m.id === managerId);
           onSuccess({
             ...result.data,
@@ -127,11 +130,11 @@ export function TeamFormDialog({
           } as unknown as TeamWithManager);
           onOpenChange(false);
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาดในการสร้างทีม");
+          toast.error(result.message || (isEn ? "Failed to create team" : "เกิดข้อผิดพลาดในการสร้างทีม"));
         }
       }
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } catch {
+      toast.error(isEn ? "An error occurred while saving" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setIsLoading(false);
     }
@@ -144,8 +147,8 @@ export function TeamFormDialog({
       open={open}
       onOpenChange={onOpenChange}
       confirmOnClose={isDirty}
-      title={team ? "แก้ไขข้อมูลทีม (Edit Team)" : "สร้างทีมใหม่ (New Team)"}
-      description="ระบุชื่อทีมและเลือกหัวหน้าทีมที่รับผิดชอบในสาขานี้"
+      title={team ? (isEn ? "Edit Team" : "แก้ไขข้อมูลทีม (Edit Team)") : (isEn ? "New Team" : "สร้างทีมใหม่ (New Team)")}
+      description={isEn ? "Set team name and designate a team leader in this branch" : "ระบุชื่อทีมและเลือกหัวหน้าทีมที่รับผิดชอบในสาขานี้"}
       footer={
         <div className="flex w-full gap-3 p-1">
           {isMobile ? (
@@ -156,7 +159,7 @@ export function TeamFormDialog({
                 className="flex-1 h-12 rounded-2xl font-semibold text-slate-400 hover:bg-slate-100 italic"
                 disabled={isLoading}
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DrawerClose>
           ) : (
@@ -167,7 +170,7 @@ export function TeamFormDialog({
                 className="flex-1 h-12 rounded-2xl font-semibold text-slate-400 hover:bg-slate-100 italic"
                 disabled={isLoading}
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DialogClose>
           )}
@@ -177,10 +180,10 @@ export function TeamFormDialog({
             disabled={isLoading}
           >
             {isLoading
-              ? "กำลังประมวลผล..."
+              ? (isEn ? "Processing..." : "กำลังประมวลผล...")
               : team
-                ? "บันทึกการเปลี่ยนแปลง"
-                : "สร้างทีมใหม่ทันที"}
+                ? (isEn ? "Save Changes" : "บันทึกการเปลี่ยนแปลง")
+                : (isEn ? "Create Team Now" : "สร้างทีมใหม่ทันที")}
           </Button>
         </div>
       }
@@ -194,13 +197,13 @@ export function TeamFormDialog({
               htmlFor="name"
               className="text-slate-900 font-semibold text-xs uppercase tracking-widest"
             >
-              ชื่อทีมพนักงาน
+              {isEn ? "Team Name" : "ชื่อทีมพนักงาน"}
             </Label>
           </div>
           <div className="relative group">
             <Input
               id="name"
-              placeholder="เช่น Team Silom Central, Sukhumvit Elite"
+              placeholder={isEn ? "e.g. Team Silom Central, Sukhumvit Elite" : "เช่น Team Silom Central, Sukhumvit Elite"}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="rounded-3xl border-slate-200 h-16 bg-slate-50/50 shadow-inner focus:ring-4 focus:ring-indigo-500/5 placeholder:text-slate-300 font-semibold px-6 focus:bg-white transition-all"
@@ -217,15 +220,15 @@ export function TeamFormDialog({
           <div className="flex items-center gap-2 px-1">
             <div className="h-2 w-2 rounded-full bg-amber-500" />
             <Label className="text-slate-900 font-semibold text-xs uppercase tracking-widest">
-              หัวหน้าทีมผู้รับผิดชอบ
+              {isEn ? "Designated Team Leader" : "หัวหน้าทีมผู้รับผิดชอบ"}
             </Label>
           </div>
 
           <ResponsiveDialog
             open={managerOpen}
             onOpenChange={setManagerOpen}
-            title="เลือกหัวหน้าทีม (Select Manager)"
-            description="ค้นหาและระบุตัวตนหัวหน้าพนักงานในระบบ"
+            title={isEn ? "Select Manager" : "เลือกหัวหน้าทีม (Select Manager)"}
+            description={isEn ? "Search and assign a team leader from available staff" : "ค้นหาและระบุตัวตนหัวหน้าพนักงานในระบบ"}
             trigger={
               <button
                 type="button"
@@ -265,7 +268,7 @@ export function TeamFormDialog({
                       <User className="h-5 w-5" />
                     </div>
                     <span className="text-slate-400 font-semibold italic">
-                      ค้นหาและเลือกหัวหน้าทีม...
+                      {isEn ? "Search and select team leader..." : "ค้นหาและเลือกหัวหน้าทีม..."}
                     </span>
                   </div>
                 )}
@@ -278,7 +281,7 @@ export function TeamFormDialog({
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="พิมพ์ชื่อพนักงาน..."
+                    placeholder={isEn ? "Search employee name..." : "พิมพ์ชื่อพนักงาน..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 h-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white transition-all font-semibold"
@@ -297,7 +300,7 @@ export function TeamFormDialog({
                     <XCircle className="h-5 w-5" />
                   </div>
                   <span className="font-semibold text-slate-400">
-                    --- ไม่ระบุหัวหน้าทีม ---
+                    {isEn ? "--- No Manager Assigned ---" : "--- ไม่ระบุหัวหน้าทีม ---"}
                   </span>
                 </button>
 
@@ -343,8 +346,9 @@ export function TeamFormDialog({
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50 flex items-start gap-3">
             <Sparkles className="h-4 w-4 text-amber-500 mt-0.5" />
             <p className="text-[10px] text-slate-500 font-semibold leading-relaxed uppercase tracking-tighter">
-              ระบบแสดงพนักงานที่มีบทบาท ADMIN หรือ MANAGER <br />
-              ในสโคปสาขาที่คุณกำลังบริหารจัดการเท่านั้น
+              {isEn 
+                ? "Displays members with ADMIN or MANAGER roles in the current branch scope only." 
+                : "ระบบแสดงพนักงานที่มีบทบาท ADMIN หรือ MANAGER ในสโคปสาขาที่คุณกำลังบริหารจัดการเท่านั้น"}
             </p>
           </div>
         </div>
@@ -352,3 +356,4 @@ export function TeamFormDialog({
     </ResponsiveDialog>
   );
 }
+

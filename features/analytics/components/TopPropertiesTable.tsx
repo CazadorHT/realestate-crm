@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { listingTypeLabel } from "@/features/properties/labels";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PropertyAnalytics } from "@/features/dashboard/queries";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TopPropertiesTableProps {
   topProperties: PropertyAnalytics[];
@@ -27,6 +28,9 @@ export function TopPropertiesTable({
   page,
   pageSize,
 }: TopPropertiesTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -47,10 +51,10 @@ export function TopPropertiesTable({
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <CardTitle className="text-lg font-bold text-slate-800">
-              อันดับทรัพย์ที่มีการเข้าชมสูงสุด
+              {isEn ? "Top Viewed Properties" : "อันดับทรัพย์ที่มีการเข้าชมสูงสุด"}
             </CardTitle>
             <CardDescription className="text-xs md:text-sm text-slate-500">
-              วิเคราะห์ผลตอบรับรายทรัพย์สิน (Performance by Property)
+              {isEn ? "Performance analytics by property listing" : "วิเคราะห์ผลตอบรับรายทรัพย์สิน (Performance by Property)"}
             </CardDescription>
           </div>
           <Button
@@ -60,7 +64,9 @@ export function TopPropertiesTable({
             className="flex items-center gap-2 self-start sm:self-auto h-9 bg-white border-slate-200 text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-all rounded-lg shadow-sm"
           >
             <span className="text-xs font-bold">
-              เรียงตามวิว: {currentSort === "views_desc" ? "มาก ➔ น้อย" : "น้อย ➔ มาก"}
+              {isEn 
+                ? `Sort by views: ${currentSort === "views_desc" ? "High ➔ Low" : "Low ➔ High"}`
+                : `เรียงตามวิว: ${currentSort === "views_desc" ? "มาก ➔ น้อย" : "น้อย ➔ มาก"}`}
             </span>
             {currentSort === "views_desc" ? (
               <ArrowDown className="h-3.5 w-3.5 text-blue-500" />
@@ -117,7 +123,7 @@ export function TopPropertiesTable({
                                 : "bg-amber-50 text-amber-600 border-amber-100",
                           )}
                         >
-                          {listingTypeLabel(prop.listing_type, "th")}
+                          {listingTypeLabel(prop.listing_type, isEn ? "en" : "th")}
                         </span>
                       </div>
 
@@ -133,7 +139,7 @@ export function TopPropertiesTable({
                           href={`/protected/properties/${prop.id}`}
                           className="text-[10px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50/50 hover:bg-blue-50 px-2.5 py-1.5 rounded-lg transition-all"
                         >
-                          จัดการ <ArrowUpRight className="h-2.5 w-2.5" />
+                          {isEn ? "Manage" : "จัดการ"} <ArrowUpRight className="h-2.5 w-2.5" />
                         </Link>
                       </div>
                     </div>
@@ -143,7 +149,7 @@ export function TopPropertiesTable({
             })}
             {topProperties.length === 0 && (
               <div className="px-6 py-10 text-center text-slate-400 text-sm italic">
-                — ยังไม่มีข้อมูลการเข้าชมในระบบขณะนี้ —
+                {isEn ? "— No page views recorded in the system yet —" : "— ยังไม่มีข้อมูลการเข้าชมในระบบขณะนี้ —"}
               </div>
             )}
           </div>
@@ -153,20 +159,20 @@ export function TopPropertiesTable({
             <thead className="text-[10px] md:text-xs text-slate-500 uppercase bg-slate-50/50 sticky top-0 z-10 backdrop-blur-sm">
               <tr>
                 <th className="px-4 md:px-6 py-3 md:py-4 font-bold whitespace-nowrap">
-                  รูปภาพ
+                  {isEn ? "Image" : "รูปภาพ"}
                 </th>
                 <th className="px-4 md:px-6 py-3 md:py-4 font-bold whitespace-nowrap">
-                  ทรัพย์สิน
+                  {isEn ? "Property" : "ทรัพย์สิน"}
                 </th>
                 <th className="hidden md:table-cell px-6 py-4 font-bold">
-                  ประเภท
+                  {isEn ? "Type" : "ประเภท"}
                 </th>
                 <th 
                   onClick={handleSort}
                   className="px-4 md:px-6 py-3 md:py-4 font-bold text-right cursor-pointer select-none hover:text-blue-600 transition-colors group/th"
                 >
                   <div className="flex items-center justify-end gap-1">
-                    <span>จำนวนวิว</span>
+                    <span>{isEn ? "Views" : "จำนวนวิว"}</span>
                     {currentSort === "views_desc" ? (
                       <ArrowDown className="h-4 w-4 text-blue-500 shrink-0" />
                     ) : currentSort === "views_asc" ? (
@@ -177,7 +183,7 @@ export function TopPropertiesTable({
                   </div>
                 </th>
                 <th className="px-4 md:px-6 py-3 md:py-4 font-bold text-right">
-                  จัดการ
+                  {isEn ? "Action" : "จัดการ"}
                 </th>
               </tr>
             </thead>
@@ -227,7 +233,7 @@ export function TopPropertiesTable({
                               : "bg-amber-50 text-amber-600 border-amber-100",
                         )}
                       >
-                        {listingTypeLabel(prop.listing_type, "th")}
+                        {listingTypeLabel(prop.listing_type, isEn ? "en" : "th")}
                       </span>
                     </td>
                     <td className="px-4 md:px-6 py-3 md:py-4 text-right">
@@ -244,7 +250,7 @@ export function TopPropertiesTable({
                         href={`/protected/properties/${prop.id}`}
                         className="text-blue-600 hover:text-blue-800 font-bold text-xs md:text-sm whitespace-nowrap bg-blue-50/50 hover:bg-blue-50 px-3 py-1.5 rounded-xl transition-all inline-flex items-center gap-1"
                       >
-                        แก้ไข <ArrowUpRight className="h-3 w-3" />
+                        {isEn ? "Edit" : "แก้ไข"} <ArrowUpRight className="h-3 w-3" />
                       </Link>
                     </td>
                   </tr>
@@ -256,7 +262,7 @@ export function TopPropertiesTable({
                     colSpan={5}
                     className="px-6 py-10 text-center text-slate-400 italic"
                   >
-                    — ยังไม่มีข้อมูลการเข้าชมในระบบขณะนี้ —
+                    {isEn ? "— No page views recorded in the system yet —" : "— ยังไม่มีข้อมูลการเข้าชมในระบบขณะนี้ —"}
                   </td>
                 </tr>
               )}
@@ -276,3 +282,4 @@ export function TopPropertiesTable({
     </Card>
   );
 }
+

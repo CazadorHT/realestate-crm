@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface DeleteConfirmationDialogProps {
   open: boolean;
@@ -28,6 +29,9 @@ export function DeleteConfirmationDialog({
   onConfirm,
   isLoading,
 }: DeleteConfirmationDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-[32px] border-slate-100 sm:max-w-md overflow-hidden shadow-2xl">
@@ -47,7 +51,9 @@ export function DeleteConfirmationDialog({
           <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100/50 flex items-start gap-4">
             <ShieldAlert className="h-6 w-6 text-rose-600 shrink-0 mt-0.5" />
             <p className="text-[11px] text-rose-700 leading-relaxed font-semibold uppercase tracking-tight">
-              การดำเนินการนี้ไม่สามารถย้อนกลับได้ พนักงานจะไม่สามารเข้าถึงข้อมูลสาขาได้อีกต่อไป โปรดตรวจสอบให้แน่ใจก่อนดำเนินการ
+              {isEn 
+                ? "This action cannot be undone. Staff members will lose access to all branch data. Please verify before proceeding." 
+                : "การดำเนินการนี้ไม่สามารถย้อนกลับได้ พนักงานจะไม่สามารเข้าถึงข้อมูลสาขาได้อีกต่อไป โปรดตรวจสอบให้แน่ใจก่อนดำเนินการ"}
             </p>
           </div>
         </div>
@@ -59,7 +65,7 @@ export function DeleteConfirmationDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
           <Button
             className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl h-12 flex-1 px-8 font-semibold shadow-lg shadow-rose-200 transition-all active:scale-95"
@@ -67,10 +73,11 @@ export function DeleteConfirmationDialog({
             onClick={onConfirm}
           >
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-            ยืนยันการลบ
+            {isEn ? "Confirm Delete" : "ยืนยันการลบ"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+

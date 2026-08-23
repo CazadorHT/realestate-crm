@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { getOwnerById } from "@/features/owners/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
@@ -30,6 +31,10 @@ async function getOwnerProperties(ownerId: string) {
 }
 
 export default async function OwnerPage({ params }: PageProps) {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const { id } = await params;
   const owner = await getOwnerById(id);
   const properties = await getOwnerProperties(id);
@@ -44,8 +49,8 @@ export default async function OwnerPage({ params }: PageProps) {
       <Breadcrumb
         backHref={`/protected/owners`}
         items={[
-          { label: "เจ้าของทรัพย์", href: "/protected/owners" },
-          { label: owner.full_name || "รายละเอียด" },
+          { label: isEn ? "Property Owners" : "เจ้าของทรัพย์", href: "/protected/owners" },
+          { label: owner.full_name || (isEn ? "Details" : "รายละเอียด") },
         ]}
         className="mb-6"
       />

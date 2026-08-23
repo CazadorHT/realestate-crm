@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { LeadActivityForm } from "@/components/leads/LeadActivityForm";
 import { LeadActivityFormValues } from "@/lib/types/leads";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface LeadActivityDialogProps {
   leadId: string;
@@ -36,13 +37,17 @@ export function LeadActivityDialog({
   triggerClassName,
   trigger,
   defaultValues,
-  title = "บันทึกกิจกรรมใหม่",
+  title,
   submitLabel,
   initialProperty,
   tenantId,
 }: LeadActivityDialogProps) {
   const [open, setOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const dialogTitle = title || (isEn ? "Log New Activity" : "บันทึกกิจกรรมใหม่");
 
   const handleSubmit = async (values: LeadActivityFormValues) => {
     await onSubmitAction(values);
@@ -57,19 +62,19 @@ export function LeadActivityDialog({
         if (!val) setIsDirty(false);
       }}
       confirmOnClose={isDirty}
-      title={title}
+      title={dialogTitle}
       trigger={
         trigger || (
           <Button
             variant={triggerVariant}
             className={cn(
-              "gap-2 h-11 px-5 rounded-xl font-semibold transition-all active:scale-[0.98] shadow-sm hover:shadow-md", 
+              "gap-2 h-11 px-5 rounded-xl font-semibold transition-all active:scale-[0.98] shadow-sm hover:shadow-md cursor-pointer", 
               triggerVariant === "default" && "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100",
               triggerClassName
             )}
           >
             <Plus className="h-4 w-4" />
-            <span>บันทึกกิจกรรม</span>
+            <span>{isEn ? "Log Activity" : "บันทึกกิจกรรม"}</span>
           </Button>
         )
       }
@@ -78,7 +83,7 @@ export function LeadActivityDialog({
         <LeadActivityForm
           onSubmitAction={handleSubmit}
           defaultValues={defaultValues}
-          title={title}
+          title={dialogTitle}
           submitLabel={submitLabel}
           initialProperty={initialProperty}
           tenantId={tenantId}

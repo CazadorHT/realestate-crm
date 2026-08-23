@@ -106,15 +106,28 @@ export default async function ProtectedLayout({
     }
     console.error("[protected/layout] Server render failed", error);
 
+    let isEn = false;
+    try {
+      const cookieStore = await cookies();
+      isEn = cookieStore.get("NEXT_LOCALE")?.value === "en";
+    } catch {
+      // ignore
+    }
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-lg w-full rounded-3xl border border-red-100 bg-white p-6 shadow-sm text-center">
-          <h1 className="text-xl font-bold text-slate-900">ระบบส่วนหลังบ้านขัดข้องชั่วคราว</h1>
+          <h1 className="text-xl font-bold text-slate-900">
+            {isEn ? "Backend system temporarily unavailable" : "ระบบส่วนหลังบ้านขัดข้องชั่วคราว"}
+          </h1>
           <p className="mt-2 text-sm text-slate-500">
-            เราพบข้อผิดพลาดระหว่างเตรียมหน้า protected และได้หยุดการ render ไว้อย่างปลอดภัยแล้ว
+            {isEn 
+              ? "An error occurred while preparing the protected page. Render was safely stopped."
+              : "เราพบข้อผิดพลาดระหว่างเตรียมหน้า protected และได้หยุดการ render ไว้อย่างปลอดภัยแล้ว"}
           </p>
         </div>
       </div>
     );
   }
 }
+

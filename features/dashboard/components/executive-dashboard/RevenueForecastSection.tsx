@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import { ForecastData } from "@/features/analytics/market-intelligence";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const ExecutiveRevenueForecastChart = dynamic<{ data: ForecastData[] }>(
   () => import("../ExecutiveRevenueForecastChart").then(mod => mod.default),
@@ -38,6 +39,9 @@ export const RevenueForecastSection = memo(function RevenueForecastSection({
   data,
   mounted,
 }: RevenueForecastSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Card className="border-slate-100 shadow-sm border-0 bg-linear-to-br from-white/80 to-blue-50/30 backdrop-blur-sm overflow-hidden relative">
       <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
@@ -56,20 +60,22 @@ export const RevenueForecastSection = memo(function RevenueForecastSection({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="text-slate-400 hover:text-blue-500 transition-colors">
+                <button className="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer">
                   <Info className="h-5 w-5" />
                 </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs bg-slate-900 text-white border-0 p-3 rounded-xl shadow-2xl">
                 <p className="text-xs leading-relaxed">
-                  ระบบ AI วิเคราะห์จาก Leads ใน pipeline โดยคำนวณตามดัชนีความร้อนแรง (AI Score), Stage ของดีล และสถิติการปิดดีลในอดีต เพื่อทำนายรายได้ล่วงหน้า 6 เดือน
+                  {isEn
+                    ? "The AI engine models active pipeline leads against AI heat scores, deal stages, and historical closing velocities to forecast revenue 6 months ahead."
+                    : "ระบบ AI วิเคราะห์จาก Leads ใน pipeline โดยคำนวณตามดัชนีความร้อนแรง (AI Score), Stage ของดีล และสถิติการปิดดีลในอดีต เพื่อทำนายรายได้ล่วงหน้า 6 เดือน"}
                 </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
         <CardDescription className="text-[10px] xs:text-xs text-slate-500 ml-9 xs:ml-11">
-          การวิเคราะห์รายได้จริง เทียบกับคาดการณ์ล่วงหน้า
+          {isEn ? "Actual revenue performance vs. AI forward projections" : "การวิเคราะห์รายได้จริง เทียบกับคาดการณ์ล่วงหน้า"}
         </CardDescription>
       </CardHeader>
       

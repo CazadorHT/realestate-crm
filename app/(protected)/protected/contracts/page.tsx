@@ -12,6 +12,7 @@ import { getContracts } from "@/features/contracts/queries";
 import { mapDbError } from "@/lib/db-error";
 import { StatsTimeFilter } from "../../../../components/dashboard/StatsTimeFilter";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 
 interface RentalContractsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -23,6 +24,10 @@ export default async function RentalContractsPage({
   const { role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const params = await searchParams;
   const timeRange = (params.timeRange as string) || "all";
 
@@ -31,8 +36,8 @@ export default async function RentalContractsPage({
       <SuccessAnimation />
       {/* Premium Header */}
       <PageHeader
-        title="สัญญาเช่า (Contracts)"
-        subtitle="จัดการและติดตามสัญญาเช่าทั้งหมด"
+        title={isEn ? "Rental Contracts" : "สัญญาเช่า (Contracts)"}
+        subtitle={isEn ? "Manage and track all lease and rental agreements" : "จัดการและติดตามสัญญาเช่าทั้งหมด"}
         icon="fileText"
         gradient="emerald"
         actionSlot={<CreateContractDialog />}
@@ -46,6 +51,7 @@ export default async function RentalContractsPage({
         <ContractsContentSection 
           tenantId={tenantId}
           timeRange={timeRange}
+          isEn={isEn}
         />
       </Suspense>
     </div>
@@ -57,9 +63,11 @@ export default async function RentalContractsPage({
 async function ContractsContentSection({
   tenantId,
   timeRange,
+  isEn,
 }: {
   tenantId: string | undefined;
   timeRange: string;
+  isEn: boolean;
 }) {
   const { data, count, error } = await getContracts({
     tenantId,
@@ -95,12 +103,12 @@ async function ContractsContentSection({
       {contracts.length > 0 && (
         <TableFooterStats
           totalCount={contracts.length}
-          unitLabel="สัญญา"
+          unitLabel={isEn ? "contracts" : "สัญญา"}
           secondaryStats={
             expiringSoonContracts > 0
               ? [
                   {
-                    label: "สัญญาใกล้หมดอายุ",
+                    label: isEn ? "Expiring Soon" : "สัญญาใกล้หมดอายุ",
                     value: expiringSoonContracts,
                     color: "orange",
                     icon: "clock",
@@ -113,4 +121,5 @@ async function ContractsContentSection({
     </>
   );
 }
+
 

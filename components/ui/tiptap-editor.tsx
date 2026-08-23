@@ -19,6 +19,7 @@ import { Button } from "./button";
 import { cn } from "@/lib/utils";
 import { useCallback, useEffect } from "react";
 import DOMPurify from "isomorphic-dompurify";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TipTapEditorProps {
   value: string;
@@ -31,49 +32,54 @@ interface TipTapEditorProps {
 export function TipTapEditor({
   value,
   onChange,
-  placeholder,
   className,
   disabled = false,
 }: TipTapEditorProps) {
-  const sanitize = (html: string) => {
-    return DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ["p", "br", "strong", "em", "ul", "ol", "li", "a", "s", "strike", "del"],
-      ALLOWED_ATTR: ["href", "target", "rel"],
-    });
-  };
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
-        heading: false, // Heading is usually too large for FAQ answers
-        codeBlock: false,
-        code: false,
-        blockquote: false,
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+          HTMLAttributes: {
+            class: "list-disc pl-6 space-y-1 my-2",
+          },
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+          HTMLAttributes: {
+            class: "list-decimal pl-6 space-y-1 my-2",
+          },
+        },
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-blue-600 underline hover:text-blue-800 transition-colors",
+          class: "text-blue-600 underline cursor-pointer",
         },
       }),
     ],
     content: value,
     editable: !disabled,
     onUpdate: ({ editor }) => {
-      onChange(sanitize(editor.getHTML()));
+      onChange(DOMPurify.sanitize(editor.getHTML()));
     },
     editorProps: {
       attributes: {
         class: cn(
-          "prose prose-sm max-w-none min-h-[150px] p-4 focus:outline-none",
-          disabled && "opacity-50 cursor-not-allowed"
+          "prose prose-sm max-w-none p-4 min-h-[150px] focus:outline-hidden",
+          disabled && "opacity-50 cursor-not-allowed bg-slate-50",
         ),
       },
     },
-    immediatelyRender: false,
   });
 
-  // Keep editor content in sync with external value changes (e.g. AI translation)
+  // Sync value externally if changed
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
       editor.commands.setContent(value);
@@ -81,20 +87,29 @@ export function TipTapEditor({
   }, [value, editor]);
 
   const setLink = useCallback(() => {
-    const previousUrl = editor?.getAttributes("link").href;
-    const url = window.prompt("URL ภาษาอังกฤษ (เช่น https://google.com)", previousUrl);
+    if (!editor) return;
+    const previousUrl = editor.getAttributes("link").href;
+    const url = window.prompt(isEn ? "Enter URL" : "ใส่ URL", previousUrl);
 
+    // cancelled
     if (url === null) {
       return;
     }
 
+    // empty
     if (url === "") {
-      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
 
-    editor?.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
-  }, [editor]);
+    // update link
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({ href: url })
+      .run();
+  }, [editor, isEn]);
 
   if (!editor) {
     return null;
@@ -112,10 +127,10 @@ export function TipTapEditor({
           type="button"
           variant="ghost"
           size="icon"
-          className={cn("h-8 w-8", editor.isActive("bold") && "bg-slate-200")}
+          className={cn("h-8 w-8 cursor-pointer", editor.isActive("bold") && "bg-slate-200")}
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={disabled}
-          title="ตัวหนา"
+          title={isEn ? "Bold" : "ตัวหนา"}
         >
           <Bold className="h-4 w-4" />
         </Button>
@@ -123,10 +138,10 @@ export function TipTapEditor({
           type="button"
           variant="ghost"
           size="icon"
-          className={cn("h-8 w-8", editor.isActive("italic") && "bg-slate-200")}
+          className={cn("h-8 w-8 cursor-pointer", editor.isActive("italic") && "bg-slate-200")}
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={disabled}
-          title="ตัวเอียง"
+          title={isEn ? "Italic" : "ตัวเอียง"}
         >
           <Italic className="h-4 w-4" />
         </Button>
@@ -134,10 +149,10 @@ export function TipTapEditor({
           type="button"
           variant="ghost"
           size="icon"
-          className={cn("h-8 w-8", editor.isActive("strike") && "bg-slate-200")}
+          className={cn("h-8 w-8 cursor-pointer", editor.isActive("strike") && "bg-slate-200")}
           onClick={() => editor.chain().focus().toggleStrike().run()}
           disabled={disabled}
-          title="ขีดฆ่า"
+          title={isEn ? "Strikethrough" : "ขีดฆ่า"}
         >
           <Strikethrough className="h-4 w-4" />
         </Button>
@@ -145,10 +160,10 @@ export function TipTapEditor({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-slate-500 hover:text-red-500"
+          className="h-8 w-8 text-slate-500 hover:text-red-500 cursor-pointer"
           onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
           disabled={disabled}
-          title="ล้างการจัดรูปแบบ"
+          title={isEn ? "Clear formatting" : "ล้างการจัดรูปแบบ"}
         >
           <Eraser className="h-4 w-4" />
         </Button>
@@ -157,10 +172,10 @@ export function TipTapEditor({
           type="button"
           variant="ghost"
           size="icon"
-          className={cn("h-8 w-8", editor.isActive("bulletList") && "bg-slate-200")}
+          className={cn("h-8 w-8 cursor-pointer", editor.isActive("bulletList") && "bg-slate-200")}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           disabled={disabled}
-          title="รายการแบบจุด"
+          title={isEn ? "Bullet list" : "รายการแบบจุด"}
         >
           <List className="h-4 w-4" />
         </Button>
@@ -168,10 +183,10 @@ export function TipTapEditor({
           type="button"
           variant="ghost"
           size="icon"
-          className={cn("h-8 w-8", editor.isActive("orderedList") && "bg-slate-200")}
+          className={cn("h-8 w-8 cursor-pointer", editor.isActive("orderedList") && "bg-slate-200")}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           disabled={disabled}
-          title="รายการแบบตัวเลข"
+          title={isEn ? "Numbered list" : "รายการแบบตัวเลข"}
         >
           <ListOrdered className="h-4 w-4" />
         </Button>
@@ -180,10 +195,10 @@ export function TipTapEditor({
           type="button"
           variant="ghost"
           size="icon"
-          className={cn("h-8 w-8", editor.isActive("link") && "bg-slate-200")}
+          className={cn("h-8 w-8 cursor-pointer", editor.isActive("link") && "bg-slate-200")}
           onClick={setLink}
           disabled={disabled}
-          title="เพิ่มลิงก์"
+          title={isEn ? "Insert link" : "เพิ่มลิงก์"}
         >
           <LinkIcon className="h-4 w-4" />
         </Button>
@@ -191,10 +206,10 @@ export function TipTapEditor({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8"
+          className="h-8 w-8 cursor-pointer"
           onClick={() => editor.chain().focus().unsetLink().run()}
           disabled={disabled || !editor.isActive("link")}
-          title="นำลิงก์ออก"
+          title={isEn ? "Remove link" : "นำลิงก์ออก"}
         >
           <Unlink className="h-4 w-4" />
         </Button>
@@ -203,10 +218,10 @@ export function TipTapEditor({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 cursor-pointer"
             onClick={() => editor.chain().focus().undo().run()}
             disabled={disabled || !editor.can().undo()}
-            title="เลิกทำ"
+            title={isEn ? "Undo" : "เลิกทำ"}
           >
             <Undo className="h-4 w-4" />
           </Button>
@@ -214,10 +229,10 @@ export function TipTapEditor({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 cursor-pointer"
             onClick={() => editor.chain().focus().redo().run()}
             disabled={disabled || !editor.can().redo()}
-            title="ทำซ้ำ"
+            title={isEn ? "Redo" : "ทำซ้ำ"}
           >
             <Redo className="h-4 w-4" />
           </Button>

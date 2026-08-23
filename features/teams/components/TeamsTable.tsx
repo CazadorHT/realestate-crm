@@ -31,6 +31,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Loader2 } from "lucide-react";
 import { TeamDialog } from "./TeamDialog";
 import { TeamMembersDialog } from "./TeamMembersDialog";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TeamsTableProps {
   teams: TeamWithManager[];
@@ -41,6 +42,9 @@ export function TeamsTable({
   teams: initialTeams,
   potentialManagers,
 }: TeamsTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [teams, setTeams] = useState(initialTeams);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<TeamWithManager | null>(null);
@@ -59,10 +63,10 @@ export function TeamsTable({
     setIsDeleting(true);
     const result = await deleteTeamAction(teamToDelete.id);
     if (result.success) {
-      toast.success(`ลบทีม ${teamToDelete.name} เรียบร้อยแล้ว`);
+      toast.success(isEn ? `Team ${teamToDelete.name} deleted successfully` : `ลบทีม ${teamToDelete.name} เรียบร้อยแล้ว`);
       setTeams(teams.filter((t) => t.id !== teamToDelete.id));
     } else {
-      toast.error(result.message || "ไม่สามารถลบทีมได้");
+      toast.error(result.message || (isEn ? "Failed to delete team" : "ไม่สามารถลบทีมได้"));
     }
     setIsDeleting(false);
     setTeamToDelete(null);
@@ -86,7 +90,7 @@ export function TeamsTable({
           className="bg-indigo-600 hover:bg-indigo-700 rounded-xl"
         >
           <UserPlus className="h-4 w-4 mr-2" />
-          สร้างทีมใหม่
+          {isEn ? "Create New Team" : "สร้างทีมใหม่"}
         </Button>
       </div>
 
@@ -95,19 +99,19 @@ export function TeamsTable({
           <TableHeader className="bg-slate-50/50">
             <TableRow>
               <TableHead className="py-4 px-6 font-bold text-slate-900">
-                ชื่อทีม
+                {isEn ? "Team Name" : "ชื่อทีม"}
               </TableHead>
               <TableHead className="py-4 px-6 font-bold text-slate-900">
-                หัวหน้าทีม (Manager)
+                {isEn ? "Team Leader (Manager)" : "หัวหน้าทีม (Manager)"}
               </TableHead>
               <TableHead className="py-4 px-6 font-bold text-slate-900">
-                จำนวนสมาชิก
+                {isEn ? "Members" : "จำนวนสมาชิก"}
               </TableHead>
               <TableHead className="py-4 px-6 font-bold text-slate-900">
-                วันที่สร้าง
+                {isEn ? "Created At" : "วันที่สร้าง"}
               </TableHead>
               <TableHead className="py-4 px-6 text-right font-bold text-slate-900">
-                การจัดการ
+                {isEn ? "Actions" : "การจัดการ"}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -121,10 +125,12 @@ export function TeamsTable({
                     </div>
                     <div className="space-y-1">
                       <p className="text-lg font-bold text-slate-900">
-                        ยังไม่มีข้อมูลทีมในระบบ
+                        {isEn ? "No team data found in system" : "ยังไม่มีข้อมูลทีมในระบบ"}
                       </p>
                       <p className="text-slate-500 text-sm max-w-sm mx-auto">
-                        เริ่มสร้างทีมแรกของคุณเพื่อจัดการสิทธิ์และแบ่งสายงานให้กับพนักงานของคุณ
+                        {isEn
+                          ? "Create your first team to assign roles, leads, and operational structures to agents."
+                          : "เริ่มสร้างทีมแรกของคุณเพื่อจัดการสิทธิ์และแบ่งสายงานให้กับพนักงานของคุณ"}
                       </p>
                     </div>
                     <Button
@@ -132,7 +138,7 @@ export function TeamsTable({
                       className="bg-indigo-600 hover:bg-indigo-700 rounded-xl px-8"
                     >
                       <UserPlus className="h-4 w-4 mr-2" />
-                      สร้างทีมแรกของคุณ
+                      {isEn ? "Create Your First Team" : "สร้างทีมแรกของคุณ"}
                     </Button>
                   </div>
                 </TableCell>
@@ -163,13 +169,13 @@ export function TeamsTable({
                       </div>
                     ) : (
                       <span className="text-slate-400 italic text-sm">
-                        ยังไม่ได้ระบุ
+                        {isEn ? "Unassigned" : "ยังไม่ได้ระบุ"}
                       </span>
                     )}
                   </TableCell>
                   <TableCell className="px-6">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {team.agent_count || 0} คน
+                      {team.agent_count || 0} {isEn ? "Members" : "คน"}
                     </span>
                   </TableCell>
                   <TableCell className="px-6 text-slate-400 text-sm">
@@ -195,7 +201,7 @@ export function TeamsTable({
                           className="flex items-center gap-2 py-2.5 cursor-pointer text-slate-700"
                         >
                           <Edit2 className="h-4 w-4" />
-                          <span>แก้ไขข้อมูล</span>
+                          <span>{isEn ? "Edit Team" : "แก้ไขข้อมูล"}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() =>
@@ -204,14 +210,14 @@ export function TeamsTable({
                           className="flex items-center gap-2 py-2.5 cursor-pointer text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
                         >
                           <Users className="h-4 w-4" />
-                          <span>ดูสมาชิกในทีม</span>
+                          <span>{isEn ? "View Members" : "ดูสมาชิกในทีม"}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => setTeamToDelete(team)}
                           className="flex items-center gap-2 py-2.5 cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
-                          <span>ลบทีม</span>
+                          <span>{isEn ? "Delete Team" : "ลบทีม"}</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -251,13 +257,19 @@ export function TeamsTable({
       <ResponsiveDialog
         open={!!teamToDelete}
         onOpenChange={(open) => !open && setTeamToDelete(null)}
-        title="ยืนยันการลบทีม"
+        title={isEn ? "Confirm Delete Team" : "ยืนยันการลบทีม"}
         description={
           teamToDelete ? (
             <div className="flex flex-col gap-2">
-              <p>คุณกำลังจะลบทีม <strong className="text-slate-900">{teamToDelete.name}</strong> ใช่หรือไม่?</p>
+              <p>
+                {isEn ? "Are you sure you want to delete team " : "คุณกำลังจะลบทีม "}
+                <strong className="text-slate-900">{teamToDelete.name}</strong>
+                {isEn ? "?" : " ใช่หรือไม่?"}
+              </p>
               <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-[11px] text-amber-700 font-bold leading-relaxed">
-                ⚠️ พนักงานทุกคนในทีมจะถูกปลดออกจากสังกัดทีมนี้โดยอัตโนมัติ การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                {isEn
+                  ? "⚠️ All members in this team will be unassigned automatically. This action cannot be undone."
+                  : "⚠️ พนักงานทุกคนในทีมจะถูกปลดออกจากสังกัดทีมนี้โดยอัตโนมัติ การดำเนินการนี้ไม่สามารถย้อนกลับได้"}
               </div>
             </div>
           ) : ""
@@ -270,7 +282,7 @@ export function TeamsTable({
               disabled={isDeleting}
               className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               onClick={handleDelete}
@@ -281,10 +293,10 @@ export function TeamsTable({
               {isDeleting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  กำลังลบ...
+                  {isEn ? "Deleting..." : "กำลังลบ..."}
                 </>
               ) : (
-                "ยืนยันการลบทีม"
+                isEn ? "Confirm Delete" : "ยืนยันการลบทีม"
               )}
             </Button>
           </div>
@@ -293,3 +305,4 @@ export function TeamsTable({
     </div>
   );
 }
+

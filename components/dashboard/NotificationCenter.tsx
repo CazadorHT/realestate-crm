@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, AlertCircle, Clock, Check } from "lucide-react";
 import type { Notification } from "@/features/dashboard/queries";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { formatTimeAgo, formatTimeAgoEn } from "@/lib/utils";
 
 interface NotificationCenterProps {
   notifications: Notification[];
@@ -17,6 +19,8 @@ export function NotificationCenter({
   role,
   view = "personal",
 }: NotificationCenterProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [readIds, setReadIds] = useState<Set<string | number>>(new Set());
   const [deletedIds, setDeletedIds] = useState<Set<string | number>>(new Set());
   const [mounted, setMounted] = useState(false);
@@ -55,8 +59,12 @@ export function NotificationCenter({
           setDraftNotif({
             id: "draft-recovery",
             type: "alert",
-            message: `📝 แบบร่างที่ยังไม่บันทึก: "${values.title || 'ไม่มีชื่อโครงการ'}"`,
-            time: `บันทึกล่าสุดเมื่อ ${new Date(timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`,
+            message: isEn
+              ? `📝 Unsaved Property Draft: "${values.title || 'Untitled'}"`
+              : `📝 แบบร่างที่ยังไม่บันทึก: "${values.title || 'ไม่มีชื่อโครงการ'}"`,
+            time: isEn
+              ? `Last saved at ${new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
+              : `บันทึกล่าสุดเมื่อ ${new Date(timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`,
             read: false,
             href: "/protected/properties/new?restore=true",
           });
@@ -65,7 +73,7 @@ export function NotificationCenter({
     } catch (e) {
       console.error("Failed to parse draft for notification center", e);
     }
-  }, []);
+  }, [isEn]);
 
   // Filter and merge notifications
   const allNotifs = draftNotif ? [draftNotif, ...initialNotifications] : initialNotifications;
@@ -94,12 +102,12 @@ export function NotificationCenter({
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Bell className="h-4 w-4" />
-            การแจ้งเตือน
+            {isEn ? "Notifications" : "การแจ้งเตือน"}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="text-center text-sm text-muted-foreground py-4 px-6">
-            กำลังโหลด...
+            {isEn ? "Loading..." : "กำลังโหลด..."}
           </div>
         </CardContent>
       </Card>
@@ -116,22 +124,22 @@ export function NotificationCenter({
               <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
             )}
           </div>
-          การแจ้งเตือน
+          {isEn ? "Notifications" : "การแจ้งเตือน"}
         </CardTitle>
         <Button
           variant="ghost"
-          className="h-auto p-0 text-xs text-muted-foreground hover:text-primary"
+          className="h-auto p-0 text-xs text-muted-foreground hover:text-primary cursor-pointer"
           onClick={markAllRead}
           disabled={unreadCount === 0}
         >
-          Mark all read
+          {isEn ? "Mark all read" : "อ่านทั้งหมดแล้ว"}
         </Button>
       </CardHeader>
       <CardContent className="p-0">
         <div className="space-y-0 max-h-[320px] overflow-y-auto px-6 py-4">
           {visibleNotifications.length === 0 ? (
             <div className="text-center text-sm text-muted-foreground py-4">
-              ไม่มีการแจ้งเตือนใหม่
+              {isEn ? "No new notifications" : "ไม่มีการแจ้งเตือนใหม่"}
             </div>
           ) : (
             visibleNotifications.map((notif) => {
@@ -169,12 +177,12 @@ export function NotificationCenter({
                       {notif.href ? (
                         <a href={notif.href} className="hover:underline hover:text-blue-600 block">
                           <p className={`text-sm leading-none ${!notif.read ? "font-semibold" : "font-medium"}`}>
-                            {notif.message}
+                            {isEn ? (notif.messageEn || notif.message) : notif.message}
                           </p>
                         </a>
                       ) : (
                         <p className={`text-sm leading-none ${!notif.read ? "font-semibold" : "font-medium"}`}>
-                          {notif.message}
+                          {isEn ? (notif.messageEn || notif.message) : notif.message}
                         </p>
                       )}
                       {!notif.read && (
@@ -182,12 +190,16 @@ export function NotificationCenter({
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {notif.time}
+                      {notif.createdAt
+                        ? (isEn
+                            ? formatTimeAgoEn(notif.createdAt)
+                            : (notif.time || formatTimeAgo(notif.createdAt)))
+                        : notif.time}
                     </p>
                     {notif.id === "draft-recovery" && notif.href && (
                       <div className="pt-2">
                         <a href={notif.href} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-sm hover:bg-blue-700 transition-colors no-underline">
-                          ⚡ กู้คืนแบบร่าง (Restore)
+                          {isEn ? "⚡ Restore Draft" : "⚡ กู้คืนแบบร่าง (Restore)"}
                         </a>
                       </div>
                     )}

@@ -30,6 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ServicesTableDesktopProps {
   services: ServiceRow[];
@@ -50,6 +51,9 @@ export function ServicesTableDesktop({
   onRestore,
   onPermanentDelete,
 }: ServicesTableDesktopProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="hidden lg:block rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm transition-all duration-300">
       <Table>
@@ -59,19 +63,19 @@ export function ServicesTableDesktop({
               #
             </TableHead>
             <TableHead className="font-bold text-slate-800">
-              ข้อมูลบริการ
+              {isEn ? "Service Details" : "ข้อมูลบริการ"}
             </TableHead>
             <TableHead className="w-[140px] text-right font-bold text-slate-800">
-              ราคาเริ่มต้น
+              {isEn ? "Starting Price" : "ราคาเริ่มต้น"}
             </TableHead>
             <TableHead className="w-[120px] text-center font-bold text-slate-800">
-              สถิติยอดวิว
+              {isEn ? "Views" : "สถิติยอดวิว"}
             </TableHead>
             <TableHead className="w-[120px] text-center font-bold text-slate-800">
-              สถานะ
+              {isEn ? "Status" : "สถานะ"}
             </TableHead>
             <TableHead className="w-[100px] text-right font-bold text-slate-800">
-              จัดการ
+              {isEn ? "Actions" : "จัดการ"}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -88,8 +92,8 @@ export function ServicesTableDesktop({
                   </div>
                   <p className="text-sm font-medium">
                     {isTrashView
-                      ? "ไม่พบข้อมูลในถังขยะ"
-                      : "ยังไม่มีข้อมูลบริการ"}
+                      ? (isEn ? "No items in trash" : "ไม่พบข้อมูลในถังขยะ")
+                      : (isEn ? "No services created yet" : "ยังไม่มีข้อมูลบริการ")}
                   </p>
                 </div>
               </TableCell>
@@ -117,7 +121,7 @@ export function ServicesTableDesktop({
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-300 text-[10px] text-center p-1">
-                          ไม่มีรูปภาพ
+                          {isEn ? "No Image" : "ไม่มีรูปภาพ"}
                         </div>
                       )}
                     </div>
@@ -135,7 +139,7 @@ export function ServicesTableDesktop({
                               variant="outline"
                               className="text-[9px] h-4 px-1 border-slate-200 text-slate-400 bg-slate-50/50"
                             >
-                              +{service.gallery_images.length} imgs
+                              +{service.gallery_images.length} {isEn ? "imgs" : "imgs"}
                             </Badge>
                           )}
                       </div>
@@ -144,7 +148,7 @@ export function ServicesTableDesktop({
                 </TableCell>
                 <TableCell className="text-right">
                   <span className="text-sm text-slate-600 font-bold">
-                    {service.price_range || "สอบถามราคา"}
+                    {service.price_range || (isEn ? "Contact for price" : "สอบถามราคา")}
                   </span>
                 </TableCell>
                 <TableCell className="text-center">
@@ -171,14 +175,14 @@ export function ServicesTableDesktop({
                       variant="secondary"
                       className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-100 whitespace-nowrap"
                     >
-                      <Eye className="w-3.5 h-3.5 mr-1.5" /> เปิดใช้งาน
+                      <Eye className="w-3.5 h-3.5 mr-1.5" /> {isEn ? "Active" : "เปิดใช้งาน"}
                     </Badge>
                   ) : (
                     <Badge
                       variant="secondary"
                       className="bg-slate-50 text-slate-400 hover:bg-slate-100 border-slate-100 whitespace-nowrap"
                     >
-                      <EyeOff className="w-3.5 h-3.5 mr-1.5" /> ซ่อน
+                      <EyeOff className="w-3.5 h-3.5 mr-1.5" /> {isEn ? "Hidden" : "ซ่อน"}
                     </Badge>
                   )}
                 </TableCell>
@@ -188,10 +192,10 @@ export function ServicesTableDesktop({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 text-emerald-600 hover:bg-emerald-50/50 rounded-xl transition-all"
+                        className="h-10 w-10 text-emerald-600 hover:bg-emerald-50/50 rounded-xl transition-all cursor-pointer"
                         onClick={() => onRestore(service.id)}
                         disabled={isPending}
-                        title="กู้คืนข้อมูล"
+                        title={isEn ? "Restore" : "กู้คืนข้อมูล"}
                       >
                         <RefreshCcw
                           className={cn(
@@ -203,10 +207,10 @@ export function ServicesTableDesktop({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 text-rose-600 hover:bg-rose-50/50 rounded-xl transition-all"
+                        className="h-10 w-10 text-rose-600 hover:bg-rose-50/50 rounded-xl transition-all cursor-pointer"
                         onClick={() => onPermanentDelete!(service.id)}
                         disabled={isPending}
-                        title="ลบทิ้งถาวร"
+                        title={isEn ? "Delete Permanently" : "ลบทิ้งถาวร"}
                       >
                         <Trash2 className="h-4.5 w-4.5" />
                       </Button>
@@ -214,21 +218,21 @@ export function ServicesTableDesktop({
                   ) : (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(service)}>
+                        <DropdownMenuItem onClick={() => onEdit(service)} className="cursor-pointer">
                           <Edit className="w-4 h-4 mr-2" />
-                          <span>แก้ไข</span>
+                          <span>{isEn ? "Edit" : "แก้ไข"}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => onDelete(service.id)}
                           className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          <span>ย้ายลงถังขยะ</span>
+                          <span>{isEn ? "Move to Trash" : "ย้ายลงถังขยะ"}</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

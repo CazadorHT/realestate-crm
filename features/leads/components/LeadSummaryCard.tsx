@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { generateLeadSummaryAction } from "../actions";
 import { toast } from "sonner";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface LeadSummaryCardProps {
   leadId: string;
@@ -16,9 +17,11 @@ interface LeadSummaryCardProps {
 export function LeadSummaryCard({ leadId, initialSummary }: LeadSummaryCardProps) {
   const [summary, setSummary] = useState<string | null>(initialSummary || null);
   const [isLoading, setIsLoading] = useState(false);
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const handleGenerate = async () => {
-    const processId = startProcess("วิเคราะห์ข้อมูลด้วย AI", { 
+    const processId = startProcess(isEn ? "AI Data Analysis" : "วิเคราะห์ข้อมูลด้วย AI", { 
       type: "AI_SUMMARIZE",
       onRetry: handleGenerate
     });
@@ -28,10 +31,10 @@ export function LeadSummaryCard({ leadId, initialSummary }: LeadSummaryCardProps
       const result = await generateLeadSummaryAction({ leadId });
       if (!result.success) throw new Error(result.error);
       setSummary(result.data);
-      finishProcess(processId, "SUCCESS", "สรุปข้อมูลด้วย AI เรียบร้อยแล้ว ✨");
+      finishProcess(processId, "SUCCESS", isEn ? "AI Summary generated ✨" : "สรุปข้อมูลด้วย AI เรียบร้อยแล้ว ✨");
     } catch (error: unknown) {
       console.error("AI Summary Error:", error);
-      const errorMessage = error instanceof Error ? error.message : "ไม่สามารถสรุปข้อมูลได้ในขณะนี้";
+      const errorMessage = error instanceof Error ? error.message : (isEn ? "Unable to generate summary at this time" : "ไม่สามารถสรุปข้อมูลได้ในขณะนี้");
       finishProcess(processId, "ERROR", errorMessage);
     } finally {
       setIsLoading(false);
@@ -50,7 +53,7 @@ export function LeadSummaryCard({ leadId, initialSummary }: LeadSummaryCardProps
           <div>
             <h3 className="font-semibold text-slate-800 tracking-tight">AI Intelligent Summary</h3>
             <p className="text-[11px] text-slate-400 font-medium">
-              สรุปความต้องการและกิจกรรมสำคัญอัตโนมัติ
+              {isEn ? "Automatic summary of requirements and key activities" : "สรุปความต้องการและกิจกรรมสำคัญอัตโนมัติ"}
             </p>
           </div>
         </div>
@@ -59,14 +62,16 @@ export function LeadSummaryCard({ leadId, initialSummary }: LeadSummaryCardProps
           size="sm"
           onClick={handleGenerate}
           disabled={isLoading}
-          className="h-8 gap-1.5 text-xs font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm"
+          className="h-8 gap-1.5 text-xs font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm cursor-pointer"
         >
           {isLoading ? (
             <RefreshCw className="h-3.5 w-3.5 animate-spin" />
           ) : (
             <Sparkles className="h-3.5 w-3.5 text-violet-500" />
           )}
-          {summary ? "สรุปใหม่" : "สรุปด้วย AI"}
+          {summary
+            ? (isEn ? "Regenerate" : "สรุปใหม่")
+            : (isEn ? "AI Summary" : "สรุปด้วย AI")}
         </Button>
       </CardHeader>
       <CardContent className="p-5">
@@ -77,10 +82,12 @@ export function LeadSummaryCard({ leadId, initialSummary }: LeadSummaryCardProps
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-slate-500">
-                ยังไม่มีบทสรุป
+                {isEn ? "No summary yet" : "ยังไม่มีบทสรุป"}
               </p>
               <p className="text-xs text-slate-400">
-                กดปุ่ม "สรุปด้วย AI" เพื่อวิเคราะห์ข้อมูลลีดรายนี้
+                {isEn
+                  ? 'Click "AI Summary" to analyze this lead\'s profile'
+                  : 'กดปุ่ม "สรุปด้วย AI" เพื่อวิเคราะห์ข้อมูลลีดรายนี้'}
               </p>
             </div>
           </div>

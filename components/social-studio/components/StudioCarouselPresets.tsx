@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Layers } from "lucide-react";
 import type { CarouselPageType, CarouselPageConfig } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StudioCarouselPresetsProps {
   carouselPages: CarouselPageConfig[];
@@ -13,11 +14,35 @@ interface StudioCarouselPresetsProps {
   setActiveCarouselPage: (p: CarouselPageType) => void;
 }
 
-const PAGE_INFO: Record<CarouselPageType, { label: string; icon: string; description: string }> = {
-  cover: { label: "ภาพปก (Cover)", icon: "📸", description: "แบนเนอร์ปกหลัก" },
-  specs_highlights: { label: "สเปก & จุดเด่น", icon: "📊", description: "ห้องนอน/น้ำ/ตร.ม. + Highlights" },
-  location_map: { label: "ทำเลที่ตั้ง", icon: "📍", description: "ทำเล + รถไฟฟ้า + โครงการ" },
-  contact_cta: { label: "ติดต่อ & CTA", icon: "📱", description: "เอเจ้นท์ + QR + ช่องทางติดต่อ" },
+const PAGE_INFO: Record<CarouselPageType, { label: string; labelEn: string; icon: string; description: string; descriptionEn: string }> = {
+  cover: { 
+    label: "ภาพปก (Cover)", 
+    labelEn: "Cover Banner", 
+    icon: "📸", 
+    description: "แบนเนอร์ปกหลัก",
+    descriptionEn: "Main cover banner",
+  },
+  specs_highlights: { 
+    label: "สเปก & จุดเด่น", 
+    labelEn: "Specs & Highlights", 
+    icon: "📊", 
+    description: "ห้องนอน/น้ำ/ตร.ม. + Highlights",
+    descriptionEn: "Bed/Bath/Sqm + Key features",
+  },
+  location_map: { 
+    label: "ทำเลที่ตั้ง", 
+    labelEn: "Location & Transit", 
+    icon: "📍", 
+    description: "ทำเล + รถไฟฟ้า + โครงการ",
+    descriptionEn: "Location + Transit + Project",
+  },
+  contact_cta: { 
+    label: "ติดต่อ & CTA", 
+    labelEn: "Contact & CTA", 
+    icon: "📱", 
+    description: "เอเจ้นท์ + QR + ช่องทางติดต่อ",
+    descriptionEn: "Agent + QR + Channels",
+  },
 };
 
 export function StudioCarouselPresets({
@@ -26,6 +51,9 @@ export function StudioCarouselPresets({
   activeCarouselPage,
   setActiveCarouselPage,
 }: StudioCarouselPresetsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const togglePage = (type: CarouselPageType) => {
     setCarouselPages((prev) =>
       prev.map((p) => (p.type === type ? { ...p, enabled: !p.enabled } : p))
@@ -39,10 +67,10 @@ export function StudioCarouselPresets({
       <div className="flex items-center justify-between">
         <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
           <Layers className="h-3.5 w-3.5 text-amber-400" />
-          Carousel Pages (สร้างหลายหน้า)
+          {isEn ? "Carousel Pages (Multi-Slide)" : "Carousel Pages (สร้างหลายหน้า)"}
         </Label>
         <span className="text-[10px] text-amber-400 font-mono">
-          {enabledCount} หน้า
+          {enabledCount} {isEn ? (enabledCount > 1 ? "slides" : "slide") : "หน้า"}
         </span>
       </div>
 
@@ -75,10 +103,12 @@ export function StudioCarouselPresets({
                   <div className="flex items-center gap-1.5">
                     <span className="text-base">{info.icon}</span>
                     <span className={`text-[11px] font-bold ${isActive && page.enabled ? "text-amber-300" : "text-slate-200"}`}>
-                      {info.label}
+                      {isEn ? info.labelEn : info.label}
                     </span>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-0.5 leading-tight">{info.description}</p>
+                  <p className="text-[9px] text-slate-400 mt-0.5 leading-tight">
+                    {isEn ? info.descriptionEn : info.description}
+                  </p>
                 </button>
                 <Switch
                   checked={page.enabled}
@@ -99,8 +129,11 @@ export function StudioCarouselPresets({
       </div>
 
       <p className="text-[9px] text-slate-500 text-center pt-1">
-        กดที่การ์ดเพื่อเปลี่ยน Preview • ใช้ Export ทั้งชุดเพื่อสร้าง ZIP ทุกหน้า
+        {isEn 
+          ? "Click cards to switch preview • Use Export Set to download all slides as ZIP"
+          : "กดที่การ์ดเพื่อเปลี่ยน Preview • ใช้ Export ทั้งชุดเพื่อสร้าง ZIP ทุกหน้า"}
       </p>
     </div>
   );
 }
+

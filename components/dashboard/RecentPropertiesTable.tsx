@@ -221,7 +221,11 @@ export function RecentPropertiesTable({
                             </TooltipTrigger>
                             <TooltipContent side="top" className="bg-amber-900 text-white border-amber-800">
                               <p className="font-bold">Requires AI Review</p>
-                              <p className="text-[10px] opacity-80">รายการนี้ต้องการการตรวจสอบความถูกต้องโดย AI</p>
+                              <p className="text-[10px] opacity-80">
+                                {isEn
+                                  ? "This property requires AI review and verification"
+                                  : "รายการนี้ต้องการการตรวจสอบความถูกต้องโดย AI"}
+                              </p>
                             </TooltipContent>
                           </Tooltip>
                         )}
@@ -236,7 +240,7 @@ export function RecentPropertiesTable({
                           return imageUrl ? (
                             <Dialog>
                               <DialogTrigger asChild>
-                                <button className="w-full h-full overflow-hidden relative" aria-label={`ดูรูปภาพ ${property.title}`}>
+                                <button className="w-full h-full overflow-hidden relative cursor-pointer" aria-label={isEn ? `View image of ${property.title}` : `ดูรูปภาพ ${property.title}`}>
                                   <Image
                                     src={imageUrl}
                                     alt={property.title || "Property"}
@@ -249,10 +253,10 @@ export function RecentPropertiesTable({
                               <DialogContent className="max-w-4xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
                                 <VisuallyHidden>
                                   <DialogTitle>
-                                    {property.title || "Property Image"}
+                                    {property.title || (isEn ? "Property Image" : "รูปภาพทรัพย์สิน")}
                                   </DialogTitle>
                                   <DialogDescription>
-                                    การแสดงผลรูปภาพทรัพย์สินแบบขยายใหญ่
+                                    {isEn ? "Expanded property image preview" : "การแสดงผลรูปภาพทรัพย์สินแบบขยายใหญ่"}
                                   </DialogDescription>
                                 </VisuallyHidden>
                                 <div className="relative w-full h-[80vh] flex items-center justify-center bg-transparent">
@@ -288,7 +292,7 @@ export function RecentPropertiesTable({
                             </div>
                           )}
                           <span className="line-clamp-2 overflow-hidden w-[300px]">
-                            {property.title || "ไม่ระบุชื่อ"}
+                            {property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ")}
                           </span>
                         </div>
                         <span className="text-xs text-slate-500 font-medium line-clamp-1 opacity-90">
@@ -301,7 +305,7 @@ export function RecentPropertiesTable({
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5 bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-100 shrink-0">
                             <Clock className="h-3 w-3" />
-                            {formatDistanceToNowThai(property.created_at)}
+                            {formatDistanceToNowThai(property.created_at, isEn)}
                           </span>
                           {property.tenant_name && (
                             <span
@@ -326,10 +330,10 @@ export function RecentPropertiesTable({
                       />
                       <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 shrink-0">
                         {property.listing_type === "SALE"
-                          ? "ขาย"
+                          ? (isEn ? "Sale" : "ขาย")
                           : property.listing_type === "RENT"
-                            ? "เช่า"
-                            : "ขาย/เช่า"}
+                            ? (isEn ? "Rent" : "เช่า")
+                            : (isEn ? "Sale/Rent" : "ขาย/เช่า")}
                       </span>
                     </div>
                   </TableCell>
@@ -354,10 +358,10 @@ export function RecentPropertiesTable({
                       </div>
                       <div className="text-[11px] font-medium text-slate-400 flex gap-2">
                         {property.bedrooms ? (
-                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bedrooms}น</span>
+                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bedrooms} {isEn ? "Bed" : "น"}</span>
                         ) : null}
                         {property.bathrooms ? (
-                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bathrooms}น้ำ</span>
+                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bathrooms} {isEn ? "Bath" : "น้ำ"}</span>
                         ) : null}
                       </div>
                     </div>
@@ -382,7 +386,7 @@ export function RecentPropertiesTable({
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="right">
-                          <p className="text-xs">จำนวนลีดที่สนใจทรัพย์นี้</p>
+                          <p className="text-xs">{isEn ? "Number of interested leads" : "จำนวนลีดที่สนใจทรัพย์นี้"}</p>
                         </TooltipContent>
                       </Tooltip>
 
@@ -394,17 +398,17 @@ export function RecentPropertiesTable({
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="right">
-                          <p className="text-xs">จำนวนการเข้าชมทั้งหมด</p>
+                          <p className="text-xs">{isEn ? "Total views" : "จำนวนการเข้าชมทั้งหมด"}</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
                   </TableCell>
                   <TableCell className="px-2 py-4">
                     <div
-                      className="text-xs font-medium text-slate-500 line-clamp-1 max-w-[80px] truncate"
-                      title={new Date(property.updated_at).toLocaleString("th-TH")}
+                      className="text-xs font-medium text-slate-500 whitespace-nowrap"
+                      title={new Date(property.updated_at).toLocaleString(isEn ? "en-US" : "th-TH")}
                     >
-                      {formatDistanceToNowThai(property.updated_at)}
+                      {formatDistanceToNowThai(property.updated_at, isEn)}
                     </div>
                   </TableCell>
                   <TableCell className="px-2 py-4">
@@ -439,8 +443,8 @@ export function RecentPropertiesTable({
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label="ดูรายละเอียด"
-                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                        aria-label={isEn ? "View Details" : "ดูรายละเอียด"}
+                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
                         onClick={() => {
                           setNavigatingId(`eye-${property.id}`);
                           router.push(`/protected/properties/${property.id}`);
@@ -457,8 +461,8 @@ export function RecentPropertiesTable({
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label="แก้ไข"
-                        className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-colors"
+                        aria-label={isEn ? "Edit" : "แก้ไข"}
+                        className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-colors cursor-pointer"
                         onClick={() => {
                           setNavigatingId(`edit-${property.id}`);
                           router.push(
@@ -580,7 +584,7 @@ export function RecentPropertiesTable({
                       }}
                       className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer relative"
                     >
-                      {property.title || "ไม่ระบุชื่อ"}
+                      {property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ")}
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-slate-50 w-fit px-2 py-1 rounded-md">
                       <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
@@ -636,7 +640,7 @@ export function RecentPropertiesTable({
                     <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 mt-auto">
                       <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5">
                         <Clock className="h-3 w-3" />
-                        {formatDistanceToNowThai(property.updated_at)}
+                        {formatDistanceToNowThai(property.updated_at, isEn)}
                       </span>
                       {showBranch && (
                         <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100 truncate max-w-[100px]">

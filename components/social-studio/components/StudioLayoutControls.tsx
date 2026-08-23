@@ -19,6 +19,7 @@ import type {
   FontSizeScale,
   PhotoFilter,
 } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StudioLayoutControlsProps {
   layout: StudioLayout;
@@ -73,6 +74,8 @@ export function StudioLayoutControls({
   gridLineColor,
   setGridLineColor,
 }: StudioLayoutControlsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const getSlotCount = () => {
     switch (layout) {
       case "split_two":
@@ -98,28 +101,28 @@ export function StudioLayoutControls({
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <LayoutGrid className="h-3.5 w-3.5 text-amber-400" />
-            สไตล์การจัดวางรูป (Layouts)
+            {isEn ? "Photo Layouts" : "สไตล์การจัดวางรูป (Layouts)"}
           </Label>
           {imageUrls.length > 1 && (
             <button
               type="button"
               onClick={onShuffleImages}
               className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer"
-              title="สุ่มจัดเรียงรูปภาพ"
+              title={isEn ? "Shuffle layout photos" : "สุ่มจัดเรียงรูปภาพ"}
             >
               <Shuffle className="h-3 w-3" />
-              สลับรูป (Shuffle)
+              {isEn ? "Shuffle Photos" : "สลับรูป (Shuffle)"}
             </button>
           )}
         </div>
         <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
           {[
-            { id: "single", label: "1 รูปใหญ่", sub: "1 Hero" },
-            { id: "split_two", label: "2 รูปคู่", sub: "Split 2" },
-            { id: "hero_plus_two", label: "3 รูปฮิต", sub: "1 Hero+2" },
-            { id: "four_grid", label: "4 รูปกริด", sub: "2x2 Grid" },
-            { id: "five_grid", label: "5 รูปกริด", sub: "1 Hero+4" },
-            { id: "six_grid", label: "6 รูปกริด", sub: "2x3 (3 แถว)" },
+            { id: "single", label: isEn ? "1 Hero" : "1 รูปใหญ่", sub: "1 Hero" },
+            { id: "split_two", label: isEn ? "2 Split" : "2 รูปคู่", sub: "Split 2" },
+            { id: "hero_plus_two", label: isEn ? "3 Photos" : "3 รูปฮิต", sub: "1 Hero+2" },
+            { id: "four_grid", label: isEn ? "4 Grid" : "4 รูปกริด", sub: "2x2 Grid" },
+            { id: "five_grid", label: isEn ? "5 Grid" : "5 รูปกริด", sub: "1 Hero+4" },
+            { id: "six_grid", label: isEn ? "6 Grid" : "6 รูปกริด", sub: isEn ? "2x3 (3 rows)" : "2x3 (3 แถว)" },
           ].map((item) => (
             <button
               key={item.id}
@@ -147,12 +150,12 @@ export function StudioLayoutControls({
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <ImageIcon className="h-3.5 w-3.5 text-amber-400" />
             {getSlotCount() > 1
-              ? `จัดการรูปแยกช่อง (${getSlotCount()} รูป)`
-              : `เลือกรูปภาพหลัก (${imageUrls.length} รูป)`}
+              ? (isEn ? `Manage Slots (${getSlotCount()} photos)` : `จัดการรูปแยกช่อง (${getSlotCount()} รูป)`)
+              : (isEn ? `Choose Primary Photo (${imageUrls.length} photos)` : `เลือกรูปภาพหลัก (${imageUrls.length} รูป)`)}
           </Label>
           {getSlotCount() > 1 && (
             <span className="text-[10px] text-amber-400/80">
-              กำลังเลือก: ช่องที่ {activeSlot + 1}
+              {isEn ? `Selecting: Slot ${activeSlot + 1}` : `กำลังเลือก: ช่องที่ ${activeSlot + 1}`}
             </span>
           )}
         </div>
@@ -171,7 +174,7 @@ export function StudioLayoutControls({
                 }`}
               >
                 <span className="w-2 h-2 rounded-full bg-current opacity-60" />
-                <span>ช่อง {slotIdx + 1}</span>
+                <span>{isEn ? `Slot ${slotIdx + 1}` : `ช่อง ${slotIdx + 1}`}</span>
               </button>
             ))}
           </div>
@@ -196,7 +199,7 @@ export function StudioLayoutControls({
                 
                 {/* Photo Index Badge */}
                 <div className="absolute top-1.5 left-1.5 bg-slate-950/85 backdrop-blur-md text-[10px] font-extrabold text-amber-300 px-2 py-0.5 rounded-lg border border-slate-700/60 shadow-md">
-                  {idx === 0 ? "⭐ ปกหลัก" : `#${idx + 1}`}
+                  {idx === 0 ? (isEn ? "⭐ Primary" : "⭐ ปกหลัก") : `#${idx + 1}`}
                 </div>
 
                 {isSelected && (
@@ -204,7 +207,7 @@ export function StudioLayoutControls({
                     <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/40">
                       <Check className="h-5 w-5 stroke-[3]" />
                     </div>
-                    <span className="text-[10px] font-black text-white drop-shadow-lg tracking-wider uppercase">เลือกแล้ว</span>
+                    <span className="text-[10px] font-black text-white drop-shadow-lg tracking-wider uppercase">{isEn ? "Selected" : "เลือกแล้ว"}</span>
                   </div>
                 )}
               </button>
@@ -218,7 +221,7 @@ export function StudioLayoutControls({
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
             <Smartphone className="h-3.5 w-3.5 text-amber-400" />
-            สัดส่วนภาพ
+            {isEn ? "Aspect Ratio" : "สัดส่วนภาพ"}
           </Label>
           <div className="grid grid-cols-3 gap-1">
             {(["9:16", "1:1", "4:5"] as AspectRatio[]).map((r) => (
@@ -241,7 +244,7 @@ export function StudioLayoutControls({
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
             <Palette className="h-3.5 w-3.5 text-amber-400" />
-            ธีมกราฟิก
+            {isEn ? "Graphic Theme" : "ธีมกราฟิก"}
           </Label>
           <div className="grid grid-cols-4 gap-1">
             {[
@@ -257,7 +260,7 @@ export function StudioLayoutControls({
                 key={t.id}
                 type="button"
                 onClick={() => setTheme(t.id as StudioTheme)}
-                className={`py-1.5 rounded-lg border text-xs font-medium transition-all text-center cursor-pointer ${
+                className={`py-1.5 rounded-lg border text-[11px] font-medium transition-all text-center cursor-pointer ${
                   theme === t.id
                     ? "bg-amber-500/20 border-amber-500 text-amber-300 font-bold"
                     : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
@@ -288,7 +291,7 @@ export function StudioLayoutControls({
           <div className="flex items-center justify-between">
             <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
               <span className="text-amber-400 font-bold font-serif text-sm">Aa</span>
-              ขนาดตัวอักษร
+              {isEn ? "Font Size" : "ขนาดตัวอักษร"}
             </Label>
             <span className="text-[10px] text-amber-400 font-mono">
               {fontSizeScale === "sm" ? "85%" : fontSizeScale === "lg" ? "116%" : fontSizeScale === "xl" ? "130%" : "100%"}
@@ -296,10 +299,10 @@ export function StudioLayoutControls({
           </div>
           <div className="grid grid-cols-4 gap-1">
             {[
-              { id: "sm", label: "เล็ก", sub: "85%" },
-              { id: "md", label: "ปกติ", sub: "100%" },
-              { id: "lg", label: "ใหญ่", sub: "116%" },
-              { id: "xl", label: "ยักษ์", sub: "130%" },
+              { id: "sm", label: isEn ? "Small" : "เล็ก", sub: "85%" },
+              { id: "md", label: isEn ? "Normal" : "ปกติ", sub: "100%" },
+              { id: "lg", label: isEn ? "Large" : "ใหญ่", sub: "116%" },
+              { id: "xl", label: isEn ? "XL" : "ยักษ์", sub: "130%" },
             ].map((f) => (
               <button
                 key={f.id}
@@ -322,18 +325,24 @@ export function StudioLayoutControls({
           <div className="flex items-center justify-between">
             <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
               <Sliders className="h-3.5 w-3.5 text-amber-400" />
-              ตำแหน่ง / แยกส่วน
+              {isEn ? "Content Position" : "ตำแหน่ง / แยกส่วน"}
             </Label>
             <span className="text-[10px] text-amber-400 font-medium">
-              {contentPosition === "bottom" ? "📌 ชิดล่าง" : contentPosition === "center" ? "📍 กลางจอ" : contentPosition === "top" ? "🔝 ด้านบน" : "✨ แยกส่วน"}
+              {contentPosition === "bottom"
+                ? (isEn ? "📌 Bottom" : "📌 ชิดล่าง")
+                : contentPosition === "center"
+                ? (isEn ? "📍 Center" : "📍 กลางจอ")
+                : contentPosition === "top"
+                ? (isEn ? "🔝 Top" : "🔝 ด้านบน")
+                : (isEn ? "✨ Split" : "✨ แยกส่วน")}
             </span>
           </div>
           <div className="grid grid-cols-4 gap-1">
             {[
-              { id: "bottom", label: "📌 ล่าง", sub: "มาตรฐาน" },
-              { id: "center", label: "📍 กลาง", sub: "เด่นกลาง" },
-              { id: "top", label: "🔝 บน", sub: "ชิดบน" },
-              { id: "split_hero", label: "✨ แยก", sub: "กลาง+ล่าง" },
+              { id: "bottom", label: isEn ? "📌 Bottom" : "📌 ล่าง", sub: isEn ? "Standard" : "มาตรฐาน" },
+              { id: "center", label: isEn ? "📍 Center" : "📍 กลาง", sub: isEn ? "Centered" : "เด่นกลาง" },
+              { id: "top", label: isEn ? "🔝 Top" : "🔝 บน", sub: isEn ? "Header" : "ชิดบน" },
+              { id: "split_hero", label: isEn ? "✨ Split" : "✨ แยก", sub: isEn ? "Mid+Bot" : "กลาง+ล่าง" },
             ].map((p) => (
               <button
                 key={p.id}
@@ -357,11 +366,11 @@ export function StudioLayoutControls({
       <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2">
         <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
           <ImageIcon className="h-3.5 w-3.5 text-amber-400" />
-          ฟิลเตอร์ภาพถ่าย (Photo Filter)
+          {isEn ? "Photo Filters" : "ฟิลเตอร์ภาพถ่าย (Photo Filter)"}
         </Label>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1">
           {[
-            { id: "none", label: "❌ ไม่ใส่" },
+            { id: "none", label: isEn ? "❌ None" : "❌ ไม่ใส่" },
             { id: "bright", label: "✨ Bright" },
             { id: "dark_moody", label: "🌙 Dark" },
             { id: "warm_gold", label: "☀️ Warm" },
@@ -384,15 +393,15 @@ export function StudioLayoutControls({
         </div>
       </div>
 
-      {/* 6. Grid Line Border Controls (เส้นแบ่งรูปภาพ) */}
+      {/* 6. Grid Line Border Controls */}
       <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Sliders className="h-3.5 w-3.5 text-amber-400" />
-            เส้นแบ่งกริดรูปภาพ (Grid Border Lines)
+            {isEn ? "Grid Border Lines" : "เส้นแบ่งกริดรูปภาพ (Grid Border Lines)"}
           </Label>
           <span className="text-[10px] text-amber-400 font-mono font-bold">
-            {gridLineWidth === 0 ? "ซ่อนเส้นแบ่ง" : `${gridLineWidth} px`}
+            {gridLineWidth === 0 ? (isEn ? "None" : "ซ่อนเส้นแบ่ง") : `${gridLineWidth} px`}
           </span>
         </div>
 
@@ -400,11 +409,11 @@ export function StudioLayoutControls({
           {/* Preset Buttons */}
           <div className="grid grid-cols-5 gap-1">
             {[
-              { label: "ไม่มี", value: 0 },
-              { label: "บาง", value: 2 },
-              { label: "กลาง", value: 4 },
-              { label: "หนา ⭐", value: 8 },
-              { label: "หนามาก", value: 16 },
+              { label: isEn ? "None" : "ไม่มี", value: 0 },
+              { label: isEn ? "Thin" : "บาง", value: 2 },
+              { label: isEn ? "Medium" : "กลาง", value: 4 },
+              { label: isEn ? "Thick ⭐" : "หนา ⭐", value: 8 },
+              { label: isEn ? "Max" : "หนามาก", value: 16 },
             ].map((item) => (
               <button
                 key={item.value}
@@ -434,14 +443,16 @@ export function StudioLayoutControls({
 
           {/* Color Chooser */}
           <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
-            <span className="text-[11px] text-slate-400 font-medium">🎨 สีเส้นแบ่ง:</span>
+            <span className="text-[11px] text-slate-400 font-medium">
+              {isEn ? "🎨 Border Color:" : "🎨 สีเส้นแบ่ง:"}
+            </span>
             <div className="flex items-center gap-1.5">
               {[
-                { name: "ดำ", hex: "#000000" },
-                { name: "เทาเข้ม", hex: "#1E293B" },
-                { name: "ขาว", hex: "#FFFFFF" },
-                { name: "ทอง", hex: "#F59E0B" },
-                { name: "ส้ม", hex: "#F97316" },
+                { name: isEn ? "Black" : "ดำ", hex: "#000000" },
+                { name: isEn ? "Dark Gray" : "เทาเข้ม", hex: "#1E293B" },
+                { name: isEn ? "White" : "ขาว", hex: "#FFFFFF" },
+                { name: isEn ? "Gold" : "ทอง", hex: "#F59E0B" },
+                { name: isEn ? "Orange" : "ส้ม", hex: "#F97316" },
               ].map((c) => (
                 <button
                   key={c.hex}
@@ -461,7 +472,7 @@ export function StudioLayoutControls({
                 value={gridLineColor}
                 onChange={(e) => setGridLineColor(e.target.value)}
                 className="w-6 h-6 rounded-md bg-transparent border border-slate-700 cursor-pointer p-0"
-                title="เลือกสี Custom"
+                title={isEn ? "Select custom color" : "เลือกสี Custom"}
               />
             </div>
           </div>

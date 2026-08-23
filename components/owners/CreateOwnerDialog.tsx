@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { OwnerForm } from "@/features/owners/OwnerForm";
 import { UserPlus } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function CreateOwnerDialog() {
   const [open, setOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   return (
     <ResponsiveDialog
@@ -18,14 +21,14 @@ export function CreateOwnerDialog() {
         if (!val) setIsDirty(false);
       }}
       confirmOnClose={isDirty}
-      title="เพิ่มเจ้าของทรัพย์ใหม่"
+      title={isEn ? "Add New Owner" : "เพิ่มเจ้าของทรัพย์ใหม่"}
       trigger={
         <Button
           size="lg"
-          className="bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold h-12 rounded-2xl border border-slate-100"
+          className="bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold h-12 rounded-2xl border border-slate-100 cursor-pointer"
         >
           <UserPlus className="h-5 w-5 mr-2 text-indigo-600" />
-          เพิ่มเจ้าของ
+          {isEn ? "Add Owner" : "เพิ่มเจ้าของ"}
         </Button>
       }
     >
@@ -41,3 +44,4 @@ export function CreateOwnerDialog() {
     </ResponsiveDialog>
   );
 }
+

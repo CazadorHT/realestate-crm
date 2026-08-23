@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, Download, Loader2 } from "lucide-react";
+import { FileSpreadsheet, Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { PropertyAnalytics, AreaAnalytics } from "@/features/dashboard/queries";
 import { toast } from "sonner";
-import { LISTING_TYPE_LABELS } from "@/features/properties/labels";
+import { listingTypeLabel, propertyTypeLabel, ListingType, PropertyType } from "@/features/properties/labels";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ExportButtonProps {
   topProperties: PropertyAnalytics[];
@@ -15,6 +16,9 @@ interface ExportButtonProps {
 }
 
 export function ExportButton({ topProperties, topAreas, totalViews }: ExportButtonProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
@@ -22,23 +26,23 @@ export function ExportButton({ topProperties, topAreas, totalViews }: ExportButt
     try {
       // 1. Prepare Property Data
       const propertyData = topProperties.map((p, index) => ({
-         "ลำดับ": index + 1,
-         "ชื่อทรัพย์สิน": p.title,
+         [isEn ? "No." : "ลำดับ"]: index + 1,
+         [isEn ? "Property Title" : "ชื่อทรัพย์สิน"]: p.title,
          "ID": p.id.slice(0, 8),
-         "ประเภทดีล": LISTING_TYPE_LABELS[p.listing_type as keyof typeof LISTING_TYPE_LABELS] || p.listing_type,
-         "ประเภททรัพย์": p.property_type || "-",
-         "ราคาขาย": p.price?.toLocaleString() || "-",
-         "ราคาเช่า": p.rental_price?.toLocaleString() || "-",
-         "ยอดเข้าชม (Views)": p.view_count,
-         "ลิงก์": `${window.location.origin}/protected/properties/${p.id}`
+         [isEn ? "Deal Type" : "ประเภทดีล"]: listingTypeLabel(p.listing_type as ListingType, isEn ? "en" : "th"),
+         [isEn ? "Property Type" : "ประเภททรัพย์"]: p.property_type ? propertyTypeLabel(p.property_type as PropertyType, isEn ? "en" : "th") : "-",
+         [isEn ? "Sale Price" : "ราคาขาย"]: p.price?.toLocaleString() || "-",
+         [isEn ? "Rent Price" : "ราคาเช่า"]: p.rental_price?.toLocaleString() || "-",
+         [isEn ? "Views" : "ยอดเข้าชม (Views)"]: p.view_count,
+         [isEn ? "Link" : "ลิงก์"]: `${window.location.origin}/protected/properties/${p.id}`
       }));
 
       // 2. Prepare Area Data
       const areaData = topAreas.map((a, index) => ({
-         "ลำดับ": index + 1,
-         "ชื่อย่าน/พื้นที่": a.name,
-         "ยอดเข้าชม (Views)": a.view_count,
-         "จำนวน Leads ที่สนใจ": a.leads_count,
+         [isEn ? "No." : "ลำดับ"]: index + 1,
+         [isEn ? "Area/Location" : "ชื่อย่าน/พื้นที่"]: a.name,
+         [isEn ? "Views" : "ยอดเข้าชม (Views)"]: a.view_count,
+         [isEn ? "Leads Count" : "จำนวน Leads ที่สนใจ"]: a.leads_count,
          "Market Interest Share": `${Math.round((a.view_count / (totalViews || 1)) * 100)}%`
       }));
 
@@ -65,15 +69,14 @@ export function ExportButton({ topProperties, topAreas, totalViews }: ExportButt
       XLSX.utils.book_append_sheet(wb, wsAreas, "Area Analysis");
 
       // 7. Write and Download
-      const dateStr = new Date().toLocaleDateString("th-TH").replace(/\//g, "-");
-      XLSX.writeFile(wb, `V-Link-Analytics-${dateStr}.xlsx`);
+      const dateStr = new Date().toLocaleDateString(isEn ? "en-US" : "th-TH").replace(/\//g, "-");
+      XLSX.writeFile(wb, `Analytics-Report-${dateStr}.xlsx`);
       
-      toast.success("ส่งออกข้อมูลสำเร็จแล้ว", {
-        description: "เตรียมไฟล์ Excel พร้อมให้คุณดาวน์โหลด",
+      toast.success(isEn ? "Export completed successfully" : "ส่งออกข้อมูลสำเร็จแล้ว", {
+        description: isEn ? "Excel file is ready and downloading." : "เตรียมไฟล์ Excel พร้อมให้คุณดาวน์โหลด",
       });
-    } catch (error) {
-      console.error("Export Error:", error);
-      toast.error("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
+    } catch {
+      toast.error(isEn ? "Failed to export analytics data" : "เกิดข้อผิดพลาดในการส่งออกข้อมูล");
     } finally {
       setIsExporting(false);
     }
@@ -92,7 +95,8 @@ export function ExportButton({ topProperties, topAreas, totalViews }: ExportButt
       ) : (
         <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
       )}
-      <span className="hidden md:block">ส่งออก Excel</span>
+      <span className="hidden md:block">{isEn ? "Export Excel" : "ส่งออก Excel"}</span>
     </Button>
   );
 }
+

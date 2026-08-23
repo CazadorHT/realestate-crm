@@ -168,27 +168,27 @@ export function StatsOverview({
     if (context === "staff") {
       // searchParams agentId might be what's active
       const activeAgentId = searchParams.get("agentId") || "all";
-      if (activeAgentId === "all") return "พนักงานทั้งหมด";
+      if (activeAgentId === "all") return isEn ? " - All Staff" : " - พนักงานทั้งหมด";
       const agent = agents.find(a => a.id === activeAgentId);
-      return agent ? `พนักงาน: ${agent.name}` : "พนักงาน";
+      return agent ? ` - ${isEn ? "Staff: " : "พนักงาน: "}${agent.name}` : (isEn ? " - Staff" : " - พนักงาน");
     }
     
     if (context === "team") {
-      if (initialTeamId === "all") return "ทุกทีม";
+      if (initialTeamId === "all") return isEn ? " - All Teams" : " - ทุกทีม";
       const team = teams.find(t => t.id === initialTeamId);
-      return team ? `ทีม: ${team.name}` : "รายทีม";
+      return team ? ` - ${isEn ? "Team: " : "ทีม: "}${team.name}` : (isEn ? " - Team" : " - รายทีม");
     }
     
     if (context === "branch") {
-      if (initialBranchId === "all") return "ทุกสาขา";
+      if (initialBranchId === "all") return isEn ? " - All Branches" : " - ทุกสาขา";
       const branch = branches.find(b => b.id === initialBranchId);
-      return branch ? `สาขา: ${branch.name}` : "รายสาขา";
+      return branch ? ` - ${isEn ? "Branch: " : "สาขา: "}${branch.name}` : (isEn ? " - Branch" : " - รายสาขา");
     }
     
-    return "ภาพรวมบริษัท";
+    return isEn ? " - Company Overview" : " - ภาพรวมบริษัท";
   };
 
-  const getTitleSuffix = () => ` (${timeRangeLabels[timeRange] || "เดือนนี้"})`;
+  const getTitleSuffix = () => ` (${timeRangeLabels[timeRange] || (isEn ? "This Month" : "เดือนนี้")})`;
 
   const renderValue = (val: number, compVal: number | undefined, isCurrency = false) => {
     const displayVal = isCurrency ? `฿${val.toLocaleString()}` : val.toLocaleString();
@@ -208,12 +208,16 @@ export function StatsOverview({
           <TooltipTrigger asChild>
             <div className={cn("flex items-center gap-1.5 px-2 py-0.5 rounded-lg w-fit text-[11px] font-bold cursor-help", diffColor)}>
               {diff >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-              {diffText} <span className="opacity-60 font-medium ml-1">เทียบเป้า</span>
+              {diffText} <span className="opacity-60 font-medium ml-1">{isEn ? "vs Target" : "เทียบเป้า"}</span>
             </div>
           </TooltipTrigger>
           <TooltipContent side="right" className="bg-slate-900 text-white border-slate-800">
-            <p className="font-bold">เปรียบเทียบผลงาน</p>
-            <p className="text-[10px] opacity-70">เทียบกับ {compareId === "ALL" ? "ค่าเฉลี่ยบริษัท" : "คู่เทียบที่เลือก"}</p>
+            <p className="font-bold">{isEn ? "Performance Benchmark" : "เปรียบเทียบผลงาน"}</p>
+            <p className="text-[10px] opacity-70">
+              {isEn
+                ? `Compared to ${compareId === "ALL" ? "Company Average" : "Selected benchmark"}`
+                : `เทียบกับ ${compareId === "ALL" ? "ค่าเฉลี่ยบริษัท" : "คู่เทียบที่เลือก"}`}
+            </p>
           </TooltipContent>
         </Tooltip>
       </div>
@@ -268,7 +272,9 @@ export function StatsOverview({
         <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-50 flex items-center justify-center transition-all duration-300">
           <div className="bg-white/90 p-4 rounded-2xl shadow-xl border border-indigo-50 flex items-center gap-3 animate-in zoom-in-95 duration-200">
              <Loader2 className="h-5 w-5 text-indigo-600 animate-spin" />
-             <span className="text-xs font-bold text-slate-600 tracking-wide uppercase">กำลังอัปเดตสถิติ...</span>
+             <span className="text-xs font-bold text-slate-600 tracking-wide uppercase">
+               {isEn ? "Updating stats..." : "กำลังอัปเดตสถิติ..."}
+             </span>
           </div>
         </div>
       )}
@@ -283,15 +289,25 @@ export function StatsOverview({
           {context === "team" && teams.length === 0 && (
             <Alert className="rounded-2xl border-amber-200 bg-amber-50/80 backdrop-blur-sm shadow-sm animate-in fade-in slide-in-from-top-2">
               <AlertCircle className="h-5 w-5 text-amber-600" />
-              <AlertTitle className="text-sm font-bold text-amber-800">ยังไม่ได้สร้างทีม</AlertTitle>
-              <AlertDescription className="text-xs text-amber-700">กรุณาไปที่หน้าตั้งค่าเพื่อสร้างทีมและมอบหมายพนักงาน</AlertDescription>
+              <AlertTitle className="text-sm font-bold text-amber-800">
+                {isEn ? "No teams created yet" : "ยังไม่ได้สร้างทีม"}
+              </AlertTitle>
+              <AlertDescription className="text-xs text-amber-700">
+                {isEn ? "Please go to Settings to create teams and assign members." : "กรุณาไปที่หน้าตั้งค่าเพื่อสร้างทีมและมอบหมายพนักงาน"}
+              </AlertDescription>
             </Alert>
           )}
           {context === "branch" && branches.length === 0 && (
             <Alert className="rounded-2xl border-amber-200 bg-amber-50/80 backdrop-blur-sm shadow-sm animate-in fade-in slide-in-from-top-2">
               <AlertCircle className="h-5 w-5 text-amber-600" />
-              <AlertTitle className="text-sm font-bold text-amber-800">ยังไม่ได้เพิ่มสาขา</AlertTitle>
-              <AlertDescription className="text-xs text-amber-700">คุณมีเพียงสาขาเดียวในขณะนี้ ไม่สามารถดูข้อมูลเปรียบเทียบระหว่างสาขาได้</AlertDescription>
+              <AlertTitle className="text-sm font-bold text-amber-800">
+                {isEn ? "No additional branches" : "ยังไม่ได้เพิ่มสาขา"}
+              </AlertTitle>
+              <AlertDescription className="text-xs text-amber-700">
+                {isEn
+                  ? "You currently have a single branch. Cross-branch comparison is unavailable."
+                  : "คุณมีเพียงสาขาเดียวในขณะนี้ ไม่สามารถดูข้อมูลเปรียบเทียบระหว่างสาขาได้"}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -301,8 +317,14 @@ export function StatsOverview({
       {!loading && stats.revenueThisMonth === 0 && stats.leadsThisMonth === 0 && stats.dealsWon === 0 && (
         <Alert className="rounded-2xl border-blue-200 bg-blue-50/80 backdrop-blur-sm shadow-sm animate-in fade-in slide-in-from-top-2 relative z-10 mb-4">
           <AlertCircle className="h-5 w-5 text-blue-600" />
-          <AlertTitle className="text-sm font-bold text-blue-800">ยังไม่มีข้อมูลสถิติในช่วงเวลานี้</AlertTitle>
-          <AlertDescription className="text-xs text-blue-700">ระบบตรวจสอบพบว่ายังไม่มีธุรกรรม ยอดขาย หรือลีดใหม่เกิดขึ้นในช่วงเวลาหรือตัวกรองที่คุณเลือก</AlertDescription>
+          <AlertTitle className="text-sm font-bold text-blue-800">
+            {isEn ? "No statistics recorded for this period" : "ยังไม่มีข้อมูลสถิติในช่วงเวลานี้"}
+          </AlertTitle>
+          <AlertDescription className="text-xs text-blue-700">
+            {isEn
+              ? "No transactions, sales, or new leads were found for the selected time frame or filter."
+              : "ระบบตรวจสอบพบว่ายังไม่มีธุรกรรม ยอดขาย หรือลีดใหม่เกิดขึ้นในช่วงเวลาหรือตัวกรองที่คุณเลือก"}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -361,7 +383,9 @@ export function StatsOverview({
                     </TooltipTrigger>
                     <TooltipContent side="left" className="bg-slate-900 text-white border-slate-800">
                       <p className="font-bold">Trend Analysis</p>
-                      <p className="text-[10px] opacity-70">เทียบกับช่วงเวลาเดียวกันในรอบก่อนหน้า</p>
+                      <p className="text-[10px] opacity-70">
+                        {isEn ? "Compared to the previous period" : "เทียบกับช่วงเวลาเดียวกันในรอบก่อนหน้า"}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 )}

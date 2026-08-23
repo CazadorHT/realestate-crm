@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format, differenceInMonths } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   BadgeCent,
@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealFinancialsProps {
   deal: Deal;
@@ -54,6 +55,9 @@ export function DealFinancials({
   invoices = [],
   agents = [],
 }: DealFinancialsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [commissions, setCommissions] = useState(initialCommissions);
   const [calculating, setCalculating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -199,15 +203,15 @@ export function DealFinancials({
       })));
 
       if (res.success) {
-        toast.success("บันทึกการจัดสรรคอมมิชชั่นเรียบร้อยแล้ว ✨");
+        toast.success(isEn ? "Commission split saved successfully ✨" : "บันทึกการจัดสรรคอมมิชชั่นเรียบร้อยแล้ว ✨");
         setCommissions(editList);
         setIsEditing(false);
         router.refresh();
       } else {
-        toast.error(res.message || "เกิดข้อผิดพลาดในการบันทึก");
+        toast.error(res.message || (isEn ? "Error saving commission split" : "เกิดข้อผิดพลาดในการบันทึก"));
       }
     } catch (err: any) {
-      toast.error(err.message || "เกิดข้อผิดพลาดในการบันทึก");
+      toast.error(err.message || (isEn ? "Error saving commission split" : "เกิดข้อผิดพลาดในการบันทึก"));
     } finally {
       setSaving(false);
     }
@@ -215,27 +219,27 @@ export function DealFinancials({
 
   const handleCalculate = async () => {
     if (!deal?.id) {
-      toast.error("รหัสดีลไม่ถูกต้อง (Invalid Deal ID)");
+      toast.error(isEn ? "Invalid Deal ID" : "รหัสดีลไม่ถูกต้อง (Invalid Deal ID)");
       return;
     }
     if ((deal.commission_total || 0) <= 0) {
-      toast.error("กรุณาระบุยอดคอมมิชชั่นรวมก่อนคำนวณส่วนแบ่ง");
+      toast.error(isEn ? "Please specify gross commission before calculating splits" : "กรุณาระบุยอดคอมมิชชั่นรวมก่อนคำนวณส่วนแบ่ง");
       return;
     }
-    const processId = startProcess("กำลังคำนวณส่วนแบ่งคอมมิชชั่น", {
+    const processId = startProcess(isEn ? "Calculating commission splits" : "กำลังคำนวณส่วนแบ่งคอมมิชชั่น", {
       type: "FINANCIAL_CALC"
     });
     setCalculating(true);
     try {
       const res = await calculateAndSaveCommissionsAction(deal.id);
       if (res.success) {
-        finishProcess(processId, "SUCCESS", "คำนวณสัดส่วนคอมมิชชั่นเรียบร้อยแล้ว ✨");
+        finishProcess(processId, "SUCCESS", isEn ? "Commission splits calculated successfully ✨" : "คำนวณสัดส่วนคอมมิชชั่นเรียบร้อยแล้ว ✨");
         handleSuccessFeedback();
       } else {
-        finishProcess(processId, "ERROR", res.message || "เกิดข้อผิดพลาดในการคำนวณ");
+        finishProcess(processId, "ERROR", res.message || (isEn ? "Calculation failed" : "เกิดข้อผิดพลาดในการคำนวณ"));
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+      const msg = err instanceof Error ? err.message : (isEn ? "Connection error" : "เกิดข้อผิดพลาดในการเชื่อมต่อ");
       finishProcess(processId, "ERROR", msg);
     } finally {
       setCalculating(false);
@@ -244,10 +248,10 @@ export function DealFinancials({
 
   const handleExportPdf = async (commissionId: string) => {
     if (!commissionId) {
-      toast.error("รหัสคอมมิชชั่นไม่ถูกต้อง (Invalid Commission ID)");
+      toast.error(isEn ? "Invalid Commission ID" : "รหัสคอมมิชชั่นไม่ถูกต้อง (Invalid Commission ID)");
       return;
     }
-    const processId = startProcess("กำลังเตรียมไฟล์ PDF ค่าคอมมิชชั่น", {
+    const processId = startProcess(isEn ? "Preparing commission PDF statement" : "กำลังเตรียมไฟล์ PDF ค่าคอมมิชชั่น", {
       type: "EXPORT"
     });
     try {
@@ -257,33 +261,33 @@ export function DealFinancials({
         link.href = `data:application/pdf;base64,${res.data}`;
         link.download = res.filename || "commission-statement.pdf";
         link.click();
-        finishProcess(processId, "SUCCESS", "ดาวน์โหลด PDF สำเร็จ ✨");
+        finishProcess(processId, "SUCCESS", isEn ? "PDF downloaded successfully ✨" : "ดาวน์โหลด PDF สำเร็จ ✨");
       } else {
-        finishProcess(processId, "ERROR", res.message || "ล้มเหลวในการสร้าง PDF");
+        finishProcess(processId, "ERROR", res.message || (isEn ? "Failed to generate PDF" : "ล้มเหลวในการสร้าง PDF"));
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการดาวน์โหลด";
+      const msg = err instanceof Error ? err.message : (isEn ? "Download failed" : "เกิดข้อผิดพลาดในการดาวน์โหลด");
       finishProcess(processId, "ERROR", msg);
     }
   };
 
   const handleSendLine = async (commissionId: string) => {
     if (!commissionId) {
-      toast.error("รหัสคอมมิชชั่นไม่ถูกต้อง (Invalid Commission ID)");
+      toast.error(isEn ? "Invalid Commission ID" : "รหัสคอมมิชชั่นไม่ถูกต้อง (Invalid Commission ID)");
       return;
     }
-    const processId = startProcess("กำลังส่งข้อมูลค่าคอมมิชชั่นไปยัง LINE", {
+    const processId = startProcess(isEn ? "Sending commission details to LINE" : "กำลังส่งข้อมูลค่าคอมมิชชั่นไปยัง LINE", {
       type: "SOCIAL_LINE",
     });
     try {
       const res = await sendCommissionToLineAction(commissionId);
       if (res.success) {
-        finishProcess(processId, "SUCCESS", "ส่งข้อมูลไปยัง LINE เรียบร้อยแล้ว ✨");
+        finishProcess(processId, "SUCCESS", isEn ? "Sent to LINE successfully ✨" : "ส่งข้อมูลไปยัง LINE เรียบร้อยแล้ว ✨");
       } else {
-        finishProcess(processId, "ERROR", res.message || "ล้มเหลวในการส่ง");
+        finishProcess(processId, "ERROR", res.message || (isEn ? "Failed to send to LINE" : "ล้มเหลวในการส่ง"));
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการส่ง";
+      const msg = err instanceof Error ? err.message : (isEn ? "Failed to send to LINE" : "เกิดข้อผิดพลาดในการส่ง");
       finishProcess(processId, "ERROR", msg);
     }
   };
@@ -327,7 +331,7 @@ export function DealFinancials({
           <div className="flex items-center gap-2 text-emerald-600 mb-2">
             <BadgeCent className="h-4 w-4" />
             <span className="text-[10px] font-bold uppercase tracking-wider">
-              ค่าคอมฯ (Base)
+              {isEn ? "Commission (Base)" : "ค่าคอมฯ (Base)"}
             </span>
           </div>
           <p className="text-2xl font-bold text-emerald-700">
@@ -354,7 +358,7 @@ export function DealFinancials({
             <div className="flex items-center gap-2 text-indigo-600">
               <FileText className="h-4 w-4" />
               <span className="text-[10px] font-bold uppercase tracking-wider">
-                ยอดเรียกเก็บรวม (Invoice Total)
+                {isEn ? "Total Billing (Invoice Total)" : "ยอดเรียกเก็บรวม (Invoice Total)"}
               </span>
             </div>
             {latestInvoice && (
@@ -374,12 +378,12 @@ export function DealFinancials({
             <div className="flex items-center gap-2 text-blue-600 mb-2">
               <Calendar className="h-4 w-4" />
               <span className="text-[10px] font-bold uppercase tracking-wider">
-                {isRent ? "เริ่มสัญญา" : "วันโอน"}
+                {isRent ? (isEn ? "Start Date" : "เริ่มสัญญา") : (isEn ? "Transfer Date" : "วันโอน")}
               </span>
             </div>
             <p className="text-lg font-bold text-slate-800">
               {format(new Date(deal.transaction_date), "d MMM yy", {
-                locale: th,
+                locale: isEn ? enUS : th,
               })}
             </p>
           </div>
@@ -391,12 +395,12 @@ export function DealFinancials({
             <div className="flex items-center gap-2 text-purple-600 mb-2">
               <Calendar className="h-4 w-4" />
               <span className="text-[10px] font-bold uppercase tracking-wider">
-                สิ้นสุดสัญญา
+                {isEn ? "End Date" : "สิ้นสุดสัญญา"}
               </span>
             </div>
             <p className="text-lg font-bold text-slate-800">
               {format(new Date(deal.transaction_end_date), "d MMM yy", {
-                locale: th,
+                locale: isEn ? enUS : th,
               })}
             </p>
           </div>
@@ -408,7 +412,7 @@ export function DealFinancials({
             <div className="flex items-center gap-2 text-amber-600 mb-2">
               <Calendar className="h-4 w-4" />
               <span className="text-[10px] font-bold uppercase tracking-wider">
-                ระยะเวลาสัญญา
+                {isEn ? "Contract Term" : "ระยะเวลาสัญญา"}
               </span>
             </div>
             <p className="text-lg font-bold text-slate-800">
@@ -420,11 +424,11 @@ export function DealFinancials({
                 const years = Math.floor(months / 12);
                 const remainingMonths = months % 12;
                 if (years > 0 && remainingMonths > 0) {
-                  return `${years} ปี ${remainingMonths} เดือน`;
+                  return isEn ? `${years} yr ${remainingMonths} mo` : `${years} ปี ${remainingMonths} เดือน`;
                 } else if (years > 0) {
-                  return `${years} ปี`;
+                  return isEn ? `${years} yr${years > 1 ? "s" : ""}` : `${years} ปี`;
                 } else {
-                  return `${months} เดือน`;
+                  return isEn ? `${months} mo` : `${months} เดือน`;
                 }
               })()}
             </p>
@@ -441,10 +445,10 @@ export function DealFinancials({
             </div>
             <div>
               <h3 className="font-bold text-slate-900">
-                การจัดสรรค่าคอมมิชชั่น
+                {isEn ? "Commission Allocation" : "การจัดสรรค่าคอมมิชชั่น"}
               </h3>
               <p className="text-xs text-slate-500">
-                Breakdown รายละเอียดการแบ่งส่วนแบ่งและภาษี
+                {isEn ? "Breakdown of splits, withholding tax and payouts" : "Breakdown รายละเอียดการแบ่งส่วนแบ่งและภาษี"}
               </p>
             </div>
           </div>
@@ -460,17 +464,17 @@ export function DealFinancials({
                     setIsEditing(false);
                   }}
                   disabled={saving}
-                  className="h-9 px-3 rounded-lg text-slate-600 border-slate-200"
+                  className="h-9 px-3 rounded-lg text-slate-600 border-slate-200 cursor-pointer"
                 >
-                  ยกเลิก
+                  {isEn ? "Cancel" : "ยกเลิก"}
                 </Button>
                 <Button
                   size="sm"
                   onClick={handleSaveEdits}
                   disabled={saving}
-                  className="h-9 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                  className="h-9 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm cursor-pointer"
                 >
-                  {saving ? "กำลังบันทึก..." : "บันทึก"}
+                  {saving ? (isEn ? "Saving..." : "กำลังบันทึก...") : (isEn ? "Save" : "บันทึก")}
                 </Button>
               </div>
             ) : (
@@ -482,9 +486,9 @@ export function DealFinancials({
                     setEditList(commissions);
                     setIsEditing(true);
                   }}
-                  className="h-9 px-3 rounded-lg text-slate-700 border-slate-200"
+                  className="h-9 px-3 rounded-lg text-slate-700 border-slate-200 cursor-pointer"
                 >
-                  แก้ไข
+                  {isEn ? "Edit" : "แก้ไข"}
                 </Button>
                 {commissions.length > 0 ? (
                   <Button
@@ -492,7 +496,7 @@ export function DealFinancials({
                     size="sm"
                     onClick={handleCalculate}
                     disabled={calculating}
-                    className="h-9 w-9 p-0 hover:bg-slate-200"
+                    className="h-9 w-9 p-0 hover:bg-slate-200 cursor-pointer"
                   >
                     <RefreshCw
                       className={`h-4 w-4 ${calculating ? "animate-spin" : ""}`}
@@ -503,12 +507,12 @@ export function DealFinancials({
                     size="sm"
                     onClick={handleCalculate}
                     disabled={calculating}
-                    className="gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-sm transition-all active:scale-95"
+                    className="gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-sm transition-all active:scale-95 cursor-pointer"
                   >
                     <RefreshCw
                       className={`h-4 w-4 ${calculating ? "animate-spin" : ""}`}
                     />
-                    {calculating ? "กำลังคำนวณ..." : "คำนวณส่วนแบ่ง"}
+                    {calculating ? (isEn ? "Calculating..." : "กำลังคำนวณ...") : (isEn ? "Calculate Splits" : "คำนวณส่วนแบ่ง")}
                   </Button>
                 )}
               </div>
@@ -523,19 +527,19 @@ export function DealFinancials({
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 pl-6">
-                    ผู้รับส่วนแบ่ง
+                    {isEn ? "Recipient" : "ผู้รับส่วนแบ่ง"}
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                     %
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 text-right">
-                    ยอดก่อนหัก
+                    {isEn ? "Gross Amount" : "ยอดก่อนหัก"}
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 text-right">
                     WHT (3%)
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 text-right pr-6">
-                    ยอดสุทธิ (NET)
+                    {isEn ? "Net Amount (NET)" : "ยอดสุทธิ (NET)"}
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-500 text-right pr-6">
                     Export
@@ -555,7 +559,7 @@ export function DealFinancials({
                             variant="outline"
                             size="sm"
                             type="button"
-                            className="w-full sm:w-44 h-8 justify-start text-xs font-semibold px-2 py-1 text-slate-700! bg-white hover:bg-slate-50 border-slate-200 shadow-xs"
+                            className="w-full sm:w-44 h-8 justify-start text-xs font-semibold px-2 py-1 text-slate-700! bg-white hover:bg-slate-50 border-slate-200 shadow-xs cursor-pointer"
                             onClick={() => setActiveEditIndex(idx)}
                           >
                             {comm.recipient_id ? (
@@ -581,7 +585,7 @@ export function DealFinancials({
                             <select
                               value={comm.recipient_role}
                               onChange={(e) => handleRoleChange(idx, e.target.value)}
-                              className="w-full sm:w-28 h-8 text-[11px] rounded-md border border-slate-200 px-2 py-1 bg-white font-medium text-slate-600 shadow-xs"
+                              className="w-full sm:w-28 h-8 text-[11px] rounded-md border border-slate-200 px-2 py-1 bg-white font-medium text-slate-600 shadow-xs cursor-pointer"
                             >
                               <option value="LISTING">Listing Agent</option>
                               <option value="CLOSING">Closing Agent</option>
@@ -633,12 +637,12 @@ export function DealFinancials({
                                 </span>
                                 {comm.recipient_role === "AGENCY" && (
                                   <span className="text-[10px] text-slate-400">
-                                    หักเข้ากองกลางบริษัท
+                                    {isEn ? "Company General Pool" : "หักเข้ากองกลางบริษัท"}
                                   </span>
                                 )}
                                 {comm.recipient_role === "CO_AGENT" && (
                                   <span className="text-[10px] text-slate-400">
-                                    นายหน้าร่วมภายนอก (Co-Agent)
+                                    {isEn ? "External Co-Agent" : "นายหน้าร่วมภายนอก (Co-Agent)"}
                                   </span>
                                 )}
                               </div>
@@ -716,9 +720,9 @@ export function DealFinancials({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-auto flex items-center justify-center"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-auto flex items-center justify-center cursor-pointer"
                           onClick={() => handleDeleteRow(idx)}
-                          title="ลบผู้รับส่วนแบ่ง"
+                          title={isEn ? "Remove Recipient" : "ลบผู้รับส่วนแบ่ง"}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -727,7 +731,7 @@ export function DealFinancials({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600"
+                            className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600 cursor-pointer"
                             onClick={() => handleExportPdf(comm.id)}
                             title="Export PDF"
                           >
@@ -736,7 +740,7 @@ export function DealFinancials({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-600"
+                            className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-600 cursor-pointer"
                             onClick={() => handleSendLine(comm.id)}
                             title="Send to LINE"
                           >
@@ -755,10 +759,10 @@ export function DealFinancials({
                   size="sm"
                   variant="outline"
                   onClick={handleAddRow}
-                  className="gap-2 text-xs font-semibold text-blue-600! border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50"
+                  className="gap-2 text-xs font-semibold text-blue-600! border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50 cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
-                  เพิ่มผู้รับส่วนแบ่ง
+                  {isEn ? "Add Recipient" : "เพิ่มผู้รับส่วนแบ่ง"}
                 </Button>
               </div>
             )}
@@ -770,11 +774,12 @@ export function DealFinancials({
               </div>
               <div>
                 <p className="font-bold text-slate-800">
-                  ยังไม่มีข้อมูลการจัดสรรค่าคอมฯ
+                  {isEn ? "No Commission Allocation Data" : "ยังไม่มีข้อมูลการจัดสรรค่าคอมฯ"}
                 </p>
                 <p className="text-sm text-slate-500 max-w-[280px]">
-                  กรุณากดปุ่ม "คำนวณส่วนแบ่ง"
-                  เพื่อเริ่มแบ่งคอมมิชชั่นตามมาตรฐานบริษัท
+                  {isEn 
+                    ? "Click \"Calculate Splits\" to compute team and agent splits automatically."
+                    : "กรุณากดปุ่ม \"คำนวณส่วนแบ่ง\" เพื่อเริ่มแบ่งคอมมิชชั่นตามมาตรฐานบริษัท"}
                 </p>
               </div>
             </div>
@@ -788,18 +793,20 @@ export function DealFinancials({
         onOpenChange={(open) => {
           if (!open) setActiveEditIndex(null);
         }}
-        title="เลือกผู้รับส่วนแบ่ง"
-        description="เลือกช่องทางกองกลางหรือรายชื่อเอเจ้นท์ภายในบริษัทที่ต้องการมอบส่วนแบ่งคอมมิชชั่นให้"
+        title={isEn ? "Select Split Recipient" : "เลือกผู้รับส่วนแบ่ง"}
+        description={isEn ? "Select company pool, team pool or company agents to receive commission split" : "เลือกช่องทางกองกลางหรือรายชื่อเอเจ้นท์ภายในบริษัทที่ต้องการมอบส่วนแบ่งคอมมิชชั่นให้"}
       >
         <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Special roles / pools */}
           <div className="space-y-2">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">ระบบกองกลาง & นายหน้าภายนอก</h4>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {isEn ? "Company Pools & External Co-Agents" : "ระบบกองกลาง & นายหน้าภายนอก"}
+            </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <Button
                 variant="outline"
                 type="button"
-                className="h-12 justify-start gap-2.5 px-3 border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 transition-all text-xs font-bold text-slate-700"
+                className="h-12 justify-start gap-2.5 px-3 border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 transition-all text-xs font-bold text-slate-700 cursor-pointer"
                 onClick={() => {
                   if (activeEditIndex !== null) {
                     handleRecipientSelectionChange(activeEditIndex, "AGENCY");
@@ -808,12 +815,12 @@ export function DealFinancials({
                 }}
               >
                 <Building2 className="h-4 w-4 text-indigo-500" />
-                <span>Agency (กองกลาง)</span>
+                <span>Agency ({isEn ? "Pool" : "กองกลาง"})</span>
               </Button>
               <Button
                 variant="outline"
                 type="button"
-                className="h-12 justify-start gap-2.5 px-3 border-slate-200 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 transition-all text-xs font-bold text-slate-700"
+                className="h-12 justify-start gap-2.5 px-3 border-slate-200 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 transition-all text-xs font-bold text-slate-700 cursor-pointer"
                 onClick={() => {
                   if (activeEditIndex !== null) {
                     handleRecipientSelectionChange(activeEditIndex, "TEAM_POOL");
@@ -822,12 +829,12 @@ export function DealFinancials({
                 }}
               >
                 <TrendingUp className="h-4 w-4 text-amber-500" />
-                <span>Team Pool (ทีม)</span>
+                <span>Team Pool ({isEn ? "Team" : "ทีม"})</span>
               </Button>
               <Button
                 variant="outline"
                 type="button"
-                className="h-12 justify-start gap-2.5 px-3 border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-all text-xs font-bold text-slate-700"
+                className="h-12 justify-start gap-2.5 px-3 border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-all text-xs font-bold text-slate-700 cursor-pointer"
                 onClick={() => {
                   if (activeEditIndex !== null) {
                     handleRecipientSelectionChange(activeEditIndex, "CO_AGENT");
@@ -836,7 +843,7 @@ export function DealFinancials({
                 }}
               >
                 <Users className="h-4 w-4 text-slate-500" />
-                <span>Co-Agent (ภายนอก)</span>
+                <span>Co-Agent ({isEn ? "External" : "ภายนอก"})</span>
               </Button>
             </div>
           </div>
@@ -852,7 +859,7 @@ export function DealFinancials({
                 <div className="space-y-2 pt-2">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                     <Building2 className="w-3.5 h-3.5 text-blue-500" />
-                    พนักงาน / เอเจ้นท์ภายในบริษัท ({internalAgents.length})
+                    {isEn ? "Company Agents & Internal Staff" : "พนักงาน / เอเจ้นท์ภายในบริษัท"} ({internalAgents.length})
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {internalAgents.map((agent) => (
@@ -860,7 +867,7 @@ export function DealFinancials({
                         key={agent.id}
                         variant="outline"
                         type="button"
-                        className="h-14 justify-start gap-3 px-3 border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all text-left"
+                        className="h-14 justify-start gap-3 px-3 border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all text-left cursor-pointer"
                         onClick={() => {
                           if (activeEditIndex !== null) {
                             handleRecipientSelectionChange(activeEditIndex, agent.id);
@@ -891,10 +898,10 @@ export function DealFinancials({
                 <div className="space-y-2 pt-3 border-t border-slate-100">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                     <Users className="w-3.5 h-3.5 text-emerald-600" />
-                    พาร์ทเนอร์ / เอเจ้นท์ภายนอก (Co-Broker) ({coBrokers.length})
+                    {isEn ? "External Partners & Co-Brokers" : "พาร์ทเนอร์ / เอเจ้นท์ภายนอก (Co-Broker)"} ({coBrokers.length})
                   </h4>
                   {coBrokers.length === 0 ? (
-                    <p className="text-xs text-slate-400 italic py-2">ยังไม่มีรายชื่อ Co-Broker ในระบบ</p>
+                    <p className="text-xs text-slate-400 italic py-2">{isEn ? "No Co-Brokers registered in system" : "ยังไม่มีรายชื่อ Co-Broker ในระบบ"}</p>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {coBrokers.map((agent) => (
@@ -902,7 +909,7 @@ export function DealFinancials({
                           key={agent.id}
                           variant="outline"
                           type="button"
-                          className="h-14 justify-start gap-3 px-3 border-emerald-100 bg-emerald-50/30 hover:bg-emerald-100/60 hover:border-emerald-300 hover:text-emerald-800 transition-all text-left"
+                          className="h-14 justify-start gap-3 px-3 border-emerald-100 bg-emerald-50/30 hover:bg-emerald-100/60 hover:border-emerald-300 hover:text-emerald-800 transition-all text-left cursor-pointer"
                           onClick={() => {
                             if (activeEditIndex !== null) {
                               handleRecipientSelectionChange(activeEditIndex, agent.id);
@@ -921,7 +928,7 @@ export function DealFinancials({
                               {agent.display_name}
                             </span>
                             <span className="text-[10px] text-emerald-600 truncate uppercase font-bold">
-                              Co-Broker ภายนอก
+                              {isEn ? "External Co-Broker" : "Co-Broker ภายนอก"}
                             </span>
                           </div>
                         </Button>
@@ -937,3 +944,4 @@ export function DealFinancials({
     </div>
   );
 }
+

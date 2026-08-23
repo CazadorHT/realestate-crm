@@ -10,6 +10,7 @@ import { Edit, Trash2, Eye, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type LeadRowActionsProps = {
   id: string;
@@ -21,6 +22,8 @@ type LeadRowActionsProps = {
 export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isPending, startTransition] = useTransition();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -30,13 +33,13 @@ export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsPro
         try {
           const res = await deleteLeadAction({ id });
           if (!res?.success) throw new Error(res?.error || "Delete failed");
-          toast.success("ลบ Lead เรียบร้อยแล้ว");
+          toast.success(isEn ? "Lead deleted successfully" : "ลบ Lead เรียบร้อยแล้ว");
           const url = new URL(window.location.href);
           url.searchParams.set("success", "true");
           router.push(url.pathname + url.search);
           router.refresh();
         } catch (e: any) {
-          toast.error(e.message || "เกิดข้อผิดพลาดในการลบ Lead");
+          toast.error(e.message || (isEn ? "Error deleting lead" : "เกิดข้อผิดพลาดในการลบ Lead"));
         } finally {
           resolve();
         }
@@ -51,15 +54,15 @@ export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsPro
       <ResponsiveDialog
         open={isMenuOpen}
         onOpenChange={setIsMenuOpen}
-        title={fullName || "จัดการ Lead"}
+        title={fullName || (isEn ? "Manage Lead" : "จัดการ Lead")}
         description={
           <div className="flex flex-col gap-0.5 mt-1">
-             <div className="text-slate-500 font-medium">{phone || email || "ข้อมูลลูกค้า"}</div>
+             <div className="text-slate-500 font-medium">{phone || email || (isEn ? "Customer details" : "ข้อมูลลูกค้า")}</div>
           </div>
         }
         className="sm:max-w-sm!"
         trigger={
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-100" title="เปิดเมนู">
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-100 cursor-pointer" title={isEn ? "Open menu" : "เปิดเมนู"}>
             <MoreHorizontal className="h-5 w-5 text-slate-500" />
           </Button>
         }
@@ -67,13 +70,13 @@ export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsPro
         <div className="flex flex-col gap-1.5 p-6 ">
           <div className="px-3 mb-2">
             <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
-              ตัวเลือกการจัดการ
+              {isEn ? "Management Options" : "ตัวเลือกการจัดการ"}
             </p>
           </div>
 
           <Button
             variant="outline"
-            className="w-full justify-start h-auto py-4 px-4 rounded-2xl border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center gap-4 group"
+            className="w-full justify-start h-auto py-4 px-4 rounded-2xl border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center gap-4 group cursor-pointer"
             asChild
             onClick={() => setIsMenuOpen(false)}
           >
@@ -82,15 +85,19 @@ export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsPro
                 <Eye className="h-5 w-5" />
               </div>
               <div className="flex flex-col items-start text-left">
-                <span className="text-[15px] font-bold text-slate-800">ดูรายละเอียด</span>
-                <span className="text-xs text-slate-500 font-medium mt-0.5">ข้อมูลเชิงลึกและประวัติกิจกรรม</span>
+                <span className="text-[15px] font-bold text-slate-800">
+                  {isEn ? "View Details" : "ดูรายละเอียด"}
+                </span>
+                <span className="text-xs text-slate-500 font-medium mt-0.5">
+                  {isEn ? "Insights and activity history" : "ข้อมูลเชิงลึกและประวัติกิจกรรม"}
+                </span>
               </div>
             </Link>
           </Button>
 
           <Button
             variant="outline"
-            className="w-full justify-start h-auto py-4 px-4 rounded-2xl border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center gap-4 group"
+            className="w-full justify-start h-auto py-4 px-4 rounded-2xl border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center gap-4 group cursor-pointer"
             asChild
             onClick={() => setIsMenuOpen(false)}
           >
@@ -99,8 +106,12 @@ export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsPro
                 <Edit className="h-5 w-5" />
               </div>
               <div className="flex flex-col items-start text-left">
-                <span className="text-[15px] font-bold text-slate-800">แก้ไขข้อมูล</span>
-                <span className="text-xs text-slate-500 font-medium mt-0.5">ปรับปรุงข้อมูลลูกค้าและสถานะ</span>
+                <span className="text-[15px] font-bold text-slate-800">
+                  {isEn ? "Edit Lead" : "แก้ไขข้อมูล"}
+                </span>
+                <span className="text-xs text-slate-500 font-medium mt-0.5">
+                  {isEn ? "Update customer profile and status" : "ปรับปรุงข้อมูลลูกค้าและสถานะ"}
+                </span>
               </div>
             </Link>
           </Button>
@@ -109,7 +120,7 @@ export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsPro
 
           <Button
             variant="ghost"
-            className="w-full justify-start h-auto py-4 px-4 rounded-2xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-all flex items-center gap-4 group"
+            className="w-full justify-start h-auto py-4 px-4 rounded-2xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-all flex items-center gap-4 group cursor-pointer"
             onClick={() => {
               setIsMenuOpen(false);
               setShowDeleteDialog(true);
@@ -119,8 +130,12 @@ export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsPro
               <Trash2 className="h-5 w-5" />
             </div>
             <div className="flex flex-col items-start text-left">
-              <span className="text-[15px] font-bold text-rose-600">ลบรายงานนี้</span>
-              <span className="text-xs text-rose-400 font-medium mt-0.5">การกระทำนี้ไม่สามารถกู้คืนได้</span>
+              <span className="text-[15px] font-bold text-rose-600">
+                {isEn ? "Delete this Lead" : "ลบรายงานนี้"}
+              </span>
+              <span className="text-xs text-rose-400 font-medium mt-0.5">
+                {isEn ? "This action cannot be undone" : "การกระทำนี้ไม่สามารถกู้คืนได้"}
+              </span>
             </div>
           </Button>
         </div>
@@ -129,17 +144,25 @@ export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsPro
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        title="ยืนยันการลบ"
+        title={isEn ? "Confirm Deletion" : "ยืนยันการลบ"}
         description={
-          <>
-            คุณแน่ใจหรือไม่ว่าต้องการลบ{" "}
-            {fullName ? `"${fullName}"` : "Lead นี้"}?
-            <br />
-            การลบจะไม่สามารถกู้คืนได้
-          </>
+          isEn ? (
+            <>
+              Are you sure you want to delete {fullName ? `"${fullName}"` : "this lead"}?
+              <br />
+              This action cannot be undone.
+            </>
+          ) : (
+            <>
+              คุณแน่ใจหรือไม่ว่าต้องการลบ{" "}
+              {fullName ? `"${fullName}"` : "Lead นี้"}?
+              <br />
+              การลบจะไม่สามารถกู้คืนได้
+            </>
+          )
         }
-        confirmText={isPending ? "กำลังลบ..." : "ลบ"}
-        cancelText="ยกเลิก"
+        confirmText={isPending ? (isEn ? "Deleting..." : "กำลังลบ...") : (isEn ? "Delete" : "ลบ")}
+        cancelText={isEn ? "Cancel" : "ยกเลิก"}
         variant="destructive"
         onConfirm={onDelete}
       />

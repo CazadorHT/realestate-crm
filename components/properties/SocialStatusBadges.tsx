@@ -11,6 +11,7 @@ import { th } from "date-fns/locale";
 import { FaLine, FaTiktok, FaFacebook } from "react-icons/fa";
 import { RiInstagramFill } from "react-icons/ri";
 import { SocialPostDialog } from "@/features/properties/components/SocialPostDialog";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface SocialStatusBadgesProps {
   propertyId?: string;
@@ -42,10 +43,12 @@ export function SocialStatusBadges({
   className,
 }: SocialStatusBadgesProps) {
   const [activePlatform, setActivePlatform] = useState<Platform | null>(null);
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const handleBadgeClick = (e: React.MouseEvent, platform: Platform) => {
     if (!propertyId) return;
-    e.stopPropagation(); // 🛡️ ป้องกันไม่ให้ Trigger การคลิกแถวตาราง
+    e.stopPropagation();
     setActivePlatform(platform);
   };
 
@@ -67,7 +70,7 @@ export function SocialStatusBadges({
                       ? "bg-amber-50 border-amber-300 text-amber-600 hover:bg-amber-100"
                       : "bg-slate-50 border-slate-100 text-slate-300 hover:text-blue-500 hover:bg-blue-50/50 hover:border-blue-200",
                 )}
-                aria-label="แชร์ไปยัง Facebook"
+                aria-label={isEn ? "Share to Facebook" : "แชร์ไปยัง Facebook"}
               >
                 <FaFacebook className="h-5 w-5" />
                 {facebookError && !facebookAt && (
@@ -80,10 +83,14 @@ export function SocialStatusBadges({
             <TooltipContent side="top">
               <p className="text-[11px] font-medium">
                 {facebookAt
-                  ? `โพสต์บน Facebook แล้ว (${format(new Date(facebookAt), "d MMM yyyy HH:mm", { locale: th })}) • คลิกเพื่อแชร์ใหม่`
+                  ? (isEn
+                      ? `Posted on Facebook (${format(new Date(facebookAt), "d MMM yyyy HH:mm")}) • Click to re-share`
+                      : `โพสต์บน Facebook แล้ว (${format(new Date(facebookAt), "d MMM yyyy HH:mm", { locale: th })}) • คลิกเพื่อแชร์ใหม่`)
                   : facebookError
-                    ? `การโพสต์ Facebook ล้มเหลว: ${facebookError} • คลิกเพื่อลองใหม่`
-                    : "คลิกเพื่อโพสต์บน Facebook"}
+                    ? (isEn
+                        ? `Facebook post failed: ${facebookError} • Click to retry`
+                        : `การโพสต์ Facebook ล้มเหลว: ${facebookError} • คลิกเพื่อลองใหม่`)
+                    : (isEn ? "Click to post on Facebook" : "คลิกเพื่อโพสต์บน Facebook")}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -104,7 +111,7 @@ export function SocialStatusBadges({
                       ? "bg-amber-50 border-amber-300 text-amber-600 hover:bg-amber-100"
                       : "bg-slate-50 border-slate-100 text-slate-300 hover:text-pink-500 hover:bg-pink-50/50 hover:border-pink-200",
                 )}
-                aria-label="แชร์ไปยัง Instagram"
+                aria-label={isEn ? "Share to Instagram" : "แชร์ไปยัง Instagram"}
               >
                 <RiInstagramFill className="h-5 w-5" />
                 {instagramError && !instagramAt && (
@@ -117,10 +124,14 @@ export function SocialStatusBadges({
             <TooltipContent side="top">
               <p className="text-[11px] font-medium">
                 {instagramAt
-                  ? `โพสต์บน Instagram แล้ว (${format(new Date(instagramAt), "d MMM yyyy HH:mm", { locale: th })}) • คลิกเพื่อแชร์ใหม่`
+                  ? (isEn
+                      ? `Posted on Instagram (${format(new Date(instagramAt), "d MMM yyyy HH:mm")}) • Click to re-share`
+                      : `โพสต์บน Instagram แล้ว (${format(new Date(instagramAt), "d MMM yyyy HH:mm", { locale: th })}) • คลิกเพื่อแชร์ใหม่`)
                   : instagramError
-                    ? `การโพสต์ Instagram ล้มเหลว: ${instagramError} • คลิกเพื่อลองใหม่`
-                    : "คลิกเพื่อโพสต์บน Instagram"}
+                    ? (isEn
+                        ? `Instagram post failed: ${instagramError} • Click to retry`
+                        : `การโพสต์ Instagram ล้มเหลว: ${instagramError} • คลิกเพื่อลองใหม่`)
+                    : (isEn ? "Click to post on Instagram" : "คลิกเพื่อโพสต์บน Instagram")}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -141,7 +152,7 @@ export function SocialStatusBadges({
                       ? "bg-amber-50 border-amber-300 text-amber-600 hover:bg-amber-100"
                       : "bg-slate-50 border-slate-100 text-slate-300 hover:text-green-500 hover:bg-green-50/50 hover:border-green-200",
                 )}
-                aria-label="แชร์ไปยัง LINE"
+                aria-label={isEn ? "Share to LINE" : "แชร์ไปยัง LINE"}
               >
                 <FaLine className="h-6 w-6" />
                 {lineError && !lineAt && (
@@ -154,10 +165,14 @@ export function SocialStatusBadges({
             <TooltipContent side="top">
               <p className="text-[11px] font-medium">
                 {lineAt
-                  ? `แชร์บน Line แล้ว (${format(new Date(lineAt), "d MMM yyyy HH:mm", { locale: th })}) • คลิกเพื่อแชร์ใหม่`
+                  ? (isEn
+                      ? `Shared on Line (${format(new Date(lineAt), "d MMM yyyy HH:mm")}) • Click to re-share`
+                      : `แชร์บน Line แล้ว (${format(new Date(lineAt), "d MMM yyyy HH:mm", { locale: th })}) • คลิกเพื่อแชร์ใหม่`)
                   : lineError
-                    ? `การแชร์ Line ล้มเหลว: ${lineError} • คลิกเพื่อลองใหม่`
-                    : "คลิกเพื่อแชร์บน LINE"}
+                    ? (isEn
+                        ? `Line share failed: ${lineError} • Click to retry`
+                        : `การแชร์ Line ล้มเหลว: ${lineError} • คลิกเพื่อลองใหม่`)
+                    : (isEn ? "Click to share on LINE" : "คลิกเพื่อแชร์บน LINE")}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -178,7 +193,7 @@ export function SocialStatusBadges({
                       ? "bg-amber-50 border-amber-300 text-amber-600 hover:bg-amber-100"
                       : "bg-slate-50 border-slate-100 text-slate-300 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300",
                 )}
-                aria-label="แชร์ไปยัง TikTok"
+                aria-label={isEn ? "Share to TikTok" : "แชร์ไปยัง TikTok"}
               >
                 <FaTiktok className="h-4 w-4" />
                 {tiktokError && !tiktokAt && (
@@ -191,10 +206,14 @@ export function SocialStatusBadges({
             <TooltipContent side="top">
               <p className="text-[11px] font-medium">
                 {tiktokAt
-                  ? `โพสต์บน TikTok แล้ว (${format(new Date(tiktokAt), "d MMM yyyy HH:mm", { locale: th })}) • คลิกเพื่อแชร์ใหม่`
+                  ? (isEn
+                      ? `Posted on TikTok (${format(new Date(tiktokAt), "d MMM yyyy HH:mm")}) • Click to re-share`
+                      : `โพสต์บน TikTok แล้ว (${format(new Date(tiktokAt), "d MMM yyyy HH:mm", { locale: th })}) • คลิกเพื่อแชร์ใหม่`)
                   : tiktokError
-                    ? `การโพสต์ TikTok ล้มเหลว: ${tiktokError} • คลิกเพื่อลองใหม่`
-                    : "คลิกเพื่อโพสต์บน TikTok"}
+                    ? (isEn
+                        ? `TikTok post failed: ${tiktokError} • Click to retry`
+                        : `การโพสต์ TikTok ล้มเหลว: ${tiktokError} • คลิกเพื่อลองใหม่`)
+                    : (isEn ? "Click to post on TikTok" : "คลิกเพื่อโพสต์บน TikTok")}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -216,3 +235,4 @@ export function SocialStatusBadges({
     </>
   );
 }
+

@@ -25,11 +25,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserCircle, Phone, Mail, DollarSign, Loader2 } from "lucide-react";
 import { LEAD_STAGES } from "@/lib/validations/lead";
-import { LEAD_STAGE_LABELS } from "./labels";
+import { leadStageLabelNullable } from "./labels";
 import type { LeadWithJoins, LeadRow } from "./types";
 import { updateLeadStageAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface KanbanProps {
   initialLeads: LeadWithJoins[];
@@ -40,6 +41,8 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [navigatingId, setNavigatingId] = React.useState<string | null>(null);
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -122,17 +125,16 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
           stage: newStage || "NEW",
         });
         if (!result.success) {
-          toast.error(result.error || "Failed to update stage");
+          toast.error(result.error || (isEn ? "Failed to update stage" : "เกิดข้อผิดพลาดในการอัปเดตสถานะ"));
           setLeads(initialLeads); // Rollback
         } else {
+          const stageName = leadStageLabelNullable(newStage, language);
           toast.success(
-            `อัปเดตสถานะเป็น ${
-              LEAD_STAGE_LABELS[newStage as keyof typeof LEAD_STAGE_LABELS]
-            }`,
+            isEn ? `Stage updated to ${stageName}` : `อัปเดตสถานะเป็น ${stageName}`
           );
         }
       } catch (error) {
-        toast.error("An error occurred");
+        toast.error(isEn ? "An error occurred" : "เกิดข้อผิดพลาด");
         setLeads(initialLeads);
       }
     }
@@ -153,15 +155,16 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
           <KanbanColumn
             key={stage}
             id={stage}
-            title={LEAD_STAGE_LABELS[stage]}
+            title={leadStageLabelNullable(stage, language)}
             leads={leads.filter((l) => l.stage === stage)}
             navigatingId={navigatingId}
             onNavigate={setNavigatingId}
+            isEn={isEn}
           />
         ))}
       </div>
       <DragOverlay>
-        {activeLead ? <LeadCard lead={activeLead} isOverlay /> : null}
+        {activeLead ? <LeadCard lead={activeLead} isOverlay isEn={isEn} /> : null}
       </DragOverlay>
     </DndContext>
   );
@@ -173,12 +176,14 @@ const KanbanColumn = React.memo(function KanbanColumn({
   leads,
   navigatingId,
   onNavigate,
+  isEn,
 }: {
   id: string;
   title: string;
   leads: LeadWithJoins[];
   navigatingId: string | null;
   onNavigate: (id: string) => void;
+  isEn?: boolean;
 }) {
   const { setNodeRef } = useSortable({ id });
 
@@ -208,6 +213,7 @@ const KanbanColumn = React.memo(function KanbanColumn({
               lead={lead} 
               navigatingId={navigatingId}
               onNavigate={onNavigate}
+              isEn={isEn}
             />
           ))}
           {leads.length === 0 && (
@@ -215,7 +221,7 @@ const KanbanColumn = React.memo(function KanbanColumn({
               <div className="p-2 rounded-full bg-slate-100">
                 <UserCircle className="h-5 w-5 opacity-20" />
               </div>
-              ไม่มีรายการในขั้นนี้
+              {isEn ? "No leads in this stage" : "ไม่มีรายการในขั้นนี้"}
             </div>
           )}
         </SortableContext>
@@ -228,10 +234,12 @@ const SortableLeadCard = React.memo(function SortableLeadCard({
   lead,
   navigatingId,
   onNavigate,
+  isEn,
 }: {
   lead: LeadWithJoins;
   navigatingId: string | null;
   onNavigate: (id: string) => void;
+  isEn?: boolean;
 }) {
   const {
     attributes,
@@ -250,7 +258,7 @@ const SortableLeadCard = React.memo(function SortableLeadCard({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <LeadCard lead={lead} navigatingId={navigatingId} onNavigate={onNavigate} />
+      <LeadCard lead={lead} navigatingId={navigatingId} onNavigate={onNavigate} isEn={isEn} />
     </div>
   );
 });
@@ -260,11 +268,13 @@ const LeadCard = React.memo(function LeadCard({
   isOverlay,
   navigatingId,
   onNavigate,
+  isEn,
 }: {
   lead: LeadWithJoins;
   isOverlay?: boolean;
   navigatingId?: string | null;
   onNavigate?: (id: string) => void;
+  isEn?: boolean;
 }) {
   const router = useRouter();
 
@@ -301,8 +311,8 @@ const LeadCard = React.memo(function LeadCard({
               onNavigate?.(lead.id);
               router.push(`/protected/leads/${lead.id}`);
             }}
-            className="opacity-0 group-hover:opacity-100 p-1  rounded transition-all"
-            title="ดูรายละเอียด"
+            className="opacity-0 group-hover:opacity-100 p-1 rounded transition-all cursor-pointer"
+            title={isEn ? "View details" : "ดูรายละเอียด"}
           >
             <Badge
               variant="outline"
@@ -336,7 +346,7 @@ const LeadCard = React.memo(function LeadCard({
 
         <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-2 justify-between items-center text-[11px] text-muted-foreground">
           <div className="flex items-center gap-2">
-            <span>{lead.created_at ? new Date(lead.created_at).toLocaleDateString("th-TH") : ""}</span>
+            <span>{lead.created_at ? new Date(lead.created_at).toLocaleDateString(isEn ? "en-US" : "th-TH") : ""}</span>
             {lead.tenants?.name && (
               <Badge variant="outline" className="text-[11px] h-5 px-1.5 bg-slate-50 text-slate-500 border-slate-200">
                 {lead.tenants.name}

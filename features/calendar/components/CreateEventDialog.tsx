@@ -29,6 +29,7 @@ import { LeadCombobox } from "@/components/LeadCombobox";
 import { PropertyCombobox } from "@/components/PropertyCombobox";
 import { ActivityTypePicker, ActivityType } from "@/components/calendar/ActivityTypePicker";
 import { TimePicker } from "@/components/calendar/TimePicker";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { CalendarEvent } from "@/features/calendar/queries";
 import { AlertCircle } from "lucide-react";
@@ -44,6 +45,9 @@ export function CreateEventDialog({
   properties = [],
   events = [],
 }: CreateEventDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isPending, startTransition] = useTransition();
@@ -78,11 +82,11 @@ export function CreateEventDialog({
     startTransition(async () => {
       try {
         await createAppointment(formData);
-        toast.success("สร้างนัดหมายสำเร็จ");
+        toast.success(isEn ? "Appointment created successfully" : "สร้างนัดหมายสำเร็จ");
         setOpen(false);
         resetForm();
       } catch (error) {
-        toast.error("เกิดข้อผิดพลาดในการสร้างนัดหมาย");
+        toast.error(isEn ? "Failed to create appointment" : "เกิดข้อผิดพลาดในการสร้างนัดหมาย");
       }
     });
   };
@@ -99,11 +103,11 @@ export function CreateEventDialog({
   const nextStep = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
     if (step === 1 && !leadId) {
-      toast.error("กรุณาเลือกลูกค้าก่อนไปขั้นตอนถัดไป");
+      toast.error(isEn ? "Please select a client before proceeding" : "กรุณาเลือกลูกค้าก่อนไปขั้นตอนถัดไป");
       return;
     }
     if (step === 2 && (!date || !time)) {
-      toast.error("กรุณาเลือกวันที่และเวลานัดหมาย");
+      toast.error(isEn ? "Please select appointment date and time" : "กรุณาเลือกวันที่และเวลานัดหมาย");
       return;
     }
     setStep(prev => prev + 1);
@@ -121,13 +125,19 @@ export function CreateEventDialog({
         setOpen(val);
         if (!val) resetForm();
       }}
-      title={step === 1 ? "เลือกผู้เกี่ยวข้อง" : step === 2 ? "ระบุเวลาและประเภทงาน" : "สรุปข้อมูล"}
-      description={`ขั้นตอนที่ ${step} จาก 3`}
+      title={
+        step === 1 
+          ? (isEn ? "Select Stakeholders" : "เลือกผู้เกี่ยวข้อง") 
+          : step === 2 
+          ? (isEn ? "Date, Time & Activity Type" : "ระบุเวลาและประเภทงาน") 
+          : (isEn ? "Summary & Confirmation" : "สรุปข้อมูล")
+      }
+      description={isEn ? `Step ${step} of 3` : `ขั้นตอนที่ ${step} จาก 3`}
       className="sm:max-w-[500px]"
       trigger={
-        <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-100 rounded-xl px-5 h-11 transition-all active:scale-95">
+        <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-100 rounded-xl px-5 h-11 transition-all active:scale-95 cursor-pointer">
           <Plus className="h-4 w-4" />
-          <span className="font-bold">เพิ่มนัดหมาย</span>
+          <span className="font-bold">{isEn ? "Add Appointment" : "เพิ่มนัดหมาย"}</span>
         </Button>
       }
     >
@@ -167,7 +177,7 @@ export function CreateEventDialog({
             <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="grid gap-2">
                 <Label htmlFor="leadId" className="flex items-center gap-2 text-slate-700 font-bold ml-1">
-                  <User className="h-4 w-4 text-blue-500" /> ลูกค้า (Lead) <span className="text-rose-500">*</span>
+                  <User className="h-4 w-4 text-blue-500" /> {isEn ? "Client (Lead)" : "ลูกค้า (Lead)"} <span className="text-rose-500">*</span>
                 </Label>
                 <LeadCombobox 
                   name="leadId"
@@ -179,7 +189,7 @@ export function CreateEventDialog({
 
               <div className="grid gap-2">
                 <Label htmlFor="propertyId" className="flex items-center gap-2 text-slate-700 font-bold ml-1">
-                  <Building2 className="h-4 w-4 text-orange-500" /> ทรัพย์สิน (Optional)
+                  <Building2 className="h-4 w-4 text-orange-500" /> {isEn ? "Property (Optional)" : "ทรัพย์สิน (Optional)"}
                 </Label>
                 <PropertyCombobox
                   name="propertyId"
@@ -195,7 +205,7 @@ export function CreateEventDialog({
             <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="grid gap-2">
                 <Label htmlFor="activityType" className="flex items-center gap-2 text-slate-700 font-bold ml-1">
-                  <Briefcase className="h-4 w-4 text-indigo-500" /> ประเภทนัดหมาย
+                  <Briefcase className="h-4 w-4 text-indigo-500" /> {isEn ? "Activity Type" : "ประเภทนัดหมาย"}
                 </Label>
                 <ActivityTypePicker
                   name="activityType"
@@ -207,19 +217,19 @@ export function CreateEventDialog({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label className="flex items-center gap-2 text-slate-700 font-bold ml-1">
-                    <Calendar className="h-4 w-4 text-emerald-500" /> วันที่ <span className="text-rose-500">*</span>
+                    <Calendar className="h-4 w-4 text-emerald-500" /> {isEn ? "Date" : "วันที่"} <span className="text-rose-500">*</span>
                   </Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full justify-start text-left font-bold h-11 rounded-xl border-slate-200 shadow-sm",
+                          "w-full justify-start text-left font-bold h-11 rounded-xl border-slate-200 shadow-sm cursor-pointer",
                           !date && "text-slate-400 font-normal",
                         )}
                       >
                         <Calendar className="mr-2 h-4 w-4 opacity-70" />
-                        {date ? formatDate(date) : "เลือกวันที่"}
+                        {date ? formatDate(date) : (isEn ? "Select date" : "เลือกวันที่")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-slate-100" align="start">
@@ -236,16 +246,18 @@ export function CreateEventDialog({
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="time" className="flex items-center gap-2 text-slate-700 font-bold ml-1">
-                    <Clock className="h-4 w-4 text-purple-500" /> เวลา <span className="text-rose-500">*</span>
+                    <Clock className="h-4 w-4 text-purple-500" /> {isEn ? "Time" : "เวลา"} <span className="text-rose-500">*</span>
                   </Label>
                   <TimePicker value={time} onChange={setTime} />
                 </div>
 
                 {hasConflict && (
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-orange-50 border border-orange-100 text-orange-700 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-orange-50 border border-orange-100 text-orange-700 mt-2 animate-in fade-in slide-in-from-top-1 duration-200 col-span-full">
                     <AlertCircle className="h-5 w-5 shrink-0" />
                     <div className="text-xs font-semibold leading-relaxed">
-                       คำเตือน: มีนัดหมายอื่นในช่วงเวลานี้แล้วสำหรับทรัพย์สินหรือลูกค้าที่เลือก
+                       {isEn 
+                         ? "Warning: Another appointment already exists during this time for the selected property or client." 
+                         : "คำเตือน: มีนัดหมายอื่นในช่วงเวลานี้แล้วสำหรับทรัพย์สินหรือลูกค้าที่เลือก"}
                     </div>
                   </div>
                 )}
@@ -258,11 +270,11 @@ export function CreateEventDialog({
             <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="grid gap-2">
                 <Label htmlFor="note" className="flex items-center gap-2 text-slate-700 font-bold ml-1">
-                  <StickyNote className="h-4 w-4 text-slate-400" /> บันทึกเพิ่มเติม
+                  <StickyNote className="h-4 w-4 text-slate-400" /> {isEn ? "Additional Notes" : "บันทึกเพิ่มเติม"}
                 </Label>
                 <Textarea 
                   name="note" 
-                  placeholder="รายละเอียดนัดหมาย..." 
+                  placeholder={isEn ? "Appointment details..." : "รายละเอียดนัดหมาย..."} 
                   className="rounded-xl border-slate-200 focus:ring-indigo-500/10 min-h-[120px] bg-slate-50/50 p-4 font-medium" 
                 />
               </div>
@@ -273,9 +285,9 @@ export function CreateEventDialog({
                     <Calendar className="h-6 w-6 text-blue-600" />
                  </div>
                  <div>
-                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-0.5">นัดหมายที่คุณกำลังสร้าง</p>
+                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-0.5">{isEn ? "Appointment to be created" : "นัดหมายที่คุณกำลังสร้าง"}</p>
                     <p className="text-sm font-bold text-slate-900 leading-tight">
-                      {date ? formatDate(date) : "ยังไม่ระบุวันที่"} เวลา {time || "??:??"} น.
+                      {date ? formatDate(date) : (isEn ? "Undetermined date" : "ยังไม่ระบุวันที่")} {isEn ? "at" : "เวลา"} {time || "??:??"}{isEn ? "" : " น."}
                     </p>
                  </div>
               </div>
@@ -289,9 +301,9 @@ export function CreateEventDialog({
                 type="button"
                 variant="outline"
                 onClick={prevStep}
-                className="flex-1 rounded-xl h-12 font-bold text-slate-500 hover:bg-slate-50"
+                className="flex-1 rounded-xl h-12 font-bold text-slate-500 hover:bg-slate-50 cursor-pointer"
               >
-                ย้อนกลับ
+                {isEn ? "Back" : "ย้อนกลับ"}
               </Button>
             )}
             
@@ -300,24 +312,24 @@ export function CreateEventDialog({
                 key="next-btn"
                 type="button"
                 onClick={nextStep}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl h-12 shadow-lg shadow-indigo-100 transition-all active:scale-95 translate-y-0"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl h-12 shadow-lg shadow-indigo-100 transition-all active:scale-95 translate-y-0 cursor-pointer"
               >
-                ถัดไป
+                {isEn ? "Next" : "ถัดไป"}
               </Button>
             ) : (
               <Button
                 key="save-btn"
                 type="submit"
                 disabled={isPending}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-12 shadow-lg shadow-emerald-100 transition-all active:scale-95"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-12 shadow-lg shadow-emerald-100 transition-all active:scale-95 cursor-pointer"
               >
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    กำลังบันทึก...
+                    {isEn ? "Saving..." : "กำลังบันทึก..."}
                   </>
                 ) : (
-                  "บันทึกนัดหมาย"
+                  isEn ? "Save Appointment" : "บันทึกนัดหมาย"
                 )}
               </Button>
             )}
@@ -327,3 +339,4 @@ export function CreateEventDialog({
     </ResponsiveDialog>
   );
 }
+

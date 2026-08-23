@@ -7,13 +7,6 @@ import {
   updateTenantAction,
   deleteTenantAction,
 } from "@/lib/actions/tenant-management";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Plus,
@@ -33,8 +26,8 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
-import { Skeleton } from "@/components/ui/skeleton";
 import { m, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 /**
  * 🦴 Shimmer Loading Grid for Elite UX
@@ -59,6 +52,9 @@ function BranchCardSkeleton() {
 }
 
 export default function BranchesPage() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [branches, setBranches] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -81,7 +77,7 @@ export default function BranchesPage() {
     if (res.data) {
       setBranches(res.data);
     } else {
-      toast.error(res.error || "ไม่สามารถโหลดข้อมูลสาขาได้");
+      toast.error(res.error || (isEn ? "Failed to load branches" : "ไม่สามารถโหลดข้อมูลสาขาได้"));
     }
     setIsLoading(false);
   };
@@ -95,12 +91,12 @@ export default function BranchesPage() {
     setIsCreating(true);
     const res = await createTenantAction(newBranch);
     if (res.data) {
-      toast.success("สร้างสาขาสำเร็จ");
+      toast.success(isEn ? "Branch created successfully" : "สร้างสาขาสำเร็จ");
       setOpen(false);
       setNewBranch({ name: "", slug: "" });
       fetchBranches();
     } else {
-      toast.error(res.error || "ไม่สามารถสร้างสาขาได้");
+      toast.error(res.error || (isEn ? "Failed to create branch" : "ไม่สามารถสร้างสาขาได้"));
     }
     setIsCreating(false);
   };
@@ -113,11 +109,11 @@ export default function BranchesPage() {
       slug: editBranch.slug,
     });
     if (res.data) {
-      toast.success("อัปเดตสาขาสำเร็จ");
+      toast.success(isEn ? "Branch updated successfully" : "อัปเดตสาขาสำเร็จ");
       setEditOpen(false);
       fetchBranches();
     } else {
-      toast.error(res.error || "ไม่สามารถอัปเดตสาขาได้");
+      toast.error(res.error || (isEn ? "Failed to update branch" : "ไม่สามารถอัปเดตสาขาได้"));
     }
     setIsProcessing(false);
   };
@@ -127,12 +123,12 @@ export default function BranchesPage() {
     setIsProcessing(true);
     const res = await deleteTenantAction(branchToDelete.id);
     if (res.success) {
-      toast.success("ลบสาขาสำเร็จ");
+      toast.success(isEn ? "Branch deleted successfully" : "ลบสาขาสำเร็จ");
       setDeleteOpen(false);
       setBranchToDelete(null);
       fetchBranches();
     } else {
-      toast.error(res.error || "ไม่สามารถลบสาขาได้");
+      toast.error(res.error || (isEn ? "Failed to delete branch" : "ไม่สามารถลบสาขาได้"));
     }
     setIsProcessing(false);
   };
@@ -140,22 +136,22 @@ export default function BranchesPage() {
   return (
     <div className="space-y-0">
       <SettingsHeader
-        title="จัดการสาขา & แฟรนไชส์"
-        description="บริหารจัดการโครงสร้างองค์กรและสิทธิ์การเข้าถึงรายสาขา"
+        title={isEn ? "Branches & Franchise" : "จัดการสาขา & แฟรนไชส์"}
+        description={isEn ? "Manage organization structure and branch-level access control" : "บริหารจัดการโครงสร้างองค์กรและสิทธิ์การเข้าถึงรายสาขา"}
         subPath={[
-          { label: "System Control", href: "/protected/settings" },
-          { label: "จัดการสาขา" },
+          { label: isEn ? "System Control" : "System Control", href: "/protected/settings" },
+          { label: isEn ? "Branches" : "จัดการสาขา" },
         ]}
         actions={
           <ResponsiveDialog
             open={open}
             onOpenChange={setOpen}
-            title="เพิ่มสาขาใหม่"
-            description="กรอกข้อมูลพื้นฐานเพื่อเริ่มต้นสาขาใหม่ในระบบ"
+            title={isEn ? "Add New Branch" : "เพิ่มสาขาใหม่"}
+            description={isEn ? "Fill in basic information to create a new branch in the system" : "กรอกข้อมูลพื้นฐานเพื่อเริ่มต้นสาขาใหม่ในระบบ"}
             trigger={
               <Button className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11 px-6 shadow-lg shadow-slate-200 transition-all active:scale-95">
                 <Plus className="mr-2 h-4 w-4" />
-                เพิ่มสาขาใหม่
+                {isEn ? "Add New Branch" : "เพิ่มสาขาใหม่"}
               </Button>
             }
             footer={
@@ -166,7 +162,7 @@ export default function BranchesPage() {
                   className="flex-1 rounded-xl h-12 text-slate-500 hover:bg-slate-50 font-semibold"
                   onClick={() => setOpen(false)}
                 >
-                  ยกเลิก
+                  {isEn ? "Cancel" : "ยกเลิก"}
                 </Button>
                 <Button
                   onClick={handleCreate}
@@ -178,7 +174,7 @@ export default function BranchesPage() {
                   ) : (
                     <Building2 className="mr-2 h-4 w-4" />
                   )}
-                  สร้างสาขา
+                  {isEn ? "Create Branch" : "สร้างสาขา"}
                 </Button>
               </div>
             }
@@ -189,11 +185,11 @@ export default function BranchesPage() {
                   htmlFor="name"
                   className="text-sm font-semibold text-slate-700"
                 >
-                  ชื่อสาขา
+                  {isEn ? "Branch Name" : "ชื่อสาขา"}
                 </Label>
                 <Input
                   id="name"
-                  placeholder="เช่น สาขาเชียงใหม่, Real Estate Plus"
+                  placeholder={isEn ? "e.g. Chiang Mai Branch, Real Estate Plus" : "เช่น สาขาเชียงใหม่, Real Estate Plus"}
                   className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-semibold"
                   value={newBranch.name}
                   onChange={(e) =>
@@ -226,7 +222,9 @@ export default function BranchesPage() {
                 />
                 <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1 font-semibold">
                   <Layers size={12} className="text-blue-500" />
-                  ใช้สำหรับระบุตัวตนสาขาในระบบ เช่น /t/chiang-mai
+                  {isEn 
+                    ? "Used to identify branch in the system, e.g. /t/chiang-mai" 
+                    : "ใช้สำหรับระบุตัวตนสาขาในระบบ เช่น /t/chiang-mai"}
                 </p>
               </div>
             </div>
@@ -311,7 +309,7 @@ export default function BranchesPage() {
                             ))}
                           </div>
                           <span className="text-xs font-semibold text-slate-500">
-                            {branch.memberCount} พนักงาน
+                            {isEn ? `${branch.memberCount} Staff` : `${branch.memberCount} พนักงาน`}
                           </span>
                         </div>
                         <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
@@ -334,18 +332,19 @@ export default function BranchesPage() {
                   <Building2 className="h-10 w-10 text-slate-200" />
                 </div>
                 <h4 className="text-xl font-semibold text-slate-900 mb-2">
-                  ยังไม่มีสาขาในระบบ
+                  {isEn ? "No branches in the system yet" : "ยังไม่มีสาขาในระบบ"}
                 </h4>
                 <p className="text-slate-500 text-center max-w-sm mb-8">
-                  เริ่มต้นสร้างสาขาหรือแฟรนไชส์ของคุณ
-                  เพื่อแยกการบริหารจัดการข้อมูลและพนักงาน
+                  {isEn 
+                    ? "Get started by creating your first branch or franchise to organize staff and properties." 
+                    : "เริ่มต้นสร้างสาขาหรือแฟรนไชส์ของคุณ เพื่อแยกการบริหารจัดการข้อมูลและพนักงาน"}
                 </p>
                 <Button
                   onClick={() => setOpen(true)}
                   className="bg-slate-900 hover:bg-slate-800 text-white rounded-2xl h-14 px-8 shadow-xl shadow-slate-200"
                 >
                   <Plus className="mr-2 h-5 w-5" />
-                  สร้างสาขาแรกของคุณ
+                  {isEn ? "Create Your First Branch" : "สร้างสาขาแรกของคุณ"}
                 </Button>
               </m.div>
             )}
@@ -356,8 +355,8 @@ export default function BranchesPage() {
         <ResponsiveDialog
           open={editOpen}
           onOpenChange={setEditOpen}
-          title="แก้ไขข้อมูลสาขา"
-          description="อัปเดตชื่อสาขาหรือ Slug ของคุณเพื่อให้ข้อมูลเป็นปัจจุบัน"
+          title={isEn ? "Edit Branch" : "แก้ไขข้อมูลสาขา"}
+          description={isEn ? "Update branch name or slug to keep records current" : "อัปเดตชื่อสาขาหรือ Slug ของคุณเพื่อให้ข้อมูลเป็นปัจจุบัน"}
           footer={
             <div className="flex w-full gap-3">
               <Button
@@ -366,7 +365,7 @@ export default function BranchesPage() {
                 className="flex-1 rounded-xl h-12 text-slate-500 hover:bg-white font-semibold"
                 onClick={() => setEditOpen(false)}
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
               <Button
                 onClick={handleUpdate}
@@ -378,7 +377,7 @@ export default function BranchesPage() {
                 ) : (
                   <Edit2 className="mr-2 h-4 w-4" />
                 )}
-                บันทึกการเปลี่ยนแปลง
+                {isEn ? "Save Changes" : "บันทึกการเปลี่ยนแปลง"}
               </Button>
             </div>
           }
@@ -389,7 +388,7 @@ export default function BranchesPage() {
                 htmlFor="edit-name"
                 className="text-sm font-semibold text-slate-700"
               >
-                ชื่อสาขา
+                {isEn ? "Branch Name" : "ชื่อสาขา"}
               </Label>
               <Input
                 id="edit-name"
@@ -436,16 +435,16 @@ export default function BranchesPage() {
                 <span className="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-red-400 opacity-20"></span>
                 <AlertTriangle size={20} className="relative" />
               </div>
-              ยืนยันการลบสาขา
+              {isEn ? "Confirm Delete Branch" : "ยืนยันการลบสาขา"}
             </div>
           }
           description={
             <div className="pt-2 italic">
-              คุณแน่ใจหรือไม่ว่าต้องการลบสาขา{" "}
-              <strong className="text-slate-900">
-                "{branchToDelete?.name}"
-              </strong>
-              ?
+              {isEn ? (
+                <>Are you sure you want to delete branch <strong className="text-slate-900">"{branchToDelete?.name}"</strong>?</>
+              ) : (
+                <>คุณแน่ใจหรือไม่ว่าต้องการลบสาขา <strong className="text-slate-900">"{branchToDelete?.name}"</strong>?</>
+              )}
             </div>
           }
           footer={
@@ -456,7 +455,7 @@ export default function BranchesPage() {
                 className="flex-1 rounded-xl h-12 text-slate-500 hover:bg-white font-semibold"
                 onClick={() => setDeleteOpen(false)}
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
               <Button
                 type="button"
@@ -468,7 +467,7 @@ export default function BranchesPage() {
                 {isProcessing && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                ยืนยันการลบข้อมูล
+                {isEn ? "Confirm Delete" : "ยืนยันการลบข้อมูล"}
               </Button>
             </div>
           }
@@ -476,11 +475,12 @@ export default function BranchesPage() {
           <div className="p-6">
             <div className="p-4 bg-red-50/50 rounded-2xl border border-red-100/50">
               <span className="text-red-600 font-semibold flex items-center gap-2 mb-2 italic">
-                <AlertTriangle size={14} /> ⚠️ คำเตือนสำคัญ:
+                <AlertTriangle size={14} /> {isEn ? "⚠️ Important Warning:" : "⚠️ คำเตือนสำคัญ:"}
               </span>{" "}
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                ข้อมูลทั้งหมดที่เกี่ยวข้องกับสาขานี้ (Leads, Properties, สัญญา)
-                ทั้งหมด จะถูกลบออกจากระบบอย่างถาวรและไม่สามารถกู้คืนกลับมาได้อีก
+                {isEn 
+                  ? "All data associated with this branch (Leads, Properties, Contracts) will be permanently deleted and cannot be recovered." 
+                  : "ข้อมูลทั้งหมดที่เกี่ยวข้องกับสาขานี้ (Leads, Properties, สัญญา) ทั้งหมด จะถูกลบออกจากระบบอย่างถาวรและไม่สามารถกู้คืนกลับมาได้อีก"}
               </p>
             </div>
           </div>
@@ -490,8 +490,8 @@ export default function BranchesPage() {
         <ResponsiveDialog
           open={menuOpen}
           onOpenChange={setMenuOpen}
-          title="จัดการข้อมูลสาขา"
-          description={`เลือกดำเนินการสำหรับสาขา ${selectedBranchForMenu?.name || ""}`}
+          title={isEn ? "Manage Branch" : "จัดการข้อมูลสาขา"}
+          description={isEn ? `Select an action for branch ${selectedBranchForMenu?.name || ""}` : `เลือกดำเนินการสำหรับสาขา ${selectedBranchForMenu?.name || ""}`}
         >
           <div className="p-6 space-y-3 italic">
             <Button
@@ -512,7 +512,7 @@ export default function BranchesPage() {
               </div>
               <div className="text-left">
                 <p className="font-semibold text-slate-900 leading-none mb-1 group-hover:text-blue-700">
-                  แก้ไขข้อมูลพื้นฐาน
+                  {isEn ? "Edit Branch Details" : "แก้ไขข้อมูลพื้นฐาน"}
                 </p>
                 <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
                   Branch Details & URL Slug
@@ -537,7 +537,7 @@ export default function BranchesPage() {
               </div>
               <div className="text-left">
                 <p className="font-semibold text-red-600 leading-none mb-1 group-hover:text-red-700">
-                  ลบสาขาออกจากระบบ
+                  {isEn ? "Delete Branch from System" : "ลบสาขาออกจากระบบ"}
                 </p>
                 <p className="text-[11px] text-red-400 font-semibold uppercase tracking-wider">
                   DANGER: Permanent Deletion
@@ -550,7 +550,7 @@ export default function BranchesPage() {
               className="w-full h-14 rounded-[24px] text-slate-400 font-semibold mt-4"
               onClick={() => setMenuOpen(false)}
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
           </div>
         </ResponsiveDialog>
@@ -558,3 +558,4 @@ export default function BranchesPage() {
     </div>
   );
 }
+

@@ -13,6 +13,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { siteConfig } from "@/lib/site-config";
 import Image from "next/image";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface QuickShareButtonProps {
   property: {
@@ -41,8 +42,10 @@ export function QuickShareButton({
   property,
   className,
 }: QuickShareButtonProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [copied, setCopied] = useState(false);
-  const [lang, setLang] = useState<"th" | "en" | "cn" | "ru">("th");
+  const [lang, setLang] = useState<"th" | "en" | "cn" | "ru">(isEn ? "en" : "th");
 
   const publicUrl = `${siteConfig.url}/properties/${property.id}`;
   const tTitle = getLocaleValue(property, "title", lang);
@@ -128,14 +131,14 @@ ${L.link} ${publicUrl}
           )}
         >
           <Share2 className="w-4 h-4" />
-          ส่งข้อมูลให้ลูกค้า
+          {isEn ? "Share to Client" : "ส่งข้อมูลให้ลูกค้า"}
         </Button>
       }
       title={
         <div className="flex items-center justify-between text-xl">
           <div className="flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-blue-600" />
-            แชร์ข้อมูลทรัพย์แบบด่วน
+            {isEn ? "Quick Share Property" : "แชร์ข้อมูลทรัพย์แบบด่วน"}
           </div>
         </div>
       }

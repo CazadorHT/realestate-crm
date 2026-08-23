@@ -11,6 +11,7 @@ import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/resp
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { ChevronDown, CheckCircle2, Shield, User as UserIcon, Eye } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StaffIdentity {
   id: string;
@@ -39,6 +40,9 @@ export function AddMemberDialog({
   branchName,
   onAdd,
 }: AddMemberDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [newMember, setNewMember] = useState({ email: "", role: "AGENT" });
   const [searchQuery, setSearchQuery] = useState("");
   const [isAdding, setIsAdding] = useState(false);
@@ -77,10 +81,10 @@ export function AddMemberDialog({
           <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
             <UserPlus size={20} className="text-indigo-600" />
           </div>
-          <span>เพิ่มพนักงาน</span>
+          <span>{isEn ? "Add Member" : "เพิ่มพนักงาน"}</span>
         </div>
       }
-      description={`ดึงพนักงานที่มีในระบบอยู่แล้วเข้าสู่สาขา ${branchName}`}
+      description={isEn ? `Add existing system staff to ${branchName}` : `ดึงพนักงานที่มีในระบบอยู่แล้วเข้าสู่สาขา ${branchName}`}
       footer={
         <div className="flex flex-row sm:flex-row gap-3 w-full">
           {isMobile ? (
@@ -90,7 +94,7 @@ export function AddMemberDialog({
                 variant="ghost"
                 className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DrawerClose>
           ) : (
@@ -100,7 +104,7 @@ export function AddMemberDialog({
                 variant="ghost"
                 className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             </DialogClose>
           )}
@@ -115,7 +119,7 @@ export function AddMemberDialog({
             ) : (
               <Key className="mr-2 h-4 w-4" />
             )}
-            เพิ่มพนักงาน
+            {isEn ? "Add Member" : "เพิ่มพนักงาน"}
           </Button>
         </div>
       }
@@ -124,12 +128,12 @@ export function AddMemberDialog({
         <div className="grid gap-6">
           <div className="grid gap-2">
             <Label htmlFor="user-select" className="text-sm font-semibold text-slate-700 px-1">
-              เลือกจากรายชื่อ
+              {isEn ? "Select from Staff Directory" : "เลือกจากรายชื่อ"}
             </Label>
             <ResponsiveDialog
               open={isMemberPickerOpen}
               onOpenChange={setIsMemberPickerOpen}
-              title="เลือกพนักงาน"
+              title={isEn ? "Select Staff" : "เลือกพนักงาน"}
               trigger={
                 <Button
                   type="button"
@@ -165,7 +169,7 @@ export function AddMemberDialog({
                     ) : (
                       <>
                         <Search size={18} className="text-slate-400" />
-                        <span>ค้นหาหรือเลือกพนักงาน...</span>
+                        <span>{isEn ? "Search or select staff member..." : "ค้นหาหรือเลือกพนักงาน..."}</span>
                       </>
                     )}
                   </div>
@@ -178,7 +182,7 @@ export function AddMemberDialog({
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
-                      placeholder="ค้นหาชื่อหรืออีเมล..."
+                      placeholder={isEn ? "Search by name or email..." : "ค้นหาชื่อหรืออีเมล..."}
                       value={memberSearch}
                       onChange={(e) => setMemberSearch(e.target.value)}
                       className="pl-9 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-500/20"
@@ -224,7 +228,7 @@ export function AddMemberDialog({
                             <div className="flex items-center gap-2">
                               <span
                                 className={cn(
-                                  "text-sm font-bold text-slate-900 truncate",
+                                   "text-sm font-bold text-slate-900 truncate",
                                   newMember.email === p.email &&
                                     "text-indigo-600"
                                 )}
@@ -257,7 +261,7 @@ export function AddMemberDialog({
                     {availableProfiles.length === 0 && (
                       <div className="p-12 text-center">
                         <p className="text-xs text-slate-400 font-medium italic">
-                          พนักงานทุกคนอยู่ในสาขานี้แล้ว
+                          {isEn ? "All staff members are already in this branch" : "พนักงานทุกคนอยู่ในสาขานี้แล้ว"}
                         </p>
                       </div>
                     )}
@@ -270,7 +274,7 @@ export function AddMemberDialog({
           <div className="flex items-center gap-2 py-2">
             <div className="h-px bg-slate-100 flex-1" />
             <span className="text-[10px] text-slate-300 uppercase font-bold tracking-widest px-2">
-              หรือ
+              {isEn ? "OR" : "หรือ"}
             </span>
             <div className="h-px bg-slate-100 flex-1" />
           </div>
@@ -280,7 +284,7 @@ export function AddMemberDialog({
               htmlFor="email"
               className="text-sm font-semibold text-slate-700 px-1"
             >
-              ใส่อีเมลโดยตรง
+              {isEn ? "Enter Email Directly" : "ใส่อีเมลโดยตรง"}
             </Label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -347,7 +351,7 @@ export function AddMemberDialog({
               htmlFor="role"
               className="text-sm font-semibold text-slate-700 px-1"
             >
-              ตำแหน่งภายในสาขา
+              {isEn ? "Role in Branch" : "ตำแหน่งภายในสาขา"}
             </Label>
             <div className="flex flex-wrap gap-2 pt-1">
               <Button
@@ -362,7 +366,7 @@ export function AddMemberDialog({
                 )}
               >
                 <UserIcon size={14} />
-                พนักงานขาย (AGENT)
+                {isEn ? "Agent (AGENT)" : "พนักงานขาย (AGENT)"}
               </Button>
 
               {(selectedProfileRole === "MANAGER" ||
@@ -381,7 +385,7 @@ export function AddMemberDialog({
                   )}
                 >
                   <Shield size={14} />
-                  ผู้จัดการ (MANAGER)
+                  {isEn ? "Manager (MANAGER)" : "ผู้จัดการ (MANAGER)"}
                 </Button>
               )}
 
@@ -398,7 +402,7 @@ export function AddMemberDialog({
                   )}
                 >
                   <Key size={14} />
-                  ผู้ดูแลระบบ (ADMIN)
+                  {isEn ? "Admin (ADMIN)" : "ผู้ดูแลระบบ (ADMIN)"}
                 </Button>
               )}
 
@@ -414,7 +418,7 @@ export function AddMemberDialog({
                 )}
               >
                 <Eye size={14} />
-                ผู้เข้าชม (VIEWER)
+                {isEn ? "Viewer (VIEWER)" : "ผู้เข้าชม (VIEWER)"}
               </Button>
             </div>
           </div>
@@ -423,3 +427,4 @@ export function AddMemberDialog({
     </ResponsiveDialog>
   );
 }
+

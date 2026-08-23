@@ -43,26 +43,33 @@ import {
 import { OwnerMobileView } from "./components/OwnerMobileView";
 import { OwnerDesktopView } from "./components/OwnerDesktopView";
 
-const ownerSchema = z.object({
-  full_name: z.string().min(1, "กรุณากรอกชื่อเจ้าของ"),
-  phone: z
-    .string()
-    .refine(
-      (val) => !val || /^0[0-9]{8,9}$/.test(val.replace(/[- ]/g, "")),
-      "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 9-10 หลัก)",
-    )
-    .nullable()
-    .optional(),
-  line_id: z.string().nullable().optional(),
-  facebook_url: z.string().nullable().optional(),
-  other_contact: z.string().nullable().optional(),
-  company_name: z.string().nullable().optional(),
-  created_by: z.string().nullable().optional(),
-  updated_at: z.string().nullable().optional(),
-  owner_type: z.string().nullable().optional(),
-});
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
-type FormShape = z.infer<typeof ownerSchema>;
+const getOwnerSchema = (isEn: boolean) =>
+  z.object({
+    full_name: z
+      .string()
+      .min(1, isEn ? "Owner name is required" : "กรุณากรอกชื่อเจ้าของ"),
+    phone: z
+      .string()
+      .refine(
+        (val) => !val || /^0[0-9]{8,9}$/.test(val.replace(/[- ]/g, "")),
+        isEn
+          ? "Invalid phone number (must start with 0 and have 9-10 digits)"
+          : "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 9-10 หลัก)",
+      )
+      .nullable()
+      .optional(),
+    line_id: z.string().nullable().optional(),
+    facebook_url: z.string().nullable().optional(),
+    other_contact: z.string().nullable().optional(),
+    company_name: z.string().nullable().optional(),
+    created_by: z.string().nullable().optional(),
+    updated_at: z.string().nullable().optional(),
+    owner_type: z.string().nullable().optional(),
+  });
+
+type FormShape = z.infer<ReturnType<typeof getOwnerSchema>>;
 
 type Props =
   | {
@@ -89,6 +96,9 @@ function toNull(v: string | null | undefined) {
 }
 
 export function OwnerForm(props: Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const isMobile = useIsMobile();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -103,7 +113,7 @@ export function OwnerForm(props: Props) {
   }>({});
 
   const form = useForm<FormShape>({
-    resolver: zodResolver(ownerSchema),
+    resolver: zodResolver(getOwnerSchema(isEn)),
     mode: "onChange",
     defaultValues: {
       full_name: props.initialValues?.full_name ?? "",
@@ -177,9 +187,9 @@ export function OwnerForm(props: Props) {
               id: res.duplicateId as string,
               name: res.duplicateName as string,
             });
-            setError(res.message || "มีข้อมูลเจ้าของทรัพย์นี้ในระบบแล้ว");
+            setError(res.message || (isEn ? "This owner already exists in the system" : "มีข้อมูลเจ้าของทรัพย์นี้ในระบบแล้ว"));
           } else {
-            toast.error(res.message || "เกิดข้อผิดพลาด");
+            toast.error(res.message || (isEn ? "Error occurred" : "เกิดข้อผิดพลาด"));
           }
           return;
         }
@@ -187,8 +197,8 @@ export function OwnerForm(props: Props) {
         toast.success(
           res.message ||
             (props.mode === "create"
-              ? "เพิ่มเจ้าของสำเร็จ"
-              : "บันทึกข้อมูลสำเร็จ"),
+              ? (isEn ? "Owner added successfully" : "เพิ่มเจ้าของสำเร็จ")
+              : (isEn ? "Saved successfully" : "บันทึกข้อมูลสำเร็จ")),
         );
 
         if (props.onSuccess) {
@@ -198,7 +208,7 @@ export function OwnerForm(props: Props) {
           router.push("/protected/owners?success=true");
         }
       } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : "เกิดข้อผิดพลาด";
+        const message = e instanceof Error ? e.message : (isEn ? "Error occurred" : "เกิดข้อผิดพลาด");
         toast.error(message);
       }
     });

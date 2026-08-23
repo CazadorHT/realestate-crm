@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format, differenceInMonths } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import Link from "next/link";
 import {
   Home,
@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { FaClock } from "react-icons/fa6";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealListProps {
   deals: DealWithProperty[];
@@ -37,6 +38,8 @@ interface DealListProps {
 
 export function DealList({ deals, properties = [], hasActiveFilters = false }: DealListProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   if (deals.length === 0) {
     return (
@@ -51,13 +54,13 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
           <div className="space-y-2 max-w-md mx-auto">
             <h3 className="text-2xl font-semibold text-slate-800">
               {hasActiveFilters
-                ? "ไม่พบดีลที่ค้นหา"
-                : "ยังไม่มีดีลในระบบ"}
+                ? (isEn ? "No matching deals found" : "ไม่พบดีลที่ค้นหา")
+                : (isEn ? "No deals in system" : "ยังไม่มีดีลในระบบ")}
             </h3>
             <p className="text-slate-500 font-medium leading-relaxed">
               {hasActiveFilters
-                ? "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่น"
-                : "เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามการขายและการเช่าทรัพย์"}
+                ? (isEn ? "Try adjusting filters or searching with different keywords" : "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่น")
+                : (isEn ? "Create your first deal to track property sales and rentals" : "เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามการขายและการเช่าทรัพย์")}
             </p>
           </div>
         </div>
@@ -69,8 +72,8 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
     <div className="relative">
       {/* 📜 Scrollable Container: Pure vertical scroll instead of pagination */}
       <div
-        className="max-h-[520px] overflow-y-auto pr-3 sm:pr-4 -mr-3 sm:-mr-4  scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent hover:scrollbar-thumb-slate-300 transition-colors"
-        style={{ scrollbarWidth: "thin" }} // 🛡️ Native thin scrollbar fallback
+        className="max-h-[520px] overflow-y-auto pr-3 sm:pr-4 -mr-3 sm:-mr-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent hover:scrollbar-thumb-slate-300 transition-colors"
+        style={{ scrollbarWidth: "thin" }}
       >
         <div className="grid grid-cols-1 gap-4 pb-4">
           {deals.map((deal, index) => (
@@ -122,7 +125,7 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                           : "bg-orange-500 text-white",
                       )}
                     >
-                      {deal.deal_type === "RENT" ? "เช่า" : "ขาย"}
+                      {deal.deal_type === "RENT" ? (isEn ? "Rent" : "เช่า") : (isEn ? "Sale" : "ขาย")}
                     </Badge>
                   </div>
 
@@ -146,13 +149,13 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                           e.preventDefault();
                           const refCode = (deal.property_id || "").slice(0, 8);
                           navigator.clipboard.writeText(refCode);
-                          toast.success(`คัดลอกรหัส ${refCode} แล้ว`, {
-                            description: "คุณสามารถนำไปวางในช่องค้นหาได้ทันที",
+                          toast.success(isEn ? `Copied code ${refCode}` : `คัดลอกรหัส ${refCode} แล้ว`, {
+                            description: isEn ? "You can paste it directly into search" : "คุณสามารถนำไปวางในช่องค้นหาได้ทันที",
                             icon: <Copy className="h-4 w-4 text-blue-500" />,
                           });
                         }}
-                        className="text-[9px] font-semibold text-blue-500 uppercase tracking-widest leading-none bg-blue-50 px-1.5 py-1 rounded-md border border-blue-100/50 hover:bg-blue-100 hover:border-blue-200 transition-all active:scale-95 flex items-center gap-1 group"
-                        title="คลิกเพื่อคัดลอกรหัสอ้างอิง"
+                        className="text-[9px] font-semibold text-blue-500 uppercase tracking-widest leading-none bg-blue-50 px-1.5 py-1 rounded-md border border-blue-100/50 hover:bg-blue-100 hover:border-blue-200 transition-all active:scale-95 flex items-center gap-1 group cursor-pointer"
+                        title={isEn ? "Click to copy reference code" : "คลิกเพื่อคัดลอกรหัสอ้างอิง"}
                       >
                         REF: #{(deal.property_id || "").slice(0, 8)}
                         <Copy className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -162,10 +165,10 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                     {/* Title: Compact font */}
                     <Link
                       href={`/protected/properties/${deal.property_id || ""}`}
-                      className="font-semibold text-sm lg:text-base text-slate-800 hover:text-blue-600 transition-colors block  leading-normal"
+                      className="font-semibold text-sm lg:text-base text-slate-800 hover:text-blue-600 transition-colors block leading-normal cursor-pointer"
                       title={deal.property?.title || "Property"}
                     >
-                      <span className="line-clamp-2">{deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}</span>
+                      <span className="line-clamp-2">{deal.property?.title || (isEn ? "Untitled Property" : "ทรัพย์ไม่ระบุชื่อ")}</span>
                     </Link>
 
                     {/* Metadata: Dates & Duration */}
@@ -173,7 +176,7 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                       {(!deal.transaction_date || deal.undetermined_date) && (
                         <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50/50 rounded-lg border border-amber-100 text-[10px] font-semibold text-amber-600">
                           <Calendar className="h-3 w-3 text-amber-400" />
-                          <span>ยังไม่ระบุวันที่</span>
+                          <span>{isEn ? "Undetermined Date" : "ยังไม่ระบุวันที่"}</span>
                         </div>
                       )}
 
@@ -185,7 +188,7 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                               new Date(deal.transaction_date),
                               "d MMM yy",
                               {
-                                locale: th,
+                                locale: isEn ? enUS : th,
                               },
                             )}
                           </span>
@@ -200,15 +203,13 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                               {format(
                                 new Date(deal.transaction_end_date),
                                 "d MMM yy",
-                                { locale: th },
+                                { locale: isEn ? enUS : th },
                               )}
                             </span>
                           </div>
                         )}
 
                       {(() => {
-                        // Priority 1: Use stored duration_months
-                        // Priority 2: Calculate from transaction_date and transaction_end_date
                         let duration = deal.duration_months;
 
                         if (
@@ -228,8 +229,8 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                               <FaClock className="h-3 w-3" />
                               <span>
                                 {duration >= 12 && duration % 12 === 0
-                                  ? `${Math.floor(duration / 12)} ปี`
-                                  : `${duration} เดือน`}
+                                  ? (isEn ? `${Math.floor(duration / 12)} yr${Math.floor(duration / 12) > 1 ? "s" : ""}` : `${Math.floor(duration / 12)} ปี`)
+                                  : (isEn ? `${duration} mo` : `${duration} เดือน`)}
                               </span>
                             </div>
                           );
@@ -249,7 +250,7 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                         </div>
                         <div className="flex flex-col leading-none">
                           <span className="text-xs text-emerald-600/70 uppercase font-medium mb-0.5 tracking-relaxed">
-                            ค่าคอมมิชชั่น
+                            {isEn ? "Commission" : "ค่าคอมมิชชั่น"}
                           </span>
                           <span className="text-sm font-semibold text-emerald-900">
                             ฿{deal.commission_amount.toLocaleString()}
@@ -267,8 +268,8 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
 
                     {/* Actions Trigger */}
                     <ResponsiveDialog
-                      title="จัดการดีล"
-                      description="เลือกคำสั่งสำหรับดีลนี้"
+                      title={isEn ? "Manage Deal" : "จัดการดีล"}
+                      description={isEn ? "Select an action for this deal" : "เลือกคำสั่งสำหรับดีลนี้"}
                       className="bg-white md:max-w-72!"
                       shouldScaleBackground={false}
                       onOpenAutoFocus={(e) => e.preventDefault()}
@@ -278,7 +279,7 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100 active:scale-95 bg-white shadow-sm"
+                          className="h-8 w-8 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100 active:scale-95 bg-white shadow-sm cursor-pointer"
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
@@ -287,16 +288,16 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                       <div className="p-4 space-y-2">
                         <Link
                           href={`/protected/deals/${deal.id}`}
-                          className="block w-full"
+                          className="block w-full cursor-pointer"
                         >
                           <Button
                             variant="ghost"
-                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
+                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100 cursor-pointer"
                           >
                             <div className="h-8 w-8 rounded-lg bg-blue-100/50 flex items-center justify-center">
                               <Eye className="h-4 w-4" />
                             </div>
-                            ดูรายละเอียดดีล
+                            {isEn ? "View Deal Details" : "ดูรายละเอียดดีล"}
                           </Button>
                         </Link>
 
@@ -308,12 +309,12 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                           trigger={
                             <Button
                               variant="ghost"
-                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100"
+                              className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-600 transition-all border border-transparent hover:border-amber-100 cursor-pointer"
                             >
                               <div className="h-8 w-8 rounded-lg bg-amber-100/50 flex items-center justify-center">
                                 <Edit2 className="h-4 w-4" />
                               </div>
-                              แก้ไขข้อมูลดีล
+                              {isEn ? "Edit Deal Information" : "แก้ไขข้อมูลดีล"}
                             </Button>
                           }
                         />
@@ -330,12 +331,12 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                         >
                           <Button
                             variant="ghost"
-                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all border border-transparent hover:border-rose-100 group"
+                            className="w-full justify-start h-12 rounded-xl px-4 gap-3 font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all border border-transparent hover:border-rose-100 group cursor-pointer"
                           >
                             <div className="h-8 w-8 rounded-lg bg-rose-100/50 flex items-center justify-center group-hover:bg-rose-100">
                               <Trash2 className="h-4 w-4" />
                             </div>
-                            ลบดีลนี้
+                            {isEn ? "Delete This Deal" : "ลบดีลนี้"}
                           </Button>
                         </DeleteDealButton>
                       </div>
@@ -350,3 +351,4 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
     </div>
   );
 }
+

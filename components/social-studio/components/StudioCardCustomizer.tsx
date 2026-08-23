@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Sliders, Layers } from "lucide-react";
 import type { CardBackground, ContentPosition, FontSizeScale } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StudioCardCustomizerProps {
   cardHeightPercent: number;
@@ -63,9 +64,9 @@ export function StudioCardCustomizer({
   setCardOpacity,
   scrimOpacity,
   setScrimOpacity,
-  topScrimOpacity,
+  topScrimOpacity = 0,
   setTopScrimOpacity,
-  bottomScrimOpacity,
+  bottomScrimOpacity = 0,
   setBottomScrimOpacity,
   cardBackground,
   setCardBackground,
@@ -97,6 +98,8 @@ export function StudioCardCustomizer({
   customListingBadgeTextColor,
   setCustomListingBadgeTextColor,
 }: StudioCardCustomizerProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isSplitMode = contentPosition === "split_hero";
 
   return (
@@ -106,19 +109,21 @@ export function StudioCardCustomizer({
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Sliders className="h-3.5 w-3.5 text-amber-400" />
-            ความสูงกรอบข้อมูล (Card Height)
+            {isEn ? "Card Height" : "ความสูงกรอบข้อมูล (Card Height)"}
           </Label>
           <span className="text-[10px] text-amber-400 font-medium">
-            {cardHeightPercent === 0 ? "🎯 Auto-Fit (พอดีข้อความ)" : `กำหนดเอง ${cardHeightPercent}%`}
+            {cardHeightPercent === 0
+              ? (isEn ? "🎯 Auto-Fit" : "🎯 Auto-Fit (พอดีข้อความ)")
+              : (isEn ? `Custom ${cardHeightPercent}%` : `กำหนดเอง ${cardHeightPercent}%`)}
           </span>
         </div>
 
         <div className="grid grid-cols-4 gap-1.5">
           {[
-            { val: 0, label: "🎯 Auto-Fit", sub: "พอดีข้อความ" },
-            { val: 26, label: "26%", sub: "เน้นรูปภาพ" },
-            { val: 36, label: "36%", sub: "สมดุลพอดี" },
-            { val: 46, label: "46%", sub: "การ์ดใหญ่" },
+            { val: 0, label: "🎯 Auto-Fit", sub: isEn ? "Fit text" : "พอดีข้อความ" },
+            { val: 26, label: "26%", sub: isEn ? "Photo focus" : "เน้นรูปภาพ" },
+            { val: 36, label: "36%", sub: isEn ? "Balanced" : "สมดุลพอดี" },
+            { val: 46, label: "46%", sub: isEn ? "Large card" : "การ์ดใหญ่" },
           ].map((preset) => (
             <button
               key={preset.val}
@@ -139,8 +144,8 @@ export function StudioCardCustomizer({
         {cardHeightPercent > 0 && (
           <div className="space-y-1 pt-1">
             <div className="flex justify-between text-[10px] text-slate-400">
-              <span>ลากปรับความสูง</span>
-              <span>{cardHeightPercent}% ของภาพ</span>
+              <span>{isEn ? "Adjust height" : "ลากปรับความสูง"}</span>
+              <span>{isEn ? `${cardHeightPercent}% of height` : `${cardHeightPercent}% ของภาพ`}</span>
             </div>
             <input
               type="range"
@@ -158,19 +163,21 @@ export function StudioCardCustomizer({
         <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
           <div className="flex items-center justify-between">
             <Label className="text-[11px] font-medium text-slate-300">
-              📐 ความกว้างกรอบข้อมูล (Card Width)
+              {isEn ? "📐 Card Width" : "📐 ความกว้างกรอบข้อมูล (Card Width)"}
             </Label>
             <span className="text-[10px] text-amber-400 font-medium">
-              {cardWidthPercent === 0 ? "🎯 Auto 100% เต็มขอบ" : `กำหนดเอง ${cardWidthPercent}%`}
+              {cardWidthPercent === 0
+                ? (isEn ? "🎯 Auto 100%" : "🎯 Auto 100% เต็มขอบ")
+                : (isEn ? `Custom ${cardWidthPercent}%` : `กำหนดเอง ${cardWidthPercent}%`)}
             </span>
           </div>
 
           <div className="grid grid-cols-4 gap-1.5">
             {[
-              { val: 0, label: "🎯 Auto 100%", sub: "เต็มขอบภาพ" },
-              { val: 92, label: "92%", sub: "มาตรฐาน" },
-              { val: 84, label: "84%", sub: "กระชับ" },
-              { val: 75, label: "75%", sub: "เรียวเล็ก" },
+              { val: 0, label: "🎯 Auto 100%", sub: isEn ? "Full width" : "เต็มขอบภาพ" },
+              { val: 92, label: "92%", sub: isEn ? "Standard" : "มาตรฐาน" },
+              { val: 84, label: "84%", sub: isEn ? "Compact" : "กระชับ" },
+              { val: 75, label: "75%", sub: isEn ? "Slim" : "เรียวเล็ก" },
             ].map((preset) => (
               <button
                 key={preset.val}
@@ -191,8 +198,8 @@ export function StudioCardCustomizer({
           {cardWidthPercent > 0 && (
             <div className="space-y-1 pt-1">
               <div className="flex justify-between text-[10px] text-slate-400">
-                <span>ลากปรับความกว้างละเอียด</span>
-                <span>{cardWidthPercent}% ของความกว้าง</span>
+                <span>{isEn ? "Fine-tune width" : "ลากปรับความกว้างละเอียด"}</span>
+                <span>{isEn ? `${cardWidthPercent}% of width` : `${cardWidthPercent}% ของความกว้าง`}</span>
               </div>
               <input
                 type="range"
@@ -211,17 +218,21 @@ export function StudioCardCustomizer({
         <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
           <div className="flex items-center justify-between">
             <Label className="text-[11px] font-medium text-slate-300">
-              ✍️ การจัดวางข้อความ (Text Alignment)
+              {isEn ? "✍️ Text Alignment" : "✍️ การจัดวางข้อความ (Text Alignment)"}
             </Label>
             <span className="text-[10px] text-amber-400 font-medium">
-              {cardTextAlign === "center" ? "↔️ จัดกึ่งกลาง" : cardTextAlign === "right" ? "➡️ ชิดขวา" : "⬅️ ชิดซ้าย"}
+              {cardTextAlign === "center"
+                ? (isEn ? "↔️ Center" : "↔️ จัดกึ่งกลาง")
+                : cardTextAlign === "right"
+                ? (isEn ? "➡️ Right" : "➡️ ชิดขวา")
+                : (isEn ? "⬅️ Left" : "⬅️ ชิดซ้าย")}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             {[
-              { id: "left", label: "⬅️ ชิดซ้าย", sub: "Left Align" },
-              { id: "center", label: "↔️ จัดกึ่งกลาง", sub: "Center Align" },
-              { id: "right", label: "➡️ ชิดขวา", sub: "Right Align" },
+              { id: "left", label: isEn ? "⬅️ Left" : "⬅️ ชิดซ้าย", sub: "Left Align" },
+              { id: "center", label: isEn ? "↔️ Center" : "↔️ จัดกึ่งกลาง", sub: "Center Align" },
+              { id: "right", label: isEn ? "➡️ Right" : "➡️ ชิดขวา", sub: "Right Align" },
             ].map((align) => (
               <button
                 key={align.id}
@@ -245,7 +256,7 @@ export function StudioCardCustomizer({
           <div className="flex items-center justify-between">
             <Label className="text-[11px] font-medium text-slate-300 flex items-center gap-1">
               <Layers className="h-3 w-3 text-amber-400" />
-              ความโปร่งใสพื้นหลังการ์ด (Card Opacity)
+              {isEn ? "Card Opacity" : "ความโปร่งใสพื้นหลังการ์ด (Card Opacity)"}
             </Label>
             <span className="text-[10px] text-amber-400 font-medium font-mono">
               {cardOpacity}%
@@ -254,16 +265,16 @@ export function StudioCardCustomizer({
 
           <div className="grid grid-cols-4 gap-1.5">
             {[
-              { val: 0, label: "0% ใส", sub: "ไร้กรอบ" },
-              { val: 40, label: "40%", sub: "โปร่งใส" },
-              { val: 62, label: "62%", sub: "กระจกใส" },
-              { val: 94, label: "94%", sub: "มืดทึบ" },
+              { val: 0, label: isEn ? "0% Clear" : "0% ใส", sub: isEn ? "Frameless" : "ไร้กรอบ" },
+              { val: 40, label: "40%", sub: isEn ? "Transparent" : "โปร่งใส" },
+              { val: 62, label: "62%", sub: isEn ? "Glass" : "กระจกใส" },
+              { val: 94, label: "94%", sub: isEn ? "Solid" : "มืดทึบ" },
             ].map((preset) => (
               <button
                 key={preset.val}
                 type="button"
                 onClick={() => setCardOpacity(preset.val)}
-                className={`py-1 px-1 rounded-xl border text-[10px] font-medium transition-all text-center flex flex-col items-center gap-0.5 cursor-pointer ${
+                className={`py-1.5 px-1 rounded-xl border text-[10px] font-medium transition-all text-center flex flex-col items-center gap-0.5 cursor-pointer ${
                   cardOpacity === preset.val
                     ? "bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-xs scale-102"
                     : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
@@ -277,7 +288,7 @@ export function StudioCardCustomizer({
 
           <div className="space-y-1 pt-1">
             <div className="flex justify-between text-[10px] text-slate-400">
-              <span>ลากปรับความโปร่งแสง</span>
+              <span>{isEn ? "Adjust opacity" : "ลากปรับความโปร่งแสง"}</span>
               <span>{cardOpacity}%</span>
             </div>
             <input
@@ -299,15 +310,17 @@ export function StudioCardCustomizer({
           </Label>
 
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-slate-400 font-medium">สีการ์ด:</span>
+            <span className="text-[11px] text-slate-400 font-medium">
+              {isEn ? "Card Color:" : "สีการ์ด:"}
+            </span>
             <div className="flex items-center gap-1.5">
               {[
-                { name: "น้ำเงินเข้ม", hex: "#0F172A" },
-                { name: "ดำสนิท", hex: "#000000" },
-                { name: "กรมท่า", hex: "#0B1329" },
-                { name: "เขียวมรกต", hex: "#064E3B" },
-                { name: "แดงไวน์", hex: "#4C0519" },
-                { name: "น้ำตาลมอลต์", hex: "#291E1A" },
+                { name: isEn ? "Deep Blue" : "น้ำเงินเข้ม", hex: "#0F172A" },
+                { name: isEn ? "Pure Black" : "ดำสนิท", hex: "#000000" },
+                { name: isEn ? "Navy Blue" : "กรมท่า", hex: "#0B1329" },
+                { name: isEn ? "Emerald" : "เขียวมรกต", hex: "#064E3B" },
+                { name: isEn ? "Wine Red" : "แดงไวน์", hex: "#4C0519" },
+                { name: isEn ? "Malt Brown" : "น้ำตาลมอลต์", hex: "#291E1A" },
               ].map((c) => (
                 <button
                   key={c.hex}
@@ -327,7 +340,7 @@ export function StudioCardCustomizer({
                 value={customCardBgColor || "#0F172A"}
                 onChange={(e) => setCustomCardBgColor && setCustomCardBgColor(e.target.value)}
                 className="w-6 h-6 rounded-md bg-transparent border border-slate-700 cursor-pointer p-0"
-                title="เลือกสี Custom"
+                title={isEn ? "Pick custom color" : "เลือกสี Custom"}
               />
             </div>
           </div>
@@ -339,19 +352,21 @@ export function StudioCardCustomizer({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label className="text-[11px] font-medium text-slate-300">
-                🌤️ เงาดำขอบบนภาพ (Top Scrim)
+                {isEn ? "🌤️ Top Scrim Shadow" : "🌤️ เงาดำขอบบนภาพ (Top Scrim)"}
               </Label>
               <span className="text-[10px] text-amber-400 font-medium font-mono">
-                {(topScrimOpacity ?? scrimOpacity) === 0 ? "🚫 ปิดใส" : `${topScrimOpacity ?? scrimOpacity}%`}
+                {(topScrimOpacity ?? scrimOpacity) === 0
+                  ? (isEn ? "🚫 Transparent" : "🚫 ปิดใส")
+                  : `${topScrimOpacity ?? scrimOpacity}%`}
               </span>
             </div>
 
             <div className="grid grid-cols-4 gap-1.5">
               {[
-                { val: 0, label: "🚫 0% ใส", sub: "ไม่บังภาพ" },
-                { val: 30, label: "🌤️ 30%", sub: "บางสบายตา" },
-                { val: 60, label: "⛅ 60%", sub: "ปกติ" },
-                { val: 100, label: "🌙 100%", sub: "เข้มชัด" },
+                { val: 0, label: isEn ? "🚫 0% Off" : "🚫 0% ใส", sub: isEn ? "Clear" : "ไม่บังภาพ" },
+                { val: 30, label: "🌤️ 30%", sub: isEn ? "Subtle" : "บางสบายตา" },
+                { val: 60, label: "⛅ 60%", sub: isEn ? "Normal" : "ปกติ" },
+                { val: 100, label: "🌙 100%", sub: isEn ? "Dark" : "เข้มชัด" },
               ].map((preset) => (
                 <button
                   key={preset.val}
@@ -393,19 +408,19 @@ export function StudioCardCustomizer({
           <div className="space-y-1.5 pt-2 border-t border-slate-800/60">
             <div className="flex items-center justify-between">
               <Label className="text-[11px] font-medium text-slate-300">
-                🌙 เงาดำขอบล่างภาพ (Bottom Scrim)
+                {isEn ? "🌙 Bottom Scrim Shadow" : "🌙 เงาดำขอบล่างภาพ (Bottom Scrim)"}
               </Label>
               <span className="text-[10px] text-amber-400 font-medium font-mono">
-                {(bottomScrimOpacity ?? scrimOpacity) === 0 ? "🚫 ปิดใส" : `${bottomScrimOpacity ?? scrimOpacity}%`}
+                {(bottomScrimOpacity ?? scrimOpacity) === 0 ? (isEn ? "🚫 Clear" : "🚫 ปิดใส") : `${bottomScrimOpacity ?? scrimOpacity}%`}
               </span>
             </div>
 
             <div className="grid grid-cols-4 gap-1.5">
               {[
-                { val: 0, label: "🚫 0% ใส", sub: "ไม่บังภาพ" },
-                { val: 30, label: "🌤️ 30%", sub: "บางสบายตา" },
-                { val: 60, label: "⛅ 60%", sub: "ปกติ" },
-                { val: 100, label: "🌙 100%", sub: "เข้มชัด" },
+                { val: 0, label: isEn ? "🚫 0% Clear" : "🚫 0% ใส", sub: isEn ? "No overlay" : "ไม่บังภาพ" },
+                { val: 30, label: isEn ? "🌤️ 30%" : "🌤️ 30%", sub: isEn ? "Subtle" : "บางสบายตา" },
+                { val: 60, label: isEn ? "⛅ 60%" : "⛅ 60%", sub: isEn ? "Normal" : "ปกติ" },
+                { val: 100, label: isEn ? "🌙 100%" : "🌙 100%", sub: isEn ? "Heavy" : "เข้มชัด" },
               ].map((preset) => (
                 <button
                   key={preset.val}
@@ -450,7 +465,7 @@ export function StudioCardCustomizer({
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Sliders className="h-3.5 w-3.5 text-amber-400" />
-            Header ด้านบน (Branding & ป้ายสถานะ)
+            {isEn ? "Top Header (Branding & Status Badges)" : "Header ด้านบน (Branding & ป้ายสถานะ)"}
           </Label>
         </div>
 
@@ -458,11 +473,11 @@ export function StudioCardCustomizer({
         <div className="space-y-1.5 p-2 rounded-xl bg-slate-900/60 border border-slate-800">
           <div className="flex items-center justify-between">
             <Label className="text-[11px] text-slate-300 font-medium">
-              🏢 Branding โลโก้ & ชื่อบริษัท (ฝั่งซ้าย)
+              {isEn ? "🏢 Branding Logo & Company (Left)" : "🏢 Branding โลโก้ & ชื่อบริษัท (ฝั่งซ้าย)"}
             </Label>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-slate-400 font-medium">
-                {showBrandingHeader ? "เปิดแสดง" : "🚫 ปิด"}
+                {showBrandingHeader ? (isEn ? "Enabled" : "เปิดแสดง") : (isEn ? "🚫 Off" : "🚫 ปิด")}
               </span>
               <Switch
                 checked={showBrandingHeader}
@@ -474,13 +489,15 @@ export function StudioCardCustomizer({
 
           {showBrandingHeader && (
             <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
-              <span className="text-[10px] text-slate-400">ขนาดฟอนต์ Branding:</span>
+              <span className="text-[10px] text-slate-400">
+                {isEn ? "Branding Font Size:" : "ขนาดฟอนต์ Branding:"}
+              </span>
               <div className="flex gap-1">
                 {[
-                  { id: "sm", label: "เล็ก" },
-                  { id: "md", label: "ปกติ" },
-                  { id: "lg", label: "ใหญ่" },
-                  { id: "xl", label: "ยักษ์" },
+                  { id: "sm", label: isEn ? "Small" : "เล็ก" },
+                  { id: "md", label: isEn ? "Medium" : "ปกติ" },
+                  { id: "lg", label: isEn ? "Large" : "ใหญ่" },
+                  { id: "xl", label: isEn ? "XL" : "ยักษ์" },
                 ].map((f) => (
                   <button
                     key={f.id}
@@ -504,11 +521,11 @@ export function StudioCardCustomizer({
         <div className="space-y-1.5 p-2 rounded-xl bg-slate-900/60 border border-slate-800">
           <div className="flex items-center justify-between">
             <Label className="text-[11px] text-slate-300 font-medium">
-              🏷️ ป้ายประเภทประกาศ (FOR SALE / RENT ฝั่งขวา)
+              {isEn ? "🏷️ Listing Type Badge (Right)" : "🏷️ ป้ายประเภทประกาศ (FOR SALE / RENT ฝั่งขวา)"}
             </Label>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-slate-400 font-medium">
-                {showTopListingBadge ? "เปิดแสดง" : "🚫 ปิด"}
+                {showTopListingBadge ? (isEn ? "Enabled" : "เปิดแสดง") : (isEn ? "🚫 Off" : "🚫 ปิด")}
               </span>
               <Switch
                 checked={showTopListingBadge}
@@ -521,13 +538,15 @@ export function StudioCardCustomizer({
           {showTopListingBadge && (
             <div className="space-y-2 pt-1 border-t border-slate-800/60">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400 font-medium">ขนาดป้าย & ฟอนต์:</span>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  {isEn ? "Badge Size & Font:" : "ขนาดป้าย & ฟอนต์:"}
+                </span>
                 <div className="flex gap-1">
                   {[
-                    { id: "sm", label: "เล็ก" },
-                    { id: "md", label: "ปกติ" },
-                    { id: "lg", label: "ใหญ่" },
-                    { id: "xl", label: "ยักษ์" },
+                    { id: "sm", label: isEn ? "Small" : "เล็ก" },
+                    { id: "md", label: isEn ? "Medium" : "ปกติ" },
+                    { id: "lg", label: isEn ? "Large" : "ใหญ่" },
+                    { id: "xl", label: isEn ? "XL" : "ยักษ์" },
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -549,15 +568,17 @@ export function StudioCardCustomizer({
               <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800/40">
                 {/* Badge BG Color */}
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400 font-medium">สีพื้นหลังป้าย:</span>
+                  <span className="text-slate-400 font-medium">
+                    {isEn ? "Badge BG:" : "สีพื้นหลังป้าย:"}
+                  </span>
                   <div className="flex items-center gap-1">
                     {[
-                      { name: "ทอง", hex: "#F59E0B" },
-                      { name: "ส้ม", hex: "#F97316" },
-                      { name: "แดง", hex: "#EF4444" },
-                      { name: "น้ำเงิน", hex: "#2563EB" },
-                      { name: "เขียว", hex: "#10B981" },
-                      { name: "ดำ", hex: "#000000" },
+                      { name: isEn ? "Gold" : "ทอง", hex: "#F59E0B" },
+                      { name: isEn ? "Orange" : "ส้ม", hex: "#F97316" },
+                      { name: isEn ? "Red" : "แดง", hex: "#EF4444" },
+                      { name: isEn ? "Blue" : "น้ำเงิน", hex: "#2563EB" },
+                      { name: isEn ? "Emerald" : "เขียว", hex: "#10B981" },
+                      { name: isEn ? "Black" : "ดำ", hex: "#000000" },
                     ].map((c) => (
                       <button
                         key={c.hex}
@@ -577,20 +598,22 @@ export function StudioCardCustomizer({
                       value={customListingBadgeBgColor || "#F59E0B"}
                       onChange={(e) => setCustomListingBadgeBgColor && setCustomListingBadgeBgColor(e.target.value)}
                       className="w-5 h-5 rounded bg-transparent border border-slate-700 cursor-pointer p-0"
-                      title="เลือกสี Custom BG"
+                      title={isEn ? "Choose custom BG color" : "เลือกสี Custom BG"}
                     />
                   </div>
                 </div>
 
                 {/* Badge Text Color */}
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400 font-medium">สีข้อความป้าย:</span>
+                  <span className="text-slate-400 font-medium">
+                    {isEn ? "Badge Text:" : "สีข้อความป้าย:"}
+                  </span>
                   <div className="flex items-center gap-1">
                     {[
-                      { name: "ดำ", hex: "#000000" },
-                      { name: "ขาว", hex: "#FFFFFF" },
-                      { name: "ทอง", hex: "#F59E0B" },
-                      { name: "ส้ม", hex: "#F97316" },
+                      { name: isEn ? "Black" : "ดำ", hex: "#000000" },
+                      { name: isEn ? "White" : "ขาว", hex: "#FFFFFF" },
+                      { name: isEn ? "Gold" : "ทอง", hex: "#F59E0B" },
+                      { name: isEn ? "Orange" : "ส้ม", hex: "#F97316" },
                     ].map((c) => (
                       <button
                         key={c.hex}
@@ -610,7 +633,7 @@ export function StudioCardCustomizer({
                       value={customListingBadgeTextColor || "#000000"}
                       onChange={(e) => setCustomListingBadgeTextColor && setCustomListingBadgeTextColor(e.target.value)}
                       className="w-5 h-5 rounded bg-transparent border border-slate-700 cursor-pointer p-0"
-                      title="เลือกสี Custom Text"
+                      title={isEn ? "Choose custom Text color" : "เลือกสี Custom Text"}
                     />
                   </div>
                 </div>
@@ -624,9 +647,9 @@ export function StudioCardCustomizer({
           <div className="space-y-2 pt-1">
             <div className="grid grid-cols-3 gap-1">
               {[
-                { val: 0, label: "ปกติ (0px)" },
-                { val: 40, label: "🛡️ หลบสตอรี่ (+40)" },
-                { val: 90, label: "⬇️ ต่ำพิเศษ (+90)" },
+                { val: 0, label: isEn ? "Normal (0px)" : "ปกติ (0px)" },
+                { val: 40, label: isEn ? "🛡️ Story Safe (+40)" : "🛡️ หลบสตอรี่ (+40)" },
+                { val: 90, label: isEn ? "⬇️ Extra Low (+90)" : "⬇️ ต่ำพิเศษ (+90)" },
               ].map((preset) => (
                 <button
                   key={preset.val}
@@ -645,7 +668,7 @@ export function StudioCardCustomizer({
 
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] text-slate-400">
-                <span>เลื่อน Header ขึ้น-ลง ละเอียด</span>
+                <span>{isEn ? "Fine-tune Header Offset" : "เลื่อน Header ขึ้น-ลง ละเอียด"}</span>
                 <span>{headerYOffset > 0 ? `+${headerYOffset}px` : `${headerYOffset}px`}</span>
               </div>
               <input
@@ -668,15 +691,15 @@ export function StudioCardCustomizer({
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Sliders className="h-3.5 w-3.5 text-amber-400" />
             {isSplitMode
-              ? "ปรับตำแหน่งการ์ดทั้ง 2 โซนอิสระ"
-              : "ตำแหน่งกรอบข้อมูล (หนี Deadzone แพลตฟอร์ม)"}
+              ? (isEn ? "Dual Zone Card Positioning" : "ปรับตำแหน่งการ์ดทั้ง 2 โซนอิสระ")
+              : (isEn ? "Card Position & Platform Deadzone" : "ตำแหน่งกรอบข้อมูล (หนี Deadzone แพลตฟอร์ม)")}
           </Label>
           <span className="text-[10px] text-amber-400 font-medium">
             {isSplitMode
-              ? "✨ แยก 2 การ์ดอิสระ"
+              ? (isEn ? "✨ Split 2 Cards" : "✨ แยก 2 การ์ดอิสระ")
               : cardYOffset === 0
-                ? "📌 ล่างสุดปกติ"
-                : `ยกขึ้น ${Math.abs(cardYOffset)}px`}
+                ? (isEn ? "📌 Default Bottom" : "📌 ล่างสุดปกติ")
+                : (isEn ? `Lifted ${Math.abs(cardYOffset)}px` : `ยกขึ้น ${Math.abs(cardYOffset)}px`)}
           </span>
         </div>
 
@@ -684,11 +707,11 @@ export function StudioCardCustomizer({
           <div className="space-y-3 pt-1">
             <div className="space-y-1 p-2 rounded-xl bg-slate-900/60 border border-slate-800">
               <div className="flex justify-between text-[11px] text-slate-300 font-medium">
-                <span>🔝 การ์ดโซนบน/กลาง (Zone A)</span>
+                <span>{isEn ? "🔝 Top/Mid Zone Card (Zone A)" : "🔝 การ์ดโซนบน/กลาง (Zone A)"}</span>
                 <span className="text-amber-400">
                   {card1YOffset !== 0
                     ? `${card1YOffset > 0 ? `+${card1YOffset}` : card1YOffset}px`
-                    : "ปกติ (0px)"}
+                    : (isEn ? "Normal (0px)" : "ปกติ (0px)")}
                 </span>
               </div>
               <input
@@ -704,11 +727,11 @@ export function StudioCardCustomizer({
 
             <div className="space-y-1 p-2 rounded-xl bg-slate-900/60 border border-slate-800">
               <div className="flex justify-between text-[11px] text-slate-300 font-medium">
-                <span>🔻 การ์ดโซนล่าง (Zone B)</span>
+                <span>{isEn ? "🔻 Bottom Zone Card (Zone B)" : "🔻 การ์ดโซนล่าง (Zone B)"}</span>
                 <span className="text-amber-400">
                   {card2YOffset !== 0
                     ? `${card2YOffset > 0 ? `+${card2YOffset}` : card2YOffset}px`
-                    : "ปกติ (0px)"}
+                    : (isEn ? "Normal (0px)" : "ปกติ (0px)")}
                 </span>
               </div>
               <input
@@ -726,10 +749,10 @@ export function StudioCardCustomizer({
           <div className="space-y-2">
             <div className="grid grid-cols-4 gap-1">
               {[
-                { val: 0, label: "📌 ล่างสุด (0)" },
-                { val: -240, label: "📸 หลบ IG (-240)" },
-                { val: -380, label: "🛡️ หลบ TikTok (-380)" },
-                { val: -580, label: "🎯 กึ่งกลาง (-580)" },
+                { val: 0, label: isEn ? "📌 Bottom (0)" : "📌 ล่างสุด (0)" },
+                { val: -240, label: isEn ? "📸 IG Safe (-240)" : "📸 หลบ IG (-240)" },
+                { val: -380, label: isEn ? "🛡️ TikTok Safe (-380)" : "🛡️ หลบ TikTok (-380)" },
+                { val: -580, label: isEn ? "🎯 Center (-580)" : "🎯 กึ่งกลาง (-580)" },
               ].map((preset) => (
                 <button
                   key={preset.val}
@@ -748,13 +771,13 @@ export function StudioCardCustomizer({
 
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] text-slate-400">
-                <span>เลื่อนกรอบ ขึ้น-ลง ละเอียด</span>
+                <span>{isEn ? "Fine-tune Card Offset" : "เลื่อนกรอบ ขึ้น-ลง ละเอียด"}</span>
                 <span>
                   {cardYOffset < 0
-                    ? `ยกขึ้น ${Math.abs(cardYOffset)}px (หลบแถบล่าง)`
+                    ? (isEn ? `Lifted ${Math.abs(cardYOffset)}px (Safe zone)` : `ยกขึ้น ${Math.abs(cardYOffset)}px (หลบแถบล่าง)`)
                     : cardYOffset > 0
-                      ? `กดลง +${cardYOffset}px`
-                      : "0px (ล่างสุด)"}
+                      ? `+${cardYOffset}px`
+                      : (isEn ? "0px (Bottom)" : "0px (ล่างสุด)")}
                 </span>
               </div>
               <input
@@ -772,7 +795,7 @@ export function StudioCardCustomizer({
 
         <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
           <Label className="text-[11px] font-medium text-slate-400">
-            🛡️ หลบปุ่ม Like / Share ฝั่งขวา (TikTok)
+            {isEn ? "🛡️ Avoid TikTok Right Action Buttons" : "🛡️ หลบปุ่ม Like / Share ฝั่งขวา (TikTok)"}
           </Label>
           <Switch
             checked={cardRightMargin > 0}
@@ -784,3 +807,4 @@ export function StudioCardCustomizer({
     </div>
   );
 }
+

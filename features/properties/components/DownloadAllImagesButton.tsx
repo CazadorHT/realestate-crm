@@ -6,6 +6,7 @@ import { Download, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import JSZip from "jszip";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface DownloadAllImagesButtonProps {
   images: (string | { url?: string; image_url?: string; storage_path?: string })[];
@@ -24,6 +25,8 @@ export function DownloadAllImagesButton({
   variant = "outline",
   size = "sm",
 }: DownloadAllImagesButtonProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -138,24 +141,24 @@ export function DownloadAllImagesButton({
         "rounded-full transition-all duration-200 font-bold text-xs flex items-center gap-1.5 active:scale-95 cursor-pointer",
         className
       )}
-      title="ดาวน์โหลดรูปภาพทั้งหมดของทรัพย์นี้เป็นไฟล์ .ZIP"
+      title={isEn ? "Download all property images as a .ZIP file" : "ดาวน์โหลดรูปภาพทั้งหมดของทรัพย์นี้เป็นไฟล์ .ZIP"}
     >
       {isDownloading ? (
         <>
           <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
           <span>
-            {progress ? `${progress.current}/${progress.total}` : "กำลังดาวน์โหลด..."}
+            {progress ? `${progress.current}/${progress.total}` : (isEn ? "Downloading..." : "กำลังดาวน์โหลด...")}
           </span>
         </>
       ) : isSuccess ? (
         <>
           <Check className="h-3.5 w-3.5 text-emerald-600" />
-          <span>โหลดสำเร็จ ({imageUrls.length})</span>
+          <span>{isEn ? `Downloaded (${imageUrls.length})` : `โหลดสำเร็จ (${imageUrls.length})`}</span>
         </>
       ) : (
         <>
           <Download className="h-3.5 w-3.5 text-blue-600" />
-          <span>โหลดรูปทั้งหมด ({imageUrls.length})</span>
+          <span>{isEn ? `Download All (${imageUrls.length})` : `โหลดรูปทั้งหมด (${imageUrls.length})`}</span>
         </>
       )}
     </Button>

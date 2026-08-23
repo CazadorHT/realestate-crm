@@ -24,6 +24,7 @@ import { DealsFilters } from "./components/DealsFilters";
 import { DealsTableRow } from "./components/DealsTableRow";
 import { DealsMobileCard } from "./components/DealsMobileCard";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealsTableProps {
   initialData?: DealWithProperty[];
@@ -62,6 +63,9 @@ export function DealsTable({
   properties = [],
   timeRange: initialTimeRange = "all",
 }: DealsTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const {
     q,
     setQ,
@@ -123,10 +127,10 @@ export function DealsTable({
       });
       if (result.success && result.ids) {
         toggleSelectAll(result.ids);
-        toast.info(`เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
+        toast.info(isEn ? `Selected all ${result.ids.length} records` : `เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
       }
     } catch (err) {
-      toast.error("ไม่สามารถเลือกทั้งหมดได้");
+      toast.error(isEn ? "Failed to select all records" : "ไม่สามารถเลือกทั้งหมดได้");
     } finally {
       setIsGlobalLoading(false);
     }
@@ -144,7 +148,7 @@ export function DealsTable({
           clearSelection();
           refresh();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
+          toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
         }
         resolve();
       });
@@ -158,26 +162,26 @@ export function DealsTable({
         onClear={clearSelection}
         onDelete={handleBulkDelete}
         onExport={() => exportDealsAction(Array.from(selectedIds))}
-        entityName="ดีล"
+        entityName={isEn ? "deal" : "ดีล"}
         className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}
       />
 
       {/* Global Selection Indicator */}
       {isAllSelected && selectedCount < count && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-from-top-4 duration-300 shadow-sm">
           <div className="flex items-center gap-3 text-sm text-blue-800">
             <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
-            <span>เลือกทั้งหมด {selectedCount} ดีลในหน้านี้แล้ว</span>
+            <span>{isEn ? `Selected all ${selectedCount} deals on this page` : `เลือกทั้งหมด ${selectedCount} ดีลในหน้านี้แล้ว`}</span>
           </div>
           <button
             onClick={handleSelectAllGlobal}
             disabled={isGlobalLoading}
-            className="text-sm font-semibold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+            className="text-sm font-semibold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             {isGlobalLoading ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : null}
-            เลือกทั้งหมด {count} ดีลในระบบ
+            {isEn ? `Select all ${count} deals in system` : `เลือกทั้งหมด ${count} ดีลในระบบ`}
           </button>
         </div>
       )}
@@ -186,13 +190,19 @@ export function DealsTable({
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300">
           <div className="flex items-center gap-3 text-sm text-emerald-800">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span>คุณได้เลือกทั้งหมด <strong>{count}</strong> ดีลในระบบแล้ว (ทุกหน้า)</span>
+            <span>
+              {isEn ? (
+                <>You have selected all <strong>{count}</strong> deals across all pages</>
+              ) : (
+                <>คุณได้เลือกทั้งหมด <strong>{count}</strong> ดีลในระบบแล้ว (ทุกหน้า)</>
+              )}
+            </span>
           </div>
           <button
             onClick={clearSelection}
-            className="text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+            className="text-sm font-semibold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all cursor-pointer"
           >
-            ยกเลิกการเลือก
+            {isEn ? "Deselect All" : "ยกเลิกการเลือก"}
           </button>
         </div>
       )}
@@ -240,7 +250,7 @@ export function DealsTable({
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={() => toggleSelectAll(allIds)}
-                      aria-label="เลือกทั้งหมด"
+                      aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
                       className={
                         isPartialSelected
                           ? "data-[state=checked]:bg-primary/50"
@@ -249,31 +259,31 @@ export function DealsTable({
                     />
                   </TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                    ประเภท
+                    {isEn ? "Type" : "ประเภท"}
                   </TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                    ทรัพย์
+                    {isEn ? "Property" : "ทรัพย์"}
                   </TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                    ลีด
+                    {isEn ? "Lead" : "ลีด"}
                   </TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                    ราคา{" "}
+                    {isEn ? "Price " : "ราคา "}
                     <span className="text-[9px] font-normal text-slate-400">
-                      (เดิม)
+                      ({isEn ? "Orig." : "เดิม"})
                     </span>
                   </TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                    ค่าคอม
+                    {isEn ? "Commission" : "ค่าคอม"}
                   </TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                    ระยะสัญญา
+                    {isEn ? "Term" : "ระยะสัญญา"}
                   </TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                    วันที่
+                    {isEn ? "Date" : "วันที่"}
                   </TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                    สถานะ
+                    {isEn ? "Status" : "สถานะ"}
                   </TableHead>
                   <TableHead className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     Actions
@@ -295,13 +305,13 @@ export function DealsTable({
                           <div className="space-y-2 max-w-md">
                             <h3 className="text-2xl font-semibold text-slate-800">
                               {hasActiveFilters
-                                ? "ไม่พบดีลที่ค้นหา"
-                                : "ยังไม่มีดีลในระบบ"}
+                                ? (isEn ? "No matching deals found" : "ไม่พบดีลที่ค้นหา")
+                                : (isEn ? "No deals in system" : "ยังไม่มีดีลในระบบ")}
                             </h3>
                             <p className="text-slate-500 leading-relaxed">
                               {hasActiveFilters
-                                ? "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่น"
-                                : "เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามการขายและการเช่าทรัพย์"}
+                                ? (isEn ? "Try adjusting filters or searching with different keywords" : "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่น")
+                                : (isEn ? "Create your first deal to start tracking sales and rental closings." : "เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามการขายและการเช่าทรัพย์")}
                             </p>
                           </div>
                         </div>
@@ -354,3 +364,4 @@ export function DealsTable({
     </div>
   );
 }
+

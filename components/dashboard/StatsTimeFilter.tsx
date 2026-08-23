@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Calendar, ChevronDown, Layers, Clock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface TimeRangeOption {
   label: string;
@@ -14,27 +14,29 @@ interface TimeRangeOption {
   sublabel?: string;
 }
 
-const GENERAL_RANGES: TimeRangeOption[] = [
-  { label: "ทั้งหมด", value: "all", icon: Clock },
-  { label: "เดือนนี้", value: "this-month", icon: Calendar },
-  { label: "6 เดือน", value: "6-months", icon: Calendar },
-  { label: "1 ปี", value: "1-year", icon: Calendar },
-];
-
-const QUARTER_RANGES: TimeRangeOption[] = [
-  { label: "ไตรมาส 1", sublabel: "(ม.ค. - มี.ค.)", value: "q1", icon: Layers },
-  { label: "ไตรมาส 2", sublabel: "(เม.ย. - มิ.ย.)", value: "q2", icon: Layers },
-  { label: "ไตรมาส 3", sublabel: "(ก.ค. - ก.ย.)", value: "q3", icon: Layers },
-  { label: "ไตรมาส 4", sublabel: "(ต.ค. - ธ.ค.)", value: "q4", icon: Layers },
-];
-
 export function StatsTimeFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentRange = searchParams.get("timeRange") || "all";
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
-  const allOptions = [...GENERAL_RANGES, ...QUARTER_RANGES];
-  const activeOption = allOptions.find((opt) => opt.value === currentRange) || GENERAL_RANGES[0];
+  const generalRanges: TimeRangeOption[] = [
+    { label: isEn ? "All Time" : "ทั้งหมด", value: "all", icon: Clock },
+    { label: isEn ? "This Month" : "เดือนนี้", value: "this-month", icon: Calendar },
+    { label: isEn ? "6 Months" : "6 เดือน", value: "6-months", icon: Calendar },
+    { label: isEn ? "1 Year" : "1 ปี", value: "1-year", icon: Calendar },
+  ];
+
+  const quarterRanges: TimeRangeOption[] = [
+    { label: isEn ? "Quarter 1" : "ไตรมาส 1", sublabel: isEn ? "(Jan - Mar)" : "(ม.ค. - มี.ค.)", value: "q1", icon: Layers },
+    { label: isEn ? "Quarter 2" : "ไตรมาส 2", sublabel: isEn ? "(Apr - Jun)" : "(เม.ย. - มิ.ย.)", value: "q2", icon: Layers },
+    { label: isEn ? "Quarter 3" : "ไตรมาส 3", sublabel: isEn ? "(Jul - Sep)" : "(ก.ค. - ก.ย.)", value: "q3", icon: Layers },
+    { label: isEn ? "Quarter 4" : "ไตรมาส 4", sublabel: isEn ? "(Oct - Dec)" : "(ต.ค. - ธ.ค.)", value: "q4", icon: Layers },
+  ];
+
+  const allOptions = [...generalRanges, ...quarterRanges];
+  const activeOption = allOptions.find((opt) => opt.value === currentRange) || generalRanges[0];
 
   const handleRangeChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -50,18 +52,18 @@ export function StatsTimeFilter() {
   return (
     <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-500">
       <ResponsiveDialog
-        title="เลือกช่วงเวลาแสดงผล"
+        title={isEn ? "Select Time Range" : "เลือกช่วงเวลาแสดงผล"}
         trigger={
           <Button
             variant="outline"
-            className="h-12 px-5 rounded-2xl bg-white border-slate-200 shadow-sm hover:border-blue-200 transition-all group flex items-center gap-3 active:scale-95"
+            className="h-12 px-5 rounded-2xl bg-white border-slate-200 shadow-sm hover:border-blue-200 transition-all group flex items-center gap-3 active:scale-95 cursor-pointer"
           >
             <div className="h-8 w-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 group-hover:bg-blue-100! transition-colors">
               <Calendar className="h-4 w-4" />
             </div>
             <div className="flex flex-col items-start pr-4">
               <span className="text-[10px] font-semibolduppercase tracking-widest leading-none mb-1">
-                ช่วงเวลาที่เลือก
+                {isEn ? "Selected Range" : "ช่วงเวลาที่เลือก"}
               </span>
               <span className="text-sm font-semibold leading-none">
                 {activeOption.label}{" "}
@@ -78,10 +80,10 @@ export function StatsTimeFilter() {
           {/* General Ranges */}
           <div className="space-y-3">
              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-               <Calendar className="h-3 w-3" /> ช่วงเวลาทั่วไป
+               <Calendar className="h-3 w-3" /> {isEn ? "General Timeframes" : "ช่วงเวลาทั่วไป"}
              </span>
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-               {GENERAL_RANGES.map((range) => {
+               {generalRanges.map((range) => {
                  const isActive = currentRange === range.value;
                  return (
                    <Button
@@ -89,7 +91,7 @@ export function StatsTimeFilter() {
                      variant="ghost"
                      onClick={() => handleRangeChange(range.value)}
                      className={cn(
-                       "h-14 justify-between px-4 rounded-xl border transition-all",
+                       "h-14 justify-between px-4 rounded-xl border transition-all cursor-pointer",
                        isActive 
                         ? "bg-blue-50 text-blue-600 border-blue-100 shadow-sm" 
                         : "text-slate-600 border-transparent hover:bg-slate-50"
@@ -113,10 +115,10 @@ export function StatsTimeFilter() {
           {/* Quarter Ranges */}
           <div className="space-y-3 pb-8">
              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-               <Layers className="h-3 w-3" /> แยกตามไตรมาส
+               <Layers className="h-3 w-3" /> {isEn ? "Quarterly Breakdown" : "แยกตามไตรมาส"}
              </span>
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-               {QUARTER_RANGES.map((range) => {
+               {quarterRanges.map((range) => {
                  const isActive = currentRange === range.value;
                  return (
                    <Button
@@ -124,7 +126,7 @@ export function StatsTimeFilter() {
                      variant="ghost"
                      onClick={() => handleRangeChange(range.value)}
                      className={cn(
-                       "h-16 justify-between px-4 rounded-xl border transition-all",
+                       "h-16 justify-between px-4 rounded-xl border transition-all cursor-pointer",
                        isActive 
                         ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm" 
                         : "text-slate-600 border-transparent hover:bg-slate-50"

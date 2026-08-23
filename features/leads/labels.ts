@@ -1,6 +1,41 @@
 export type LeadStage = "NEW" | "CONTACTED" | "VIEWED" | "NEGOTIATING" | "CLOSED";
 export type LeadSource = "PORTAL" | "FACEBOOK" | "INSTAGRAM" | "LINE" | "WEBSITE" | "REFERRAL" | "OTHER" | "WHATSAPP" | "WECHAT";
 export type LeadActivityType = "CALL" | "LINE_CHAT" | "EMAIL" | "VIEWING" | "FOLLOW_UP" | "NOTE" | "SYSTEM";
+export type MultiLangLabel = {
+  th: string;
+  en: string;
+};
+
+export const LEAD_SOURCE_I18N: Record<LeadSource, MultiLangLabel> = {
+  PORTAL: { th: "ติดต่อเข้ามาเอง", en: "Inbound / Portal" },
+  FACEBOOK: { th: "มาจาก Facebook", en: "Facebook" },
+  INSTAGRAM: { th: "มาจาก Instagram", en: "Instagram" },
+  LINE: { th: "มาจาก LINE", en: "LINE" },
+  WEBSITE: { th: "มาจาก Website", en: "Website" },
+  REFERRAL: { th: "ถูกแนะนำมา", en: "Referral" },
+  OTHER: { th: "อื่น ๆ", en: "Other" },
+  WHATSAPP: { th: "มาจาก Whatsapp", en: "WhatsApp" },
+  WECHAT: { th: "มาจาก WeChat", en: "WeChat" },
+};
+
+export const LEAD_STAGE_I18N: Record<LeadStage, MultiLangLabel> = {
+  NEW: { th: "ลูกค้าใหม่", en: "New Lead" },
+  CONTACTED: { th: "ติดต่อกับลูกค้าแล้ว", en: "Contacted" },
+  VIEWED: { th: "ลูกค้านัดดูแล้ว", en: "Viewing" },
+  NEGOTIATING: { th: "กำลังต่อรอง", en: "Negotiating" },
+  CLOSED: { th: "ปิดดีลแล้ว", en: "Closed" },
+};
+
+export const LEAD_ACTIVITY_TYPE_I18N: Record<LeadActivityType, MultiLangLabel> = {
+  CALL: { th: "โทรศัพท์", en: "Phone Call" },
+  LINE_CHAT: { th: "แชท LINE", en: "LINE Chat" },
+  EMAIL: { th: "อีเมล", en: "Email" },
+  VIEWING: { th: "พาชมทรัพย์", en: "Viewing" },
+  FOLLOW_UP: { th: "ติดตามผล", en: "Follow-up" },
+  NOTE: { th: "บันทึก", en: "Note" },
+  SYSTEM: { th: "ระบบ", en: "System" },
+};
+
 export const LEAD_SOURCE_LABELS = {
   PORTAL: "ติดต่อเข้ามาเอง",
   FACEBOOK: "มาจากช่องทาง Facebook",
@@ -30,6 +65,7 @@ export const LEAD_ACTIVITY_TYPE_LABELS = {
   NOTE: "บันทึกโน้ต",
   SYSTEM: "ระบบ",
 } satisfies Record<LeadActivityType, string>;
+
 /** === ORDER (ใช้ sort_order ที่คุณกำหนด) ===
  * TS จะบังคับว่ารายการใน array ต้องเป็น enum ของจริง
  */
@@ -61,26 +97,41 @@ export const LEAD_ACTIVITY_TYPE_ORDER = [
   "NOTE",
   "SYSTEM",
 ] as const satisfies readonly [LeadActivityType, ...LeadActivityType[]];
+
 /** helpers */
 
-export function leadStageLabelNullable(v: LeadStage | string | null | undefined) {
+export function leadStageLabelNullable(v: LeadStage | string | null | undefined, lang?: string) {
   if (!v) return "-";
+  const entry = LEAD_STAGE_I18N[v as LeadStage];
+  if (entry) return lang === "en" ? entry.en : entry.th;
   return LEAD_STAGE_LABELS[v as LeadStage] ?? v;
 }
-export function leadSourceLabelNullable(v: LeadSource | string | null | undefined) {
+
+export function leadSourceLabelNullable(v: LeadSource | string | null | undefined, lang?: string) {
   if (!v) return "-";
+  const entry = LEAD_SOURCE_I18N[v as LeadSource];
+  if (entry) return lang === "en" ? entry.en : entry.th;
   return LEAD_SOURCE_LABELS[v as LeadSource] ?? v;
 }
+
 export function leadActivityTypeLabelNullable(
   v: LeadActivityType | string | null | undefined,
+  lang?: string,
 ) {
   if (!v) return "-";
+  const entry = LEAD_ACTIVITY_TYPE_I18N[v as LeadActivityType];
+  if (entry) return lang === "en" ? entry.en : entry.th;
   return LEAD_ACTIVITY_TYPE_LABELS[v as LeadActivityType] ?? v;
 }
+
 /** fallback เผื่อเจอ string แปลก ๆ (ข้อมูลเก่าหรือ null) */
-export function safeEnumLabel(map: Record<string, string>, v: any) {
+export function safeEnumLabel(map: Record<string, any>, v: any, lang?: string) {
   if (!v) return "-";
-  return map[v] ?? String(v);
+  const val = map[v];
+  if (val && typeof val === "object" && "th" in val && "en" in val) {
+    return lang === "en" ? val.en : val.th;
+  }
+  return val ?? String(v);
 }
 
 export const NATIONALITY_OPTIONS = [

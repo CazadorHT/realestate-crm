@@ -32,6 +32,7 @@ import { AgentMultiSelect } from "../../sections/AgentMultiSelect";
 import { Button } from "@/components/ui/button";
 import { FaUserPlus } from "react-icons/fa";
 import { CoBrokerSelect } from "@/features/co-brokers/components/CoBrokerSelect";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface ManagementSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
@@ -59,6 +60,8 @@ export const ManagementSection = ({
   isMultiTenant,
   userRole,
 }: ManagementSectionProps) => {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const [isAddingOwner, setIsAddingOwner] = useState(false);
@@ -111,10 +114,10 @@ export const ManagementSection = ({
         </div>
         <div className="flex flex-col">
           <h3 className="text-sm sm:text-base font-medium text-slate-800">
-            การจัดการ (Management)
+            {isEn ? "Management & Inventory" : "การจัดการ (Management)"}
           </h3>
           <p className="text-[10px] sm:text-xs text-slate-500">
-            จัดการข้อมูลทรัพย์สิน
+            {isEn ? "Manage listing status, ownership and allocation" : "จัดการข้อมูลทรัพย์สิน"}
           </p>
         </div>
       </div>
@@ -130,13 +133,13 @@ export const ManagementSection = ({
               <FormItem className="space-y-2">
                 <FormLabel className="text-slate-900 font-bold text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-2">
                   <Activity className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>สถานะประกาศ (Status)</span>
+                  <span>{isEn ? "Listing Status" : "สถานะประกาศ (Status)"}</span>
                 </FormLabel>
                 {isMobileOrTablet ? (
                   <ResponsiveDialog
                     open={statusOpen}
                     onOpenChange={setStatusOpen}
-                    title="เลือกสถานะประกาศ"
+                    title={isEn ? "Select Listing Status" : "เลือกสถานะประกาศ"}
                     trigger={
                       <Button
                         type="button"
@@ -156,7 +159,7 @@ export const ManagementSection = ({
                             "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
                         )}
                       >
-                        <span>{PROPERTY_STATUS_LABELS[field.value as PropertyStatus]?.th || field.value}</span>
+                        <span>{PROPERTY_STATUS_LABELS[field.value as PropertyStatus]?.[isEn ? "en" : "th"] || field.value}</span>
                       </Button>
                     }
                   >
@@ -190,7 +193,7 @@ export const ManagementSection = ({
                                     "bg-amber-500",
                                 )}
                               />
-                              <span>{PROPERTY_STATUS_LABELS[s]?.th || s}</span>
+                              <span>{PROPERTY_STATUS_LABELS[s]?.[isEn ? "en" : "th"] || s}</span>
                             </span>
                             {isSelected && (
                               <div className="bg-blue-600 rounded-full p-1 text-white shrink-0">
@@ -224,17 +227,17 @@ export const ManagementSection = ({
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white rounded-2xl border-none shadow-xl ring-1 ring-black/5 p-1">
+                    <SelectContent className="bg-white rounded-2xl shadow-xl border-none p-1">
                       {PROPERTY_STATUS_ORDER.map((s) => (
                         <SelectItem
                           key={s}
                           value={s}
-                          className="py-3 rounded-lg text-sm font-medium focus:bg-slate-50 cursor-pointer transition-colors"
+                          className="py-3 font-medium text-sm rounded-lg"
                         >
                           <span className="flex items-center gap-3">
                             <span
                               className={cn(
-                                "w-3 h-3 rounded-full shrink-0 shadow-inner",
+                                "w-2.5 h-2.5 rounded-full shrink-0 shadow-inner",
                                 s === "ACTIVE" && "bg-emerald-500",
                                 s === "DRAFT" && "bg-slate-400",
                                 s === "ARCHIVED" && "bg-slate-800",
@@ -243,7 +246,7 @@ export const ManagementSection = ({
                                   "bg-amber-500",
                               )}
                             />
-                            <span>{PROPERTY_STATUS_LABELS[s]?.th || s}</span>
+                            <span>{PROPERTY_STATUS_LABELS[s]?.[isEn ? "en" : "th"] || s}</span>
                           </span>
                         </SelectItem>
                       ))}
@@ -263,7 +266,7 @@ export const ManagementSection = ({
                 <div className="flex items-center justify-between pb-1">
                   <FormLabel className="text-slate-900 font-bold text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-2">
                     <User className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>เจ้าของทรัพย์ (Owner)</span>
+                    <span>{isEn ? "Property Owner" : "เจ้าของทรัพย์ (Owner)"}</span>
                   </FormLabel>
                   <div className="flex items-center gap-4">
                     {setAllBranches &&
@@ -274,7 +277,7 @@ export const ManagementSection = ({
                             htmlFor="owner-all-branches"
                             className="text-[10px] text-blue-700 font-bold cursor-pointer"
                           >
-                            ทุกสาขา
+                            {isEn ? "All Branches" : "ทุกสาขา"}
                           </Label>
                           <Switch
                             id="owner-all-branches"
@@ -287,11 +290,11 @@ export const ManagementSection = ({
                     {isCoAgent && (
                       <span className="text-[10px] text-blue-600 font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                        <span>ℹ️ บันทึกคู่กับ Co-Agent ได้</span>
+                        <span>{isEn ? "ℹ️ Supports Co-Agent record" : "ℹ️ บันทึกคู่กับ Co-Agent ได้"}</span>
                       </span>
                     )}
                     <span className="text-[10px] text-slate-400 font-medium bg-slate-100 px-2 py-0.5 rounded-md">
-                      ส่วนตัว 🔒
+                      {isEn ? "Private 🔒" : "ส่วนตัว 🔒"}
                     </span>
                   </div>
                 </div>
@@ -305,7 +308,7 @@ export const ManagementSection = ({
                           <ResponsiveDialog
                             open={ownerOpen}
                             onOpenChange={setOwnerOpen}
-                            title="เลือกเจ้าของทรัพย์"
+                            title={isEn ? "Select Property Owner" : "เลือกเจ้าของทรัพย์"}
                             trigger={
                               <Button
                                 type="button"
@@ -315,7 +318,7 @@ export const ManagementSection = ({
                                 <span className="truncate">
                                   {selectedOwner
                                     ? `K. ${selectedOwner.full_name}${selectedOwner.phone ? ` (${selectedOwner.phone})` : ""}`
-                                    : "ค้นหาหรือเลือกเจ้าของ"}
+                                    : (isEn ? "Search or select owner" : "ค้นหาหรือเลือกเจ้าของ")}
                                 </span>
                               </Button>
                             }
@@ -334,7 +337,7 @@ export const ManagementSection = ({
                               : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
                           )}
                         >
-                          <span className="text-xs font-bold italic text-slate-400">-- ไม่ระบุเจ้าของ --</span>
+                          <span className="text-xs font-bold italic text-slate-400">{isEn ? "-- No Owner Specified --" : "-- ไม่ระบุเจ้าของ --"}</span>
                           {!field.value && (
                             <div className="bg-blue-600 rounded-full p-1 text-white shrink-0">
                               <Check className="h-3 w-3" />
@@ -389,7 +392,7 @@ export const ManagementSection = ({
                     >
                       <FormControl>
                         <SelectTrigger className="h-11! w-full flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm overflow-hidden">
-                          <SelectValue placeholder="ค้นหาหรือเลือกเจ้าของ" />
+                          <SelectValue placeholder={isEn ? "Search or select owner" : "ค้นหาหรือเลือกเจ้าของ"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white rounded-2xl shadow-xl border-none max-h-[300px] overflow-y-auto custom-scrollbar p-1">
@@ -401,7 +404,7 @@ export const ManagementSection = ({
                           <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <input
                             type="text"
-                            placeholder="พิมพ์ค้นหาชื่อ หรือเบอร์..."
+                            placeholder={isEn ? "Search name or phone..." : "พิมพ์ค้นหาชื่อ หรือเบอร์..."}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-white  placeholder:text-sm placeholder:font-medium border-none text-xs outline-none placeholder:text-slate-400 text-slate-700"
@@ -412,7 +415,7 @@ export const ManagementSection = ({
                               onClick={() => setSearchTerm("")}
                               className="text-[10px] text-slate-400 hover:text-slate-600 font-medium px-1"
                             >
-                              ล้าง
+                              {isEn ? "Clear" : "ล้าง"}
                             </button>
                           )}
                         </div>
@@ -420,7 +423,7 @@ export const ManagementSection = ({
                           value="NONE"
                           className="font-medium text-slate-400 text-sm italic py-3 rounded-lg"
                         >
-                          -- ไม่ระบุเจ้าของ --
+                          {isEn ? "-- No Owner Specified --" : "-- ไม่ระบุเจ้าของ --"}
                         </SelectItem>
                         {searchTerm && (
                           <div className="p-2 border-b border-slate-100 bg-slate-50/20" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -433,13 +436,13 @@ export const ManagementSection = ({
                               className="w-full flex items-center gap-2 p-2.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl border border-dashed border-emerald-200 transition-all text-left"
                             >
                               <Plus className="w-3.5 h-3.5" />
-                              <span>เพิ่มเจ้าของใหม่ชื่อ "{searchTerm}"</span>
+                              <span>{isEn ? `Add new owner named "${searchTerm}"` : `เพิ่มเจ้าของใหม่ชื่อ "${searchTerm}"`}</span>
                             </button>
                           </div>
                         )}
                         {filteredOwners.length === 0 && searchTerm ? (
                           <div className="py-6 text-center text-xs text-slate-400">
-                            ไม่พบรายชื่อที่ค้นหา
+                            {isEn ? "No matching owners found" : "ไม่พบรายชื่อที่ค้นหา"}
                           </div>
                         ) : (
                           filteredOwners.map((o) => {
@@ -477,7 +480,7 @@ export const ManagementSection = ({
                       {selectedOwner.phone && (
                         <a
                           href={`tel:${selectedOwner.phone}`}
-                          title={`โทรหา K. ${selectedOwner.full_name}`}
+                          title={isEn ? `Call K. ${selectedOwner.full_name}` : `โทรหา K. ${selectedOwner.full_name}`}
                           className="h-11 w-11 flex items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm"
                         >
                           <Phone className="w-4 h-4" />
@@ -486,10 +489,10 @@ export const ManagementSection = ({
                       {selectedOwner.line_id && (
                         <button
                           type="button"
-                          title={`คัดลอก Line ID ของ K. ${selectedOwner.full_name}`}
+                          title={isEn ? `Copy Line ID of K. ${selectedOwner.full_name}` : `คัดลอก Line ID ของ K. ${selectedOwner.full_name}`}
                           onClick={() => {
                             navigator.clipboard.writeText(selectedOwner.line_id || "");
-                            toast.success(`คัดลอก Line ID "${selectedOwner.line_id}" สำเร็จ`);
+                            toast.success(isEn ? `Line ID "${selectedOwner.line_id}" copied!` : `คัดลอก Line ID "${selectedOwner.line_id}" สำเร็จ`);
                           }}
                           className="h-11 w-11 flex items-center justify-center rounded-xl border border-green-100 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all shadow-sm"
                         >
@@ -505,8 +508,8 @@ export const ManagementSection = ({
                   <ResponsiveDialog
                     open={isAddingOwner}
                     onOpenChange={setIsAddingOwner}
-                    title="เพิ่มเจ้าของทรัพย์ใหม่"
-                    description="กรอกข้อมูลเจ้าของทรัพย์เพื่อบันทึกลงในระบบเพื่อใช้ในการจับคู่ทรัพย์สิน"
+                    title={isEn ? "Add New Owner" : "เพิ่มเจ้าของทรัพย์ใหม่"}
+                    description={isEn ? "Record owner details to match listings and manage communication" : "กรอกข้อมูลเจ้าของทรัพย์เพื่อบันทึกลงในระบบเพื่อใช้ในการจับคู่ทรัพย์สิน"}
                     trigger={
                       <Button
                         type="button"
@@ -514,7 +517,7 @@ export const ManagementSection = ({
                         className="h-11 px-4 shrink-0 rounded-xl border-emerald-200 bg-emerald-50/30 text-emerald-700 hover:text-white hover:bg-emerald-600 hover:border-emerald-700 transition-all shadow-sm group font-bold text-xs"
                       >
                         <FaUserPlus className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                        เพิ่มเจ้าของใหม่
+                        {isEn ? "Add New Owner" : "เพิ่มเจ้าของใหม่"}
                       </Button>
                     }
                   >
@@ -564,7 +567,7 @@ export const ManagementSection = ({
             render={({ field }) => (
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-1">
                 <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                  จำนวนยูนิตทั้งหมด:
+                  {isEn ? "Total Units:" : "จำนวนยูนิตทั้งหมด:"}
                 </span>
                 <div className="flex items-center gap-0.5 self-end sm:self-auto">
                   <button
@@ -610,7 +613,7 @@ export const ManagementSection = ({
             render={({ field }) => (
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-1">
                 <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-                  ปล่อย/จองแล้ว:
+                  {isEn ? "Sold / Reserved Units:" : "ปล่อย/จองแล้ว:"}
                 </span>
                 <div className="flex items-center gap-0.5 self-end sm:self-auto">
                   <button
@@ -652,7 +655,7 @@ export const ManagementSection = ({
           {/* Remaining - Highlight */}
           <div className="flex flex-row items-center justify-between lg:justify-end gap-3 border-t lg:border-t-0 border-slate-200 pt-3 lg:pt-0 mt-1 lg:mt-0 p-1">
             <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">
-              คงเหลือปัจจุบัน:
+              {isEn ? "Current Available Units:" : "คงเหลือปัจจุบัน:"}
             </span>
             <span
               className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-black shadow-sm ring-1 ring-inset ${
@@ -661,7 +664,7 @@ export const ManagementSection = ({
                   : "bg-red-500 text-white ring-red-600"
               }`}
             >
-              <span>{(totalUnits ?? 1) - (soldUnits ?? 0)} ยูนิต</span>
+              <span>{(totalUnits ?? 1) - (soldUnits ?? 0)} {isEn ? "Units" : "ยูนิต"}</span>
               {(totalUnits ?? 1) - (soldUnits ?? 0) > 0 && (
                 <ShieldCheck className="w-3.5 h-3.5" />
               )}
@@ -680,7 +683,7 @@ export const ManagementSection = ({
           <div className="mt-4 p-5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-5 animate-in fade-in zoom-in-95 duration-300">
             <div className="flex items-center gap-2 pb-2 border-b border-blue-100/50 text-blue-800">
               <User className="w-4 h-4" />
-              <h4 className="text-xs font-bold uppercase tracking-widest">ข้อมูลผู้ดูแลจากภายนอก (Co-Agent Details)</h4>
+              <h4 className="text-xs font-bold uppercase tracking-widest">{isEn ? "Co-Agent Details" : "ข้อมูลผู้ดูแลจากภายนอก (Co-Agent Details)"}</h4>
             </div>
 
             {/* 🔍 Centralized Directory Selection */}
@@ -688,7 +691,7 @@ export const ManagementSection = ({
               <CoBrokerSelect />
               <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1.5">
                 <Info className="w-3 h-3" />
-                <span>เคล็ดลับ: การเลือกจากฐานข้อมูลกลางจะช่วยบันทึกสถิติและลดเวลาการกรอกข้อมูล</span>
+                <span>{isEn ? "Tip: Selecting from the co-broker directory records statistics and speeds up data entry." : "เคล็ดลับ: การเลือกจากฐานข้อมูลกลางจะช่วยบันทึกสถิติและลดเวลาการกรอกข้อมูล"}</span>
               </p>
             </div>
 
@@ -698,12 +701,12 @@ export const ManagementSection = ({
                 name="co_agent_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">ชื่อ Co-Agent</FormLabel>
+                    <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{isEn ? "Co-Agent Name" : "ชื่อ Co-Agent"}</FormLabel>
                     <FormControl>
                       <input 
                         {...field} 
                         value={field.value || ""} 
-                        placeholder="ระบุชื่อเอเยนต์เจ้าของทรัพย์"
+                        placeholder={isEn ? "External agent name" : "ระบุชื่อเอเยนต์เจ้าของทรัพย์"}
                         className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none shadow-sm"
                       />
                     </FormControl>
@@ -716,12 +719,12 @@ export const ManagementSection = ({
                 name="co_agent_phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">เบอร์โทรติดต่อ</FormLabel>
+                    <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{isEn ? "Phone Number" : "เบอร์โทรติดต่อ"}</FormLabel>
                     <FormControl>
                       <input 
                         {...field} 
                         value={field.value || ""} 
-                        placeholder="เลขเบอร์โทรศัพท์"
+                        placeholder={isEn ? "Contact phone number" : "เลขเบอร์โทรศัพท์"}
                         inputMode="numeric"
                         className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none shadow-sm"
                       />
@@ -735,19 +738,19 @@ export const ManagementSection = ({
                 name="co_agent_contact_channel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">ช่องทางที่โค (Channel)</FormLabel>
+                    <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{isEn ? "Contact Channel" : "ช่องทางที่โค (Channel)"}</FormLabel>
                     {isMobileOrTablet ? (
                       <ResponsiveDialog
                         open={channelOpen}
                         onOpenChange={setChannelOpen}
-                        title="เลือกช่องทางติดต่อ"
+                        title={isEn ? "Select Contact Channel" : "เลือกช่องทางติดต่อ"}
                         trigger={
                           <Button
                             type="button"
                             variant="outline"
                             className="w-full h-11! rounded-xl bg-white border border-slate-200 justify-between text-left font-medium text-xs px-4"
                           >
-                            <span>{field.value || "เลือกช่องทางติดต่อ"}</span>
+                            <span>{field.value || (isEn ? "Select contact channel" : "เลือกช่องทางติดต่อ")}</span>
                           </Button>
                         }
                       >
@@ -755,10 +758,10 @@ export const ManagementSection = ({
                           {[
                             { label: "LINE", value: "LINE" },
                             { label: "WhatsApp", value: "WHATSAPP" },
-                            { label: "โทรศัพท์", value: "PHONE" },
+                            { label: isEn ? "Phone" : "โทรศัพท์", value: "PHONE" },
                             { label: "Facebook", value: "FACEBOOK" },
                             { label: "WeChat", value: "WECHAT" },
-                            { label: "อื่นๆ", value: "OTHER" },
+                            { label: isEn ? "Other" : "อื่นๆ", value: "OTHER" },
                           ].map((item) => {
                             const isSelected = field.value === item.value;
                             return (
@@ -791,16 +794,16 @@ export const ManagementSection = ({
                       <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger className="h-11! rounded-xl bg-white border-slate-200">
-                            <SelectValue placeholder="เลือกช่องทางติดต่อ" />
+                            <SelectValue placeholder={isEn ? "Select contact channel" : "เลือกช่องทางติดต่อ"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-white rounded-xl">
                           <SelectItem value="LINE">LINE</SelectItem>
                           <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
-                          <SelectItem value="PHONE">โทรศัพท์</SelectItem>
+                          <SelectItem value="PHONE">{isEn ? "Phone" : "โทรศัพท์"}</SelectItem>
                           <SelectItem value="FACEBOOK">Facebook</SelectItem>
                           <SelectItem value="WECHAT">WeChat</SelectItem>
-                          <SelectItem value="OTHER">อื่นๆ</SelectItem>
+                          <SelectItem value="OTHER">{isEn ? "Other" : "อื่นๆ"}</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -813,12 +816,12 @@ export const ManagementSection = ({
                 name="co_agent_contact_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">ID / หมายเหตุติดต่อ</FormLabel>
+                    <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{isEn ? "ID / Contact Notes" : "ID / หมายเหตุติดต่อ"}</FormLabel>
                     <FormControl>
                       <input 
                         {...field} 
                         value={field.value || ""} 
-                        placeholder="เช่น Line ID หรือลิ้งค์โพสต์"
+                        placeholder={isEn ? "e.g. Line ID or listing post link" : "เช่น Line ID หรือลิ้งค์โพสต์"}
                         className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none shadow-sm"
                       />
                     </FormControl>
@@ -835,7 +838,7 @@ export const ManagementSection = ({
                 render={({ field }) => (
                   <FormItem className="bg-blue-100/30 p-3 rounded-xl border border-blue-100/50">
                     <FormLabel className="text-[10px] font-bold text-blue-700 uppercase tracking-tight flex items-center gap-1.5">
-                      <span>ส่วนแบ่งขาย (%)</span>
+                      <span>{isEn ? "Sale Split (%)" : "ส่วนแบ่งขาย (%)"}</span>
                     </FormLabel>
                     <FormControl>
                       <div className="flex items-center gap-2 mt-1">
@@ -859,7 +862,7 @@ export const ManagementSection = ({
                 render={({ field }) => (
                   <FormItem className="bg-blue-100/30 p-3 rounded-xl border border-blue-100/50">
                     <FormLabel className="text-[10px] font-bold text-blue-700 uppercase tracking-tight flex items-center gap-1.5">
-                      <span>ส่วนแบ่งเช่า (เดือน)</span>
+                      <span>{isEn ? "Rent Split (Mo)" : "ส่วนแบ่งเช่า (เดือน)"}</span>
                     </FormLabel>
                     <FormControl>
                       <div className="flex items-center gap-2 mt-1">
@@ -870,7 +873,7 @@ export const ManagementSection = ({
                           onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
                           className="w-full h-8 px-3 rounded-lg border-none bg-white font-bold text-xs focus:ring-1 focus:ring-blue-400 outline-none"
                         />
-                        <span className="text-xs font-bold text-blue-600">ด.</span>
+                        <span className="text-xs font-bold text-blue-600">{isEn ? "Mo" : "ด."}</span>
                       </div>
                     </FormControl>
                   </FormItem>

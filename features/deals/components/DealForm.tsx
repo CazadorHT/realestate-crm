@@ -24,6 +24,7 @@ import { CoAgentPicker } from "./CoAgentPicker";
 import { CalendarPicker } from "./CalendarPicker";
 import { CoBrokerSelect } from "@/features/co-brokers/components/CoBrokerSelect";
 import { InternalAgentSelect } from "./InternalAgentSelect";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface DealFormProps {
   leadId: string;
@@ -31,19 +32,6 @@ interface DealFormProps {
   deal?: DealWithProperty;
   step?: number;
 }
-
-const STEPS = [
-  { id: 1, title: "ทรัพย์และลูกค้า" },
-  { id: 2, title: "รายละเอียดดีล" },
-  { id: 3, title: "ระยะเวลาและข้อมูลอื่น" },
-];
-
-const LISTING_TYPE_LABELS: Record<string, { label: string; className: string }> = {
-  RENT: { label: "เช่า", className: "bg-blue-600 text-white" },
-  SALE: { label: "ขาย", className: "bg-emerald-600 text-white" },
-  SALE_RENT: { label: "ขาย/เช่า", className: "bg-amber-500 text-white" },
-  SALE_AND_RENT: { label: "ขาย/เช่า", className: "bg-amber-500 text-white" },
-};
 
 export function DealForm({
   leadId,
@@ -53,6 +41,21 @@ export function DealForm({
 }: DealFormProps) {
   const form = useFormContext<CreateDealInput>();
   const isMobile = useIsMobile();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const STEPS = [
+    { id: 1, title: isEn ? "Property & Lead" : "ทรัพย์และลูกค้า" },
+    { id: 2, title: isEn ? "Deal Details" : "รายละเอียดดีล" },
+    { id: 3, title: isEn ? "Timeline & Info" : "ระยะเวลาและข้อมูลอื่น" },
+  ];
+
+  const LISTING_TYPE_LABELS: Record<string, { label: string; className: string }> = {
+    RENT: { label: isEn ? "Rent" : "เช่า", className: "bg-blue-600 text-white" },
+    SALE: { label: isEn ? "Sale" : "ขาย", className: "bg-emerald-600 text-white" },
+    SALE_RENT: { label: isEn ? "Sale/Rent" : "ขาย/เช่า", className: "bg-amber-500 text-white" },
+    SALE_AND_RENT: { label: isEn ? "Sale/Rent" : "ขาย/เช่า", className: "bg-amber-500 text-white" },
+  };
 
   const propertyId = form.watch("property_id");
   const dealType = form.watch("deal_type");
@@ -137,7 +140,7 @@ export function DealForm({
                 <div className="flex items-center justify-between mb-2">
                   <FormLabel className="text-slate-800 font-semibold text-sm flex items-center gap-2">
                     <span className="flex h-6 w-1 bg-blue-500 rounded-full" />
-                    เลือกทรัพย์ที่เกี่ยวข้อง{" "}
+                    {isEn ? "Select Related Property " : "เลือกทรัพย์ที่เกี่ยวข้อง "}
                     <span className="text-red-500">*</span>
                   </FormLabel>
                 </div>
@@ -145,7 +148,7 @@ export function DealForm({
                   <PropertyCombobox
                     value={field.value}
                     onChangeAction={(id) => field.onChange(id)}
-                    placeholder="ค้นหาตามชื่อทรัพย์ ย่าน หรือรหัส..."
+                    placeholder={isEn ? "Search by title, location or ref..." : "ค้นหาตามชื่อทรัพย์ ย่าน หรือรหัส..."}
                     className="max-w-full"
                       initialProperty={(() => {
                         // 1. Try finding in the currently passed properties list
@@ -231,16 +234,16 @@ export function DealForm({
                         {rentalPrice ? (
                           <div className="flex flex-col gap-0.5 min-w-[80px]">
                             <span className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-widest truncate">
-                              ค่าเช่า / เดือน
+                              {isEn ? "Rental / Mo." : "ค่าเช่า / เดือน"}
                             </span>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-sm sm:text-base font-semibold text-blue-700">
-                                {new Intl.NumberFormat("th-TH").format(
+                              <span className="text-sm sm:base font-semibold text-blue-700">
+                                {new Intl.NumberFormat(isEn ? "en-US" : "th-TH").format(
                                   rentalPrice,
                                 )}
                               </span>
                               <span className="text-[10px] sm:text-xs text-slate-400 font-semibold whitespace-nowrap">
-                                บาท
+                                {isEn ? "THB" : "บาท"}
                               </span>
                             </div>
                           </div>
@@ -249,16 +252,16 @@ export function DealForm({
                         {salePrice ? (
                           <div className="flex flex-col gap-0.5 min-w-[80px]">
                             <span className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-widest truncate">
-                              ราคาขาย
+                              {isEn ? "Sale Price" : "ราคาขาย"}
                             </span>
                             <div className="flex items-baseline gap-1">
                               <span className="text-sm sm:text-base font-semibold text-emerald-700">
-                                {new Intl.NumberFormat("th-TH").format(
+                                {new Intl.NumberFormat(isEn ? "en-US" : "th-TH").format(
                                   salePrice,
                                 )}
                               </span>
                               <span className="text-[10px] sm:text-xs text-slate-400 font-semibold whitespace-nowrap">
-                                บาท
+                                {isEn ? "THB" : "บาท"}
                               </span>
                             </div>
                           </div>
@@ -281,13 +284,13 @@ export function DealForm({
                 <FormItem>
                   <FormLabel className="text-slate-800 font-semibold text-sm flex items-center gap-2 mb-2">
                     <span className="flex h-6 w-1 bg-emerald-500 rounded-full" />
-                    เลือกลูกค้า (ลีด) *
+                    {isEn ? "Select Customer (Lead) *" : "เลือกลูกค้า (ลีด) *"}
                   </FormLabel>
                   <FormControl>
                     <LeadCombobox
                       value={field.value}
                       onChangeAction={(id) => field.onChange(id)}
-                      placeholder="ค้นหาลีดด้วยชื่อ เบอร์โทร หรือไอดี..."
+                      placeholder={isEn ? "Search lead by name, phone or ID..." : "ค้นหาลีดด้วยชื่อ เบอร์โทร หรือไอดี..."}
                     />
                   </FormControl>
                   <FormMessage className="text-xs font-semibold" />
@@ -310,12 +313,12 @@ export function DealForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-slate-700 font-semibold text-sm">
-                ประเภทดีล
+                {isEn ? "Deal Type" : "ประเภทดีล"}
               </FormLabel>
               <div className="flex gap-2">
                 {[
-                  { value: "RENT", label: "🏠 เช่า" },
-                  { value: "SALE", label: "💰 ซื้อ" },
+                  { value: "RENT", label: isEn ? "🏠 Rent" : "🏠 เช่า" },
+                  { value: "SALE", label: isEn ? "💰 Sale" : "💰 ซื้อ" },
                 ].map((opt) => {
                   const isAllowed = allowedTypes.includes(opt.value);
                   return (
@@ -326,7 +329,7 @@ export function DealForm({
                       variant={field.value === opt.value ? "default" : "outline"}
                       onClick={() => field.onChange(opt.value)}
                       className={cn(
-                        "flex-1 h-11 rounded-xl font-semibold text-sm transition-all",
+                        "flex-1 h-11 rounded-xl font-semibold text-sm transition-all cursor-pointer",
                         field.value === opt.value
                           ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200"
                           : "text-slate-600",
@@ -349,7 +352,7 @@ export function DealForm({
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-slate-700 font-semibold text-sm">สถานะ</FormLabel>
+              <FormLabel className="text-slate-700 font-semibold text-sm">{isEn ? "Status" : "สถานะ"}</FormLabel>
               <FormControl>
                 <DealStatusPicker
                   value={field.value}
@@ -368,7 +371,7 @@ export function DealForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-slate-700 font-semibold text-sm">
-                คอมมิชชั่น (บาท)
+                {isEn ? "Commission (THB)" : "คอมมิชชั่น (บาท)"}
               </FormLabel>
               <FormControl>
                 <Input
@@ -376,7 +379,7 @@ export function DealForm({
                   inputMode="numeric"
                   value={
                     field.value != null
-                      ? new Intl.NumberFormat("th-TH").format(field.value)
+                      ? new Intl.NumberFormat(isEn ? "en-US" : "th-TH").format(field.value)
                       : ""
                   }
                   onChange={(e) => {
@@ -417,7 +420,7 @@ export function DealForm({
                 type="button"
                 onClick={() => toggleUndetermined(!field.value)}
                 className={cn(
-                  "h-14 px-6 rounded-2xl flex items-center gap-3 transition-all duration-300 font-medium text-sm border-2 active:scale-95 shrink-0",
+                  "h-14 px-6 rounded-2xl flex items-center gap-3 transition-all duration-300 font-medium text-sm border-2 active:scale-95 shrink-0 cursor-pointer",
                   field.value 
                     ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100" 
                     : "bg-transparent border-slate-200 text-slate-400 hover:border-blue-400 hover:text-blue-500"
@@ -429,7 +432,7 @@ export function DealForm({
                 )}>
                   {field.value && <Check className="h-3 w-3 stroke-4" />}
                 </div>
-                <span>ยังไม่ระบุวันที่</span>
+                <span>{isEn ? "Undetermined Date" : "ยังไม่ระบุวันที่"}</span>
               </button>
             )}
           />
@@ -439,7 +442,7 @@ export function DealForm({
       {/* Co-Agent Info */}
       <div className="pt-6 border-t border-slate-100 px-6">
         <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-4">
-          Co-Agent Information (Optional)
+          {isEn ? "Co-Agent / Co-Broker Information (Optional)" : "Co-Agent Information (Optional)"}
         </h4>
 
         <div className="mb-6 p-4 rounded-xl border border-blue-100 bg-white shadow-sm space-y-4">
@@ -450,7 +453,9 @@ export function DealForm({
            </div>
            
            <p className="text-[10px] text-slate-400 mt-2 italic">
-             * การเลือกจากฐานข้อมูลช่วยให้ระบบบัญชี (Phase 6) จ่ายเงินคอมมิชชันและคำนวณภาษีได้แม่นยำขึ้น
+             {isEn 
+               ? "* Selecting partners from database ensures accurate commission settlement and withholding tax calculation."
+               : "* การเลือกจากฐานข้อมูลช่วยให้ระบบบัญชี (Phase 6) จ่ายเงินคอมมิชชันและคำนวณภาษีได้แม่นยำขึ้น"}
            </p>
         </div>
 
@@ -569,3 +574,4 @@ export function DealForm({
     </div>
   );
 }
+

@@ -63,7 +63,7 @@ export function ExecutiveAISummary({
   const fetchSummary = async (showToast = false) => {
     setLoading(true);
     try {
-      const result = await getExecutiveWeeklyAISummaryAction({ tenantId, filters });
+      const result = await getExecutiveWeeklyAISummaryAction({ tenantId, filters, language });
       setData(result);
 
       if (showToast) {
@@ -233,7 +233,9 @@ export function ExecutiveAISummary({
                 </Tooltip>
               </div>
               <div className="text-xs leading-relaxed text-slate-700 whitespace-pre-wrap font-medium relative z-10">
-                {data.summary.replace("📊 [ข้อมูลตัวอย่างจำลอง - เนื่องจากคุณยังไม่มีข้อมูลจริงในระบบ]\n\n", "")}
+                {data.summary
+                  .replace("📊 [ข้อมูลตัวอย่างจำลอง - เนื่องจากคุณยังไม่มีข้อมูลจริงในระบบ]\n\n", "")
+                  .replace("📊 [Simulated Sample Data - No live transactions recorded yet]\n\n", "")}
               </div>
             </div>
 

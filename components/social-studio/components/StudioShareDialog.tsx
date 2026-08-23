@@ -19,8 +19,8 @@ import {
   Smartphone,
   Facebook,
   MessageCircle,
-  Image as ImageIcon,
 } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StudioShareDialogProps {
   isOpen: boolean;
@@ -45,19 +45,23 @@ export function StudioShareDialog({
   propertyUrl,
   onDownloadAlbumZip,
 }: StudioShareDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [copiedCaption, setCopiedCaption] = useState(false);
   const [copiedImage, setCopiedImage] = useState(false);
 
-  const fullText = `${caption}\n\n${hashtags.join(" ")}\n\n👉 ดูข้อมูลเพิ่มเติม: ${propertyUrl}`;
+  const moreInfoText = isEn ? "👉 More details:" : "👉 ดูข้อมูลเพิ่มเติม:";
+  const fullText = `${caption}\n\n${hashtags.join(" ")}\n\n${moreInfoText} ${propertyUrl}`;
 
   const handleCopyCaption = async () => {
     try {
       await navigator.clipboard.writeText(fullText);
       setCopiedCaption(true);
-      toast.success("คัดลอกแคปชั่นและแฮชแท็กเรียบร้อยแล้ว! 📋");
+      toast.success(isEn ? "Caption & hashtags copied! 📋" : "คัดลอกแคปชั่นและแฮชแท็กเรียบร้อยแล้ว! 📋");
       setTimeout(() => setCopiedCaption(false), 2500);
     } catch {
-      toast.error("คัดลอกไม่สำเร็จ");
+      toast.error(isEn ? "Failed to copy" : "คัดลอกไม่สำเร็จ");
     }
   };
 
@@ -69,14 +73,18 @@ export function StudioShareDialog({
           new ClipboardItem({ [coverFile.type]: coverFile }),
         ]);
         setCopiedImage(true);
-        toast.success("คัดลอกภาพปกเข้า Clipboard เรียบร้อย! นำไปวาง (Ctrl+V / Cmd+V) ได้เลย 🖼️");
+        toast.success(
+          isEn
+            ? "Cover banner copied to Clipboard! Ready to paste (Ctrl+V / Cmd+V) 🖼️"
+            : "คัดลอกภาพปกเข้า Clipboard เรียบร้อย! นำไปวาง (Ctrl+V / Cmd+V) ได้เลย 🖼️"
+        );
         setTimeout(() => setCopiedImage(false), 2500);
       } else {
-        toast.error("เบราว์เซอร์นี้ไม่รองรับการคัดลอกภาพเข้า Clipboard");
+        toast.error(isEn ? "Clipboard image copy not supported on this browser" : "เบราว์เซอร์นี้ไม่รองรับการคัดลอกภาพเข้า Clipboard");
       }
     } catch (err) {
       console.warn("Copy image failed:", err);
-      toast.error("ไม่สามารถคัดลอกภาพได้ กรุณาใช้วิธีดาวน์โหลด");
+      toast.error(isEn ? "Failed to copy image. Please use Download." : "ไม่สามารถคัดลอกภาพได้ กรุณาใช้วิธีดาวน์โหลด");
     }
   };
 
@@ -89,16 +97,20 @@ export function StudioShareDialog({
           title: propertyTitle,
           text: fullText,
         });
-        toast.success("เปิดหน้าต่างแชร์สำเร็จ! 📲");
+        toast.success(isEn ? "Share window opened! 📲" : "เปิดหน้าต่างแชร์สำเร็จ! 📲");
       } else if (navigator.share) {
         await navigator.share({
           title: propertyTitle,
           text: fullText,
           url: propertyUrl,
         });
-        toast.success("เปิดหน้าต่างแชร์ลิงก์สำเร็จ! 📲");
+        toast.success(isEn ? "Share link opened! 📲" : "เปิดหน้าต่างแชร์ลิงก์สำเร็จ! 📲");
       } else {
-        toast.error("เบราว์เซอร์นี้ไม่รองรับ Native Share API ให้ใช้ปุ่มแชร์ Facebook/LINE ด้านล่างแทน");
+        toast.error(
+          isEn
+            ? "Native Share not supported. Please use the Facebook/LINE buttons below."
+            : "เบราว์เซอร์นี้ไม่รองรับ Native Share API ให้ใช้ปุ่มแชร์ Facebook/LINE ด้านล่างแทน"
+        );
       }
     } catch (err: any) {
       if (err.name !== "AbortError") {
@@ -111,14 +123,18 @@ export function StudioShareDialog({
     await handleCopyCaption();
     const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(propertyUrl)}`;
     window.open(fbUrl, "_blank", "width=600,height=500");
-    toast.info("คัดลอกแคปชั่นแล้ว! สามารถกด Paste (Ctrl+V) ลงในโพสต์ Facebook ได้เลย 🔵");
+    toast.info(
+      isEn
+        ? "Caption copied! You can paste (Ctrl+V) directly into your Facebook post. 🔵"
+        : "คัดลอกแคปชั่นแล้ว! สามารถกด Paste (Ctrl+V) ลงในโพสต์ Facebook ได้เลย 🔵"
+    );
   };
 
   const handleShareLine = async () => {
     await handleCopyCaption();
     const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(fullText)}`;
     window.open(lineUrl, "_blank");
-    toast.success("ส่งเข้า LINE เรียบร้อย! 🟢");
+    toast.success(isEn ? "Sent to LINE! 🟢" : "ส่งเข้า LINE เรียบร้อย! 🟢");
   };
 
   return (
@@ -127,15 +143,17 @@ export function StudioShareDialog({
         <DialogHeader className="pb-1">
           <DialogTitle className="text-base sm:text-lg font-bold text-amber-400 flex items-center gap-2">
             <Share2 className="h-4.5 w-4.5 text-amber-400" />
-            📲 แชร์ภาพปกและชุดภาพโซเชียล
+            {isEn ? "📲 Share Social Cover & Photo Pack" : "📲 แชร์ภาพปกและชุดภาพโซเชียล"}
           </DialogTitle>
           <DialogDescription className="text-xs text-slate-400">
-            พรีวิวภาพปก คัดลอกแคปชั่น หรือกดแชร์เข้าแอปได้ทันที
+            {isEn
+              ? "Preview cover poster, copy caption, or share directly to social channels"
+              : "พรีวิวภาพปก คัดลอกแคปชั่น หรือกดแชร์เข้าแอปได้ทันที"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3.5 pt-1">
-          {/* Fitted Vertical Cover Preview (No black side bars) */}
+          {/* Fitted Vertical Cover Preview */}
           <div className="flex flex-col items-center gap-2">
             <div className="relative h-[230px] aspect-9/16 rounded-2xl overflow-hidden border border-amber-500/40 bg-slate-950 shadow-xl flex items-center justify-center">
               {coverImageUrl ? (
@@ -147,7 +165,7 @@ export function StudioShareDialog({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">
-                  กำลังโหลดภาพปก...
+                  {isEn ? "Loading cover..." : "กำลังโหลดภาพปก..."}
                 </div>
               )}
             </div>
@@ -162,12 +180,14 @@ export function StudioShareDialog({
               {copiedImage ? (
                 <>
                   <Check className="h-4 w-4 text-emerald-400" />
-                  <span>คัดลอกรูปภาพแล้ว!</span>
+                  <span>{isEn ? "Image Copied!" : "คัดลอกรูปภาพแล้ว!"}</span>
                 </>
               ) : (
                 <>
                   <Copy className="h-4 w-4 text-amber-400" />
-                  <span>คัดลอกรูปปกเข้า Clipboard (Ctrl+V / Cmd+V)</span>
+                  <span>
+                    {isEn ? "Copy Cover to Clipboard (Ctrl+V / Cmd+V)" : "คัดลอกรูปปกเข้า Clipboard (Ctrl+V / Cmd+V)"}
+                  </span>
                 </>
               )}
             </Button>
@@ -177,7 +197,7 @@ export function StudioShareDialog({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold text-slate-300">
-                📝 แคปชั่นสำหรับโพสต์:
+                {isEn ? "📝 Post Caption:" : "📝 แคปชั่นสำหรับโพสต์:"}
               </Label>
               <button
                 type="button"
@@ -185,7 +205,7 @@ export function StudioShareDialog({
                 className="text-xs text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 cursor-pointer"
               >
                 {copiedCaption ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                {copiedCaption ? "คัดลอกแล้ว!" : "คัดลอกข้อความ"}
+                {copiedCaption ? (isEn ? "Copied!" : "คัดลอกแล้ว!") : (isEn ? "Copy Text" : "คัดลอกข้อความ")}
               </button>
             </div>
             <div className="p-3 rounded-2xl bg-slate-950/90 border border-slate-800 text-xs text-slate-300 max-h-[110px] overflow-y-auto whitespace-pre-wrap font-sans leading-relaxed">
@@ -201,7 +221,7 @@ export function StudioShareDialog({
               className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5 h-10"
             >
               <Smartphone className="h-4 w-4" />
-              <span>แชร์ผ่านระบบมือถือ / แอปโซเชียล</span>
+              <span>{isEn ? "Share via Mobile / Apps" : "แชร์ผ่านระบบมือถือ / แอปโซเชียล"}</span>
             </Button>
 
             <div className="grid grid-cols-2 gap-2">
@@ -231,7 +251,7 @@ export function StudioShareDialog({
               className="w-full h-9 rounded-xl border-amber-500/40 bg-slate-800/60 text-amber-400 hover:bg-amber-500/10 font-semibold text-xs cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Download className="h-4 w-4 text-amber-400" />
-              <span>ดาวน์โหลดชุดภาพ ZIP (ปก + รูปจริง)</span>
+              <span>{isEn ? "Download Photo Pack ZIP (Cover + Real Photos)" : "ดาวน์โหลดชุดภาพ ZIP (ปก + รูปจริง)"}</span>
             </Button>
           </div>
         </div>
@@ -239,3 +259,4 @@ export function StudioShareDialog({
     </Dialog>
   );
 }
+

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export interface BranchMemberV3 {
   id: string; // tenant_member_id
@@ -54,11 +55,13 @@ export function BranchMemberList({
   branches = [],
   onRefresh,
 }: BranchMemberListProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [memberSearch, setMemberSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
   const [targetBranchId, setTargetBranchId] = useState("");
-
 
   const filteredMembers = members.filter(
     (m) =>
@@ -88,7 +91,10 @@ export function BranchMemberList({
 
   const handleBulkRemove = async () => {
     if (!tenantId || selectedIds.length === 0) return;
-    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบพนักงานทั้ง ${selectedIds.length} คนออกจากสาขานี้?`)) return;
+    const confirmMsg = isEn 
+      ? `Are you sure you want to remove all ${selectedIds.length} members from this branch?`
+      : `คุณแน่ใจหรือไม่ว่าต้องการลบพนักงานทั้ง ${selectedIds.length} คนออกจากสาขานี้?`;
+    if (!confirm(confirmMsg)) return;
 
     setIsBulkLoading(true);
     try {
@@ -97,11 +103,11 @@ export function BranchMemberList({
         const res = await removeTenantMemberAction(tenantId, profileId);
         if (res.success) successCount++;
       }
-      toast.success(`ลบพนักงาน ${successCount} คนออกจากสาขาเรียบร้อยแล้ว`);
+      toast.success(isEn ? `Removed ${successCount} members successfully` : `ลบพนักงาน ${successCount} คนออกจากสาขาเรียบร้อยแล้ว`);
       setSelectedIds([]);
       if (onRefresh) onRefresh();
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการดำเนินการ");
+    } catch {
+      toast.error(isEn ? "Failed to remove members" : "เกิดข้อผิดพลาดในการดำเนินการ");
     } finally {
       setIsBulkLoading(false);
     }
@@ -112,7 +118,10 @@ export function BranchMemberList({
     const dest = branches.find((b) => b.id === targetBranchId);
     if (!dest) return;
 
-    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการย้ายพนักงานทั้ง ${selectedIds.length} คนไปยังสาขา "${dest.name}"?`)) return;
+    const confirmMsg = isEn 
+      ? `Are you sure you want to transfer ${selectedIds.length} members to "${dest.name}"?`
+      : `คุณแน่ใจหรือไม่ว่าต้องการย้ายพนักงานทั้ง ${selectedIds.length} คนไปยังสาขา "${dest.name}"?`;
+    if (!confirm(confirmMsg)) return;
 
     setIsBulkLoading(true);
     try {
@@ -129,12 +138,12 @@ export function BranchMemberList({
         });
         if (res.success) successCount++;
       }
-      toast.success(`ย้ายสาขาพนักงาน ${successCount} คนไปยัง "${dest.name}" สำเร็จ`);
+      toast.success(isEn ? `Transferred ${successCount} members to "${dest.name}"` : `ย้ายสาขาพนักงาน ${successCount} คนไปยัง "${dest.name}" สำเร็จ`);
       setSelectedIds([]);
       setTargetBranchId("");
       if (onRefresh) onRefresh();
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการดำเนินการ");
+    } catch {
+      toast.error(isEn ? "Failed to transfer members" : "เกิดข้อผิดพลาดในการดำเนินการ");
     } finally {
       setIsBulkLoading(false);
     }
@@ -146,18 +155,18 @@ export function BranchMemberList({
         <div>
           <h3 className="text-2xl font-semibold text-slate-800 flex items-center gap-2.5">
             <Users2 size={24} className="text-indigo-600" />
-            รายชื่อพนักงาน{" "}
-            <span className="text-slate-400 font-normal hidden sm:block">(Branch Members)</span>
+            {isEn ? "Branch Members" : "รายชื่อพนักงาน"}{" "}
+            {!isEn && <span className="text-slate-400 font-normal hidden sm:block">(Branch Members)</span>}
           </h3>
           <p className="text-[13px] text-slate-500 mt-1 font-medium">
-            จัดการรายชื่อและสิทธิ์การเข้าถึงทรัพย์ในสาขานี้
+            {isEn ? "Manage member access and role permissions for this branch" : "จัดการรายชื่อและสิทธิ์การเข้าถึงทรัพย์ในสาขานี้"}
           </p>
         </div>
 
         <div className="relative w-full md:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="ค้นหาพนักงาน (Search)..."
+            placeholder={isEn ? "Search members..." : "ค้นหาพนักงาน (Search)..."}
             className="pl-10 h-11 text-sm! font-normal rounded-2xl bg-white border-slate-200 focus-visible:ring-indigo-500 transition-all shadow-sm"
             value={memberSearch}
             onChange={(e) => setMemberSearch(e.target.value)}
@@ -182,7 +191,9 @@ export function BranchMemberList({
               htmlFor="select-all-members"
               className="text-sm font-semibold text-slate-600 cursor-pointer select-none"
             >
-              เลือกทั้งหมด ({selectedIds.length}/{filteredMembers.length} คน)
+              {isEn 
+                ? `Select all (${selectedIds.length}/${filteredMembers.length} members)` 
+                : `เลือกทั้งหมด (${selectedIds.length}/${filteredMembers.length} คน)`}
             </label>
           </div>
 
@@ -197,7 +208,7 @@ export function BranchMemberList({
                     onChange={(e) => setTargetBranchId(e.target.value)}
                     disabled={isBulkLoading}
                   >
-                    <option value="">เลือกสาขาปลายทาง...</option>
+                    <option value="">{isEn ? "Select destination branch..." : "เลือกสาขาปลายทาง..."}</option>
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
                         {b.name}
@@ -214,7 +225,7 @@ export function BranchMemberList({
                     ) : (
                       <ArrowRightLeft size={14} />
                     )}
-                    ย้ายสาขาแบบกลุ่ม
+                    {isEn ? "Bulk Transfer" : "ย้ายสาขาแบบกลุ่ม"}
                   </Button>
                 </div>
               )}
@@ -230,7 +241,7 @@ export function BranchMemberList({
                 ) : (
                   <Trash2 size={14} />
                 )}
-                ลบพนักงานแบบกลุ่ม
+                {isEn ? "Bulk Remove" : "ลบพนักงานแบบกลุ่ม"}
               </Button>
             </div>
           )}
@@ -285,7 +296,7 @@ export function BranchMemberList({
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors text-base">
-                      {member.identity?.display_name || member.identity?.full_name || member.identity?.email || "ไม่มีชื่อ (No Name)"}
+                      {member.identity?.display_name || member.identity?.full_name || member.identity?.email || (isEn ? "No Name" : "ไม่มีชื่อ (No Name)")}
                       {member.identity?.nickname && (
                         <span className="ml-1.5 text-xs text-slate-400 font-normal">
                           ({member.identity.nickname})
@@ -341,7 +352,7 @@ export function BranchMemberList({
                       variant="ghost"
                       size="icon"
                       className="h-11 w-11 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-all shadow-sm border border-transparent hover:border-indigo-100"
-                      title="ย้ายสาขา (Transfer)"
+                      title={isEn ? "Transfer Branch" : "ย้ายสาขา (Transfer)"}
                       onClick={() => onTransfer(member)}
                     >
                       <ArrowRightLeft size={18} />
@@ -350,6 +361,7 @@ export function BranchMemberList({
                       variant="ghost"
                       size="icon"
                       className="h-11 w-11 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-2xl transition-all shadow-sm border border-transparent hover:border-rose-100"
+                      title={isEn ? "Remove Member" : "ลบพนักงาน"}
                       onClick={() => onRemove(member)}
                     >
                       <Trash2 size={18} />
@@ -365,7 +377,7 @@ export function BranchMemberList({
           <div className="flex flex-col items-center justify-center py-20 text-slate-300 bg-slate-50/50 rounded-[32px] border border-dashed border-slate-200">
             <Users2 className="h-16 w-16 mb-4 opacity-10" />
             <p className="text-[13px] font-semibold italic px-4">
-              ไม่พบรายชื่อพนักงานที่ระบุ (No members found)
+              {isEn ? "No branch members found" : "ไม่พบรายชื่อพนักงานที่ระบุ (No members found)"}
             </p>
           </div>
         )}
@@ -373,3 +385,4 @@ export function BranchMemberList({
     </div>
   );
 }
+

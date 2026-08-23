@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ServicesActionDialogsProps {
   deletingId: string | null;
@@ -36,14 +37,21 @@ export function ServicesActionDialogs({
   setIsEmptyTrashOpen,
   onEmptyTrash,
 }: ServicesActionDialogsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <>
       {/* Standard Delete Dialog (Move to Trash) */}
       <ResponsiveDialog
         open={!!deletingId}
         onOpenChange={(open: boolean) => !open && setDeletingId(null)}
-        title="ยืนยันการย้ายลงถังขยะ"
-        description="คุณแน่ใจหรือไม่ว่าต้องการย้ายข้อมูลบริการนี้ลงถังขยะ? คุณสามารถกู้คืนกลับมาได้ภายหลัง"
+        title={isEn ? "Confirm Move to Trash" : "ยืนยันการย้ายลงถังขยะ"}
+        description={
+          isEn 
+            ? "Are you sure you want to move this service to trash? You can restore it later."
+            : "คุณแน่ใจหรือไม่ว่าต้องการย้ายข้อมูลบริการนี้ลงถังขยะ? คุณสามารถกู้คืนกลับมาได้ภายหลัง"
+        }
         footer={
           <div className="flex flex-col sm:flex-row gap-2 w-full">
             <Button
@@ -52,7 +60,7 @@ export function ServicesActionDialogs({
               onClick={() => setDeletingId(null)}
               className="flex-1 rounded-xl h-11 font-bold text-slate-500 border-slate-200"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               disabled={isDeleting}
@@ -65,10 +73,10 @@ export function ServicesActionDialogs({
               {isDeleting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  กำลังดำเนินการ...
+                  {isEn ? "Processing..." : "กำลังดำเนินการ..."}
                 </>
               ) : (
-                "ย้ายลงถังขยะ"
+                isEn ? "Move to Trash" : "ย้ายลงถังขยะ"
               )}
             </Button>
           </div>
@@ -87,22 +95,26 @@ export function ServicesActionDialogs({
         title={
           <div className="flex items-center gap-2 text-rose-600">
              <ShieldAlert className="w-5 h-5" />
-             ลบข้อมูลถาวร
+             {isEn ? "Permanent Delete" : "ลบข้อมูลถาวร"}
           </div>
         }
         description={
           <div className="space-y-4">
             <p className="text-sm text-slate-500">
-              การกระทำนี้ <span className="text-rose-600 font-bold">ไม่สามารถย้อนกลับได้</span> ข้อมูลและรูปภาพทั้งหมดจะถูกลบออกจากเซิร์ฟเวอร์ถาว
+              {isEn ? (
+                <>This action <span className="text-rose-600 font-bold">cannot be undone</span>. All records and related media will be permanently deleted from the server.</>
+              ) : (
+                <>การกระทำนี้ <span className="text-rose-600 font-bold">ไม่สามารถย้อนกลับได้</span> ข้อมูลและรูปภาพทั้งหมดจะถูกลบออกจากเซิร์ฟเวอร์ถาวร</>
+              )}
             </p>
             <div className="bg-rose-50 p-4 rounded-xl border border-rose-100">
               <p className="text-xs text-rose-700 font-bold mb-2">
-                พิมพ์ <span className="underline italic">DELETE</span> เพื่อยืนยัน:
+                {isEn ? "Type " : "พิมพ์ "}<span className="underline italic font-mono font-bold">DELETE</span>{isEn ? " to confirm:" : " เพื่อยืนยัน:"}
               </p>
               <Input
                 value={confirmName}
                 onChange={(e) => setConfirmName(e.target.value)}
-                placeholder="พิมพ์ตัวใหญ่ทั้งหมด..."
+                placeholder={isEn ? "Type all uppercase..." : "พิมพ์ตัวใหญ่ทั้งหมด..."}
                 className="h-10 border-rose-200 focus:border-rose-400 focus:ring-rose-400 font-mono"
               />
             </div>
@@ -116,7 +128,7 @@ export function ServicesActionDialogs({
               onClick={() => setPermanentDeletingId(null)}
               className="flex-1 rounded-xl h-11 font-bold"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               disabled={isDeleting || confirmName !== "DELETE"}
@@ -129,10 +141,10 @@ export function ServicesActionDialogs({
               {isDeleting ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>กำลังลบถาวร...</span>
+                  <span>{isEn ? "Deleting permanently..." : "กำลังลบถาวร..."}</span>
                 </div>
               ) : (
-                "ลบทิ้งถาวร"
+                isEn ? "Delete Permanently" : "ลบทิ้งถาวร"
               )}
             </Button>
           </div>
@@ -151,22 +163,26 @@ export function ServicesActionDialogs({
         title={
           <div className="flex items-center gap-2 text-rose-600">
              <ShieldAlert className="w-5 h-5" />
-             ล้างถังขยะทั้งหมด
+             {isEn ? "Empty All Trash" : "ล้างถังขยะทั้งหมด"}
           </div>
         }
         description={
           <div className="space-y-4">
             <p className="text-sm text-slate-500">
-              การล้างถังขยะจะลบบริการ <span className="text-rose-600 font-extrabold">ทั้งหมด</span> ที่อยู่ในถังขยะอย่างถาวร รวมถึงไฟล์สื่อที่เกี่ยวข้อง
+              {isEn ? (
+                <>Emptying the trash will permanently delete <span className="text-rose-600 font-extrabold">ALL</span> services in the trash along with associated media files.</>
+              ) : (
+                <>การล้างถังขยะจะลบบริการ <span className="text-rose-600 font-extrabold">ทั้งหมด</span> ที่อยู่ในถังขยะอย่างถาวร รวมถึงไฟล์สื่อที่เกี่ยวข้อง</>
+              )}
             </p>
             <div className="bg-rose-50 p-4 rounded-xl border border-rose-100">
               <p className="text-xs text-rose-700 font-bold mb-2">
-                พิมพ์ <span className="underline">DELETE_ALL</span> เพื่อยืนยัน:
+                {isEn ? "Type " : "พิมพ์ "}<span className="underline font-mono font-bold">DELETE_ALL</span>{isEn ? " to confirm:" : " เพื่อยืนยัน:"}
               </p>
               <Input
                 value={confirmName}
                 onChange={(e) => setConfirmName(e.target.value)}
-                placeholder="พิมพ์ตัวใหญ่ทั้งหมด..."
+                placeholder={isEn ? "Type all uppercase..." : "พิมพ์ตัวใหญ่ทั้งหมด..."}
                 className="h-10 border-rose-200 focus:border-rose-400 focus:ring-rose-400 font-mono"
               />
             </div>
@@ -180,7 +196,7 @@ export function ServicesActionDialogs({
               onClick={() => setIsEmptyTrashOpen(false)}
               className="flex-1 rounded-xl h-11 font-bold"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               disabled={isDeleting || confirmName !== "DELETE_ALL"}
@@ -193,10 +209,10 @@ export function ServicesActionDialogs({
               {isDeleting ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>กำลังล้างถังขยะ...</span>
+                  <span>{isEn ? "Emptying trash..." : "กำลังล้างถังขยะ..."}</span>
                 </div>
               ) : (
-                "ยืนยันล้างถังขยะ"
+                isEn ? "Confirm Empty Trash" : "ยืนยันล้างถังขยะ"
               )}
             </Button>
           </div>
@@ -205,3 +221,4 @@ export function ServicesActionDialogs({
     </>
   );
 }
+

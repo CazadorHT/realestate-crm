@@ -3,6 +3,7 @@
 import { m } from "framer-motion";
 import { Users2, Clock, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface BranchStatsProps {
   memberCount: number;
@@ -15,6 +16,9 @@ export function BranchStatsDashboard({
   inviteCount,
   propertyCount,
 }: BranchStatsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Members Card - Indigo Gradient */}
@@ -26,7 +30,7 @@ export function BranchStatsDashboard({
         <div className="absolute top-0 right-0 h-full w-2 bg-indigo-500/10 group-hover:w-full transition-all duration-500 -z-10" />
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">
-            สมาชิกทั้งหมด (Total Members)
+            {isEn ? "Total Members" : "สมาชิกทั้งหมด (Total Members)"}
           </p>
           <h4 className="text-3xl font-semibold text-slate-900 leading-none">
             {memberCount}
@@ -47,7 +51,7 @@ export function BranchStatsDashboard({
         <div className="absolute top-0 right-0 h-full w-2 bg-amber-500/10 group-hover:w-full transition-all duration-500 -z-10" />
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">
-            คำเชิญที่รออยู่ (Pending Invites)
+            {isEn ? "Pending Invites" : "คำเชิญที่รออยู่ (Pending Invites)"}
           </p>
           <div className="flex items-center gap-2">
             <h4 className="text-3xl font-semibold text-slate-900 leading-none">
@@ -75,7 +79,7 @@ export function BranchStatsDashboard({
         <div className="absolute top-0 right-0 h-full w-2 bg-emerald-500/10 group-hover:w-full transition-all duration-500 -z-10" />
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">
-            ทรัพย์เปิดขาย (Active Properties)
+            {isEn ? "Active Properties" : "ทรัพย์เปิดขาย (Active Properties)"}
           </p>
           <h4 className="text-3xl font-semibold text-slate-900 leading-none">
             {propertyCount}
@@ -88,3 +92,4 @@ export function BranchStatsDashboard({
     </div>
   );
 }
+

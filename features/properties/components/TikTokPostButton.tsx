@@ -3,11 +3,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FaTiktok } from "react-icons/fa";
-import { Loader2, Send } from "lucide-react";
-import { postPropertyToTikTokAction } from "../actions/tiktok";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SocialPostDialog } from "./SocialPostDialog";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface TikTokPostButtonProps {
   propertyId: string;
@@ -22,9 +20,8 @@ interface TikTokPostButtonProps {
     | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
   showLabel?: boolean;
+  onSuccess?: (url: string) => void;
   children?: React.ReactNode;
-  onSuccess?: (url?: string | null) => void;
-  onLoading?: (isLoading: boolean) => void;
 }
 
 export function TikTokPostButton({
@@ -34,10 +31,11 @@ export function TikTokPostButton({
   variant = "outline",
   size = "default",
   showLabel = true,
-  children,
   onSuccess,
-  onLoading,
+  children,
 }: TikTokPostButtonProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
@@ -48,8 +46,8 @@ export function TikTokPostButton({
         platform="TIKTOK"
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onSuccess={() => {
-          onSuccess?.("https://www.tiktok.com"); // Demo placeholder
+        onSuccess={(url) => {
+          onSuccess?.(url);
         }}
       />
       {children ? (
@@ -62,7 +60,7 @@ export function TikTokPostButton({
           onClick={() => setIsDialogOpen(true)}
         >
           <FaTiktok className="h-4 w-4" />
-          {showLabel && "โพสต์ลง TikTok"}
+          {showLabel && (isEn ? "Post to TikTok" : "โพสต์ลง TikTok")}
         </Button>
       )}
     </>

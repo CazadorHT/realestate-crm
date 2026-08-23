@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Briefcase, Building2 } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ExecutiveStatsProps {
   totalLeads: number;
@@ -25,6 +26,8 @@ export function ExecutiveStats({
   branchCount,
   isLoading,
 }: ExecutiveStatsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   return (
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
@@ -32,7 +35,7 @@ export function ExecutiveStats({
       <Card className="border-slate-100 shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-slate-50/30">
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            ลีดทั้งหมด (Global Leads)
+            {isEn ? "Global Leads" : "ลีดทั้งหมด (Global Leads)"}
           </CardTitle>
           <div className="p-1.5 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
             <Users className="h-4 w-4 text-blue-600" />
@@ -47,7 +50,7 @@ export function ExecutiveStats({
                 {totalLeads.toLocaleString()}
               </div>
               <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">
-                จาก {branchCount} สาขาทั่วประเทศ
+                {isEn ? `Across ${branchCount} branches nationwide` : `จาก ${branchCount} สาขาทั่วประเทศ`}
               </p>
             </>
           )}
@@ -58,7 +61,7 @@ export function ExecutiveStats({
       <Card className="border-slate-100 shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-slate-50/30">
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            ดีลที่ปิดได้ (Won Deals)
+            {isEn ? "Won Deals" : "ดีลที่ปิดได้ (Won Deals)"}
           </CardTitle>
           <div className="p-1.5 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
             <Briefcase className="h-4 w-4 text-emerald-600" />
@@ -73,7 +76,7 @@ export function ExecutiveStats({
                 {totalDeals.toLocaleString()}
               </div>
               <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">
-                ความสำเร็จขององค์กร
+                {isEn ? "Total closed organization success" : "ความสำเร็จขององค์กร"}
               </p>
             </>
           )}
@@ -84,7 +87,7 @@ export function ExecutiveStats({
       <Card className="border-slate-100 shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-slate-50/30">
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            จำนวนสาขา (Active Branches)
+            {isEn ? "Active Branches" : "จำนวนสาขา (Active Branches)"}
           </CardTitle>
           <div className="p-1.5 bg-amber-50 rounded-lg group-hover:bg-amber-100 transition-colors">
             <Building2 className="h-4 w-4 text-amber-600" />
@@ -97,7 +100,7 @@ export function ExecutiveStats({
             <>
               <div className="text-2xl font-semibold text-slate-900">{branchCount}</div>
               <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">
-                สาขาที่เปิดดำเนินการจริง
+                {isEn ? "Operational branch entities" : "สาขาที่เปิดดำเนินการจริง"}
               </p>
             </>
           )}
@@ -106,3 +109,4 @@ export function ExecutiveStats({
     </div>
   );
 }
+

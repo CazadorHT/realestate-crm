@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
@@ -22,6 +22,7 @@ import {
   XCircle,
   Calendar,
   Users,
+  Loader2
 } from "lucide-react";
 import { differenceInHours } from "date-fns";
 import { formatDate, cn } from "@/lib/utils";
@@ -30,16 +31,17 @@ import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteRentalContractsAction, getAllContractIdsAction } from "@/features/contracts/bulk-actions";
 import { toast } from "sonner";
 import { RentalContractWithRelations } from "../types";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
-function formatLeaseTerm(months: number | null | undefined) {
+function formatLeaseTerm(months: number | null | undefined, isEn: boolean) {
   if (!months) return "";
   if (months % 12 === 0) {
     const years = months / 12;
-    return `${years} ปี (${months} เดือน)`;
+    return isEn 
+      ? `${years} ${years > 1 ? "years" : "year"} (${months} mos)`
+      : `${years} ปี (${months} เดือน)`;
   }
-  return `${months} เดือน`;
+  return isEn ? `${months} mos` : `${months} เดือน`;
 }
 
 function getMonthsBetween(startStr: string, endStr: string) {
@@ -59,7 +61,7 @@ function getMonthsBetween(startStr: string, endStr: string) {
   return totalMonths > 0 ? totalMonths : 0;
 }
 
-function getContractStatus(endDate: string) {
+function getContractStatus(endDate: string, isEn: boolean) {
   const now = new Date();
   const end = new Date(endDate);
   const diffTime = end.getTime() - now.getTime();
@@ -68,17 +70,21 @@ function getContractStatus(endDate: string) {
   if (diffDays < 0) {
     return {
       status: "expired" as const,
-      label: "หมดอายุ",
+      label: isEn ? "Expired" : "หมดอายุ",
       days: Math.abs(diffDays),
     };
   } else if (diffDays <= 30) {
     return {
       status: "expiring-soon" as const,
-      label: "ใกล้หมดอายุ",
+      label: isEn ? "Expiring Soon" : "ใกล้หมดอายุ",
       days: diffDays,
     };
   } else {
-    return { status: "active" as const, label: "ใช้งานอยู่", days: diffDays };
+    return { 
+      status: "active" as const, 
+      label: isEn ? "Active" : "ใช้งานอยู่", 
+      days: diffDays 
+    };
   }
 }
 
@@ -95,6 +101,9 @@ export function ContractsTable({
   totalCount,
   filters = {},
 }: ContractsTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const allIds = useMemo(() => contracts.map((c) => c.id), [contracts]);
   const {
     toggleSelect,
@@ -128,10 +137,14 @@ export function ContractsTable({
       });
       if (result.success && result.ids) {
         toggleSelectAll(result.ids);
-        toast.info(`เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
+        toast.info(
+          isEn 
+            ? `Selected all ${result.ids.length} contracts` 
+            : `เลือกทั้งหมด ${result.ids.length} รายการแล้ว`
+        );
       }
     } catch (err) {
-      toast.error("ไม่สามารถเลือกทั้งหมดได้");
+      toast.error(isEn ? "Failed to select all" : "ไม่สามารถเลือกทั้งหมดได้");
     } finally {
       setIsGlobalLoading(false);
     }
@@ -145,7 +158,7 @@ export function ContractsTable({
       clearSelection();
       handleSuccessFeedback();
     } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
+      toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
 
@@ -155,7 +168,7 @@ export function ContractsTable({
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
-        entityName="สัญญา"
+        entityName={isEn ? "contract(s)" : "สัญญา"}
       />
 
       {/* Global Selection Indicator */}
@@ -163,17 +176,17 @@ export function ContractsTable({
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300 shadow-sm">
           <div className="flex items-center gap-3 text-sm text-blue-800">
             <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
-            <span>เลือกทั้งหมด {selectedCount} สัญญาในหน้านี้แล้ว</span>
+            <span>{isEn ? `Selected all ${selectedCount} contracts on this page` : `เลือกทั้งหมด ${selectedCount} สัญญาในหน้านี้แล้ว`}</span>
           </div>
           <button
             onClick={handleSelectAllGlobal}
             disabled={isGlobalLoading}
-            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2"
+            className="text-sm font-bold text-blue-700 hover:text-blue-900 px-4 py-1.5 bg-white rounded-lg border border-blue-200 shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             {isGlobalLoading ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : null}
-            เลือกทั้งหมด {totalCount} สัญญาในระบบ
+            {isEn ? `Select all ${totalCount} contracts in system` : `เลือกทั้งหมด ${totalCount} สัญญาในระบบ`}
           </button>
         </div>
       )}
@@ -182,13 +195,19 @@ export function ContractsTable({
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300">
           <div className="flex items-center gap-3 text-sm text-emerald-800">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span>คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> สัญญาในระบบแล้ว (ทุกหน้า)</span>
+            <span>
+              {isEn ? (
+                <>You have selected all <strong>{totalCount}</strong> contracts in the system (all pages)</>
+              ) : (
+                <>คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> สัญญาในระบบแล้ว (ทุกหน้า)</>
+              )}
+            </span>
           </div>
           <button
             onClick={clearSelection}
-            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all"
+            className="text-sm font-bold text-emerald-700 hover:text-emerald-900 px-4 py-1.5 bg-white rounded-lg border border-emerald-200 shadow-xs hover:shadow-md transition-all cursor-pointer"
           >
-            ยกเลิกการเลือก
+            {isEn ? "Deselect" : "ยกเลิกการเลือก"}
           </button>
         </div>
       )}
@@ -202,7 +221,7 @@ export function ContractsTable({
                 <Checkbox
                   checked={isAllSelected}
                   onCheckedChange={() => toggleSelectAll(allIds)}
-                  aria-label="เลือกทั้งหมด"
+                  aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
                   className={
                     isPartialSelected
                       ? "data-[state=checked]:bg-primary/50"
@@ -210,26 +229,26 @@ export function ContractsTable({
                   }
                 />
               </TableHead>
-              <TableHead>เลขที่สัญญา</TableHead>
-              <TableHead>ทรัพย์สิน</TableHead>
-              <TableHead>ผู้เช่า</TableHead>
-              <TableHead>ระยะเวลา</TableHead>
-              <TableHead>ค่าเช่า/เดือน</TableHead>
-              <TableHead>สถานะ</TableHead>
-              <TableHead className="text-right">จัดการ</TableHead>
+              <TableHead>{isEn ? "Contract No." : "เลขที่สัญญา"}</TableHead>
+              <TableHead>{isEn ? "Property" : "ทรัพย์สิน"}</TableHead>
+              <TableHead>{isEn ? "Tenant" : "ผู้เช่า"}</TableHead>
+              <TableHead>{isEn ? "Duration" : "ระยะเวลา"}</TableHead>
+              <TableHead>{isEn ? "Rent / Month" : "ค่าเช่า/เดือน"}</TableHead>
+              <TableHead>{isEn ? "Status" : "สถานะ"}</TableHead>
+              <TableHead className="text-right">{isEn ? "Actions" : "จัดการ"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {contracts && contracts.length > 0 ? (
               contracts.map((contract) => {
-                const statusInfo = getContractStatus(contract.end_date);
+                const statusInfo = getContractStatus(contract.end_date, isEn);
                 const propertyTitle =
-                  contract.deal?.property?.title || "ไม่ระบุทรัพย์สิน";
+                  contract.deal?.property?.title || (isEn ? "Unspecified Property" : "ไม่ระบุทรัพย์สิน");
                 
                 // Tenant info (from lead)
                 const tenantName =
                   contract.deal?.lead?.full_name ||
-                  "ไม่ระบุ";
+                  (isEn ? "Unspecified" : "ไม่ระบุ");
 
                 return (
                   <TableRow
@@ -242,7 +261,7 @@ export function ContractsTable({
                       <Checkbox
                         checked={isSelected(contract.id)}
                         onCheckedChange={() => toggleSelect(contract.id)}
-                        aria-label={`เลือก ${contract.contract_number}`}
+                        aria-label={isEn ? `Select ${contract.contract_number}` : `เลือก ${contract.contract_number}`}
                       />
                     </TableCell>
                     <TableCell className="font-medium">
@@ -303,7 +322,7 @@ export function ContractsTable({
                       <div className="font-medium">{tenantName}</div>
                       {(() => {
                         const lead = contract.deal?.lead;
-                        if (!lead) return <div className="text-xs text-slate-400">ไม่ระบุข้อมูลผู้ติดต่อ</div>;
+                        if (!lead) return <div className="text-xs text-slate-400">{isEn ? "No contact info" : "ไม่ระบุข้อมูลผู้ติดต่อ"}</div>;
                         const contacts = [
                           { label: "Phone", value: lead.phone },
                           { label: "Email", value: lead.email },
@@ -314,7 +333,7 @@ export function ContractsTable({
                         ].filter(c => !!c.value);
 
                         if (contacts.length === 0) {
-                          return <div className="text-xs text-slate-400">ไม่ได้ระบุเบอร์หรือemail</div>;
+                          return <div className="text-xs text-slate-400">{isEn ? "No phone or email" : "ไม่ได้ระบุเบอร์หรือemail"}</div>;
                         }
 
                         return (
@@ -342,7 +361,7 @@ export function ContractsTable({
                         return term > 0 ? (
                           <div className="text-xs mt-1">
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                              {formatLeaseTerm(term)}
+                              {formatLeaseTerm(term, isEn)}
                             </span>
                           </div>
                         ) : null;
@@ -351,7 +370,7 @@ export function ContractsTable({
                     <TableCell>
                       {contract.rent_price ? (
                         <div className="font-medium text-slate-900">
-                          {new Intl.NumberFormat("th-TH", {
+                          {new Intl.NumberFormat(isEn ? "en-US" : "th-TH", {
                             style: "currency",
                             currency: "THB",
                             maximumFractionDigits: 0,
@@ -362,8 +381,8 @@ export function ContractsTable({
                       )}
                       {contract.deposit_amount && (
                         <div className="text-xs text-slate-500">
-                          ประกัน:{" "}
-                          {new Intl.NumberFormat("th-TH", {
+                          {isEn ? "Deposit: " : "ประกัน: "}
+                          {new Intl.NumberFormat(isEn ? "en-US" : "th-TH", {
                             maximumFractionDigits: 0,
                           }).format(contract.deposit_amount)}
                         </div>
@@ -385,7 +404,7 @@ export function ContractsTable({
                             {statusInfo.label}
                           </Badge>
                           <div className="text-xs text-orange-600 font-medium">
-                            อีก {statusInfo.days} วัน
+                            {isEn ? `in ${statusInfo.days} days` : `อีก ${statusInfo.days} วัน`}
                           </div>
                         </div>
                       ) : (
@@ -402,6 +421,7 @@ export function ContractsTable({
                       <Button 
                         variant="ghost" 
                         size="sm" 
+                        className="cursor-pointer"
                         onClick={() => {
                           setNavigatingId(`view-${contract.id}`);
                           router.push(`/protected/deals/${contract.deal_id}?tab=contract`);
@@ -411,7 +431,7 @@ export function ContractsTable({
                         {navigatingId === `view-${contract.id}` ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         ) : (
-                          <>ดูรายละเอียด <ArrowUpRight className="ml-1 h-3 w-3" /></>
+                          <>{isEn ? "View Details" : "ดูรายละเอียด"} <ArrowUpRight className="ml-1 h-3 w-3" /></>
                         )}
                       </Button>
                     </TableCell>
@@ -421,7 +441,7 @@ export function ContractsTable({
             ) : (
               <TableRow>
                 <TableCell colSpan={8} className="h-auto py-0 border-0">
-                  <EmptyState />
+                  <EmptyState isEn={isEn} />
                 </TableCell>
               </TableRow>
             )}
@@ -437,28 +457,28 @@ export function ContractsTable({
               id="select-all-mobile"
               checked={isAllSelected}
               onCheckedChange={() => toggleSelectAll(allIds)}
-              aria-label="เลือกสัญญาในหน้านี้ทั้งหมด"
+              aria-label={isEn ? "Select all contracts on this page" : "เลือกสัญญาในหน้านี้ทั้งหมด"}
             />
             <span
               className="text-xs font-bold text-slate-500 uppercase tracking-wider"
             >
-              เลือกทั้งหมด
+              {isEn ? "Select All" : "เลือกทั้งหมด"}
             </span>
           </div>
           <p className="text-[10px] font-medium text-slate-400">
-            Displaying {contracts.length} contracts
+            {isEn ? `Displaying ${contracts.length} contracts` : `แสดง ${contracts.length} สัญญา`}
           </p>
         </div>
 
         {contracts && contracts.length > 0 ? (
           contracts.map((contract) => {
-            const statusInfo = getContractStatus(contract.end_date);
+            const statusInfo = getContractStatus(contract.end_date, isEn);
             const propertyTitle =
-              contract.deal?.property?.title || "ไม่ระบุทรัพย์สิน";
+              contract.deal?.property?.title || (isEn ? "Unspecified Property" : "ไม่ระบุทรัพย์สิน");
             const isSel = isSelected(contract.id);
             const tenantName =
               contract.deal?.lead?.full_name ||
-              "ไม่ระบุ";
+              (isEn ? "Unspecified" : "ไม่ระบุ");
 
             return (
               <div
@@ -475,7 +495,7 @@ export function ContractsTable({
                   <Checkbox
                     checked={isSel}
                     onCheckedChange={() => toggleSelect(contract.id)}
-                    className="h-5 w-5 rounded-md border-slate-300"
+                    className="h-5 w-5 rounded-md border-slate-300 cursor-pointer"
                   />
                 </div>
 
@@ -534,14 +554,14 @@ export function ContractsTable({
                   <div className="mt-6 grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        ผู้เช่า
+                        {isEn ? "Tenant" : "ผู้เช่า"}
                       </p>
                       <p className="text-xs font-bold text-slate-700 truncate">
                         {tenantName}
                       </p>
                       {(() => {
                         const lead = contract.deal?.lead;
-                        if (!lead) return <div className="text-[9px] text-slate-400">ไม่ระบุ</div>;
+                        if (!lead) return <div className="text-[9px] text-slate-400">{isEn ? "Unspecified" : "ไม่ระบุ"}</div>;
                         const contacts = [
                           { label: "Phone", value: lead.phone },
                           { label: "Email", value: lead.email },
@@ -552,7 +572,7 @@ export function ContractsTable({
                         ].filter(c => !!c.value);
 
                         if (contacts.length === 0) {
-                          return <div className="text-[9px] text-slate-400">ไม่ได้ระบุติดต่อ</div>;
+                          return <div className="text-[9px] text-slate-400">{isEn ? "No contact" : "ไม่ได้ระบุติดต่อ"}</div>;
                         }
 
                         return (
@@ -569,11 +589,11 @@ export function ContractsTable({
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        ค่าเช่า/เดือน
+                        {isEn ? "Rent / Month" : "ค่าเช่า/เดือน"}
                       </p>
                       <p className="text-xs font-black text-blue-600">
                         {contract.rent_price
-                          ? new Intl.NumberFormat("th-TH").format(
+                          ? new Intl.NumberFormat(isEn ? "en-US" : "th-TH").format(
                               contract.rent_price,
                             )
                           : "-"}{" "}
@@ -582,7 +602,7 @@ export function ContractsTable({
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        ระยะเวลา
+                        {isEn ? "Duration" : "ระยะเวลา"}
                       </p>
                       <p className="text-[10px] font-semibold text-slate-600">
                         {formatDate(contract.start_date)} -{" "}
@@ -594,7 +614,7 @@ export function ContractsTable({
                         return term > 0 ? (
                           <div className="mt-1">
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                              {formatLeaseTerm(term)}
+                              {formatLeaseTerm(term, isEn)}
                             </span>
                           </div>
                         ) : null;
@@ -602,7 +622,7 @@ export function ContractsTable({
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        สถานะ
+                        {isEn ? "Status" : "สถานะ"}
                       </p>
                       {statusInfo.status === "expired" ? (
                         <div className="inline-flex items-center gap-1.5 text-red-600">
@@ -615,7 +635,7 @@ export function ContractsTable({
                         <div className="inline-flex items-center gap-1.5 text-orange-600">
                           <AlertTriangle className="h-3 w-3" />
                           <span className="text-[10px] font-black uppercase tracking-tight">
-                            {statusInfo.label} (อีก {statusInfo.days} ว.)
+                            {statusInfo.label} ({isEn ? `in ${statusInfo.days}d` : `อีก ${statusInfo.days} ว.`})
                           </span>
                         </div>
                       ) : (
@@ -631,7 +651,6 @@ export function ContractsTable({
 
                   <div className="mt-6 pt-5 border-t border-slate-50 flex items-center justify-between gap-3">
                     <div className="flex -space-x-1">
-                      {/* Placeholder for tenant avatar or similar if needed */}
                       <div className="h-6 w-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center">
                         <Users className="h-3 w-3 text-slate-400" />
                       </div>
@@ -639,7 +658,7 @@ export function ContractsTable({
                      <Button
                       variant="outline"
                       size="sm"
-                      className="h-9 rounded-xl text-xs font-bold border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all"
+                      className="h-9 rounded-xl text-xs font-bold border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all cursor-pointer"
                       onClick={() => {
                         setNavigatingId(`m-view-${contract.id}`);
                         router.push(`/protected/deals/${contract.deal_id}?tab=contract`);
@@ -650,7 +669,7 @@ export function ContractsTable({
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
                         <>
-                          ดูรายละเอียด{" "}
+                          {isEn ? "View Details" : "ดูรายละเอียด"}{" "}
                           <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
                         </>
                       )}
@@ -662,7 +681,7 @@ export function ContractsTable({
           })
         ) : (
           <div className="px-2">
-            <EmptyState />
+            <EmptyState isEn={isEn} />
           </div>
         )}
       </div>
@@ -670,7 +689,7 @@ export function ContractsTable({
   );
 }
 
-function EmptyState() {
+function EmptyState({ isEn }: { isEn: boolean }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white py-12 px-6 sm:p-12 my-4">
       {/* Decorative Background */}
@@ -692,22 +711,24 @@ function EmptyState() {
         {/* Text */}
         <div className="space-y-2">
           <h3 className="text-xl sm:text-2xl font-bold text-slate-800">
-            ยังไม่มีสัญญาเช่าในระบบ
+            {isEn ? "No Rental Contracts in System" : "ยังไม่มีสัญญาเช่าในระบบ"}
           </h3>
           <p className="text-sm text-slate-500 leading-relaxed mx-auto">
-            การสร้างสัญญาเช่าต้องมีดีลที่มีสถานะ{" "}
-            <span className="font-semibold text-emerald-600">"สำเร็จ"</span>{" "}
-            เท่านั้น กรุณาไปหน้าดีลเพื่อปิดการขาย/เช่าก่อน
+            {isEn ? (
+              <>Creating a contract requires a deal with <span className="font-semibold text-emerald-600">"Closed Won"</span> status. Please go to Deals page to close the deal first.</>
+            ) : (
+              <>การสร้างสัญญาเช่าต้องมีดีลที่มีสถานะ <span className="font-semibold text-emerald-600">"สำเร็จ"</span> เท่านั้น กรุณาไปหน้าดีลเพื่อปิดการขาย/เช่าก่อน</>
+            )}
           </p>
         </div>
 
         {/* Button */}
         <Button
           asChild
-          className="mt-2 gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 rounded-xl h-11"
+          className="mt-2 gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 rounded-xl h-11 cursor-pointer"
         >
           <Link href="/protected/deals">
-            ไปหน้าดีล
+            {isEn ? "Go to Deals" : "ไปหน้าดีล"}
             <ArrowUpRight className="h-4 w-4" />
           </Link>
         </Button>
@@ -715,3 +736,4 @@ function EmptyState() {
     </div>
   );
 }
+

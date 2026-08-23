@@ -8,6 +8,7 @@ import { Download, RefreshCcw } from "lucide-react";
 import { getExecutiveStatsAction } from "@/lib/actions/executive-stats";
 import { toast } from "sonner";
 import { ExecutiveData } from "./types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // 🛡️ Elite Modular Components
 import { ExecutiveStats } from "./components/ExecutiveStats";
@@ -28,6 +29,9 @@ const ExecutiveChartsContainer = dynamic(
 );
 
 export default function ExecutiveDashboard() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [data, setData] = useState<ExecutiveData[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -37,8 +41,8 @@ export default function ExecutiveDashboard() {
     try {
       const stats = await getExecutiveStatsAction();
       setData(stats as ExecutiveData[]);
-    } catch (error) {
-      toast.error("ไม่สามารถดึงข้อมูลสถิติได้");
+    } catch {
+      toast.error(isEn ? "Failed to load executive statistics" : "ไม่สามารถดึงข้อมูลสถิติได้");
     } finally {
       // 🛡️ Deliberate slight delay for smooth transition (UX Polish)
       setTimeout(() => setLoading(false), 300);
@@ -62,14 +66,18 @@ export default function ExecutiveDashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
-        title="แผงควบคุมระดับบริหาร (Executive Dashboard)"
-        subtitle="ภาพรวมผลการดำเนินงานแบบ Real-time ของทุกสาขาทั่วประเทศ"
+        title={isEn ? "Executive Dashboard" : "แผงควบคุมระดับบริหาร (Executive Dashboard)"}
+        subtitle={
+          isEn
+            ? "Real-time enterprise-wide performance across all nationwide branches"
+            : "ภาพรวมผลการดำเนินงานแบบ Real-time ของทุกสาขาทั่วประเทศ"
+        }
         icon="trendingUp"
         gradient="blue"
         breadcrumbs={[
-          { label: "หน้าแรก", href: "/protected" },
-          { label: "ผู้ดูแลระบบ", href: "/protected/admin/analytics" },
-          { label: "แดชบอร์ดผู้บริหาร" },
+          { label: isEn ? "Home" : "หน้าแรก", href: "/protected" },
+          { label: isEn ? "Analytics" : "ผู้ดูแลระบบ", href: "/protected/admin/analytics" },
+          { label: isEn ? "Executive Dashboard" : "แดชบอร์ดผู้บริหาร" },
         ]}
         actionSlot={
           <div className="flex flex-col md:flex-row items-center gap-2">
@@ -83,14 +91,14 @@ export default function ExecutiveDashboard() {
               <RefreshCcw
                 className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
               />
-              รีเฟรชข้อมูล
+              {isEn ? "Refresh Data" : "รีเฟรชข้อมูล"}
             </Button>
             <Button
               size="sm"
               className="rounded-xl font-semibold h-11 bg-slate-900 hover:bg-black text-white shadow-lg"
             >
               <Download className="mr-2 h-3.5 w-3.5" />
-              ส่งออกรายงาน
+              {isEn ? "Export Report" : "ส่งออกรายงาน"}
             </Button>
           </div>
         }
@@ -119,3 +127,4 @@ export default function ExecutiveDashboard() {
     </div>
   );
 }
+

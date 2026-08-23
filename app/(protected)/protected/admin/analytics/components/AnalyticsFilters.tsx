@@ -6,22 +6,26 @@ import { Calendar, ChevronDown, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
-
-const RANGES = [
-  { label: "ทั้งหมด (All)", value: "all" },
-  { label: "7 วันล่าสุด", value: "7" },
-  { label: "14 วันล่าสุด", value: "14" },
-  { label: "30 วันล่าสุด", value: "30" },
-  { label: "90 วันล่าสุด", value: "90" },
-];
-
-const LISTING_TYPES = [
-  { label: "ทั้งหมด", value: "all" },
-  { label: "เพื่อขาย", value: "SALE" },
-  { label: "เพื่อเช่า", value: "RENT" },
-];
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function AnalyticsFilters() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const ranges = [
+    { label: isEn ? "All Time" : "ทั้งหมด (All)", value: "all" },
+    { label: isEn ? "Last 7 Days" : "7 วันล่าสุด", value: "7" },
+    { label: isEn ? "Last 14 Days" : "14 วันล่าสุด", value: "14" },
+    { label: isEn ? "Last 30 Days" : "30 วันล่าสุด", value: "30" },
+    { label: isEn ? "Last 90 Days" : "90 วันล่าสุด", value: "90" },
+  ];
+
+  const listingTypes = [
+    { label: isEn ? "All Types" : "ทั้งหมด", value: "all" },
+    { label: isEn ? "For Sale" : "เพื่อขาย", value: "SALE" },
+    { label: isEn ? "For Rent" : "เพื่อเช่า", value: "RENT" },
+  ];
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentRange = searchParams.get("range") || "all";
@@ -29,7 +33,7 @@ export function AnalyticsFilters() {
   const [isOpen, setIsOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  const activeRange = RANGES.find((r) => r.value === currentRange) || RANGES[0];
+  const activeRange = ranges.find((r) => r.value === currentRange) || ranges[0];
 
   const updateFilters = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
@@ -45,11 +49,11 @@ export function AnalyticsFilters() {
   };
 
   return (
-    <div className="flex items-center gap-2 w-full  md:w-auto">
+    <div className="flex items-center gap-2 w-full md:w-auto">
       <ResponsiveDialog
         open={isOpen}
         onOpenChange={setIsOpen}
-        title="ตัวกรองข้อมูลวิเคราะห์"
+        title={isEn ? "Analytics Filters" : "ตัวกรองข้อมูลวิเคราะห์"}
         trigger={
           <Button
             variant="outline"
@@ -70,9 +74,11 @@ export function AnalyticsFilters() {
       >
         <div className="p-5 space-y-6">
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">ช่วงเวลา</h4>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+              {isEn ? "Timeframe" : "ช่วงเวลา"}
+            </h4>
             <div className="grid grid-cols-1 gap-1">
-              {RANGES.map((range) => {
+              {ranges.map((range) => {
                 const isActive = currentRange === range.value;
                 return (
                   <Button
@@ -95,9 +101,11 @@ export function AnalyticsFilters() {
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">ประเภทดีล</h4>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+              {isEn ? "Deal Type" : "ประเภทดีล"}
+            </h4>
             <div className="grid grid-cols-1 gap-1">
-              {LISTING_TYPES.map((type) => {
+              {listingTypes.map((type) => {
                 const isActive = currentListingType === type.value;
                 return (
                   <Button
@@ -123,10 +131,11 @@ export function AnalyticsFilters() {
             className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg mt-4"
             onClick={() => setIsOpen(false)}
           >
-            ตกลง
+            {isEn ? "Apply Filters" : "ตกลง"}
           </Button>
         </div>
       </ResponsiveDialog>
     </div>
   );
 }
+

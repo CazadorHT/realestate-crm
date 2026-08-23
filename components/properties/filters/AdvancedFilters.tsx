@@ -30,6 +30,8 @@ import {
   PROPERTY_TYPE_ORDER,
   PROPERTY_TYPE_LABELS,
 } from "@/features/properties/labels";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
 
 interface Filters {
   q: string;
@@ -76,6 +78,8 @@ export function AdvancedFilters({
   totalCount,
   filterMetadata = [],
 }: AdvancedFiltersProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const {
     typeCounts,
     statusCounts,
@@ -98,23 +102,8 @@ export function AdvancedFilters({
     const provincesMap = new Map<string, number>();
     const areasMap = new Map<string, number>();
 
-    // Price Preset Definitions
-    const salePresets = [
-      { min: 0, max: 3000000 },
-      { min: 3000000, max: 7000000 },
-      { min: 7000000, max: 15000000 },
-      { min: 15000000, max: Infinity },
-    ];
-    const rentPresets = [
-      { min: 0, max: 15000 },
-      { min: 15000, max: 50000 },
-      { min: 50000, max: 150000 },
-      { min: 150000, max: Infinity },
-    ];
-
-    const salePriceCounts = salePresets.map(() => 0);
-    const rentPriceCounts = rentPresets.map(() => 0);
-
+    const salePriceCounts = [0, 0, 0, 0];
+    const rentPriceCounts = [0, 0, 0, 0];
     const bedroomCounts: Record<string, number> = {
       "1": 0,
       "2": 0,
@@ -128,162 +117,133 @@ export function AdvancedFilters({
       "4": 0,
     };
     const amenityCounts = {
+      nearTransit: 0,
       petFriendly: 0,
       fullyFurnished: 0,
       needsAiReview: 0,
     };
 
     filterMetadata.forEach((p) => {
-      // Type & Status Counts
-      const type = p.property_type;
-      const status = p.status;
-      typeCounts[type] = (typeCounts[type] || 0) + 1;
-      statusCounts[status] = (statusCounts[status] || 0) + 1;
-
-      // Listing Type Logic
-      if (p.listing_type === "SALE_AND_RENT") listingCounts.SALE_AND_RENT++;
-      else if (p.listing_type === "SALE") listingCounts.SALE++;
-      else if (p.listing_type === "RENT") listingCounts.RENT++;
-
-      // Price Presets Counts
-      const isSaleProp =
-        p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT";
-      const isRentProp =
-        p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT";
-
-      if (isSaleProp) {
-        const activeSalePrice = p.price ?? p.original_price;
-        if (activeSalePrice !== null && activeSalePrice !== undefined) {
-          salePresets.forEach((preset, idx) => {
-            if (activeSalePrice >= preset.min && activeSalePrice < preset.max) {
-              salePriceCounts[idx]++;
-            }
-          });
-        }
+      if (p.type) typeCounts[p.type] = (typeCounts[p.type] || 0) + 1;
+      if (p.status) statusCounts[p.status] = (statusCounts[p.status] || 0) + 1;
+      if (p.listing_type && listingCounts[p.listing_type] !== undefined) {
+        listingCounts[p.listing_type]++;
       }
-      if (isRentProp) {
-        const activeRentPrice = p.rental_price ?? p.original_rental_price;
-        if (activeRentPrice !== null && activeRentPrice !== undefined) {
-          rentPresets.forEach((preset, idx) => {
-            if (activeRentPrice >= preset.min && activeRentPrice < preset.max) {
-              rentPriceCounts[idx]++;
-            }
-          });
-        }
-      }
-
-      // Bedroom & Bathroom Counts
-      if (p.bedrooms !== null) {
-        const bKey = p.bedrooms >= 4 ? "4" : String(Math.floor(p.bedrooms));
-        if (bedroomCounts[bKey] !== undefined) bedroomCounts[bKey]++;
-      }
-      if (p.bathrooms !== null) {
-        const baKey = p.bathrooms >= 4 ? "4" : String(Math.floor(p.bathrooms));
-        if (bathroomCounts[baKey] !== undefined) bathroomCounts[baKey]++;
-      }
-
-      // Amenities Counts
-      if (p.is_fully_furnished) amenityCounts.fullyFurnished++;
-      if (p.requires_ai_review) amenityCounts.needsAiReview++;
-
-      // Location Counts
       if (p.province) {
         provincesMap.set(p.province, (provincesMap.get(p.province) || 0) + 1);
       }
       if (p.popular_area) {
-        areasMap.set(p.popular_area, (areasMap.get(p.popular_area) || 0) + 1);
+        areasMap.set(
+          p.popular_area,
+          (areasMap.get(p.popular_area) || 0) + 1,
+        );
       }
+      if (p.price) {
+        const price = Number(p.price);
+        if (price > 0 && price <= 3000000) salePriceCounts[0]++;
+        else if (price > 3000000 && price <= 7000000) salePriceCounts[1]++;
+        else if (price > 7000000 && price <= 15000000) salePriceCounts[2]++;
+        else if (price > 15000000) salePriceCounts[3]++;
+      }
+      if (p.rental_price) {
+        const rPrice = Number(p.rental_price);
+        if (rPrice > 0 && rPrice <= 15000) rentPriceCounts[0]++;
+        else if (rPrice > 15000 && rPrice <= 50000) rentPriceCounts[1]++;
+        else if (rPrice > 50000 && rPrice <= 150000) rentPriceCounts[2]++;
+        else if (rPrice > 150000) rentPriceCounts[3]++;
+      }
+      if (p.bedrooms) {
+        const b = Number(p.bedrooms);
+        if (b >= 4) bedroomCounts["4"]++;
+        else if (b > 0) bedroomCounts[String(b)]++;
+      }
+      if (p.bathrooms) {
+        const b = Number(p.bathrooms);
+        if (b >= 4) bathroomCounts["4"]++;
+        else if (b > 0) bathroomCounts[String(b)]++;
+      }
+      if (p.is_pet_friendly) amenityCounts.petFriendly++;
+      if (p.is_fully_furnished) amenityCounts.fullyFurnished++;
+      if (p.transit_station_name) amenityCounts.nearTransit++;
+      if (p.needs_ai_review) amenityCounts.needsAiReview++;
     });
 
     return {
       typeCounts,
       statusCounts,
       listingCounts,
-      salePriceCounts,
-      rentPriceCounts,
-      bedroomCounts,
-      bathroomCounts,
-      amenityCounts,
       availableProvinces: Array.from(provincesMap.entries())
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count),
       availableAreas: Array.from(areasMap.entries())
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count),
+      salePriceCounts,
+      rentPriceCounts,
+      bedroomCounts,
+      bathroomCounts,
+      amenityCounts,
     };
   }, [filterMetadata]);
 
   const liveFilteredCount = useMemo(() => {
-    if (!filterMetadata) return 0;
+    if (!filterMetadata || filterMetadata.length === 0) return 0;
     return filterMetadata.filter((p) => {
-      // Status
-      if (
-        filters.status &&
-        filters.status !== "ALL" &&
-        p.status !== filters.status
-      )
-        return false;
-      // Type
-      if (
-        filters.type &&
-        filters.type !== "ALL" &&
-        p.property_type !== filters.type
-      )
-        return false;
-      // Listing
-      if (filters.listing && filters.listing !== "ALL") {
-        const isMatch =
-          p.listing_type === filters.listing ||
-          p.listing_type === "SALE_AND_RENT";
-        if (!isMatch) return false;
-      }
-
-      // Price
-      const min = filters.minPrice ? Number(filters.minPrice) : 0;
-      const max = filters.maxPrice ? Number(filters.maxPrice) : Infinity;
-      const price =
-        filters.listing === "RENT"
-          ? (p.rental_price ?? p.original_rental_price)
-          : (p.price ?? p.original_price);
-
-      if (price !== null && price !== undefined) {
-        if (price < min || (max !== Infinity && price > max)) return false;
-      } else if (filters.minPrice || filters.maxPrice) {
-        return false;
-      }
-
-      // Bedrooms
-      if (filters.bedrooms) {
-        const b = Number(filters.bedrooms);
-        if (b >= 4) {
-          if ((p.bedrooms ?? 0) < 4) return false;
-        } else if (p.bedrooms !== b) {
+      if (filters.status !== "ALL" && p.status !== filters.status) return false;
+      if (filters.type !== "ALL" && p.type !== filters.type) return false;
+      if (filters.listing !== "ALL") {
+        if (
+          filters.listing === "SALE" &&
+          p.listing_type !== "SALE" &&
+          p.listing_type !== "SALE_AND_RENT"
+        )
           return false;
-        }
-      }
-      // Bathrooms
-      if (filters.bathrooms) {
-        const b = Number(filters.bathrooms);
-        if (b >= 4) {
-          if ((p.bathrooms ?? 0) < 4) return false;
-        } else if (p.bathrooms !== b) {
+        if (
+          filters.listing === "RENT" &&
+          p.listing_type !== "RENT" &&
+          p.listing_type !== "SALE_AND_RENT"
+        )
           return false;
-        }
+        if (
+          filters.listing === "SALE_AND_RENT" &&
+          p.listing_type !== "SALE_AND_RENT"
+        )
+          return false;
       }
-
-      // Provinces
       if (filters.province && p.province !== filters.province) return false;
-      // Area
+      if (filters.district && p.district !== filters.district) return false;
       if (filters.popular_area && p.popular_area !== filters.popular_area)
         return false;
-
-      // Amenities
-      if (filters.nearTransit === "true" && !p.near_transit) return false;
+      if (filters.bedrooms) {
+        const reqB = filters.bedrooms;
+        const b = Number(p.bedrooms || 0);
+        if (reqB === "4+" && b < 4) return false;
+        else if (reqB !== "4+" && b !== Number(reqB)) return false;
+      }
+      if (filters.bathrooms) {
+        const reqB = filters.bathrooms;
+        const b = Number(p.bathrooms || 0);
+        if (reqB === "4+" && b < 4) return false;
+        else if (reqB !== "4+" && b !== Number(reqB)) return false;
+      }
+      if (filters.petFriendly === "true" && !p.is_pet_friendly) return false;
       if (filters.fullyFurnished === "true" && !p.is_fully_furnished)
         return false;
-      if (filters.needsAiReview === "true" && !p.requires_ai_review)
+      if (filters.nearTransit === "true" && !p.transit_station_name)
         return false;
-
+      if (filters.needsAiReview === "true" && !p.needs_ai_review) return false;
+      if (filters.minPrice) {
+        const min = Number(filters.minPrice);
+        const checkPrice =
+          filters.listing === "RENT" ? p.rental_price : p.price;
+        if (!checkPrice || Number(checkPrice) < min) return false;
+      }
+      if (filters.maxPrice) {
+        const max = Number(filters.maxPrice);
+        const checkPrice =
+          filters.listing === "RENT" ? p.rental_price : p.price;
+        if (!checkPrice || Number(checkPrice) > max) return false;
+      }
       return true;
     }).length;
   }, [filterMetadata, filters]);
@@ -295,16 +255,16 @@ export function AdvancedFilters({
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="ตัวกรองขั้นสูง"
-      description="ปรับแต่งการค้นหาตามความต้องการของคุณ"
+      title={isEn ? "Advanced Filters" : "ตัวกรองขั้นสูง"}
+      description={isEn ? "Customize your property search criteria" : "ปรับแต่งการค้นหาตามความต้องการของคุณ"}
       trigger={
         <Button
           id={id}
           variant={activeFilterCount > 0 ? "default" : "outline"}
-          className="hover:bg-blue-500! hover:text-white"
+          className="hover:bg-blue-500! hover:text-white cursor-pointer"
         >
           <SlidersHorizontal className="h-4 w-4 mr-2" />
-          ตัวกรอง
+          {isEn ? "Filters" : "ตัวกรอง"}
           {activeFilterCount > 0 && (
             <span className="ml-2 px-1.5 py-0.5 bg-primary-foreground text-primary rounded-full text-[10px] font-bold leading-none min-w-[18px] h-[18px] flex items-center justify-center">
               {activeFilterCount}
@@ -317,17 +277,17 @@ export function AdvancedFilters({
           <DialogClose asChild>
             <Button
               variant="outline"
-              className="h-12 rounded-xl font-bold border-slate-200"
+              className="h-12 rounded-xl font-bold border-slate-200 cursor-pointer"
               onClick={clearFilters}
             >
-              ล้างทั้งหมด
+              {isEn ? "Clear All" : "ล้างทั้งหมด"}
             </Button>
           </DialogClose>
           <Button
-            className="h-12 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200"
+            className="h-12 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 cursor-pointer"
             onClick={applyFilters}
           >
-            แสดง {liveFilteredCount} รายการ
+            {isEn ? `Show ${liveFilteredCount} Listings` : `แสดง ${liveFilteredCount} รายการ`}
           </Button>
         </div>
       }
@@ -354,16 +314,16 @@ export function AdvancedFilters({
             <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
               <div className="flex items-center gap-2">
                 <ArrowUpDown className="h-4 w-4 text-slate-500" />
-                <span>เรียงตาม</span>
+                <span>{isEn ? "Sort By" : "เรียงตาม"}</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-6">
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { id: "created_at-desc", label: "ใหม่ล่าสุด" },
-                  { id: "created_at-asc", label: "เก่าสุด" },
-                  { id: "price-desc", label: "ราคาสูงสุด" },
-                  { id: "price-asc", label: "ราคาต่ำสุด" },
+                  { id: "created_at-desc", label: isEn ? "Newest First" : "ใหม่ล่าสุด" },
+                  { id: "created_at-asc", label: isEn ? "Oldest First" : "เก่าสุด" },
+                  { id: "price-desc", label: isEn ? "Price: High to Low" : "ราคาสูงสุด" },
+                  { id: "price-asc", label: isEn ? "Price: Low to High" : "ราคาต่ำสุด" },
                 ].map((opt) => {
                   const isActive =
                     `${filters.sortBy}-${filters.sortOrder}` === opt.id;
@@ -378,7 +338,7 @@ export function AdvancedFilters({
                           sortOrder,
                         }));
                       }}
-                      className={`flex items-center justify-center px-4 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                      className={`flex items-center justify-center px-4 py-3 rounded-xl border-2 transition-all font-bold text-xs cursor-pointer ${
                         isActive
                           ? "bg-slate-900 border-slate-900 text-white shadow-md"
                           : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
@@ -398,7 +358,7 @@ export function AdvancedFilters({
             className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
           >
             <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-              สถานะประกาศ
+              {isEn ? "Listing Status" : "สถานะประกาศ"}
             </AccordionTrigger>
             <AccordionContent className="pb-6">
               <div className="grid grid-cols-2 gap-2">
@@ -406,13 +366,13 @@ export function AdvancedFilters({
                   onClick={() =>
                     setFilters((prev: any) => ({ ...prev, status: "ALL" }))
                   }
-                  className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs cursor-pointer ${
                     filters.status === "ALL"
                       ? "bg-slate-900 border-slate-900 text-white shadow-md"
                       : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  <span>ทั้งหมดสถานะ</span>
+                  <span>{isEn ? "All Statuses" : "ทั้งหมดสถานะ"}</span>
                   {filterMetadata.length > 0 && (
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
@@ -443,12 +403,12 @@ export function AdvancedFilters({
                         isActive
                           ? "bg-blue-600 border-blue-600 text-white shadow-md"
                           : isAvailable
-                            ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                            ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50 cursor-pointer"
                             : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                       }`}
                     >
                       <span className="truncate mr-1">
-                        {PROPERTY_STATUS_LABELS[s].th}
+                        {isEn ? PROPERTY_STATUS_LABELS[s].en : PROPERTY_STATUS_LABELS[s].th}
                       </span>
                       {isAvailable && (
                         <div className="flex items-center gap-1.5 shrink-0">
@@ -474,7 +434,7 @@ export function AdvancedFilters({
             className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
           >
             <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-              ประเภททรัพย์
+              {isEn ? "Property Type" : "ประเภททรัพย์"}
             </AccordionTrigger>
             <AccordionContent className="pb-6">
               <div className="grid grid-cols-2 gap-2">
@@ -482,13 +442,13 @@ export function AdvancedFilters({
                   onClick={() =>
                     setFilters((prev: any) => ({ ...prev, type: "ALL" }))
                   }
-                  className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-medium text-xs ${
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-medium text-xs cursor-pointer ${
                     filters.type === "ALL"
                       ? "bg-slate-900 border-slate-900 text-white shadow-md"
                       : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  <span>ทั้งหมด</span>
+                  <span>{isEn ? "All Types" : "ทั้งหมด"}</span>
                   {filterMetadata.length > 0 && (
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
@@ -515,16 +475,16 @@ export function AdvancedFilters({
                       onClick={() =>
                         setFilters((prev: any) => ({ ...prev, type: t }))
                       }
-                      className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                      className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-medium text-xs ${
                         isActive
-                          ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                          ? "bg-blue-600 border-blue-600 text-white shadow-md font-bold"
                           : isAvailable
-                            ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                            ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50 cursor-pointer"
                             : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                       }`}
                     >
                       <span className="truncate mr-1">
-                        {PROPERTY_TYPE_LABELS[t].th}
+                        {isEn ? PROPERTY_TYPE_LABELS[t].en : PROPERTY_TYPE_LABELS[t].th}
                       </span>
                       {isAvailable && (
                         <div className="flex items-center gap-1.5 shrink-0">
@@ -551,7 +511,7 @@ export function AdvancedFilters({
             className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
           >
             <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-              รูปแบบรายการ
+              {isEn ? "Listing Type" : "รูปแบบรายการ"}
             </AccordionTrigger>
             <AccordionContent className="pb-6">
               <div className="grid grid-cols-2 gap-2">
@@ -559,13 +519,13 @@ export function AdvancedFilters({
                   onClick={() =>
                     setFilters((prev: any) => ({ ...prev, listing: "ALL" }))
                   }
-                  className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs cursor-pointer ${
                     filters.listing === "ALL"
                       ? "bg-slate-900 border-slate-900 text-white shadow-md"
                       : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  <span>ทั้งหมดรายการ</span>
+                  <span>{isEn ? "All Listing Types" : "ทั้งหมดรายการ"}</span>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                     <span
@@ -599,12 +559,12 @@ export function AdvancedFilters({
                         isActive
                           ? "bg-blue-600 border-blue-600 text-white shadow-md"
                           : isAvailable
-                            ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                            ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50 cursor-pointer"
                             : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                       }`}
                     >
                       <span className="truncate mr-1">
-                        {LISTING_TYPE_LABELS[t].th}
+                        {isEn ? LISTING_TYPE_LABELS[t].en : LISTING_TYPE_LABELS[t].th}
                       </span>
                       {isAvailable && (
                         <div className="flex items-center gap-1.5 shrink-0">
@@ -632,25 +592,25 @@ export function AdvancedFilters({
             className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
           >
             <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-              ราคา & ขนาด
+              {isEn ? "Price & Rooms" : "ราคา & ขนาด"}
             </AccordionTrigger>
             <AccordionContent className="pb-6 space-y-6">
               <div className="space-y-6">
                 {/* Sale Price Section */}
                 <div className="space-y-3">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    ช่วงราคาขาย (บาท)
+                    {isEn ? "Sale Price Range (THB)" : "ช่วงราคาขาย (บาท)"}
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { min: "0", max: "3000000", label: "< 3 ล้าน" },
-                      { min: "3000000", max: "7000000", label: "3 - 7 ล้าน" },
+                      { min: "0", max: "3000000", label: isEn ? "< 3M" : "< 3 ล้าน" },
+                      { min: "3000000", max: "7000000", label: isEn ? "3 - 7M" : "3 - 7 ล้าน" },
                       {
                         min: "7000000",
                         max: "15000000",
-                        label: "7 - 15 ล้าน",
+                        label: isEn ? "7 - 15M" : "7 - 15 ล้าน",
                       },
-                      { min: "15000000", max: "", label: "> 15 ล้าน" },
+                      { min: "15000000", max: "", label: isEn ? "> 15M" : "> 15 ล้าน" },
                     ].map((preset, idx) => {
                       const count = salePriceCounts[idx] || 0;
                       const isActive =
@@ -683,7 +643,7 @@ export function AdvancedFilters({
                             isActive
                               ? "bg-blue-600 border-blue-600 text-white shadow-md"
                               : isAvailable
-                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50 cursor-pointer"
                                 : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                           }`}
                         >
@@ -709,7 +669,7 @@ export function AdvancedFilters({
                 {/* Rent Price Section */}
                 <div className="space-y-3">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    ช่วงราคาเช่า (บาท / เดือน)
+                    {isEn ? "Rent Price Range (THB / mo)" : "ช่วงราคาเช่า (บาท / เดือน)"}
                   </span>
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -717,14 +677,14 @@ export function AdvancedFilters({
                       {
                         min: "15000",
                         max: "50000",
-                        label: "1.5 - 5 หมื่น",
+                        label: isEn ? "15K - 50K" : "1.5 - 5 หมื่น",
                       },
                       {
                         min: "50000",
                         max: "150000",
-                        label: "5 หมื่น - 1.5 แสน",
+                        label: isEn ? "50K - 150K" : "5 หมื่น - 1.5 แสน",
                       },
-                      { min: "150000", max: "", label: "> 1.5 แสน" },
+                      { min: "150000", max: "", label: isEn ? "> 150K" : "> 1.5 แสน" },
                     ].map((preset, idx) => {
                       const count = rentPriceCounts[idx] || 0;
                       const isActive =
@@ -757,7 +717,7 @@ export function AdvancedFilters({
                             isActive
                               ? "bg-blue-600 border-blue-600 text-white shadow-md"
                               : isAvailable
-                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50 cursor-pointer"
                                 : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                           }`}
                         >
@@ -784,7 +744,7 @@ export function AdvancedFilters({
               <div className="space-y-4">
                 <div className="space-y-3">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    ห้องนอน
+                    {isEn ? "Bedrooms" : "ห้องนอน"}
                   </span>
                   <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                     <button
@@ -794,13 +754,13 @@ export function AdvancedFilters({
                           bedrooms: "",
                         }))
                       }
-                      className={`flex items-center justify-between h-10 min-w-24 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
+                      className={`flex items-center justify-between h-10 min-w-24 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 cursor-pointer ${
                         !filters.bedrooms
                           ? "bg-slate-900 border-slate-900 text-white shadow-md"
                           : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
                       }`}
                     >
-                      <span className="mr-2">ทั้งหมด</span>
+                      <span className="mr-2">{isEn ? "All" : "ทั้งหมด"}</span>
                       {filterMetadata.length > 0 && (
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
@@ -833,7 +793,7 @@ export function AdvancedFilters({
                             isActive
                               ? "bg-blue-600 border-blue-600 text-white shadow-md font-bold"
                               : isAvailable
-                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50 cursor-pointer"
                                 : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                           }`}
                         >
@@ -858,7 +818,7 @@ export function AdvancedFilters({
 
                 <div className="space-y-3">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    ห้องน้ำ
+                    {isEn ? "Bathrooms" : "ห้องน้ำ"}
                   </span>
                   <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                     <button
@@ -868,13 +828,13 @@ export function AdvancedFilters({
                           bathrooms: "",
                         }))
                       }
-                      className={`flex items-center justify-between h-10 min-w-24 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
+                      className={`flex items-center justify-between h-10 min-w-24 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 cursor-pointer ${
                         !filters.bathrooms
                           ? "bg-slate-900 border-slate-900 text-white shadow-md"
                           : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
                       }`}
                     >
-                      <span className="mr-2">ทั้งหมด</span>
+                      <span className="mr-2">{isEn ? "All" : "ทั้งหมด"}</span>
                       {filterMetadata.length > 0 && (
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
@@ -909,7 +869,7 @@ export function AdvancedFilters({
                             isActive
                               ? "bg-blue-600 border-blue-600 text-white shadow-md font-bold"
                               : isAvailable
-                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50 cursor-pointer"
                                 : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                           }`}
                         >
@@ -934,23 +894,23 @@ export function AdvancedFilters({
 
                 <div className="space-y-3 pt-2">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    ความต้องการพิเศษ
+                    {isEn ? "Special Features" : "ความต้องการพิเศษ"}
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {[
                       {
                         id: "nearTransit",
-                        label: "ใกล้รถไฟฟ้า",
+                        label: isEn ? "Near SkyTrain/MRT" : "ใกล้รถไฟฟ้า",
                         icon: "🚈",
                       },
                       {
                         id: "petFriendly",
-                        label: "เลี้ยงสัตว์ได้",
+                        label: isEn ? "Pet Friendly" : "เลี้ยงสัตว์ได้",
                         icon: "🐾",
                       },
                       {
                         id: "fullyFurnished",
-                        label: "ตกแต่งครบ",
+                        label: isEn ? "Fully Furnished" : "ตกแต่งครบ",
                         icon: "🛋️",
                       },
                     ].map((item) => {
@@ -975,7 +935,7 @@ export function AdvancedFilters({
                             isActive
                               ? "bg-blue-600 border-blue-600 text-white shadow-md"
                               : isAvailable
-                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50 cursor-pointer"
                                 : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                           }`}
                         >
@@ -1011,14 +971,14 @@ export function AdvancedFilters({
           >
             <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
               <div className="flex items-center gap-2">
-                <span className="text-slate-900">จังหวัด & ทำเล</span>
+                <span className="text-slate-900">{isEn ? "Province & Area" : "จังหวัด & ทำเล"}</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-6 space-y-6">
               {/* Provinces */}
               <div className="space-y-3">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  จังหวัด
+                  {isEn ? "Province" : "จังหวัด"}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -1029,13 +989,13 @@ export function AdvancedFilters({
                         popular_area: "",
                       }))
                     }
-                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all min-w-[140px] ${
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all min-w-[140px] cursor-pointer ${
                       !filters.province
                         ? "bg-slate-900 border-slate-900 text-white shadow-md"
                         : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
                     }`}
                   >
-                    <span>ทุกจังหวัด</span>
+                    <span>{isEn ? "All Provinces" : "ทุกจังหวัด"}</span>
                     {filterMetadata.length > 0 && (
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
@@ -1065,13 +1025,15 @@ export function AdvancedFilters({
                               popular_area: "",
                             }))
                           }
-                          className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold border-2 transition-all min-w-[140px] ${
+                          className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold border-2 transition-all min-w-[140px] cursor-pointer ${
                             isActive
                               ? "bg-blue-600 border-blue-600 text-white shadow-md"
                               : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
                           }`}
                         >
-                          <span className="truncate mr-2">{p.name}</span>
+                          <span className="truncate mr-2">
+                            {getProvinceName(p.name, isEn ? "en" : "th")}
+                          </span>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                             <span
@@ -1088,11 +1050,11 @@ export function AdvancedFilters({
                   {availableProvinces.length > ITEMS_LIMIT && (
                     <button
                       onClick={() => setShowAllProvinces(!showAllProvinces)}
-                      className="px-4 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all"
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all cursor-pointer"
                     >
                       {showAllProvinces
-                        ? "แสดงน้อยลง"
-                        : `+${availableProvinces.length - ITEMS_LIMIT} เพิ่มเติม`}
+                        ? (isEn ? "Show Less" : "แสดงน้อยลง")
+                        : (isEn ? `+${availableProvinces.length - ITEMS_LIMIT} More` : `+${availableProvinces.length - ITEMS_LIMIT} เพิ่มเติม`)}
                     </button>
                   )}
                 </div>
@@ -1101,7 +1063,7 @@ export function AdvancedFilters({
               {/* Areas (Districts) */}
               <div className="space-y-3">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  ทำเล
+                  {isEn ? "Area / Zone" : "ทำเล"}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -1111,13 +1073,13 @@ export function AdvancedFilters({
                         popular_area: "",
                       }))
                     }
-                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all min-w-[140px] ${
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all min-w-[140px] cursor-pointer ${
                       !filters.popular_area
                         ? "bg-slate-900 border-slate-900 text-white shadow-md"
                         : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
                     }`}
                   >
-                    <span>ทุกย่านทำเล</span>
+                    <span>{isEn ? "All Areas" : "ทุกย่านทำเล"}</span>
                     {filterMetadata.length > 0 && (
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
@@ -1146,13 +1108,15 @@ export function AdvancedFilters({
                               popular_area: a.name,
                             }))
                           }
-                          className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold border-2 transition-all min-w-[140px] ${
+                          className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold border-2 transition-all min-w-[140px] cursor-pointer ${
                             isActive
                               ? "bg-blue-600 border-blue-600 text-white shadow-md"
                               : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
                           }`}
                         >
-                          <span className="truncate mr-2">{a.name}</span>
+                          <span className="truncate mr-2">
+                            {getDistrictName(a.name, isEn ? "en" : "th")}
+                          </span>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                             <span
@@ -1169,11 +1133,11 @@ export function AdvancedFilters({
                   {availableAreas.length > ITEMS_LIMIT && (
                     <button
                       onClick={() => setShowAllAreas(!showAllAreas)}
-                      className="px-4 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all"
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all cursor-pointer"
                     >
                       {showAllAreas
-                        ? "แสดงน้อยลง"
-                        : `+${availableAreas.length - ITEMS_LIMIT} เพิ่มเติม`}
+                        ? (isEn ? "Show Less" : "แสดงน้อยลง")
+                        : (isEn ? `+${availableAreas.length - ITEMS_LIMIT} More` : `+${availableAreas.length - ITEMS_LIMIT} เพิ่มเติม`)}
                     </button>
                   )}
                 </div>
@@ -1194,7 +1158,7 @@ export function AdvancedFilters({
                 needsAiReview: prev.needsAiReview === "true" ? "" : "true",
               }))
             }
-            className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all group ${
+            className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all group cursor-pointer ${
               filters.needsAiReview === "true"
                 ? "bg-indigo-50 border-indigo-200 shadow-sm"
                 : "bg-white border-slate-100 hover:border-slate-200 shadow-xs"
@@ -1218,10 +1182,10 @@ export function AdvancedFilters({
                       : "text-slate-700"
                   }`}
                 >
-                  ✨ ตรวจร่าง AI
+                  {isEn ? "✨ AI Review Drafts" : "✨ ตรวจร่าง AI"}
                 </p>
                 <p className="text-[10px] text-slate-400 font-medium leading-tight">
-                  แสดงเฉพาะรายการที่ AI ช่วยสรุปเนื้อหาให้ (รอคุณตรวจสอบ)
+                  {isEn ? "Show only listings auto-drafted by AI awaiting your review" : "แสดงเฉพาะรายการที่ AI ช่วยสรุปเนื้อหาให้ (รอคุณตรวจสอบ)"}
                 </p>
               </div>
             </div>

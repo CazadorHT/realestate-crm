@@ -13,12 +13,15 @@ import {
   LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface SettingsTabsProps {
   activeTab: string;
 }
 
 export function SettingsTabs({ activeTab }: SettingsTabsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -30,14 +33,50 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
   };
 
   const tabs = [
-    { value: "general", label: "ทั่วไป (General)", description: "จัดการชื่อองค์กร สถาปัตยกรรม และข้อมูลพื้นฐาน", icon: Settings },
-    { value: "branding", label: "แบรนด์ (Branding)", description: "ปรับแต่งโลโก้ สีสัน และอัตลักษณ์ของแบรนด์", icon: Palette },
-    { value: "social", label: "Social", description: "เชื่อมต่อ FB, Line, TikTok และระบบแชท", icon: Share2 },
-    { value: "automation", label: "แชทบอท (Automation)", description: "ระบบสุ่มตอบอัตโนมัติและ Live Simulator", icon: MessageSquare },
-    { value: "ai", label: "AI Tools", description: "ตั้งค่าระบบปัญญาประดิษฐ์และ SmartMatch", icon: Cpu },
-    { value: "admin", label: "Admin", description: "ควบคุมสิทธิ์ สาขา ทีม และความปลอดภัย", icon: ShieldCheck },
-    { value: "commission", label: "คอมมิชชั่น", description: "จัดการฐานเงินเดือนและเปอร์เซ็นต์ส่วนแบ่ง", icon: CircleDollarSign },
+    { 
+      value: "general", 
+      label: isEn ? "General" : "ทั่วไป (General)", 
+      description: isEn ? "Organization details and core configuration" : "จัดการชื่อองค์กร สถาปัตยกรรม และข้อมูลพื้นฐาน", 
+      icon: Settings 
+    },
+    { 
+      value: "branding", 
+      label: isEn ? "Branding" : "แบรนด์ (Branding)", 
+      description: isEn ? "Customize logos, brand colors, and visual identity" : "ปรับแต่งโลโก้ สีสัน และอัตลักษณ์ของแบรนด์", 
+      icon: Palette 
+    },
+    { 
+      value: "social", 
+      label: isEn ? "Social & Meta" : "Social", 
+      description: isEn ? "Connect Facebook, LINE, TikTok, and webhooks" : "เชื่อมต่อ FB, Line, TikTok และระบบแชท", 
+      icon: Share2 
+    },
+    { 
+      value: "automation", 
+      label: isEn ? "Automation & Bots" : "แชทบอท (Automation)", 
+      description: isEn ? "Automated responses and live message simulator" : "ระบบสุ่มตอบอัตโนมัติและ Live Simulator", 
+      icon: MessageSquare 
+    },
+    { 
+      value: "ai", 
+      label: isEn ? "AI Tools" : "AI Tools", 
+      description: isEn ? "AI model engine, telemetry, and SmartMatch" : "ตั้งค่าระบบปัญญาประดิษฐ์และ SmartMatch", 
+      icon: Cpu 
+    },
+    { 
+      value: "admin", 
+      label: isEn ? "Admin & Security" : "Admin", 
+      description: isEn ? "Control roles, branches, teams, and security logs" : "ควบคุมสิทธิ์ สาขา ทีม และความปลอดภัย", 
+      icon: ShieldCheck 
+    },
+    { 
+      value: "commission", 
+      label: isEn ? "Commissions" : "คอมมิชชั่น", 
+      description: isEn ? "Base salary and commission split percentage settings" : "จัดการฐานเงินเดือนและเปอร์เซ็นต์ส่วนแบ่ง", 
+      icon: CircleDollarSign 
+    },
   ];
+
 
   const TabItem = ({ value, label, icon: Icon }: { value: string; label: string; icon: LucideIcon }) => (
     <TabsTrigger

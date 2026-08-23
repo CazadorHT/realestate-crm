@@ -24,8 +24,10 @@ export function getPropertyDiff(
   context: {
     allAgents?: { id: string; full_name: string }[];
     allFeatures?: { id: string; label: string }[];
+    language?: "th" | "en";
   } = {}
 ): PropertyDiffResult {
+  const isEn = context.language === "en";
   const diff: PropertyDiffResult = {
     changed_fields: [],
     summary: [],
@@ -36,10 +38,12 @@ export function getPropertyDiff(
 
   const trackField = (
     key: keyof PropertyFormValues, 
-    label: string, 
+    labelTh: string,
+    labelEn: string,
     formatter?: (v: unknown) => string,
     isLongText: boolean = false
   ) => {
+    const label = isEn ? labelEn : labelTh;
     const oldVal = (oldData as Record<string, unknown>)[key];
     const newVal = (newData as Record<string, unknown>)[key];
 
@@ -71,7 +75,9 @@ export function getPropertyDiff(
         const newWords = String(newVal).split(/\s+/).filter(Boolean).length;
         const delta = newWords - oldWords;
         const deltaText = delta >= 0 ? `(+${delta} words)` : `(${delta} words)`;
-        summaryText = `${label}: แก้ไขเนื้อหา ${deltaText}`;
+        summaryText = isEn 
+          ? `${label}: Updated content ${deltaText}` 
+          : `${label}: แก้ไขเนื้อหา ${deltaText}`;
         
         if (!diff.word_counts) diff.word_counts = {};
         diff.word_counts[key] = { old: oldWords, new: newWords, delta };
@@ -82,13 +88,16 @@ export function getPropertyDiff(
     }
   };
 
-  const trackBooleanField = (key: keyof PropertyFormValues, label: string) => {
+  const trackBooleanField = (key: keyof PropertyFormValues, labelTh: string, labelEn: string) => {
+    const label = isEn ? labelEn : labelTh;
     const oldBool = Boolean((oldData as Record<string, unknown>)[key]);
     const newBool = Boolean((newData as Record<string, unknown>)[key]);
 
     if (oldBool !== newBool) {
       diff.changed_fields.push(key);
-      const summaryText = `${label}: ${oldBool ? "ใช่" : "ไม่ใช่"} → ${newBool ? "ใช่" : "ไม่ใช่"}`;
+      const trueStr = isEn ? "Yes" : "ใช่";
+      const falseStr = isEn ? "No" : "ไม่ใช่";
+      const summaryText = `${label}: ${oldBool ? trueStr : falseStr} → ${newBool ? trueStr : falseStr}`;
       diff.summary.push(summaryText);
       diff.details[key] = { old: oldBool, new: newBool };
     }
@@ -98,73 +107,73 @@ export function getPropertyDiff(
   const enumFormatter = (labels: Record<string, any>) => (val: unknown) => {
     const key = String(val ?? "");
     const labelObj = labels[key];
-    if (labelObj && typeof labelObj === "object" && labelObj.th) {
-      return labelObj.th;
+    if (labelObj && typeof labelObj === "object") {
+      return (isEn ? labelObj.en : labelObj.th) || labelObj.th || labelObj.en;
     }
     return labelObj || String(val ?? "N/A");
   };
 
   // --- 1. CORE FIELDS ---
-  trackField("price", "ราคาขายปัจจุบัน", formatCurrencyDiff);
-  trackField("original_price", "ราคาตั้งขาย", formatCurrencyDiff);
-  trackField("rental_price", "ราคาเช่าปัจจุบัน", formatCurrencyDiff);
-  trackField("original_rental_price", "ราคาตั้งเช่า", formatCurrencyDiff);
-  trackField("status", "สถานะ", enumFormatter(PROPERTY_STATUS_LABELS));
-  trackField("listing_type", "ประเภทประกาศ", enumFormatter(LISTING_TYPE_LABELS));
-  trackField("property_type", "ประเภททรัพย์", enumFormatter(PROPERTY_TYPE_LABELS));
-  trackField("title", "ชื่อทรัพย์");
-  trackField("title_en", "ชื่อทรัพย์ (EN)");
+  trackField("price", "ราคาขายปัจจุบัน", "Current Sale Price", formatCurrencyDiff);
+  trackField("original_price", "ราคาตั้งขาย", "Original Sale Price", formatCurrencyDiff);
+  trackField("rental_price", "ราคาเช่าปัจจุบัน", "Current Rent Price", formatCurrencyDiff);
+  trackField("original_rental_price", "ราคาตั้งเช่า", "Original Rent Price", formatCurrencyDiff);
+  trackField("status", "สถานะ", "Status", enumFormatter(PROPERTY_STATUS_LABELS));
+  trackField("listing_type", "ประเภทประกาศ", "Listing Type", enumFormatter(LISTING_TYPE_LABELS));
+  trackField("property_type", "ประเภททรัพย์", "Property Type", enumFormatter(PROPERTY_TYPE_LABELS));
+  trackField("title", "ชื่อทรัพย์", "Property Title (TH)");
+  trackField("title_en", "ชื่อทรัพย์ (EN)", "Property Title (EN)");
   
   // --- 2. DESCRIPTIONS (Long Text) ---
-  trackField("description", "รายละเอียดทรัพย์", undefined, true);
-  trackField("description_en", "รายละเอียดทรัพย์ (EN)", undefined, true);
+  trackField("description", "รายละเอียดทรัพย์", "Description (TH)", undefined, true);
+  trackField("description_en", "รายละเอียดทรัพย์ (EN)", "Description (EN)", undefined, true);
 
   // --- 3. OWNERSHIP & FINANCIALS ---
-  trackField("owner_id", "เจ้าของทรัพย์ (Owner)");
-  trackField("assigned_to", "เอเจนท์ผู้ดูแลหลัก");
-  trackField("commission_sale_percentage", "ค่าคอมมิชชั่นการขาย (%)");
-  trackField("commission_rent_months", "ค่าคอมมิชชั่นการเช่า (เดือน)");
-  trackField("maintenance_fee", "ค่าส่วนกลาง");
-  trackField("total_units", "จำนวนยูนิตทั้งหมด");
-  trackField("sold_units", "จำนวนที่ขายแล้ว");
+  trackField("owner_id", "เจ้าของทรัพย์ (Owner)", "Property Owner");
+  trackField("assigned_to", "เอเจนท์ผู้ดูแลหลัก", "Lead Agent");
+  trackField("commission_sale_percentage", "ค่าคอมมิชชั่นการขาย (%)", "Sale Commission (%)");
+  trackField("commission_rent_months", "ค่าคอมมิชชั่นการเช่า (เดือน)", "Rental Commission (Months)");
+  trackField("maintenance_fee", "ค่าส่วนกลาง", "Common Fee");
+  trackField("total_units", "จำนวนยูนิตทั้งหมด", "Total Units");
+  trackField("sold_units", "จำนวนที่ขายแล้ว", "Sold Units");
 
   // --- 4. PHYSICAL SPECS ---
-  trackField("bedrooms", "ห้องนอน");
-  trackField("bathrooms", "ห้องน้ำ");
-  trackField("size_sqm", "พื้นที่ใช้สอย (ตร.ม.)");
-  trackField("land_size_sqwah", "พื้นที่ดิน (ตร.ว.)");
-  trackField("floor", "ชั้น");
-  trackField("orientation", "ทิศทาง");
-  trackField("parking_slots", "ที่จอดรถ");
+  trackField("bedrooms", "ห้องนอน", "Bedrooms");
+  trackField("bathrooms", "ห้องน้ำ", "Bathrooms");
+  trackField("size_sqm", "พื้นที่ใช้สอย (ตร.ม.)", "Usable Area (Sq.m.)");
+  trackField("land_size_sqwah", "พื้นที่ดิน (ตร.ว.)", "Land Area (Sq.wah)");
+  trackField("floor", "ชั้น", "Floor");
+  trackField("orientation", "ทิศทาง", "Orientation");
+  trackField("parking_slots", "ที่จอดรถ", "Parking Slots");
 
   // --- 5. LOCATION ---
-  trackField("address_line1", "ที่อยู่/โครงการ");
-  trackField("google_maps_link", "ลิงก์แผนที่");
-  trackField("province", "จังหวัด");
-  trackField("district", "เขต/อำเภอ");
+  trackField("address_line1", "ที่อยู่/โครงการ", "Address/Project");
+  trackField("google_maps_link", "ลิงก์แผนที่", "Google Maps Link");
+  trackField("province", "จังหวัด", "Province");
+  trackField("district", "เขต/อำเภอ", "District");
 
   // --- 6. BOOLEAN FLAGS (TAGS) ---
-  const booleanFieldsMap: Record<string, string> = {
-    is_exclusive: "สัญญา Exclusive",
-    is_pet_friendly: "เลี้ยงสัตว์ได้",
-    is_fully_furnished: "เฟอร์นิเจอร์ครบ",
-    is_renovated: "ตกแต่ง/รีโนเวทใหม่",
-    verified: "ยืนยันแล้ว",
-    requires_ai_review: "รอ AI ตรวจสอบ",
-    is_co_agent: "รับ Co-Agent",
-    has_private_pool: "สระว่ายน้ำส่วนตัว",
-    is_selling_with_tenant: "ขายพร้อมผู้เช่า",
-    is_bare_shell: "ห้องเปล่า (Bare Shell)",
-    has_garden_view: "วิวสวน",
-    has_pool_view: "วิวสระว่ายน้ำ",
-    has_city_view: "วิวเมือง",
-    has_river_view: "วิวแม่น้ำ",
-    is_cbd: "ทำเล CBD",
-    is_smart_home: "ระบบ Smart Home",
+  const booleanFieldsMap: Record<string, { th: string; en: string }> = {
+    is_exclusive: { th: "สัญญา Exclusive", en: "Exclusive Contract" },
+    is_pet_friendly: { th: "เลี้ยงสัตว์ได้", en: "Pet Friendly" },
+    is_fully_furnished: { th: "เฟอร์นิเจอร์ครบ", en: "Fully Furnished" },
+    is_renovated: { th: "ตกแต่ง/รีโนเวทใหม่", en: "Renovated" },
+    verified: { th: "ยืนยันแล้ว", en: "Verified" },
+    requires_ai_review: { th: "รอ AI ตรวจสอบ", en: "Requires AI Review" },
+    is_co_agent: { th: "รับ Co-Agent", en: "Co-Agent Allowed" },
+    has_private_pool: { th: "สระว่ายน้ำส่วนตัว", en: "Private Pool" },
+    is_selling_with_tenant: { th: "ขายพร้อมผู้เช่า", en: "Selling with Tenant" },
+    is_bare_shell: { th: "ห้องเปล่า (Bare Shell)", en: "Bare Shell" },
+    has_garden_view: { th: "วิวสวน", en: "Garden View" },
+    has_pool_view: { th: "วิวสระว่ายน้ำ", en: "Pool View" },
+    has_city_view: { th: "วิวเมือง", en: "City View" },
+    has_river_view: { th: "วิวแม่น้ำ", en: "River View" },
+    is_cbd: { th: "ทำเล CBD", en: "CBD Location" },
+    is_smart_home: { th: "ระบบ Smart Home", en: "Smart Home System" },
   };
   
-  Object.entries(booleanFieldsMap).forEach(([fieldKey, fieldLabel]) => {
-    trackBooleanField(fieldKey as keyof PropertyFormValues, fieldLabel);
+  Object.entries(booleanFieldsMap).forEach(([fieldKey, labels]) => {
+    trackBooleanField(fieldKey as keyof PropertyFormValues, labels.th, labels.en);
   });
 
   // --- 7. JUNCTION: IMAGES (Visual Tracking) ---
@@ -178,9 +187,9 @@ export function getPropertyDiff(
       diff.changed_fields.push("images");
       diff.image_changes = { added, removed };
       
-      let imgSum = "รูปภาพ: ";
-      if (added.length) imgSum += `เพิ่ม ${added.length} รูป `;
-      if (removed.length) imgSum += `ลบ ${removed.length} รูป`;
+      let imgSum = isEn ? "Images: " : "รูปภาพ: ";
+      if (added.length) imgSum += isEn ? `Added ${added.length} image(s) ` : `เพิ่ม ${added.length} รูป `;
+      if (removed.length) imgSum += isEn ? `Removed ${removed.length} image(s)` : `ลบ ${removed.length} รูป`;
       diff.summary.push(imgSum.trim());
       diff.details.images = { old: oldImgs, new: newImgs };
     }
@@ -194,8 +203,8 @@ export function getPropertyDiff(
   );
   if (agentDiff.hasChanges) {
     diff.changed_fields.push("agent_ids");
-    if (agentDiff.added.length) diff.summary.push(`เพิ่มเอเจนท์: ${agentDiff.added.join(", ")}`);
-    if (agentDiff.removed.length) diff.summary.push(`ถอดเอเจนท์: ${agentDiff.removed.join(", ")}`);
+    if (agentDiff.added.length) diff.summary.push(isEn ? `Added Agents: ${agentDiff.added.join(", ")}` : `เพิ่มเอเจนท์: ${agentDiff.added.join(", ")}`);
+    if (agentDiff.removed.length) diff.summary.push(isEn ? `Removed Agents: ${agentDiff.removed.join(", ")}` : `ถอดเอเจนท์: ${agentDiff.removed.join(", ")}`);
     diff.details.agent_ids = { old: oldData.agent_ids, new: newData.agent_ids };
   }
 
@@ -207,8 +216,8 @@ export function getPropertyDiff(
   );
   if (featureDiff.hasChanges) {
     diff.changed_fields.push("feature_ids");
-    if (featureDiff.added.length) diff.summary.push(`เพิ่มฟีเจอร์: ${featureDiff.added.join(", ")}`);
-    if (featureDiff.removed.length) diff.summary.push(`ถอดฟีเจอร์: ${featureDiff.removed.join(", ")}`);
+    if (featureDiff.added.length) diff.summary.push(isEn ? `Added Features: ${featureDiff.added.join(", ")}` : `เพิ่มฟีเจอร์: ${featureDiff.added.join(", ")}`);
+    if (featureDiff.removed.length) diff.summary.push(isEn ? `Removed Features: ${featureDiff.removed.join(", ")}` : `ถอดฟีเจอร์: ${featureDiff.removed.join(", ")}`);
     diff.details.feature_ids = { old: oldData.feature_ids, new: newData.feature_ids };
   }
 

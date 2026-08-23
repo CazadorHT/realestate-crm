@@ -4,6 +4,7 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Tag } from "lucide-react";
 import type { ElementZoneMapping, ContentPosition, FontSizeScale, SpecFontSizeScale, StudioPriceFormatStyle } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StudioFieldRouterProps {
   contentPosition: ContentPosition;
@@ -66,6 +67,8 @@ export function StudioFieldRouter({
   setShowQrCode,
   hasOriginalPrice,
 }: StudioFieldRouterProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isSplitMode = contentPosition === "split_hero";
 
   const handleToggleAll = () => {
@@ -77,6 +80,7 @@ export function StudioFieldRouter({
       showSpecs &&
       showPrice &&
       showHeadline;
+
     setShowLocation(!allOn);
     setShowProjectName(!allOn);
     setShowListingType(!allOn);
@@ -92,28 +96,28 @@ export function StudioFieldRouter({
         <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
           <Tag className="h-3.5 w-3.5 text-amber-400" />
           {isSplitMode
-            ? "เลือกเปิด/ปิด & ย้ายโซนข้อมูลอิสระ (Zone Router)"
-            : "เปิด/ปิด ข้อมูลที่จะแสดงบนภาพ (Field Toggles)"}
+            ? (isEn ? "Zone Router (Split Card Placement)" : "เลือกเปิด/ปิด & ย้ายโซนข้อมูลอิสระ (Zone Router)")
+            : (isEn ? "Field Toggles (Visible Elements)" : "เปิด/ปิด ข้อมูลที่จะแสดงบนภาพ (Field Toggles)")}
         </Label>
         <button
           type="button"
           onClick={handleToggleAll}
           className="text-[10px] text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
         >
-          เปิด/ปิด ทั้งหมด
+          {isEn ? "Toggle All" : "เปิด/ปิด ทั้งหมด"}
         </button>
       </div>
 
       {isSplitMode ? (
         <div className="space-y-1.5">
           {[
-            { id: "projectName" as keyof ElementZoneMapping, label: "🏢 ชื่อโครงการ", active: showProjectName, toggle: () => setShowProjectName(!showProjectName) },
-            { id: "title" as keyof ElementZoneMapping, label: "🏠 หัวข้อประกาศ", active: showTitle, toggle: () => setShowTitle(!showTitle) },
-            { id: "headline" as keyof ElementZoneMapping, label: "✨ พาดหัว AI", active: showHeadline, toggle: () => setShowHeadline(!showHeadline) },
-            { id: "price" as keyof ElementZoneMapping, label: "💰 ราคา", active: showPrice, toggle: () => setShowPrice(!showPrice) },
-            { id: "location" as keyof ElementZoneMapping, label: "📍 ทำเล / รถไฟฟ้า", active: showLocation, toggle: () => setShowLocation(!showLocation) },
-            { id: "specs" as keyof ElementZoneMapping, label: "🛏️ สเปกห้อง (นอน/น้ำ/ตร.ม.)", active: showSpecs, toggle: () => setShowSpecs(!showSpecs) },
-            { id: "contact" as keyof ElementZoneMapping, label: "👤 ข้อมูลติดต่อ & QR", active: showContact || showQrCode, toggle: () => { setShowContact(!showContact); setShowQrCode(!showQrCode); } },
+            { id: "projectName" as keyof ElementZoneMapping, label: isEn ? "🏢 Project Name" : "🏢 ชื่อโครงการ", active: showProjectName, toggle: () => setShowProjectName(!showProjectName) },
+            { id: "title" as keyof ElementZoneMapping, label: isEn ? "🏠 Listing Title" : "🏠 หัวข้อประกาศ", active: showTitle, toggle: () => setShowTitle(!showTitle) },
+            { id: "headline" as keyof ElementZoneMapping, label: isEn ? "✨ AI Headline" : "✨ พาดหัว AI", active: showHeadline, toggle: () => setShowHeadline(!showHeadline) },
+            { id: "price" as keyof ElementZoneMapping, label: isEn ? "💰 Price" : "💰 ราคา", active: showPrice, toggle: () => setShowPrice(!showPrice) },
+            { id: "location" as keyof ElementZoneMapping, label: isEn ? "📍 Location / Transit" : "📍 ทำเล / รถไฟฟ้า", active: showLocation, toggle: () => setShowLocation(!showLocation) },
+            { id: "specs" as keyof ElementZoneMapping, label: isEn ? "🛏️ Specs (Bed/Bath/Sqm)" : "🛏️ สเปกห้อง (นอน/น้ำ/ตร.ม.)", active: showSpecs, toggle: () => setShowSpecs(!showSpecs) },
+            { id: "contact" as keyof ElementZoneMapping, label: isEn ? "👤 Contact & QR" : "👤 ข้อมูลติดต่อ & QR", active: showContact || showQrCode, toggle: () => { setShowContact(!showContact); setShowQrCode(!showQrCode); } },
           ].map((item) => {
             const currentZone = zoneMapping[item.id] || "zone_b";
             return (
@@ -153,7 +157,7 @@ export function StudioFieldRouter({
                           : "text-slate-400 hover:text-slate-200"
                       }`}
                     >
-                      🔝 การ์ดบน
+                      {isEn ? "🔝 Top Card" : "🔝 การ์ดบน"}
                     </button>
                     <button
                       type="button"
@@ -164,7 +168,7 @@ export function StudioFieldRouter({
                           : "text-slate-400 hover:text-slate-200"
                       }`}
                     >
-                      🔻 การ์ดล่าง
+                      {isEn ? "🔻 Bottom Card" : "🔻 การ์ดล่าง"}
                     </button>
                   </div>
                 )}
@@ -175,14 +179,14 @@ export function StudioFieldRouter({
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {[
-            { id: "projectName", label: "🏢 ชื่อโครงการ", active: showProjectName, toggle: () => setShowProjectName(!showProjectName) },
-            { id: "title", label: "🏠 หัวข้อประกาศ", active: showTitle, toggle: () => setShowTitle(!showTitle) },
-            { id: "listingType", label: "🏷️ ประเภทประกาศ", active: showListingType, toggle: () => setShowListingType(!showListingType) },
-            { id: "location", label: "📍 ทำเล / รถไฟฟ้า", active: showLocation, toggle: () => setShowLocation(!showLocation) },
-            { id: "price", label: "💰 ราคา", active: showPrice, toggle: () => setShowPrice(!showPrice) },
-            { id: "originalPrice", label: "❌ ราคาเดิมขีดฆ่า", active: showOriginalPrice, toggle: () => setShowOriginalPrice(!showOriginalPrice), disabled: !hasOriginalPrice },
-            { id: "specs", label: "🛏️ สเปกห้อง (นอน/น้ำ/ตร.ม.)", active: showSpecs, toggle: () => setShowSpecs(!showSpecs) },
-            { id: "headline", label: "✨ พาดหัว AI", active: showHeadline, toggle: () => setShowHeadline(!showHeadline) },
+            { id: "projectName", label: isEn ? "🏢 Project Name" : "🏢 ชื่อโครงการ", active: showProjectName, toggle: () => setShowProjectName(!showProjectName) },
+            { id: "title", label: isEn ? "🏠 Listing Title" : "🏠 หัวข้อประกาศ", active: showTitle, toggle: () => setShowTitle(!showTitle) },
+            { id: "listingType", label: isEn ? "🏷️ Listing Type" : "🏷️ ประเภทประกาศ", active: showListingType, toggle: () => setShowListingType(!showListingType) },
+            { id: "location", label: isEn ? "📍 Location / Transit" : "📍 ทำเล / รถไฟฟ้า", active: showLocation, toggle: () => setShowLocation(!showLocation) },
+            { id: "price", label: isEn ? "💰 Price" : "💰 ราคา", active: showPrice, toggle: () => setShowPrice(!showPrice) },
+            { id: "originalPrice", label: isEn ? "❌ Original Price (Strikethrough)" : "❌ ราคาเดิมขีดฆ่า", active: showOriginalPrice, toggle: () => setShowOriginalPrice(!showOriginalPrice), disabled: !hasOriginalPrice },
+            { id: "specs", label: isEn ? "🛏️ Specs (Bed/Bath/Sqm)" : "🛏️ สเปกห้อง (นอน/น้ำ/ตร.ม.)", active: showSpecs, toggle: () => setShowSpecs(!showSpecs) },
+            { id: "headline", label: isEn ? "✨ AI Headline" : "✨ พาดหัว AI", active: showHeadline, toggle: () => setShowHeadline(!showHeadline) },
           ].map((item) => (
             <button
               key={item.id}
@@ -207,17 +211,17 @@ export function StudioFieldRouter({
       {showSpecs && setSpecFontSizeScale && (
         <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
           <span className="text-[11px] text-slate-300 font-medium flex items-center gap-1">
-            📏 ขนาดฟอนต์สเปก (นอน/น้ำ/ตร.ม.):
+            {isEn ? "📏 Specs Font Size:" : "📏 ขนาดฟอนต์สเปก (นอน/น้ำ/ตร.ม.):"}
           </span>
           <div className="flex flex-wrap gap-1">
             {[
-              { id: "xs", label: "จิ๋ว" },
-              { id: "sm", label: "เล็ก" },
-              { id: "md", label: "ปกติ" },
-              { id: "lg", label: "ใหญ่" },
-              { id: "xl", label: "ยักษ์ ⭐" },
-              { id: "2xl", label: "มหายักษ์" },
-              { id: "3xl", label: "ยักษ์ใหญ่" },
+              { id: "xs", label: isEn ? "XS" : "จิ๋ว" },
+              { id: "sm", label: isEn ? "Small" : "เล็ก" },
+              { id: "md", label: isEn ? "Normal" : "ปกติ" },
+              { id: "lg", label: isEn ? "Large" : "ใหญ่" },
+              { id: "xl", label: isEn ? "XL ⭐" : "ยักษ์ ⭐" },
+              { id: "2xl", label: isEn ? "2XL" : "มหายักษ์" },
+              { id: "3xl", label: isEn ? "3XL" : "ยักษ์ใหญ่" },
             ].map((f) => (
               <button
                 key={f.id}
@@ -240,19 +244,21 @@ export function StudioFieldRouter({
       {showPrice && setPriceFormatStyle && (
         <div className="pt-2.5 border-t border-slate-800/80 space-y-1.5">
           <Label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-            <span>🏷️ รูปแบบการแสดงราคา (Price Format Styles)</span>
-            <span className="text-[10px] text-amber-400 font-mono">สากล & ท้องถิ่น</span>
+            <span>{isEn ? "🏷️ Price Format Styles" : "🏷️ รูปแบบการแสดงราคา (Price Format Styles)"}</span>
+            <span className="text-[10px] text-amber-400 font-mono">
+              {isEn ? "Global & Local" : "สากล & ท้องถิ่น"}
+            </span>
           </Label>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             {[
-              { id: "default", label: "฿ 38,000,000", sub: "มาตรฐาน ฿" },
-              { id: "symbol_short", label: "฿ 38M", sub: "ย่อสัญลักษณ์" },
-              { id: "code_short_prefix", label: "THB 38M", sub: "สากล Prefix" },
-              { id: "code_short_suffix", label: "38M THB", sub: "สากล Suffix" },
-              { id: "code_full_suffix", label: "38,000,000 THB", sub: "เต็ม THB" },
-              { id: "thai_lakh", label: "38 ล้านบาท", sub: "ล้าน/หมื่น" },
-              { id: "usd_approx", label: "$ 1.08M USD", sub: "ประมาณ USD" },
+              { id: "default", label: "฿ 38,000,000", sub: isEn ? "Standard ฿" : "มาตรฐาน ฿" },
+              { id: "symbol_short", label: "฿ 38M", sub: isEn ? "Short Symbol" : "ย่อสัญลักษณ์" },
+              { id: "code_short_prefix", label: "THB 38M", sub: isEn ? "Global Prefix" : "สากล Prefix" },
+              { id: "code_short_suffix", label: "38M THB", sub: isEn ? "Global Suffix" : "สากล Suffix" },
+              { id: "code_full_suffix", label: "38,000,000 THB", sub: isEn ? "Full THB" : "เต็ม THB" },
+              { id: "thai_lakh", label: "38 ล้านบาท", sub: isEn ? "Thai Lakh" : "ล้าน/หมื่น" },
+              { id: "usd_approx", label: "$ 1.08M USD", sub: isEn ? "Approx USD" : "ประมาณ USD" },
             ].map((item) => (
               <button
                 key={item.id}

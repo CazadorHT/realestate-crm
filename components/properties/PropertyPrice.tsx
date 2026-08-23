@@ -1,7 +1,10 @@
+"use client";
+
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ListingType } from "@/features/properties/types";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PropertyPriceProps {
   listingType: ListingType;
@@ -22,6 +25,9 @@ export function PropertyPrice({
   className,
   variant = "card",
 }: PropertyPriceProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const isSale = listingType === "SALE" || listingType === "SALE_AND_RENT";
   const isRent = listingType === "RENT" || listingType === "SALE_AND_RENT";
 
@@ -32,7 +38,7 @@ export function PropertyPrice({
   if (!price && !rentalPrice && !originalPrice && !originalRentalPrice) {
     return (
       <span className={cn("text-sm text-slate-300", className)}>
-        ติดต่อสอบถาม
+        {isEn ? "Contact for price" : "ติดต่อสอบถาม"}
       </span>
     );
   }
@@ -60,7 +66,7 @@ export function PropertyPrice({
             </span>
             {hasSaleDiscount && (
               <Badge className="h-4 text-[9px] bg-red-100 text-red-600 border-none px-1 font-bold pointer-events-none">
-                ลดขาย
+                {isEn ? "Sale Disc" : "ลดขาย"}
               </Badge>
             )}
           </div>
@@ -72,7 +78,7 @@ export function PropertyPrice({
         <div className="flex flex-col items-start leading-tight">
           {hasRentDiscount && (
             <span className="text-[10px] text-slate-400 line-through decoration-slate-300">
-              ฿{originalRentalPrice?.toLocaleString()}/ด
+              ฿{originalRentalPrice?.toLocaleString()}{isEn ? "/mo" : "/ด"}
             </span>
           )}
           <div className="flex items-center gap-1.5">
@@ -82,14 +88,14 @@ export function PropertyPrice({
                 isDesktop ? "text-xs font-semibold" : "text-sm",
               )}
             >
-              {isSale ? "เช่า: " : ""}฿
+              {isSale ? (isEn ? "Rent: " : "เช่า: ") : ""}฿
               {rentalPrice?.toLocaleString() ||
                 originalRentalPrice?.toLocaleString()}
-              /ด
+              {isEn ? "/mo" : "/ด"}
             </span>
             {hasRentDiscount && (
               <Badge className="h-4 text-[9px] bg-orange-100 text-orange-600 border-none px-1 font-bold pointer-events-none">
-                ลดเช่า
+                {isEn ? "Rent Disc" : "ลดเช่า"}
               </Badge>
             )}
           </div>
@@ -98,3 +104,4 @@ export function PropertyPrice({
     </div>
   );
 }
+

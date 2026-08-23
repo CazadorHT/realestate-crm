@@ -6,6 +6,7 @@ import { Users, Briefcase } from "lucide-react";
 import { ExecutiveLeadsChart, ExecutiveDealsChart } from "./ExecutiveCharts";
 import { ExecutiveAiInsights } from "./ExecutiveAiInsights";
 import { ExecutiveData } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ExecutiveChartsContainerProps {
   data: ExecutiveData[];
@@ -39,6 +40,8 @@ export function ExecutiveChartsContainer({
   totalDeals,
   isLoading,
 }: ExecutiveChartsContainerProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -48,10 +51,10 @@ export function ExecutiveChartsContainer({
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
             <CardTitle className="text-lg font-semibold flex items-center gap-2 text-slate-800">
               <Users className="h-5 w-5 text-blue-500" />
-              การเปรียบเทียบจำนวนลีดรายสาขา
+              {isEn ? "Lead Volume by Branch" : "การเปรียบเทียบจำนวนลีดรายสาขา"}
             </CardTitle>
             <CardDescription className="text-xs">
-              ประสิทธิภาพในการสรรหาลูกค้า (Global Lead Distribution)
+              {isEn ? "Acquisition efficiency across global lead distribution" : "ประสิทธิภาพในการสรรหาลูกค้า (Global Lead Distribution)"}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -65,10 +68,10 @@ export function ExecutiveChartsContainer({
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
             <CardTitle className="text-lg font-semibold flex items-center gap-2 text-slate-800">
               <Briefcase className="h-5 w-5 text-emerald-500" />
-              การเปรียบเทียบจำนวนดีลรายสาขา
+              {isEn ? "Won Deals by Branch" : "การเปรียบเทียบจำนวนดีลรายสาขา"}
             </CardTitle>
             <CardDescription className="text-xs">
-              ประสิทธิภาพความสำเร็จ (Conversion Success: WON)
+              {isEn ? "Conversion performance (Conversion Success: WON)" : "ประสิทธิภาพความสำเร็จ (Conversion Success: WON)"}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -96,3 +99,4 @@ export function ExecutiveChartsContainer({
     </div>
   );
 }
+

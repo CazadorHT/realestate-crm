@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 // 🛡️ Imported Specialized Sub-components
 import { FilterOptionSelect } from "./sub-components/FilterOptionSelect";
 import type { InventoryFilterCounts } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface InventoryFiltersProps {
   query: string;
@@ -44,6 +45,9 @@ export function InventoryFilters({
   onFilterChange,
   onReset,
 }: InventoryFiltersProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [searchInput, setSearchInput] = useState(query);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -67,7 +71,7 @@ export function InventoryFilters({
   // 🛡️ Pre-calculated Options with Dynamic Counts
   const tenantOptions = [
     {
-      label: "ทุกสาขา (Global)",
+      label: isEn ? "All Branches (Global)" : "ทุกสาขา (Global)",
       value: "ALL",
       icon: <Building2 className="h-4 w-4" />,
     },
@@ -80,36 +84,36 @@ export function InventoryFilters({
   ];
 
   const propertyTypeOptions = [
-    { label: "ทั้งหมด", value: "ALL" },
-    { label: "คอนโด", value: "CONDO", icon: <Building className="h-4 w-4" />, count: filterCounts?.propertyTypes["CONDO"] || 0 },
-    { label: "บ้านเดี่ยว", value: "HOUSE", icon: <Home className="h-4 w-4" />, count: filterCounts?.propertyTypes["HOUSE"] || 0 },
-    { label: "ทาวน์โฮม", value: "TOWNHOME", icon: <Home className="h-4 w-4" />, count: filterCounts?.propertyTypes["TOWNHOME"] || 0 },
-    { label: "ที่ดิน", value: "LAND", icon: <Tag className="h-4 w-4" />, count: filterCounts?.propertyTypes["LAND"] || 0 },
-    { label: "พูลวิลล่า", value: "POOL_VILLA", icon: <Home className="h-4 w-4" />, count: filterCounts?.propertyTypes["POOL_VILLA"] || 0 },
-    { label: "วิลล่า", value: "VILLA", icon: <Home className="h-4 w-4" />, count: filterCounts?.propertyTypes["VILLA"] || 0 },
-    { label: "อาคารพาณิชย์", value: "COMMERCIAL_BUILDING", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["COMMERCIAL_BUILDING"] || 0 },
-    { label: "ออฟฟิศ", value: "OFFICE_BUILDING", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["OFFICE_BUILDING"] || 0 },
-    { label: "โฮมออฟฟิศ", value: "HOME_OFFICE", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["HOME_OFFICE"] || 0 },
-    { label: "โกดัง", value: "WAREHOUSE", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["WAREHOUSE"] || 0 },
-    { label: "อื่นๆ", value: "OTHER", icon: <Tag className="h-4 w-4" />, count: filterCounts?.propertyTypes["OTHER"] || 0 },
+    { label: isEn ? "All Types" : "ทั้งหมด", value: "ALL" },
+    { label: isEn ? "Condo" : "คอนโด", value: "CONDO", icon: <Building className="h-4 w-4" />, count: filterCounts?.propertyTypes["CONDO"] || 0 },
+    { label: isEn ? "Single House" : "บ้านเดี่ยว", value: "HOUSE", icon: <Home className="h-4 w-4" />, count: filterCounts?.propertyTypes["HOUSE"] || 0 },
+    { label: isEn ? "Townhome" : "ทาวน์โฮม", value: "TOWNHOME", icon: <Home className="h-4 w-4" />, count: filterCounts?.propertyTypes["TOWNHOME"] || 0 },
+    { label: isEn ? "Land" : "ที่ดิน", value: "LAND", icon: <Tag className="h-4 w-4" />, count: filterCounts?.propertyTypes["LAND"] || 0 },
+    { label: isEn ? "Pool Villa" : "พูลวิลล่า", value: "POOL_VILLA", icon: <Home className="h-4 w-4" />, count: filterCounts?.propertyTypes["POOL_VILLA"] || 0 },
+    { label: isEn ? "Villa" : "วิลล่า", value: "VILLA", icon: <Home className="h-4 w-4" />, count: filterCounts?.propertyTypes["VILLA"] || 0 },
+    { label: isEn ? "Commercial Building" : "อาคารพาณิชย์", value: "COMMERCIAL_BUILDING", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["COMMERCIAL_BUILDING"] || 0 },
+    { label: isEn ? "Office Building" : "ออฟฟิศ", value: "OFFICE_BUILDING", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["OFFICE_BUILDING"] || 0 },
+    { label: isEn ? "Home Office" : "โฮมออฟฟิศ", value: "HOME_OFFICE", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["HOME_OFFICE"] || 0 },
+    { label: isEn ? "Warehouse" : "โกดัง", value: "WAREHOUSE", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["WAREHOUSE"] || 0 },
+    { label: isEn ? "Other" : "อื่นๆ", value: "OTHER", icon: <Tag className="h-4 w-4" />, count: filterCounts?.propertyTypes["OTHER"] || 0 },
   ];
 
   const statusOptions = [
-    { label: "ทั้งหมด", value: "ALL" },
-    { label: "ออนไลน์ (Active)", value: "ACTIVE", icon: <CheckCircle2 className="h-4 w-4 text-emerald-500" />, count: filterCounts?.statuses["ACTIVE"] || 0 },
-    { label: "ติดจอง (Offer)", value: "UNDER_OFFER", icon: <Tag className="h-4 w-4 text-amber-500" />, count: filterCounts?.statuses["UNDER_OFFER"] || 0 },
-    { label: "จองแล้ว (Reserved)", value: "RESERVED", icon: <Tag className="h-4 w-4 text-orange-500" />, count: filterCounts?.statuses["RESERVED"] || 0 },
-    { label: "ขายแล้ว (Sold)", value: "SOLD", icon: <CheckCircle2 className="h-4 w-4 text-blue-500" />, count: filterCounts?.statuses["SOLD"] || 0 },
-    { label: "เช่าแล้ว (Rented)", value: "RENTED", icon: <CheckCircle2 className="h-4 w-4 text-purple-500" />, count: filterCounts?.statuses["RENTED"] || 0 },
-    { label: "ฉบับร่าง (Draft)", value: "DRAFT", icon: <Tag className="h-4 w-4 text-slate-400" />, count: filterCounts?.statuses["DRAFT"] || 0 },
-    { label: "ยกเลิก (Archived)", value: "ARCHIVED", icon: <X className="h-4 w-4 text-rose-400" />, count: filterCounts?.statuses["ARCHIVED"] || 0 },
+    { label: isEn ? "All Statuses" : "ทั้งหมด", value: "ALL" },
+    { label: isEn ? "Active (Online)" : "ออนไลน์ (Active)", value: "ACTIVE", icon: <CheckCircle2 className="h-4 w-4 text-emerald-500" />, count: filterCounts?.statuses["ACTIVE"] || 0 },
+    { label: isEn ? "Under Offer" : "ติดจอง (Offer)", value: "UNDER_OFFER", icon: <Tag className="h-4 w-4 text-amber-500" />, count: filterCounts?.statuses["UNDER_OFFER"] || 0 },
+    { label: isEn ? "Reserved" : "จองแล้ว (Reserved)", value: "RESERVED", icon: <Tag className="h-4 w-4 text-orange-500" />, count: filterCounts?.statuses["RESERVED"] || 0 },
+    { label: isEn ? "Sold" : "ขายแล้ว (Sold)", value: "SOLD", icon: <CheckCircle2 className="h-4 w-4 text-blue-500" />, count: filterCounts?.statuses["SOLD"] || 0 },
+    { label: isEn ? "Rented" : "เช่าแล้ว (Rented)", value: "RENTED", icon: <CheckCircle2 className="h-4 w-4 text-purple-500" />, count: filterCounts?.statuses["RENTED"] || 0 },
+    { label: isEn ? "Draft" : "ฉบับร่าง (Draft)", value: "DRAFT", icon: <Tag className="h-4 w-4 text-slate-400" />, count: filterCounts?.statuses["DRAFT"] || 0 },
+    { label: isEn ? "Archived" : "ยกเลิก (Archived)", value: "ARCHIVED", icon: <X className="h-4 w-4 text-rose-400" />, count: filterCounts?.statuses["ARCHIVED"] || 0 },
   ];
 
   const listingTypeOptions = [
-    { label: "ทุกประเภทการดีล", value: "ALL" },
-    { label: "เฉพาะขายเท่านั้น", value: "SALE", icon: <Tag className="h-4 w-4" />, count: filterCounts?.listingTypes["SALE"] || 0 },
-    { label: "เฉพาะให้เช่าเท่านั้น", value: "RENT", icon: <Key className="h-4 w-4" />, count: filterCounts?.listingTypes["RENT"] || 0 },
-    { label: "ทั้งขายและเช่า", value: "SALE_AND_RENT", icon: <Tag className="h-4 w-4" />, count: filterCounts?.listingTypes["SALE_AND_RENT"] || 0 },
+    { label: isEn ? "All Deal Types" : "ทุกประเภทการดีล", value: "ALL" },
+    { label: isEn ? "For Sale Only" : "เฉพาะขายเท่านั้น", value: "SALE", icon: <Tag className="h-4 w-4" />, count: filterCounts?.listingTypes["SALE"] || 0 },
+    { label: isEn ? "For Rent Only" : "เฉพาะให้เช่าเท่านั้น", value: "RENT", icon: <Key className="h-4 w-4" />, count: filterCounts?.listingTypes["RENT"] || 0 },
+    { label: isEn ? "Sale & Rent" : "ทั้งขายและเช่า", value: "SALE_AND_RENT", icon: <Tag className="h-4 w-4" />, count: filterCounts?.listingTypes["SALE_AND_RENT"] || 0 },
   ];
 
   return (
@@ -119,7 +123,7 @@ export function InventoryFilters({
         <div className="relative flex-1 w-full lg:w-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="ค้นหาตามชื่อทรัพย์สิน, ทำเล, หรือรายละเอียด..."
+            placeholder={isEn ? "Search property title, location, or details..." : "ค้นหาตามชื่อทรัพย์สิน, ทำเล, หรือรายละเอียด..."}
             className="pl-11 h-11 border-none bg-slate-50/50 focus-visible:ring-blue-500/10 rounded-xl text-sm transition-all"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -134,16 +138,16 @@ export function InventoryFilters({
             title={
               <div className="flex items-center gap-2 text-slate-900 font-medium">
                 <Filter className="h-5 w-5 text-blue-500" />
-                คัดกรองทรัพย์สินละเอียด
+                {isEn ? "Detailed Property Filters" : "คัดกรองทรัพย์สินละเอียด"}
               </div>
             }
             trigger={
               <Button
                 variant="outline"
-                className="h-11 px-5 border-slate-200 hover:bg-slate-100 rounded-xl relative text-sm font-semibold transition-all w-full lg:w-auto text-blue-500!"
+                className="h-11 px-5 border-slate-200 hover:bg-slate-100 rounded-xl relative text-sm font-semibold transition-all w-full lg:w-auto text-blue-500! cursor-pointer"
               >
                 <Filter className="mr-2 h-4 w-4 text-slate-400" />
-                ตัวกรองขั้นสูง
+                {isEn ? "Advanced Filters" : "ตัวกรองขั้นสูง"}
                 {activeFiltersCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white font-semibold">
                     {activeFiltersCount}
@@ -161,56 +165,56 @@ export function InventoryFilters({
                     setSearchInput("");
                     setIsOpen(false);
                   }}
-                  className="text-slate-400 flex-1 hover:text-rose-600 rounded-xl px-4 py-2 hover:bg-rose-50 transition-colors"
+                  className="text-slate-400 flex-1 hover:text-rose-600 rounded-xl px-4 py-2 hover:bg-rose-50 transition-colors cursor-pointer"
                 >
                   <X className="mr-2 h-4 w-4" />
-                  ล้างตัวกรอง
+                  {isEn ? "Reset Filters" : "ล้างตัวกรอง"}
                 </Button>
                 <Button
                   onClick={() => setIsOpen(false)}
-                  className="bg-blue-600 flex-2  hover:bg-blue-700 text-white rounded-xl px-8 h-11 text-sm font-semibold shadow-lg shadow-blue-600/20"
+                  className="bg-blue-600 flex-2 hover:bg-blue-700 text-white rounded-xl px-8 h-11 text-sm font-semibold shadow-lg shadow-blue-600/20 cursor-pointer"
                 >
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  ใช้ตัวกรอง
+                  {isEn ? "Apply Filters" : "ใช้ตัวกรอง"}
                 </Button>
               </div>
             }
           >
             <div className="grid gap-6 py-4 px-6">
               <FilterOptionSelect
-                label="สาขาที่ดูแล (Branch)"
+                label={isEn ? "Branch" : "สาขาที่ดูแล (Branch)"}
                 value={tenantId}
                 options={tenantOptions}
                 onSelect={(val: string) => onFilterChange({ tenant: val })}
-                placeholder="เลือกสาขา"
+                placeholder={isEn ? "Select branch" : "เลือกสาขา"}
                 icon={<Building2 className="h-4 w-4" />}
               />
 
               <div className="grid grid-cols-2 gap-4">
                 <FilterOptionSelect
-                  label="ประเภททรัพย์"
+                  label={isEn ? "Property Type" : "ประเภททรัพย์"}
                   value={propertyType}
                   options={propertyTypeOptions}
                   onSelect={(val: string) => onFilterChange({ type: val })}
-                  placeholder="เลือกประเภท"
+                  placeholder={isEn ? "Select type" : "เลือกประเภท"}
                   icon={<Building className="h-4 w-4" />}
                 />
                 <FilterOptionSelect
-                  label="สถานะ"
+                  label={isEn ? "Status" : "สถานะ"}
                   value={status}
                   options={statusOptions}
                   onSelect={(val: string) => onFilterChange({ status: val })}
-                  placeholder="เลือกสถานะ"
+                  placeholder={isEn ? "Select status" : "เลือกสถานะ"}
                   icon={<CheckCircle2 className="h-4 w-4" />}
                 />
               </div>
 
               <FilterOptionSelect
-                label="ประเภทการดีล"
+                label={isEn ? "Deal Type" : "ประเภทการดีล"}
                 value={listingType}
                 options={listingTypeOptions}
                 onSelect={(val: string) => onFilterChange({ listing: val })}
-                placeholder="เลือกประเภทการดีล"
+                placeholder={isEn ? "Select deal type" : "เลือกประเภทการดีล"}
                 icon={<Tag className="h-4 w-4" />}
               />
             </div>
@@ -218,9 +222,9 @@ export function InventoryFilters({
 
           <Button
             onClick={() => onFilterChange({ q: searchInput })}
-            className="h-11 px-7 bg-slate-900 hover:bg-black text-white rounded-xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] text-sm font-semibold w-full lg:w-auto"
+            className="h-11 px-7 bg-slate-900 hover:bg-black text-white rounded-xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] text-sm font-semibold w-full lg:w-auto cursor-pointer"
           >
-            ค้นหา
+            {isEn ? "Search" : "ค้นหา"}
           </Button>
         </div>
       </div>
@@ -234,13 +238,14 @@ export function InventoryFilters({
             onFilterChange({ type: propertyType === "CONDO" ? "ALL" : "CONDO" })
           }
           className={cn(
-            "rounded-full h-11 px-6 text-[11px] font-semibold uppercase transition-all whitespace-nowrap shadow-xs shrink-0",
+            "rounded-full h-11 px-6 text-[11px] font-semibold uppercase transition-all whitespace-nowrap shadow-xs shrink-0 cursor-pointer",
             propertyType === "CONDO"
               ? "bg-blue-600 text-white border-blue-600 shadow-blue-200"
               : "bg-white text-slate-500 border-slate-200",
           )}
         >
-          <Building className="mr-2 h-3.5 w-3.5" /> คอนโด
+          <Building className="mr-2 h-3.5 w-3.5" />
+          {isEn ? "Condo" : "คอนโด"}
         </Button>
         <Button
           variant="outline"
@@ -249,13 +254,14 @@ export function InventoryFilters({
             onFilterChange({ type: propertyType === "HOUSE" ? "ALL" : "HOUSE" })
           }
           className={cn(
-            "rounded-full h-11 px-6 text-[11px] font-semibold uppercase transition-all whitespace-nowrap shadow-xs shrink-0",
+            "rounded-full h-11 px-6 text-[11px] font-semibold uppercase transition-all whitespace-nowrap shadow-xs shrink-0 cursor-pointer",
             propertyType === "HOUSE"
               ? "bg-blue-600 text-white border-blue-600 shadow-blue-200"
               : "bg-white text-slate-500 border-slate-200",
           )}
         >
-          <Home className="mr-2 h-3.5 w-3.5" /> บ้านเดี่ยว
+          <Home className="mr-2 h-3.5 w-3.5" />
+          {isEn ? "House" : "บ้านเดี่ยว"}
         </Button>
         <Button
           variant="outline"
@@ -264,13 +270,14 @@ export function InventoryFilters({
             onFilterChange({ listing: listingType === "SALE" ? "ALL" : "SALE" })
           }
           className={cn(
-            "rounded-full h-11 px-6 text-[11px] font-semibold uppercase transition-all whitespace-nowrap shadow-xs shrink-0",
+            "rounded-full h-11 px-6 text-[11px] font-semibold uppercase transition-all whitespace-nowrap shadow-xs shrink-0 cursor-pointer",
             listingType === "SALE"
               ? "bg-emerald-600 text-white border-emerald-600 shadow-emerald-200"
               : "bg-white text-slate-500 border-slate-200",
           )}
         >
-          <Tag className="mr-2 h-3.5 w-3.5" /> เฉพาะขาย
+          <Tag className="mr-2 h-3.5 w-3.5" />
+          {isEn ? "For Sale" : "เฉพาะขาย"}
         </Button>
         <Button
           variant="outline"
@@ -279,15 +286,17 @@ export function InventoryFilters({
             onFilterChange({ listing: listingType === "RENT" ? "ALL" : "RENT" })
           }
           className={cn(
-            "rounded-full h-11 px-6 text-[11px] font-semibold uppercase transition-all whitespace-nowrap shadow-xs shrink-0",
+            "rounded-full h-11 px-6 text-[11px] font-semibold uppercase transition-all whitespace-nowrap shadow-xs shrink-0 cursor-pointer",
             listingType === "RENT"
               ? "bg-amber-600 text-white border-amber-600 shadow-amber-200"
               : "bg-white text-slate-500 border-slate-200",
           )}
         >
-          <Key className="mr-2 h-3.5 w-3.5" /> สำหรับเช่า
+          <Key className="mr-2 h-3.5 w-3.5" />
+          {isEn ? "For Rent" : "สำหรับเช่า"}
         </Button>
       </div>
     </div>
   );
 }
+

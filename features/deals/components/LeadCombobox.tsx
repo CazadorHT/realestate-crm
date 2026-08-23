@@ -6,6 +6,7 @@ import { Check, ChevronsUpDown, X, Search, User, Phone, Mail } from "lucide-reac
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type LeadItem = {
   id: string;
@@ -39,8 +40,13 @@ function getInitials(name: string) {
 export function LeadCombobox({
   value,
   onChangeAction,
-  placeholder = "เลือกลูกค้า...",
+  placeholder,
 }: Props) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
+  const defaultPlaceholder = placeholder || (isEn ? "Select customer (lead)..." : "เลือกลูกค้า...");
+
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -139,7 +145,7 @@ export function LeadCombobox({
     <button
       type="button"
       className={cn(
-        "w-full flex items-center gap-3 text-left rounded-xl border px-3 py-2.5 transition-all duration-200 shadow-sm group",
+        "w-full flex items-center gap-3 text-left rounded-xl border px-3 py-2.5 transition-all duration-200 shadow-sm group cursor-pointer",
         "hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-md",
         selected
           ? "border-blue-200 bg-blue-50/30"
@@ -166,11 +172,11 @@ export function LeadCombobox({
               {selected.full_name}
             </p>
             <p className="text-xs text-slate-400 truncate mt-0.5">
-              {selected.email || selected.phone || "ไม่มีข้อมูลติดต่อ"}
+              {selected.email || selected.phone || (isEn ? "No contact information" : "ไม่มีข้อมูลติดต่อ")}
             </p>
           </>
         ) : (
-          <span className="text-slate-400 text-sm">{placeholder}</span>
+          <span className="text-slate-400 text-sm">{defaultPlaceholder}</span>
         )}
       </div>
 
@@ -180,7 +186,7 @@ export function LeadCombobox({
           <span
             role="button"
             onClick={handleClear}
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors"
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors cursor-pointer"
           >
             <X className="h-3.5 w-3.5" />
           </span>
@@ -194,8 +200,8 @@ export function LeadCombobox({
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="เลือกลูกค้า (ลีด)"
-      description="ค้นหาลีดด้วยชื่อ เบอร์โทรศัพท์ หรืออีเมล"
+      title={isEn ? "Select Lead" : "เลือกลูกค้า (ลีด)"}
+      description={isEn ? "Search leads by name, phone or email" : "ค้นหาลีดด้วยชื่อ เบอร์โทรศัพท์ หรืออีเมล"}
       className="sm:max-w-md!"
       trigger={trigger}
       isLoading={isLoading}
@@ -210,13 +216,13 @@ export function LeadCombobox({
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="ค้นหาชื่อ, เบอร์โทร, อีเมล..."
+              placeholder={isEn ? "Search name, phone, email..." : "ค้นหาชื่อ, เบอร์โทร, อีเมล..."}
               className="pl-9 pr-9 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 text-sm"
             />
             {q && (
               <button
                 onClick={() => setQ("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -225,18 +231,20 @@ export function LeadCombobox({
           <div className="flex items-center justify-between mt-2 px-1">
             {items.length > 0 ? (
               <p className="text-[11px] text-slate-400">
-                พบ <span className="font-bold text-slate-600">{items.length}</span> รายการ
+                {isEn ? "Found " : "พบ "}
+                <span className="font-bold text-slate-600">{items.length}</span>
+                {isEn ? " leads" : " รายการ"}
                 {hasMore ? "+" : ""}
               </p>
             ) : <div />}
             <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
-              <span className="text-[10px] text-slate-400 font-medium">เรียงลำดับ:</span>
+              <span className="text-[10px] text-slate-400 font-medium">{isEn ? "Sort:" : "เรียงลำดับ:"}</span>
               <button
                 type="button"
                 onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
                 className="text-[10px] font-black text-blue-600 hover:text-blue-800 cursor-pointer"
               >
-                {sortOrder === "desc" ? "ใหม่ ➔ เก่า" : "เก่า ➔ ใหม่"}
+                {sortOrder === "desc" ? (isEn ? "Newest ➔ Oldest" : "ใหม่ ➔ เก่า") : (isEn ? "Oldest ➔ Newest" : "เก่า ➔ ใหม่")}
               </button>
             </div>
           </div>
@@ -254,8 +262,8 @@ export function LeadCombobox({
                 <User className="h-7 w-7 text-slate-300" />
               </div>
               <div className="text-center">
-                <p className="font-bold text-slate-500 text-sm">ไม่พบลีด</p>
-                <p className="text-xs text-slate-400 mt-1">ลองค้นหาด้วยคำอื่น</p>
+                <p className="font-bold text-slate-500 text-sm">{isEn ? "No leads found" : "ไม่พบลีด"}</p>
+                <p className="text-xs text-slate-400 mt-1">{isEn ? "Try searching with a different term" : "ลองค้นหาด้วยคำอื่น"}</p>
               </div>
             </div>
           ) : (
@@ -272,7 +280,7 @@ export function LeadCombobox({
                     type="button"
                     onClick={() => handleSelect(item)}
                     className={cn(
-                      "w-full flex flex-col items-center gap-2 px-3 pt-4 pb-3 rounded-2xl text-center transition-all duration-150 group relative border",
+                      "w-full flex flex-col items-center gap-2 px-3 pt-4 pb-3 rounded-2xl text-center transition-all duration-150 group relative border cursor-pointer",
                       "hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
                       isSelected
                         ? "bg-blue-50 border-blue-300 ring-2 ring-blue-400/20 shadow-md shadow-blue-100"
@@ -296,7 +304,7 @@ export function LeadCombobox({
                         "font-bold text-sm truncate leading-snug transition-colors text-center",
                         isSelected ? "text-blue-700" : "text-slate-900 group-hover:text-blue-700"
                       )}>
-                        คุณ {item.full_name}
+                        {isEn ? "" : "คุณ "}{item.full_name}
                       </p>
                       {contactLine && (
                         <p className="flex items-center justify-center gap-1.5 text-xs text-slate-400 mt-0.5 truncate">
@@ -327,12 +335,12 @@ export function LeadCombobox({
                     <div className="flex flex-col items-center gap-2">
                        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                         กำลังโหลดข้อมูล...
+                         {isEn ? "Loading more leads..." : "กำลังโหลดข้อมูล..."}
                        </span>
                     </div>
                   ) : (
                     <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">
-                      เลื่อนเพื่อโหลดเพิ่มเติม
+                      {isEn ? "Scroll for more" : "เลื่อนเพื่อโหลดเพิ่มเติม"}
                     </span>
                   )}
                 </div>
@@ -344,3 +352,4 @@ export function LeadCombobox({
     </ResponsiveDialog>
   );
 }
+

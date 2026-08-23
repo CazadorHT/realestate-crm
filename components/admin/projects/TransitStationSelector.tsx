@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type MasterDataTransitStation } from "@/features/properties/actions/fetch-master-data";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 function getTransitLogoInfo(code: string, transitType?: string) {
   const c = code.toUpperCase();
@@ -98,6 +99,9 @@ export function TransitStationSelector({
   stations,
   setIsFormDirty,
 }: TransitStationSelectorProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [stationSearchQuery, setStationSearchQuery] = React.useState("");
   const [stationLineFilter, setStationLineFilter] = React.useState("ALL");
   const [tempSelectedStations, setTempSelectedStations] = React.useState<string[]>([]);
@@ -132,10 +136,14 @@ export function TransitStationSelector({
       title={
         <span className="flex items-center gap-2 text-slate-900">
           <Train className="h-5.5 w-5.5 text-indigo-600 animate-pulse" />
-          เลือกสถานีรถไฟฟ้าใกล้เคียง
+          {isEn ? "Select Nearby Transit Stations" : "เลือกสถานีรถไฟฟ้าใกล้เคียง"}
         </span>
       }
-      description="ค้นหาและเลือกสถานีรถไฟฟ้าที่ใกล้กับโครงการ สามารถเลือกได้มากกว่า 1 สถานี"
+      description={
+        isEn
+          ? "Search and select transit stations near the project. You can select multiple stations."
+          : "ค้นหาและเลือกสถานีรถไฟฟ้าที่ใกล้กับโครงการ สามารถเลือกได้มากกว่า 1 สถานี"
+      }
       className="sm:max-w-2xl"
       footer={
         <div className="flex justify-end gap-3 w-full px-6 sm:px-0">
@@ -145,7 +153,7 @@ export function TransitStationSelector({
             onClick={() => onClose(false)}
             className="h-10.5 rounded-xl border-slate-200 text-slate-650 cursor-pointer"
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
           <Button
             type="button"
@@ -156,7 +164,9 @@ export function TransitStationSelector({
             }}
             className="h-10.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer shadow-md shadow-indigo-500/20"
           >
-            ตกลง ({tempSelectedStations.length} สถานี)
+            {isEn
+              ? `Confirm (${tempSelectedStations.length} Stations)`
+              : `ตกลง (${tempSelectedStations.length} สถานี)`}
           </Button>
         </div>
       }
@@ -166,7 +176,7 @@ export function TransitStationSelector({
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="ค้นหาชื่อสถานี (ภาษาไทย หรือ อังกฤษ)..."
+              placeholder={isEn ? "Search station name (Thai or English)..." : "ค้นหาชื่อสถานี (ภาษาไทย หรือ อังกฤษ)..."}
               value={stationSearchQuery}
               onChange={(e) => setStationSearchQuery(e.target.value)}
               className="pl-10 h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500"
@@ -175,19 +185,19 @@ export function TransitStationSelector({
           <div className="w-full sm:w-56">
             <Select value={stationLineFilter} onValueChange={setStationLineFilter}>
               <SelectTrigger className="h-10.5 rounded-xl border-slate-200">
-                <SelectValue placeholder="ทุกสายรถไฟฟ้า" />
+                <SelectValue placeholder={isEn ? "All Transit Lines" : "ทุกสายรถไฟฟ้า"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">ทุกสายรถไฟฟ้า</SelectItem>
-                <SelectItem value="BTS">BTS (สายสีเขียว)</SelectItem>
-                <SelectItem value="MRT">MRT (สายสีน้ำเงิน)</SelectItem>
-                <SelectItem value="MRT_PURPLE">MRT (สายสีม่วง)</SelectItem>
-                <SelectItem value="MRT_YELLOW">MRT (สายสีเหลือง)</SelectItem>
-                <SelectItem value="MRT_PINK">MRT (สายสีชมพู)</SelectItem>
-                <SelectItem value="MRT_ORANGE">MRT (สายสีส้ม)</SelectItem>
+                <SelectItem value="ALL">{isEn ? "All Transit Lines" : "ทุกสายรถไฟฟ้า"}</SelectItem>
+                <SelectItem value="BTS">BTS (Green Line)</SelectItem>
+                <SelectItem value="MRT">MRT (Blue Line)</SelectItem>
+                <SelectItem value="MRT_PURPLE">MRT (Purple Line)</SelectItem>
+                <SelectItem value="MRT_YELLOW">MRT (Yellow Line)</SelectItem>
+                <SelectItem value="MRT_PINK">MRT (Pink Line)</SelectItem>
+                <SelectItem value="MRT_ORANGE">MRT (Orange Line)</SelectItem>
                 <SelectItem value="ARL">ARL (Airport Link)</SelectItem>
-                <SelectItem value="SRT_RED">SRT (สายสีแดง)</SelectItem>
-                <SelectItem value="GOLD">สายสีทอง</SelectItem>
+                <SelectItem value="SRT_RED">SRT (Red Line)</SelectItem>
+                <SelectItem value="GOLD">{isEn ? "Gold Line" : "สายสีทอง"}</SelectItem>
                 <SelectItem value="BRT">BRT</SelectItem>
               </SelectContent>
             </Select>
@@ -198,7 +208,9 @@ export function TransitStationSelector({
           {filteredStations.length === 0 ? (
             <div className="text-center py-12">
               <AlertCircle className="h-10 w-10 text-slate-355 mx-auto mb-2" />
-              <span className="text-xs text-slate-400 font-medium">ไม่พบสถานีรถไฟฟ้าที่ค้นหา</span>
+              <span className="text-xs text-slate-400 font-medium">
+                {isEn ? "No transit stations found" : "ไม่พบสถานีรถไฟฟ้าที่ค้นหา"}
+              </span>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -231,10 +243,10 @@ export function TransitStationSelector({
                     />
                     <div className="flex flex-col">
                       <span className="text-xs text-slate-900 font-bold leading-none mb-1">
-                        {stat.label.th}
+                        {isEn ? (stat.label.en || stat.label.th) : stat.label.th}
                       </span>
                       <span className="text-[10px] text-slate-400 leading-none">
-                        {stat.label.en} ({stat.code})
+                        {isEn ? stat.label.th : stat.label.en} ({stat.code})
                       </span>
                     </div>
                     <div className={cn("ml-auto flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-extrabold border uppercase tracking-wider", logoInfo.bg)}>
@@ -254,3 +266,4 @@ export function TransitStationSelector({
     </ResponsiveDialog>
   );
 }
+

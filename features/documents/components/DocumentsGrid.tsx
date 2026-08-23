@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect, useTransition } from "react";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DOC_TYPE_LABELS } from "../schema";
+import { DOC_TYPE_LABELS, DOC_TYPE_LABELS_EN } from "../schema";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -51,6 +51,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface DocumentsGridProps {
   documents: DocumentWithRelations[];
@@ -76,6 +77,9 @@ export function DocumentsGrid({
   totalCount,
   currentPage,
 }: DocumentsGridProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -89,8 +93,6 @@ export function DocumentsGrid({
   // Sync debounced search to URL
   useEffect(() => {
     const currentQ = searchParams.get("q") || "";
-    // 🛑 ONLY update if the search value has truly changed
-    // This prevents the infinite loop where router.push -> searchParams change -> useEffect triggers again
     if (currentQ === debouncedSearch) return;
 
     const params = new URLSearchParams(searchParams.toString());
@@ -142,11 +144,11 @@ export function DocumentsGrid({
   const handleDelete = async (id: string, storagePath: string) => {
     const result = await bulkDeleteDocumentsAction([id]);
     if (result.success) {
-      toast.success("ลบเอกสารสำเร็จ");
+      toast.success(isEn ? "Document deleted successfully" : "ลบเอกสารสำเร็จ");
       handleSuccessFeedback();
     } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-      throw new Error(result.message || "เกิดข้อผิดพลาด");
+      toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
+      throw new Error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
 
@@ -158,10 +160,12 @@ export function DocumentsGrid({
       clearSelection();
       handleSuccessFeedback();
     } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-      throw new Error(result.message || "เกิดข้อผิดพลาด");
+      toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
+      throw new Error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
     }
   };
+
+  const docTypeDict = isEn ? DOC_TYPE_LABELS_EN : DOC_TYPE_LABELS;
 
   return (
     <div className="space-y-4 relative">
@@ -170,7 +174,9 @@ export function DocumentsGrid({
         <div className="absolute inset-0 z-50 bg-white/40 backdrop-blur-[1px] flex items-center justify-center rounded-xl transition-all">
           <div className="bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3 animate-in zoom-in-95 duration-200">
             <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-            <span className="text-sm font-bold text-slate-700">กำลังโหลดข้อมูล...</span>
+            <span className="text-sm font-bold text-slate-700">
+              {isEn ? "Loading documents..." : "กำลังโหลดข้อมูล..."}
+            </span>
           </div>
         </div>
       )}
@@ -179,12 +185,12 @@ export function DocumentsGrid({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
-            รายการเอกสารทั้งหมด
+            {isEn ? "All Documents" : "รายการเอกสารทั้งหมด"}
           </h2>
           <p className="text-sm text-slate-500 mt-1">
             {searchQuery
-              ? `พบผลการค้นหา ${totalCount} รายการ`
-              : `พบทั้งหมด ${totalCount} เอกสาร`}
+              ? (isEn ? `Found ${totalCount} matching record(s)` : `พบผลการค้นหา ${totalCount} รายการ`)
+              : (isEn ? `Found ${totalCount} document(s)` : `พบทั้งหมด ${totalCount} เอกสาร`)}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
@@ -192,33 +198,33 @@ export function DocumentsGrid({
             <Button
               variant="ghost"
               size="sm"
-              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "ALL" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
+              className={`text-xs h-7 px-3 rounded-md transition-all cursor-pointer ${filterType === "ALL" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
               onClick={() => handleFilterChange("ALL")}
             >
-              ทั้งหมด
+              {isEn ? "All" : "ทั้งหมด"}
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "DOCUMENT" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
+              className={`text-xs h-7 px-3 rounded-md transition-all cursor-pointer ${filterType === "DOCUMENT" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
               onClick={() => handleFilterChange("DOCUMENT")}
             >
-              เอกสาร
+              {isEn ? "Documents" : "เอกสาร"}
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className={`text-xs h-7 px-3 rounded-md transition-all ${filterType === "SLIP" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
+              className={`text-xs h-7 px-3 rounded-md transition-all cursor-pointer ${filterType === "SLIP" ? "bg-white shadow-sm" : "hover:bg-white/50"}`}
               onClick={() => handleFilterChange("SLIP")}
             >
-              สลิป
+              {isEn ? "Payment Slips" : "สลิป"}
             </Button>
           </div>
 
           <div className="relative w-full md:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="ค้นหาชื่อไฟล์..."
+              placeholder={isEn ? "Search file name..." : "ค้นหาชื่อไฟล์..."}
               className="pl-10 pr-10 bg-white"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -226,7 +232,7 @@ export function DocumentsGrid({
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -239,7 +245,7 @@ export function DocumentsGrid({
         selectedCount={selectedCount}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
-        entityName="เอกสาร"
+        entityName={isEn ? "document(s)" : "เอกสาร"}
       />
 
       {/* Select All Header */}
@@ -248,12 +254,14 @@ export function DocumentsGrid({
           <Checkbox
             checked={isAllSelected && documents.length > 0}
             onCheckedChange={() => toggleSelectAll(allIds)}
-            aria-label="เลือกทั้งหมด"
+            aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
             className={
               isPartialSelected ? "data-[state=checked]:bg-primary/50" : ""
             }
           />
-          <span className="text-sm text-slate-600">เลือกทั้งหมด</span>
+          <span className="text-sm text-slate-600">
+            {isEn ? "Select all" : "เลือกทั้งหมด"}
+          </span>
         </div>
       )}
 
@@ -266,14 +274,14 @@ export function DocumentsGrid({
                 <Checkbox
                   checked={isAllSelected && documents.length > 0}
                   onCheckedChange={() => toggleSelectAll(allIds)}
-                  aria-label="เลือกทั้งหมด"
+                  aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
                 />
               </th>
-              <th className="p-4">ชื่อไฟล์</th>
-              <th className="p-4 w-40">ประเภทเอกสาร</th>
-              <th className="p-4 w-48">วันที่สร้าง</th>
-              <th className="p-4">ข้อมูลอ้างอิง</th>
-              <th className="p-4 w-44 text-right">การจัดการ</th>
+              <th className="p-4">{isEn ? "File Name" : "ชื่อไฟล์"}</th>
+              <th className="p-4 w-40">{isEn ? "Document Type" : "ประเภทเอกสาร"}</th>
+              <th className="p-4 w-48">{isEn ? "Created Date" : "วันที่สร้าง"}</th>
+              <th className="p-4">{isEn ? "Reference" : "ข้อมูลอ้างอิง"}</th>
+              <th className="p-4 w-44 text-right">{isEn ? "Actions" : "การจัดการ"}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -289,7 +297,7 @@ export function DocumentsGrid({
                     <Checkbox
                       checked={isSelected(doc.id)}
                       onCheckedChange={() => toggleSelect(doc.id)}
-                      aria-label={`เลือก ${doc.file_name}`}
+                      aria-label={isEn ? `Select ${doc.file_name}` : `เลือก ${doc.file_name}`}
                     />
                   </td>
                   <td className="p-4 font-medium text-slate-900 lg:w-70">
@@ -326,16 +334,16 @@ export function DocumentsGrid({
                           : "bg-blue-50 text-blue-700 border-blue-200"
                       }`}
                     >
-                      {DOC_TYPE_LABELS[doc.document_type?.toUpperCase() || ""] ||
+                      {docTypeDict[doc.document_type?.toUpperCase() || ""] ||
                         doc.document_type ||
-                        "อื่นๆ"}
+                        (isEn ? "Other" : "อื่นๆ")}
                     </Badge>
                   </td>
                   <td className="p-4 text-slate-500 font-medium whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-slate-400" />
                       {format(new Date(doc.created_at), "d MMM yyyy HH:mm", {
-                        locale: th,
+                        locale: isEn ? enUS : th,
                       })}
                     </div>
                   </td>
@@ -352,25 +360,26 @@ export function DocumentsGrid({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 px-2.5 gap-1.5 rounded-lg border-slate-200 text-xs font-semibold text-slate-700! bg-white hover:bg-slate-50"
+                            className="h-8 px-2.5 gap-1.5 rounded-lg border-slate-200 text-xs font-semibold text-slate-700! bg-white hover:bg-slate-50 cursor-pointer"
                           >
                             <Eye className="h-3.5 w-3.5" />
-                            ดูตัวอย่าง
+                            {isEn ? "Preview" : "ดูตัวอย่าง"}
                           </Button>
                         }
                       />
                       <DocumentActions document={doc} tenantId={tenantId} />
                       <ConfirmDialog
-                        title="ลบเอกสาร"
-                        description={`คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
-                        confirmText="ลบออก"
+                        title={isEn ? "Delete Document" : "ลบเอกสาร"}
+                        description={isEn ? `Are you sure you want to delete "${doc.file_name}"?` : `คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
+                        confirmText={isEn ? "Delete" : "ลบออก"}
+                        cancelText={isEn ? "Cancel" : "ยกเลิก"}
                         variant="destructive"
                         onConfirm={() => handleDelete(doc.id, doc.storage_path)}
                         trigger={
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 rounded-lg"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 rounded-lg cursor-pointer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -384,7 +393,9 @@ export function DocumentsGrid({
               <tr>
                 <td colSpan={6} className="text-center py-16 text-slate-400">
                   <FileText className="h-16 w-16 text-slate-300 mx-auto mb-3" />
-                  <p className="font-medium text-slate-500">ไม่พบเอกสาร</p>
+                  <p className="font-medium text-slate-500">
+                    {isEn ? "No documents found" : "ไม่พบเอกสาร"}
+                  </p>
                 </td>
               </tr>
             )}
@@ -408,7 +419,7 @@ export function DocumentsGrid({
                     <Checkbox
                       checked={isSelected(doc.id)}
                       onCheckedChange={() => toggleSelect(doc.id)}
-                      aria-label={`เลือก ${doc.file_name}`}
+                      aria-label={isEn ? `Select ${doc.file_name}` : `เลือก ${doc.file_name}`}
                     />
                     <div
                       className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
@@ -443,9 +454,9 @@ export function DocumentsGrid({
                         : "bg-blue-50 text-blue-700 border-blue-200"
                     }`}
                   >
-                    {DOC_TYPE_LABELS[doc.document_type?.toUpperCase() || ""] ||
+                    {docTypeDict[doc.document_type?.toUpperCase() || ""] ||
                       doc.document_type ||
-                      "อื่นๆ"}
+                      (isEn ? "Other" : "อื่นๆ")}
                   </Badge>
                 </div>
 
@@ -453,7 +464,7 @@ export function DocumentsGrid({
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-slate-400" />
                     {format(new Date(doc.created_at), "d MMM yyyy HH:mm", {
-                      locale: th,
+                      locale: isEn ? enUS : th,
                     })}
                   </div>
                   <DocumentOwnerInfo document={doc} />
@@ -472,16 +483,16 @@ export function DocumentsGrid({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="gap-2"
+                                className="gap-2 cursor-pointer"
                               >
                                 <Eye className="h-4 w-4" />
-                                ดูตัวอย่าง
+                                {isEn ? "Preview" : "ดูตัวอย่าง"}
                               </Button>
                             }
                           />
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>ดูพรีวิวเอกสาร</TooltipContent>
+                      <TooltipContent>{isEn ? "View document preview" : "ดูพรีวิวเอกสาร"}</TooltipContent>
                     </Tooltip>
 
                     <div className="flex gap-1 ml-auto items-center">
@@ -491,9 +502,10 @@ export function DocumentsGrid({
                         <TooltipTrigger asChild>
                           <div>
                             <ConfirmDialog
-                              title="ลบเอกสาร"
-                              description={`คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
-                              confirmText="ลบออก"
+                              title={isEn ? "Delete Document" : "ลบเอกสาร"}
+                              description={isEn ? `Are you sure you want to delete "${doc.file_name}"?` : `คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
+                              confirmText={isEn ? "Delete" : "ลบออก"}
+                              cancelText={isEn ? "Cancel" : "ยกเลิก"}
                               variant="destructive"
                               onConfirm={() =>
                                 handleDelete(doc.id, doc.storage_path)
@@ -502,7 +514,7 @@ export function DocumentsGrid({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 cursor-pointer"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -511,7 +523,7 @@ export function DocumentsGrid({
                           </div>
                         </TooltipTrigger>
                         <TooltipContent className="bg-red-600 text-white border-red-600">
-                          ลบเอกสาร
+                          {isEn ? "Delete document" : "ลบเอกสาร"}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -523,8 +535,8 @@ export function DocumentsGrid({
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-slate-500">
             <FileText className="h-16 w-16 text-slate-300 mb-4" />
-            <p className="font-medium text-lg">ไม่พบเอกสาร</p>
-            <p className="text-sm">ลองค้นหาด้วยคำอื่น หรืออัพโหลดเอกสารใหม่</p>
+            <p className="font-medium text-lg">{isEn ? "No documents found" : "ไม่พบเอกสาร"}</p>
+            <p className="text-sm">{isEn ? "Try searching with different keywords or upload a new document" : "ลองค้นหาด้วยคำอื่น หรืออัพโหลดเอกสารใหม่"}</p>
           </div>
         )}
       </div>
@@ -540,3 +552,4 @@ export function DocumentsGrid({
     </div>
   );
 }
+

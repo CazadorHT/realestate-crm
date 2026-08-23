@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface UsersFiltersProps {
   onSearchChange: (search: string) => void;
@@ -11,6 +12,9 @@ interface UsersFiltersProps {
 }
 
 export function UsersFilters({ onSearchChange, onRoleFilterChange }: UsersFiltersProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
 
@@ -20,7 +24,7 @@ export function UsersFilters({ onSearchChange, onRoleFilterChange }: UsersFilter
   };
 
   const handleRoleFilterChange = (value: string) => {
-   setRoleFilter(value);
+    setRoleFilter(value);
     onRoleFilterChange(value);
   };
 
@@ -30,7 +34,7 @@ export function UsersFilters({ onSearchChange, onRoleFilterChange }: UsersFilter
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="ค้นหาชื่อหรือเบอร์โทร..."
+          placeholder={isEn ? "Search by name or phone..." : "ค้นหาชื่อหรือเบอร์โทร..."}
           className="pl-9 w-full"
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
@@ -39,10 +43,10 @@ export function UsersFilters({ onSearchChange, onRoleFilterChange }: UsersFilter
 
       <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
         <SelectTrigger className="w-full md:w-40">
-          <SelectValue placeholder="บทบาท" />
+          <SelectValue placeholder={isEn ? "Role" : "บทบาท"} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">ทั้งหมด</SelectItem>
+          <SelectItem value="ALL">{isEn ? "All Roles" : "ทั้งหมด"}</SelectItem>
           <SelectItem value="ADMIN">Admin</SelectItem>
           <SelectItem value="AGENT">Agent</SelectItem>
         </SelectContent>
@@ -50,3 +54,4 @@ export function UsersFilters({ onSearchChange, onRoleFilterChange }: UsersFilter
     </div>
   );
 }
+

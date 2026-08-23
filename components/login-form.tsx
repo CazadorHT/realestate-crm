@@ -178,8 +178,8 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
 
             await notifyAdminsAction({
               type: "INFO",
-              title: "มีการเข้าสู่ระบบ 🔑",
-              message: `ผู้ใช้ ${data.email} เข้าสู่ระบบแล้ว (Remember: ${data.rememberMe ? 'Yes' : 'No'})`,
+              title: "User Login 🔑 / มีการเข้าสู่ระบบ",
+              message: `User ${data.email} logged in (ผู้ใช้เข้าสู่ระบบแล้ว - Remember: ${data.rememberMe ? 'Yes' : 'No'})`,
               link: "/protected/settings/users",
             });
           } catch (e) {
@@ -210,13 +210,13 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
         // 🔔 Notify Admins about the new signup
         await notifyAdminsAction({
           type: "SYSTEM",
-          title: "มีผู้สมัครสมาชิกใหม่ 🆕",
-          message: `มีผู้ใช้ใหม่สมัครสมาชิกด้วยอีเมล ${data.email}`,
+          title: "New User Registration 🆕",
+          message: `New user signed up with email: ${data.email}`,
           link: "/protected/settings/users",
         });
 
         reset();
-        setSuccess("ส่งอีเมลยืนยันไปแล้วนะ! ไปเช็คดูใน Inbox ได้เลย");
+        setSuccess("Confirmation email sent! Please check your inbox.");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(
           data.email,
@@ -226,10 +226,10 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
         );
         if (error) throw error;
         reset();
-        setSuccess("เราส่งลิงก์รีเซ็ตรหัสผ่านไปให้ทางอีเมลแล้วนะ!");
+        setSuccess("Password reset link has been sent to your email.");
       }
     } catch (error: unknown) {
-      let errorMessage = "อ๊ะ! มีอะไรบางอย่างผิดพลาด ลองใหม่อีกทีนะ";
+      let errorMessage = "An error occurred. Please try again.";
       if (error instanceof Error) {
         if (view === "login" && error.message === "Invalid login credentials") {
           try {
@@ -240,16 +240,16 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
               .maybeSingle();
 
             if (!profileExists) {
-              errorMessage = "คุณยังไม่ได้ลงทะเบียนเข้าใช้งานระบบ CRM ด้วยอีเมลนี้ กรุณาสมัครสมาชิกก่อน";
+              errorMessage = "Account not found with this email. Please register first.";
             } else {
-              errorMessage = "คุณกรอกรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง";
+              errorMessage = "Invalid password. Please check and try again.";
             }
           } catch (checkErr) {
             console.error("Error checking profile existence:", checkErr);
-            errorMessage = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+            errorMessage = "Invalid email or password.";
           }
         } else if (error.message === "User already registered") {
-          errorMessage = "หากมีบัญชีอยู่แล้ว คุณจะได้รับอีเมลยืนยันหรือลิงก์เข้าสู่ระบบ";
+          errorMessage = "If an account exists, you will receive a confirmation or sign-in link.";
         } else {
           errorMessage = error.message;
         }
@@ -495,7 +495,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                         htmlFor="rememberMe"
                         className="text-xs font-medium text-slate-500 cursor-pointer"
                       >
-                        จดจำฉันในระบบ
+                        Remember me
                       </label>
                     </div>
                   )}

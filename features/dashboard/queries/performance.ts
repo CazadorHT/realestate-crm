@@ -212,8 +212,8 @@ export async function getTopAgents({
         commission: 0,
         name: identity?.display_name || identity?.email || "Unknown Agent",
         avatar: identity?.avatar_url || null,
-        branchName: tenantData?.name || "ยังไม่ได้สังกัด",
-        teamName: teamData?.name || "ไม่มีทีม",
+        branchName: tenantData?.name || null,
+        teamName: teamData?.name || null,
       };
 
       agentStats.set(agentId, {

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, Building2, Users, History, Database } from "lucide-react";
 import Link from "next/link";
 import { AdminSystemSettings } from "@/components/settings/AdminSystemSettings";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface AdminQuickLinksTabProps {
   summary: {
@@ -16,6 +17,9 @@ interface AdminQuickLinksTabProps {
 }
 
 export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="space-y-8">
       <AdminSystemSettings />
@@ -24,7 +28,7 @@ export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
           <Card className="relative hover:border-slate-400 transition-all duration-300 bg-white/50 backdrop-blur-sm border-slate-200/60 rounded-[22px] group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-slate-200/50 overflow-hidden">
             <div className="absolute top-3 right-3">
               <Badge className="bg-slate-100 text-slate-600 border-slate-200 font-bold px-2 py-0.5 rounded-lg text-[10px]">
-                {summary.users} Users
+                {summary.users} {isEn ? "Users" : "ผู้ใช้"}
               </Badge>
             </div>
             <CardHeader className="flex flex-col items-center gap-4 text-center">
@@ -33,7 +37,7 @@ export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
               </div>
               <div className="space-y-1">
                 <CardTitle className="text-lg font-bold text-slate-900">
-                  จัดการผู้ใช้
+                  {isEn ? "User Management" : "จัดการผู้ใช้"}
                 </CardTitle>
                 <CardDescription className="text-[11px] font-bold text-slate-500 tracking-tight uppercase italic opacity-70">
                   Roles & Permissions
@@ -47,7 +51,7 @@ export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
           <Card className="relative hover:border-blue-400 transition-all duration-300 bg-white/50 backdrop-blur-sm border-slate-200/60 rounded-[22px] group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-blue-200/50 overflow-hidden">
             <div className="absolute top-3 right-3">
               <Badge className="bg-blue-100 text-blue-600 border-blue-200 font-bold px-2 py-0.5 rounded-lg text-[10px]">
-                {summary.branches} Branches
+                {summary.branches} {isEn ? "Branches" : "สาขา"}
               </Badge>
             </div>
             <CardHeader className="flex flex-col items-center gap-4 text-center">
@@ -56,7 +60,7 @@ export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
               </div>
               <div className="space-y-1">
                 <CardTitle className="text-lg font-bold text-slate-900">
-                  จัดการสาขา
+                  {isEn ? "Branch Management" : "จัดการสาขา"}
                 </CardTitle>
                 <CardDescription className="text-[11px] font-bold text-blue-500/70 tracking-tight uppercase italic opacity-70">
                   Multi-Office Control
@@ -70,7 +74,7 @@ export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
           <Card className="relative hover:border-indigo-400 transition-all duration-300 bg-white/50 backdrop-blur-sm border-slate-200/60 rounded-[22px] group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-indigo-200/50 overflow-hidden">
             <div className="absolute top-3 right-3">
               <Badge className="bg-indigo-100 text-indigo-600 border-indigo-200 font-bold px-2 py-0.5 rounded-lg text-[10px]">
-                {summary.teams} Teams
+                {summary.teams} {isEn ? "Teams" : "ทีม"}
               </Badge>
             </div>
             <CardHeader className="flex flex-col items-center gap-4 text-center">
@@ -79,7 +83,7 @@ export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
               </div>
               <div className="space-y-1">
                 <CardTitle className="text-lg font-bold text-slate-900">
-                  จัดการทีม
+                  {isEn ? "Team Management" : "จัดการทีม"}
                 </CardTitle>
                 <CardDescription className="text-[11px] font-bold text-indigo-500/70 tracking-tight uppercase italic opacity-70">
                   Group Resource Mgmt
@@ -97,7 +101,7 @@ export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
               </div>
               <div className="space-y-1">
                 <CardTitle className="text-lg font-bold text-slate-900">
-                  Audit Logs
+                  {isEn ? "Audit Logs" : "บันทึกการตรวจสอบ"}
                 </CardTitle>
                 <CardDescription className="text-[11px] font-bold text-slate-500/70 tracking-tight uppercase italic opacity-70">
                   Security Tracing
@@ -118,9 +122,9 @@ export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
                 <Database className="h-6 w-6 text-blue-400" />
               </div>
               <div>
-                <h4 className="font-bold text-lg">System Health</h4>
+                <h4 className="font-bold text-lg">{isEn ? "System Health" : "สถานะระบบ"}</h4>
                 <p className="text-xs text-slate-400 font-medium">
-                  All database nodes optimized
+                  {isEn ? "All database nodes optimized" : "ฐานข้อมูลทุกโหนดทำงานได้อย่างมีประสิทธิภาพ"}
                 </p>
               </div>
             </div>
@@ -142,9 +146,9 @@ export function AdminQuickLinksTab({ summary }: AdminQuickLinksTabProps) {
                 <Shield className="h-6 w-6 text-indigo-400" />
               </div>
               <div>
-                <h4 className="font-bold text-lg">Security Score</h4>
+                <h4 className="font-bold text-lg">{isEn ? "Security Score" : "คะแนนความปลอดภัย"}</h4>
                 <p className="text-xs text-slate-300 font-medium italic">
-                  Elite hardening level active
+                  {isEn ? "Elite hardening level active" : "เปิดใช้งานการรักษาความปลอดภัยระดับสูงสุด"}
                 </p>
               </div>
             </div>

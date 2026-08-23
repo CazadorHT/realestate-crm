@@ -7,12 +7,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { SetupProgress } from "../executive-queries";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface SetupChecklistProps {
   progress: SetupProgress;
 }
 
 export function SetupChecklist({ progress }: SetupChecklistProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (progress.isAllCompleted) return null;
 
   const percentage = Math.round((progress.completedCount / progress.totalSteps) * 100);
@@ -20,8 +24,8 @@ export function SetupChecklist({ progress }: SetupChecklistProps) {
   const steps = [
     {
       id: "profile",
-      title: "ตั้งค่าโปรไฟล์สาขา",
-      description: "ใส่โลโก้ ชื่อบริษัท และข้อมูลติดต่อเพื่อสร้างความน่าเชื่อถือ",
+      title: isEn ? "Set Up Branch Profile" : "ตั้งค่าโปรไฟล์สาขา",
+      description: isEn ? "Add logo, company details, and contact info to build client trust." : "ใส่โลโก้ ชื่อบริษัท และข้อมูลติดต่อเพื่อสร้างความน่าเชื่อถือ",
       completed: progress.profileCompleted,
       icon: Building2,
       href: "/protected/settings",
@@ -29,8 +33,8 @@ export function SetupChecklist({ progress }: SetupChecklistProps) {
     },
     {
       id: "staff",
-      title: "เพิ่มพนักงานคนแรก",
-      description: "ชวนทีมงานของคุณเข้าระบบเพื่อช่วยกันจัดการงาน",
+      title: isEn ? "Add First Team Member" : "เพิ่มพนักงานคนแรก",
+      description: isEn ? "Invite your team to collaborate and manage deals together." : "ชวนทีมงานของคุณเข้าระบบเพื่อช่วยกันจัดการงาน",
       completed: progress.firstAgentAdded,
       icon: UserPlus,
       href: "/protected/settings/branches",
@@ -38,8 +42,8 @@ export function SetupChecklist({ progress }: SetupChecklistProps) {
     },
     {
       id: "property",
-      title: "ลงประกาศทรัพย์แรก",
-      description: "เริ่มสร้าง Listing ของคุณเพื่อให้ลูกค้าเห็น",
+      title: isEn ? "Create First Property" : "ลงประกาศทรัพย์แรก",
+      description: isEn ? "Start publishing your listings to attract potential buyers." : "เริ่มสร้าง Listing ของคุณเพื่อให้ลูกค้าเห็น",
       completed: progress.firstPropertyAdded,
       icon: PlusCircle,
       href: "/protected/properties/new",
@@ -47,8 +51,8 @@ export function SetupChecklist({ progress }: SetupChecklistProps) {
     },
     {
       id: "line",
-      title: "เชื่อมต่อ LINE OA",
-      description: "เปิดระบบตอบกลับอัตโนมัติและแจ้งเตือนผ่าน LINE",
+      title: isEn ? "Connect LINE OA" : "เชื่อมต่อ LINE OA",
+      description: isEn ? "Enable automated customer engagement and LINE alerts." : "เปิดระบบตอบกลับอัตโนมัติและแจ้งเตือนผ่าน LINE",
       completed: progress.lineConnected,
       icon: MessageSquare,
       href: "/protected/line-manager",
@@ -67,10 +71,10 @@ export function SetupChecklist({ progress }: SetupChecklistProps) {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-              เริ่มต้นใช้งาน (Setup Checklist)
+              {isEn ? "Getting Started (Setup Checklist)" : "เริ่มต้นใช้งาน (Setup Checklist)"}
             </CardTitle>
             <CardDescription className="text-slate-500 font-medium">
-              ทำตามขั้นตอนเหล่านี้เพื่อให้ระบบทำงานได้อย่างสมบูรณ์แบบ
+              {isEn ? "Complete these initial steps to fully configure your workspace." : "ทำตามขั้นตอนเหล่านี้เพื่อให้ระบบทำงานได้อย่างสมบูรณ์แบบ"}
             </CardDescription>
           </div>
           <div className="flex items-center gap-3 xs:gap-4">
@@ -136,7 +140,7 @@ export function SetupChecklist({ progress }: SetupChecklistProps) {
                     asChild 
                     size="sm" 
                     className={cn(
-                      "w-full text-white font-bold rounded-xl shadow-md",
+                      "w-full text-white font-bold rounded-xl shadow-md cursor-pointer",
                       step.color === "blue" && "bg-blue-600 hover:bg-blue-700",
                       step.color === "emerald" && "bg-emerald-600 hover:bg-emerald-700",
                       step.color === "indigo" && "bg-indigo-600 hover:bg-indigo-700",
@@ -144,13 +148,13 @@ export function SetupChecklist({ progress }: SetupChecklistProps) {
                     )}
                   >
                     <Link href={step.href}>
-                      ดำเนินการ <ArrowRight className="ml-2 h-4 w-4" />
+                      {isEn ? "Proceed" : "ดำเนินการ"} <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 ) : (
                   <div className="flex items-center justify-center py-2">
                     <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
-                      สำเร็จแล้ว
+                      {isEn ? "Completed" : "สำเร็จแล้ว"}
                     </span>
                   </div>
                 )}

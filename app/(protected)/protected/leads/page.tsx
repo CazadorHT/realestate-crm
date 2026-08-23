@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import {
   getLeadsQuery,
   getLeadsForKanbanQuery,
@@ -37,6 +38,10 @@ export default async function LeadsPage({
     allBranches?: string;
   }>;
 }) {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+
   const sp = (await searchParams) ?? {};
   
   // [PERFORMANCE] Parallel Fetching: Core Auth & Context
@@ -65,7 +70,7 @@ export default async function LeadsPage({
       <SuccessAnimation />
       
       {/* 1. HEADER (Static part fetched in wrapper) */}
-      <PageHeaderWrapper sp={sp} view={view} toggleViewHref={toggleViewHref} />
+      <PageHeaderWrapper sp={sp} view={view} toggleViewHref={toggleViewHref} isEn={isEn} />
 
       {/* 2. STATS SECTION (Streamed) */}
       <Suspense fallback={<div className="h-32 animate-pulse bg-slate-50 rounded-2xl" />}>
@@ -80,13 +85,14 @@ export default async function LeadsPage({
           page={page} 
           tenantId={tenantId}
           isMultiTenant={isMultiTenant}
+          isEn={isEn}
         />
       </Suspense>
 
       <MobileFloatingAction
         href="/protected/leads/new"
         icon={<UserPlus className="h-6 w-6" />}
-        label="สร้างลูกค้าใหม่"
+        label={isEn ? "New Lead" : "สร้างลูกค้าใหม่"}
       />
     </div>
   );
@@ -94,17 +100,27 @@ export default async function LeadsPage({
 
 /** 🚀 LEADS PERFORMANCE WRAPPERS (Streaming Pattern) */
 
-async function PageHeaderWrapper({ sp, view, toggleViewHref }: { sp: any; view: string; toggleViewHref: any }) {
+async function PageHeaderWrapper({
+  sp,
+  view,
+  toggleViewHref,
+  isEn,
+}: {
+  sp: any;
+  view: string;
+  toggleViewHref: any;
+  isEn: boolean;
+}) {
   const stats = await getLeadsDashboardStatsQuery();
   const count = stats.totalLeads;
 
   return (
     <PageHeader
-      title="ลูกค้า (Leads)"
-      subtitle="จัดการและติดตามลูกค้าที่สนใจ"
+      title={isEn ? "Leads" : "ลูกค้า (Leads)"}
+      subtitle={isEn ? "Manage and track prospective clients" : "จัดการและติดตามลูกค้าที่สนใจ"}
       count={count}
       icon="users"
-      actionLabel="สร้างลูกค้าใหม่"
+      actionLabel={isEn ? "New Lead" : "สร้างลูกค้าใหม่"}
       actionHref="/protected/leads/new"
       actionIcon="userPlus"
       gradient="emerald"
@@ -119,7 +135,7 @@ async function PageHeaderWrapper({ sp, view, toggleViewHref }: { sp: any; view: 
                 : "text-white/70 hover:text-white"
             }`}
           >
-            📋 รายการ
+            📋 {isEn ? "List" : "รายการ"}
           </Link>
           <Link
             href={toggleViewHref("kanban")}
@@ -129,7 +145,7 @@ async function PageHeaderWrapper({ sp, view, toggleViewHref }: { sp: any; view: 
                 : "text-white/70 hover:text-white"
             }`}
           >
-            📊 กระดานงาน
+            📊 {isEn ? "Kanban Board" : "กระดานงาน"}
           </Link>
         </div>
       </div>
@@ -147,13 +163,15 @@ async function LeadsContentWrapper({
   sp, 
   page, 
   tenantId, 
-  isMultiTenant 
+  isMultiTenant,
+  isEn,
 }: { 
   view: string; 
   sp: any; 
   page: number; 
   tenantId: string | undefined;
   isMultiTenant: boolean;
+  isEn: boolean;
 }) {
   if (view === "list") {
     const { data: listLeads, count } = await getLeadsQuery({
@@ -169,8 +187,8 @@ async function LeadsContentWrapper({
     return (
       <div className="space-y-4">
         <SectionTitle
-          title="รายการลีดทั้งหมด"
-          subtitle="คลิกที่แถวเพื่อดูรายละเอียด"
+          title={isEn ? "All Leads" : "รายการลีดทั้งหมด"}
+          subtitle={isEn ? "Click a row to view details" : "คลิกที่แถวเพื่อดูรายละเอียด"}
           color="emerald"
         />
 
@@ -181,9 +199,13 @@ async function LeadsContentWrapper({
         {isEmptyState ? (
           <EmptyState
             icon="users"
-            title="ยังไม่มีลีดในระบบ"
-            description="เริ่มต้นสร้างลีดแรกของคุณเพื่อติดตามลูกค้าที่สนใจทรัพย์"
-            actionLabel="สร้างลีดแรก"
+            title={isEn ? "No leads in system yet" : "ยังไม่มีลีดในระบบ"}
+            description={
+              isEn
+                ? "Start by creating your first lead to track interested clients."
+                : "เริ่มต้นสร้างลีดแรกของคุณเพื่อติดตามลูกค้าที่สนใจทรัพย์"
+            }
+            actionLabel={isEn ? "Create First Lead" : "สร้างลีดแรก"}
             actionHref="/protected/leads/new"
             actionIcon="userPlus"
           />

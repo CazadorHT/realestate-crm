@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface SpecsSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
@@ -51,6 +52,8 @@ export function SpecsSection({
   form: formProp,
   isReadOnly,
 }: SpecsSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const bedrooms = form.watch("bedrooms");
@@ -107,8 +110,8 @@ export function SpecsSection({
       <CardHeader className="space-y-4">
         <SectionHeader
           icon={LayoutGrid}
-          title="สเปกและขนาด"
-          desc="ตัวเลขที่ลูกค้าถามบ่อยที่สุด"
+          title={isEn ? "Specs & Dimensions" : "สเปกและขนาด"}
+          desc={isEn ? "Key property specifications and figures" : "ตัวเลขที่ลูกค้าถามบ่อยที่สุด"}
           tone="purple"
         />
         <Separator className="bg-slate-200/70" />
@@ -128,24 +131,24 @@ export function SpecsSection({
                 <LayoutGrid className="h-4 w-4" />
               </div>
               <h4 className="text-sm font-semibold text-purple-700 uppercase tracking-widest">
-                สเปกและสัดส่วน
+                {isEn ? "Specs & Layout" : "สเปกและสัดส่วน"}
               </h4>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-4">
               {[
-                { name: "bedrooms", label: "ห้องนอน", icon: BedDouble },
-                { name: "bathrooms", label: "ห้องน้ำ", icon: Bath },
-                { name: "parking_slots", label: "ที่จอดรถ", icon: CarFront },
-                { name: "floor", label: "ชั้นที่", icon: Building2 },
+                { name: "bedrooms", label: isEn ? "Bedrooms" : "ห้องนอน", icon: BedDouble },
+                { name: "bathrooms", label: isEn ? "Bathrooms" : "ห้องน้ำ", icon: Bath },
+                { name: "parking_slots", label: isEn ? "Parking" : "ที่จอดรถ", icon: CarFront },
+                { name: "floor", label: isEn ? "Floor" : "ชั้นที่", icon: Building2 },
                 {
                   name: "office_capacity",
-                  label: "รองรับจำนวนที่นั่ง",
+                  label: isEn ? "Seating Capacity" : "รองรับจำนวนที่นั่ง",
                   icon: Users,
                 },
-                { name: "maid_rooms", label: "ห้องแม่บ้าน", icon: Sparkles },
-                { name: "halls", label: "ห้องโถงใหญ่", icon: Sofa },
-                { name: "dining_rooms", label: "ห้องอาหาร", icon: Utensils },
+                { name: "maid_rooms", label: isEn ? "Maid Rooms" : "ห้องแม่บ้าน", icon: Sparkles },
+                { name: "halls", label: isEn ? "Living Halls" : "ห้องโถงใหญ่", icon: Sofa },
+                { name: "dining_rooms", label: isEn ? "Dining Rooms" : "ห้องอาหาร", icon: Utensils },
               ].map((item) => (
                 <FormField
                   key={item.name}
@@ -159,8 +162,8 @@ export function SpecsSection({
                           <span>
                             {item.name === "floor"
                               ? isTotalFloors
-                                ? "จำนวนชั้น"
-                                : "ชั้นที่"
+                                ? (isEn ? "Total Storeys" : "จำนวนชั้น")
+                                : (isEn ? "Floor No." : "ชั้นที่")
                               : item.label}
                           </span>
                         </span>
@@ -175,8 +178,8 @@ export function SpecsSection({
                             className="text-[10px] text-blue-500 truncate hover:text-blue-700 hover:underline normal-case transition-colors cursor-pointer select-none"
                           >
                             {isTotalFloors
-                              ? "สลับเป็น ชั้นที่"
-                              : "สลับเป็น มีกี่ชั้น"}
+                              ? (isEn ? "Switch to Floor No." : "สลับเป็น ชั้นที่")
+                              : (isEn ? "Switch to Total Storeys" : "สลับเป็น มีกี่ชั้น")}
                           </button>
                         )}
                       </FormLabel>
@@ -185,7 +188,7 @@ export function SpecsSection({
                           <Input
                             {...field}
                             value={field.value ?? ""}
-                            placeholder="เช่น 4-5"
+                            placeholder={isEn ? "e.g. 4-5 seats" : "เช่น 4-5"}
                             disabled={isReadOnly}
                             className={[
                               "h-9 rounded-lg border-slate-200 bg-white text-center text-sm",
@@ -250,7 +253,7 @@ export function SpecsSection({
                         (Number(field.value) || 0) === 0 && (
                           <div className="mt-1 text-[10px] font-semibold text-amber-600 flex items-center gap-1 animate-in fade-in duration-200">
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                            <span>กรุณาตรวจสอบจำนวนห้องน้ำ</span>
+                            <span>{isEn ? "Please verify bathrooms count" : "กรุณาตรวจสอบจำนวนห้องน้ำ"}</span>
                           </div>
                         )}
                       <FormMessage />
@@ -267,7 +270,7 @@ export function SpecsSection({
                 <Maximize2 className="h-4 w-4 " />
               </div>
               <h4 className="text-sm font-semibold text-emerald-700 uppercase tracking-widest">
-                ขนาดและทำเล
+                {isEn ? "Dimensions & Area" : "ขนาดและทำเล"}
               </h4>
             </div>
 
@@ -278,13 +281,13 @@ export function SpecsSection({
                 label={
                   <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                     <Ruler className="h-4 w-4 text-emerald-500" />
-                    <span>พื้นที่ใช้สอย</span>
+                    <span>{isEn ? "Usable Area" : "พื้นที่ใช้สอย"}</span>
                   </span>
                 }
                 name="size_sqm"
                 control={form.control}
-                placeholder="ระบุตารางเมตร"
-                suffix="ตร.ม."
+                placeholder={isEn ? "in Sq.m." : "ระบุตารางเมตร"}
+                suffix={isEn ? "Sq.m." : "ตร.ม."}
                 disabled={isReadOnly}
                 emphasize
                 size="sm"
@@ -298,14 +301,14 @@ export function SpecsSection({
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                       <Map className="h-4 w-4 text-emerald-500" />
-                      <span>ขนาดที่ดิน (ไร่ - งาน - ตร.ว.)</span>
+                      <span>{isEn ? "Land Size (Rai - Ngan - Sq.wah)" : "ขนาดที่ดิน (ไร่ - งาน - ตร.ว.)"}</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => setUseSplitLandSize(false)}
                       className="text-[10px] font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors cursor-pointer"
                     >
-                       สลับใช้ ตร.ว. เดี่ยว
+                       {isEn ? "Switch to Sq.wah only" : "สลับใช้ ตร.ว. เดี่ยว"}
                     </button>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -319,7 +322,7 @@ export function SpecsSection({
                           className="h-9 w-full rounded-l-lg border border-slate-200 border-r-0 bg-white text-center text-sm font-medium focus:border-emerald-500 focus:ring-0 text-slate-900 focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:border-emerald-500"
                         />
                         <span className="h-9 flex items-center bg-slate-50 border border-slate-200 rounded-r-lg px-2 text-[10px] text-slate-500 select-none whitespace-nowrap">
-                          ไร่
+                          {isEn ? "Rai" : "ไร่"}
                         </span>
                       </div>
                     </div>
@@ -333,7 +336,7 @@ export function SpecsSection({
                           className="h-9 w-full rounded-l-lg border border-slate-200 border-r-0 bg-white text-center text-sm font-medium focus:border-emerald-500 focus:ring-0 text-slate-900 focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:border-emerald-500"
                         />
                         <span className="h-9 flex items-center bg-slate-50 border border-slate-200 rounded-r-lg px-2 text-[10px] text-slate-500 select-none whitespace-nowrap">
-                          งาน
+                          {isEn ? "Ngan" : "งาน"}
                         </span>
                       </div>
                     </div>
@@ -348,7 +351,7 @@ export function SpecsSection({
                           className="h-9 w-full rounded-l-lg border border-slate-200 border-r-0 bg-white text-center text-sm font-medium focus:border-emerald-500 focus:ring-0 text-slate-900 focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:border-emerald-500"
                         />
                         <span className="h-9 flex items-center bg-slate-50 border border-slate-200 rounded-r-lg px-1.5 text-[10px] text-slate-500 select-none whitespace-nowrap">
-                          ตร.ว.
+                          {isEn ? "Sq.w" : "ตร.ว."}
                         </span>
                       </div>
                     </div>
@@ -361,7 +364,7 @@ export function SpecsSection({
                       <div className="flex items-center justify-between w-full">
                         <span className="flex items-center gap-2">
                           <Map className="h-4 w-4 text-emerald-500" />
-                          <span>ขนาดที่ดิน</span>
+                          <span>{isEn ? "Land Size" : "ขนาดที่ดิน"}</span>
                         </span>
                         <button
                           type="button"
@@ -372,14 +375,14 @@ export function SpecsSection({
                           }}
                           className="text-[10px] font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors cursor-pointer"
                         >
-                          สลับใช้ ไร่-งาน-ตร.ว.
+                          {isEn ? "Switch to Rai-Ngan-Sq.w" : "สลับใช้ ไร่-งาน-ตร.ว."}
                         </button>
                       </div>
                     }
                     name="land_size_sqwah"
                     control={form.control}
-                    placeholder="ระบุตารางวา"
-                    suffix="ตร.ว."
+                    placeholder={isEn ? "in Sq.wah" : "ระบุตารางวา"}
+                    suffix={isEn ? "Sq.wah" : "ตร.ว."}
                     disabled={isReadOnly}
                     emphasize
                     size="sm"
@@ -393,10 +396,12 @@ export function SpecsSection({
                       className="text-[10px] text-emerald-700 bg-emerald-50/50 border border-emerald-100 px-2 py-1 rounded-md cursor-pointer hover:bg-emerald-100/50 transition-colors flex items-center justify-between animate-in fade-in slide-in-from-top-1"
                     >
                       <span>
-                        คิดเป็น: {rai} ไร่ {ngan} งาน {sqwah} ตร.ว.
+                        {isEn
+                          ? `Total: ${rai} Rai ${ngan} Ngan ${sqwah} Sq.wah`
+                          : `คิดเป็น: ${rai} ไร่ ${ngan} งาน ${sqwah} ตร.ว.`}
                       </span>
                       <span className="text-[9px] font-semibold text-emerald-600 underline">
-                        สลับโหมด
+                        {isEn ? "Switch" : "สลับโหมด"}
                       </span>
                     </div>
                   )}
@@ -411,14 +416,14 @@ export function SpecsSection({
                   <FormItem className="col-span-1 sm:col-span-2">
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                       <MapPinned className="h-4 w-4 text-emerald-500" />
-                      <span>ผังสี / Zoning</span>
+                      <span>{isEn ? "Zoning Code" : "ผังสี / Zoning"}</span>
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         disabled={isReadOnly}
                         value={field.value ?? ""}
-                        placeholder="เช่น สีส้ม ย.5-10"
+                        placeholder={isEn ? "e.g. Orange Yor.5-10" : "เช่น สีส้ม ย.5-10"}
                         className="h-9 rounded-lg border-slate-200 bg-white focus:border-emerald-500 focus:ring-emerald-500/20 focus:ring-2 text-sm "
                       />
                     </FormControl>
@@ -435,7 +440,7 @@ export function SpecsSection({
                 <Zap className="h-4 w-4" />
               </div>
               <h4 className="text-sm font-semibold text-amber-700 uppercase tracking-widest">
-                ค่าใช้จ่ายอื่นๆ
+                {isEn ? "Utilities & Charges" : "ค่าใช้จ่ายอื่นๆ"}
               </h4>
             </div>
             <div className="grid grid-cols-2 gap-4 items-start">
@@ -446,7 +451,7 @@ export function SpecsSection({
                   <FormItem>
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                       <Zap className="h-4 w-4 text-amber-500" />
-                      <span>ค่าไฟ</span>
+                      <span>{isEn ? "Electricity" : "ค่าไฟ"}</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -454,7 +459,7 @@ export function SpecsSection({
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         disabled={isReadOnly}
-                        placeholder="เช่น 7 บาท/หน่วย"
+                        placeholder={isEn ? "e.g. 7 THB/unit" : "เช่น 7 บาท/หน่วย"}
                         className="h-9 rounded-lg border-slate-200 bg-white focus:border-amber-500 focus:ring-amber-500/20 focus:ring-2 text-sm "
                       />
                     </FormControl>
@@ -470,7 +475,7 @@ export function SpecsSection({
                   <FormItem>
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                       <Droplets className="h-4 w-4 text-amber-500" />
-                      <span>ค่าน้ำ</span>
+                      <span>{isEn ? "Water Rate" : "ค่าน้ำ"}</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -478,7 +483,7 @@ export function SpecsSection({
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         disabled={isReadOnly}
-                        placeholder="เช่น 20 บาท/หน่วย"
+                        placeholder={isEn ? "e.g. 20 THB/unit" : "เช่น 20 บาท/หน่วย"}
                         className="h-9 rounded-lg border-slate-200 bg-white focus:border-amber-500 focus:ring-amber-500/20 focus:ring-2 text-sm "
                       />
                     </FormControl>
@@ -490,30 +495,30 @@ export function SpecsSection({
                 label={
                   <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                     <Clock className="h-4 w-4 text-amber-500" />
-                    <span>ปลอดค่าเช่า</span>
+                    <span>{isEn ? "Rent-Free Period" : "ปลอดค่าเช่า"}</span>
                   </span>
                 }
                 name="rent_free_period_days"
                 control={form.control}
-                placeholder="โปรดระบุ (ถ้ามี)"
-                suffix="วัน"
+                placeholder={isEn ? "Optional" : "โปรดระบุ (ถ้ามี)"}
+                suffix={isEn ? "Days" : "วัน"}
                 disabled={isReadOnly}
                 size="sm"
                 className="font-normal "
                 labelClassName=" "
-                footer={<RentFreeShortcuts />}
+                footer={<RentFreeShortcuts isEn={isEn} />}
               />
 
               <UnitNumberField
                 label={
                   <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                     <Car className="h-4 w-4 text-amber-500" />
-                    <span>ค่าจอดรถเสริม</span>
+                    <span>{isEn ? "Extra Parking Fee" : "ค่าจอดรถเสริม"}</span>
                   </span>
                 }
                 name="parking_fee_additional"
                 control={form.control}
-                placeholder="โปรดระบุ (ถ้ามี)"
+                placeholder={isEn ? "Optional" : "โปรดระบุ (ถ้ามี)"}
                 suffix="฿"
                 disabled={isReadOnly}
                 size="sm"
@@ -529,7 +534,7 @@ export function SpecsSection({
                 <ArrowUpToLine className="h-4 w-4" />
               </div>
               <h4 className="text-sm font-semibold text-blue-700 uppercase tracking-widest">
-                สเปกทางเทคนิค
+                {isEn ? "Technical Specs" : "สเปกทางเทคนิค"}
               </h4>
             </div>
 
@@ -538,13 +543,13 @@ export function SpecsSection({
                 label={
                   <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                     <ArrowUpToLine className="h-4 w-4 text-blue-500" />
-                    <span>ความสูงเพดาน</span>
+                    <span>{isEn ? "Ceiling Height" : "ความสูงเพดาน"}</span>
                   </span>
                 }
                 name="ceiling_height"
                 control={form.control}
-                placeholder="โปรดระบุ"
-                suffix="ม."
+                placeholder={isEn ? "Specify" : "โปรดระบุ"}
+                suffix={isEn ? "m." : "ม."}
                 disabled={isReadOnly}
                 size="sm"
                 labelClassName=" "
@@ -558,12 +563,12 @@ export function SpecsSection({
                   <FormItem>
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                       <ParkingCircle className="h-4 w-4 text-blue-500" />
-                      <span>ประเภทที่จอดรถ</span>
+                      <span>{isEn ? "Parking Type" : "ประเภทที่จอดรถ"}</span>
                     </FormLabel>
                     <FormControl>
                       <div className="flex gap-1 p-1 bg-slate-50 rounded-lg border border-slate-200">
                         {[
-                          { value: "COMMON", label: "หมุนเวียน" },
+                          { value: "COMMON", label: isEn ? "Common" : "หมุนเวียน" },
                           { value: "FIXED", label: "Fix" },
                           { value: "AUTO", label: "Auto" },
                         ].map((opt) => (
@@ -595,7 +600,7 @@ export function SpecsSection({
                   <FormItem className="col-span-1 md:col-span-2">
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                       <Compass className="h-4 w-4 text-blue-500" />
-                      <span>ทิศทางทรัพย์</span>
+                      <span>{isEn ? "Orientation" : "ทิศทางทรัพย์"}</span>
                     </FormLabel>
                     <FormControl>
                       <div className="grid grid-cols-4 gap-1 p-1 bg-slate-50 rounded-lg border border-slate-200">
@@ -632,7 +637,7 @@ export function SpecsSection({
   );
 }
 
-function RentFreeShortcuts() {
+function RentFreeShortcuts({ isEn = false }: { isEn?: boolean }) {
   const { watch, setValue } = useFormContext<PropertyFormValues>();
   const value = watch("rent_free_period_days");
 
@@ -659,7 +664,7 @@ function RentFreeShortcuts() {
                 : "bg-white text-slate-500 border-slate-200 hover:border-amber-500 hover:text-amber-600",
             ].join(" ")}
           >
-            {m} ด.
+            {m} {isEn ? "Mo" : "ด."}
           </button>
         );
       })}

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface OwnerDesktopViewProps {
   form: UseFormReturn<any>;
@@ -46,6 +47,8 @@ export function OwnerDesktopView({
   duplicateOwner,
   onUseExisting,
 }: OwnerDesktopViewProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const FormContainer = isInDialog ? "div" : "form";
 
   return (
@@ -61,17 +64,25 @@ export function OwnerDesktopView({
       {duplicateOwner && onUseExisting && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
           <div className="text-sm text-amber-800 font-bold flex items-center gap-2">
-            ⚠️ ตรวจพบข้อมูลเจ้าของทรัพย์ซ้ำในระบบ
+            ⚠️ {isEn ? "Duplicate Owner Record Detected" : "ตรวจพบข้อมูลเจ้าของทรัพย์ซ้ำในระบบ"}
           </div>
           <p className="text-xs text-amber-700">
-            คุณสามารถกดยืนยันเพื่อดึงข้อมูลของ <strong>K. {duplicateOwner.name}</strong> ที่มีอยู่ในฐานข้อมูลมาใช้งานกับทรัพย์นี้ได้ทันทีโดยไม่ต้องสร้างใหม่
+            {isEn ? (
+              <>
+                You can link the existing record for <strong>K. {duplicateOwner.name}</strong> from the database directly without creating a new one.
+              </>
+            ) : (
+              <>
+                คุณสามารถกดยืนยันเพื่อดึงข้อมูลของ <strong>K. {duplicateOwner.name}</strong> ที่มีอยู่ในฐานข้อมูลมาใช้งานกับทรัพย์นี้ได้ทันทีโดยไม่ต้องสร้างใหม่
+              </>
+            )}
           </p>
           <Button
             type="button"
             onClick={onUseExisting}
-            className="w-full sm:w-auto h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 rounded-lg shadow-sm transition-colors"
+            className="w-full sm:w-auto h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 rounded-lg shadow-sm transition-colors cursor-pointer"
           >
-            ดึงข้อมูลเจ้าของท่านนี้มาใช้ทันที
+            {isEn ? "Use Existing Owner Record" : "ดึงข้อมูลเจ้าของท่านนี้มาใช้ทันที"}
           </Button>
         </div>
       )}
@@ -87,18 +98,18 @@ export function OwnerDesktopView({
         <div className="bg-slate-50/50 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-4">
           <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-200/60 pb-2 mb-2">
             <User className="h-4 w-4 text-blue-600" />
-            ข้อมูลทั่วไป
+            {isEn ? "General Information" : "ข้อมูลทั่วไป"}
           </div>
 
           <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                ชื่อเจ้าของ <span className="text-red-500">*</span>
+                {isEn ? "Owner Name" : "ชื่อเจ้าของ"} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="เช่น คุณสมชาย ใจดี"
+                  placeholder={isEn ? "e.g. Somchai Jaidee" : "เช่น คุณสมชาย ใจดี"}
                   className="pl-9 h-11 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all rounded-xl"
                   {...form.register("full_name")}
                 />
@@ -111,11 +122,13 @@ export function OwnerDesktopView({
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">ประเภทเจ้าของ</label>
+              <label className="text-sm font-semibold text-slate-700">
+                {isEn ? "Owner Type" : "ประเภทเจ้าของ"}
+              </label>
               <div className="grid grid-cols-2 gap-2 p-1 bg-slate-50 rounded-xl border border-slate-100">
                 {[
-                  { id: "individual", label: "บุคคลธรรมดา" },
-                  { id: "corporate", label: "นิติบุคคล / บริษัท" },
+                  { id: "individual", label: isEn ? "Individual" : "บุคคลธรรมดา" },
+                  { id: "corporate", label: isEn ? "Corporate / Company" : "นิติบุคคล / บริษัท" },
                 ].map((type) => {
                   const isActive = form.watch("owner_type") === type.id;
                   return (
@@ -124,7 +137,7 @@ export function OwnerDesktopView({
                       type="button"
                       onClick={() => form.setValue("owner_type", type.id, { shouldDirty: true })}
                       className={cn(
-                        "h-11 px-2 rounded-lg text-xs font-bold transition-all duration-300",
+                        "h-11 px-2 rounded-lg text-xs font-bold transition-all duration-300 cursor-pointer",
                         isActive 
                           ? "bg-white text-emerald-600 shadow-sm border border-emerald-100" 
                           : "text-slate-500 hover:text-slate-700 hover:bg-slate-100/50"
@@ -138,11 +151,13 @@ export function OwnerDesktopView({
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <label className="text-sm font-semibold text-slate-700">ชื่อบริษัท (ถ้ามี)</label>
+              <label className="text-sm font-semibold text-slate-700">
+                {isEn ? "Company Name (Optional)" : "ชื่อบริษัท (ถ้ามี)"}
+              </label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="เช่น บริษัท วี-ลิงะ แอสเซท จำกัด"
+                  placeholder={isEn ? "e.g. V-Link Asset Co., Ltd." : "เช่น บริษัท วี-ลิงก์ แอสเซท จำกัด"}
                   className="pl-9 h-11 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all rounded-xl"
                   {...form.register("company_name")}
                 />
@@ -155,14 +170,14 @@ export function OwnerDesktopView({
         <div className="bg-slate-50/50 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-4">
           <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-200/60 pb-2 mb-2">
             <Phone className="h-4 w-4 text-emerald-600" />
-            ข้อมูลการติดต่อ
+            {isEn ? "Contact Information" : "ข้อมูลการติดต่อ"}
           </div>
 
           <div className="grid gap-4 sm:gap-5 sm:grid-cols-2">
             {/* Phone */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">
-                เบอร์โทร
+                {isEn ? "Phone Number" : "เบอร์โทร"}
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -179,7 +194,9 @@ export function OwnerDesktopView({
               </div>
               {liveValidation?.phone?.isDuplicate && (
                 <p className="text-xs text-amber-600 font-semibold ml-1">
-                  ⚠️ เบอร์โทรศัพท์นี้ถูกใช้งานแล้วโดย K. {liveValidation.phone.ownerName}
+                  {isEn
+                    ? `⚠️ This phone number is already registered under K. ${liveValidation.phone.ownerName}`
+                    : `⚠️ เบอร์โทรศัพท์นี้ถูกใช้งานแล้วโดย K. ${liveValidation.phone.ownerName}`}
                 </p>
               )}
             </div>
@@ -206,7 +223,9 @@ export function OwnerDesktopView({
               </div>
               {liveValidation?.line_id?.isDuplicate && (
                 <p className="text-xs text-amber-600 font-semibold ml-1">
-                  ⚠️ Line ID นี้ถูกใช้งานแล้วโดย K. {liveValidation.line_id.ownerName}
+                  {isEn
+                    ? `⚠️ This Line ID is already registered under K. ${liveValidation.line_id.ownerName}`
+                    : `⚠️ Line ID นี้ถูกใช้งานแล้วโดย K. ${liveValidation.line_id.ownerName}`}
                 </p>
               )}
             </div>
@@ -236,7 +255,7 @@ export function OwnerDesktopView({
             {/* Other Contact */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">
-                ช่องทางอื่นๆ
+                {isEn ? "Other Channels" : "ช่องทางอื่นๆ"}
               </label>
               <div className="relative">
                 <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -259,9 +278,9 @@ export function OwnerDesktopView({
               type="button"
               variant="ghost"
               disabled={isPending}
-              className="h-12 px-8 rounded-2xl font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition-all"
+              className="h-12 px-8 rounded-2xl font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition-all cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
           </DialogClose>
         ) : (
@@ -270,9 +289,9 @@ export function OwnerDesktopView({
             variant="ghost"
             disabled={isPending}
             onClick={handleCancel}
-            className="h-12 px-8 rounded-2xl font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition-all"
+            className="h-12 px-8 rounded-2xl font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition-all cursor-pointer"
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
         )}
 
@@ -282,7 +301,7 @@ export function OwnerDesktopView({
           disabled={
             isPending || !form.formState.isValid || !form.formState.isDirty
           }
-          className="h-12 px-10 rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold shadow-[0_8px_25px_-8px_rgba(16,185,129,0.5)] hover:shadow-[0_12px_30px_-10px_rgba(16,185,129,0.6)] hover:scale-[1.02] active:scale-95 transition-all gap-2.5 disabled:opacity-50 disabled:scale-100"
+          className="h-12 px-10 rounded-2xl bg-linear-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold shadow-[0_8px_25px_-8px_rgba(16,185,129,0.5)] hover:shadow-[0_12px_30px_-10px_rgba(16,185,129,0.6)] hover:scale-[1.02] active:scale-95 transition-all gap-2.5 disabled:opacity-50 disabled:scale-100 cursor-pointer"
         >
           {isPending ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -291,10 +310,10 @@ export function OwnerDesktopView({
           )}
           <span className="tracking-wide">
             {isPending
-              ? "กำลังบันทึก..."
+              ? (isEn ? "Saving..." : "กำลังบันทึก...")
               : mode === "create"
-                ? "เพิ่มเจ้าของ"
-                : "บันทึกข้อมูล"}
+                ? (isEn ? "Add Owner" : "เพิ่มเจ้าของ")
+                : (isEn ? "Save Changes" : "บันทึกข้อมูล")}
           </span>
         </Button>
       </div>

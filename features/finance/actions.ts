@@ -30,7 +30,17 @@ import { FinanceMath } from "@/lib/finance/precision";
 import { TaxLogic } from "@/lib/finance/tax-logic";
 import { TaxService } from "./services/tax-service";
 import { SupabaseClient, User } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
+async function getIsEn(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+    return lang === "en";
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Marks multiple commissions as READY_TO_PAY using high-performance RPC.
@@ -38,6 +48,7 @@ import { SupabaseClient, User } from "@supabase/supabase-js";
 export async function bulkMarkAsReadyToPayAction(
   commissionIds: string[],
 ): Promise<BulkPayoutResult> {
+  const isEn = await getIsEn();
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
@@ -106,7 +117,7 @@ export async function bulkMarkAsReadyToPayAction(
       entity: "COMMISSION",
       entityId: "BULK_UPDATE",
       metadata: { 
-        summary: `อนุมัติรอจ่ายแบบกลุ่มสำเร็จ ${processedCount} รายการ`,
+        summary: isEn ? `Approved bulk payout queue for ${processedCount} items` : `อนุมัติรอจ่ายแบบกลุ่มสำเร็จ ${processedCount} รายการ`,
         commissionIds, 
         updated_count: processedCount 
       },
@@ -116,7 +127,7 @@ export async function bulkMarkAsReadyToPayAction(
     return {
       success: true,
       processedCount,
-      message: `อนุมัติรอจ่ายสำเร็จ ${processedCount} รายการ`,
+      message: isEn ? `Approved payout for ${processedCount} items` : `อนุมัติรอจ่ายสำเร็จ ${processedCount} รายการ`,
     };
   } catch (error: unknown) {
     logger.error("bulkMarkAsReady Error", error, { source: "finance-actions" });
@@ -134,6 +145,7 @@ export async function bulkMarkAsReadyToPayAction(
 export async function markAsReadyToPayAction(
   commissionId: string,
 ): Promise<PayoutStatusUpdateResult> {
+  const isEn = await getIsEn();
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
@@ -160,7 +172,7 @@ export async function markAsReadyToPayAction(
       entity: "COMMISSION",
       entityId: commissionId,
       metadata: { 
-        summary: `อนุมัติยอดคอมมิชชัน ${FinanceMath.format(data.amount || 0)} บ. เตรียมโอนเงิน`,
+        summary: isEn ? `Approved commission of ฿${FinanceMath.format(data.amount || 0)} for payout` : `อนุมัติยอดคอมมิชชัน ${FinanceMath.format(data.amount || 0)} บ. เตรียมโอนเงิน`,
         commissionId, 
         amount: data.amount 
       },
@@ -169,7 +181,7 @@ export async function markAsReadyToPayAction(
     revalidatePath("/protected/finance/payouts");
     return {
       success: true,
-      message: "อนุมัติรายการเตรียมโอนเงินเรียบร้อยแล้ว",
+      message: isEn ? "Commission approved for payout" : "อนุมัติรายการเตรียมโอนเงินเรียบร้อยแล้ว",
     };
   } catch (error: unknown) {
     logger.error("markAsReadyToPay Error", error, { source: "finance-actions" });
@@ -187,6 +199,7 @@ export async function createCommissionAdjustmentAction(payload: {
   amount: number;
   adjustment_type: "MARKETING" | "FEE" | "BONUS" | "OTHER";
 }) {
+  const isEn = await getIsEn();
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertAdmin(role); // Only admins can adjust financials
@@ -195,7 +208,7 @@ export async function createCommissionAdjustmentAction(payload: {
 
     if (payload.commission_id === "COMPANY") {
       if (!tenantId || tenantId === "ALL") {
-        throw new Error("กรุณาสลับสาขาให้ถูกต้องก่อนดำเนินการบันทึกรายจ่ายกองกลางบริษัท");
+        throw new Error(isEn ? "Please switch to the correct branch before recording company expense" : "กรุณาสลับสาขาให้ถูกต้องก่อนดำเนินการบันทึกรายจ่ายกองกลางบริษัท");
       }
       targetTenantId = tenantId;
     } else {
@@ -206,12 +219,14 @@ export async function createCommissionAdjustmentAction(payload: {
         .single();
 
       if (!currentCommission) {
-        throw new Error("ไม่พบรายการคอมมิชชันที่ต้องการปรับปรุง");
+        throw new Error(isEn ? "Commission record to adjust not found" : "ไม่พบรายการคอมมิชชันที่ต้องการปรับปรุง");
       }
 
       if (tenantId && tenantId !== "ALL" && currentCommission.tenant_id !== tenantId) {
         throw new Error(
-          "ไม่สามารถเพิ่มรายการปรับปรุงข้ามสาขาได้ กรุณาสลับสาขาให้ถูกต้อง",
+          isEn 
+            ? "Cannot add adjustment across branches (ข้ามสาขา). Please switch branch." 
+            : "ไม่สามารถเพิ่มรายการปรับปรุงข้ามสาขาได้ กรุณาสลับสาขาให้ถูกต้อง",
         );
       }
       targetTenantId = currentCommission.tenant_id;
@@ -242,8 +257,8 @@ export async function createCommissionAdjustmentAction(payload: {
       entityId: payload.commission_id === "COMPANY" ? "COMPANY" : payload.commission_id,
       metadata: { 
         summary: payload.commission_id === "COMPANY"
-          ? `บันทึกรายจ่ายกองกลางบริษัท: ${payload.description} (${payload.amount} บ.)`
-          : `เพิ่มรายการปรับปรุง: ${payload.description} (${payload.amount} บ.)`,
+          ? (isEn ? `Recorded company expense: ${payload.description} (฿${payload.amount})` : `บันทึกรายจ่ายกองกลางบริษัท: ${payload.description} (${payload.amount} บ.)`)
+          : (isEn ? `Added financial adjustment: ${payload.description} (฿${payload.amount})` : `เพิ่มรายการปรับปรุง: ${payload.description} (${payload.amount} บ.)`),
         ...payload 
       },
     });
@@ -254,7 +269,7 @@ export async function createCommissionAdjustmentAction(payload: {
     logger.error("createAdjustment Error", error, { source: "finance-actions", payload });
     return {
       success: false,
-      error: "ไม่สามารถบันทึกได้: " + (error as Error).message,
+      error: (isEn ? "Unable to save: " : "ไม่สามารถบันทึกได้: ") + (error as Error).message,
     };
   }
 }
@@ -267,6 +282,7 @@ export async function recalculatePayoutTotalsAction(
   commissionId: string,
   previewOnly: boolean = false,
 ): Promise<{ success: boolean; message?: string; data?: RecalculatePreview | null; error?: string }> {
+  const isEn = await getIsEn();
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
@@ -282,10 +298,10 @@ export async function recalculatePayoutTotalsAction(
 
     const { data: rawCurrent, error: fetchErr } = await query.single();
 
-    if (fetchErr || !rawCurrent) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
+    if (fetchErr || !rawCurrent) throw new Error(isEn ? "Commission record not found" : "ไม่พบข้อมูลรายการคอมมิชชัน");
     const current = rawCurrent as any;
     if (current.status === "PAID")
-      throw new Error("ไม่สามารถคำนวณใหม่ได้สำหรับรายการที่จ่ายแล้ว");
+      throw new Error(isEn ? "Cannot recalculate already paid payout" : "ไม่สามารถคำนวณใหม่ได้สำหรับรายการที่จ่ายแล้ว");
 
     // Fetch adjustments explicitly from financial_ledger_v3
     const { data: adjustmentsData } = await supabase
@@ -352,8 +368,8 @@ export async function recalculatePayoutTotalsAction(
           },
           reason:
             Math.abs(dealAmount - totalCommsForDeal) > 0.01
-              ? `ยอดรวมดีลเปลี่ยนเป็น ${FinanceMath.format(dealAmount)} (เดิม ${FinanceMath.format(totalCommsForDeal)})`
-              : "ปรับปรุงอัตราภาษีหรือรายการหักลบ",
+              ? (isEn ? `Deal total changed to ฿${FinanceMath.format(dealAmount)} (prev ฿${FinanceMath.format(totalCommsForDeal)})` : `ยอดรวมดีลเปลี่ยนเป็น ${FinanceMath.format(dealAmount)} (เดิม ${FinanceMath.format(totalCommsForDeal)})`)
+              : (isEn ? "Tax rate or deductions updated" : "ปรับปรุงอัตราภาษีหรือรายการหักลบ"),
         },
       };
     }
@@ -381,7 +397,7 @@ export async function recalculatePayoutTotalsAction(
       entity: "COMMISSION",
       entityId: commissionId,
       metadata: {
-        summary: `คำนวณยอดเงินใหม่ (WHT: ${(taxRate * 100).toFixed(1)}%, Net: ${FinanceMath.format(newNetTransfer)} บ.)`,
+        summary: isEn ? `Recalculated payout totals (WHT: ${(taxRate * 100).toFixed(1)}%, Net: ฿${FinanceMath.format(newNetTransfer)})` : `คำนวณยอดเงินใหม่ (WHT: ${(taxRate * 100).toFixed(1)}%, Net: ${FinanceMath.format(newNetTransfer)} บ.)`,
         commissionId,
         taxRate,
         before: { amount: oldAmount, net: oldNet },
@@ -396,7 +412,7 @@ export async function recalculatePayoutTotalsAction(
     });
 
     revalidatePath("/protected/finance/payouts");
-    return { success: true, message: "คำนวณยอดเงินใหม่เรียบร้อยแล้ว" };
+    return { success: true, message: isEn ? "Recalculated payout totals successfully" : "คำนวณยอดเงินใหม่เรียบร้อยแล้ว" };
   } catch (error: unknown) {
     logger.error("recalculate Error", error, { source: "finance-actions", commissionId });
     return { success: false, error: (error as Error).message };
@@ -409,12 +425,13 @@ export async function markAsPaidAction(
   commissionId: string,
   payload: { slip_url: string; payment_reference: string },
 ) {
+  const isEn = await getIsEn();
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
     const isStaffControl = role === "ADMIN" || role === "MANAGER";
     if (!isStaffControl && (!tenantId || tenantId === "ALL")) {
-      throw new Error("กรุณาสลับสาขาให้ถูกต้องก่อนดำเนินการบันทึกการโอนเงิน");
+      throw new Error(isEn ? "Please switch to the correct branch before recording payout" : "กรุณาสลับสาขาให้ถูกต้องก่อนดำเนินการบันทึกการโอนเงิน");
     }
 
     // 1. Audit Hardening: Validate Slip URL (Must be an image or PDF) if provided
@@ -428,7 +445,7 @@ export async function markAsPaidAction(
         !payload.slip_url.includes("storage")
       ) {
         throw new Error(
-          "รูปแบบไฟล์สลิปไม่ถูกต้อง หรือลิงก์ไม่ปลอดภัย (อนุญาตเฉพาะ JPG, PNG, PDF)",
+          isEn ? "Invalid slip file format or insecure link (JPG, PNG, PDF only)" : "รูปแบบไฟล์สลิปไม่ถูกต้อง หรือลิงก์ไม่ปลอดภัย (อนุญาตเฉพาะ JPG, PNG, PDF)",
         );
       }
     }
@@ -445,10 +462,10 @@ export async function markAsPaidAction(
 
     const { data: rawCurrent, error: fetchErr } = await query.single();
 
-    if (fetchErr || !rawCurrent) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
+    if (fetchErr || !rawCurrent) throw new Error(isEn ? "Commission record not found" : "ไม่พบข้อมูลรายการคอมมิชชัน");
     const current = rawCurrent as any;
     if (current.status === "PAID")
-      throw new Error("รายการนี้ถูกบันทึกว่าจ่ายแล้ว");
+      throw new Error(isEn ? "This record has already been marked as PAID" : "รายการนี้ถูกบันทึกว่าจ่ายแล้ว");
 
     // Fetch adjustments explicitly from financial_ledger_v3
     const { data: adjustmentsData } = await supabase
@@ -501,7 +518,7 @@ export async function markAsPaidAction(
       entity: "COMMISSION",
       entityId: commissionId,
       metadata: { 
-        summary: `ยืนยันการโอนเงินสุทธิ ${FinanceMath.format(netTransfer)} บ. (Ref: ${payload.payment_reference})`,
+        summary: isEn ? `Confirmed net payout of ฿${FinanceMath.format(netTransfer)} (Ref: ${payload.payment_reference})` : `ยืนยันการโอนเงินสุทธิ ${FinanceMath.format(netTransfer)} บ. (Ref: ${payload.payment_reference})`,
         ...payload, 
         netAmount: netTransfer.toNumber() 
       },
@@ -538,7 +555,7 @@ export async function markAsPaidAction(
 
     return {
       success: true,
-      message: "บันทึกการโอนเงินสุทธิสำเร็จ และส่งแจ้งเตือนเรียบร้อยแล้ว",
+      message: isEn ? "Payout recorded and notification sent successfully" : "บันทึกการโอนเงินสุทธิสำเร็จ และส่งแจ้งเตือนเรียบร้อยแล้ว",
     };
   } catch (error: unknown) {
     logger.error("markAsPaid Error", error, { source: "finance-actions", commissionId });
@@ -551,11 +568,12 @@ export async function markAsPaidAction(
  * Ensures financial privacy by preventing public access to bank slips.
  */
 export async function getSignedSlipUrlAction(slipUrl: string) {
+  const isEn = await getIsEn();
   try {
     const { supabase, tenantId, role } = await requireAuthContext();
     assertStaff(role);
 
-    if (!slipUrl) throw new Error("ไม่พบลิงก์ไฟล์สลิป");
+    if (!slipUrl) throw new Error(isEn ? "Slip file link not found" : "ไม่พบลิงก์ไฟล์สลิป");
 
     // Extract path from Supabase storage URL if it's a full URL
     // Format: .../storage/v1/object/public/payout-slips/TENANT_ID/filename.jpg
@@ -569,7 +587,7 @@ export async function getSignedSlipUrlAction(slipUrl: string) {
 
     // Security check: Must belong to current tenant
     if (tenantId && tenantId !== "ALL" && !filePath.includes(tenantId)) {
-      throw new Error("คุณไม่มีสิทธิ์เข้าถึงไฟล์ชุดนี้ (Unauthorized Access)");
+      throw new Error(isEn ? "Unauthorized access to slip file" : "คุณไม่มีสิทธิ์เข้าถึงไฟล์ชุดนี้ (Unauthorized Access)");
     }
 
     const { data, error } = await supabase.storage
@@ -594,6 +612,7 @@ export async function getPayoutQueueAction(filters?: {
   page?: number;
   pageSize?: number;
 }): Promise<PaginatedPayoutResult> {
+  const isEn = await getIsEn();
   try {
     const { supabase, tenantId, role } = await requireAuthContext();
     const page = filters?.page || 1;
@@ -612,7 +631,7 @@ export async function getPayoutQueueAction(filters?: {
         queryBuilder = queryBuilder.eq("tenant_id", tenantId);
       }
     } else {
-      if (!tenantId) throw new Error("ไม่พบข้อมูลสาขาที่สังกัด");
+      if (!tenantId) throw new Error(isEn ? "Branch information not found" : "ไม่พบข้อมูลสาขาที่สังกัด");
       queryBuilder = queryBuilder.eq("tenant_id", tenantId);
     }
 
@@ -675,7 +694,7 @@ export async function getPayoutQueueAction(filters?: {
         acc[refId].push(curr);
       }
       return acc;
-    }, {} as Record<string, any[]>);
+      }, {} as Record<string, any[]>);
 
     // Enhance records with totals from the SQL View and Stale Detection
     const enhancedData = data.map((item: any): CommissionPayoutRecord => {
@@ -685,9 +704,9 @@ export async function getPayoutQueueAction(filters?: {
       let recipientName = (recipient as any)?.display_name;
       if (!recipientName) {
         if (item.recipient_role === "AGENCY") {
-          recipientName = "บริษัท (Agency)";
+          recipientName = isEn ? "Agency Pool" : "บริษัท (Agency)";
         } else if (item.recipient_role === "TEAM_POOL") {
-          recipientName = "กองกลางทีม (Team Pool)";
+          recipientName = isEn ? "Team Pool" : "กองกลางทีม (Team Pool)";
         } else if (item.recipient_role === "CO_AGENT" && deal?.co_agent_name) {
           recipientName = deal.co_agent_name;
         } else {
@@ -711,7 +730,7 @@ export async function getPayoutQueueAction(filters?: {
 
       const detailsVal = deal?.property?.details;
       const propDetails = Array.isArray(detailsVal) ? detailsVal[0] : detailsVal;
-      const propertyTitle = propDetails?.title?.th || propDetails?.title?.en || "ไม่ทราบชื่อทรัพย์สิน";
+      const propertyTitle = (isEn ? (propDetails?.title?.en || propDetails?.title?.th) : (propDetails?.title?.th || propDetails?.title?.en)) || (isEn ? "Unknown Property" : "ไม่ทราบชื่อทรัพย์สิน");
 
       return {
         ...item,
@@ -811,6 +830,7 @@ export async function getPayoutStatsAction() {
  * Fetches specific data for WHT 50 Tawi certificate generation.
  */
 export async function getWhtCertificateDataAction(commissionId: string) {
+  const isEn = await getIsEn();
   try {
     const { supabase, tenantId } = await requireAuthContext();
     assertStaff(await (await requireAuthContext()).role);
@@ -837,7 +857,7 @@ export async function getWhtCertificateDataAction(commissionId: string) {
     const { data: rawCurrent, error: fetchErr } = await query.single();
 
     if (fetchErr || !rawCurrent)
-      throw new Error("ไม่พบข้อมูลสำหรับการออกใบรับรอง");
+      throw new Error(isEn ? "Data for certificate not found" : "ไม่พบข้อมูลสำหรับการออกใบรับรอง");
 
     const current = rawCurrent as any;
 
@@ -853,17 +873,18 @@ export async function getWhtCertificateDataAction(commissionId: string) {
         agentName:
           current.recipient?.display_name ||
           "Unknown Partner",
-        address: (current.recipient as any)?.tax_address || "ระบุในโปรไฟล์",
+        address: (current.recipient as any)?.tax_address || (isEn ? "Specified in profile" : "ระบุในโปรไฟล์"),
         taxId: (current.recipient as any)?.tax_id || null,
         taxAmount: FinanceMath.format(Number(current.tax_amount || 0)),
         grossAmount: FinanceMath.format(Number(current.amount || 0)),
         netAmount: FinanceMath.format(netAmount.toNumber()),
         date: current.paid_at
-          ? new Intl.DateTimeFormat("th-TH").format(new Date(current.paid_at))
+          ? new Intl.DateTimeFormat(isEn ? "en-US" : "th-TH").format(new Date(current.paid_at))
           : "-",
         tenantName: "Real Estate CRM Provider",
         referenceCode:
           (current.metadata as any)?.payment_reference || current.id.slice(0, 8).toUpperCase(),
+        isEn,
       },
     };
   } catch (error: unknown) {
@@ -937,6 +958,7 @@ export async function getAgentWalletStatsAction(agentId: string): Promise<{
   data?: { stats: AgentWalletStats; history: AgentWalletHistory[] };
   error?: string;
 }> {
+  const isEn = await getIsEn();
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
@@ -984,7 +1006,7 @@ export async function getAgentWalletStatsAction(agentId: string): Promise<{
       const deal = c.deal as any;
       const detailsVal = deal?.property?.details;
       const propDetails = Array.isArray(detailsVal) ? detailsVal[0] : detailsVal;
-      const propertyTitle = propDetails?.title?.th || propDetails?.title?.en || "ไม่ทราบชื่อทรัพย์สิน";
+      const propertyTitle = (isEn ? (propDetails?.title?.en || propDetails?.title?.th) : (propDetails?.title?.th || propDetails?.title?.en)) || (isEn ? "Unknown Property" : "ไม่ทราบชื่อทรัพย์สิน");
 
       return {
         ...c,
@@ -1014,9 +1036,6 @@ export async function getAgentWalletStatsAction(agentId: string): Promise<{
       enhanced.filter((c) => c.status === "PAID").map((c) => c.deal_id),
     ).size;
 
-    const agentData = data && data.length > 0 ? (data[0] as any).recipient : null;
-    const recipientName = agentData?.display_name || "Unknown Partner";
-    
     return {
       success: true,
       data: {
@@ -1042,6 +1061,7 @@ export async function getAgentWalletStatsAction(agentId: string): Promise<{
  * Runs in Node.js environment to handle font rendering and buffer generation.
  */
 export async function generateWhtPdfAction(commissionId: string) {
+  const isEn = await getIsEn();
   try {
     const { supabase, user, role } = await requireAuthContext();
     assertStaff(role);
@@ -1054,7 +1074,7 @@ export async function generateWhtPdfAction(commissionId: string) {
     // 1. Fetch data for the certificate
     const res = await getWhtCertificateDataAction(commissionId);
     if (!res.success || !res.data) {
-      throw new Error(res.error || "ไม่สามารถดึงข้อมูลสำหรับออกใบรับรองได้");
+      throw new Error(res.error || (isEn ? "Unable to fetch data for certificate" : "ไม่สามารถดึงข้อมูลสำหรับออกใบรับรองได้"));
     }
 
     // 2. Render PDF to Buffer
@@ -1069,7 +1089,7 @@ export async function generateWhtPdfAction(commissionId: string) {
       entity: "FINANCE",
       entityId: commissionId,
       metadata: { 
-        summary: `ออกใบรับรองหักภาษี ณ ที่จ่าย (50 ทวิ) สำหรับรายการ ID: ${commissionId.slice(0, 8)}`,
+        summary: isEn ? `Generated WHT (50 Bis) certificate for ID: ${commissionId.slice(0, 8)}` : `ออกใบรับรองหักภาษี ณ ที่จ่าย (50 ทวิ) สำหรับรายการ ID: ${commissionId.slice(0, 8)}`,
         commissionId 
       },
     });
@@ -1093,16 +1113,17 @@ export async function bulkMarkAsPaidAction(
   commissionIds: string[],
   payload?: { slip_url?: string; payment_reference?: string },
 ) {
+  const isEn = await getIsEn();
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
     const isStaffControl = role === "ADMIN" || role === "MANAGER";
     if (!isStaffControl && (!tenantId || tenantId === "ALL")) {
-      throw new Error("กรุณาสลับสาขาให้ถูกต้องก่อนดำเนินการบันทึกการโอนเงิน");
+      throw new Error(isEn ? "Please switch branch before recording payout" : "กรุณาสลับสาขาให้ถูกต้องก่อนดำเนินการบันทึกการโอนเงิน");
     }
 
     if (commissionIds.length === 0) {
-      return { success: true, message: "ไม่มีรายการที่เลือก" };
+      return { success: true, message: isEn ? "No items selected" : "ไม่มีรายการที่เลือก" };
     }
 
     // 1. Fetch all records that are READY_TO_PAY
@@ -1118,7 +1139,7 @@ export async function bulkMarkAsPaidAction(
 
     const { data: rawComms, error: fetchErr } = await query;
     if (fetchErr) throw new Error(mapDbError(fetchErr));
-    if (!rawComms || rawComms.length === 0) throw new Error("ไม่พบรายการที่พร้อมโอนเงิน");
+    if (!rawComms || rawComms.length === 0) throw new Error(isEn ? "No items ready to pay found" : "ไม่พบรายการที่พร้อมโอนเงิน");
 
     let processedCount = 0;
 
@@ -1179,7 +1200,7 @@ export async function bulkMarkAsPaidAction(
         entity: "COMMISSION",
         entityId: commissionId,
         metadata: { 
-          summary: `ยืนยันการโอนเงินสุทธิ ${FinanceMath.format(netTransfer)} บ. (Ref: ${ref}) [โอนแบบกลุ่ม]`,
+          summary: isEn ? `Confirmed bulk net payout of ฿${FinanceMath.format(netTransfer)} (Ref: ${ref})` : `ยืนยันการโอนเงินสุทธิ ${FinanceMath.format(netTransfer)} บ. (Ref: ${ref}) [โอนแบบกลุ่ม]`,
           payment_reference: ref,
           slip_url: payload?.slip_url || "",
           netAmount: netTransfer.toNumber() 
@@ -1218,13 +1239,14 @@ export async function bulkMarkAsPaidAction(
 
     return {
       success: true,
-      message: `บันทึกการจ่ายเงินสำเร็จจำนวน ${processedCount} รายการ`,
+      message: isEn ? `Successfully recorded payment for ${processedCount} items` : `บันทึกการจ่ายเงินสำเร็จจำนวน ${processedCount} รายการ`,
     };
   } catch (error: unknown) {
     logger.error("bulkMarkAsPaid Error", error, { source: "finance-actions", commissionIds });
     return { success: false, error: (error as Error).message };
   }
 }
+
 
 
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
@@ -22,11 +23,15 @@ export async function bulkDeleteRentalContractsAction(
     if (!tenantId) throw new Error("Tenant context required");
     assertStaff(role);
 
+    const cookieStore = await cookies();
+    const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+    const isEn = lang === "en";
+
     if (!ids || ids.length === 0) {
       return {
         success: false,
         deletedCount: 0,
-        message: "ไม่มีรายการที่เลือก",
+        message: isEn ? "No items selected" : "ไม่มีรายการที่เลือก",
       };
     }
 
@@ -55,10 +60,11 @@ export async function bulkDeleteRentalContractsAction(
 
     revalidatePath("/protected/contracts");
 
+    const delCount = count ?? ids.length;
     return {
       success: true,
-      deletedCount: count ?? ids.length,
-      message: `ลบสัญญาเช่าสำเร็จ ${count ?? ids.length} รายการ`,
+      deletedCount: delCount,
+      message: isEn ? `Successfully deleted ${delCount} contracts` : `ลบสัญญาเช่าสำเร็จ ${delCount} รายการ`,
     };
   } catch (error) {
     console.error("bulkDeleteRentalContractsAction error:", error);

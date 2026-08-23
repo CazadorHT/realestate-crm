@@ -29,10 +29,10 @@ import { Input } from "@/components/ui/input";
 export function ConfirmDialog({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
-  title = "ยืนยันการทำรายการ",
-  description = "คุณแน่ใจหรือไม่ที่จะทำรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
-  confirmText = "ยืนยัน",
-  cancelText = "ยกเลิก",
+  title,
+  description,
+  confirmText,
+  cancelText,
   onConfirm,
   variant = "default",
   trigger,
@@ -43,7 +43,8 @@ export function ConfirmDialog({
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [confirmInput, setConfirmInput] = useState("");
-  const { t } = useLanguage();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const onOpenChange = (val: boolean) => {
@@ -59,17 +60,14 @@ export function ConfirmDialog({
 
   const isUnlocked = confirmString ? confirmInput === confirmString : true;
 
-  const finalTitle =
-    title === "ยืนยันการทำรายการ" ? t("common.confirm") : title;
+  const finalTitle = title || (isEn ? "Confirm Action" : "ยืนยันการทำรายการ");
   const finalDescription =
-    description ===
-    "คุณแน่ใจหรือไม่ที่จะทำรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้"
-      ? t("common.are_you_sure")
-      : description;
-  const finalConfirmText =
-    confirmText === "ยืนยัน" ? confirmText : confirmText;
-  const finalCancelText =
-    cancelText === "ยกเลิก" ? cancelText : cancelText;
+    description ||
+    (isEn
+      ? "Are you sure you want to proceed? This action cannot be undone."
+      : "คุณแน่ใจหรือไม่ที่จะทำรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้");
+  const finalConfirmText = confirmText || (isEn ? "Confirm" : "ยืนยัน");
+  const finalCancelText = cancelText || (isEn ? "Cancel" : "ยกเลิก");
 
   const handleConfirm = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -102,7 +100,9 @@ export function ConfirmDialog({
           {confirmString && (
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
               <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">
-                กรุณาพิมพ์ {confirmString} เพื่อยืนยัน:
+                {isEn
+                  ? `Please type "${confirmString}" to confirm:`
+                  : `กรุณาพิมพ์ ${confirmString} เพื่อยืนยัน:`}
               </p>
               <Input
                 value={confirmInput}
@@ -125,13 +125,19 @@ export function ConfirmDialog({
           <Button
             variant="outline"
             disabled={isConfirming || isSuccess}
-            className="w-full sm:flex-1 h-12 rounded-xl border-slate-200 text-slate-600 font-medium"
+            className="w-full sm:flex-1 h-12 rounded-xl border-slate-200 text-slate-600 font-medium cursor-pointer"
             onClick={() => onOpenChange(false)}
           >
             {finalCancelText}
           </Button>
           <Button
-            disabled={isConfirming || isSuccess || confirmDisabled || !isUnlocked}
+            variant={variant === "destructive" ? "destructive" : "default"}
+            disabled={
+              isConfirming ||
+              isSuccess ||
+              confirmDisabled ||
+              !isUnlocked
+            }
             className={cn(
               "w-full sm:flex-1 h-12 rounded-xl font-bold shadow-lg transition-all active:scale-95 gap-2",
               isSuccess 

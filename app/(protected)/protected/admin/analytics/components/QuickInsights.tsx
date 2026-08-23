@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AreaAnalytics, DistributionData } from "@/features/dashboard/queries";
 import { TrendingUp, MapPin, Building2, CheckCircle2 } from "lucide-react";
 import { listingTypeLabel, propertyTypeLabel, ListingType, PropertyType } from "@/features/properties/labels";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface QuickInsightsProps {
   topAreas: AreaAnalytics[];
@@ -13,30 +14,33 @@ interface QuickInsightsProps {
 }
 
 export function QuickInsights({ topAreas, listingTypeDist, propertyTypeDist, totalViews }: QuickInsightsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const topArea = topAreas[0];
   const topListingType = listingTypeDist[0];
   const topPropertyType = propertyTypeDist[0];
 
   const insights = [
     {
-      title: "ย่านยอดนิยมอันดับ 1",
-      value: topArea?.name || "ไม่มีข้อมูล",
+      title: isEn ? "Top #1 Area" : "ย่านยอดนิยมอันดับ 1",
+      value: topArea?.name || (isEn ? "No data" : "ไม่มีข้อมูล"),
       detail: topArea ? `${topArea.view_count.toLocaleString()} Views` : "-",
       icon: MapPin,
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
-      title: "ประเภทดีลที่ถูกหามากที่สุด",
-      value: topListingType ? listingTypeLabel(topListingType.label as ListingType, "th") : "ไม่มีข้อมูล",
-      detail: topListingType ? `${Math.round((topListingType.value / (totalViews || 1)) * 100)}% ของยอดวิวทั้งหมด` : "-",
+      title: isEn ? "Most Demanded Deal Type" : "ประเภทดีลที่ถูกหามากที่สุด",
+      value: topListingType ? listingTypeLabel(topListingType.label as ListingType, isEn ? "en" : "th") : (isEn ? "No data" : "ไม่มีข้อมูล"),
+      detail: topListingType ? `${Math.round((topListingType.value / (totalViews || 1)) * 100)}% ${isEn ? "of total views" : "ของยอดวิวทั้งหมด"}` : "-",
       icon: TrendingUp,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
     },
     {
-      title: "ประเภททรัพย์ยอดนิยม",
-      value: topPropertyType ? propertyTypeLabel(topPropertyType.label as PropertyType, "th") : "ไม่มีข้อมูล",
+      title: isEn ? "Most Popular Property Type" : "ประเภททรัพย์ยอดนิยม",
+      value: topPropertyType ? propertyTypeLabel(topPropertyType.label as PropertyType, isEn ? "en" : "th") : (isEn ? "No data" : "ไม่มีข้อมูล"),
       detail: topPropertyType ? `${topPropertyType.value.toLocaleString()} Views` : "-",
       icon: Building2,
       color: "text-orange-600",
@@ -70,3 +74,4 @@ export function QuickInsights({ topAreas, listingTypeDist, propertyTypeDist, tot
     </div>
   );
 }
+

@@ -11,6 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ExecutiveChartsProps {
   data: any[];
@@ -18,7 +19,8 @@ interface ExecutiveChartsProps {
 
 // 🛡️ Elite Optimization: Wrapped with memo to prevent redundant re-renders
 export const ExecutiveLeadsChart = memo(function ExecutiveLeadsChart({ data }: ExecutiveChartsProps) {
-  // Mounted state removed - handled by parent via next/dynamic { ssr: false }
+  const { language } = useLanguage();
+  const isEn = language === "en";
   
   return (
     <div className="h-[350px] w-full relative">
@@ -67,7 +69,7 @@ export const ExecutiveLeadsChart = memo(function ExecutiveLeadsChart({ data }: E
           <Area
             type="monotone"
             dataKey="leadCount"
-            name="จำนวนลีด"
+            name={isEn ? "Total Leads" : "จำนวนลีด"}
             stroke="#3b82f6"
             strokeWidth={3}
             fillOpacity={1}
@@ -81,6 +83,9 @@ export const ExecutiveLeadsChart = memo(function ExecutiveLeadsChart({ data }: E
 });
 
 export const ExecutiveDealsChart = memo(function ExecutiveDealsChart({ data }: ExecutiveChartsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="h-[350px] w-full relative">
       <ResponsiveContainer width="100%" height={350}>
@@ -128,7 +133,7 @@ export const ExecutiveDealsChart = memo(function ExecutiveDealsChart({ data }: E
           <Area
             type="monotone"
             dataKey="dealCount"
-            name="จำนวนดีลชนะ"
+            name={isEn ? "Won Deals" : "จำนวนดีลชนะ"}
             stroke="#10b981"
             strokeWidth={3}
             fillOpacity={1}
@@ -140,3 +145,4 @@ export const ExecutiveDealsChart = memo(function ExecutiveDealsChart({ data }: E
     </div>
   );
 });
+

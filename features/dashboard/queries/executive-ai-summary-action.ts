@@ -19,7 +19,8 @@ export interface AISummaryResult {
 
 export async function getExecutiveWeeklyAISummaryAction({
   tenantId,
-  filters
+  filters,
+  language = "th",
 }: {
   tenantId?: string | null;
   filters?: {
@@ -27,7 +28,9 @@ export async function getExecutiveWeeklyAISummaryAction({
     teamId?: string | null;
     agentId?: string | null;
   };
+  language?: string;
 }): Promise<AISummaryResult> {
+  const isEn = language === "en";
   try {
     const supabase = await createClient();
     const monthAgo = new Date();
@@ -74,7 +77,7 @@ export async function getExecutiveWeeklyAISummaryAction({
       return q;
     };
 
-    // 1. Fetch Stats (Optimized: Removed unused properties query)
+    // 1. Fetch Stats
     const [leadsRes, dealsRes] = await Promise.all([
       applyTeamFilter(
         applyFilters(
@@ -115,8 +118,9 @@ export async function getExecutiveWeeklyAISummaryAction({
     // If no data, return a mock sample
     if (totalLeads === 0 && deals.length === 0) {
       return {
-        summary:
-          "📊 [ข้อมูลตัวอย่างจำลอง - เนื่องจากคุณยังไม่มีข้อมูลจริงในระบบ]\n\nในรอบ 30 วันที่ผ่านมา ภาพรวมธุรกิจมีทิศทางที่เติบโตอย่างน่าสนใจ โดยเราได้ Lead ใหม่เข้ามาถึง 45 ราย ซึ่งในจำนวนนี้เป็น Hot Lead ที่ระบบประเมินว่ามีโอกาสปิดการขายสูงถึง 12 ราย\n\nในฝั่งของทีมขาย สามารถปิดดีลได้สำเร็จแล้ว 5 ดีล ซึ่งเป็นสัญญาณบวกของเดือนนี้\n\n💡 คำแนะนำเชิงกลยุทธ์จาก AI:\n- แพลตฟอร์ม Facebook ใช้งานได้ผลดีเยี่ยม นำลีดเข้ามาได้มากที่สุด ควรพิจารณาเพิ่มงบโฆษณาในส่วนนี้\n- ทีมเซลส์ควรให้ความสำคัญและเร่งเจรจากับกลุ่ม Hot Lead ทั้ง 12 ราย เพื่อเพิ่มยอดปิดการขายก่อนสิ้นเดือน",
+        summary: isEn
+          ? "📊 [Simulated Sample Data - No live transactions recorded yet]\n\nOver the past 30 days, your real estate business has generated 45 new prospective leads, with 12 identified as high-intent Hot Leads with high closing probability.\n\nYour sales team successfully closed 5 transactions, representing solid momentum for this period.\n\n💡 Strategic AI Insights:\n- Facebook Ads delivered the highest volume of qualified inquiries. Consider scaling marketing budget here.\n- Sales agents should prioritize immediate follow-up on the 12 hot leads to maximize conversion before month-end."
+          : "📊 [ข้อมูลตัวอย่างจำลอง - เนื่องจากคุณยังไม่มีข้อมูลจริงในระบบ]\n\nในรอบ 30 วันที่ผ่านมา ภาพรวมธุรกิจมีทิศทางที่เติบโตอย่างน่าสนใจ โดยเราได้ Lead ใหม่เข้ามาถึง 45 ราย ซึ่งในจำนวนนี้เป็น Hot Lead ที่ระบบประเมินว่ามีโอกาสปิดการขายสูงถึง 12 ราย\n\nในฝั่งของทีมขาย สามารถปิดดีลได้สำเร็จแล้ว 5 ดีล ซึ่งเป็นสัญญาณบวกของเดือนนี้\n\n💡 คำแนะนำเชิงกลยุทธ์จาก AI:\n- แพลตฟอร์ม Facebook ใช้งานได้ผลดีเยี่ยม นำลีดเข้ามาได้มากที่สุด ควรพิจารณาเพิ่มงบโฆษณาในส่วนนี้\n- ทีมเซลส์ควรให้ความสำคัญและเร่งเจรจากับกลุ่ม Hot Lead ทั้ง 12 ราย เพื่อเพิ่มยอดปิดการขายก่อนสิ้นเดือน",
         stats: {
           totalLeads: 45,
           hotLeads: 12,
@@ -130,13 +134,28 @@ export async function getExecutiveWeeklyAISummaryAction({
     // 2. AI Generate Summary
     const { generateText } = await import("@/lib/ai/gemini");
 
-    let scopeText = "ภาพรวมบริษัท";
-    if (filters?.agentId && filters.agentId !== "ALL") scopeText = "ผลงานส่วนตัว";
-    else if (filters?.teamId && filters.teamId !== "ALL") scopeText = "ผลงานทีม";
+    let scopeText = isEn ? "Company Wide" : "ภาพรวมบริษัท";
+    if (filters?.agentId && filters.agentId !== "ALL") scopeText = isEn ? "Personal Performance" : "ผลงานส่วนตัว";
+    else if (filters?.teamId && filters.teamId !== "ALL") scopeText = isEn ? "Team Performance" : "ผลงานทีม";
     else if (filters?.branchId && filters.branchId !== "ALL")
-      scopeText = "ผลงานสาขา";
+      scopeText = isEn ? "Branch Performance" : "ผลงานสาขา";
 
-    const prompt = `
+    const prompt = isEn
+      ? `
+    You are an executive AI real estate analyst.
+    Summarize operational performance (${scopeText}) over the past 30 days based on:
+    - New Leads: ${totalLeads}
+    - Hot Leads (High Quality / AI Score >= 80): ${hotLeads}
+    - Deals Closed / Won: ${dealsWon}
+    - Top Acquisition Channel: ${topSource}
+    
+    Instructions:
+    1. Provide concise performance trend analysis (strengths or areas for improvement).
+    2. Offer 2-3 strategic, actionable recommendations (e.g. increase ad spend on top channel or intensify follow-up on hot leads).
+    3. Output in fluent, executive English.
+    4. Do not include large markdown headings; produce clean paragraphs directly.
+  `
+      : `
     คุณเป็นผู้ช่วยวิเคราะห์ธุรกิจอสังหาริมทรัพย์ระดับสูง
     สรุปผลการดำเนินงาน (${scopeText}) ในรอบ 30 วันที่ผ่านมาให้ฟัง จากข้อมูลดังนี้:
     - จำนวน Lead ใหม่: ${totalLeads} คน
@@ -154,7 +173,7 @@ export async function getExecutiveWeeklyAISummaryAction({
     const result = await generateText(prompt, "gemini-flash-lite-latest");
 
     return {
-      summary: result.text || "ไม่สามารถสรุปข้อมูลได้ในขณะนี้",
+      summary: result.text || (isEn ? "Unable to generate summary at this time." : "ไม่สามารถสรุปข้อมูลได้ในขณะนี้"),
       stats: {
         totalLeads,
         hotLeads,
@@ -165,7 +184,7 @@ export async function getExecutiveWeeklyAISummaryAction({
   } catch (error) {
     console.error("getExecutiveWeeklyAISummaryAction Error:", error);
     return {
-      summary: "ไม่สามารถประมวลผลข้อมูลได้ในขณะนี้",
+      summary: isEn ? "Unable to process data at this time." : "ไม่สามารถประมวลผลข้อมูลได้ในขณะนี้",
       stats: {
         totalLeads: 0,
         hotLeads: 0,

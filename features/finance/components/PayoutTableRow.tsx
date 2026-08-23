@@ -13,6 +13,7 @@ import { usePayoutStore } from "../stores/payoutStore";
 import { cn } from "@/lib/utils";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PayoutTableRowProps {
   deal: any; // { dealId, dealTitle, propertyTitle, totalAmount, totalWht, totalNet, status, splits }
@@ -33,6 +34,9 @@ export const PayoutTableRow = React.memo(({
   onUpdate,
   disabledAction
 }: PayoutTableRowProps) => {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const selectedIds = usePayoutStore((state) => state.selectedIds);
   const toggleSelection = usePayoutStore((state) => state.toggleSelection);
   const isExpanded = usePayoutStore((state) => state.expandedRows.has(deal.dealId));
@@ -42,22 +46,22 @@ export const PayoutTableRow = React.memo(({
   // Group status map
   const statusMap: any = {
     'UNPAID': { 
-      label: 'รอดำเนินการ', 
+      label: isEn ? 'Pending' : 'รอดำเนินการ', 
       color: 'bg-slate-500/10 text-slate-500 border-slate-200/50',
       glow: 'shadow-[0_0_15px_rgba(100,116,139,0.15)]'
     },
     'READY_TO_PAY': { 
-      label: 'พร้อมโอนเงิน', 
+      label: isEn ? 'Ready to Pay' : 'พร้อมโอนเงิน', 
       color: 'bg-amber-500/10 text-amber-600 border-amber-200/50',
       glow: 'shadow-[0_0_15px_rgba(245,158,11,0.2)]'
     },
     'PAID': { 
-      label: 'ชำระเงินแล้ว', 
+      label: isEn ? 'Paid' : 'ชำระเงินแล้ว', 
       color: 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50',
       glow: 'shadow-[0_0_15px_rgba(16,185,129,0.2)]'
     },
     'MIXED': { 
-      label: 'สถานะผสม', 
+      label: isEn ? 'Mixed Status' : 'สถานะผสม', 
       color: 'bg-indigo-500/10 text-indigo-600 border-indigo-200/50',
       glow: 'shadow-[0_0_15px_rgba(99,102,241,0.2)]'
     }
@@ -108,7 +112,7 @@ export const PayoutTableRow = React.memo(({
         <TableCell>
           <div className="flex flex-col">
             <span className="font-semibold text-slate-700 text-xs">
-              {deal.splits.length} ผู้รับเงิน
+              {isEn ? `${deal.splits.length} payees` : `${deal.splits.length} ผู้รับเงิน`}
             </span>
             <span className="text-[10px] text-slate-400 truncate max-w-[200px]">
               {deal.splits.map((s: any) => s.recipient_name || s.agent?.full_name).join(", ")}
@@ -143,7 +147,7 @@ export const PayoutTableRow = React.memo(({
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-9 w-9 rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition-all border border-transparent" 
+            className="h-9 w-9 rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition-all border border-transparent cursor-pointer" 
             onClick={() => toggleExpansion(deal.dealId)}
           >
             <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform duration-500", isExpanded && "rotate-180 text-indigo-600")} />
@@ -159,20 +163,20 @@ export const PayoutTableRow = React.memo(({
               <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg overflow-hidden">
                 <div className="p-4 border-b border-slate-100 bg-slate-50/30">
                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    รายการจัดสรรคอมมิชชันภายในดีล (Commission Splits)
+                    {isEn ? "Commission Splits in Deal" : "รายการจัดสรรคอมมิชชันภายในดีล (Commission Splits)"}
                   </h4>
                 </div>
                 <Table>
                   <TableHeader className="bg-slate-50/10">
                     <TableRow className="hover:bg-transparent border-slate-100">
                       <TableHead className="w-10 pl-4"></TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ผู้รับเงิน / บทบาท</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400">สัดส่วน</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400">สถานะ</TableHead>
-                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">ยอดเงินดิบ</TableHead>
-                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">WHT 3%</TableHead>
-                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">ยอดโอน (สุทธิ)</TableHead>
-                      <TableHead className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400 pr-4">จัดการ</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{isEn ? "Payee / Role" : "ผู้รับเงิน / บทบาท"}</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{isEn ? "Share" : "สัดส่วน"}</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{isEn ? "Status" : "สถานะ"}</TableHead>
+                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">{isEn ? "Gross Amount" : "ยอดเงินดิบ"}</TableHead>
+                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">{isEn ? "WHT 3%" : "WHT 3%"}</TableHead>
+                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">{isEn ? "Net Payout" : "ยอดโอน (สุทธิ)"}</TableHead>
+                      <TableHead className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400 pr-4">{isEn ? "Actions" : "จัดการ"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -194,7 +198,7 @@ export const PayoutTableRow = React.memo(({
                           <TableCell className="py-3">
                             <div className="flex flex-col">
                               <span className="font-semibold text-slate-800 text-xs">
-                                {split.recipient_name || split.agent?.full_name || 'ไม่ระบุชื่อ'}
+                                {split.recipient_name || split.agent?.full_name || (isEn ? 'Unnamed' : 'ไม่ระบุชื่อ')}
                               </span>
                               <span className="text-[8px] font-bold text-slate-400 uppercase mt-0.5 tracking-wider">
                                 {split.recipient_role}
@@ -229,9 +233,9 @@ export const PayoutTableRow = React.memo(({
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-xs shrink-0" 
+                                className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-xs shrink-0 cursor-pointer" 
                                 onClick={() => onOpenHistory(split)}
-                                title="ดูประวัติการเบิกจ่าย"
+                                title={isEn ? "View payout history" : "ดูประวัติการเบิกจ่าย"}
                               >
                                 <HistoryIcon className="w-3.5 h-3.5" />
                               </Button>
@@ -241,7 +245,7 @@ export const PayoutTableRow = React.memo(({
                                   <Button 
                                     variant="ghost" 
                                     size="icon" 
-                                    className="h-8 w-8 rounded-lg border border-emerald-200 bg-white text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition-all shadow-xs shrink-0"
+                                    className="h-8 w-8 rounded-lg border border-emerald-200 bg-white text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition-all shadow-xs shrink-0 cursor-pointer"
                                     onClick={async () => {
                                       const { getSignedSlipUrlAction } = await import("../actions");
                                       const res = await getSignedSlipUrlAction(split.slip_url);
@@ -249,7 +253,7 @@ export const PayoutTableRow = React.memo(({
                                         window.open(res.url, "_blank");
                                       }
                                     }}
-                                    title="ดูสลิปโอนเงิน"
+                                    title={isEn ? "View transfer slip" : "ดูสลิปโอนเงิน"}
                                   >
                                     <ShieldCheck className="w-3.5 h-3.5" />
                                   </Button>
@@ -257,10 +261,10 @@ export const PayoutTableRow = React.memo(({
                                   <Button 
                                     variant="ghost" 
                                     size="icon" 
-                                    className="h-8 w-8 rounded-lg border border-indigo-200 bg-white text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 transition-all shadow-xs shrink-0"
+                                    className="h-8 w-8 rounded-lg border border-indigo-200 bg-white text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 transition-all shadow-xs shrink-0 cursor-pointer"
                                     onClick={async () => {
                                        const { generateWhtPdfAction } = await import("../actions");
-                                       const processId = startProcess("กำลังสร้างใบ 50 ทวิ (WHT Certificate)", {
+                                       const processId = startProcess(isEn ? "Generating 50 Twi (WHT Certificate)" : "กำลังสร้างใบ 50 ทวิ (WHT Certificate)", {
                                          type: "EXPORT"
                                        });
                                        try {
@@ -278,17 +282,17 @@ export const PayoutTableRow = React.memo(({
                                             link.href = blobUrl;
                                             link.download = res.fileName || "WHT_Certificate.pdf";
                                             link.click();
-                                            finishProcess(processId, "SUCCESS", "ดาวน์โหลดใบ 50 ทวิสำเร็จ ✨", {
+                                            finishProcess(processId, "SUCCESS", isEn ? "50 Twi certificate downloaded ✨" : "ดาวน์โหลดใบ 50 ทวิสำเร็จ ✨", {
                                               resultLink: blobUrl
                                             });
                                          } else {
-                                            finishProcess(processId, "ERROR", res.error || "เกิดข้อผิดพลาดในการสร้าง PDF");
+                                            finishProcess(processId, "ERROR", res.error || (isEn ? "Error generating PDF" : "เกิดข้อผิดพลาดในการสร้าง PDF"));
                                          }
                                        } catch (e: unknown) {
-                                         finishProcess(processId, "ERROR", e instanceof Error ? e.message : "เกิดข้อผิดพลาด");
+                                         finishProcess(processId, "ERROR", e instanceof Error ? e.message : (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
                                        }
                                     }}
-                                    title="ดาวน์โหลดใบ 50 ทวิ"
+                                    title={isEn ? "Download 50 Twi certificate" : "ดาวน์โหลดใบ 50 ทวิ"}
                                   >
                                     <FileDown className="w-3.5 h-3.5" />
                                   </Button>
@@ -298,7 +302,7 @@ export const PayoutTableRow = React.memo(({
                               {split.status === 'UNPAID' && (
                                 <Button 
                                   size="sm" 
-                                  className="bg-amber-600 hover:bg-amber-700 text-white h-8 px-3 rounded-lg text-xs font-semibold shadow-md shadow-amber-100 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center shrink-0" 
+                                  className="bg-amber-600 hover:bg-amber-700 text-white h-8 px-3 rounded-lg text-xs font-semibold shadow-md shadow-amber-100 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center shrink-0 cursor-pointer" 
                                   onClick={async () => {
                                     setApprovingIds(prev => {
                                       const next = new Set(prev);
@@ -309,13 +313,13 @@ export const PayoutTableRow = React.memo(({
                                       const { markAsReadyToPayAction } = await import("../actions");
                                       const res = await markAsReadyToPayAction(split.id);
                                       if (res.success) {
-                                        toast.success("อนุมัติพร้อมจ่ายสำเร็จ ✨");
+                                        toast.success(isEn ? "Approved ready to pay ✨" : "อนุมัติพร้อมจ่ายสำเร็จ ✨");
                                         if (onUpdate) onUpdate();
                                       } else {
-                                        toast.error(res.error || "เกิดข้อผิดพลาดในการอนุมัติ");
+                                        toast.error(res.error || (isEn ? "Failed to approve" : "เกิดข้อผิดพลาดในการอนุมัติ"));
                                       }
                                     } catch (e: any) {
-                                      toast.error(e.message || "เกิดข้อผิดพลาด");
+                                      toast.error(e.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
                                     } finally {
                                       setApprovingIds(prev => {
                                         const next = new Set(prev);
@@ -325,15 +329,15 @@ export const PayoutTableRow = React.memo(({
                                     }
                                   }}
                                   disabled={disabledAction || approvingIds.has(split.id)}
-                                  title={disabledAction ? "กรุณาสลับสาขาก่อนอนุมัติ" : "อนุมัติพร้อมจ่าย"}
+                                  title={disabledAction ? (isEn ? "Please switch branch before approving" : "กรุณาสลับสาขาก่อนอนุมัติ") : (isEn ? "Approve ready to pay" : "อนุมัติพร้อมจ่าย")}
                                 >
                                   {approvingIds.has(split.id) ? (
                                     <>
                                       <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                                      กำลังอนุมัติ...
+                                      {isEn ? "Approving..." : "กำลังอนุมัติ..."}
                                     </>
                                   ) : (
-                                    "อนุมัติ"
+                                    isEn ? "Approve" : "อนุมัติ"
                                   )}
                                 </Button>
                               )}
@@ -341,13 +345,13 @@ export const PayoutTableRow = React.memo(({
                               {split.status === 'READY_TO_PAY' && (
                                 <Button 
                                   size="sm" 
-                                  className="bg-indigo-600 hover:bg-indigo-700 text-white h-8 px-3 rounded-lg text-xs font-semibold shadow-md shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50 shrink-0" 
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white h-8 px-3 rounded-lg text-xs font-semibold shadow-md shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50 shrink-0 cursor-pointer" 
                                   onClick={() => onOpenPaidDialog(split)}
                                   disabled={disabledAction}
-                                  title={disabledAction ? "กรุณาสลับสาขาก่อนโอนเงิน" : "บันทึกการโอนเงิน"}
+                                  title={disabledAction ? (isEn ? "Please switch branch before payout" : "กรุณาสลับสาขาก่อนโอนเงิน") : (isEn ? "Record payout" : "บันทึกการโอนเงิน")}
                                 >
                                   <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
-                                  โอนเงิน
+                                  {isEn ? "Pay" : "โอนเงิน"}
                                 </Button>
                               )}
 
@@ -355,10 +359,10 @@ export const PayoutTableRow = React.memo(({
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
-                                  className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-xs shrink-0"
+                                  className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-xs shrink-0 cursor-pointer"
                                   onClick={() => onRecalculate(split.id)}
                                   disabled={isRecalculating || disabledAction}
-                                  title="คำนวณสัดส่วนใหม่"
+                                  title={isEn ? "Recalculate split" : "คำนวณสัดส่วนใหม่"}
                                 >
                                   <RefreshCw className={cn("w-3 h-3", isRecalculating && "animate-spin")} />
                                 </Button>

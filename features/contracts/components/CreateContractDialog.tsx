@@ -19,8 +19,12 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function CreateContractDialog() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const router = useRouter();
@@ -54,9 +58,9 @@ export function CreateContractDialog() {
   };
 
   const steps = [
-    { title: "เลือกดีล", desc: "ดีล" },
-    { title: "ข้อมูลสัญญา", desc: "สัญญา" },
-    { title: "การเงินและเงื่อนไข", desc: "เงื่อนไข" },
+    { title: isEn ? "Select Deal" : "เลือกดีล", desc: isEn ? "Deal" : "ดีล" },
+    { title: isEn ? "Contract Details" : "ข้อมูลสัญญา", desc: isEn ? "Details" : "สัญญา" },
+    { title: isEn ? "Financials & Terms" : "การเงินและเงื่อนไข", desc: isEn ? "Terms" : "เงื่อนไข" },
   ];
 
   const rentPrice = form.watch("rent_price");
@@ -70,9 +74,9 @@ export function CreateContractDialog() {
         trigger={
           <Button
             onClick={() => setOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 shadow-md h-12 rounded-xl font-bold"
+            className="bg-blue-600 hover:bg-blue-700 shadow-md h-12 rounded-xl font-bold cursor-pointer"
           >
-            <Plus className="mr-2 h-4 w-4" /> สร้างสัญญาใหม่
+            <Plus className="mr-2 h-4 w-4" /> {isEn ? "New Contract" : "สร้างสัญญาใหม่"}
           </Button>
         }
         title={
@@ -80,22 +84,22 @@ export function CreateContractDialog() {
             <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
               <FileText className="h-6 w-6" />
             </div>
-            <span>สร้างสัญญาใหม่</span>
+            <span>{isEn ? "Create New Contract" : "สร้างสัญญาใหม่"}</span>
           </div>
         }
-        description="รายละเอียดสัญญาสำหรับดีลที่ปิดการขายหรือเช่าแล้ว"
+        description={isEn ? "Contract details for closed deals (rent/sale)" : "รายละเอียดสัญญาสำหรับดีลที่ปิดการขายหรือเช่าแล้ว"}
         className="sm:max-w-[700px]"
         footer={
-          <div className="flex flex-row gap-3 w-full ">
+          <div className="flex flex-row gap-3 w-full">
             {currentStep > 1 ? (
               <Button
                 variant="outline"
                 type="button"
                 onClick={prevStep}
                 disabled={isSubmitting}
-                className="flex-1 rounded-xl h-12 font-bold border-slate-200 text-slate-500"
+                className="flex-1 rounded-xl h-12 font-bold border-slate-200 text-slate-500 cursor-pointer"
               >
-                ย้อนกลับ
+                {isEn ? "Back" : "ย้อนกลับ"}
               </Button>
             ) : (
               <Button
@@ -103,9 +107,9 @@ export function CreateContractDialog() {
                 type="button"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="flex-1 rounded-xl h-12 font-bold border-slate-200 text-slate-500"
+                className="flex-1 rounded-xl h-12 font-bold border-slate-200 text-slate-500 cursor-pointer"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             )}
 
@@ -113,24 +117,24 @@ export function CreateContractDialog() {
               <Button
                 type="button"
                 onClick={nextStep}
-                className="flex-2 bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-blue-500/10 gap-2"
+                className="flex-2 bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-blue-500/10 gap-2 cursor-pointer"
               >
-                ถัดไป
+                {isEn ? "Next" : "ถัดไป"}
               </Button>
             ) : (
               <Button
                 type="button"
                 onClick={onSubmit}
-                className="flex-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-emerald-500/10"
+                className="flex-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-emerald-500/10 cursor-pointer"
                 disabled={isSubmitting || !selectedDeal}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    กำลังบันทึก...
+                    {isEn ? "Saving..." : "กำลังบันทึก..."}
                   </>
                 ) : (
-                  "สร้างสัญญา"
+                  isEn ? "Create Contract" : "สร้างสัญญา"
                 )}
               </Button>
             )}
@@ -260,31 +264,32 @@ export function CreateContractDialog() {
 
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-              สร้างสัญญาเรียบร้อยแล้ว
+              {isEn ? "Contract Created Successfully" : "สร้างสัญญาเรียบร้อยแล้ว"}
             </h3>
             <p className="text-slate-500 text-sm font-medium px-4">
-              สัญญาถูกบันทึกเข้าระบบเรียบร้อย
-              คุณสามารถจัดการแจ้งเตือนหรือพิมพ์เอกสารได้ทันที
+              {isEn 
+                ? "Contract has been saved. You can configure rent reminder schedules or view details immediately." 
+                : "สัญญาถูกบันทึกเข้าระบบเรียบร้อย คุณสามารถจัดการแจ้งเตือนหรือพิมพ์เอกสารได้ทันที"}
             </p>
           </div>
 
           <div className="flex flex-col gap-3 w-full px-2">
             {isRental && (
               <Button
-                className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-100"
+                className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-100 cursor-pointer"
                 onClick={() => {
                   handleClose();
                   setShowSuccessDialog(false);
                   router.push("/protected/rent-notifications");
                 }}
               >
-                ไปตั้งค่าแจ้งเตือนค่าเช่า
+                {isEn ? "Configure Rent Reminders" : "ไปตั้งค่าแจ้งเตือนค่าเช่า"}
               </Button>
             )}
 
             <Button
               variant="outline"
-              className="w-full h-11 rounded-xl font-bold border-slate-200 text-slate-600"
+              className="w-full h-11 rounded-xl font-bold border-slate-200 text-slate-600 cursor-pointer"
               onClick={() => {
                 handleClose();
                 setShowSuccessDialog(false);
@@ -293,7 +298,7 @@ export function CreateContractDialog() {
                 router.push(url.pathname + url.search);
               }}
             >
-              ตกลง
+              {isEn ? "OK" : "ตกลง"}
             </Button>
           </div>
         </div>
@@ -301,3 +306,4 @@ export function CreateContractDialog() {
     </>
   );
 }
+

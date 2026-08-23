@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/popover";
 import { DynamicIcon } from "./dynamic-icon";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface IconPickerProps {
   value: string;
@@ -22,6 +23,9 @@ interface IconPickerProps {
 const allIcons = Object.keys(dynamicIconImports) as string[];
 
 export function IconPicker({ value, onChange }: IconPickerProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
@@ -69,16 +73,16 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between px-3 h-10"
+          className="w-full justify-between px-3 h-10 cursor-pointer"
         >
           <div className="flex items-center gap-2">
             {value ? (
               <DynamicIcon name={value} className="h-4 w-4 text-blue-600" />
             ) : (
-              <span className="text-slate-400">เลือกไอคอน...</span>
+              <span className="text-slate-400">{isEn ? "Select icon..." : "เลือกไอคอน..."}</span>
             )}
             <span className="truncate text-sm text-slate-700">
-              {value || "เลือกไอคอน"}
+              {value || (isEn ? "Select icon" : "เลือกไอคอน")}
             </span>
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -89,7 +93,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="ค้นหาไอคอน..."
+              placeholder={isEn ? "Search icons..." : "ค้นหาไอคอน..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8"
@@ -99,7 +103,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
         <div className="h-[300px] overflow-y-auto p-2">
           {displayedIcons.length === 0 ? (
             <div className="py-6 text-center text-sm text-slate-500">
-              ไม่พบไอคอน
+              {isEn ? "No icons found" : "ไม่พบไอคอน"}
             </div>
           ) : (
             <div className="grid grid-cols-5 gap-1">
@@ -111,7 +115,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                     setOpen(false);
                   }}
                   className={cn(
-                    "flex flex-col items-center justify-center p-2 rounded-md hover:bg-slate-100 transition-colors aspect-square gap-1",
+                    "flex flex-col items-center justify-center p-2 rounded-md hover:bg-slate-100 transition-colors aspect-square gap-1 cursor-pointer",
                     value === iconName &&
                       "bg-blue-50 text-blue-600 ring-2 ring-blue-100",
                   )}
@@ -128,7 +132,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
               className="py-2 text-center text-xs text-slate-400 border-t mt-2 cursor-pointer hover:bg-slate-50"
               onClick={() => setLimit((prev) => prev + 50)}
             >
-              คลิกเพื่อโหลดไอคอนเพิ่มเติม
+              {isEn ? "Click to load more icons" : "คลิกเพื่อโหลดไอคอนเพิ่มเติม"}
             </div>
           )}
         </div>
@@ -136,3 +140,4 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
     </Popover>
   );
 }
+

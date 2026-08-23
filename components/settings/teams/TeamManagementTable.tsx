@@ -12,12 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Users, Shield, Edit2, Trash2, MoreVertical, Plus } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -28,6 +22,7 @@ import { TeamWithManager } from "@/features/teams/actions/teamActions";
 import { formatDate, cn } from "@/lib/utils";
 import { m, AnimatePresence } from "framer-motion";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TeamManagementTableProps {
   teams: TeamWithManager[];
@@ -46,6 +41,9 @@ export function TeamManagementTable({
   onCreate,
   fetchedWithError = false,
 }: TeamManagementTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="space-y-6">
       {/* 🖥️ Desktop View (Table) */}
@@ -54,19 +52,19 @@ export function TeamManagementTable({
           <TableHeader className="bg-slate-50/40 border-b border-white/20">
             <TableRow className="hover:bg-transparent border-b border-slate-100/50">
               <TableHead className="py-4 px-8 font-semibold text-slate-400 uppercase tracking-widest text-[10px]">
-                ชื่อทีม (Team Name)
+                {isEn ? "Team Name" : "ชื่อทีม (Team Name)"}
               </TableHead>
               <TableHead className="py-4 px-8 font-semibold text-slate-400 uppercase tracking-widest text-[10px]">
-                หัวหน้าทีม (Leader)
+                {isEn ? "Leader" : "หัวหน้าทีม (Leader)"}
               </TableHead>
               <TableHead className="py-4 px-8 font-semibold text-slate-400 uppercase tracking-widest text-[10px]">
-                สมาชิก (Members)
+                {isEn ? "Members" : "สมาชิก (Members)"}
               </TableHead>
               <TableHead className="py-4 px-8 font-semibold text-slate-400 uppercase tracking-widest text-[10px]">
-                วันที่สร้าง
+                {isEn ? "Created Date" : "วันที่สร้าง"}
               </TableHead>
               <TableHead className="py-4 px-8 text-right font-semibold text-slate-400 uppercase tracking-widest text-[10px]">
-                จัดการ
+                {isEn ? "Actions" : "จัดการ"}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -151,14 +149,14 @@ export function TeamManagementTable({
 
                 <div className="p-4 bg-slate-50 rounded-[24px] border border-slate-100/50">
                   <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">
-                    หัวหน้าทีม (Team Leader)
+                    {isEn ? "Team Leader" : "หัวหน้าทีม (Team Leader)"}
                   </p>
                   <ManagerDisplay manager={team.manager} />
                 </div>
 
                 <div className="flex flex-col items-center justify-center py-2 space-y-4">
                   <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
-                    สมาชิกเข้าร่วม (Members Pool)
+                    {isEn ? "Members Pool" : "สมาชิกเข้าร่วม (Members Pool)"}
                   </p>
                   <MemberStack
                     previews={team.member_previews}
@@ -169,7 +167,7 @@ export function TeamManagementTable({
 
                 <div className="pt-4 border-t border-slate-50 flex justify-between items-center">
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest italic">
-                    สร้างเมื่อ {formatDate(team.created_at || "")}
+                    {isEn ? "Created " : "สร้างเมื่อ "}{formatDate(team.created_at || "")}
                   </span>
                   <div className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
                 </div>
@@ -183,6 +181,9 @@ export function TeamManagementTable({
 }
 
 function TeamNameDisplay({ name }: { name: string }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="flex items-center gap-3">
       <div className="h-10 w-10 rounded-xl bg-indigo-50/50 flex items-center justify-center border border-indigo-100/30 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-500 shadow-xs">
@@ -193,7 +194,7 @@ function TeamNameDisplay({ name }: { name: string }) {
           {name}
         </p>
         <p className="text-[10px] md:text-[11px] font-semibold text-slate-400 tracking-wider uppercase italic">
-          กลุ่มพนักงาน (Unit Squad)
+          {isEn ? "Unit Squad" : "กลุ่มพนักงาน (Unit Squad)"}
         </p>
       </div>
     </div>
@@ -201,15 +202,20 @@ function TeamNameDisplay({ name }: { name: string }) {
 }
 
 function ManagerDisplay({ manager }: { manager: any }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (!manager)
     return (
       <div className="flex flex-col">
         <span className="text-slate-400 italic text-xs font-semibold">
-          ยังไม่ได้ระบุหัวหน้าทีม
+          {isEn ? "Leader Unassigned" : "ยังไม่ได้ระบุหัวหน้าทีม"}
         </span>
-        <span className="text-[10px] text-slate-300 font-semibold tracking-widest uppercase italic">
-          (Leader Unassigned)
-        </span>
+        {!isEn && (
+          <span className="text-[10px] text-slate-300 font-semibold tracking-widest uppercase italic">
+            (Leader Unassigned)
+          </span>
+        )}
       </div>
     );
 
@@ -227,7 +233,7 @@ function ManagerDisplay({ manager }: { manager: any }) {
         </span>
         <span className="flex items-center gap-1 text-[10px] text-amber-500 font-semibold tracking-widest uppercase italic">
           <Shield className="h-3 w-3" />
-          หัวหน้าทีม (Team Leader)
+          {isEn ? "Team Leader" : "หัวหน้าทีม (Team Leader)"}
         </span>
       </div>
     </div>
@@ -243,6 +249,9 @@ function MemberStack({
   count?: number | null;
   centralized?: boolean;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className={`flex items-center ${centralized ? "flex-col gap-4" : ""}`}>
       <TooltipProvider>
@@ -275,7 +284,7 @@ function MemberStack({
           "text-[9px] font-semibold text-indigo-500 px-2.5 py-0.5 bg-indigo-50/50 rounded-full border border-indigo-100/30 uppercase tracking-widest italic shadow-xs leading-none",
         )}
       >
-        {count || 0} เอเจนท์ (Agents)
+        {isEn ? `${count || 0} Agents` : `${count || 0} เอเจนท์ (Agents)`}
       </span>
     </div>
   );
@@ -292,14 +301,16 @@ function ActionMenu({
   onDelete: () => void;
   onViewMembers: () => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [open, setOpen] = React.useState(false);
 
   return (
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title={`จัดการทีม: ${teamName}`}
-      description="เลือกดำเนินการกับรายการทีมที่คุณต้องการจัดการ"
+      title={isEn ? `Manage Team: ${teamName}` : `จัดการทีม: ${teamName}`}
+      description={isEn ? "Select an action for this team record" : "เลือกดำเนินการกับรายการทีมที่คุณต้องการจัดการ"}
       trigger={
         <Button
           variant="ghost"
@@ -323,7 +334,7 @@ function ActionMenu({
           </div>
           <div>
             <p className="font-semibold text-slate-700">
-              แก้ไขข้อมูลทีม (Edit Team)
+              {isEn ? "Edit Team" : "แก้ไขข้อมูลทีม (Edit Team)"}
             </p>
             <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-widest mt-0.5">
               Change name or leader
@@ -343,7 +354,7 @@ function ActionMenu({
           </div>
           <div>
             <p className="font-semibold text-slate-700">
-              สมาชิกในทีม (Team Members)
+              {isEn ? "Team Members" : "สมาชิกในทีม (Team Members)"}
             </p>
             <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-widest mt-0.5">
               Manage agents in this pool
@@ -364,7 +375,7 @@ function ActionMenu({
             <Trash2 className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-semibold">ลบทีมพนักงาน (Delete Team)</p>
+            <p className="font-semibold">{isEn ? "Delete Team" : "ลบทีมพนักงาน (Delete Team)"}</p>
             <p className="text-[10px] uppercase font-semibold text-rose-400 tracking-widest mt-0.5 italic">
               Permanent Action
             </p>
@@ -384,6 +395,9 @@ function EmptyState({
   colSpan?: number;
   isError?: boolean;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const content = (
     <m.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -407,13 +421,17 @@ function EmptyState({
       <div className="space-y-2">
         <h3 className="text-2xl font-semibold text-slate-900 tracking-tight text-center">
           {isError
-            ? "เกิดข้อผิดพลาดในการโหลดข้อมูล"
-            : "รวมพลังด้วยการสร้างทีมแรก"}
+            ? (isEn ? "Failed to load team data" : "เกิดข้อผิดพลาดในการโหลดข้อมูล")
+            : (isEn ? "Create your first team" : "รวมพลังด้วยการสร้างทีมแรก")}
         </h3>
         <p className="text-slate-500 text-sm max-w-sm sm:max-w-none mx-auto font-medium text-center">
           {isError
-            ? "ระบบไม่สามารถดึงรายชื่อทีมจากฐานข้อมูลได้ในขณะนี้ กรุณารีเฟรชหน้าจอหรือติดต่อฝ่ายเทคนิค"
-            : "การแบ่งทีมช่วยให้คุณจัดการลีดและมอบหมายงานให้พนักงานเฉพาะกลุ่มได้อย่างรวดเร็วและเป็นระเบียบ"}
+            ? (isEn 
+                ? "Unable to fetch team list from database. Please refresh or contact support." 
+                : "ระบบไม่สามารถดึงรายชื่อทีมจากฐานข้อมูลได้ในขณะนี้ กรุณารีเฟรชหน้าจอหรือติดต่อฝ่ายเทคนิค")
+            : (isEn 
+                ? "Organizing into teams allows efficient lead distribution and grouped performance tracking." 
+                : "การแบ่งทีมช่วยให้คุณจัดการลีดและมอบหมายงานให้พนักงานเฉพาะกลุ่มได้อย่างรวดเร็วและเป็นระเบียบ")}
         </p>
       </div>
       {!isError && (
@@ -422,7 +440,7 @@ function EmptyState({
           className="bg-slate-900 hover:bg-slate-800 text-white rounded-2xl px-10 h-14 font-semibold shadow-xl shadow-slate-200 transition-all hover:scale-105 active:scale-95"
         >
           <Plus className="h-5 w-5 mr-3" />
-          เริ่มสร้างทีมแรกของสาขานี้
+          {isEn ? "Create First Team in Branch" : "เริ่มสร้างทีมแรกของสาขานี้"}
         </Button>
       )}
       {isError && (
@@ -431,7 +449,7 @@ function EmptyState({
           variant="outline"
           className="border-slate-200 text-slate-600 rounded-2xl px-10 h-14 font-semibold hover:bg-slate-50 transition-all"
         >
-          ลองใหม่อีกครั้ง (Retry)
+          {isEn ? "Try Again (Retry)" : "ลองใหม่อีกครั้ง (Retry)"}
         </Button>
       )}
     </m.div>
@@ -449,3 +467,4 @@ function EmptyState({
 
   return content;
 }
+
