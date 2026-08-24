@@ -368,11 +368,14 @@ export function PropertiesTable({
     try {
       const result = await bulkDeletePropertiesAction(ids);
       if (result.success) {
-        finishProcess(processId, "SUCCESS", result.message);
+        const successMsg = isEn
+          ? `Successfully moved ${result.count || ids.length} properties to trash`
+          : (result.message || `ย้ายทรัพย์ลงถังขยะสำเร็จ ${ids.length} รายการ`);
+        finishProcess(processId, "SUCCESS", successMsg);
         clearSelection();
         handleSuccessFeedback();
       } else {
-        finishProcess(processId, "ERROR", result.message || (isEn ? "Error deleting properties" : "เกิดข้อผิดพลาดในการลบ"));
+        finishProcess(processId, "ERROR", isEn ? (result.message ? "Failed to delete properties" : "Error deleting properties") : (result.message || "เกิดข้อผิดพลาดในการลบ"));
         throw new Error(result.message || (isEn ? "Error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (err: unknown) {
@@ -392,11 +395,14 @@ export function PropertiesTable({
     try {
       const result = await bulkApproveAiReviewAction(ids);
       if (result.success) {
-        finishProcess(processId, "SUCCESS", result.message);
+        const successMsg = isEn
+          ? `Successfully approved AI drafts for ${result.count || ids.length} properties`
+          : (result.message || `ยืนยันข้อมูล AI สำเร็จ ${ids.length} รายการ`);
+        finishProcess(processId, "SUCCESS", successMsg);
         clearSelection();
         handleSuccessFeedback();
       } else {
-        finishProcess(processId, "ERROR", result.message || (isEn ? "Error approving AI data" : "เกิดข้อผิดพลาด"));
+        finishProcess(processId, "ERROR", isEn ? "Error approving AI data" : (result.message || "เกิดข้อผิดพลาด"));
         throw new Error(result.message || (isEn ? "Error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (err: unknown) {
@@ -416,11 +422,14 @@ export function PropertiesTable({
     try {
       const result = await bulkMovePropertiesToTenantAction(ids);
       if (result.success) {
-        finishProcess(processId, "SUCCESS", result.message);
+        const successMsg = isEn
+          ? `Successfully pulled ${result.count || ids.length} properties to your branch`
+          : (result.message || `ดึงทรัพย์มายังสาขาสำเร็จ ${ids.length} รายการ`);
+        finishProcess(processId, "SUCCESS", successMsg);
         clearSelection();
         handleSuccessFeedback();
       } else {
-        finishProcess(processId, "ERROR", result.message || (isEn ? "Error pulling properties" : "เกิดข้อผิดพลาด"));
+        finishProcess(processId, "ERROR", isEn ? "Error pulling properties" : (result.message || "เกิดข้อผิดพลาด"));
         throw new Error(result.message || (isEn ? "Error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (err: unknown) {

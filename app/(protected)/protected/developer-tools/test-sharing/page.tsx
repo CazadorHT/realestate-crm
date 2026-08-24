@@ -17,15 +17,18 @@ import {
 import { Search, ArrowLeftRight, UserCheck, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useTenant } from "@/components/providers/TenantProvider";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export default function CrossBranchTestPage() {
   const { activeTenant } = useTenant();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [phone, setPhone] = useState("");
   const [searchResult, setSearchResult] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = async () => {
-    if (!phone) return toast.error("กรุณากรอกเบอร์โทรศัพท์");
+    if (!phone) return toast.error(isEn ? "Please enter a phone number" : "กรุณากรอกเบอร์โทรศัพท์");
 
     setIsSearching(true);
     try {
@@ -33,15 +36,15 @@ export default function CrossBranchTestPage() {
       if (result.success) {
         setSearchResult(result.data);
         if (result.data.found) {
-          toast.warning("พบข้อมูลลูกค้าในระบบส่วนกลาง!");
+          toast.warning(isEn ? "Customer found in central database!" : "พบข้อมูลลูกค้าในระบบส่วนกลาง!");
         } else {
-          toast.success("ไม่พบข้อมูลซ้ำ สามารถสร้างลีดใหม่ได้");
+          toast.success(isEn ? "No duplicate found. Safe to create a new lead." : "ไม่พบข้อมูลซ้ำ สามารถสร้างลีดใหม่ได้");
         }
       } else {
-        toast.error(result.error || "เกิดข้อผิดพลาด");
+        toast.error(result.error || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (error) {
-      toast.error("ล้มเหลวในการตรวจสอบ");
+      toast.error(isEn ? "Verification failed" : "ล้มเหลวในการตรวจสอบ");
     } finally {
       setIsSearching(false);
     }
@@ -51,10 +54,12 @@ export default function CrossBranchTestPage() {
     <div className="container max-w-4xl py-10 space-y-8">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">
-          ระบบแชร์ข้อมูลข้ามสาขา (Cross-Branch)
+          {isEn ? "Cross-Branch Data Sharing" : "ระบบแชร์ข้อมูลข้ามสาขา (Cross-Branch)"}
         </h1>
         <p className="text-muted-foreground">
-          ทดสอบระบบตรวจสอบลูกค้าซ้ำข้ามสาขา และระบบส่งต่อลีด
+          {isEn
+            ? "Test cross-branch customer duplication checks and lead referral workflows"
+            : "ทดสอบระบบตรวจสอบลูกค้าซ้ำข้ามสาขา และระบบส่งต่อลีด"}
         </p>
       </div>
 
@@ -64,21 +69,23 @@ export default function CrossBranchTestPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-primary">
               <Search className="h-5 w-5" />
-              1. ตรวจสอบลูกค้าข้ามสาขา
+              {isEn ? "1. Cross-Branch Lead Check" : "1. ตรวจสอบลูกค้าข้ามสาขา"}
             </CardTitle>
             <CardDescription>
-              เช็คเบอร์โทรลูกค้าจากคลังข้อมูลทุกสาขา
+              {isEn
+                ? "Verify customer phone number against all branch databases"
+                : "เช็คเบอร์โทรลูกค้าจากคลังข้อมูลทุกสาขา"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-2">
               <Input
-                placeholder="กรอกเบอร์โทรศัพท์..."
+                placeholder={isEn ? "Enter phone number..." : "กรอกเบอร์โทรศัพท์..."}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
-              <Button onClick={handleSearch} disabled={isSearching}>
-                {isSearching ? "กำลังเช็ค..." : "ตรวจสอบ"}
+              <Button onClick={handleSearch} disabled={isSearching} className="cursor-pointer">
+                {isSearching ? (isEn ? "Checking..." : "กำลังเช็ค...") : (isEn ? "Check" : "ตรวจสอบ")}
               </Button>
             </div>
 
@@ -86,22 +93,24 @@ export default function CrossBranchTestPage() {
               <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 space-y-2 animate-in fade-in slide-in-from-top-2">
                 <div className="flex items-center gap-2 text-amber-800 font-semibold">
                   <AlertCircle className="h-4 w-4" />
-                  พบลูกค้าซ้ำ!
+                  {isEn ? "Duplicate Customer Found!" : "พบลูกค้าซ้ำ!"}
                 </div>
                 <div className="text-sm text-amber-700">
                   <p>
-                    <strong>ชื่อ (Masked):</strong> {searchResult.maskedName}
+                    <strong>{isEn ? "Name (Masked):" : "ชื่อ (Masked):"}</strong> {searchResult.maskedName}
                   </p>
                   <p>
-                    <strong>อยู่สาขา:</strong> {searchResult.branchName}
+                    <strong>{isEn ? "Branch:" : "อยู่สาขา:"}</strong> {searchResult.branchName}
                   </p>
                   <p>
-                    <strong>ผู้ดูแล:</strong>{" "}
-                    {searchResult.agentName || "ยังไม่ได้มอบหมาย"}
+                    <strong>{isEn ? "Assigned Agent:" : "ผู้ดูแล:"}</strong>{" "}
+                    {searchResult.agentName || (isEn ? "Unassigned" : "ยังไม่ได้มอบหมาย")}
                   </p>
                 </div>
                 <p className="text-xs text-amber-600 italic">
-                  * ข้อมูลชื่อถูกซ่อนบางส่วนเพื่อความเป็นส่วนตัวตาม PDPA
+                  {isEn
+                    ? "* Customer names are partially masked for privacy under PDPA regulations"
+                    : "* ข้อมูลชื่อถูกซ่อนบางส่วนเพื่อความเป็นส่วนตัวตาม PDPA"}
                 </p>
               </div>
             )}
@@ -109,7 +118,7 @@ export default function CrossBranchTestPage() {
             {searchResult && !searchResult.found && (
               <div className="p-4 rounded-lg bg-green-50 border border-green-200 flex items-center gap-2 text-green-800 animate-in fade-in">
                 <UserCheck className="h-4 w-4" />
-                เบอร์นี้ยังไม่มีในระบบส่วนกลาง (ปลอดภัย)
+                {isEn ? "This number does not exist in central DB (Safe to proceed)" : "เบอร์นี้ยังไม่มีในระบบส่วนกลาง (ปลอดภัย)"}
               </div>
             )}
           </CardContent>
@@ -120,10 +129,10 @@ export default function CrossBranchTestPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-accent-foreground">
               <ArrowLeftRight className="h-5 w-5" />
-              2. ส่งต่อลีดข้ามสาขา (Concept)
+              {isEn ? "2. Cross-Branch Lead Referral (Concept)" : "2. ส่งต่อลีดข้ามสาขา (Concept)"}
             </CardTitle>
             <CardDescription>
-              ส่งต่อข้อมูลลูกค้าให้สาขาที่ใกล้เคียงดูแล
+              {isEn ? "Refer customer leads to appropriate regional branches" : "ส่งต่อข้อมูลลูกค้าให้สาขาที่ใกล้เคียงดูแล"}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center py-8 text-center space-y-4">
@@ -131,10 +140,9 @@ export default function CrossBranchTestPage() {
               <ArrowLeftRight className="h-6 w-6 text-accent" />
             </div>
             <p className="text-sm text-muted-foreground px-4">
-              ระบบกำลังพัฒนา UI สำหรับกดส่งต่อแบบ 100% แต่ตอนนีคุณสามารถใช้
-              Action{" "}
-              <code className="bg-muted px-1">requestLeadTransferAction</code>
-              ผ่านโค้ดได้แล้วครับ
+              {isEn
+                ? "UI for 1-click lead referral is in active development. You can now use the requestLeadTransferAction programmatically."
+                : "ระบบกำลังพัฒนา UI สำหรับกดส่งต่อแบบ 100% แต่ตอนนีคุณสามารถใช้ Action requestLeadTransferAction ผ่านโค้ดได้แล้วครับ"}
             </p>
             <Button variant="outline" disabled>
               Coming Soon
@@ -145,19 +153,21 @@ export default function CrossBranchTestPage() {
 
       <Card className="bg-slate-50">
         <CardContent className="p-6">
-          <h3 className="font-semibold mb-2">💡 ทำไมต้องมีระบบนี้?</h3>
+          <h3 className="font-semibold mb-2">
+            {isEn ? "💡 Why Cross-Branch Sharing?" : "💡 ทำไมต้องมีระบบนี้?"}
+          </h3>
           <ul className="text-sm space-y-1 text-slate-600 list-disc list-inside">
             <li>
-              <strong>ป้องกันพนักงานแย่งเคส:</strong> ถ้ารู้ว่ามีคนดูแลอยู่แล้ว
-              จะได้ประสานงานกันแทน
+              <strong>{isEn ? "Prevent lead collision: " : "ป้องกันพนักงานแย่งเคส: "}</strong>
+              {isEn ? "Coordinate when an agent is already in contact with the client." : "ถ้ารู้ว่ามีคนดูแลอยู่แล้ว จะได้ประสานงานกันแทน"}
             </li>
             <li>
-              <strong>Data Privacy:</strong> โชว์ข้อมูลแค่บางส่วน (S***i)
-              เพื่อให้รู้ว่าซ้ำแต่ไม่ละเมิดสิทธิ์
+              <strong>Data Privacy: </strong>
+              {isEn ? "Masks sensitive identifiers (e.g. S***i) to preserve confidentiality." : "โชว์ข้อมูลแค่บางส่วน (S***i) เพื่อให้รู้ว่าซ้ำแต่ไม่ละเมิดสิทธิ์"}
             </li>
             <li>
-              <strong>Collaboration:</strong>{" "}
-              สาขากรุงเทพสามารถส่งเคสให้สาขาภูเก็ตดูแลได้ผ่านระบบ
+              <strong>Collaboration: </strong>
+              {isEn ? "Allows Bangkok teams to seamlessly refer Phuket inquiries." : "สาขากรุงเทพสามารถส่งเคสให้สาขาภูเก็ตดูแลได้ผ่านระบบ"}
             </li>
           </ul>
         </CardContent>

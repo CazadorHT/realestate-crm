@@ -52,3 +52,21 @@ describe("getDealDiff - Thai Semantic Localization", () => {
     expect(diff).toHaveLength(0);
   });
 });
+
+describe("getDealDiff - English Semantic Localization", () => {
+  it("should handle status changes in English", () => {
+    const oldData = { status: "NEGOTIATING" as any };
+    const newData = { status: "CLOSED_WIN" as any };
+    const diff = getDealDiff(oldData, newData, true);
+
+    expect(diff).toContain('Changed status from "Negotiating" to "Closed (Won)"');
+  });
+
+  it("should handle commission changes in English", () => {
+    const oldData = { commission_total: 50000 };
+    const newData = { commission_total: 75000 };
+    const diff = getDealDiff(oldData, newData, true);
+
+    expect(diff[0]).toContain("Increased commission total from ฿50,000.00 to ฿75,000.00");
+  });
+});

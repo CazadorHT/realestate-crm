@@ -9,15 +9,17 @@ const thaiCurrency = new Intl.NumberFormat("th-TH", {
   minimumFractionDigits: 2,
 });
 
-const formatBaht = (amount: number | null | undefined) => {
-  if (amount === null || amount === undefined || amount === 0) return "ไม่ระบุ";
-  return thaiCurrency.format(amount).replace("฿", "") + " บาท";
+const formatBaht = (amount: number | null | undefined, isEn: boolean = false) => {
+  if (amount === null || amount === undefined || amount === 0) return isEn ? "Not specified" : "ไม่ระบุ";
+  return isEn
+    ? `฿${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : thaiCurrency.format(amount).replace("฿", "") + " บาท";
 };
 
 /**
- * Human-readable status translations (High-quality Thai)
+ * Human-readable status translations (High-quality Thai & English)
  */
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS_TH: Record<string, string> = {
   NEGOTIATING: "กำลังเจรจาระหว่างรอปิดการขาย",
   SIGNED: "เซ็นสัญญาเรียบร้อยแล้ว",
   CANCELLED: "ยกเลิกดีล",
@@ -25,27 +27,48 @@ const STATUS_LABELS: Record<string, string> = {
   CLOSED_LOSS: "ปิดดีลไม่สำเร็จ (เสียดีล)",
 };
 
-const TYPE_LABELS: Record<string, string> = {
+const STATUS_LABELS_EN: Record<string, string> = {
+  NEGOTIATING: "Negotiating",
+  SIGNED: "Signed Contract",
+  CANCELLED: "Cancelled",
+  CLOSED_WIN: "Closed (Won)",
+  CLOSED_LOSS: "Closed (Lost)",
+};
+
+const TYPE_LABELS_TH: Record<string, string> = {
   RENT: "เช่า",
   SALE: "ขาย",
 };
 
+const TYPE_LABELS_EN: Record<string, string> = {
+  RENT: "Rent",
+  SALE: "Sale",
+};
+
 /**
- * Thai Semantic Diffing for Deals
+ * Semantic Diffing for Deals (Bilingual EN/TH)
  */
 export function getDealDiff(
   oldData: Partial<Deal>,
   newData: Partial<Deal>,
+  isEn: boolean = false,
 ): string[] {
   const changes: string[] = [];
+  const statusLabels = isEn ? STATUS_LABELS_EN : STATUS_LABELS_TH;
+  const typeLabels = isEn ? TYPE_LABELS_EN : TYPE_LABELS_TH;
+  const notSpecified = isEn ? "Not specified" : "ไม่ระบุ";
 
   // 1. Status Change
   if (newData.status && newData.status !== oldData.status) {
     const oldStatus = oldData.status
-      ? STATUS_LABELS[oldData.status] || oldData.status
-      : "ไม่ระบุ";
-    const newStatus = STATUS_LABELS[newData.status] || newData.status;
-    changes.push(`เปลี่ยนสถานะจาก "${oldStatus}" เป็น "${newStatus}"`);
+      ? statusLabels[oldData.status] || oldData.status
+      : notSpecified;
+    const newStatus = statusLabels[newData.status] || newData.status;
+    changes.push(
+      isEn
+        ? `Changed status from "${oldStatus}" to "${newStatus}"`
+        : `เปลี่ยนสถานะจาก "${oldStatus}" เป็น "${newStatus}"`
+    );
   }
 
   // 2. Commission Amount
@@ -57,14 +80,22 @@ export function getDealDiff(
     const newAmt = newData.commission_total || 0;
 
     if (oldAmt === 0 && newAmt > 0) {
-      changes.push(`ระบุยอดคอมมิชชั่นเป็น ${formatBaht(newAmt)}`);
+      changes.push(
+        isEn
+          ? `Set commission total to ${formatBaht(newAmt, isEn)}`
+          : `ระบุยอดคอมมิชชั่นเป็น ${formatBaht(newAmt, isEn)}`
+      );
     } else if (newAmt > oldAmt) {
       changes.push(
-        `ราคาคอมมิชชั่นเพิ่มขึ้นจาก ${formatBaht(oldAmt)} เป็น ${formatBaht(newAmt)}`,
+        isEn
+          ? `Increased commission total from ${formatBaht(oldAmt, isEn)} to ${formatBaht(newAmt, isEn)}`
+          : `ราคาคอมมิชชั่นเพิ่มขึ้นจาก ${formatBaht(oldAmt, isEn)} เป็น ${formatBaht(newAmt, isEn)}`
       );
     } else {
       changes.push(
-        `ปรับลดราคาคอมมิชชั่นจาก ${formatBaht(oldAmt)} เป็น ${formatBaht(newAmt)}`,
+        isEn
+          ? `Reduced commission total from ${formatBaht(oldAmt, isEn)} to ${formatBaht(newAmt, isEn)}`
+          : `ปรับลดราคาคอมมิชชั่นจาก ${formatBaht(oldAmt, isEn)} เป็น ${formatBaht(newAmt, isEn)}`
       );
     }
   }
@@ -72,24 +103,34 @@ export function getDealDiff(
   // 3. Deal Type
   if (newData.deal_type && newData.deal_type !== oldData.deal_type) {
     const oldType = oldData.deal_type
-      ? TYPE_LABELS[oldData.deal_type] || oldData.deal_type
-      : "ไม่ระบุ";
-    const newType = TYPE_LABELS[newData.deal_type] || newData.deal_type;
-    changes.push(`เปลี่ยนประเภทดีลจาก "${oldType}" เป็น "${newType}"`);
+      ? typeLabels[oldData.deal_type] || oldData.deal_type
+      : notSpecified;
+    const newType = typeLabels[newData.deal_type] || newData.deal_type;
+    changes.push(
+      isEn
+        ? `Changed deal type from "${oldType}" to "${newType}"`
+        : `เปลี่ยนประเภทดีลจาก "${oldType}" เป็น "${newType}"`
+    );
   }
 
   // 4. Property Change
   if (newData.property_id && newData.property_id !== oldData.property_id) {
-    changes.push("เปลี่ยนทรัพย์สินที่ผูกกับดีล");
+    changes.push(isEn ? "Changed linked property" : "เปลี่ยนทรัพย์สินที่ผูกกับดีล");
   }
 
   // 5. Co-agent
   if (newData.co_agent_name !== oldData.co_agent_name) {
     if (!oldData.co_agent_name && newData.co_agent_name) {
-      changes.push(`ระบุ Co-agent เป็น "${newData.co_agent_name}"`);
+      changes.push(
+        isEn
+          ? `Assigned Co-agent "${newData.co_agent_name}"`
+          : `ระบุ Co-agent เป็น "${newData.co_agent_name}"`
+      );
     } else {
       changes.push(
-        `แก้ไขชื่อ Co-agent เป็น "${newData.co_agent_name || "ไม่ระบุ"}"`,
+        isEn
+          ? `Updated Co-agent name to "${newData.co_agent_name || notSpecified}"`
+          : `แก้ไขชื่อ Co-agent เป็น "${newData.co_agent_name || notSpecified}"`
       );
     }
   }
@@ -98,11 +139,12 @@ export function getDealDiff(
 }
 
 /**
- * Thai Semantic Diffing for Commissions
+ * Semantic Diffing for Commissions (Bilingual EN/TH)
  */
 export function getCommissionDiff(
   oldData: Partial<DealCommission>,
   newData: Partial<DealCommission>,
+  isEn: boolean = false,
 ): string[] {
   const changes: string[] = [];
 
@@ -111,12 +153,18 @@ export function getCommissionDiff(
     newData.net_amount !== oldData.net_amount
   ) {
     changes.push(
-      `ปรับยอดคอมมิชชั่นสุทธิจาก ${formatBaht(oldData.net_amount)} เป็น ${formatBaht(newData.net_amount)}`,
+      isEn
+        ? `Updated net commission from ${formatBaht(oldData.net_amount, isEn)} to ${formatBaht(newData.net_amount, isEn)}`
+        : `ปรับยอดคอมมิชชั่นสุทธิจาก ${formatBaht(oldData.net_amount, isEn)} เป็น ${formatBaht(newData.net_amount, isEn)}`
     );
   }
 
   if (newData.status && newData.status !== oldData.status) {
-    changes.push(`เปลี่ยนสถานะคอมมิชชั่นเป็น "${newData.status}"`);
+    changes.push(
+      isEn
+        ? `Changed commission status to "${newData.status}"`
+        : `เปลี่ยนสถานะคอมมิชชั่นเป็น "${newData.status}"`
+    );
   }
 
   return changes;

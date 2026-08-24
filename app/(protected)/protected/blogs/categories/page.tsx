@@ -11,7 +11,11 @@ import {
 } from "@/features/blog/components/CategoryStats";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
+import { getServerTranslations } from "@/lib/i18n";
+
 export default async function CategoriesPage() {
+  const { language } = await getServerTranslations();
+  const isEn = language === "en";
   const { data: categories } = await getCategoriesAction();
   const posts = await getAllBlogPosts();
 
@@ -23,9 +27,9 @@ export default async function CategoriesPage() {
            <Breadcrumb
                   backHref={`/protected/blogs`}
                   items={[
-                    { label: "บทความ", href: "/protected/blogs" },
+                    { label: isEn ? "Blog Posts" : "บทความ", href: "/protected/blogs" },
                     {
-                      label: "จัดการหมวดหมู่",
+                      label: isEn ? "Manage Categories" : "จัดการหมวดหมู่",
                       href: `/protected/blogs/categories`,
                     },
                   ]}
@@ -39,9 +43,11 @@ export default async function CategoriesPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              จัดการหมวดหมู่
+              {isEn ? "Manage Categories" : "จัดการหมวดหมู่"}
             </h1>
-            <p className="text-slate-500 mt-2">สร้างและจัดการหมวดหมู่บทความ</p>
+            <p className="text-slate-500 mt-2">
+              {isEn ? "Create and organize blog article categories" : "สร้างและจัดการหมวดหมู่บทความ"}
+            </p>
           </div>
         </div>
       </div>
@@ -55,7 +61,7 @@ export default async function CategoriesPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>จัดการหมวดหมู่</CardTitle>
+              <CardTitle>{isEn ? "Category Management" : "จัดการหมวดหมู่"}</CardTitle>
             </CardHeader>
             <CardContent>
               <CategoryManager initialCategories={categories || []} />

@@ -6,12 +6,15 @@ import { toast } from "sonner";
 import { PropertyFormValues } from "@/features/properties/schema";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const isNonEmptyString = (val: any): boolean => {
   return typeof val === "string" && val.trim() !== "" && val !== "<p></p>";
 };
 
 export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues>) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formOverride || formContext;
 
@@ -35,7 +38,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       (isNonEmptyString(currentRu) && currentRu);
 
     if (!sourceText) {
-      if (!silent) toast.error("กรุณากรอกชื่อทรัพย์ในช่องภาษาใดก็ได้ก่อนกดแปลครับ");
+      if (!silent) toast.error(isEn ? "Please enter a title in any language before translating." : "กรุณากรอกชื่อทรัพย์ในช่องภาษาใดก็ได้ก่อนกดแปลครับ");
       return;
     }
 
@@ -45,12 +48,16 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     const hasRu = isNonEmptyString(currentRu);
 
     if (!force && hasTh && hasEn && hasCn && hasRu) {
-      if (!silent) toast.success("ชื่อทรัพย์แปลครบถ้วนแล้ว ✨");
+      if (!silent) toast.success(isEn ? "Title translation completed ✨" : "ชื่อทรัพย์แปลครบถ้วนแล้ว ✨");
       return;
     }
 
     setIsTranslating(true);
-    const processId = !silent ? startProcess(`แปลชื่อทรัพย์: ${sourceText}`, { type: "PROPERTY_TRANSLATION" }) : null;
+    const processId = !silent
+      ? startProcess(isEn ? `Translating title: ${sourceText}` : `แปลชื่อทรัพย์: ${sourceText}`, {
+          type: "PROPERTY_TRANSLATION",
+        })
+      : null;
 
     try {
       const result = await translateTextAction(sourceText, "plain");
@@ -86,11 +93,11 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
           });
         }
       }
-      if (processId) finishProcess(processId, "SUCCESS", "แปลชื่อทรัพย์เรียบร้อยแล้ว ✨");
+      if (processId) finishProcess(processId, "SUCCESS", isEn ? "Title translated successfully ✨" : "แปลชื่อทรัพย์เรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      const msg = error instanceof Error ? error.message : (isEn ? "Translation failed" : "การแปลขัดข้อง");
       if (processId) finishProcess(processId, "ERROR", msg);
       return false;
     } finally {
@@ -112,7 +119,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       (isNonEmptyString(currentRu) && currentRu);
 
     if (!sourceText) {
-      if (!silent) toast.error("กรุณากรอกคำบรรยายในช่องภาษาใดก็ได้ก่อนกดแปลครับ");
+      if (!silent) toast.error(isEn ? "Please enter a description in any language before translating." : "กรุณากรอกคำบรรยายในช่องภาษาใดก็ได้ก่อนกดแปลครับ");
       return;
     }
 
@@ -122,13 +129,13 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     const hasRu = isNonEmptyString(currentRu);
 
     if (!force && hasTh && hasEn && hasCn && hasRu) {
-      if (!silent) toast.success("คำบรรยายแปลครบถ้วนแล้ว ✨");
+      if (!silent) toast.success(isEn ? "Description translation completed ✨" : "คำบรรยายแปลครบถ้วนแล้ว ✨");
       return;
     }
 
     setIsTranslating(true);
     const processId = !silent
-      ? startProcess("แปลคำบรรยายทรัพย์ (HTML)", {
+      ? startProcess(isEn ? "Translating property description (HTML)" : "แปลคำบรรยายทรัพย์ (HTML)", {
           type: "PROPERTY_TRANSLATION",
         })
       : null;
@@ -168,11 +175,11 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
         }
       }
       if (processId)
-        finishProcess(processId, "SUCCESS", "แปลคำบรรยายเรียบร้อยแล้ว ✨");
+        finishProcess(processId, "SUCCESS", isEn ? "Description translated successfully ✨" : "แปลคำบรรยายเรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      const msg = error instanceof Error ? error.message : (isEn ? "Translation failed" : "การแปลขัดข้อง");
       if (processId) finishProcess(processId, "ERROR", msg);
       return false;
     } finally {
@@ -187,8 +194,8 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     const processId = !silent
       ? startProcess(
           currentDesc && currentDesc.trim() !== "" && currentDesc !== "<p></p>"
-            ? "AI กำลังนำคำบรรยายเดิมมาเกลาใหม่..."
-            : "AI กำลังแต่งคำบรรยายทรัพย์...",
+            ? (isEn ? "AI is refining description..." : "AI กำลังนำคำบรรยายเดิมมาเกลาใหม่...")
+            : (isEn ? "AI is drafting property description..." : "AI กำลังแต่งคำบรรยายทรัพย์..."),
           {
             type: "PROPERTY_TRANSLATION",
           }
@@ -215,13 +222,13 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
           processId,
           "SUCCESS",
           currentDesc && currentDesc.trim() !== "" && currentDesc !== "<p></p>"
-            ? "เกลาคำบรรยายภาษาไทยเรียบร้อย ✨"
-            : "แต่งคำบรรยายภาษาไทยเรียบร้อย ✨"
+            ? (isEn ? "Refined description successfully ✨" : "เกลาคำบรรยายภาษาไทยเรียบร้อย ✨")
+            : (isEn ? "Generated description successfully ✨" : "แต่งคำบรรยายภาษาไทยเรียบร้อย ✨")
         );
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "การแต่งคำบรรยายขัดข้อง";
+      const msg = error instanceof Error ? error.message : (isEn ? "Description generation failed" : "การแต่งคำบรรยายขัดข้อง");
       if (processId) finishProcess(processId, "ERROR", msg);
       if (!silent) toast.error(msg);
       return false;
@@ -251,7 +258,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       (t: any) => t.station_name && (force || !isNonEmptyString(t.station_name_en) || !isNonEmptyString(t.station_name_cn) || !isNonEmptyString(t.station_name_ru)),
     );
     if (!force && needsTranslation.length === 0) {
-      if (!silent) toast.success("ข้อมูลสถานีรถไฟฟ้าแปลครบถ้วนแล้ว ✨");
+      if (!silent) toast.success(isEn ? "Transit info translated completely ✨" : "ข้อมูลสถานีรถไฟฟ้าแปลครบถ้วนแล้ว ✨");
       return;
     }
 
@@ -280,12 +287,14 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       form.setValue("nearby_transits", updatedTransits, { shouldDirty: true });
       if (!silent)
         toast.success(
-          `แปลข้อมูลสถานีรถไฟฟ้าเรียบร้อยแล้ว ${results.length} รายการ ✨`,
+          isEn
+            ? `Translated ${results.length} transit stations ✨`
+            : `แปลข้อมูลสถานีรถไฟฟ้าเรียบร้อยแล้ว ${results.length} รายการ ✨`,
         );
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error) {
-      if (!silent) toast.error("การแปลสถานีรถไฟฟ้าขัดข้อง");
+      if (!silent) toast.error(isEn ? "Transit translation failed" : "การแปลสถานีรถไฟฟ้าขัดข้อง");
       return false;
     } finally {
       setIsTranslating(false);
@@ -313,7 +322,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       (p: any) => p.name && (force || !isNonEmptyString(p.name_en) || !isNonEmptyString(p.name_cn) || !isNonEmptyString(p.name_ru)),
     );
     if (!force && needsTranslation.length === 0) {
-      if (!silent) toast.success("ข้อมูลสถานที่ใกล้เคียงแปลครบถ้วนแล้ว ✨");
+      if (!silent) toast.success(isEn ? "Nearby places translated completely ✨" : "ข้อมูลสถานที่ใกล้เคียงแปลครบถ้วนแล้ว ✨");
       return;
     }
 
@@ -341,12 +350,14 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       form.setValue("nearby_places", updatedPlaces, { shouldDirty: true });
       if (!silent)
         toast.success(
-          `แปลข้อมูลสถานที่ใกล้เคียงเรียบร้อยแล้ว ${results.length} รายการ ✨`,
+          isEn
+            ? `Translated ${results.length} nearby places ✨`
+            : `แปลข้อมูลสถานที่ใกล้เคียงเรียบร้อยแล้ว ${results.length} รายการ ✨`,
         );
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error) {
-      if (!silent) toast.error("การแปลสถานที่ใกล้เคียงขัดข้อง");
+      if (!silent) toast.error(isEn ? "Nearby place translation failed" : "การแปลสถานที่ใกล้เคียงขัดข้อง");
       return false;
     } finally {
       setIsTranslating(false);
@@ -357,7 +368,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   const translateAddress = async (silent = false, force = false) => {
     const address = form.getValues("address_line1");
     if (typeof address !== "string" || !address.trim()) {
-      if (!silent) toast.error("กรุณากรอกที่อยู่ภาษาไทยก่อนกดแปลครับ");
+      if (!silent) toast.error(isEn ? "Please enter an address before translating." : "กรุณากรอกที่อยู่ภาษาไทยก่อนกดแปลครับ");
       return;
     }
 
@@ -370,12 +381,12 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     const hasRu = isNonEmptyString(currentRu);
 
     if (!force && hasEn && hasCn && hasRu) {
-      if (!silent) toast.success("ที่อยู่แปลครบถ้วนแล้ว ✨");
+      if (!silent) toast.success(isEn ? "Address translated completely ✨" : "ที่อยู่แปลครบถ้วนแล้ว ✨");
       return;
     }
 
     setIsTranslating(true);
-    const processId = !silent ? startProcess("แปลที่อยู่ทรัพย์", { type: "PROPERTY_TRANSLATION" }) : null;
+    const processId = !silent ? startProcess(isEn ? "Translating address" : "แปลที่อยู่ทรัพย์", { type: "PROPERTY_TRANSLATION" }) : null;
 
     try {
       const result = await translateTextAction(address, "plain");
@@ -397,11 +408,11 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
           shouldTouch: true,
         });
       }
-      if (processId) finishProcess(processId, "SUCCESS", "แปลที่อยู่เรียบร้อยแล้ว ✨");
+      if (processId) finishProcess(processId, "SUCCESS", isEn ? "Address translated successfully ✨" : "แปลที่อยู่เรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      const msg = error instanceof Error ? error.message : (isEn ? "Address translation failed" : "การแปลขัดข้อง");
       if (processId) finishProcess(processId, "ERROR", msg);
       return false;
     } finally {
@@ -442,7 +453,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   const translateAll = async () => {
     setIsTranslatingAll(true);
     const processId = startProcess(
-      "แปลข้อมูลทรัพย์สินทั้งหมด (AI Auto-Translate)",
+      isEn ? "Translating all property details (AI Auto-Translate)" : "แปลข้อมูลทรัพย์สินทั้งหมด (AI Auto-Translate)",
       {
         type: "PROPERTY_TRANSLATION",
         onRetry: translateAll,
@@ -450,7 +461,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     );
 
     try {
-      finishProcess(processId, "PROCESSING", "กำลังเริ่มแปลข้อมูลทุกส่วน...");
+      finishProcess(processId, "PROCESSING", isEn ? "Starting multi-field translation..." : "กำลังเริ่มแปลข้อมูลทุกส่วน...");
 
       // Run sequentially with force = false to protect already translated fields
       await translateTitle(true, false);
@@ -460,9 +471,9 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       await translateTransits(true, false);
       await translatePlaces(true, false);
 
-      finishProcess(processId, "SUCCESS", "แปลข้อมูลครบทุกส่วนเรียบร้อยแล้ว! ✨");
+      finishProcess(processId, "SUCCESS", isEn ? "All property fields translated successfully! ✨" : "แปลข้อมูลครบทุกส่วนเรียบร้อยแล้ว! ✨");
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      const msg = error instanceof Error ? error.message : (isEn ? "Translation failed" : "การแปลขัดข้อง");
       finishProcess(processId, "ERROR", msg);
     } finally {
       setIsTranslatingAll(false);
@@ -471,32 +482,32 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
 
   const generateAndTranslateAll = async () => {
     setIsTranslatingAll(true);
-    const processId = startProcess("AI Writer: กำลังแต่งคำบรรยายทุกภาษา...", {
+    const processId = startProcess(isEn ? "AI Writer: Generating descriptions in all languages..." : "AI Writer: กำลังแต่งคำบรรยายทุกภาษา...", {
       type: "PROPERTY_TRANSLATION",
       onRetry: generateAndTranslateAll,
     });
 
     try {
-      finishProcess(processId, "PROCESSING", "กำลังเริ่มแต่งคำบรรยาย...");
+      finishProcess(processId, "PROCESSING", isEn ? "Starting description generation..." : "กำลังเริ่มแต่งคำบรรยาย...");
       // 1. Generate TH
       const success = await generateDescription(true);
-      if (!success) throw new Error("ไม่สามารถแต่งคำบรรยายภาษาไทยได้");
+      if (!success) throw new Error(isEn ? "Failed to draft description" : "ไม่สามารถแต่งคำบรรยายภาษาไทยได้");
 
       // 2. Translate to others
       finishProcess(
         processId,
         "PROCESSING",
-        "แต่งภาษาไทยสำเร็จ กำลังแปลเป็นภาษาอื่น...",
+        isEn ? "Draft generated. Translating to other languages..." : "แต่งภาษาไทยสำเร็จ กำลังแปลเป็นภาษาอื่น...",
       );
       await translateDescription(true);
 
       finishProcess(
         processId,
         "SUCCESS",
-        "แต่งคำบรรยายครบทุกภาษาเรียบร้อยแล้ว! ✨",
+        isEn ? "Descriptions generated and translated in all languages! ✨" : "แต่งคำบรรยายครบทุกภาษาเรียบร้อยแล้ว! ✨",
       );
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "การทำงานขัดข้อง";
+      const msg = error instanceof Error ? error.message : (isEn ? "Operation failed" : "การทำงานขัดข้อง");
       finishProcess(processId, "ERROR", msg);
     } finally {
       setIsTranslatingAll(false);
