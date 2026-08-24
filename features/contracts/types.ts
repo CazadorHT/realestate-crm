@@ -15,6 +15,9 @@ export type RentalContractWithRelations = {
     property: {
       id: string;
       title: string;
+      title_en?: string | null;
+      project_name?: string | null;
+      project_name_en?: string | null;
       cover_image_url?: string | null;
     } | null;
     lead: {

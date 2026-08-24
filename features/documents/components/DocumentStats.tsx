@@ -2,14 +2,18 @@ import { FileText, HardDrive, File, Calendar, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
-import { DOC_TYPE_LABELS } from "../schema";
+import { th, enUS } from "date-fns/locale";
+import { DOC_TYPE_LABELS, DOC_TYPE_LABELS_EN } from "../schema";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface DocumentStatsProps {
   documents: any[];
 }
 
 export function DocumentStats({ documents }: DocumentStatsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const totalDocuments = documents?.length || 0;
   const totalSize =
     documents?.reduce((sum, doc) => sum + (doc.size_bytes || 0), 0) || 0;
@@ -39,60 +43,78 @@ export function DocumentStats({ documents }: DocumentStatsProps) {
     return `${bytes} B`;
   };
 
+  const docTypeDict = isEn ? DOC_TYPE_LABELS_EN : DOC_TYPE_LABELS;
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">เอกสารทั้งหมด</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {isEn ? "Total Documents" : "เอกสารทั้งหมด"}
+            </CardTitle>
             <FileText className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalDocuments}</div>
-            <p className="text-xs text-slate-500 mt-1">Total files</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {isEn ? "Total files" : "ไฟล์ทั้งหมด"}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ขนาดรวม</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {isEn ? "Total Storage" : "ขนาดรวม"}
+            </CardTitle>
             <HardDrive className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
               {formatSize(totalSize)}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Storage used</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {isEn ? "Storage used" : "พื้นที่ใช้งาน"}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ประเภทเอกสาร</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {isEn ? "Document Types" : "ประเภทเอกสาร"}
+            </CardTitle>
             <File className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
               {Object.keys(typeGroups).length}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Document types</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {isEn ? "Categories" : "หมวดหมู่เอกสาร"}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">อัพโหลดล่าสุด</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {isEn ? "Latest Upload" : "อัปโหลดล่าสุด"}
+            </CardTitle>
             <Calendar className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {documents && documents.length > 0
                 ? format(new Date(documents[0].created_at), "d MMM", {
-                    locale: th,
+                    locale: isEn ? enUS : th,
                   })
                 : "-"}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Latest upload</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {isEn ? "Latest activity" : "กิจกรรมล่าสุด"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -103,7 +125,7 @@ export function DocumentStats({ documents }: DocumentStatsProps) {
             <div className="flex items-center gap-2 mb-4">
               <Filter className="h-5 w-5 text-purple-600" />
               <h3 className="font-semibold text-slate-900">
-                ประเภทเอกสารยอดนิยม
+                {isEn ? "Top Document Types" : "ประเภทเอกสารยอดนิยม"}
               </h3>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -113,7 +135,7 @@ export function DocumentStats({ documents }: DocumentStatsProps) {
                   variant="outline"
                   className="bg-white border-purple-200 text-purple-700 font-medium"
                 >
-                  {DOC_TYPE_LABELS[type.toUpperCase()] || type}: {count}
+                  {docTypeDict[type.toUpperCase()] || type}: {count}
                 </Badge>
               ))}
             </div>

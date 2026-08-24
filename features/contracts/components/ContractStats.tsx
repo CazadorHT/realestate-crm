@@ -10,7 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getContractStatus } from "@/features/contracts/utils";
 import { RentalContractWithRelations } from "../types";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ContractStatsProps {
   contracts: RentalContractWithRelations[];

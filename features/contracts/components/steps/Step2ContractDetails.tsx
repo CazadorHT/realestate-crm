@@ -15,7 +15,7 @@ import { PriceInput } from "@/components/ui/price-input";
 import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 import { ContractFormInput } from "@/features/rental-contracts/schema";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface Step2Props {
   isSale: boolean;

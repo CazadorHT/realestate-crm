@@ -29,8 +29,10 @@ export async function getContracts({
       property:properties!crm_deals_v3_property_id_fkey (
         id,
         title,
+        title_en,
         main_image,
-        rental_price
+        rental_price,
+        project_id
       ),
       lead:crm_leads_v3!crm_deals_v3_lead_id_fkey (
         id,
@@ -98,10 +100,43 @@ export async function getContracts({
     return { data: [], count: 0, error };
   }
 
-  const mappedData: RentalContractWithRelations[] = (data || []).map((row: any) => {
+  const rawRows = (data || []) as any[];
+  const projectIds = Array.from(
+    new Set(rawRows.map((r) => r.property?.project_id).filter(Boolean)),
+  );
+
+  const projectMap = new Map<string, { th: string; en: string }>();
+  if (projectIds.length > 0) {
+    try {
+      const { data: projects } = await supabase
+        .from("projects")
+        .select("id, name")
+        .in("id", projectIds);
+
+      if (projects) {
+        projects.forEach((proj: any) => {
+          let thName = "";
+          let enName = "";
+          if (proj.name && typeof proj.name === "object") {
+            thName = proj.name.th || proj.name.en || "";
+            enName = proj.name.en || proj.name.th || "";
+          } else if (typeof proj.name === "string") {
+            thName = proj.name;
+            enName = proj.name;
+          }
+          projectMap.set(proj.id, { th: thName, en: enName });
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to fetch project names for contracts:", err);
+    }
+  }
+
+  const mappedData: RentalContractWithRelations[] = rawRows.map((row: any) => {
     const meta = (row.metadata || {}) as Record<string, any>;
     const leadData = row.lead;
     const identity = leadData?.identity;
+    const proj = row.property?.project_id ? projectMap.get(row.property.project_id) : null;
 
     return {
       id: row.id,
@@ -120,6 +155,9 @@ export async function getContracts({
         property: row.property ? { 
           id: row.property.id, 
           title: row.property.title, 
+          title_en: row.property.title_en || null,
+          project_name: proj?.th || proj?.en || null,
+          project_name_en: proj?.en || proj?.th || null,
           cover_image_url: row.property.main_image 
         } : null,
         lead: leadData ? {

@@ -188,7 +188,7 @@ export async function getAllDocuments(
     ownerIdsByType.PROPERTY.size > 0
       ? supabase
           .from("properties")
-          .select("id, title")
+          .select("id, title, title_en, project_id")
           .in("id", Array.from(ownerIdsByType.PROPERTY))
       : Promise.resolve({ data: [] }),
     ownerIdsByType.LEAD.size > 0
@@ -201,7 +201,7 @@ export async function getAllDocuments(
       ? supabase
           .from("deals")
           .select(
-            "id, deal_type, property:properties(title), lead:leads(id, full_name, email)",
+            "id, deal_type, property:properties(id, title, title_en, project_id), lead:leads(id, full_name, email)",
           )
           .in("id", Array.from(ownerIdsByType.DEAL))
       : Promise.resolve({ data: [] }),
@@ -209,17 +209,104 @@ export async function getAllDocuments(
       ? supabase
           .from("rental_contracts")
           .select(
-            "id, deal:deals(id, deal_type, property:properties(title), lead:leads(id, full_name, email))",
+            "id, deal:deals(id, deal_type, property:properties(id, title, title_en, project_id), lead:leads(id, full_name, email))",
           )
           .in("id", Array.from(ownerIdsByType.RENTAL_CONTRACT))
       : Promise.resolve({ data: [] }),
   ]);
 
+  // Collect all project IDs for single batch lookup
+  const projectIds = new Set<string>();
+  (properties.data || []).forEach((p: any) => {
+    if (p.project_id) projectIds.add(p.project_id);
+  });
+  (deals.data || []).forEach((d: any) => {
+    if (d.property?.project_id) projectIds.add(d.property.project_id);
+  });
+  (contracts.data || []).forEach((c: any) => {
+    if (c.deal?.property?.project_id) projectIds.add(c.deal.property.project_id);
+  });
+
+  const projectMap = new Map<string, { th: string; en: string }>();
+  if (projectIds.size > 0) {
+    try {
+      const { data: projectsData } = await supabase
+        .from("projects")
+        .select("id, name")
+        .in("id", Array.from(projectIds));
+
+      if (projectsData) {
+        projectsData.forEach((proj: any) => {
+          let thName = "";
+          let enName = "";
+          if (proj.name && typeof proj.name === "object") {
+            thName = proj.name.th || proj.name.en || "";
+            enName = proj.name.en || proj.name.th || "";
+          } else if (typeof proj.name === "string") {
+            thName = proj.name;
+            enName = proj.name;
+          }
+          projectMap.set(proj.id, { th: thName, en: enName });
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to fetch project names for documents:", err);
+    }
+  }
+
+  const enrichProperty = (p: any) => {
+    if (!p) return null;
+    const proj = p.project_id ? projectMap.get(p.project_id) : null;
+    return {
+      ...p,
+      title: p.title,
+      title_en: p.title_en || null,
+      project_name: proj?.th || proj?.en || null,
+      project_name_en: proj?.en || proj?.th || null,
+    };
+  };
+
+  const enrichLead = (l: any) => {
+    if (!l) return null;
+    return {
+      id: l.id,
+      full_name: decrypt(l.full_name) || l.full_name || null,
+      email: decrypt(l.email) || l.email || null,
+    };
+  };
+
   // Create lookup maps
-  const propMap = new Map(properties.data?.map((p) => [p.id, p]));
-  const leadMap = new Map(leads.data?.map((l) => [l.id, l]));
-  const dealMap = new Map(deals.data?.map((d) => [d.id, d]));
-  const contractMap = new Map(contracts.data?.map((c) => [c.id, c]));
+  const propMap = new Map(
+    (properties.data || []).map((p: any) => [p.id, enrichProperty(p)]),
+  );
+  const leadMap = new Map(
+    (leads.data || []).map((l: any) => [l.id, enrichLead(l)]),
+  );
+  const dealMap = new Map(
+    (deals.data || []).map((d: any) => [
+      d.id,
+      {
+        ...d,
+        property: enrichProperty(d.property),
+        lead: enrichLead(d.lead),
+      },
+    ]),
+  );
+  const contractMap = new Map(
+    (contracts.data || []).map((c: any) => [
+      c.id,
+      {
+        ...c,
+        deal: c.deal
+          ? {
+              ...c.deal,
+              property: enrichProperty(c.deal.property),
+              lead: enrichLead(c.deal.lead),
+            }
+          : null,
+      },
+    ]),
+  );
 
   // Map results back to docs
   const documentsWithOwners = rawDocs.map((doc) => {

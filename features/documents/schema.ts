@@ -27,7 +27,7 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
   OTHER: "อื่นๆ",
   RESERVATION_DOCUMENT: "ใบจองทรัพย์",
   RENT_RECEIPT: "ใบเสร็จค่าเช่า",
-  SLIP: "หลักฐานการโอน (Slip)",
+  SLIP: "หลักฐานการโอนเงิน",
 };
 
 export const DOC_TYPE_LABELS_EN: Record<string, string> = {

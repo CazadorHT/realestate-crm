@@ -7,12 +7,24 @@ export type DocumentWithRelations = {
   created_at: string;
   owner_type: string;
   owner_id: string;
-  property?: { id: string; title: string } | null;
+  property?: {
+    id?: string;
+    title: string;
+    title_en?: string | null;
+    project_name?: string | null;
+    project_name_en?: string | null;
+  } | null;
   lead?: { id: string; full_name: string | null; email: string | null } | null;
   deal?: {
     id: string;
     deal_type?: string | null;
-    property: { title: string } | null;
+    property: {
+      id?: string;
+      title: string;
+      title_en?: string | null;
+      project_name?: string | null;
+      project_name_en?: string | null;
+    } | null;
     lead?: {
       id: string;
       full_name: string | null;
@@ -24,7 +36,13 @@ export type DocumentWithRelations = {
     deal?: {
       id: string;
       deal_type?: string | null;
-      property: { title: string } | null;
+      property: {
+        id?: string;
+        title: string;
+        title_en?: string | null;
+        project_name?: string | null;
+        project_name_en?: string | null;
+      } | null;
       lead?: {
         id: string;
         full_name: string | null;

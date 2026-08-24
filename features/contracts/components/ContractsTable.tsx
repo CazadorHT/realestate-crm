@@ -31,7 +31,7 @@ import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeleteRentalContractsAction, getAllContractIdsAction } from "@/features/contracts/bulk-actions";
 import { toast } from "sonner";
 import { RentalContractWithRelations } from "../types";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 function formatLeaseTerm(months: number | null | undefined, isEn: boolean) {
   if (!months) return "";
@@ -243,7 +243,13 @@ export function ContractsTable({
               contracts.map((contract) => {
                 const statusInfo = getContractStatus(contract.end_date, isEn);
                 const propertyTitle =
-                  contract.deal?.property?.title || (isEn ? "Unspecified Property" : "ไม่ระบุทรัพย์สิน");
+                  (isEn && (contract.deal?.property?.title_en || contract.deal?.property?.title))
+                    ? (contract.deal?.property?.title_en || contract.deal?.property?.title)
+                    : (contract.deal?.property?.title || (isEn ? "Unspecified Property" : "ไม่ระบุทรัพย์สิน"));
+                
+                const projectName = isEn
+                  ? (contract.deal?.property?.project_name_en || contract.deal?.property?.project_name)
+                  : (contract.deal?.property?.project_name || contract.deal?.property?.project_name_en);
                 
                 // Tenant info (from lead)
                 const tenantName =
@@ -299,6 +305,11 @@ export function ContractsTable({
                           )}
                         </div>
                         <div className="flex flex-col min-w-0">
+                          {projectName && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 truncate max-w-md">
+                              {projectName}
+                            </span>
+                          )}
                           <div
                             onClick={() => {
                               setNavigatingId(`deal-${contract.deal_id}`);
@@ -333,7 +344,7 @@ export function ContractsTable({
                         ].filter(c => !!c.value);
 
                         if (contacts.length === 0) {
-                          return <div className="text-xs text-slate-400">{isEn ? "No phone or email" : "ไม่ได้ระบุเบอร์หรือemail"}</div>;
+                          return <div className="text-xs text-slate-400">{isEn ? "No phone or email" : "ไม่ได้ระบุเบอร์หรืออีเมล"}</div>;
                         }
 
                         return (
@@ -474,7 +485,14 @@ export function ContractsTable({
           contracts.map((contract) => {
             const statusInfo = getContractStatus(contract.end_date, isEn);
             const propertyTitle =
-              contract.deal?.property?.title || (isEn ? "Unspecified Property" : "ไม่ระบุทรัพย์สิน");
+              (isEn && (contract.deal?.property?.title_en || contract.deal?.property?.title))
+                ? (contract.deal?.property?.title_en || contract.deal?.property?.title)
+                : (contract.deal?.property?.title || (isEn ? "Unspecified Property" : "ไม่ระบุทรัพย์สิน"));
+            
+            const projectName = isEn
+              ? (contract.deal?.property?.project_name_en || contract.deal?.property?.project_name)
+              : (contract.deal?.property?.project_name || contract.deal?.property?.project_name_en);
+
             const isSel = isSelected(contract.id);
             const tenantName =
               contract.deal?.lead?.full_name ||
@@ -536,6 +554,11 @@ export function ContractsTable({
                             </span>
                           )}
                       </div>
+                      {projectName && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-600 truncate block">
+                          {projectName}
+                        </span>
+                      )}
                       <div
                         onClick={() => {
                           setNavigatingId(`m-deal-${contract.deal_id}`);
@@ -572,7 +595,7 @@ export function ContractsTable({
                         ].filter(c => !!c.value);
 
                         if (contacts.length === 0) {
-                          return <div className="text-[9px] text-slate-400">{isEn ? "No contact" : "ไม่ได้ระบุติดต่อ"}</div>;
+                          return <div className="text-[9px] text-slate-400">{isEn ? "No contact" : "ไม่ได้ระบุช่องทางติดต่อ"}</div>;
                         }
 
                         return (

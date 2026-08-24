@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 import { ContractFormInput, type ContractDealSummary } from "@/features/rental-contracts/schema";
 import Image from "next/image";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface Step1Props {
   selectedDeal: ContractDealSummary | null;

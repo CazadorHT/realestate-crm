@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface VersionHistoryDialogProps {
   documentId: string;
@@ -36,6 +37,9 @@ export function VersionHistoryDialog({
   tenantId,
   trigger,
 }: VersionHistoryDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [versions, setVersions] = useState<any[]>([]);
@@ -55,10 +59,10 @@ export function VersionHistoryDialog({
       if (res.success) {
         setVersions(res.data || []);
       } else {
-        toast.error(res.message || "Failed to load version history");
+        toast.error(res.message || (isEn ? "Failed to load version history" : "ไม่สามารถโหลดประวัติเวอร์ชันได้"));
       }
     } catch (err) {
-      toast.error("An error occurred while loading versions");
+      toast.error(isEn ? "An error occurred while loading versions" : "เกิดข้อผิดพลาดในการโหลดประวัติเวอร์ชัน");
     } finally {
       setLoading(false);
     }
@@ -70,10 +74,10 @@ export function VersionHistoryDialog({
       if (url) {
         window.open(url, "_blank");
       } else {
-        toast.error("Could not generate view link");
+        toast.error(isEn ? "Could not generate view link" : "ไม่สามารถสร้างลิงก์เปิดดูได้");
       }
     } catch (err) {
-      toast.error("Error opening document");
+      toast.error(isEn ? "Error opening document" : "เกิดข้อผิดพลาดในการเปิดเอกสาร");
     }
   };
 
@@ -86,7 +90,7 @@ export function VersionHistoryDialog({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+            className="h-9 w-9 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer"
           >
             <History className="h-4.5 w-4.5" />
           </Button>
@@ -98,24 +102,28 @@ export function VersionHistoryDialog({
             <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
               <History className="h-5 w-5" />
             </div>
-            <span className="text-xl font-black text-slate-900 tracking-tight">ประวัติเวอร์ชัน</span>
+            <span className="text-xl font-black text-slate-900 tracking-tight">
+              {isEn ? "Version History" : "ประวัติเวอร์ชัน"}
+            </span>
           </div>
           {ownerId && ownerType && (
             <Button
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5 rounded-xl border-indigo-100 text-indigo-600 font-bold bg-indigo-50/30 hover:bg-indigo-50 hidden sm:flex"
+              className="h-9 gap-1.5 rounded-xl border-indigo-100 text-indigo-600 font-bold bg-indigo-50/30 hover:bg-indigo-50 hidden sm:flex cursor-pointer"
               onClick={() => setShowUpload(!showUpload)}
             >
               <UploadCloud className="h-3.5 w-3.5" />
-              อัปโหลดใหม่
+              {isEn ? "Upload New" : "อัปโหลดใหม่"}
             </Button>
           )}
         </div>
       }
       description={
         <div className="mt-1.5 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl max-w-fit">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">เอกสารต้นฉบับ</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+            {isEn ? "Original Document" : "เอกสารต้นฉบับ"}
+          </p>
           <p className="text-xs font-bold text-slate-700 truncate min-w-0">{documentName}</p>
         </div>
       }
@@ -125,11 +133,11 @@ export function VersionHistoryDialog({
           <div className="sm:hidden mb-4">
             <Button
               variant="outline"
-              className="w-full h-11 gap-2 rounded-xl border-indigo-100 text-indigo-600 font-bold bg-indigo-50/30"
+              className="w-full h-11 gap-2 rounded-xl border-indigo-100 text-indigo-600 font-bold bg-indigo-50/30 cursor-pointer"
               onClick={() => setShowUpload(!showUpload)}
             >
               <UploadCloud className="h-4 w-4" />
-              อัปโหลดเวอร์ชันใหม่
+              {isEn ? "Upload New Version" : "อัปโหลดเวอร์ชันใหม่"}
             </Button>
           </div>
         )}
@@ -138,11 +146,11 @@ export function VersionHistoryDialog({
           <div className="mb-8 p-5 border rounded-2xl bg-indigo-50/30 border-indigo-100 animate-in fade-in slide-in-from-top-4 duration-300 relative">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-[10px] font-black text-indigo-800 uppercase tracking-widest">
-                อัปโหลดไฟล์เวอร์ชันใหม่
+                {isEn ? "Upload New Version File" : "อัปโหลดไฟล์เวอร์ชันใหม่"}
               </h4>
               <button
                 onClick={() => setShowUpload(false)}
-                className="text-indigo-400 hover:text-indigo-600 transition-colors"
+                className="text-indigo-400 hover:text-indigo-600 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -155,7 +163,7 @@ export function VersionHistoryDialog({
               onUploadComplete={() => {
                 setShowUpload(false);
                 loadVersions();
-                toast.success("อัปโหลดเวอร์ชันใหม่เรียบร้อยแล้ว");
+                toast.success(isEn ? "New version uploaded successfully" : "อัปโหลดเวอร์ชันใหม่เรียบร้อยแล้ว");
               }}
             />
           </div>
@@ -169,7 +177,9 @@ export function VersionHistoryDialog({
                 <div className="h-2 w-2 bg-indigo-500 rounded-full" />
               </div>
             </div>
-            <p className="text-sm font-bold text-slate-400">กำลังโหลดประวัติ...</p>
+            <p className="text-sm font-bold text-slate-400">
+              {isEn ? "Loading history..." : "กำลังโหลดประวัติ..."}
+            </p>
           </div>
         ) : (
           <div className="relative space-y-5 px-1 py-2">
@@ -211,7 +221,7 @@ export function VersionHistoryDialog({
                         </span>
                         {idx === 0 && (
                           <span className="text-[9px] bg-indigo-600 text-white font-black px-2 py-0.5 rounded-lg uppercase tracking-wider">
-                            Current
+                            {isEn ? "Current" : "ปัจจุบัน"}
                           </span>
                         )}
                       </div>
@@ -219,7 +229,7 @@ export function VersionHistoryDialog({
                         {format(
                           new Date(ver.created_at),
                           "d MMMM yyyy HH:mm",
-                          { locale: th },
+                          { locale: isEn ? enUS : th },
                         )}
                       </span>
                     </div>
@@ -250,16 +260,21 @@ export function VersionHistoryDialog({
                 <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FileText className="h-8 w-8 text-slate-200" />
                 </div>
-                <p className="text-sm font-bold text-slate-400">ไม่พบประวัติเวอร์ชันของเอกสารนี้</p>
+                <p className="text-sm font-bold text-slate-400">
+                  {isEn ? "No version history found for this document" : "ไม่พบประวัติเวอร์ชันของเอกสารนี้"}
+                </p>
               </div>
             )}
           </div>
         )}
 
         <div className="mt-8 p-3 rounded-xl bg-slate-50/50 border border-slate-100 text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest italic">
-          * เอกสารต้นฉบับจะถูกรวบรวมประวัติการแก้ไขไว้ที่นี่ทั้งหมด
+          {isEn
+            ? "* All revision histories of the original document are archived here"
+            : "* เอกสารต้นฉบับจะถูกรวบรวมประวัติการแก้ไขไว้ที่นี่ทั้งหมด"}
         </div>
       </div>
     </ResponsiveDialog>
   );
 }
+

@@ -53,7 +53,7 @@ import { ContractFinancialsCard } from "./ContractFinancialsCard";
 import { LandlordPaymentCard } from "./LandlordPaymentCard";
 import { TaxCalculationsCard } from "./TaxCalculationsCard";
 import { TenantOverridesCard } from "./TenantOverridesCard";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 import {
   translateToThai,
@@ -613,10 +613,10 @@ export function TemplateDialog({
             <Button
               variant="outline"
               size="lg"
-              className="gap-2 rounded-2xl font-semibold h-12 shadow-sm border-slate-200 hover:text-blue-700 hover:bg-slate-50!"
+              className="gap-2 rounded-2xl font-semibold h-12 shadow-sm border-slate-200 hover:text-blue-700 hover:bg-slate-50! cursor-pointer"
             >
               <FileText className="h-4.5 w-4.5 text-blue-600" />
-              {isEn ? "Generate from Template" : "สร้างจาก Template"}
+              {isEn ? "Generate from Template" : "สร้างจากแม่แบบ"}
             </Button>
           )
         }

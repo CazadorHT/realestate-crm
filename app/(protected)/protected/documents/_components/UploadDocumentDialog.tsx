@@ -22,12 +22,16 @@ import { DocumentOwnerType } from "@/features/documents/schema";
 import { Upload } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface UploadDocumentDialogProps {
   tenantId?: string | null;
 }
 
 export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
   const [ownerType, setOwnerType] = useState<DocumentOwnerType>("PROPERTY");
   const [ownerId, setOwnerId] = useState("");
@@ -97,7 +101,7 @@ export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
     };
 
     loadOwners();
-  }, [ownerType, open]);
+  }, [ownerType, open, tenantId]);
 
   const handleUploadComplete = () => {
     setOpen(false);
@@ -106,26 +110,43 @@ export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
 
   const canUpload = ownerId && ownerType;
 
+  const getOwnerLabel = () => {
+    switch (ownerType) {
+      case "PROPERTY":
+        return isEn ? "Property" : "ทรัพย์สิน";
+      case "LEAD":
+        return isEn ? "Lead" : "ลีด";
+      case "DEAL":
+        return isEn ? "Deal" : "ดีล";
+      case "RENTAL_CONTRACT":
+        return isEn ? "Rental Contract" : "สัญญาเช่า";
+      default:
+        return "";
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-2 rounded-2xl font-semibold h-12 shadow-sm border-slate-200 hover:bg-slate-50! hover:text-blue-500" >
+        <Button size="lg" className="gap-2 rounded-2xl font-semibold h-12 shadow-sm border-slate-200 hover:bg-slate-50! hover:text-blue-500 cursor-pointer">
           <Upload className="mr-2 h-4 w-4" />
-          อัพโหลดเอกสาร
+          {isEn ? "Upload Document" : "อัปโหลดเอกสาร"}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>อัพโหลดเอกสาร</DialogTitle>
+          <DialogTitle>{isEn ? "Upload Document" : "อัปโหลดเอกสาร"}</DialogTitle>
           <DialogDescription>
-            เลือกเจ้าของเอกสารและอัพโหลดไฟล์ (PDF จะถูกบีบอัดอัตโนมัติ)
+            {isEn
+              ? "Select document owner and upload files (PDFs are compressed automatically)"
+              : "เลือกเจ้าของเอกสารและอัปโหลดไฟล์ (PDF จะถูกบีบอัดอัตโนมัติ)"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Owner Type Selection */}
           <div className="space-y-2">
-            <Label>ประเภทเจ้าของ</Label>
+            <Label>{isEn ? "Owner Type" : "ประเภทเจ้าของ"}</Label>
             <Select
               value={ownerType}
               onValueChange={(v) => setOwnerType(v as DocumentOwnerType)}
@@ -134,10 +155,10 @@ export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PROPERTY">ทรัพย์สิน</SelectItem>
-                <SelectItem value="LEAD">ลีด</SelectItem>
-                <SelectItem value="DEAL">ดีล</SelectItem>
-                <SelectItem value="RENTAL_CONTRACT">สัญญาเช่า</SelectItem>
+                <SelectItem value="PROPERTY">{isEn ? "Property" : "ทรัพย์สิน"}</SelectItem>
+                <SelectItem value="LEAD">{isEn ? "Lead" : "ลีด"}</SelectItem>
+                <SelectItem value="DEAL">{isEn ? "Deal" : "ดีล"}</SelectItem>
+                <SelectItem value="RENTAL_CONTRACT">{isEn ? "Rental Contract" : "สัญญาเช่า"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -145,14 +166,7 @@ export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
           {/* Owner ID Selection */}
           <div className="space-y-2">
             <Label>
-              เลือก
-              {ownerType === "PROPERTY"
-                ? "ทรัพย์"
-                : ownerType === "LEAD"
-                ? "ลีด"
-                : ownerType === "DEAL"
-                ? "ดีล"
-                : "สัญญา"}
+              {isEn ? `Select ${getOwnerLabel()}` : `เลือก${getOwnerLabel()}`}
             </Label>
             <Select
               value={ownerId}
@@ -163,10 +177,10 @@ export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
                 <SelectValue
                   placeholder={
                     loading
-                      ? "กำลังโหลด..."
+                      ? (isEn ? "Loading..." : "กำลังโหลด...")
                       : owners.length === 0
-                      ? "ไม่พบข้อมูล"
-                      : "เลือก..."
+                      ? (isEn ? "No records found" : "ไม่พบข้อมูล")
+                      : (isEn ? "Select..." : "เลือก...")
                   }
                 />
               </SelectTrigger>
@@ -180,15 +194,9 @@ export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
             </Select>
             {owners.length === 0 && !loading && (
               <p className="text-xs text-slate-500">
-                ไม่พบรายการ กรุณาสร้าง
-                {ownerType === "PROPERTY"
-                  ? "ทรัพย์"
-                  : ownerType === "LEAD"
-                  ? "ลีด"
-                  : ownerType === "DEAL"
-                  ? "ดีล"
-                  : "สัญญา"}
-                ก่อน
+                {isEn
+                  ? `No records found. Please create a ${getOwnerLabel().toLowerCase()} first.`
+                  : `ไม่พบรายการ กรุณาสร้าง${getOwnerLabel()}ก่อน`}
               </p>
             )}
           </div>
@@ -209,3 +217,4 @@ export function UploadDocumentDialog({ tenantId }: UploadDocumentDialogProps) {
     </Dialog>
   );
 }
+

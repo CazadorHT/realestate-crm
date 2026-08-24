@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import dynamic from "next/dynamic";
-import Script from "next/script";
 import "./globals.css";
 import "flag-icons/css/flag-icons.min.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -244,42 +243,11 @@ export default async function RootLayout({
         
         {/* Supabase Preconnect */}
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
-
       </head>
       <body
         className={`${prompt.className} ${notoThai.variable} antialiased`}
         style={{ scrollbarGutter: "stable" }}
       >
-        {/* Safe stubs for third-party tags and webviews to prevent ReferenceError / TypeError in Sentry */}
-        <Script id="global-third-party-stubs" strategy="beforeInteractive">
-          {`
-            window.fbq = window.fbq || function() {
-              (window.fbq.q = window.fbq.q || []).push(arguments);
-            };
-            window.fbq.push = window.fbq;
-            window.fbq.loaded = true;
-            window.fbq.version = '2.0';
-            window.fbq.queue = [];
-
-            window.googletag = window.googletag || { cmd: [] };
-            if (typeof window !== 'undefined' && !window.webkit) {
-              window.webkit = { messageHandlers: {} };
-            }
-          `}
-        </Script>
-      
-        {/* Google Tag Manager - load immediately so page-level events are available early */}
-        {gtmId && (
-          <Script id="gtm-script" strategy="beforeInteractive">
-            {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','${gtmId}');`}
-          </Script>
-        )}
-        {/* End Google Tag Manager */}
 
         {/* Google Tag Manager (noscript) */}
         {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
@@ -303,7 +271,7 @@ export default async function RootLayout({
                 <div vaul-drawer-wrapper="" className="min-h-screen bg-white">
                   {children}
                 </div>
-                  <DynamicClientProviders />
+                  <DynamicClientProviders gtmId={gtmId} />
                   <NavigationProgressBar />
                   <Toaster />
                 </TenantProvider>
