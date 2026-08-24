@@ -25,7 +25,7 @@ export default async function RentalContractsPage({
   assertStaff(role);
 
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   const params = await searchParams;

@@ -22,6 +22,7 @@ import { DashboardEmptyState } from "./DashboardEmptyState";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState } from "react";
 import { formatDistanceToNowThai } from "@/lib/utils";
+import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
 import {
   Dialog,
   DialogContent,
@@ -56,10 +57,12 @@ import {
 import { PropertyTableData } from "@/features/properties/types";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
-// Using PropertyTableData as the base type for consistency
 export type PropertyWithRelations = PropertyTableData & {
   images?: { url?: string; image_url?: string }[] | null;
   province?: string | null;
+  title_en?: string | null;
+  project_name_en?: string | null;
+  popular_area_en?: string | null;
 };
 
 export function RecentPropertiesTable({
@@ -203,7 +206,22 @@ export function RecentPropertiesTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {properties.map((property) => (
+              {properties.map((property) => {
+                const displayTitle = (isEn && property.title_en) ? property.title_en : (property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ"));
+                const displayProjectName = isEn
+                  ? (property.project_name_en || property.project_name)
+                  : (property.project_name || property.project_name_en);
+                const displayProvince = isEn
+                  ? (property.province_en || getProvinceName(property.province || "", "en"))
+                  : (property.province || "");
+                const displayDistrict = isEn
+                  ? (property.district_en || getDistrictName(property.district || "", "en"))
+                  : (property.district || "");
+                const displayPopularArea = isEn
+                  ? (property.popular_area_en || getDistrictName(property.popular_area || "", "en"))
+                  : (property.popular_area || "");
+
+                return (
                 <TableRow
                   key={property.id}
                   className="group hover:bg-slate-50/40 transition-colors border-b border-slate-100 last:border-0"
@@ -240,10 +258,10 @@ export function RecentPropertiesTable({
                           return imageUrl ? (
                             <Dialog>
                               <DialogTrigger asChild>
-                                <button className="w-full h-full overflow-hidden relative cursor-pointer" aria-label={isEn ? `View image of ${property.title}` : `ดูรูปภาพ ${property.title}`}>
+                                <button className="w-full h-full overflow-hidden relative cursor-pointer" aria-label={isEn ? `View image of ${displayTitle}` : `ดูรูปภาพ ${displayTitle}`}>
                                   <Image
                                     src={imageUrl}
-                                    alt={property.title || "Property"}
+                                    alt={displayTitle || "Property"}
                                     fill
                                     sizes="(max-width: 768px) 100vw, 96px"
                                     className="object-cover transition-transform duration-500 group-hover/image:scale-110"
@@ -253,7 +271,7 @@ export function RecentPropertiesTable({
                               <DialogContent className="max-w-4xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
                                 <VisuallyHidden>
                                   <DialogTitle>
-                                    {property.title || (isEn ? "Property Image" : "รูปภาพทรัพย์สิน")}
+                                    {displayTitle || (isEn ? "Property Image" : "รูปภาพทรัพย์สิน")}
                                   </DialogTitle>
                                   <DialogDescription>
                                     {isEn ? "Expanded property image preview" : "การแสดงผลรูปภาพทรัพย์สินแบบขยายใหญ่"}
@@ -262,7 +280,7 @@ export function RecentPropertiesTable({
                                 <div className="relative w-full h-[80vh] flex items-center justify-center bg-transparent">
                                   <Image
                                     src={imageUrl}
-                                    alt={property.title || "Property Image"}
+                                    alt={displayTitle || "Property Image"}
                                     fill
                                     sizes="100vw"
                                     className="object-contain shadow-2xl rounded-3xl"
@@ -291,12 +309,18 @@ export function RecentPropertiesTable({
                               <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                             </div>
                           )}
-                          <span className="line-clamp-2 overflow-hidden w-[300px]">
-                            {property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ")}
+                          <span className="line-clamp-2 overflow-hidden w-[300px]" title={displayTitle}>
+                            {displayTitle}
                           </span>
                         </div>
+                        {displayProjectName ? (
+                          <div className="flex items-center gap-1 text-[11.5px] font-bold text-indigo-600 line-clamp-1 leading-tight">
+                            <Building2 className="h-3 w-3 shrink-0 text-indigo-500" />
+                            <span className="truncate">{displayProjectName}</span>
+                          </div>
+                        ) : null}
                         <span className="text-xs text-slate-500 font-medium line-clamp-1 opacity-90">
-                          {[property.popular_area, property.province]
+                          {[displayPopularArea, displayProvince]
                             .filter(Boolean)
                             .join(" • ") ||
                             property.description ||
@@ -340,9 +364,9 @@ export function RecentPropertiesTable({
                   <TableCell className="px-2 py-4">
                     <div className="flex flex-col gap-1">
                       <div className="font-semibold text-xs text-slate-800 line-clamp-1">
-                        {[property.popular_area, property.district]
+                        {[displayPopularArea, displayDistrict]
                           .filter(Boolean)
-                          .join(", ") || "-"}
+                          .join(", ") || displayProvince || "-"}
                       </div>
                       <div className="text-[11px] font-medium text-slate-500 flex items-center gap-2">
                         {property.size_sqm ? (
@@ -358,10 +382,10 @@ export function RecentPropertiesTable({
                       </div>
                       <div className="text-[11px] font-medium text-slate-400 flex gap-2">
                         {property.bedrooms ? (
-                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bedrooms} {isEn ? "Bed" : "น"}</span>
+                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bedrooms} {isEn ? "Bed" : "ห้องนอน"}</span>
                         ) : null}
                         {property.bathrooms ? (
-                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bathrooms} {isEn ? "Bath" : "น้ำ"}</span>
+                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bathrooms} {isEn ? "Bath" : "ห้องน้ำ"}</span>
                         ) : null}
                       </div>
                     </div>
@@ -494,7 +518,8 @@ export function RecentPropertiesTable({
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -502,7 +527,22 @@ export function RecentPropertiesTable({
         {/* Mobile & Tablet Premium Card View */}
         <div className="lg:hidden p-4 sm:p-6 bg-slate-50/50">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-            {properties.map((property) => (
+            {properties.map((property) => {
+              const displayTitle = (isEn && property.title_en) ? property.title_en : (property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ"));
+              const displayProjectName = isEn
+                ? (property.project_name_en || property.project_name)
+                : (property.project_name || property.project_name_en);
+              const displayProvince = isEn
+                ? (property.province_en || getProvinceName(property.province || "", "en"))
+                : (property.province || "");
+              const displayDistrict = isEn
+                ? (property.district_en || getDistrictName(property.district || "", "en"))
+                : (property.district || "");
+              const displayPopularArea = isEn
+                ? (property.popular_area_en || getDistrictName(property.popular_area || "", "en"))
+                : (property.popular_area || "");
+
+              return (
               <div
                 key={property.id}
                 className="relative group bg-white rounded-3xl border border-slate-200/80 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 overflow-hidden flex flex-col"
@@ -548,7 +588,7 @@ export function RecentPropertiesTable({
                     return imageUrl ? (
                       <Image
                         src={imageUrl}
-                        alt={property.title || "Property"}
+                        alt={displayTitle || "Property"}
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                       />
@@ -584,15 +624,22 @@ export function RecentPropertiesTable({
                       }}
                       className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer relative"
                     >
-                      {property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ")}
+                      {displayTitle}
                     </div>
+                    {displayProjectName ? (
+                      <div className="flex items-center gap-1 text-xs font-bold text-indigo-600 line-clamp-1">
+                        <Building2 className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+                        <span className="truncate">{displayProjectName}</span>
+                      </div>
+                    ) : null}
                     <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-slate-50 w-fit px-2 py-1 rounded-md">
                       <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
                       <span className="truncate">
-                        {[property.popular_area, property.province]
+                        {[displayPopularArea, displayProvince]
                           .filter(Boolean)
                           .join(" • ") ||
-                          property.district ||
+                          displayDistrict ||
+                          displayProvince ||
                           "-"}
                       </span>
                     </div>
@@ -651,7 +698,8 @@ export function RecentPropertiesTable({
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
 
             {/* Empty State */}
             {properties.length === 0 && (

@@ -22,9 +22,14 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { cookies } from "next/headers";
 
-export const metadata: Metadata = {
-  title: "Deals | จัดการดีล",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
+  const isEn = lang === "en";
+  return {
+    title: isEn ? "Deals" : "ดีล (Deals)",
+  };
+}
 
 export default async function DealsPage({
   searchParams,
@@ -35,7 +40,7 @@ export default async function DealsPage({
   const currentPage = Number(spPage) || 1;
 
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   // [PERFORMANCE] Parallel Fetching: Core Auth & Global Pre-fetches

@@ -6,6 +6,7 @@ import { PropertyStatus, PropertyType, ListingType } from "@/features/properties
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
+import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
 
 interface PropertyImage {
   url?: string;
@@ -27,6 +28,7 @@ export async function RecentPropertiesSection({
     .select(`
       id, 
       title, 
+      title_en,
       price, 
       original_price,
       rental_price,
@@ -38,6 +40,7 @@ export async function RecentPropertiesSection({
       updated_at,
       tenant_id,
       popular_area,
+      popular_area_en,
       district,
       province,
       size_sqm,
@@ -50,6 +53,7 @@ export async function RecentPropertiesSection({
       posted_to_line_at,
       posted_to_tiktok_at,
       requires_ai_review,
+      project_id,
       images,
       property_images(
         id,
@@ -77,12 +81,16 @@ export async function RecentPropertiesSection({
     query = query.or(`assigned_to.eq.${targetUserId},created_by.eq.${targetUserId}`);
   }
 
-  const { data: propertiesResult } = await query;
+  const { data: propertiesResult, error: propertiesError } = await query;
+  if (propertiesError) {
+    console.error("Error fetching recent properties:", propertiesError);
+  }
 
   // Define type for our joined query result
   type RawProperty = {
     id: string;
     title: string;
+    title_en?: string | null;
     price: number | null;
     original_price: number | null;
     rental_price: number | null;
@@ -94,6 +102,7 @@ export async function RecentPropertiesSection({
     updated_at: string;
     tenant_id: string | null;
     popular_area: string | null;
+    popular_area_en?: string | null;
     district: string | null;
     province: string | null;
     size_sqm: number | null;
@@ -106,6 +115,7 @@ export async function RecentPropertiesSection({
     posted_to_line_at: string | null;
     posted_to_tiktok_at: string | null;
     requires_ai_review: boolean | null;
+    project_id?: string | null;
     images: PropertyImage[] | null;
     property_images: PropertyImage[] | null;
     description: string | null;
@@ -131,6 +141,24 @@ export async function RecentPropertiesSection({
     });
   }
 
+  // Fetch projects in batch
+  const projectIds = Array.from(new Set(rawProperties.map(p => p.project_id).filter((id): id is string => Boolean(id))));
+  const projectMap = new Map<string, { th: string | null; en: string | null }>();
+
+  if (projectIds.length > 0) {
+    const { data: projectsData } = await supabase
+      .from("projects")
+      .select("id, name")
+      .in("id", projectIds);
+
+    (projectsData || []).forEach((proj: any) => {
+      const name = proj.name;
+      const th = typeof name === "object" && name !== null ? (name.th || name.name_th || null) : (typeof name === "string" ? name : null);
+      const en = typeof name === "object" && name !== null ? (name.en || name.name_en || null) : (typeof name === "string" ? name : null);
+      projectMap.set(proj.id, { th, en });
+    });
+  }
+
   const now = new Date().getTime();
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
   
@@ -153,11 +181,18 @@ export async function RecentPropertiesSection({
     const rawImageUrl = firstImage?.image_url || firstImage?.url || firstImage?.storage_path || (typeof firstImage === 'string' ? firstImage : null);
     const imageUrl = rawImageUrl ? (rawImageUrl.startsWith("http") ? rawImageUrl : getPublicImageUrl(rawImageUrl)) : null;
 
+    const proj = p.project_id ? projectMap.get(p.project_id) : null;
+    const finalProjectName = proj?.th || proj?.en || null;
+    const finalProjectNameEn = proj?.en || proj?.th || null;
+
     return {
       id: p.id,
       title: p.title,
+      title_en: p.title_en || null,
       description: p.description,
       image_url: imageUrl,
+      project_name: finalProjectName,
+      project_name_en: finalProjectNameEn,
       property_type: p.property_type,
       listing_type: p.listing_type,
       price: p.price,
@@ -171,8 +206,11 @@ export async function RecentPropertiesSection({
       updated_at: p.updated_at,
       created_at: p.created_at,
       popular_area: p.popular_area,
+      popular_area_en: p.popular_area_en || (p.popular_area ? getDistrictName(p.popular_area, "en") : null),
       district: p.district,
+      district_en: p.district ? getDistrictName(p.district, "en") : null,
       province: p.province,
+      province_en: p.province ? getProvinceName(p.province, "en") : null,
       size_sqm: p.size_sqm,
       land_size_sqwah: p.land_size_sqwah,
       bedrooms: p.bedrooms,

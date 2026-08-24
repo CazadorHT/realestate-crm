@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import {
   MessageSquare,
   Facebook,
@@ -24,6 +24,7 @@ import { AvatarImageWithFallback } from "./AvatarImageWithFallback";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function ConversationList({
   conversations,
@@ -40,6 +41,8 @@ export function ConversationList({
   filterCategory: string | null;
   onFilterChangeAction: (id: string | null) => void;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const { isMultiTenantEnabled } = useTenant();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -51,28 +54,28 @@ export function ConversationList({
   };
 
   return (
-    <div id="tour-inbox-list" className="flex flex-col h-full overflow-y-auto">
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+    <div id="tour-inbox-list" className="flex flex-col h-full min-h-0 overflow-hidden">
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
         <div className="font-bold text-[11px] uppercase tracking-wider text-slate-500">
-          การสนทนา ({conversations.length})
+          {isEn ? "Conversations" : "การสนทนา"} ({conversations.length})
         </div>
 
         <ResponsiveDialog
           open={isFilterOpen}
           onOpenChange={setIsFilterOpen}
-          title="กรองประเภทผู้ติดต่อ"
+          title={isEn ? "Filter Contact Category" : "กรองประเภทผู้ติดต่อ"}
           trigger={
             <button 
               id="tour-inbox-filter-btn"
               className={cn(
-                "p-1.5 rounded-lg border transition-all hover:bg-white active:scale-95 flex items-center gap-1.5",
+                "p-1.5 rounded-lg border transition-all hover:bg-white active:scale-95 flex items-center gap-1.5 cursor-pointer",
                 filterCategory ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-transparent border-slate-200 text-slate-500"
               )}
             >
               <ListFilter className="w-3.5 h-3.5" />
               {filterCategory && (
                 <span className="text-[9px] font-bold uppercase tracking-tight">
-                  {filterCategory === "AGENT" ? "ตัวแทน" : filterCategory === "OWNER" ? "เจ้าของ" : "ลูกค้า"}
+                  {filterCategory === "AGENT" ? (isEn ? "Agent" : "ตัวแทน") : filterCategory === "OWNER" ? (isEn ? "Owner" : "เจ้าของ") : (isEn ? "Customer" : "ลูกค้า")}
                 </span>
               )}
             </button>
@@ -80,10 +83,10 @@ export function ConversationList({
         >
           <div className="p-4 space-y-2">
             {[
-              { id: null, label: "การสนทนาทั้งหมด", icon: LayoutGrid, count: counts.ALL, color: "text-slate-600", bg: "bg-slate-50" },
-              { id: "CUSTOMER", label: "ลูกค้า (Customer)", icon: Users, count: counts.CUSTOMER, color: "text-blue-600", bg: "bg-blue-50" },
-              { id: "AGENT", label: "ตัวแทน (Agent)", icon: ShieldCheck, count: counts.AGENT, color: "text-emerald-600", bg: "bg-emerald-50" },
-              { id: "OWNER", label: "เจ้าของ (Owner)", icon: User, count: counts.OWNER, color: "text-amber-600", bg: "bg-amber-50" },
+              { id: null, label: isEn ? "All Conversations" : "การสนทนาทั้งหมด", icon: LayoutGrid, count: counts.ALL, color: "text-slate-600", bg: "bg-slate-50" },
+              { id: "CUSTOMER", label: isEn ? "Customer" : "ลูกค้า (Customer)", icon: Users, count: counts.CUSTOMER, color: "text-blue-600", bg: "bg-blue-50" },
+              { id: "AGENT", label: isEn ? "Agent" : "ตัวแทน (Agent)", icon: ShieldCheck, count: counts.AGENT, color: "text-emerald-600", bg: "bg-emerald-50" },
+              { id: "OWNER", label: isEn ? "Owner" : "เจ้าของ (Owner)", icon: User, count: counts.OWNER, color: "text-amber-600", bg: "bg-amber-50" },
             ].map((option) => (
               <button
                 key={option.id?.toString() || "all"}
@@ -92,7 +95,7 @@ export function ConversationList({
                   setIsFilterOpen(false);
                 }}
                 className={cn(
-                  "w-full p-4 rounded-xl border flex items-center gap-3 transition-all active:scale-[0.98]",
+                  "w-full p-4 rounded-xl border flex items-center gap-3 transition-all active:scale-[0.98] cursor-pointer",
                   filterCategory === option.id 
                     ? "bg-white border-blue-500 shadow-md ring-1 ring-blue-500/20" 
                     : "bg-white border-slate-100 hover:border-slate-200"
@@ -106,7 +109,7 @@ export function ConversationList({
                     {option.label}
                   </p>
                   <p className="text-[10px] text-slate-400 font-medium">
-                    {option.count} รายการ
+                    {option.count} {isEn ? "items" : "รายการ"}
                   </p>
                 </div>
                 {filterCategory === option.id && (
@@ -119,7 +122,7 @@ export function ConversationList({
           </div>
         </ResponsiveDialog>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 h-0 min-h-0 overflow-y-auto">
         {conversations.map((conv) => {
           const lastMsg = conv.communications_hub_v3?.[0];
           const SourceIcon =
@@ -155,7 +158,7 @@ export function ConversationList({
               key={conv.id}
               onClick={() => onSelectAction(conv.id)}
               className={cn(
-                "w-full p-4 pl-3 flex gap-3 text-left transition-all hover:bg-slate-50 border-b border-slate-50 relative group",
+                "w-full p-4 pl-3 flex gap-3 text-left transition-all hover:bg-slate-50 border-b border-slate-50 relative group cursor-pointer",
                 selectedLeadId === conv.id ? "bg-blue-50" : "bg-white",
               )}
             >
@@ -183,22 +186,6 @@ export function ConversationList({
                   "absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ring-1 ring-slate-100",
                   categoryColor
                 )} />
-                <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full">
-                  {/* <SourceIcon
-                    className={cn(
-                      "h-4 w-4",
-                      conv.source === "LINE"
-                        ? "text-green-500"
-                        : conv.source === "FACEBOOK"
-                          ? "text-blue-500"
-                          : conv.source === "INSTAGRAM"
-                            ? "text-pink-500"
-                            : conv.source === "WHATSAPP"
-                              ? "text-emerald-500"
-                              : "text-slate-400",
-                    )}
-                  /> */}
-                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline mb-1">
@@ -227,7 +214,7 @@ export function ConversationList({
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[11px] text-slate-500 truncate font-medium">
-                    {lastMsg ? lastMsg.content : "เริ่มการสนทนา"}
+                    {lastMsg ? lastMsg.content : (isEn ? "Start conversation" : "เริ่มการสนทนา")}
                   </p>
                 </div>
                   <div className="flex items-center justify-end gap-2">
@@ -235,7 +222,7 @@ export function ConversationList({
                       <span className="text-[10px] font-medium text-slate-400">
                         {formatDistanceToNow(new Date(lastMsg.created_at || 0), {
                           addSuffix: false,
-                          locale: th,
+                          locale: isEn ? enUS : th,
                         })}
                       </span>
                     )}
@@ -248,7 +235,7 @@ export function ConversationList({
               </div>
               {lastMsg &&
                 !lastMsg.is_read &&
-                lastMsg.direction === "INCOMING" && (
+                (lastMsg.direction === "INCOMING" || (lastMsg.direction as any) === 0) && (
                   <div className="w-2 h-2 rounded-full bg-blue-600 mt-2" />
                 )}
             </button>

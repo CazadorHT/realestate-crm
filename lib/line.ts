@@ -365,23 +365,44 @@ export async function saveOmniMessage(data: {
     } catch (_) {}
   }
 
-  if (!identity_id || !tenant_id) {
-    console.warn("[saveOmniMessage] Skipped insert into communications_hub_v3 due to missing identity_id or tenant_id", { identity_id, tenant_id });
-    return;
+  if (!tenant_id) {
+    try {
+      const { data: defaultTenant2 } = await supabase
+        .from("tenants")
+        .select("id")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (defaultTenant2) {
+        tenant_id = defaultTenant2.id;
+      }
+    } catch (_) {}
   }
 
-  const { error } = await supabase.from("communications_hub_v3").insert({
-    identity_id,
-    platform: data.source,
-    external_message_id: data.external_message_id || null,
-    content: data.content,
-    payload: data.payload || null,
-    direction: data.direction === "INCOMING" ? 0 : 1,
-    tenant_id: tenant_id,
-  });
+  if (!identity_id) {
+    console.warn("[saveOmniMessage] Skipped insert into communications_hub_v3 due to missing identity_id", { identity_id });
+    return null;
+  }
+
+  const { data: inserted, error } = await supabase
+    .from("communications_hub_v3")
+    .insert({
+      identity_id,
+      platform: data.source,
+      external_message_id: data.external_message_id || null,
+      content: data.content,
+      payload: data.payload || null,
+      direction: data.direction === "INCOMING" ? 0 : 1,
+      tenant_id: tenant_id || null,
+    })
+    .select("id, created_at, direction, content, platform, payload, is_read, tenant_id")
+    .single();
 
   if (error) {
     console.error("Error saving omni message:", error);
+    return null;
   }
+
+  return inserted;
 }
 

@@ -667,7 +667,7 @@ export async function searchOwnerAction(
     } else if (type === "DEAL") {
       let qry = supabase
         .from("crm_deals_v3")
-        .select("id, lead:crm_leads_v3(identity:identities_v3(display_name)), property:properties(title)");
+        .select("id, lead:crm_leads_v3(identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)), property:properties(title)");
 
       if (tenantId && tenantId !== "ALL") {
         qry = qry.eq("tenant_id", tenantId);
@@ -694,7 +694,7 @@ export async function searchOwnerAction(
     } else if (type === "RENTAL_CONTRACT") {
       let qry = supabase
         .from("crm_deals_v3")
-        .select("id, lead:crm_leads_v3(identity:identities_v3(display_name)), property:properties(title)")
+        .select("id, lead:crm_leads_v3(identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)), property:properties(title)")
         .eq("deal_type", "RENT");
 
       if (tenantId && tenantId !== "ALL") {

@@ -35,7 +35,7 @@ interface PageProps {
 export default async function DealDetailPage({ params }: PageProps) {
   const { id } = await params;
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   const { tenantId } = await requireAuthContext();
@@ -109,7 +109,7 @@ export default async function DealDetailPage({ params }: PageProps) {
                 </div>
                 <p className="text-white/90 text-base font-medium mt-1 flex items-center gap-2">
                   <span className="opacity-70">{isEn ? "Property:" : "ทรัพย์:"}</span>
-                  {deal.property?.title || (isEn ? "Unassigned Property" : "ไม่ระบุทรัพย์")}
+                  {(isEn && (deal.property as any)?.title_en) ? (deal.property as any).title_en : (deal.property?.title || (isEn ? "Unassigned Property" : "ไม่ระบุทรัพย์"))}
                 </p>
               </div>
             </div>

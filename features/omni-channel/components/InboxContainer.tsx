@@ -3,12 +3,16 @@
 import { useState } from "react";
 import { ConversationList } from "./ConversationList";
 import { MessageThread } from "./MessageThread";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function InboxContainer({
   initialConversations,
 }: {
   initialConversations: any[];
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(
     initialConversations.length > 0 ? initialConversations[0].id : null,
@@ -40,9 +44,9 @@ export function InboxContainer({
   };
 
   return (
-    <div className="flex flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm ">
+    <div className="flex flex-1 h-full max-h-full min-h-0 min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       {/* Sidebar: Conversation List */}
-      <div className="w-80 border-r border-slate-200">
+      <div className="w-80 h-full max-h-full flex flex-col min-h-0 border-r border-slate-200 shrink-0 overflow-hidden">
         <ConversationList
           conversations={filteredConversations}
           allConversations={initialConversations}
@@ -54,12 +58,12 @@ export function InboxContainer({
       </div>
 
       {/* Main: Message Thread */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col h-full max-h-full min-h-0 min-w-0 overflow-hidden">
         {selectedConversation ? (
           <MessageThread lead={selectedConversation} />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-slate-500">
-            เลือกการสนทนาเพื่อเริ่มแชท
+          <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-medium">
+            {isEn ? "Select a conversation to start chatting" : "เลือกการสนทนาเพื่อเริ่มแชท"}
           </div>
         )}
       </div>

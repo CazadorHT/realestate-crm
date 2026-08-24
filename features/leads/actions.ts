@@ -12,6 +12,7 @@ import type {
 import { generateLeadSummary } from "./services/ai-lead-service";
 import { z } from "zod";
 import { getCoverImage } from "@/lib/property-hardened-utils";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import type { PropertyAddressV3, PropertyPricingV3 } from "@/features/properties/types/v3";
 import { logAudit } from "@/lib/audit";
 import { UserRole, requireAuthContext, assertAdminOrManager } from "@/lib/authz";
@@ -580,6 +581,20 @@ export const searchPropertiesAction = createSafeAction(
     listing_type: z.string().optional(),
     property_type: z.string().optional(),
     popular_area: z.string().optional(),
+    province: z.string().optional(),
+    bedrooms: z.string().optional(),
+    min_price: z.number().optional(),
+    max_price: z.number().optional(),
+    min_size: z.number().optional(),
+    max_size: z.number().optional(),
+    transit_station: z.string().optional(),
+    near_train: z.boolean().optional(),
+    pet_friendly: z.boolean().optional(),
+    fully_furnished: z.boolean().optional(),
+    is_foreigner: z.boolean().optional(),
+    is_hot_deal: z.boolean().optional(),
+    allow_airbnb: z.boolean().optional(),
+    sort: z.string().optional(),
     status: z.union([z.string(), z.array(z.string())]).optional(),
     tenantId: z.string().uuid().optional(),
   }),
@@ -589,6 +604,20 @@ export const searchPropertiesAction = createSafeAction(
       listing_type,
       property_type,
       popular_area,
+      province,
+      bedrooms,
+      min_price,
+      max_price,
+      min_size,
+      max_size,
+      transit_station,
+      near_train,
+      pet_friendly,
+      fully_furnished,
+      is_foreigner,
+      is_hot_deal,
+      allow_airbnb,
+      sort,
       status,
       tenantId: inputTenantId,
     },
@@ -600,7 +629,17 @@ export const searchPropertiesAction = createSafeAction(
     // 1. Fetch facet counts using core tables (Efficient facet calculation)
     let facetSb = supabase
       .from("properties_core")
-      .select("listing_type, property_type, status")
+      .select(`
+        listing_type, 
+        property_type, 
+        status, 
+        bedrooms, 
+        sale_price,
+        rent_price,
+        floor_area,
+        is_hot_deal,
+        properties_details(address_info, pricing_details, amenities, transit_info)
+      `)
       .is("deleted_at", null);
 
     if (effectiveTenantId) {
@@ -609,37 +648,158 @@ export const searchPropertiesAction = createSafeAction(
 
     const { data: facetData, error: facetError } = await facetSb;
 
+    const stationsMap = new Map<string, { name: string; name_en?: string; name_cn?: string; name_ru?: string; type: string; count: number }>();
+
     const counts: {
+      total: number;
       listing_type: Record<string, number>;
       property_type: Record<string, number>;
       status: Record<string, number>;
+      bedrooms: Record<string, number>;
+      provinces: Record<string, number>;
+      prices: Record<string, number>;
+      sizes: Record<string, number>;
+      quick: {
+        nearTrain: number;
+        petFriendly: number;
+        fullyFurnished: number;
+        isForeigner: number;
+        isInvestment: number;
+        isHotDeal: number;
+        allowAirbnb: number;
+      };
+      availableStations: Array<{ name: string; name_en?: string; name_cn?: string; name_ru?: string; type: string; count: number }>;
     } = {
+      total: facetData?.length || 0,
       listing_type: {},
       property_type: {},
       status: {},
+      bedrooms: {},
+      provinces: {},
+      prices: {},
+      sizes: {},
+      quick: {
+        nearTrain: 0,
+        petFriendly: 0,
+        fullyFurnished: 0,
+        isForeigner: 0,
+        isInvestment: 0,
+        isHotDeal: 0,
+        allowAirbnb: 0,
+      },
+      availableStations: [],
     };
 
     if (facetError) {
       console.error("Facet Error:", facetError);
     } else if (facetData) {
       facetData.forEach(
-        (x: {
-          listing_type: number;
-          property_type: number;
-          status: number | null;
-        }) => {
+        (x: any) => {
           const ltKey = getListingTypeFromDb(x.listing_type);
-          counts.listing_type[ltKey] =
-            (counts.listing_type[ltKey] || 0) + 1;
+          counts.listing_type[ltKey] = (counts.listing_type[ltKey] || 0) + 1;
           const ptKey = getPropertyTypeFromDb(x.property_type);
-          counts.property_type[ptKey] =
-            (counts.property_type[ptKey] || 0) + 1;
+          counts.property_type[ptKey] = (counts.property_type[ptKey] || 0) + 1;
           if (x.status !== null) {
             const stKey = getStatusFromDb(x.status);
             counts.status[stKey] = (counts.status[stKey] || 0) + 1;
           }
+
+          // Bedrooms
+          if (x.bedrooms) {
+            const bKey = x.bedrooms >= 4 ? "4+" : x.bedrooms.toString();
+            counts.bedrooms[bKey] = (counts.bedrooms[bKey] || 0) + 1;
+          }
+
+          // Transit Info & Dynamic Stations Aggregation
+          const tInfo = x.properties_details?.transit_info || {};
+          const transits = tInfo.transits || [];
+          const isNearTransit = Boolean(tInfo.near_transit || transits.length > 0 || tInfo.transit_station_name);
+
+          if (isNearTransit) counts.quick.nearTrain++;
+
+          if (tInfo.transit_station_name && tInfo.transit_type) {
+            const key = `${tInfo.transit_station_name}|${tInfo.transit_type}`;
+            if (!stationsMap.has(key)) {
+              stationsMap.set(key, {
+                name: tInfo.transit_station_name,
+                name_en: tInfo.transit_station_name_en || tInfo.transit_station_name,
+                name_cn: tInfo.transit_station_name_cn,
+                name_ru: tInfo.transit_station_name_ru,
+                type: tInfo.transit_type,
+                count: 0,
+              });
+            }
+            stationsMap.get(key)!.count++;
+          }
+
+          transits.forEach((t: any) => {
+            if (t.station_name && t.type) {
+              const key = `${t.station_name}|${t.type}`;
+              if (!stationsMap.has(key)) {
+                stationsMap.set(key, {
+                  name: t.station_name,
+                  name_en: t.station_name_en || t.station_name,
+                  name_cn: t.station_name_cn,
+                  name_ru: t.station_name_ru,
+                  type: t.type,
+                  count: 0,
+                });
+              }
+              stationsMap.get(key)!.count++;
+            }
+          });
+
+          // Province
+          const prov = x.properties_details?.address_info?.province;
+          if (prov) {
+            counts.provinces[prov] = (counts.provinces[prov] || 0) + 1;
+          }
+
+          // Price ranges (Check both core fields and pricing_details)
+          const pricingObj = x.properties_details?.pricing_details || {};
+          const pSale = Number(x.sale_price || pricingObj.price || pricingObj.sale_price || 0);
+          const pRent = Number(x.rent_price || pricingObj.rental_price || pricingObj.rent_price || 0);
+          const p = pSale || pRent || 0;
+
+          if (pSale > 0 || p > 0) {
+            const checkPrice = pSale > 0 ? pSale : p;
+            if (checkPrice < 3000000) counts.prices["0-3000000"] = (counts.prices["0-3000000"] || 0) + 1;
+            if (checkPrice >= 3000000 && checkPrice <= 5000000) counts.prices["3000000-5000000"] = (counts.prices["3000000-5000000"] || 0) + 1;
+            if (checkPrice >= 5000000 && checkPrice <= 10000000) counts.prices["5000000-10000000"] = (counts.prices["5000000-10000000"] || 0) + 1;
+            if (checkPrice >= 10000000 && checkPrice <= 20000000) counts.prices["10000000-20000000"] = (counts.prices["10000000-20000000"] || 0) + 1;
+            if (checkPrice > 20000000) counts.prices["20000000-999999999"] = (counts.prices["20000000-999999999"] || 0) + 1;
+          }
+
+          if (pRent > 0 || (p > 0 && p < 1000000)) {
+            const checkRent = pRent > 0 ? pRent : p;
+            if (checkRent < 15000) counts.prices["0-15000"] = (counts.prices["0-15000"] || 0) + 1;
+            if (checkRent >= 15000 && checkRent <= 30000) counts.prices["15000-30000"] = (counts.prices["15000-30000"] || 0) + 1;
+            if (checkRent >= 30000 && checkRent <= 60000) counts.prices["30000-60000"] = (counts.prices["30000-60000"] || 0) + 1;
+            if (checkRent > 60000) counts.prices["60000-999999999"] = (counts.prices["60000-999999999"] || 0) + 1;
+          }
+
+          // Size ranges (floor_area in sqm)
+          const s = Number(x.floor_area || 0);
+          if (s > 0) {
+            if (s < 35) counts.sizes["0-35"] = (counts.sizes["0-35"] || 0) + 1;
+            if (s >= 35 && s <= 50) counts.sizes["35-50"] = (counts.sizes["35-50"] || 0) + 1;
+            if (s >= 50 && s <= 80) counts.sizes["50-80"] = (counts.sizes["50-80"] || 0) + 1;
+            if (s >= 80 && s <= 120) counts.sizes["80-120"] = (counts.sizes["80-120"] || 0) + 1;
+            if (s > 120) counts.sizes["120-999999"] = (counts.sizes["120-999999"] || 0) + 1;
+          }
+
+          // Quick Features
+          if (x.is_hot_deal) counts.quick.isHotDeal++;
+          const am = x.properties_details?.amenities || {};
+          if (am.is_pet_friendly) counts.quick.petFriendly++;
+          if (am.is_fully_furnished) counts.quick.fullyFurnished++;
+          if (am.is_foreigner_quota) counts.quick.isForeigner++;
+          if (am.allow_airbnb) counts.quick.allowAirbnb++;
+          if (am.is_tax_registered || am.is_grade_a) counts.quick.isInvestment++;
         },
       );
+
+      counts.availableStations = Array.from(stationsMap.values()).sort((a, b) => b.count - a.count);
     }
 
     // 2. Fetch filtered properties using Core + Details Join (No Views)
@@ -652,7 +812,13 @@ export const searchPropertiesAction = createSafeAction(
         status,
         sale_price,
         rent_price,
-        properties_details!inner(title, address_info, pricing_details),
+        bedrooms,
+        bathrooms,
+        floor_area,
+        land_area,
+        is_hot_deal,
+        projects(name),
+        properties_details!inner(title, address_info, pricing_details, amenities, transit_info),
         property_media_v3(url, storage_path, is_cover, sort_order)
       `)
       .is("deleted_at", null);
@@ -662,30 +828,68 @@ export const searchPropertiesAction = createSafeAction(
     }
 
     if (queryTerm) {
-      // Search in localized title (TH)
-      sb = sb.ilike("properties_details.title->>th", `%${queryTerm}%`);
+      // Search in localized title (TH) or English
+      sb = sb.or(`properties_details.title->>th.ilike.%${queryTerm}%,properties_details.title->>en.ilike.%${queryTerm}%`);
     }
 
-    sb = sb.order("updated_at", { ascending: false }).limit(30);
-
-    if (listing_type) {
-      const type = listing_type as ListingTypeLegacy;
-      if (type === "SALE") {
+    if (listing_type && listing_type !== "ALL") {
+      const typeStr = (listing_type as string).toUpperCase();
+      if (typeStr === "SALE" || typeStr === "BUY") {
         sb = sb.in("listing_type", [0, 2]); // SALE or SALE_AND_RENT
-      } else if (type === "RENT") {
+      } else if (typeStr === "RENT") {
         sb = sb.in("listing_type", [1, 2]); // RENT or SALE_AND_RENT
-      } else if (type === "SALE_AND_RENT") {
+      } else if (typeStr === "SALE_AND_RENT" || typeStr === "RENT_BUY" || typeStr === "SALE_RENT") {
         sb = sb.eq("listing_type", 2);
       }
     }
 
-    if (property_type) {
+    if (property_type && property_type !== "ALL") {
       const dbVal = PROPERTY_TYPE_DB_VALUE[property_type as PropertyTypeLegacy];
       if (dbVal !== undefined) sb = sb.eq("property_type", dbVal);
     }
 
-    if (popular_area) {
+    if (province && province !== "ALL") {
+      sb = sb.ilike("properties_details.address_info->>province", `%${province}%`);
+    }
+
+    if (popular_area && popular_area !== "ALL") {
       sb = sb.ilike("properties_details.address_info->>popular_area", `%${popular_area}%`);
+    }
+
+    if (transit_station && transit_station !== "ALL") {
+      sb = sb.or(`properties_details.transit_info->>transit_station_name.ilike.%${transit_station}%,properties_details.transit_info->>transit_station_name_en.ilike.%${transit_station}%,properties_details.transit_info->transits.cs.[{"station_name":"${transit_station}"}],properties_details.transit_info->transits.cs.[{"station_name_en":"${transit_station}"}]`);
+    }
+
+    if (near_train) {
+      sb = sb.eq("properties_details.transit_info->>near_transit", "true");
+    }
+
+    if (min_price && min_price > 0) {
+      sb = sb.or(`sale_price.gte.${min_price},rent_price.gte.${min_price}`);
+    }
+
+    if (max_price && max_price > 0) {
+      sb = sb.or(`sale_price.lte.${max_price},rent_price.lte.${max_price}`);
+    }
+
+    if (min_size && min_size > 0) {
+      sb = sb.gte("floor_area", min_size);
+    }
+
+    if (max_size && max_size > 0) {
+      sb = sb.lte("floor_area", max_size);
+    }
+
+    if (bedrooms && bedrooms !== "ALL") {
+      if (bedrooms === "4+" || bedrooms === "4") {
+        sb = sb.gte("bedrooms", 4);
+      } else {
+        sb = sb.eq("bedrooms", Number(bedrooms));
+      }
+    }
+
+    if (is_hot_deal) {
+      sb = sb.eq("is_hot_deal", true);
     }
 
     if (status) {
@@ -700,48 +904,94 @@ export const searchPropertiesAction = createSafeAction(
       }
     }
 
+    // Sort order
+    if (sort === "PRICE_ASC" || sort === "price_asc") {
+      sb = sb.order("sale_price", { ascending: true, nullsFirst: false });
+    } else if (sort === "PRICE_DESC" || sort === "price_desc") {
+      sb = sb.order("sale_price", { ascending: false, nullsFirst: false });
+    } else {
+      sb = sb.order("updated_at", { ascending: false });
+    }
+
+    sb = sb.limit(30);
+
     const { data, error } = await sb;
     if (error) throw new Error(mapDbError(error));
-
-
 
     return {
       properties: (data || []).map((x) => {
         const detailsObj = (x.properties_details as unknown as { 
           title: { th?: string; en?: string; cn?: string; ru?: string } | string; 
           address_info: PropertyAddressV3; 
-          pricing_details: PropertyPricingV3 
+          pricing_details: PropertyPricingV3;
+          amenities?: any;
         }) || {};
         
-        const titleVal = typeof detailsObj.title === "object" ? detailsObj.title?.th : detailsObj.title;
+        const titleObj = typeof detailsObj.title === "object" ? detailsObj.title : null;
+        const titleVal = titleObj ? titleObj.th : (typeof detailsObj.title === "string" ? detailsObj.title : null);
         const pricing = detailsObj.pricing_details || {};
-        const address = detailsObj.address_info || {};
-        const images = (x.property_media_v3 as Array<{
+        const address = (detailsObj.address_info as any) || {};
+        const mediaItems = (x.property_media_v3 as Array<{
           url: string;
           storage_path: string;
           is_cover: boolean;
           sort_order: number;
         }>) || [];
 
+        const pName = (x as any).projects?.name;
+        const projectNameTh = typeof pName === "object" ? pName?.th : pName;
+        const projectNameEn = typeof pName === "object" ? (pName?.en || pName?.th) : pName;
+        const projectNameCn = typeof pName === "object" ? (pName?.cn || pName?.en || pName?.th) : pName;
+        const projectNameRu = typeof pName === "object" ? (pName?.ru || pName?.en || pName?.th) : pName;
+
+        const provinceTh = typeof address.province === "object" ? address.province?.th : address.province;
+        const provinceEn = typeof address.province === "object" ? address.province?.en : (address.province_en || (provinceTh === "กรุงเทพมหานคร" ? "Bangkok" : provinceTh));
+        const districtTh = typeof address.district === "object" ? address.district?.th : address.district;
+        const districtEn = typeof address.district === "object" ? address.district?.en : (address.district_en || (districtTh ? districtTh.replace("เขต", "").replace("อำเภอ", "").trim() : null));
+        const areaTh = typeof address.popular_area === "object" ? address.popular_area?.th : address.popular_area;
+        const areaEn = typeof address.popular_area === "object" ? address.popular_area?.en : (address.popular_area_en || areaTh);
+
+        const coverUrl = getCoverImage(mediaItems.map(img => ({
+          url: img.url,
+          image_url: img.url,
+          storage_path: img.storage_path,
+          is_cover: img.is_cover,
+          sort_order: img.sort_order
+        })));
+
+        const imagesList = mediaItems
+          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+          .map(img => img.url ? img.url : (img.storage_path ? getPublicImageUrl(img.storage_path) : null))
+          .filter(Boolean) as string[];
+
         return {
           id: x.id,
           title: titleVal || "No Title",
+          title_en: titleObj?.en || null,
+          title_cn: titleObj?.cn || null,
+          title_ru: titleObj?.ru || null,
+          project_name: projectNameTh || null,
+          project_name_en: projectNameEn || null,
+          project_name_cn: projectNameCn || null,
+          project_name_ru: projectNameRu || null,
           price: x.sale_price as number | null,
           original_price: (pricing.original_price as number) || null,
           rental_price: x.rent_price as number | null,
           original_rental_price: (pricing.original_rental_price as number) || null,
           listing_type: getListingTypeFromDb(x.listing_type),
           property_type: getPropertyTypeFromDb(x.property_type),
-          cover_image_url: getCoverImage(images.map(img => ({
-            url: img.url,
-            image_url: img.url,
-            storage_path: img.storage_path,
-            is_cover: img.is_cover,
-            sort_order: img.sort_order
-          }))),
-          province: (typeof address.province === "object" ? address.province?.th : address.province) || null,
-          district: (typeof address.district === "object" ? address.district?.th : address.district) || null,
-          popular_area: (typeof address.popular_area === "object" ? address.popular_area?.th : address.popular_area) || null,
+          bedrooms: (x as any).bedrooms ?? null,
+          bathrooms: (x as any).bathrooms ?? null,
+          size_sqm: (x as any).floor_area ?? null,
+          land_size_sqwah: (x as any).land_area ?? null,
+          cover_image_url: coverUrl,
+          images: imagesList.length > 0 ? imagesList : (coverUrl ? [coverUrl] : []),
+          province: provinceTh || null,
+          province_en: provinceEn || null,
+          district: districtTh || null,
+          district_en: districtEn || null,
+          popular_area: areaTh || null,
+          popular_area_en: areaEn || null,
           status: getStatusFromDb(x.status),
         };
       }),

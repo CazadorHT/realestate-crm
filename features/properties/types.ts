@@ -132,10 +132,14 @@ export interface PropertyTableData {
   is_hot?: boolean;
   view_count?: number;
   is_new?: boolean;
+  title_en?: string | null;
   // Optional fields for enhanced table
   subdistrict?: string | null;
+  subdistrict_en?: string | null;
   district?: string | null;
+  district_en?: string | null;
   province?: string | null;
+  province_en?: string | null;
   size_sqm?: number | null;
   land_size_sqwah?: number | null;
   bedrooms?: number | null;
@@ -147,6 +151,7 @@ export interface PropertyTableData {
   assigned_to?: string | null;
   created_by?: string | null;
   popular_area?: string | null;
+  popular_area_en?: string | null;
   original_price?: number | null;
   original_rental_price?: number | null;
   total_units?: number;
@@ -158,6 +163,7 @@ export interface PropertyTableData {
   tenant_id?: string | null;
   tenant_name?: string | null;
   project_name?: string | null;
+  project_name_en?: string | null;
   version?: number;
   ai_reviewed_at?: string | null;
   ai_reviewed_by?: string | null;

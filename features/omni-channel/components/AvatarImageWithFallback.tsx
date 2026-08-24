@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "lucide-react";
 
 interface AvatarImageWithFallbackProps {
@@ -18,6 +18,11 @@ export function AvatarImageWithFallback({
 }: AvatarImageWithFallbackProps) {
   const [hasError, setHasError] = useState(false);
 
+  // Reset error state if image source changes
+  useEffect(() => {
+    setHasError(false);
+  }, [src]);
+
   if (!src || hasError) {
     return <User className={fallbackIconClassName} />;
   }
@@ -33,8 +38,8 @@ export function AvatarImageWithFallback({
       src={finalSrc}
       alt={alt}
       className={className}
-      onError={(e) => {
-        console.error("Avatar failed to load:", src);
+      loading="lazy"
+      onError={() => {
         setHasError(true);
       }}
     />

@@ -6,7 +6,7 @@ import {
   type ListingType,
 } from "@/features/properties/labels";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
-import { getProvinceName, PROVINCES } from "@/lib/utils/provinces";
+import { getProvinceName, translateLocation, PROVINCES } from "@/lib/utils/provinces";
 
 import {
   type BotLang,
@@ -2131,6 +2131,448 @@ export function buildSocialPostFlex(
 }
 
 /**
+ * 🏠 Rich Property Card Flex Message (2x2 Photos, Specs, Price, Colored Project Name & Multi-language)
+ */
+export function buildPropertyCardFlexMessage(
+  prop: {
+    id: string;
+    slug?: string | null;
+    title: string;
+    title_en?: string | null;
+    title_cn?: string | null;
+    title_ru?: string | null;
+    project_name?: string | null;
+    project_name_en?: string | null;
+    project_name_cn?: string | null;
+    project_name_ru?: string | null;
+    listing_type?: string | null;
+    property_type?: string | null;
+    price?: number | null;
+    rental_price?: number | null;
+    bedrooms?: number | null;
+    bathrooms?: number | null;
+    size_sqm?: number | null;
+    land_size_sqwah?: number | null;
+    popular_area?: string | null;
+    popular_area_en?: string | null;
+    popular_area_cn?: string | null;
+    popular_area_ru?: string | null;
+    district?: string | null;
+    district_en?: string | null;
+    district_cn?: string | null;
+    district_ru?: string | null;
+    province?: string | null;
+    province_en?: string | null;
+    province_cn?: string | null;
+    province_ru?: string | null;
+    images?: string[];
+    imageUrl?: string | null;
+  },
+  lang: BotLang = "th",
+  customPhone?: string | null,
+): FlexMessage {
+  const ensureHttps = (url: string) => {
+    if (!url) return "https://placehold.co/600x400?text=No+Image";
+    let cleanUrl = url.trim();
+    if (cleanUrl.startsWith("http://")) {
+      cleanUrl = cleanUrl.replace("http://", "https://");
+    } else if (cleanUrl.startsWith("//")) {
+      cleanUrl = "https:" + cleanUrl;
+    }
+    return cleanUrl;
+  };
+
+  const rawBase = siteConfig.url || "https://vccasset.com";
+  const baseUrl = (!rawBase || rawBase.includes("localhost") || !rawBase.startsWith("http"))
+    ? "https://vccasset.com"
+    : rawBase.replace(/\/$/, "");
+
+  const propertyUrl = `${baseUrl}/properties/${encodeURIComponent(prop.slug || prop.id)}`;
+
+  // Multi-language Title (Fallback if no project)
+  const title =
+    (lang === "en"
+      ? prop.title_en
+      : lang === "cn"
+        ? prop.title_cn
+        : lang === "ru"
+          ? prop.title_ru
+          : prop.title) ||
+    prop.title ||
+    "—";
+
+  // Listing Type Label
+  const listingLabels: Record<string, Record<BotLang, string>> = {
+    SALE: { th: "[ขาย]", en: "[For Sale]", cn: "[出售]", ru: "[Продажа]" },
+    RENT: { th: "[ให้เช่า]", en: "[For Rent]", cn: "[出租]", ru: "[Аренда]" },
+    SALE_AND_RENT: { th: "[ขาย/เช่า]", en: "[Sale/Rent]", cn: "[租售]", ru: "[Продажа/Аренда]" },
+    SALE_RENT: { th: "[ขาย/เช่า]", en: "[Sale/Rent]", cn: "[租售]", ru: "[Продажа/Аренда]" },
+  };
+
+  const ltKey = (prop.listing_type || "").toUpperCase();
+  const isRent = ltKey === "RENT";
+  const listingLabel = listingLabels[ltKey]?.[lang] || (isRent ? "[ให้เช่า]" : "[ขาย]");
+
+  // Property Type Label
+  const propTypeLabels: Record<string, Record<BotLang, string>> = {
+    CONDO: { th: "คอนโด", en: "Condo", cn: "公寓", ru: "Кондо" },
+    HOUSE: { th: "บ้านเดี่ยว", en: "Single House", cn: "独栋别墅", ru: "Дом" },
+    TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅", ru: "Таунхаус" },
+    LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
+    OFFICE_BUILDING: { th: "ออฟฟิศ", en: "Office", cn: "办公楼", ru: "Офис" },
+    COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商用建筑", ru: "Коммерция" },
+    VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅", ru: "Вилла" },
+    POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅", ru: "Пул вилла" },
+    WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
+  };
+
+  const ptKey = (prop.property_type || "").toUpperCase();
+  const propTypeLabel = propTypeLabels[ptKey]?.[lang] || prop.property_type || "";
+
+  const propTypeEmojiMap: Record<string, string> = {
+    CONDO: "🏢",
+    HOUSE: "🏡",
+    TOWNHOME: "🏘️",
+    VILLA: "🏰",
+    POOL_VILLA: "🏊",
+    LAND: "🏞️",
+    OFFICE_BUILDING: "🏬",
+    COMMERCIAL_BUILDING: "🏪",
+    WAREHOUSE: "🏭",
+  };
+  const propEmoji = propTypeEmojiMap[ptKey] || "🏠";
+
+  // Project / Main Headline
+  const thProject = prop.project_name?.trim();
+  const enProject = prop.project_name_en?.trim();
+  const thTitle = prop.title?.trim();
+  const enTitle = prop.title_en?.trim();
+
+  let displayHeadline = "";
+  if (lang === "th") {
+    if (thProject) {
+      displayHeadline = enProject && enProject.toLowerCase() !== thProject.toLowerCase()
+        ? `${thProject} (${enProject})`
+        : thProject;
+    } else if (thTitle) {
+      displayHeadline = enTitle && enTitle.toLowerCase() !== thTitle.toLowerCase()
+        ? `${thTitle} (${enTitle})`
+        : thTitle;
+    } else {
+      displayHeadline = enProject || enTitle || title;
+    }
+  } else if (lang === "en") {
+    displayHeadline = enProject || enTitle || thProject || thTitle || title;
+  } else if (lang === "cn") {
+    displayHeadline = prop.project_name_cn || prop.title_cn || enProject || thProject || title;
+  } else {
+    displayHeadline = prop.project_name_ru || prop.title_ru || enProject || thProject || title;
+  }
+
+  // Clean Badge Subtitle (Deal Type + Property Type)
+  const subtitle = [
+    listingLabel,
+    propTypeLabel,
+  ].filter(Boolean).join(" • ");
+
+  // Main headline: Prioritize clean Project Name with Emoji
+  const mainHeadline = `${propEmoji} ${displayHeadline}`;
+
+  // Price formatting
+  const formatNum = (num: number | null | undefined) =>
+    num ? `฿${Number(num).toLocaleString()}` : null;
+
+  const salePriceStr = formatNum(prop.price);
+  const rentPriceStr = prop.rental_price ? `฿${Number(prop.rental_price).toLocaleString()}/${lang === "th" ? "เดือน" : lang === "en" ? "mo" : "月"}` : null;
+
+  let priceText = "";
+  if (ltKey === "RENT" && rentPriceStr) {
+    priceText = rentPriceStr;
+  } else if (ltKey === "SALE" && salePriceStr) {
+    priceText = salePriceStr;
+  } else if (salePriceStr && rentPriceStr) {
+    priceText = `${salePriceStr} / ${rentPriceStr}`;
+  } else {
+    priceText = salePriceStr || rentPriceStr || (lang === "th" ? "สอบถามราคา" : "Contact for price");
+  }
+
+  // Location Localized (Only Popular Area + Province, No District/Subdistrict)
+  const rawArea = (lang === "en" ? (prop.popular_area_en || prop.popular_area) : prop.popular_area) || "";
+  const rawProv = (lang === "en" ? (prop.province_en || prop.province) : prop.province) || "";
+  const area = translateLocation(rawArea, lang);
+  const prov = translateLocation(rawProv, lang);
+  const locationText = [area, prov].filter(Boolean).join(", ");
+
+  // Images Grid: Collect up to 4 images
+  const rawImages: string[] = [];
+  if (Array.isArray(prop.images) && prop.images.length > 0) {
+    rawImages.push(...prop.images);
+  }
+  if (prop.imageUrl && !rawImages.includes(prop.imageUrl)) {
+    rawImages.unshift(prop.imageUrl);
+  }
+
+  const validImages = rawImages.filter(Boolean).map(ensureHttps);
+  const heroImage = validImages[0] || "https://placehold.co/600x400?text=Property+Image";
+
+  // Build Image Header
+  let imageHeader: any;
+  if (validImages.length >= 4) {
+    // 2x2 Photo Grid
+    imageHeader = {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "image",
+              url: validImages[0],
+              size: "full",
+              aspectRatio: "4:3",
+              aspectMode: "cover",
+              flex: 1,
+            },
+            {
+              type: "image",
+              url: validImages[1],
+              size: "full",
+              aspectRatio: "4:3",
+              aspectMode: "cover",
+              flex: 1,
+            },
+          ],
+          spacing: "xs",
+        },
+        {
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "image",
+              url: validImages[2],
+              size: "full",
+              aspectRatio: "4:3",
+              aspectMode: "cover",
+              flex: 1,
+            },
+            {
+              type: "image",
+              url: validImages[3],
+              size: "full",
+              aspectRatio: "4:3",
+              aspectMode: "cover",
+              flex: 1,
+            },
+          ],
+          spacing: "xs",
+          margin: "xs",
+        },
+      ],
+      paddingAll: "none",
+    };
+  } else {
+    // Hero Single Photo (or 2-3)
+    imageHeader = {
+      type: "image",
+      url: heroImage,
+      size: "full",
+      aspectRatio: "16:9",
+      aspectMode: "cover",
+    };
+  }
+
+  // Button Labels
+  const viewDetailsLabel = {
+    th: "ดูรายละเอียด",
+    en: "View Details",
+    cn: "查看详情",
+    ru: "Подробнее",
+  }[lang];
+
+  const contactLabel = {
+    th: "ติดต่อ",
+    en: "Contact",
+    cn: "联系我们",
+    ru: "Контакты",
+  }[lang];
+
+  const contactUri = customPhone
+    ? `tel:${customPhone}`
+    : siteConfig.links.line || "https://line.me";
+
+  const bedLabel = lang === "th" ? "นอน" : lang === "en" ? "Bed" : "房";
+  const bathLabel = lang === "th" ? "น้ำ" : lang === "en" ? "Bath" : "卫";
+  const sizeUnit = lang === "th" ? "ตร.ม." : "sq.m.";
+
+  const bubble: FlexBubble = {
+    type: "bubble",
+    size: "mega",
+    hero: imageHeader,
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "md",
+      paddingAll: "lg",
+      contents: [
+        // Subtitle / Badges
+        {
+          type: "text",
+          text: subtitle,
+          size: "xs",
+          color: isRent ? "#2563EB" : "#059669",
+          weight: "bold",
+        },
+        // Main Headline: Colored & Bold Project Name
+        {
+          type: "text",
+          text: mainHeadline,
+          weight: "bold",
+          size: "lg",
+          wrap: true,
+          maxLines: 2,
+          color: (thProject || enProject) ? "#1E40AF" : "#0F172A",
+        },
+        // Price Highlight (Red & Large)
+        {
+          type: "text",
+          text: priceText,
+          weight: "bold",
+          size: "xl",
+          color: "#DC2626",
+          wrap: true,
+        },
+        // Location Pin
+        ...(locationText
+          ? [
+              {
+                type: "box" as const,
+                layout: "horizontal" as const,
+                spacing: "xs" as const,
+                contents: [
+                  {
+                    type: "text" as const,
+                    text: "📍",
+                    size: "xs" as const,
+                    flex: 0,
+                  },
+                  {
+                    type: "text" as const,
+                    text: locationText,
+                    size: "xs" as const,
+                    color: "#64748B",
+                    wrap: true,
+                    flex: 1,
+                  },
+                ],
+              },
+            ]
+          : []),
+        // Specs Row (Bed, Bath, Sqm)
+        {
+          type: "box",
+          layout: "horizontal",
+          spacing: "sm",
+          margin: "sm",
+          contents: [
+            {
+              type: "text",
+              text: `🛏️ ${prop.bedrooms || "-"} ${bedLabel}`,
+              size: "xs",
+              color: "#475569",
+              flex: 1,
+            },
+            {
+              type: "text",
+              text: `🚿 ${prop.bathrooms || "-"} ${bathLabel}`,
+              size: "xs",
+              color: "#475569",
+              flex: 1,
+              align: "center",
+            },
+            {
+              type: "text",
+              text: `📐 ${prop.size_sqm || prop.land_size_sqwah || "-"} ${sizeUnit}`,
+              size: "xs",
+              color: "#475569",
+              flex: 1,
+              align: "end",
+            },
+          ],
+        },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "horizontal",
+      spacing: "md",
+      paddingAll: "lg",
+      paddingTop: "none",
+      contents: [
+        // View Details Button (Dark Navy)
+        {
+          type: "box",
+          layout: "vertical",
+          backgroundColor: "#1E3A5F",
+          cornerRadius: "xl",
+          height: "40px",
+          justifyContent: "center",
+          flex: 1,
+          action: {
+            type: "uri",
+            label: viewDetailsLabel,
+            uri: propertyUrl,
+          },
+          contents: [
+            {
+              type: "text",
+              text: viewDetailsLabel,
+              color: "#FFFFFF",
+              size: "xs",
+              weight: "bold",
+              align: "center",
+            },
+          ],
+        },
+        // Contact Button (Light Gray)
+        {
+          type: "box",
+          layout: "vertical",
+          backgroundColor: "#F1F5F9",
+          cornerRadius: "xl",
+          height: "40px",
+          justifyContent: "center",
+          flex: 1,
+          action: {
+            type: "uri",
+            label: contactLabel,
+            uri: contactUri,
+          },
+          contents: [
+            {
+              type: "text",
+              text: contactLabel,
+              color: "#334155",
+              size: "xs",
+              weight: "bold",
+              align: "center",
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  return {
+    type: "flex",
+    altText: `🏠 [${isRent ? (lang === "th" ? "ให้เช่า" : "For Rent") : (lang === "th" ? "ขาย" : "For Sale")}] ${mainHeadline} (${priceText})`,
+    contents: bubble,
+  };
+}
+
+/**
  * 🤝 Handover Confirmation Card (Beautiful Flex Message)
  */
 export function buildHandoverConfirmFlex(lang: BotLang = "th"): FlexMessage {
@@ -2205,7 +2647,12 @@ export function buildHandoverConfirmFlex(lang: BotLang = "th"): FlexMessage {
           height: "sm",
           action: {
             type: "uri",
-            label: "🌐 เข้าชมเว็บไซต์",
+            label: ({
+              th: "🌐 เข้าชมเว็บไซต์",
+              en: "🌐 Visit Website",
+              cn: "🌐 访问网站",
+              ru: "🌐 Посетить сайт",
+            } as Record<BotLang, string>)[lang] || "🌐 เข้าชมเว็บไซต์",
             uri: siteConfig.url,
           },
           color: "#F1F5F9",

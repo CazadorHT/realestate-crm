@@ -99,7 +99,7 @@ export const getCalendarEvents = cache(async (
     if (leadIds.length > 0) {
       const { data: leadsData } = await supabase
         .from("crm_leads_v3")
-        .select("id, tenant_id, identity:identities_v3(display_name)")
+        .select("id, tenant_id, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
         .in("id", leadIds);
       (leadsData || []).forEach((l: any) => {
         leadsMap[l.id] = { 
@@ -409,7 +409,7 @@ export const getCompactLeads = cache(async () => {
 
   let query = supabase
     .from("crm_leads_v3")
-    .select("id, tenant_id, stage, identity:identities_v3(display_name)")
+    .select("id, tenant_id, stage, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
     .neq("stage", "CLOSED");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL" && !isAdmin) {

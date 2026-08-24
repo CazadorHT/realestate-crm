@@ -16,7 +16,7 @@ export async function getPropertiesForSelect() {
   let query = supabase
     .from("properties")
     .select(
-      `id, title, price, original_price, rental_price, original_rental_price, listing_type, commission_sale_percentage, commission_rent_months, popular_area, province, main_image`,
+      `id, title, title_en, price, original_price, rental_price, original_rental_price, listing_type, commission_sale_percentage, commission_rent_months, popular_area, popular_area_en, province, main_image`,
     )
     .is("deleted_at", null);
 
@@ -34,6 +34,8 @@ export async function getPropertiesForSelect() {
       ...p,
       id: p.id!,
       title: p.title ?? "Untitled",
+      title_en: (p as any).title_en || null,
+      popular_area_en: (p as any).popular_area_en || null,
       cover_image: coverUrl,
       image_url: coverUrl,
     };

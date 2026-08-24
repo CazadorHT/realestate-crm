@@ -213,14 +213,14 @@ export function DealForm({
                     <div className="flex flex-col gap-1.5 min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="font-semibold text-slate-900 leading-tight group-hover:text-blue-700 transition-colors text-xs sm:text-base line-clamp-2 overflow-hidden">
-                          {p.title}
+                          {(isEn && (p as any).title_en) ? (p as any).title_en : p.title}
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 text-xs sm:text-sm text-slate-500 font-medium">
                         {p.popular_area && (
                           <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs truncate">
-                            📍 {p.popular_area}
+                            📍 {isEn ? ((p as any).popular_area_en || p.popular_area) : p.popular_area}
                           </div>
                         )}
                         {p.listing_type && LISTING_TYPE_LABELS[p.listing_type] && (

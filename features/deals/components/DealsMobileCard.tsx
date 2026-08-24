@@ -168,7 +168,7 @@ export function DealsMobileCard({
               }}
               className="font-semibold text-sm line-clamp-2! wrap-break-word text-slate-800 leading-[1.3] hover:text-blue-600 transition-colors block cursor-pointer"
             >
-              {deal.property?.title || (isEn ? "Untitled Property" : "ทรัพย์ไม่ระบุชื่อ")}
+              {(isEn && deal.property?.title_en) ? deal.property.title_en : (deal.property?.title || (isEn ? "Untitled Property" : "ทรัพย์ไม่ระบุชื่อ"))}
             </div>
 
             <div className="flex items-center gap-2">

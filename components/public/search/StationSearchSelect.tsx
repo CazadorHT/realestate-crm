@@ -3,12 +3,6 @@
 import * as React from "react";
 import { Check, ChevronsUpDown, Search, TrainFront } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { formatStationLabel } from "@/lib/property-utils";
 
@@ -34,6 +28,7 @@ interface StationSearchSelectProps {
   language: string;
   getLocaleValue: (obj: any, field: string, lang: string) => string;
   className?: string;
+  align?: "start" | "end" | "left" | "right";
 }
 
 const getNormalizedType = (type: string): string => {
@@ -106,11 +101,14 @@ export function StationSearchSelect({
   language,
   getLocaleValue,
   className,
+  align = "start",
 }: StationSearchSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [trainTypeFilter, setTrainTypeFilter] = React.useState("ALL");
   const [subLineFilter, setSubLineFilter] = React.useState("ALL");
+
+  const isRightAligned = align === "end" || align === "right";
 
   const handleTrainTypeFilterChange = (newType: string) => {
     setTrainTypeFilter(newType);
@@ -198,58 +196,94 @@ export function StationSearchSelect({
     return selectedStationObj.type ? formatStationLabel(selectedStationObj.type, localized, language) : localized;
   }, [transitStation, selectedStationObj, language, getLocaleValue, t]);
 
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Close on click outside or Escape key
+  React.useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
+    <div className={cn("relative inline-block", open ? "z-50" : "z-0")} ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className={cn(
+          "h-10 rounded-xl border border-slate-200 bg-white shadow-2xs hover:shadow-xs transition-all text-xs font-medium text-slate-700 flex items-center justify-between px-3 cursor-pointer select-none",
+          className
+        )}
+      >
+        <div className="flex items-center gap-2 truncate">
+          {selectedStationObj ? (
+            (() => {
+              const logoPath = LOGO_PATHS[selectedStationObj.type.toUpperCase()];
+              return logoPath ? (
+                <div className="w-4 h-4 shrink-0 flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={logoPath} alt="Logo" className="w-full h-full object-contain" />
+                </div>
+              ) : (
+                <TrainFront className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+              );
+            })()
+          ) : (
+            <TrainFront className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+          )}
+          <span className="truncate">{displayLabel}</span>
+        </div>
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </button>
+
+      {open && (
+        <div
           className={cn(
-            "h-10 rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all text-xs font-normal text-blue-500 justify-between px-3",
-            className
+            "absolute top-full mt-1.5 w-[330px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-slate-200/90 z-[9999] overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col",
+            isRightAligned ? "right-0" : "left-0"
           )}
         >
-          <div className="flex items-center gap-2 truncate">
-            {selectedStationObj ? (
-              (() => {
-                const logoPath = LOGO_PATHS[selectedStationObj.type.toUpperCase()];
-                return logoPath ? (
-                  <div className="w-4 h-4 shrink-0 flex items-center justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={logoPath} alt="Logo" className="w-full h-full object-contain" />
-                  </div>
-                ) : (
-                  <TrainFront className="h-3.5 w-3.5 shrink-0" />
-                );
-              })()
-            ) : (
-              <TrainFront className="h-3.5 w-3.5 shrink-0" />
-            )}
-            <span className="truncate">{displayLabel}</span>
+          {/* Search Input */}
+          <div className="flex items-center border-b border-slate-100 px-3 py-2">
+            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="ค้นหาชื่อสถานี..."
+              className="h-8 w-full border-0 bg-transparent p-2 placeholder:text-xs text-xs focus-visible:ring-0 focus-visible:ring-offset-0"
+              autoFocus
+            />
           </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[320px] p-0 bg-white rounded-xl shadow-lg border border-slate-100 z-50">
-        {/* Search Input */}
-        <div className="flex items-center border-b border-slate-100 px-3 py-2">
-          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="ค้นหาชื่อสถานี..."
-            className="h-8 w-full border-0 bg-transparent p-2 placeholder:text-xs text-xs focus-visible:ring-0 focus-visible:ring-offset-0"
-          />
-        </div>
 
         {/* Train Line Tabs */}
         {trainTypes.length > 0 && (
           <div className="flex flex-wrap gap-1 p-2 bg-slate-50/50 border-b border-slate-100">
             <button
+              type="button"
               onClick={() => handleTrainTypeFilterChange("ALL")}
               className={cn(
-                "px-2 py-1 rounded-lg text-[12px] font-bold transition-all border",
+                "px-2 py-1 rounded-lg text-[12px] font-bold transition-all border cursor-pointer",
                 trainTypeFilter === "ALL"
                   ? "bg-slate-700 text-white border-slate-700 shadow-xs"
                   : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -262,9 +296,10 @@ export function StationSearchSelect({
               return (
                 <button
                   key={type}
+                  type="button"
                   onClick={() => handleTrainTypeFilterChange(type)}
                   className={cn(
-                    "px-2.5 py-1 rounded-lg text-[12px] font-bold transition-all border flex items-center gap-1.5",
+                    "px-2.5 py-1 rounded-lg text-[12px] font-bold transition-all border flex items-center gap-1.5 cursor-pointer",
                     getTypeTabClass(type, trainTypeFilter === type)
                   )}
                 >
@@ -286,9 +321,10 @@ export function StationSearchSelect({
           <div className="flex flex-wrap gap-1 p-2 bg-slate-50/20 border-b border-slate-100/80 animate-in fade-in slide-in-from-top-1 duration-200">
             {/* "All" option for sub-line */}
             <button
+              type="button"
               onClick={() => setSubLineFilter("ALL")}
               className={cn(
-                "px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border",
+                "px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border cursor-pointer",
                 subLineFilter === "ALL"
                   ? "bg-slate-500 text-white border-slate-500 shadow-3xs"
                   : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
@@ -307,9 +343,10 @@ export function StationSearchSelect({
             ].map((sub) => (
               <button
                 key={sub.type}
+                type="button"
                 onClick={() => setSubLineFilter(sub.type)}
                 className={cn(
-                  "px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border",
+                  "px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border cursor-pointer",
                   subLineFilter === sub.type
                     ? `${sub.colorClass} shadow-3xs`
                     : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -326,9 +363,10 @@ export function StationSearchSelect({
             ].map((sub) => (
               <button
                 key={sub.type}
+                type="button"
                 onClick={() => setSubLineFilter(sub.type)}
                 className={cn(
-                  "px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border",
+                  "px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border cursor-pointer",
                   subLineFilter === sub.type
                     ? `${sub.colorClass} shadow-3xs`
                     : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -367,7 +405,7 @@ export function StationSearchSelect({
               ไม่พบสถานีที่สอดคล้อง
             </div>
           ) : (
-            filteredStations.map((station) => {
+            filteredStations.map((station, idx) => {
               const isSelected = transitStation === station.name;
               const localizedName = getLocaleValue(
                 {
@@ -384,7 +422,7 @@ export function StationSearchSelect({
 
               return (
                 <button
-                  key={station.name}
+                  key={`${station.name}-${station.type}-${idx}`}
                   type="button"
                   onClick={() => {
                     setTransitStation(isSelected ? "" : station.name);
@@ -443,7 +481,8 @@ export function StationSearchSelect({
             })
           )}
         </div>
-      </PopoverContent>
-    </Popover>
+      </div>
+    )}
+  </div>
   );
 }

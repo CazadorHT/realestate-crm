@@ -43,6 +43,10 @@ export function DealsTableRow({
     ? (deal as any).commission_net 
     : (Number(deal.commission_total) || 0);
 
+  const displayTitle = (isEn && deal.property?.title_en)
+    ? deal.property.title_en
+    : (deal.property?.title || "-");
+
   return (
     <TableRow
       className={`hover:bg-slate-50/50 transition-colors ${isSelected ? "bg-blue-50/50" : ""}`}
@@ -73,7 +77,7 @@ export function DealsTableRow({
             {navigatingId === `prop-${deal.property_id}` && (
               <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
             )}
-            {deal.property?.title || "-"}
+            {displayTitle}
           </div>
           <div className="flex items-center gap-1.5">
             {isNew && (

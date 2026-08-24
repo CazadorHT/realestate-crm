@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
 
 export type DealItem = {
   id: string;
@@ -85,7 +86,7 @@ export function DealCombobox({
       const pageItems: DealItem[] = (payload.data ?? []).map((x: DealWithProperty) => ({
         id: x.id,
         property_id: x.property_id || x.property?.id,
-        property_title: x.property?.title ?? (isEn ? "Untitled Property" : "ไม่ระบุทรัพย์"),
+        property_title: (isEn && x.property?.title_en) ? x.property.title_en : (x.property?.title ?? (isEn ? "Untitled Property" : "ไม่ระบุทรัพย์")),
         lead_name: x.lead?.full_name ?? (isEn ? "Unnamed Lead" : "ไม่ระบุลูกค้า"),
         deal_type: x.deal_type,
         price: x.property?.price,
@@ -96,8 +97,9 @@ export function DealCombobox({
         cover_image_url:
           x.property?.images?.find((img) => img.is_cover)?.image_url ||
           x.property?.images?.[0]?.image_url,
-        location:
-          x.property?.popular_area || x.property?.province || (isEn ? "Unspecified Location" : "ไม่ระบุทำเล"),
+        location: isEn
+          ? (x.property?.popular_area_en || getDistrictName(x.property?.popular_area || "", "en") || getProvinceName(x.property?.province || "", "en") || "Unspecified Location")
+          : (x.property?.popular_area || x.property?.province || "ไม่ระบุทำเล"),
         tenant_id: x.tenant_id,
       }));
 

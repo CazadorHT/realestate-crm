@@ -28,12 +28,16 @@ import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
 
 import { searchPropertiesAction } from "@/features/leads/actions";
 
 export type PropertyPickItem = {
   id: string;
   title: string;
+  title_en?: string | null;
+  project_name?: string | null;
+  project_name_en?: string | null;
   price: number | null;
   original_price: number | null;
   rental_price: number | null;
@@ -41,8 +45,11 @@ export type PropertyPickItem = {
   listing_type: string | null;
   cover_image_url: string | null;
   province: string | null;
+  province_en?: string | null;
   district: string | null;
+  district_en?: string | null;
   popular_area: string | null;
+  popular_area_en?: string | null;
   status: string | null;
   property_type: string | null;
 };
@@ -55,10 +62,15 @@ type Props = {
   initialProperty?: {
     id: string;
     title: string;
+    title_en?: string | null;
     cover_image_url?: string | null;
     listing_type?: string | null;
     popular_area?: string | null;
+    popular_area_en?: string | null;
     district?: string | null;
+    district_en?: string | null;
+    province?: string | null;
+    province_en?: string | null;
   } | null;
   tenantId?: string | null;
   name?: string;
@@ -361,24 +373,33 @@ export function PropertyCombobox({
       {/* Text */}
       <div className="flex-1 min-w-0 pr-2 overflow-hidden">
         {selected ? (
-          <>
-            <p className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-tight wrap-break-words ">
-              {selected.title}
-            </p>
-            <div className="flex items-center gap-1.5 mt-1 min-w-0">
-              <div className="shrink-0">
-                <ListingTypeBadge type={selected.listing_type} />
-              </div>
-              {(selected.popular_area || selected.district) && (
-                <span className="text-[10px] sm:text-xs text-slate-400 truncate flex-1 min-w-0 flex items-center gap-0.5 opacity-80">
-                  <MapPin className="h-2.5 w-2.5 shrink-0" />
-                  <span className="truncate">
-                    {(selected.popular_area || selected.district) ?? ""}
-                  </span>
-                </span>
-              )}
-            </div>
-          </>
+          (() => {
+            const displayTitle = (isEn && selected.title_en) ? selected.title_en : selected.title;
+            const displayArea = isEn
+              ? (selected.popular_area_en || selected.district_en || getDistrictName(selected.popular_area || selected.district || "", "en") || getProvinceName(selected.province || "", "en"))
+              : (selected.popular_area || selected.district || selected.province || "");
+
+            return (
+              <>
+                <p className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-tight wrap-break-words ">
+                  {displayTitle}
+                </p>
+                <div className="flex items-center gap-1.5 mt-1 min-w-0">
+                  <div className="shrink-0">
+                    <ListingTypeBadge type={selected.listing_type} />
+                  </div>
+                  {displayArea && (
+                    <span className="text-[10px] sm:text-xs text-slate-400 truncate flex-1 min-w-0 flex items-center gap-0.5 opacity-80">
+                      <MapPin className="h-2.5 w-2.5 shrink-0" />
+                      <span className="truncate">
+                        {displayArea}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </>
+            );
+          })()
         ) : (
           <span className="text-slate-400 text-sm font-normal">
             {defaultPlaceholder}
@@ -568,6 +589,11 @@ export function PropertyCombobox({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
               {items.map((item) => {
                 const isSelected = value === item.id;
+                const displayTitle = (isEn && item.title_en) ? item.title_en : item.title;
+                const displayArea = isEn
+                  ? (item.popular_area_en || item.district_en || getDistrictName(item.popular_area || item.district || "", "en") || getProvinceName(item.province || "", "en"))
+                  : (item.popular_area || item.district || item.province || "");
+
                 return (
                   <button
                     key={item.id}
@@ -587,7 +613,7 @@ export function PropertyCombobox({
                         <div className="absolute inset-0">
                           <Image
                             src={item.cover_image_url}
-                            alt={item.title}
+                            alt={displayTitle}
                             fill
                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                             sizes="(max-width: 768px) 100vw, 300px"
@@ -637,12 +663,11 @@ export function PropertyCombobox({
                             ? "text-blue-700"
                             : "text-slate-900 group-hover:text-blue-700",
                         )}
+                        title={displayTitle}
                       >
-                        {item.title}
+                        {displayTitle}
                       </p>
-                      {(item.popular_area ||
-                        item.district ||
-                        item.province) && (
+                      {displayArea && (
                         <div className="flex items-center gap-1 text-xs text-slate-400 mt-1.5 font-medium">
                           <span className="shrink-0 flex items-center">
                             <MapPin className="h-3 w-3" />
@@ -653,9 +678,7 @@ export function PropertyCombobox({
                             </div>
                           )}
                           <span className="truncate">
-                            {item.popular_area ||
-                              item.district ||
-                              item.province}
+                            {displayArea}
                           </span>
                         </div>
                       )}

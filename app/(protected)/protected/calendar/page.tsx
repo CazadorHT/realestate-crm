@@ -33,7 +33,7 @@ export default async function CalendarPage({
   searchParams: Promise<{ month?: string; propertyId?: string; leadId?: string; agentId?: string; mode?: string }>;
 }) {
   const cookieStore = await cookies();
-  const lang = (cookieStore.get("language")?.value || "th") as "th" | "en";
+  const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
 
   // 1. Auth Check (Protect Route)

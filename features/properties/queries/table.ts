@@ -358,7 +358,7 @@ export const getPropertiesTableData = cache(async (params: {
           deal_type,
           status,
           updated_at,
-          lead:crm_leads_v3(identity:identities_v3(display_name))
+          lead:crm_leads_v3(identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name))
         `,
             )
             .in("property_id", soldOrRentedIds)

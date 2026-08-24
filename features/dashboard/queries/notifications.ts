@@ -73,7 +73,7 @@ export async function getRecentNotifications(
         ? applyFilters(
             supabase
               .from("crm_leads_v3")
-              .select("id, created_at, source, identity:identities_v3(display_name)")
+              .select("id, created_at, source, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
               .eq("source", "WEBSITE")
               .gte("created_at", isoLimit)
               .order("created_at", { ascending: false }),
@@ -313,7 +313,7 @@ export async function getTodayAgenda(
   const { data: newLeads } = await applyFilters(
     supabase
       .from("crm_leads_v3")
-      .select("id, created_at, lead_type, identity:identities_v3(display_name)")
+      .select("id, created_at, lead_type, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
       .gte("created_at", todayIso)
       .order("created_at", { ascending: false }),
     "assigned_to",

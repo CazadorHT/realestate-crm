@@ -366,7 +366,7 @@ export function DealsFilters({
               {isEn ? "Search & Filter" : "ตัวกรองข้อมูล"}
               {totalCount !== undefined && <span className="ml-2 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full text-[11px]">{totalCount}</span>}
             </h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Search & Filter Deals</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{isEn ? "Search & Filter Deals" : "ค้นหาและกรองข้อมูลดีล"}</p>
           </div>
         </div>
 

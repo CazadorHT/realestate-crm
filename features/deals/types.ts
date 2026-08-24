@@ -28,12 +28,14 @@ export type DealWithProperty = Deal & {
   property: {
     id: string;
     title: string;
+    title_en?: string | null;
     price: number | null;
     original_price: number | null;
     rental_price: number | null;
     original_rental_price: number | null;
     province?: string | null;
     popular_area?: string | null;
+    popular_area_en?: string | null;
     images?: {
       url: string; // Changed from image_url for V3
       image_url?: string; // Legacy alias

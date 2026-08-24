@@ -6,6 +6,7 @@ import { RiHome4Line } from "react-icons/ri";
 import { Button } from "@/components/ui/button";
 import { DealWithProperty } from "../types";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getProvinceName } from "@/lib/utils/provinces";
 
 interface DealPropertyCardProps {
   property: DealWithProperty["property"];
@@ -95,11 +96,13 @@ export function DealPropertyCard({ property, isRent }: DealPropertyCardProps) {
               href={`/protected/properties/${property.id}`}
               className="font-bold text-lg hover:text-primary transition-colors line-clamp-2 block"
             >
-              {property.title}
+              {(isEn && property.title_en) ? property.title_en : property.title}
             </Link>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <MapPin className="h-3 w-3" />
-              {(property as any).province || (property as any).district || (isEn ? "Bangkok, Thailand" : "กรุงเทพมหานคร")}
+              {isEn
+                ? (property.popular_area_en || getProvinceName(property.province || "", "en") || property.popular_area || property.province || "Bangkok, Thailand")
+                : (property.popular_area || property.province || (property as any).district || "กรุงเทพมหานคร")}
             </p>
 
             <Button variant="outline" className="w-full mt-4 cursor-pointer" asChild>

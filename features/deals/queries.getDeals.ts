@@ -49,7 +49,7 @@ export async function getDeals({
   let query = scoped.deals().select(
       `
       *,
-      property:properties!crm_deals_v3_property_id_fkey!inner ( id, title, listing_type, property_type, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images:property_media_v3 ( id, property_id, url, is_cover, sort_order ) ),
+      property:properties!crm_deals_v3_property_id_fkey!inner ( id, title, title_en, listing_type, property_type, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, popular_area_en, property_images:property_media_v3 ( id, property_id, url, is_cover, sort_order ) ),
       lead:crm_leads_v3 ( id, stage, identity:identities_v3!crm_leads_v3_identity_id_fkey ( display_name, email, phone ) ),
       commissions:crm_deal_commissions_v3 ( recipient_role, amount )
     `,
@@ -194,13 +194,14 @@ export async function getDeals({
       ? {
           id: d.property.id,
           title: d.property.title,
+          title_en: (d.property as any).title_en || null,
           price: d.property.price,
-
           original_price: d.property.original_price,
           rental_price: d.property.rental_price,
           original_rental_price: d.property.original_rental_price,
           province: d.property.province,
           popular_area: d.property.popular_area,
+          popular_area_en: (d.property as any).popular_area_en || null,
           images: (d.property.property_images || []).map((img: any) => ({
             id: img.id,
             property_id: img.property_id,

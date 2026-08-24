@@ -335,3 +335,117 @@ export function getSubdistrictName(thaiName: string, lang: string): string {
 
   return cleanName;
 }
+
+/**
+ * Reverse lookup map from EN/CN/RU names back to Thai
+ */
+const REVERSE_LOOKUP: Record<string, string> = {
+  "bang na": "บางนา",
+  "bangna": "บางนา",
+  "samut prakan": "สมุทรปราการ",
+  "samutprakan": "สมุทรปราการ",
+  "bangkok": "กรุงเทพมหานคร",
+  "phra khanong": "พระโขนง",
+  "phrakhanong": "พระโขนง",
+  "nonthaburi": "นนทบุรี",
+  "pathum thani": "ปทุมธานี",
+  "chon buri": "ชลบุรี",
+  "chonburi": "ชลบุรี",
+  "pattaya": "พัทยา",
+  "phuket": "ภูเก็ต",
+  "chiang mai": "เชียงใหม่",
+  "chiangmai": "เชียงใหม่",
+  "sukhumvit": "สุขุมวิท",
+  "thong lo": "ทองหล่อ",
+  "thonglor": "ทองหล่อ",
+  "ekkamai": "เอกมัย",
+  "asoke": "อโศก",
+  "asok": "อโศก",
+  "ari": "อารีย์",
+  "phaya thai": "พญาไท",
+  "phayathai": "พญาไท",
+  "silom": "สีลม",
+  "sathorn": "สาทร",
+  "sathon": "สาทร",
+  "rama 9": "พระราม 9",
+  "rama 4": "พระราม 4",
+  "rama 3": "พระราม 3",
+  "rama 2": "พระราม 2",
+  "on nut": "อ่อนนุช",
+  "onnut": "อ่อนนุช",
+  "punnawithi": "ปุณณวิถี",
+  "bearing": "แบริ่ง",
+  "samrong": "สำโรง",
+  "krungthep kreetha": "กรุงเทพกรีฑา",
+  "huai khwang": "ห้วยขวาง",
+  "hua mak": "หัวหมาก",
+  "din daeng": "ดินแดง",
+  "chatuchak": "จตุจักร",
+  "lat phrao": "ลาดพร้าว",
+  "ladprao": "ลาดพร้าว",
+};
+
+// Populate reverse lookup from PROVINCES dictionary
+Object.entries(PROVINCES).forEach(([th, trans]) => {
+  if (trans.en) {
+    const lower = trans.en.toLowerCase();
+    if (!REVERSE_LOOKUP[lower]) REVERSE_LOOKUP[lower] = th;
+    const noSpace = lower.replace(/\s+/g, "");
+    if (!REVERSE_LOOKUP[noSpace]) REVERSE_LOOKUP[noSpace] = th;
+  }
+  if (trans.cn) {
+    const lower = trans.cn.toLowerCase();
+    if (!REVERSE_LOOKUP[lower]) REVERSE_LOOKUP[lower] = th;
+  }
+  if (trans.ru) {
+    const lower = trans.ru.toLowerCase();
+    if (!REVERSE_LOOKUP[lower]) REVERSE_LOOKUP[lower] = th;
+  }
+});
+
+/**
+ * Universal location translator for any Area, District, or Province
+ * Automatically translates in both directions (Thai <-> EN / CN / RU)
+ */
+export function translateLocation(name: string | null | undefined, lang: string): string {
+  if (!name || typeof name !== "string") return "";
+  const trimmed = name.trim();
+  if (!trimmed) return "";
+
+  // 1. If Thai is requested:
+  if (lang === "th") {
+    const lower = trimmed.toLowerCase();
+    if (REVERSE_LOOKUP[lower]) return REVERSE_LOOKUP[lower];
+    const noSpace = lower.replace(/\s+/g, "");
+    if (REVERSE_LOOKUP[noSpace]) return REVERSE_LOOKUP[noSpace];
+    return trimmed;
+  }
+
+  // 2. If Foreign language (EN, CN, RU) is requested:
+  // First, check if input is a Thai name
+  const cleanThai = trimmed.replace(/^(จังหวัด|จ\.|เขต|อำเภอ|อ\.|แขวง|ตำบล|ต\.)/, "").trim();
+
+  const dynamic = DYNAMIC_AREA_TRANSLATIONS[cleanThai] || DYNAMIC_AREA_TRANSLATIONS[trimmed];
+  if (dynamic) {
+    if (lang === "cn" && dynamic.cn) return dynamic.cn;
+    if (lang === "ru" && dynamic.ru) return dynamic.ru;
+    if (dynamic.en) return dynamic.en;
+  }
+
+  const mapped = PROVINCES[cleanThai] || PROVINCES[trimmed];
+  if (mapped) {
+    if (lang === "cn") return mapped.cn;
+    if (lang === "ru") return mapped.ru;
+    return mapped.en;
+  }
+
+  // Check if input was already in English and user wants CN or RU
+  const thFromEn = REVERSE_LOOKUP[trimmed.toLowerCase()] || REVERSE_LOOKUP[trimmed.toLowerCase().replace(/\s+/g, "")];
+  if (thFromEn && PROVINCES[thFromEn]) {
+    if (lang === "cn") return PROVINCES[thFromEn].cn;
+    if (lang === "ru") return PROVINCES[thFromEn].ru;
+    if (lang === "en") return PROVINCES[thFromEn].en;
+  }
+
+  return trimmed;
+}
