@@ -3,12 +3,15 @@
 import { m } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface ProfileCompletenessProps {
   score: number;
 }
 
 export function ProfileCompleteness({ score }: ProfileCompletenessProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const scoreClamped = Math.min(score, 100);
 
   return (
@@ -42,8 +45,8 @@ export function ProfileCompleteness({ score }: ProfileCompletenessProps) {
       </div>
       <p className="text-[10px] text-slate-400 font-bold leading-tight">
         {scoreClamped === 100
-          ? "ยอดเยี่ยม! ข้อมูลโปรไฟล์ของคุณสมบูรณ์แบบ"
-          : "กรอกข้อมูลติดต่อเพิ่มเติมเพื่อให้บัญชีของคุณดูเป็นมืออาชีพขึ้น"}
+          ? (isEn ? "Excellent! Your profile details are 100% complete." : "ยอดเยี่ยม! ข้อมูลโปรไฟล์ของคุณสมบูรณ์แบบ")
+          : (isEn ? "Complete your contact & tax details to boost verification" : "กรอกข้อมูลติดต่อเพิ่มเติมเพื่อให้บัญชีของคุณดูเป็นมืออาชีพขึ้น")}
       </p>
     </div>
   );

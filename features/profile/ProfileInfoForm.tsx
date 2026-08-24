@@ -327,15 +327,15 @@ export function ProfileInfoForm({
       const result = await updateProfileAction(formData);
 
       if (result.success) {
-        toast.success("บันทึกข้อมูลโปรไฟล์สำเร็จ");
+        toast.success(isEn ? "Profile updated successfully" : "บันทึกข้อมูลโปรไฟล์สำเร็จ");
         form.reset(values); // Reset dirty state with new values
         router.refresh(); // Update server component data
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาด");
+        toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
       }
     } catch (error) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      toast.error(isEn ? "Failed to save profile information" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setIsLoading(false);
     }
@@ -347,7 +347,7 @@ export function ProfileInfoForm({
       <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
         <div>
           <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-            ข้อมูลส่วนตัวเชิงธุรกิจ
+            {isEn ? "Business Profile Information" : "ข้อมูลส่วนตัวเชิงธุรกิจ"}
           </h3>
           <p className="text-sm text-slate-500 font-medium whitespace-nowrap">
             Business Identity & Contact Details
@@ -371,7 +371,7 @@ export function ProfileInfoForm({
                   <AlertCircle className="h-3.5 w-3.5" />
                 </m.div>
                 <span className="text-[10px] font-bold uppercase tracking-wider">
-                  กำลังแก้ไข... โปรดบันทึก
+                  {isEn ? "Editing... Please save" : "กำลังแก้ไข... โปรดบันทึก"}
                 </span>
               </m.div>
             ) : score >= 100 ? (
@@ -403,10 +403,12 @@ export function ProfileInfoForm({
             <section className="space-y-5">
               <div className="flex flex-col gap-1 pl-4 border-l-2 border-blue-500/50">
                 <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-                  ข้อมูลพื้นฐาน
+                  {isEn ? "Basic Information" : "ข้อมูลพื้นฐาน"}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  ชื่อและข้อมูลติดต่อเบื้องต้นของคุณ
+                  {isEn
+                    ? "Your official name and primary contact details"
+                    : "ชื่อและข้อมูลติดต่อเบื้องต้นของคุณ"}
                 </p>
               </div>
 
@@ -418,17 +420,19 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          ชื่อ-นามสกุล
+                          {isEn ? "Full Name *" : "ชื่อ-นามสกุล"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          ชื่อ-นามสกุลจริงสำหรับใช้ในเอกสารสำคัญ
+                          {isEn
+                            ? "Official name for legal documents and generated agreements"
+                            : "ชื่อ-นามสกุลจริงสำหรับใช้ในเอกสารสำคัญ"}
                         </FormDescription>
                       </div>
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input
-                            placeholder="ระบุชื่อจริงและนามสกุล..."
+                            placeholder={isEn ? "Enter real full name..." : "ระบุชื่อจริงและนามสกุล..."}
                             className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 shadow-none text-base font-normal transition-all"
                             {...field}
                           />
@@ -458,16 +462,18 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          ชื่อเล่น (Nickname)
+                          {isEn ? "Nickname" : "ชื่อเล่น (Nickname)"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          ชื่อเรียกสั้นๆ ในทีม (เช่น คุณเอ, พี่บี)
+                          {isEn
+                            ? "Short call name within team (e.g. Alex, Bob)"
+                            : "ชื่อเรียกสั้นๆ ในทีม (เช่น คุณเอ, พี่บี)"}
                         </FormDescription>
                       </div>
                       <FormControl>
                         <div className="relative">
                           <Input
-                            placeholder="ระบุชื่อเล่น..."
+                            placeholder={isEn ? "Enter nickname..." : "ระบุชื่อเล่น..."}
                             className="h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 shadow-none text-base font-normal transition-all"
                             {...field}
                           />
@@ -485,17 +491,19 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          เบอร์โทรศัพท์
+                          {isEn ? "Phone Number" : "เบอร์โทรศัพท์"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          เบอร์โทรศัพท์มือถือที่ติดต่อได้สะดวกที่สุด
+                          {isEn
+                            ? "Direct mobile number most reachable"
+                            : "เบอร์โทรศัพท์มือถือที่ติดต่อได้สะดวกที่สุด"}
                         </FormDescription>
                       </div>
                       <FormControl>
                         <div className="relative">
                           <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                           <Input
-                            placeholder="0xx-xxx-xxxx"
+                            placeholder={isEn ? "0xx-xxx-xxxx" : "0xx-xxx-xxxx"}
                             className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 shadow-none font-normal text-base transition-all"
                             {...field}
                           />
@@ -524,10 +532,12 @@ export function ProfileInfoForm({
             <section className="space-y-5">
               <div className="flex flex-col gap-1 pl-4 border-l-2 border-emerald-500/50">
                 <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-                  ช่องทางการติดต่อโซเชียล
+                  {isEn ? "Social Channels & Messaging" : "ช่องทางการติดต่อโซเชียล"}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  ระบุไอดีโซเชียลเพื่อความสะดวกในการประสานงาน
+                  {isEn
+                    ? "Specify social IDs for streamlined team and client coordination"
+                    : "ระบุไอดีโซเชียลเพื่อความสะดวกในการประสานงาน"}
                 </p>
               </div>
 
@@ -539,27 +549,26 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-1">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          ไลน์ ไอดี
+                          {isEn ? "LINE ID" : "ไลน์ ไอดี"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          ไอดีไลน์สำหรับให้ลูกค้าหรือทีมงานค้นหาเจอ
+                          {isEn
+                            ? "LINE ID for client or team search"
+                            : "ไอดีไลน์สำหรับให้ลูกค้าหรือทีมงานค้นหาเจอ"}
                         </FormDescription>
                       </div>
                       <FormControl>
-                        {/* 1. ใส่ flex และ items-center ที่กล่องครอบหลัก */}
                         <div className="relative flex items-center w-full">
-                          {/* 2. ไอคอนฝั่งซ้าย (ใส่ pointer-events-none เพื่อให้คลิกทะลุไปโดน Input ได้) */}
                           <div className="absolute left-4 flex items-center justify-center pointer-events-none">
                             <FaLine className="h-4 w-4 text-[#00B900]" />
                           </div>
 
                           <Input
-                            placeholder="ใส่ ID Line..."
+                            placeholder={isEn ? "Enter LINE ID..." : "ใส่ ID Line..."}
                             className="pl-14 pr-12 h-11 w-full rounded-xl border-emerald-200/60 bg-[#F5F8F9] focus-visible:ring-emerald-500/30 text-[17px] font-medium text-slate-700 shadow-none transition-all"
                             {...field}
                           />
 
-                          {/* 3. ไอคอนเครื่องหมายถูกฝั่งขวา */}
                           <AnimatePresence>
                             {field.value && (
                               <m.div
@@ -587,7 +596,7 @@ export function ProfileInfoForm({
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-1.5">
                           <FormLabel className="text-[13px] font-medium text-slate-600">
-                            รหัสไอดีผู้ใช้ไลน์ (สำหรับบอท)
+                            {isEn ? "LINE User ID (For Bot Notifications)" : "รหัสไอดีผู้ใช้ไลน์ (สำหรับบอท)"}
                           </FormLabel>
                           <TooltipProvider>
                             <Tooltip>
@@ -596,15 +605,18 @@ export function ProfileInfoForm({
                               </TooltipTrigger>
                               <TooltipContent className="max-w-xs p-3 rounded-xl bg-slate-900 text-white border-none shadow-xl">
                                 <p className="text-xs leading-relaxed font-medium">
-                                  ไอดีเฉพาะของแต่ละบัญชีไลน์ (ขึ้นต้นด้วย U...)
-                                  ใช้สำหรับรับการแจ้งเตือนจากระบบ VCC
+                                  {isEn
+                                    ? "Unique individual LINE account ID (starts with U...) used to receive direct CRM alerts."
+                                    : "ไอดีเฉพาะของแต่ละบัญชีไลน์ (ขึ้นต้นด้วย U...) ใช้สำหรับรับการแจ้งเตือนจากระบบ VCC"}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
                         </div>
                         <FormDescription className="text-[11px] text-slate-400">
-                          ไอดีสำหรับรับการแจ้งเตือนส่วนตัวจากระบบ (Webhook ID)
+                          {isEn
+                            ? "Personal webhook ID for instant notifications"
+                            : "ไอดีสำหรับรับการแจ้งเตือนส่วนตัวจากระบบ (Webhook ID)"}
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -612,7 +624,7 @@ export function ProfileInfoForm({
                           <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" />
                           <Input
                             placeholder="Uxxxxxxxxxxxxxxx..."
-                            className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 font-normal  shadow-none transition-all"
+                            className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 font-normal shadow-none transition-all"
                             {...field}
                           />
                           <AnimatePresence>
@@ -631,8 +643,9 @@ export function ProfileInfoForm({
                       </FormControl>
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <span className="text-[10px] text-slate-400">
-                          *โปรดบันทึกโปรไฟล์ก่อนทดสอบ หรือใส่ ID
-                          แล้วกดทดสอบยิงได้ทันที
+                          {isEn
+                            ? "*Save profile before testing, or enter ID and test immediately"
+                            : "*โปรดบันทึกโปรไฟล์ก่อนทดสอบ หรือใส่ ID แล้วกดทดสอบยิงได้ทันที"}
                         </span>
                         <Button
                           type="button"
@@ -642,14 +655,14 @@ export function ProfileInfoForm({
                           onClick={() =>
                             handleTestLineNotification(field.value || "")
                           }
-                          className="h-8 px-3 rounded-lg border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors"
+                          className="h-8 px-3 rounded-lg border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer"
                         >
                           {isTestingLine ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
                             <Send className="h-3.5 w-3.5" />
                           )}
-                          ทดลองยิง LINE
+                          {isEn ? "Test LINE Alert" : "ทดลองยิง LINE"}
                         </Button>
                       </div>
                       <FormMessage />
@@ -664,10 +677,12 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          เฟซบุ๊กโปรไฟล์
+                          {isEn ? "Facebook Profile" : "เฟซบุ๊กโปรไฟล์"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          ลิงก์ไปยังหน้าโปรไฟล์เฟซบุ๊กสำหรับอ้างอิง
+                          {isEn
+                            ? "Link to Facebook profile for verification"
+                            : "ลิงก์ไปยังหน้าโปรไฟล์เฟซบุ๊กสำหรับอ้างอิง"}
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -704,18 +719,19 @@ export function ProfileInfoForm({
                     <FormItem className="space-y-2">
                       <div className="flex flex-col gap-0">
                         <FormLabel className="text-[13px] font-medium text-slate-600">
-                          วอทส์แอป (WhatsApp ID)
+                          {isEn ? "WhatsApp ID / Phone" : "วอทส์แอป (WhatsApp ID)"}
                         </FormLabel>
                         <FormDescription className="text-[11px] text-slate-400">
-                          ระบุเบอร์โทรหรือ ID สำหรับปุ่มติดต่อ WhatsApp (เช่น
-                          66xxxxxxxx)
+                          {isEn
+                            ? "Phone number with country code for WhatsApp link (e.g. 66xxxxxxxx)"
+                            : "ระบุเบอร์โทรหรือ ID สำหรับปุ่มติดต่อ WhatsApp (เช่น 66xxxxxxxx)"}
                         </FormDescription>
                       </div>
                       <FormControl>
                         <div className="relative">
                           <FaWhatsapp className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
                           <Input
-                            placeholder="ระบุ WhatsApp ID..."
+                            placeholder={isEn ? "e.g. 66812345678" : "ระบุ WhatsApp ID..."}
                             className="pl-10.5 pr-10 h-11 rounded-xl border-emerald-100/50 focus-visible:ring-emerald-500/20 font-normal shadow-none transition-all"
                             {...field}
                           />

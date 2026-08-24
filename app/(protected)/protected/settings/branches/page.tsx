@@ -207,7 +207,7 @@ export default function BranchesPage() {
                 </Label>
                 <Input
                   id="slug"
-                  placeholder="เช่น chiang-mai"
+                  placeholder={isEn ? "e.g. chiang-mai" : "เช่น chiang-mai"}
                   className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-mono text-sm"
                   value={newBranch.slug}
                   onChange={(e) =>

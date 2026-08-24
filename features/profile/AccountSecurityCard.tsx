@@ -14,20 +14,23 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { m } from "framer-motion";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function AccountSecurityCard() {
   const router = useRouter();
   const supabase = createClient();
+  const { language } = useLanguage();
+  const isEn = language === "en";
 
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("ออกจากระบบสำเร็จ");
+      toast.success(isEn ? "Signed out successfully" : "ออกจากระบบสำเร็จ");
       router.push("/auth/login");
       router.refresh();
     } catch (error) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการออกจากระบบ");
+      toast.error(isEn ? "Failed to sign out" : "เกิดข้อผิดพลาดในการออกจากระบบ");
     }
   };
 
@@ -37,11 +40,13 @@ export function AccountSecurityCard() {
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-slate-900" />
           <CardTitle className="text-lg font-bold">
-            บัญชีและความปลอดภัย
+            {isEn ? "Account & Security" : "บัญชีและความปลอดภัย"}
           </CardTitle>
         </div>
         <CardDescription>
-          จัดการการเข้าสู่ระบบและความปลอดภัยของบัญชี
+          {isEn
+            ? "Manage your credentials and login security"
+            : "จัดการการเข้าสู่ระบบและความปลอดภัยของบัญชี"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 px-6 pb-6 pt-2">
@@ -54,19 +59,25 @@ export function AccountSecurityCard() {
               <KeyRound className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-semibold text-slate-800">รหัสผ่าน</p>
+              <p className="font-semibold text-slate-800">
+                {isEn ? "Password" : "รหัสผ่าน"}
+              </p>
               <p className="text-xs text-slate-500">
-                เปลี่ยนรหัสผ่านเพื่อความปลอดภัย
+                {isEn
+                  ? "Change your password for account security"
+                  : "เปลี่ยนรหัสผ่านเพื่อความปลอดภัย"}
               </p>
             </div>
           </div>
           <Button
             variant="outline"
             size="sm"
-            className="rounded-lg h-9 border-slate-200  hover:text-white transition-colors"
+            className="rounded-lg h-9 border-slate-200 hover:text-white transition-colors cursor-pointer"
             asChild
           >
-            <a href="/auth/update-password">แก้ไข</a>
+            <a href="/auth/update-password">
+              {isEn ? "Change" : "แก้ไข"}
+            </a>
           </Button>
         </m.div>
 
@@ -86,18 +97,22 @@ export function AccountSecurityCard() {
             <div className="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-rose-50 group-hover:text-rose-400 transition-colors">
               <LogOut className="h-5 w-5" />
             </div>
-            <div className="">
-              <p className="font-semibold text-slate-800">ออกจากระบบ</p>
-              <p className="text-xs text-slate-400">ออกจากบัญชีบนอุปกรณ์นี้</p>
+            <div>
+              <p className="font-semibold text-slate-800">
+                {isEn ? "Sign Out" : "ออกจากระบบ"}
+              </p>
+              <p className="text-xs text-slate-400">
+                {isEn ? "Log out of your session on this device" : "ออกจากบัญชีบนอุปกรณ์นี้"}
+              </p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleSignOut}
-            className="rounded-lg h-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            className="rounded-lg h-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
           >
-            Sign Out
+            {isEn ? "Sign Out" : "ออกจากระบบ"}
           </Button>
         </m.div>
       </CardContent>

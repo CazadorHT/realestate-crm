@@ -363,12 +363,12 @@ function ConfigCard({
                     <ModelIcon className={cn("w-5 h-5", model.color)} />
                   </div>
                   <span className={cn("font-bold text-slate-900 text-sm md:text-base leading-tight", isSelected ? "text-white" : "text-slate-900")}>
-                    {model.label}
+                    {isEn && (model as any).label_en ? (model as any).label_en : model.label}
                   </span>
                 </div>
 
                 <p className={cn("text-[11px] md:text-xs text-slate-500 font-medium leading-relaxed line-clamp-2", isSelected ? "text-white" : "text-slate-500")}>
-                  {model.description}
+                  {isEn && (model as any).description_en ? (model as any).description_en : model.description}
                 </p>
 
                 {/* Quota Info Tooltip */}

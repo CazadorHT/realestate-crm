@@ -10,51 +10,128 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function RolePermissionsNote() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const roles = [
     {
-      title: "ADMIN (แอดมินระบบส่วนกลาง)",
+      title: isEn ? "ADMIN (System Administrator)" : "ADMIN (แอดมินระบบส่วนกลาง)",
       icon: <Shield className="h-4 w-4 text-rose-600" />,
-      desc: "ผู้ดูแลระบบสูงสุด: สิทธิ์สูงสุดและข้ามสาขาได้อิสระ 100% (Bypass RLS) ควบคุมดูแลโครงสร้างพื้นฐานระบบ, ข้อมูล Master Data, อนุมัติการสร้างสาขาใหม่ และจัดการคดีข้อพิพาทข้ามสาขา",
+      desc: isEn
+        ? "Global Administrator: Complete 100% bypass of RLS across all branches. Controls core system infrastructure, Master Data catalogs, approves new branch registration, and manages cross-branch mediation."
+        : "ผู้ดูแลระบบสูงสุด: สิทธิ์สูงสุดและข้ามสาขาได้อิสระ 100% (Bypass RLS) ควบคุมดูแลโครงสร้างพื้นฐานระบบ, ข้อมูล Master Data, อนุมัติการสร้างสาขาใหม่ และจัดการคดีข้อพิพาทข้ามสาขา",
       color: "bg-rose-50 border-rose-100",
     },
     {
-      title: "OWNER (เจ้าของสาขา)",
+      title: isEn ? "OWNER (Branch Owner)" : "OWNER (เจ้าของสาขา)",
       icon: <Shield className="h-4 w-4 text-indigo-600" />,
-      desc: "เจ้าของสาขา: สิทธิ์สูงสุดภายในสาขา (Tenant) ของตนเอง บริหารจัดการสมาชิกทีมขาย, เข้าถึงรายงานธุรกิจ/คอมมิชชันรวมของสาขา, และมีสิทธิ์ขาดในการอนุมัติธุรกรรมและโอนย้ายทรัพย์/ลีดข้ามสาขาทันที",
+      desc: isEn
+        ? "Branch Owner: Highest authority within own branch (Tenant). Manages sales team members, views business and commission reports, and possesses instant transfer approval authority."
+        : "เจ้าของสาขา: สิทธิ์สูงสุดภายในสาขา (Tenant) ของตนเอง บริหารจัดการสมาชิกทีมขาย, เข้าถึงรายงานธุรกิจ/คอมมิชชันรวมของสาขา, และมีสิทธิ์ขาดในการอนุมัติธุรกรรมและโอนย้ายทรัพย์/ลีดข้ามสาขาทันที",
       color: "bg-indigo-50 border-indigo-100",
     },
     {
-      title: "MANAGER (ผู้จัดการ)",
+      title: isEn ? "MANAGER (Branch Manager)" : "MANAGER (ผู้จัดการ)",
       icon: <Users className="h-4 w-4 text-amber-600" />,
-      desc: "ผู้จัดการสาขา: ควบคุมพนักงานและการปฏิบัติงานประจำวันภายในสาขา ควบคุมและตรวจสอบการทำงานของเอเจนต์, อนุมัติข้อมูลทรัพย์ให้เผยแพร่สาธารณะ, และโอนย้ายทรัพย์/ลีดข้ามสาขาได้ทันที",
+      desc: isEn
+        ? "Branch Manager: Oversees staff and daily branch operations. Supervises agents, approves public property publishing, and performs instant transfers within branch."
+        : "ผู้จัดการสาขา: ควบคุมพนักงานและการปฏิบัติงานประจำวันภายในสาขา ควบคุมและตรวจสอบการทำงานของเอเจนต์, อนุมัติข้อมูลทรัพย์ให้เผยแพร่สาธารณะ, และโอนย้ายทรัพย์/ลีดข้ามสาขาได้ทันที",
       color: "bg-amber-50 border-amber-100",
     },
     {
-      title: "AGENT (ตัวแทน)",
+      title: isEn ? "AGENT (Sales Agent)" : "AGENT (ตัวแทน)",
       icon: <User className="h-4 w-4 text-emerald-600" />,
-      desc: "ตัวแทนขาย: ดูแลจัดการทรัพย์สิน ลูกค้า และดีลเฉพาะที่ได้รับมอบหมายภายในสาขาเท่านั้น ค้นหาทรัพย์และลูกค้าด้วย AI Smart Match และส่งคำขอเสนอส่งต่อเคสข้ามสาขา (Referral Request) พร้อมใส่เหตุผล",
+      desc: isEn
+        ? "Sales Agent: Manages assigned properties, leads, and active deals within branch. Discovers opportunities with AI Smart Match and submits referral requests across branches."
+        : "ตัวแทนขาย: ดูแลจัดการทรัพย์สิน ลูกค้า และดีลเฉพาะที่ได้รับมอบหมายภายในสาขาเท่านั้น ค้นหาทรัพย์และลูกค้าด้วย AI Smart Match และส่งคำขอเสนอส่งต่อเคสข้ามสาขา (Referral Request) พร้อมใส่เหตุผล",
       color: "bg-emerald-50 border-emerald-100",
     },
     {
-      title: "USER (ผู้ใช้งานทั่วไป)",
+      title: isEn ? "USER (Standard User)" : "USER (ผู้ใช้งานทั่วไป)",
       icon: <Key className="h-4 w-4 text-slate-600" />,
-      desc: "ลูกค้า / ผู้ใช้ทั่วไปหน้าบ้าน: ฝั่งหน้าเว็บสาธารณะ (Public Portal) ค้นหาและดูรายละเอียดทรัพย์สินที่อนุมัติเผยแพร่, ลงทะเบียนสมัครสมาชิก, ไม่มีสิทธิ์ล็อกอินเข้าสู่ระบบหลังบ้าน (Dashboard)",
+      desc: isEn
+        ? "Client / Public User: Searches and views published properties on public portal, registers user account, no access to back-office dashboard."
+        : "ลูกค้า / ผู้ใช้ทั่วไปหน้าบ้าน: ฝั่งหน้าเว็บสาธารณะ (Public Portal) ค้นหาและดูรายละเอียดทรัพย์สินที่อนุมัติเผยแพร่, ลงทะเบียนสมัครสมาชิก, ไม่มีสิทธิ์ล็อกอินเข้าสู่ระบบหลังบ้าน (Dashboard)",
       color: "bg-slate-50 border-slate-100",
     },
   ];
 
   const permissionMatrix = [
-    { feature: "สลับดูข้อมูลทุกสาขา (Global Switcher)", admin: true, owner: false, manager: false, agent: false, user: false },
-    { feature: "ตั้งค่าระบบส่วนกลาง (Global Settings)", admin: true, owner: false, manager: false, agent: false, user: false },
-    { feature: "อนุมัติเปิดสาขาใหม่ (Approve Tenant)", admin: true, owner: false, manager: false, agent: false, user: false },
-    { feature: "จัดการทีมงานและตำแหน่งในสาขา", admin: true, owner: true, manager: false, agent: false, user: false },
-    { feature: "ดูรายงานการเงินรวมของสาขา", admin: true, owner: true, manager: true, agent: false, user: false },
-    { feature: "โอนย้ายทรัพย์/ลีดข้ามสาขาทันที (Instant Transfer)", admin: true, owner: true, manager: true, agent: false, user: false },
-    { feature: "ส่งคำขอโอนย้ายข้ามสาขา (Referral Request)", admin: false, owner: false, manager: false, agent: true, user: false },
-    { feature: "จัดการทรัพย์/ลีด/ดีล ภายในสาขา", admin: true, owner: true, manager: true, agent: true, user: false },
-    { feature: "ดูข้อมูลหน้าบ้านสาธารณะ (Public Search)", admin: true, owner: true, manager: true, agent: true, user: true },
+    {
+      feature: isEn ? "Cross-Branch Viewing (Global Switcher)" : "สลับดูข้อมูลทุกสาขา (Global Switcher)",
+      admin: true,
+      owner: false,
+      manager: false,
+      agent: false,
+      user: false,
+    },
+    {
+      feature: isEn ? "Global System Settings" : "ตั้งค่าระบบส่วนกลาง (Global Settings)",
+      admin: true,
+      owner: false,
+      manager: false,
+      agent: false,
+      user: false,
+    },
+    {
+      feature: isEn ? "Approve New Branches (Tenant Onboarding)" : "อนุมัติเปิดสาขาใหม่ (Approve Tenant)",
+      admin: true,
+      owner: false,
+      manager: false,
+      agent: false,
+      user: false,
+    },
+    {
+      feature: isEn ? "Manage Branch Team & Roles" : "จัดการทีมงานและตำแหน่งในสาขา",
+      admin: true,
+      owner: true,
+      manager: false,
+      agent: false,
+      user: false,
+    },
+    {
+      feature: isEn ? "View Branch Financial & Commission Reports" : "ดูรายงานการเงินรวมของสาขา",
+      admin: true,
+      owner: true,
+      manager: true,
+      agent: false,
+      user: false,
+    },
+    {
+      feature: isEn ? "Instant Property/Lead Transfer" : "โอนย้ายทรัพย์/ลีดข้ามสาขาทันที (Instant Transfer)",
+      admin: true,
+      owner: true,
+      manager: true,
+      agent: false,
+      user: false,
+    },
+    {
+      feature: isEn ? "Submit Referral Request" : "ส่งคำขอโอนย้ายข้ามสาขา (Referral Request)",
+      admin: false,
+      owner: false,
+      manager: false,
+      agent: true,
+      user: false,
+    },
+    {
+      feature: isEn ? "Manage Branch Properties / Leads / Deals" : "จัดการทรัพย์/ลีด/ดีล ภายในสาขา",
+      admin: true,
+      owner: true,
+      manager: true,
+      agent: true,
+      user: false,
+    },
+    {
+      feature: isEn ? "Public Portal Search & Browsing" : "ดูข้อมูลหน้าบ้านสาธารณะ (Public Search)",
+      admin: true,
+      owner: true,
+      manager: true,
+      agent: true,
+      user: true,
+    },
   ];
 
   return (
@@ -66,7 +143,7 @@ export function RolePermissionsNote() {
           </div>
           <div>
             <CardTitle className="text-lg font-semibold text-slate-900 tracking-tight">
-              โครงสร้างระดับสมาชิก
+              {isEn ? "Role & Membership Structure" : "โครงสร้างระดับสมาชิก"}
             </CardTitle>
             <CardDescription className="text-[10px] uppercase font-semibold tracking-[0.2em] text-slate-400">
               Role & Permissions Architecture
@@ -161,13 +238,13 @@ export function RolePermissionsNote() {
         <div className="border-t border-slate-100 p-6 bg-slate-50/30">
           <h4 className="font-semibold text-sm text-slate-900 mb-4 flex items-center gap-2">
             <Info className="h-4 w-4 text-slate-500" />
-            ตารางเปรียบเทียบสิทธิ์รายตำแหน่ง
+            {isEn ? "Role Permissions Comparison Matrix" : "ตารางเปรียบเทียบสิทธิ์รายตำแหน่ง"}
           </h4>
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
             <table className="w-full text-left border-collapse text-[11px] sm:text-xs">
               <thead>
                 <tr className="bg-slate-50/70 border-b border-slate-200 text-slate-500 font-semibold">
-                  <th className="p-3">ขอบเขตงาน / ฟังก์ชัน</th>
+                  <th className="p-3">{isEn ? "Scope / Feature" : "ขอบเขตงาน / ฟังก์ชัน"}</th>
                   <th className="p-3 text-center">ADMIN</th>
                   <th className="p-3 text-center">OWNER</th>
                   <th className="p-3 text-center">MANAGER</th>

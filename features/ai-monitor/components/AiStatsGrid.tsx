@@ -8,6 +8,7 @@ import {
   Bot, 
   FileText 
 } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface StatsCardProps {
   title: string;
@@ -77,45 +78,48 @@ interface AiStatsGridProps {
 }
 
 export function AiStatsGrid({ stats }: AiStatsGridProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
       <StatsCard
-        title="รวมคำขอ (Total Requests)"
+        title={isEn ? "Total Requests" : "รวมคำขอ (Total Requests)"}
         value={stats.totalRequests.toLocaleString()}
         icon={<Zap className="w-6 h-6 text-yellow-600" />}
-        description="จำนวนการโต้ตอบทั้งหมดในระบบ"
+        description={isEn ? "Total interactions across system" : "จำนวนการโต้ตอบทั้งหมดในระบบ"}
         trend="Live"
         color="yellow"
       />
       <StatsCard
-        title="อัตราสำเร็จ (Success Rate)"
+        title={isEn ? "Success Rate" : "อัตราสำเร็จ (Success Rate)"}
         value={`${stats.successRate}%`}
         icon={<CheckCircle2 className="w-6 h-6 text-emerald-600" />}
-        description="ความเสถียรของการทำงาน (Operational)"
+        description={isEn ? "System operational stability" : "ความเสถียรของการทำงาน (Operational)"}
         trend="Stable"
         color="emerald"
       />
       <StatsCard
-        title="ค่าใช้จ่ายสะสม (AI Cost)"
+        title={isEn ? "Accumulated Cost (AI Cost)" : "ค่าใช้จ่ายสะสม (AI Cost)"}
         value={`฿${stats.totalCostThb.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
         icon={<BarChart3 className="w-6 h-6 text-blue-600" />}
-        description="งบประมาณ API ทั้งหมด (THB)"
+        description={isEn ? "Estimated total API budget (THB)" : "งบประมาณ API ทั้งหมด (THB)"}
         trend="Est."
         color="indigo"
       />
       <StatsCard
-        title="แชทบอท (Chatbot Usage)"
+        title={isEn ? "Chatbot Usage" : "แชทบอท (Chatbot Usage)"}
         value={stats.chatbotUsage.toLocaleString()}
         icon={<Bot className="w-6 h-6 text-indigo-600" />}
-        description="การสอบถามข้อมูลอสังหาฯ"
+        description={isEn ? "Property inquiries and chats" : "การสอบถามข้อมูลอสังหาฯ"}
         trend="+12%"
         color="indigo"
       />
       <StatsCard
-        title="สร้างเนื้อหา (Content Gen)"
+        title={isEn ? "Content Generation" : "สร้างเนื้อหา (Content Gen)"}
         value={stats.blogUsage.toLocaleString()}
         icon={<FileText className="w-6 h-6 text-pink-600" />}
-        description="บทความและการปรับปรุงเนื้อหา"
+        description={isEn ? "Articles and SEO content optimization" : "บทความและการปรับปรุงเนื้อหา"}
         trend="Active"
         color="pink"
       />

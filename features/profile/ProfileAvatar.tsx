@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface ProfileAvatarProps {
   avatarUrl: string | null;
@@ -16,6 +17,9 @@ interface ProfileAvatarProps {
 
 export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState(avatarUrl || undefined);
 
@@ -38,7 +42,7 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+      toast.error(isEn ? "Please select an image file only" : "กรุณาเลือกไฟล์รูปภาพเท่านั้น");
       return;
     }
 
@@ -77,7 +81,9 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
           // Still must check the 5MB limit for the final upload
           if (file.size > 5 * 1024 * 1024) {
             toast.error(
-              "ไฟล์มีขนาดใหญ่เกินไปและไม่สามารถบีบอัดได้ (ต้องไม่เกิน 5MB)",
+              isEn
+                ? "File is too large and cannot be compressed (must be under 5MB)"
+                : "ไฟล์มีขนาดใหญ่เกินไปและไม่สามารถบีบอัดได้ (ต้องไม่เกิน 5MB)",
             );
             setIsUploading(false);
             return;
@@ -89,11 +95,11 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
       formData.append("file", fileToUpload, file.name);
 
       await uploadAvatarAction(formData);
-      toast.success("อัปโหลดรูปโปรไฟล์สำเร็จ");
+      toast.success(isEn ? "Profile photo updated successfully" : "อัปโหลดรูปโปรไฟล์สำเร็จ");
       router.refresh();
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
+      toast.error(error.message || (isEn ? "Failed to upload image" : "เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ"));
       setPreview(avatarUrl || undefined);
     } finally {
       setIsUploading(false);
@@ -151,7 +157,7 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
                     <Camera className="h-7 w-7 text-white drop-shadow-xl" />
                   </div>
                   <span className="text-[10px] text-white font-black uppercase tracking-[0.2em] drop-shadow-md">
-                    อัพรูปภาพ
+                    {isEn ? "Upload Photo" : "อัพรูปภาพ"}
                   </span>
                 </m.div>
               )}
@@ -162,7 +168,7 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
         {/* Status Indicator */}
         <div
           className="absolute bottom-3 right-3 h-6 w-6 rounded-full bg-emerald-500 border-4 border-white shadow-lg animate-pulse"
-          title="ออนไลน์"
+          title={isEn ? "Online" : "ออนไลน์"}
         />
 
         <input
@@ -183,7 +189,9 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
           </p>
         </div>
         <p className="text-[10px] text-slate-400 max-w-[150px] leading-tight">
-          รูปนี้จะแสดงในระบบสมาชิกและเอกสารที่เกี่ยวข้อง
+          {isEn
+            ? "This photo appears in workspace directories and contracts"
+            : "รูปนี้จะแสดงในระบบสมาชิกและเอกสารที่เกี่ยวข้อง"}
         </p>
       </div>
     </div>

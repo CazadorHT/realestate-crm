@@ -1173,7 +1173,7 @@ function SettingsTab({
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>หัวข้อ Wizard (Thai)</Label>
+              <Label>Wizard Title (Thai)</Label>
               <Input
                 value={form.wizard_title}
                 onChange={(e) =>

@@ -39076,7 +39076,7 @@
   {
     "file": "/Users/hunter/Developer/realestate-crm/components/settings/SmartMatchConfigPanel.tsx",
     "line": 1176,
-    "content": "<Label>หัวข้อ Wizard (Thai)</Label>",
+    "content": "<Label>Wizard Title (Thai)</Label>",
     "context": "jsx",
     "hasBilingualHint": false
   },

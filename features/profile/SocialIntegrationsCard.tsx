@@ -7,14 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { FaTiktok } from "react-icons/fa6";
 import { disconnectUserIntegrationAction } from "./actions";
 import { toast } from "sonner";
-import { Sparkles, CheckCircle2, Link2, Loader2 } from "lucide-react";
+import { CheckCircle2, Link2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface SocialIntegrationsCardProps {
   metadata: any;
 }
 
 export function SocialIntegrationsCard({ metadata }: SocialIntegrationsCardProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const tiktokToken = metadata?.tiktok_auth_token;
   const isConnected = !!tiktokToken;
@@ -24,12 +28,12 @@ export function SocialIntegrationsCard({ metadata }: SocialIntegrationsCardProps
     try {
       const res = await disconnectUserIntegrationAction("tiktok");
       if (res.success) {
-        toast.success(res.message);
+        toast.success(isEn ? "Disconnected TikTok successfully" : res.message);
       } else {
         toast.error(res.message);
       }
     } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการยกเลิกการเชื่อมต่อ");
+      toast.error(isEn ? "Failed to disconnect account" : "เกิดข้อผิดพลาดในการยกเลิกการเชื่อมต่อ");
     } finally {
       setIsDisconnecting(false);
     }
@@ -43,8 +47,14 @@ export function SocialIntegrationsCard({ metadata }: SocialIntegrationsCardProps
             <Link2 className="h-5 w-5" />
           </div>
           <div>
-            <CardTitle className="text-xl font-bold text-slate-900">การเชื่อมต่อบัญชีโซเชียลมีเดีย</CardTitle>
-            <CardDescription className="text-slate-500 font-medium">เชื่อมต่อกับแพลตฟอร์มต่างๆ เพื่อเข้าถึงฟังก์ชันการตลาดโดยตรง</CardDescription>
+            <CardTitle className="text-xl font-bold text-slate-900">
+              {isEn ? "Social Media Integrations" : "การเชื่อมต่อบัญชีโซเชียลมีเดีย"}
+            </CardTitle>
+            <CardDescription className="text-slate-500 font-medium">
+              {isEn
+                ? "Connect your marketing accounts for direct publishing and synchronization"
+                : "เชื่อมต่อกับแพลตฟอร์มต่างๆ เพื่อเข้าถึงฟังก์ชันการตลาดโดยตรง"}
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -62,14 +72,14 @@ export function SocialIntegrationsCard({ metadata }: SocialIntegrationsCardProps
                 <span className="font-bold text-slate-800">TikTok Marketing</span>
                 {isConnected && (
                   <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                    <CheckCircle2 className="h-3 w-3 mr-1 inline-block" /> เชื่อมต่อแล้ว
+                    <CheckCircle2 className="h-3 w-3 mr-1 inline-block" /> {isEn ? "Connected" : "เชื่อมต่อแล้ว"}
                   </Badge>
                 )}
               </div>
               <p className="text-xs text-slate-500 font-medium mt-1">
                 {isConnected 
-                  ? `เชื่อมต่อกับบัญชี: ${tiktokToken.display_name || "ไม่ทราบชื่อ"}`
-                  : "เชื่อมต่อช่อง TikTok ของคุณเพื่อแชร์วิดีโอและโพสต์ขายทรัพย์ได้โดยตรง"}
+                  ? (isEn ? `Connected to: ${tiktokToken.display_name || "Unknown"}` : `เชื่อมต่อกับบัญชี: ${tiktokToken.display_name || "ไม่ทราบชื่อ"}`)
+                  : (isEn ? "Connect your TikTok channel to share listing videos directly" : "เชื่อมต่อช่อง TikTok ของคุณเพื่อแชร์วิดีโอและโพสต์ขายทรัพย์ได้โดยตรง")}
               </p>
             </div>
           </div>
@@ -80,21 +90,21 @@ export function SocialIntegrationsCard({ metadata }: SocialIntegrationsCardProps
                 variant="outline"
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
-                className="w-full sm:w-auto border-rose-200 text-rose-600! hover:bg-rose-50 hover:border-rose-300 rounded-xl h-11 px-5 font-bold text-xs transition-all active:scale-95"
+                className="w-full sm:w-auto border-rose-200 text-rose-600! hover:bg-rose-50 hover:border-rose-300 rounded-xl h-11 px-5 font-bold text-xs transition-all active:scale-95 cursor-pointer"
               >
                 {isDisconnecting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    กำลังยกเลิก...
+                    {isEn ? "Disconnecting..." : "กำลังยกเลิก..."}
                   </>
                 ) : (
-                  "ยกเลิกการเชื่อมต่อ"
+                  isEn ? "Disconnect Account" : "ยกเลิกการเชื่อมต่อ"
                 )}
               </Button>
             ) : (
               <a href="/api/auth/tiktok/login" className="block w-full sm:w-auto">
-                <Button className="w-full sm:w-auto bg-slate-900 hover:bg-black text-white rounded-xl h-11 px-6 font-bold text-xs shadow-lg shadow-slate-200 transition-all hover:scale-105 active:scale-95">
-                  เชื่อมต่อ TikTok
+                <Button className="w-full sm:w-auto bg-slate-900 hover:bg-black text-white rounded-xl h-11 px-6 font-bold text-xs shadow-lg shadow-slate-200 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                  {isEn ? "Connect TikTok" : "เชื่อมต่อ TikTok"}
                 </Button>
               </a>
             )}
