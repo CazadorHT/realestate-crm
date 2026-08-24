@@ -28,12 +28,27 @@ export function QuarterlyBreakdown({
   const { language } = useLanguage();
   const isEn = language === "en";
 
+  const getQuarterLabel = (quarterStr: string) => {
+    if (isEn) {
+      if (quarterStr.includes("ม.ค.") || quarterStr.startsWith("Q1")) return "Q1 (Jan - Mar)";
+      if (quarterStr.includes("เม.ย.") || quarterStr.startsWith("Q2")) return "Q2 (Apr - Jun)";
+      if (quarterStr.includes("ก.ค.") || quarterStr.startsWith("Q3")) return "Q3 (Jul - Sep)";
+      if (quarterStr.includes("ต.ค.") || quarterStr.startsWith("Q4")) return "Q4 (Oct - Dec)";
+      return quarterStr;
+    }
+    if (quarterStr.startsWith("Q1")) return "Q1 (ม.ค. - มี.ค.)";
+    if (quarterStr.startsWith("Q2")) return "Q2 (เม.ย. - มิ.ย.)";
+    if (quarterStr.startsWith("Q3")) return "Q3 (ก.ค. - ก.ย.)";
+    if (quarterStr.startsWith("Q4")) return "Q4 (ต.ค. - ธ.ค.)";
+    return quarterStr;
+  };
+
   return (
     <Card className={cn("border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm", className)}>
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <PieChartIcon className="h-5 w-5 text-indigo-500" />
-          {isEn ? "Quarterly Breakdown" : "สรุปรายไตรมาส (Quarterly)"}
+          {isEn ? "Quarterly Breakdown" : "สรุปผลงานรายไตรมาส"}
         </CardTitle>
         <CardDescription>
           {isEn ? "Performance segmented across current calendar year quarters" : "ผลงานแยกตามไตรมาสของปีปัจจุบัน"}
@@ -45,7 +60,7 @@ export function QuarterlyBreakdown({
             <div key={q.quarter} className="space-y-2">
               <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 text-xs sm:text-sm">
                 <span className="font-semibold text-slate-600 uppercase tracking-tight">
-                  {q.quarter}
+                  {getQuarterLabel(q.quarter)}
                 </span>
                 <span className="font-semibold text-slate-900">
                   {formatThaiCurrency(q.total)}
@@ -62,11 +77,11 @@ export function QuarterlyBreakdown({
               <div className="flex flex-col xs:flex-row justify-between text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-tighter gap-1 xs:gap-0">
                 <span className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
-                  {isEn ? "Sales: " : "Sales: "}{formatThaiCurrency(q.sales)}
+                  {isEn ? "Sales: " : "ยอดขาย: "}{formatThaiCurrency(q.sales)}
                 </span>
                 <span className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                  {isEn ? "Rent: " : "Rent: "}{formatThaiCurrency(q.rent)}
+                  {isEn ? "Rent: " : "ยอดเช่า: "}{formatThaiCurrency(q.rent)}
                 </span>
               </div>
             </div>

@@ -11,12 +11,13 @@ import { ExecutiveStats } from "./executive-queries";
  */
 export const getComparisonDisplayLabel = (
   compareTenantId?: string | null,
-  allBranches: { id: string; name: string }[] = []
+  allBranches: { id: string; name: string }[] = [],
+  isEn: boolean = false
 ): string => {
-  if (!compareTenantId || compareTenantId === "none") return "vs last period";
-  if (compareTenantId === "ALL") return "vs ทุกสาขา (Global)";
+  if (!compareTenantId || compareTenantId === "none") return isEn ? "vs last period" : "เทียบงวดก่อน";
+  if (compareTenantId === "ALL") return isEn ? "vs All Branches (Global)" : "vs ทุกสาขา (Global)";
   const branch = allBranches.find((b) => b.id === compareTenantId);
-  return `vs ${branch?.name || "Selection"}`;
+  return `vs ${branch?.name || (isEn ? "Selection" : "สาขาที่เลือก")}`;
 };
 
 /**

@@ -16,11 +16,12 @@ export type ExecutiveAiInsights = {
   forecast: string;
 };
 
-export async function generateExecutiveAiInsightsAction(year?: number) {
+export async function generateExecutiveAiInsightsAction(year?: number, locale: string = "th") {
   try {
     const { role } = await requireAuthContext();
     assertAdminOrManager(role);
 
+    const isEn = locale === "en";
     const targetYear = year || new Date().getFullYear();
 
     // Fetch context data
@@ -46,13 +47,13 @@ export async function generateExecutiveAiInsightsAction(year?: number) {
       - Estimated Value: ฿${pipeline.expectedValue.toLocaleString()}
       - Stage Breakdown: ${JSON.stringify(pipeline.stageBreakdown)}
       
-      Provide the response in JSON format with the following keys (all values in Thai language):
+      Provide the response in JSON format with the following keys (${isEn ? "all values in English" : "all values in Thai language"}):
       - summary: A professional 2-3 sentence overview of current business health.
       - trends: An array of 3-4 key observations about growth or market shifts.
       - recommendations: An array of 3 actionable strategic advice items.
       - forecast: A prediction for the next month's performance based on the pipeline.
       
-      The tone should be executive, data-driven, and professional. Use Thai (ภาษาไทย) for all textual content.
+      The tone should be executive, data-driven, and professional. Use ${isEn ? "English" : "Thai (ภาษาไทย)"} for all textual content.
     `;
 
     const result = await generateText(prompt, "gemini-1.5-flash");
@@ -79,14 +80,14 @@ export async function generateExecutiveAiInsightsAction(year?: number) {
       );
       return {
         success: false,
-        message: "AI ส่งข้อมูลกลับมาในรูปแบบที่ไม่ถูกต้อง",
+        message: isEn ? "AI returned invalid JSON format" : "AI ส่งข้อมูลกลับมาในรูปแบบที่ไม่ถูกต้อง",
       };
     }
   } catch (error: unknown) {
     console.error("[generateExecutiveAiInsightsAction] Failed:", error);
     return {
       success: false,
-      message: (error as Error).message || "เกิดข้อผิดพลาดในการขอข้อมูล AI",
+      message: (error as Error).message || (locale === "en" ? "Failed to request AI insights" : "เกิดข้อผิดพลาดในการขอข้อมูล AI"),
     };
   }
 }

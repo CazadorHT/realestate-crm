@@ -350,17 +350,21 @@ type PropertyViewRow = {
   property_type: PropertyType | null;
   listing_type: ListingType | null;
   price: number | null;
+  original_price: number | null;
   rental_price: number | null;
+  original_rental_price: number | null;
   created_at: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
   size_sqm: number | null;
   land_size_sqwah: number | null;
-  main_image_url: string | null;
-  title: MultiLang | null;
+  title: string | MultiLang | null;
+  title_en?: string | null;
   pricing_details: PricingDetails | null;
   meta_data: MetaData | null;
   tenants: { name: string } | null;
+  projects?: { id?: string; name?: string | MultiLang | null; name_en?: string | null } | null;
+  property_images?: { image_url: string; is_cover?: boolean | null; storage_path?: string | null }[] | null;
 };
 
 /**
@@ -389,13 +393,19 @@ export async function getGlobalPropertiesTableDataAction(params: {
     .from("properties") // 🛡️ Use View Bridge for easy searching and flattened columns
     .select(
       `
-      id, tenant_id, status, property_type, listing_type, price, rental_price, created_at, 
-      bedrooms, bathrooms, size_sqm, land_size_sqwah, title, pricing_details, meta_data, main_image_url,
+      id, tenant_id, status, property_type, listing_type, price, original_price, rental_price, original_rental_price, created_at, 
+      bedrooms, bathrooms, size_sqm, land_size_sqwah, title, title_en, pricing_details, meta_data,
       tenants (
         name
       ),
       projects!properties_core_project_id_fkey (
+        id,
         name
+      ),
+      property_images (
+        image_url,
+        is_cover,
+        storage_path
       )
     `,
       { count: "exact" },
@@ -441,18 +451,51 @@ export async function getGlobalPropertiesTableDataAction(params: {
 
   const tableData = typedData.map((p: PropertyViewRow) => {
     const pricing = p.pricing_details;
-    const title = p.title;
     const meta = p.meta_data;
+    const coverImage = getCoverImage(p.property_images);
+
+    // Extract Thai & English title
+    let thTitle = "";
+    let enTitle = "";
+
+    if (typeof p.title === "string") {
+      thTitle = p.title;
+    } else if (p.title && typeof p.title === "object") {
+      thTitle = p.title.th || p.title.en || "";
+      enTitle = p.title.en || "";
+    }
+
+    if (p.title_en) {
+      enTitle = p.title_en;
+    }
+
+    // Extract Project Name
+    let projectName: string | null = null;
+    let projectNameEn: string | null = null;
+    if (p.projects?.name) {
+      if (typeof p.projects.name === "string") {
+        projectName = p.projects.name;
+        projectNameEn = p.projects.name;
+      } else if (typeof p.projects.name === "object") {
+        projectName = (p.projects.name as any).th || (p.projects.name as any).en || null;
+        projectNameEn = (p.projects.name as any).en || (p.projects.name as any).th || null;
+      }
+    }
+
+    const finalTitle = thTitle || enTitle || projectName || "Untitled";
 
     return {
       id: p.id || "",
-      title: title?.th || title?.en || "Untitled",
+      title: finalTitle,
+      title_en: enTitle || null,
+      project_name: projectName,
+      project_name_en: projectNameEn,
       status: (p.status as PropertyStatus) || "DRAFT",
       property_type: (p.property_type as PropertyType) || "OTHER",
       listing_type: (p.listing_type as ListingType) || "SALE",
-      price: p.price ?? pricing?.original_price ?? null,
-      rental_price: p.rental_price ?? pricing?.original_rental_price ?? null,
-      main_image_url: p.main_image_url,
+      price: p.price ?? p.original_price ?? pricing?.original_price ?? null,
+      rental_price: p.rental_price ?? p.original_rental_price ?? pricing?.original_rental_price ?? null,
+      main_image_url: coverImage,
       created_at: p.created_at || "",
       tenant_id: p.tenant_id || "",
       tenant_name: p.tenants?.name || "Unknown",

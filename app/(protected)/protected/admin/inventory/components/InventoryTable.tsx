@@ -221,13 +221,21 @@ export const InventoryTable = React.memo(
                             ID: {item.id.split("-")[0]}
                           </div>
                         </div>
-                        <div className="max-w-[500px]">
-                          <div className="font-semibold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors text-sm leading-tight">
-                            {item.title}
+                        <div className="max-w-[450px] space-y-0.5">
+                          {item.project_name && (
+                            <div className="text-[11px] font-bold text-blue-600 truncate flex items-center gap-1">
+                              <Building2 className="h-3 w-3 shrink-0 text-blue-500" />
+                              <span className="truncate">
+                                {isEn && item.project_name_en ? item.project_name_en : item.project_name}
+                              </span>
+                            </div>
+                          )}
+                          <div className="font-semibold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors text-sm leading-snug">
+                            {isEn && item.title_en ? item.title_en : item.title}
                           </div>
-                          <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-medium italic">
-                            <MapPin className="h-3 w-3" />
-                            {isEn ? "Click to view details" : "แตะเพื่อดูรายละเอียด"}
+                          <div className="text-[10px] text-slate-400 flex items-center gap-1 font-medium italic">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            <span>{isEn ? "Click to view details" : "แตะเพื่อดูรายละเอียด"}</span>
                           </div>
                         </div>
                       </div>
@@ -254,20 +262,54 @@ export const InventoryTable = React.memo(
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-slate-900 text-sm">
-                          {item.price ? `${item.price.toLocaleString()} ` : "-"}
-                          <span className="text-[10px] font-semibold text-slate-400">
-                            ฿
+                      {(() => {
+                        const hasSale = item.price !== null && item.price !== undefined && item.price > 0;
+                        const hasRent = item.rental_price !== null && item.rental_price !== undefined && item.rental_price > 0;
+
+                        if (hasSale && hasRent) {
+                          return (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-bold text-slate-900 text-sm">
+                                {item.price!.toLocaleString()}{" "}
+                                <span className="text-[10px] font-semibold text-slate-400">฿</span>
+                              </span>
+                              <div className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+                                <Tag className="h-2.5 w-2.5 shrink-0" />
+                                <span>{item.rental_price!.toLocaleString()} ฿{isEn ? "/mo" : "/ด."}</span>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (hasSale) {
+                          return (
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-900 text-sm">
+                                {item.price!.toLocaleString()}{" "}
+                                <span className="text-[10px] font-semibold text-slate-400">฿</span>
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        if (hasRent) {
+                          return (
+                            <div className="flex flex-col">
+                              <span className="font-bold text-emerald-600 text-sm flex items-center gap-1">
+                                <Tag className="h-3 w-3 shrink-0" />
+                                {item.rental_price!.toLocaleString()}{" "}
+                                <span className="text-[10px] font-semibold text-emerald-500">฿{isEn ? "/mo" : "/ด."}</span>
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <span className="text-xs font-semibold text-slate-400 italic">
+                            {isEn ? "Contact for price" : "ติดต่อสอบถามราคา"}
                           </span>
-                        </span>
-                        {item.rental_price && (
-                          <div className="text-[10px] font-semibold text-emerald-600 uppercase flex items-center gap-1">
-                            <Tag className="h-2.5 w-2.5" />{" "}
-                            {item.rental_price.toLocaleString()} {isEn ? "/ mo" : "/ ด."}
-                          </div>
-                        )}
-                      </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -312,81 +354,102 @@ export const InventoryTable = React.memo(
           {isLoading ? (
             <CardSkeleton />
           ) : (
-            data.map((item) => (
-              <div
-                key={item.id}
-                className="p-5 space-y-4 hover:bg-slate-50/50 transition-colors"
-              >
+            data.map((item) => {
+              const hasSale = item.price !== null && item.price !== undefined && item.price > 0;
+              const hasRent = item.rental_price !== null && item.rental_price !== undefined && item.rental_price > 0;
+              let mobilePriceBadge = isEn ? "Price on request" : "สอบถามราคา";
+              if (hasSale && hasRent) {
+                mobilePriceBadge = `${item.price!.toLocaleString()} ฿ | ${item.rental_price!.toLocaleString()} ฿${isEn ? "/mo" : "/ด."}`;
+              } else if (hasSale) {
+                mobilePriceBadge = `${item.price!.toLocaleString()} ฿`;
+              } else if (hasRent) {
+                mobilePriceBadge = `${item.rental_price!.toLocaleString()} ฿${isEn ? "/mo" : "/ด."}`;
+              }
+
+              return (
                 <div
-                  onClick={() => {
-                    setNavigatingId(`m-${item.id}`);
-                    router.push(`/protected/properties/${item.id}`);
-                  }}
-                  className="block space-y-4 group cursor-pointer relative"
+                  key={item.id}
+                  className="p-5 space-y-4 hover:bg-slate-50/50 transition-colors"
                 >
-                  {navigatingId === `m-${item.id}` && (
-                    <div className="absolute inset-0 z-50 bg-white/20 backdrop-blur-[2px] flex items-center justify-center rounded-2xl">
-                      <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-                    </div>
-                  )}
-                  {/* 🎨 Aspect-Video Thumbnail (Elite Visual) */}
-                  <div className="relative aspect-video w-full rounded-2xl bg-slate-100 overflow-hidden border border-slate-100 shadow-sm">
-                    {item.main_image_url ? (
-                      <img
-                        src={item.main_image_url}
-                        alt={item.title}
-                        loading="lazy"
-                        className="object-cover h-full w-full group-hover:scale-105 transition-transform duration-700"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=400&auto=format&fit=crop";
-                        }}
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-slate-300">
-                        <Building2 className="h-12 w-12" />
+                  <div
+                    onClick={() => {
+                      setNavigatingId(`m-${item.id}`);
+                      router.push(`/protected/properties/${item.id}`);
+                    }}
+                    className="block space-y-4 group cursor-pointer relative"
+                  >
+                    {navigatingId === `m-${item.id}` && (
+                      <div className="absolute inset-0 z-50 bg-white/20 backdrop-blur-[2px] flex items-center justify-center rounded-2xl">
+                        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 flex gap-2">
-                      <Badge className="bg-black/70 backdrop-blur-md border-none text-[10px] font-semibold uppercase">
-                        {item.id.split("-")[0]}
-                      </Badge>
-                      <Badge className="bg-blue-600 border-none text-[10px] font-semibold uppercase">
-                        {getPropertyTypeLabel(item.property_type)}
-                      </Badge>
-                    </div>
-                    <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full shadow-lg border border-slate-100">
-                      <span className="text-xs font-semibold text-slate-900">
-                        {item.price ? `${item.price.toLocaleString()} ฿` : "-"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="font-semibold text-slate-800 text-lg line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
-                      {item.title}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
-                        <Building2 className="h-3.5 w-3.5" />
-                        {item.tenant_name}
+                    {/* 🎨 Aspect-Video Thumbnail (Elite Visual) */}
+                    <div className="relative aspect-video w-full rounded-2xl bg-slate-100 overflow-hidden border border-slate-100 shadow-sm">
+                      {item.main_image_url ? (
+                        <img
+                          src={item.main_image_url}
+                          alt={item.title}
+                          loading="lazy"
+                          className="object-cover h-full w-full group-hover:scale-105 transition-transform duration-700"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=400&auto=format&fit=crop";
+                          }}
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-slate-300">
+                          <Building2 className="h-12 w-12" />
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        <Badge className="bg-black/70 backdrop-blur-md border-none text-[10px] font-semibold uppercase">
+                          {item.id.split("-")[0]}
+                        </Badge>
+                        <Badge className="bg-blue-600 border-none text-[10px] font-semibold uppercase">
+                          {getPropertyTypeLabel(item.property_type)}
+                        </Badge>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[9px] font-semibold uppercase border transition-all",
-                          STATUS_COLORS[
-                            item.status as keyof typeof STATUS_COLORS
-                          ] || STATUS_COLORS.ARCHIVED,
-                        )}
-                      >
-                        {getStatusLabel(item.status)}
-                      </Badge>
+                      <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full shadow-lg border border-slate-100">
+                        <span className="text-xs font-bold text-slate-900">
+                          {mobilePriceBadge}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      {item.project_name && (
+                        <div className="text-xs font-bold text-blue-600 truncate flex items-center gap-1">
+                          <Building2 className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                          <span className="truncate">
+                            {isEn && item.project_name_en ? item.project_name_en : item.project_name}
+                          </span>
+                        </div>
+                      )}
+                      <div className="font-semibold text-slate-800 text-base line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+                        {isEn && item.title_en ? item.title_en : item.title}
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+                          <Building2 className="h-3.5 w-3.5" />
+                          {item.tenant_name}
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[9px] font-semibold uppercase border transition-all",
+                            STATUS_COLORS[
+                              item.status as keyof typeof STATUS_COLORS
+                            ] || STATUS_COLORS.ARCHIVED,
+                          )}
+                        >
+                          {getStatusLabel(item.status)}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 

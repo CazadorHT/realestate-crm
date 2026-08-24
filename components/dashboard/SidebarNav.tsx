@@ -723,7 +723,7 @@ export function SidebarNav({
               <TooltipTrigger asChild>
                 <Link
                   href="/protected"
-                  aria-label="แดชบอร์ด"
+                  aria-label={isEn ? "Dashboard" : "แดชบอร์ด"}
                   className={cn(
                     "flex h-12 items-center gap-4 rounded-xl px-4 transition-colors duration-300 font-semibold text-xs relative overflow-hidden group/dash",
                     pathname === "/protected"
@@ -776,13 +776,13 @@ export function SidebarNav({
                         )}
                       />
                     )}
-                    {!isCollapsed && <span>แดชบอร์ด</span>}
+                    {!isCollapsed && <span>{isEn ? "Dashboard" : "แดชบอร์ด"}</span>}
                   </div>
                 </Link>
               </TooltipTrigger>
               {isCollapsed && (
                 <TooltipContent side="right" className="z-50">
-                  แดชบอร์ด
+                  {isEn ? "Dashboard" : "แดชบอร์ด"}
                 </TooltipContent>
               )}
             </Tooltip>

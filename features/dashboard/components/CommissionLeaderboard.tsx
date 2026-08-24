@@ -14,15 +14,17 @@ interface CommissionLeaderboardProps {
 }
 
 export function CommissionLeaderboard({
-  data,
-  title = "Agent Leaderboard",
+  data = [],
+  title,
 }: CommissionLeaderboardProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
 
+  const displayTitle = title || (isEn ? "Agent Leaderboard" : "อันดับตัวแทน");
+
   // Find highest commission for progress bar scaling
   const maxCommission =
-    data.length > 0 ? Math.max(...data.map((a) => a.total_commission)) : 1;
+    data && data.length > 0 ? Math.max(...data.map((a) => a.total_commission)) : 1;
 
   const getRankStyle = (index: number) => {
     switch (index) {
@@ -63,7 +65,7 @@ export function CommissionLeaderboard({
               <span className="p-1.5 xs:p-2 bg-indigo-50 text-indigo-600 rounded-xl shadow-sm border border-indigo-100">
                 <Trophy className="h-4 w-4 xs:h-5 xs:w-5" />
               </span>
-              {title}
+              {displayTitle}
             </CardTitle>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-9 xs:pl-11">
               {isEn ? "Accumulated Commission (This Month)" : "สะสมคอมมิชชั่นสุทธิ (เดือนนี้)"}
@@ -82,7 +84,7 @@ export function CommissionLeaderboard({
 
       <CardContent className="px-4 sm:px-6 py-4 sm:py-6 relative z-10">
         <div className="space-y-6">
-          {data.map((agent, index) => (
+          {data && data.map((agent, index) => (
             <div key={agent.id} className="relative group/item">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -133,7 +135,7 @@ export function CommissionLeaderboard({
                     {agent.total_commission.toLocaleString()}
                   </div>
                   <p className="text-[8px] xs:text-[9px] text-slate-400 font-bold uppercase mt-1">
-                    COMMISSION
+                    {isEn ? "COMMISSION" : "คอมมิชชั่น"}
                   </p>
                 </div>
               </div>
@@ -160,7 +162,7 @@ export function CommissionLeaderboard({
             </div>
           ))}
 
-          {data.length === 0 && (
+          {(!data || data.length === 0) && (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
               <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
                 <Trophy className="h-10 w-10" />
@@ -169,8 +171,8 @@ export function CommissionLeaderboard({
                 <p className="text-lg font-semibold text-slate-300">
                   {isEn ? "No sales data available yet" : "ยังไม่มีข้อมูลยอดขาย"}
                 </p>
-                <p className="text-xs text-slate-400 uppercase tracking-widest">
-                  START CLOSING DEALS TO RANK UP!
+                <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mt-1">
+                  {isEn ? "START CLOSING DEALS TO RANK UP!" : "เริ่มปิดการขายเพื่อขึ้นสู่อันดับท็อป!"}
                 </p>
               </div>
             </div>
@@ -185,7 +187,7 @@ export function CommissionLeaderboard({
         <div className="flex items-center gap-1">
           <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
           <span className="text-[10px] font-black text-emerald-600 uppercase">
-            ACTIVE
+            {isEn ? "ACTIVE" : "เปิดใช้งาน"}
           </span>
         </div>
       </div>

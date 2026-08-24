@@ -1,6 +1,9 @@
 export interface InventoryProperty {
   id: string;
   title: string;
+  title_en?: string | null;
+  project_name?: string | null;
+  project_name_en?: string | null;
   property_type: string | null;
   listing_type: string | null;
   status: string | null;

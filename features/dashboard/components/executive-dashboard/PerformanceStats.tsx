@@ -28,7 +28,7 @@ export function PerformanceStats({
   const isEn = language === "en";
 
   // BI Logic Delegation
-  const compareLabel = getComparisonDisplayLabel(compareTenantId, allBranches);
+  const compareLabel = getComparisonDisplayLabel(compareTenantId, allBranches, isEn);
   
   const revenueTrend = calculateTrendPercentage(stats.totalRevenue, compareStats?.totalRevenue, compareLabel);
   const commissionTrend = calculateTrendPercentage(stats.totalCommission, compareStats?.totalCommission, compareLabel);

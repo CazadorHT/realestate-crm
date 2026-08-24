@@ -13,6 +13,7 @@ import {
 } from "recharts";
 
 import { ForecastData } from "@/features/analytics/market-intelligence";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface ExecutiveRevenueForecastChartProps {
   data: ForecastData[];
@@ -54,6 +55,9 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?:
 };
 
 const ExecutiveRevenueForecastChart = ({ data }: ExecutiveRevenueForecastChartProps) => {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart
@@ -93,7 +97,7 @@ const ExecutiveRevenueForecastChart = ({ data }: ExecutiveRevenueForecastChartPr
         
         {/* Actual Revenue Line */}
         <Area
-          name="รายได้จริง"
+          name={isEn ? "Actual Revenue" : "รายได้จริง"}
           type="monotone"
           dataKey="actualRevenue"
           stroke="#3b82f6"
@@ -105,7 +109,7 @@ const ExecutiveRevenueForecastChart = ({ data }: ExecutiveRevenueForecastChartPr
         
         {/* Predicted Revenue Line */}
         <Area
-          name="รายได้ทำนาย (AI)"
+          name={isEn ? "Predicted Revenue (AI)" : "รายได้ทำนาย (AI)"}
           type="monotone"
           dataKey="predictedRevenue"
           stroke="#8b5cf6"
@@ -123,7 +127,7 @@ const ExecutiveRevenueForecastChart = ({ data }: ExecutiveRevenueForecastChartPr
           strokeDasharray="3 3"
           label={{ 
             position: 'top', 
-            value: 'ปัจจุบัน', 
+            value: isEn ? 'Current' : 'ปัจจุบัน', 
             fill: '#ef4444', 
             fontSize: 10,
             fontWeight: 'bold'

@@ -48,7 +48,7 @@ export const RevenueChartSection = memo(function RevenueChartSection({
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-blue-500" />
-            {isEn ? "Revenue Trends (Sale vs Rent)" : "แนวโน้มรายได้ (Sale vs Rent)"}
+            {isEn ? "Revenue Trends (Sales vs Rent)" : "แนวโน้มรายได้ (ขาย vs เช่า)"}
           </CardTitle>
           <CardDescription className="text-xs">
             {isEn ? "Monthly comparison of sales and rental revenue" : "การเปรียบเทียบยอดขายและยอดเช่าในแต่ละเดือน"}
@@ -85,7 +85,7 @@ export const RevenueChartSection = memo(function RevenueChartSection({
       <div className="lg:col-span-3 h-full">
         <CommissionLeaderboard
           data={topAgents}
-          title="🏆 Agent Ranking"
+          title={isEn ? "🏆 Agent Ranking" : "🏆 อันดับตัวแทน"}
         />
       </div>
     </div>

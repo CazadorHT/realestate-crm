@@ -434,7 +434,7 @@ export function MobileNav({
             >
               <BarChart3 className="h-4 w-4" />
             </div>
-            แดชบอร์ด
+            {isEn ? "Dashboard" : "แดชบอร์ด"}
           </Link>
 
           {filteredGroups.map((group) => {
