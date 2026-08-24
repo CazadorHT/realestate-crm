@@ -4,7 +4,7 @@ import { Award, ArrowUpRight, TrendingUp, Download } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface WalletPortfolioStatsProps {
   history: any[];

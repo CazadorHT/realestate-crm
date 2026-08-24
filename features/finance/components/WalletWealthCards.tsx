@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { CreditCard, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface WalletWealthCardsProps {
   stats: {

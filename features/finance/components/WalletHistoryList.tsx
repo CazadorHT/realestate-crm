@@ -2,10 +2,10 @@
 
 import { History, Building2, Calendar } from "lucide-react";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface WalletHistoryListProps {
   history: any[];
@@ -47,7 +47,7 @@ export function WalletHistoryList({ history }: WalletHistoryListProps) {
                   </span>
                   <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1 uppercase tracking-wider">
                     <Calendar className="w-3 h-3" />
-                    {format(new Date(record.created_at), "d MMM yyyy", isEn ? undefined : { locale: th })}
+                    {format(new Date(record.created_at), "d MMM yyyy", { locale: isEn ? enUS : th })}
                   </span>
                 </div>
               </div>
