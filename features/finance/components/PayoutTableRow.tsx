@@ -13,7 +13,7 @@ import { usePayoutStore } from "../stores/payoutStore";
 import { cn } from "@/lib/utils";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { toast } from "sonner";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface PayoutTableRowProps {
   deal: any; // { dealId, dealTitle, propertyTitle, totalAmount, totalWht, totalNet, status, splits }
@@ -163,7 +163,7 @@ export const PayoutTableRow = React.memo(({
               <div className="bg-white rounded-2xl border border-slate-200/60 shadow-lg overflow-hidden">
                 <div className="p-4 border-b border-slate-100 bg-slate-50/30">
                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    {isEn ? "Commission Splits in Deal" : "รายการจัดสรรคอมมิชชันภายในดีล (Commission Splits)"}
+                    {isEn ? "Commission Splits in Deal" : "รายการจัดสรรคอมมิชชันภายในดีล"}
                   </h4>
                 </div>
                 <Table>

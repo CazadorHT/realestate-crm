@@ -39,7 +39,7 @@ import {
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table as TableComponent } from "@/components/ui/table";
 import { usePayoutStore } from "@/features/finance/stores/payoutStore";
 import { PayoutSkeleton } from "@/features/finance/components/PayoutSkeleton";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 import dynamic from "next/dynamic";
 
 const FinanceAnalytics = dynamic(() => import("@/features/finance/components/FinanceAnalytics").then(mod => mod.FinanceAnalytics), {
@@ -432,7 +432,7 @@ export default function PayoutDashboardPage() {
                   }}
                   disabled={loading || isAllBranches}
                 >
-                  {isEn ? "Approve Ready" : "อนุมัติพร้อมจ่าย (Approve Ready)"}
+                  {isEn ? "Approve Ready" : "อนุมัติพร้อมจ่าย"}
                 </Button>
               )}
 
@@ -447,7 +447,7 @@ export default function PayoutDashboardPage() {
                   disabled={loading || isAllBranches}
                 >
                   <ArrowUpRight className="w-4 h-4" />
-                  {isEn ? "Bulk Pay" : "บันทึกการโอนเงิน (Bulk Pay)"}
+                  {isEn ? "Bulk Pay" : "บันทึกการโอนเงิน"}
                 </Button>
               )}
 

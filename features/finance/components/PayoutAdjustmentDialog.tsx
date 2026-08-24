@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { createCommissionAdjustmentAction } from "../actions";
 import { CommissionPayoutRecord } from "../types";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface PayoutAdjustmentDialogProps {
   isOpen: boolean;
@@ -273,7 +273,7 @@ export function PayoutAdjustmentDialog({
           {/* ⚡ Quick Presets */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
-              {isEn ? "Quick Presets" : "รายการแนะนำ (Quick Presets)"}
+              {isEn ? "Quick Presets" : "รายการแนะนำ"}
             </label>
             <div className="flex flex-wrap gap-2">
               <Button

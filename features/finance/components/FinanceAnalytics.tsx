@@ -19,7 +19,7 @@ import { FinanceMath } from "@/lib/finance/precision";
 import { YearSelectorModal } from "./YearSelectorModal";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface FinanceAnalyticsProps {
   onBack: () => void;
@@ -99,7 +99,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
           </Button>
           <div>
             <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
-              {isEn ? "Profit & Loss Analytics (P&L)" : "วิเคราะห์ผลกำไรและขาดทุน (P&L)"}
+              {isEn ? "Profit & Loss Analytics" : "วิเคราะห์ผลกำไรและขาดทุน"}
             </h2>
             <p className="text-slate-500 text-sm font-medium">
               {isEn ? "Profit & loss and branch-level cashflow analysis" : "วิเคราะห์กำไร-ขาดทุน และกระแสเงินสดข้ามสาขา"}
@@ -160,7 +160,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
       {/* 💰 Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <SummaryCard 
-          title={isEn ? "Total Revenue (Gross)" : "รายรับทั้งหมด (Gross)"} 
+          title={isEn ? "Total Revenue" : "รายรับทั้งหมด"} 
           value={data?.summary.totalRevenue || 0} 
           icon={<DollarSign className="w-5 h-5" />}
           color="bg-indigo-600"
@@ -196,7 +196,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
           value={data?.summary.realizedProfit || 0} 
           icon={<ShieldCheck className="w-5 h-5" />}
           color="bg-emerald-600"
-          description={isEn ? "Realized cash-in profit" : "กำไรที่ได้รับแล้วจริง (Cash-in)"}
+          description={isEn ? "Realized cash-in profit" : "กำไรที่ได้รับแล้วจริง"}
           activeLabel={isEn ? "+ Active" : "+ มีรายการ"}
           highlight
         />
@@ -212,7 +212,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
                   {isEn ? "Monthly Performance Trends" : "แนวโน้มผลประกอบการรายเดือน"}
                 </CardTitle>
                 <CardDescription className="font-medium">
-                  {isEn ? "Revenue vs Net Profit trends (Realized vs Accrued)" : "แนวโน้มรายได้เปรียบเทียบกับกำไรสุทธิ (จริง vs ค้างรับ)"}
+                  {isEn ? "Revenue vs Net Profit trends" : "แนวโน้มรายได้เปรียบเทียบกับกำไรสุทธิ"}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-4 text-[10px] font-semibold uppercase tracking-tighter">

@@ -186,10 +186,10 @@ export const WhtCertificateTemplate = ({ data }: WhtTemplateProps) => {
             {isEn ? "Income Type" : "ประเภทเงินได้"}
           </Text>
           <Text style={styles.cellAmount}>
-            {isEn ? "Gross Amount (THB)" : "จำนวนเงิน (Gross)"}
+            {isEn ? "Gross Amount (THB)" : "จำนวนเงิน (บาท)"}
           </Text>
           <Text style={[styles.cellAmount, { paddingRight: 10 }]}>
-            {isEn ? "Tax Withheld (WHT 3%)" : "ภาษีที่หัก (WHT 3%)"}
+            {isEn ? "Tax Withheld (3%)" : "ภาษีที่หัก (3%)"}
           </Text>
         </View>
         
@@ -197,14 +197,14 @@ export const WhtCertificateTemplate = ({ data }: WhtTemplateProps) => {
           <Text style={[styles.cellDesc, { paddingLeft: 10 }]}>
             {isEn ? "Sales Commission / Brokerage Fee" : "ค่าคอมมิชชั่น / ค่านายหน้า"}
           </Text>
-          <Text style={styles.cellAmount}>{data.grossAmount} {isEn ? "THB" : "บ."}</Text>
-          <Text style={[styles.cellAmount, { paddingRight: 10 }]}>{data.taxAmount} {isEn ? "THB" : "บ."}</Text>
+          <Text style={styles.cellAmount}>{data.grossAmount} {isEn ? "THB" : "บาท"}</Text>
+          <Text style={[styles.cellAmount, { paddingRight: 10 }]}>{data.taxAmount} {isEn ? "THB" : "บาท"}</Text>
         </View>
 
         {/* 💰 Summary Box */}
         <View style={styles.totalBox}>
           <View style={styles.row}>
-            <Text style={styles.totalLabel}>{isEn ? "Net Payout Amount:" : "ยอดเงินจ่ายสุทธิ (Net Payout):"}</Text>
+            <Text style={styles.totalLabel}>{isEn ? "Net Payout Amount:" : "ยอดเงินจ่ายสุทธิ:"}</Text>
             <Text style={styles.totalValue}>{data.netAmount} {isEn ? "THB" : "บาท"}</Text>
           </View>
         </View>

@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { History, ShieldCheck, User, Clock } from "lucide-react";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface PayoutHistoryDrawerProps {
   isOpen: boolean;
@@ -73,7 +73,7 @@ export function PayoutHistoryDrawer({
                   </div>
                   <div className="flex items-center gap-4 text-[11px] text-slate-400 font-medium">
                     <span className="flex items-center gap-1"><User className="w-3 h-3" /> {step.author}</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {format(new Date(step.timestamp), "d MMM yyyy HH:mm", isEn ? undefined : { locale: th })}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {format(new Date(step.timestamp), "d MMM yyyy HH:mm", { locale: isEn ? enUS : th })}</span>
                   </div>
                 </div>
               </div>

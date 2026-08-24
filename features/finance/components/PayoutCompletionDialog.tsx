@@ -28,7 +28,7 @@ import { createClient } from "@/lib/supabase/client";
 import { markAsPaidAction, bulkMarkAsPaidAction } from "../actions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface PayoutCompletionDialogProps {
   isOpen: boolean;
@@ -302,7 +302,7 @@ export function PayoutCompletionDialog({
                   {/* Payment Form */}
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Upload Proof (Slip)" : "อัปโหลดหลักฐาน (Slip)"} <span className="text-red-500">*</span></Label>
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Upload Proof (Slip)" : "อัปโหลดหลักฐานการโอนเงิน"} <span className="text-red-500">*</span></Label>
                       <div 
                         onClick={() => fileInputRef.current?.click()}
                         className={cn(
@@ -342,7 +342,7 @@ export function PayoutCompletionDialog({
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Payment Reference (Optional)" : "เลขที่อ้างอิง (Optional)"}</Label>
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{isEn ? "Payment Reference (Optional)" : "เลขที่อ้างอิง (ไม่ระบุก็ได้)"}</Label>
                       <Input 
                         placeholder={isEn ? "e.g. Bank transaction reference number" : "เช่น เลขที่รายการธนาคาร"} 
                         value={paymentRef}

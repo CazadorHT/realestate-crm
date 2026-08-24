@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FinanceMath } from "@/lib/finance/precision";
 import { RefreshCw, ArrowRight, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface RecalculateConfirmDialogProps {
   isOpen: boolean;
@@ -79,7 +79,7 @@ export const RecalculateConfirmDialog = ({
             <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
                <div>
                   <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">
-                    {isEn ? "New Net Payout (Final Net)" : "ยอดโอนสุทธิใหม่ (Final Net)"}
+                    {isEn ? "New Net Payout" : "ยอดโอนสุทธิใหม่"}
                   </p>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-semibold text-slate-900 tracking-tighter">฿{FinanceMath.format(after.net)}</span>

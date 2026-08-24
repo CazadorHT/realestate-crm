@@ -23,7 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar, Check, Clock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface YearSelectorModalProps {
   isOpen: boolean;
@@ -84,7 +84,7 @@ const YearGrid = ({
             )}
             {y === currentYear && (
               <div className="absolute top-1 left-2">
-                 <span className="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold uppercase">Current</span>
+                 <span className="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold uppercase">{isEn ? "Current" : "ปีปัจจุบัน"}</span>
               </div>
             )}
           </Button>

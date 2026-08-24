@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { BadgeDollarSign, ChevronLeft, ChevronRight, FileX, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PayoutTableRow } from "./PayoutTableRow";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface PayoutTableProps {
   payouts: any[];

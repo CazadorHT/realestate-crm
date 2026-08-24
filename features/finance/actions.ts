@@ -225,7 +225,7 @@ export async function createCommissionAdjustmentAction(payload: {
       if (tenantId && tenantId !== "ALL" && currentCommission.tenant_id !== tenantId) {
         throw new Error(
           isEn 
-            ? "Cannot add adjustment across branches (ข้ามสาขา). Please switch branch." 
+            ? "Cannot add adjustment across branches. Please switch branch." 
             : "ไม่สามารถเพิ่มรายการปรับปรุงข้ามสาขาได้ กรุณาสลับสาขาให้ถูกต้อง",
         );
       }
@@ -587,7 +587,7 @@ export async function getSignedSlipUrlAction(slipUrl: string) {
 
     // Security check: Must belong to current tenant
     if (tenantId && tenantId !== "ALL" && !filePath.includes(tenantId)) {
-      throw new Error(isEn ? "Unauthorized access to slip file" : "คุณไม่มีสิทธิ์เข้าถึงไฟล์ชุดนี้ (Unauthorized Access)");
+      throw new Error(isEn ? "Unauthorized access to slip file" : "คุณไม่มีสิทธิ์เข้าถึงไฟล์ชุดนี้");
     }
 
     const { data, error } = await supabase.storage
@@ -704,13 +704,13 @@ export async function getPayoutQueueAction(filters?: {
       let recipientName = (recipient as any)?.display_name;
       if (!recipientName) {
         if (item.recipient_role === "AGENCY") {
-          recipientName = isEn ? "Agency Pool" : "บริษัท (Agency)";
+          recipientName = isEn ? "Agency Pool" : "กองกลางบริษัท";
         } else if (item.recipient_role === "TEAM_POOL") {
-          recipientName = isEn ? "Team Pool" : "กองกลางทีม (Team Pool)";
+          recipientName = isEn ? "Team Pool" : "กองกลางทีม";
         } else if (item.recipient_role === "CO_AGENT" && deal?.co_agent_name) {
           recipientName = deal.co_agent_name;
         } else {
-          recipientName = "Unknown Partner";
+          recipientName = isEn ? "Unknown Partner" : "ไม่ระบุพันธมิตร";
         }
       }
       const actualDealCommission = Number(deal?.commission_total || 0);
