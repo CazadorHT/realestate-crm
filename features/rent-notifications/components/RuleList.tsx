@@ -57,7 +57,7 @@ import Image from "next/image";
 interface RuleListProps {
   initialRules: RentNotificationRule[];
   groups: LINEGroup[];
-  properties: SimpleProperty[];
+  properties?: SimpleProperty[];
   tenantId: string | null;
   totalCount: number;
   currentPage: number;
@@ -66,7 +66,7 @@ interface RuleListProps {
 export function RuleList({
   initialRules,
   groups,
-  properties,
+  properties = [],
   tenantId,
   totalCount,
   currentPage,

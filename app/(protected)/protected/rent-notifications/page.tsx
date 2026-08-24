@@ -1,7 +1,6 @@
 import { 
   getRentNotificationRules, 
   getLineGroups, 
-  getAllPropertiesSimple,
   getRentNotificationHistory
 } from "@/features/rent-notifications/queries.server";
 import { RentNotificationsPageView } from "@/features/rent-notifications/components/RentNotificationsPageView";
@@ -16,22 +15,28 @@ export default async function RentNotificationsPage(props: {
   const search = searchParams.search || "";
   const currentTab = searchParams.tab || "rules";
 
-  const [authContext] = await Promise.all([
-    requireAuthContext(),
-  ]);
-
+  const authContext = await requireAuthContext();
   const { tenantId } = authContext;
+
+  // ⚡ Tab-conditional data fetching to eliminate redundant queries:
+  // 1. Fetch rules only when on rules tab
+  const rulesPromise = currentTab === "rules"
+    ? getRentNotificationRules(page, 20, tenantId, search)
+    : Promise.resolve({ rules: [], count: 0 });
+
+  // 2. Fetch history only when on history tab
+  const historyPromise = currentTab === "history"
+    ? getRentNotificationHistory(page, 20, tenantId)
+    : Promise.resolve({ history: [], count: 0 });
 
   const [
     { rules, count: rulesCount },
+    { history, count: historyCount },
     groups,
-    properties,
-    { history, count: historyCount }
   ] = await Promise.all([
-    getRentNotificationRules(page, 20, tenantId, search),
+    rulesPromise,
+    historyPromise,
     getLineGroups(tenantId),
-    getAllPropertiesSimple(tenantId),
-    getRentNotificationHistory(page, 20, tenantId)
   ]);
 
   return (
@@ -41,7 +46,7 @@ export default async function RentNotificationsPage(props: {
       history={history}
       historyCount={historyCount}
       groups={groups}
-      properties={properties}
+      properties={[]}
       tenantId={tenantId || null}
       page={page}
       currentTab={currentTab}

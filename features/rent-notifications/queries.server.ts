@@ -104,7 +104,9 @@ export async function getRentNotificationRules(
   return { rules, count: count || 0 };
 }
 
-export async function getLineGroups(tenantId?: string | null) {
+import { unstable_cache } from "next/cache";
+
+async function fetchLineGroupsRaw(tenantId?: string | null) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = (await createClient()) as unknown as SupabaseClient<LegacyDatabase>;
 
@@ -128,6 +130,12 @@ export async function getLineGroups(tenantId?: string | null) {
     external_channel_id: c.group_id,
   }));
 }
+
+export const getLineGroups = unstable_cache(
+  fetchLineGroupsRaw,
+  ["line_groups_cache"],
+  { revalidate: 300, tags: ["line_groups"] }
+);
 
 export async function getAllPropertiesSimple(tenantId?: string | null) {
   const { createClient } = await import("@/lib/supabase/server");

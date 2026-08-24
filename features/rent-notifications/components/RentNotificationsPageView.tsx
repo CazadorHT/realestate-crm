@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings2, History } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -16,7 +17,7 @@ interface RentNotificationsPageViewProps {
   history: any[];
   historyCount: number;
   groups: LINEGroup[];
-  properties: SimpleProperty[];
+  properties?: SimpleProperty[];
   tenantId: string | null;
   page: number;
   currentTab: string;
@@ -28,13 +29,23 @@ export function RentNotificationsPageView({
   history,
   historyCount,
   groups,
-  properties,
+  properties = [],
   tenantId,
   page,
   currentTab,
 }: RentNotificationsPageViewProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { language } = useLanguage();
   const isEn = language === "en";
+
+  const handleTabChange = (val: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", val);
+    params.set("page", "1");
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8 animate-fade-in font-sarabun">
@@ -58,7 +69,7 @@ export function RentNotificationsPageView({
       />
 
       {/* 🚀 2. MAIN CONTENT (Tabs & Lists) */}
-      <Tabs defaultValue={currentTab} className="w-full">
+      <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 bg-slate-100 p-1 rounded-xl h-11">
           <TabsTrigger
             value="rules"

@@ -45,7 +45,7 @@ import Image from "next/image";
 
 interface AddRuleDialogProps {
   groups: LINEGroup[];
-  properties: SimpleProperty[];
+  properties?: SimpleProperty[];
   tenantId?: string | null;
   existingRule?: any;
   open?: boolean;
@@ -54,7 +54,7 @@ interface AddRuleDialogProps {
 
 export function AddRuleDialog({
   groups,
-  properties,
+  properties = [],
   tenantId,
   existingRule,
   open,
