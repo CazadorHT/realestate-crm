@@ -80,7 +80,8 @@ export async function getRentNotificationRules(
       tenant_id: r.tenant_id,
       properties: r.property ? {
         id: r.property.id,
-        title: r.property.details?.title?.th || r.property.details?.title?.en || "Unknown Property",
+        title: r.property.details?.title?.th || r.property.details?.title?.en || (typeof r.property.details?.title === "string" ? r.property.details?.title : "Unknown Property"),
+        title_en: r.property.details?.title?.en || r.property.details?.title?.th || (typeof r.property.details?.title === "string" ? r.property.details?.title : null),
         rental_price: r.property.rent_price,
         currency: r.property.currency,
         bedrooms: r.property.bedrooms,
@@ -193,15 +194,17 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
         return {
           id: p.id,
           title: p.details?.title?.th || p.details?.title?.en || "Unknown Property",
+          title_en: p.details?.title?.en || p.details?.title?.th || null,
           image: cover?.image_url || null,
         };
       });
   }
 
-  const rpcData = (data as unknown as Array<{ id: string; title: string; image_url: string | null }>) || [];
+  const rpcData = (data as unknown as Array<{ id: string; title: string; title_en?: string | null; image_url: string | null }>) || [];
   return rpcData.map((p) => ({
     id: p.id,
     title: p.title,
+    title_en: p.title_en || null,
     image: p.image_url,
   }));
 }
@@ -242,7 +245,8 @@ export async function getRentNotificationHistory(
   const history = (data || []).map((r: any) => ({
     ...r,
     properties: r.property ? {
-      title: r.property.details?.title?.th || r.property.details?.title?.en || "Unknown Property"
+      title: r.property.details?.title?.th || r.property.details?.title?.en || (typeof r.property.details?.title === "string" ? r.property.details?.title : "Unknown Property"),
+      title_en: r.property.details?.title?.en || r.property.details?.title?.th || (typeof r.property.details?.title === "string" ? r.property.details?.title : null),
     } : undefined,
     line_groups: r.channel ? {
       group_name: r.channel.channel_name || "Unknown Group"

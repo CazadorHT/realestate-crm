@@ -13,6 +13,7 @@ export interface LINEGroup {
 export interface SimpleProperty {
   id: string;
   title: string;
+  title_en?: string | null;
   image: string | null;
 }
 
@@ -29,6 +30,7 @@ export interface RentNotificationRule extends Omit<RentNotificationRuleInput, "i
   properties?: {
     id: string;
     title: string;
+    title_en?: string | null;
     property_images?: { image_url: string }[];
     deals?: {
       rental_contracts?: {

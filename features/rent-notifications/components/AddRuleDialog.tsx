@@ -328,7 +328,7 @@ export function AddRuleDialog({
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel className="text-sm font-bold text-slate-700 ml-1">
-                            {targetType === "deal" ? (isEn ? "Select Deal" : "เลือกดีล (Deal)") : (isEn ? "Select Property" : "เลือกทรัพย์ (Property)")}
+                            {targetType === "deal" ? (isEn ? "Select Deal" : "เลือกดีล") : (isEn ? "Select Property" : "เลือกทรัพย์")}
                           </FormLabel>
                           <FormControl>
                             {targetType === "property" ? (
@@ -367,7 +367,7 @@ export function AddRuleDialog({
                           </FormControl>
                           <FormDescription className="text-[11px] text-rose-500 font-medium ml-1">
                             {targetType === "property" 
-                              ? (isEn ? "* Shows only properties with active rental contracts" : "* แสดงเฉพาะทรัพย์ที่มีสัญญาเช่า (Active Contract) เท่านั้น")
+                              ? (isEn ? "* Shows only properties with active rental contracts" : "* แสดงเฉพาะทรัพย์ที่มีสัญญาเช่าเท่านั้น")
                               : (isEn ? "* Shows all deals in system" : "* แสดงเฉพาะดีลในระบบ")
                             }
                           </FormDescription>
@@ -391,7 +391,7 @@ export function AddRuleDialog({
                           return (
                             <FormItem className="flex flex-col">
                               <FormLabel className="text-sm font-bold text-slate-700 ml-1">
-                                {isEn ? "LINE Group" : "กลุ่มไลน์ (LINE Group)"}
+                                {isEn ? "LINE Group" : "กลุ่มไลน์"}
                               </FormLabel>
                               <ResponsiveDialog
                                 open={isGroupOpen}
@@ -523,9 +523,9 @@ export function AddRuleDialog({
                                 >
                                   <span className="flex items-center gap-2">
                                     {field.value === "th" && (isEn ? "🇹🇭 Thai" : "🇹🇭 ไทย")}
-                                    {field.value === "en" && (isEn ? "🇬🇧 English" : "🇬🇧 อังกฤษ (English)")}
-                                    {field.value === "cn" && (isEn ? "🇨🇳 Chinese" : "🇨🇳 จีน (Chinese)")}
-                                    {field.value === "ru" && (isEn ? "🇷🇺 Russian" : "🇷🇺 รัสเซีย (Russian)")}
+                                    {field.value === "en" && (isEn ? "🇬🇧 English" : "🇬🇧 อังกฤษ")}
+                                    {field.value === "cn" && (isEn ? "🇨🇳 Chinese" : "🇨🇳 จีน")}
+                                    {field.value === "ru" && (isEn ? "🇷🇺 Russian" : "🇷🇺 รัสเซีย")}
                                   </span>
                                   <ChevronsUpDown className="w-4 h-4 text-slate-400" />
                                 </Button>
@@ -534,9 +534,9 @@ export function AddRuleDialog({
                               <div className="grid gap-2 p-4 pointer-events-auto ">
                                 {[
                                   { value: "th", label: isEn ? "Thai" : "ไทย", flag: "🇹🇭" },
-                                  { value: "en", label: isEn ? "English" : "อังกฤษ (English)", flag: "🇬🇧" },
-                                  { value: "cn", label: isEn ? "Chinese" : "จีน (Chinese)", flag: "🇨🇳" },
-                                  { value: "ru", label: isEn ? "Russian" : "รัสเซีย (Russian)", flag: "🇷🇺" },
+                                  { value: "en", label: isEn ? "English" : "อังกฤษ", flag: "🇬🇧" },
+                                  { value: "cn", label: isEn ? "Chinese" : "จีน", flag: "🇨🇳" },
+                                  { value: "ru", label: isEn ? "Russian" : "รัสเซีย", flag: "🇷🇺" },
                                 ].map((lang) => (
                                   <Button
                                     key={lang.value}

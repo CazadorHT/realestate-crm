@@ -51,7 +51,7 @@ import { AddRuleDialog } from "./AddRuleDialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RentNotificationRule, LINEGroup, SimpleProperty } from "../types";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 import Image from "next/image";
 
 interface RuleListProps {
@@ -85,6 +85,7 @@ export function RuleList({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
   const { t, language } = useLanguage();
+  const isEn = language === "en";
 
   // Handle Search Debounce with startTransition
   useEffect(() => {
@@ -120,7 +121,7 @@ export function RuleList({
 
     const res = await toggleRentNotificationRule(id, !currentStatus, tenantId);
     if (!res.success) {
-      toast.error("Failed to update status");
+      toast.error(isEn ? "Failed to update status" : "อัปเดตสถานะไม่สำเร็จ");
       // Revert
       setRules((prev) =>
         prev.map((r) =>
@@ -135,24 +136,24 @@ export function RuleList({
     const id = isDeleting;
     const res = await deleteRentNotificationRule(id, tenantId);
     if (res.success) {
-      toast.success("ลบรายการแล้ว");
+      toast.success(isEn ? "Rule deleted successfully" : "ลบรายการแล้ว");
       setRules((prev) => prev.filter((r) => r.id !== id));
       setIsDeleting(null);
     } else {
-      toast.error("ลบรายการไม่สำเร็จ");
+      toast.error(isEn ? "Failed to delete rule" : "ลบรายการไม่สำเร็จ");
     }
   };
 
   const handleTestSend = async (id: string) => {
     if (isSendingTest) return;
     setIsSendingTest(id);
-    const toastId = toast.loading("กำลังส่งข้อความทดสอบ...");
+    const toastId = toast.loading(isEn ? "Sending test message..." : "กำลังส่งข้อความทดสอบ...");
     try {
       const res = await testSendRentNotification(id, tenantId);
       if (res.success) {
-        toast.success("ส่งข้อความทดสอบแล้ว", { id: toastId });
+        toast.success(isEn ? "Test message sent successfully" : "ส่งข้อความทดสอบแล้ว", { id: toastId });
       } else {
-        toast.error("เกิดข้อผิดพลาดในการส่ง: " + res.message, { id: toastId });
+        toast.error((isEn ? "Failed to send test message: " : "เกิดข้อผิดพลาดในการส่ง: ") + res.message, { id: toastId });
       }
     } finally {
       setIsSendingTest(null);
@@ -161,16 +162,16 @@ export function RuleList({
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (!confirm(`คุณแน่ใจว่าต้องการลบ ${selectedIds.length} รายการ?`)) return;
+    if (!confirm(isEn ? `Are you sure you want to delete ${selectedIds.length} items?` : `คุณแน่ใจว่าต้องการลบ ${selectedIds.length} รายการ?`)) return;
 
     setIsBulkActionLoading(true);
     const res = await deleteRentNotificationRules(selectedIds, tenantId);
     if (res.success) {
-      toast.success(`ลบ ${selectedIds.length} รายการเรียบร้อยแล้ว`);
+      toast.success(isEn ? `Deleted ${selectedIds.length} rules successfully` : `ลบ ${selectedIds.length} รายการเรียบร้อยแล้ว`);
       setRules((prev) => prev.filter((r) => !selectedIds.includes(r.id)));
       setSelectedIds([]);
     } else {
-      toast.error("ล้มเหลวในการลบรายการแบบกลุ่ม");
+      toast.error(isEn ? "Failed to bulk delete items" : "ล้มเหลวในการลบรายการแบบกลุ่ม");
     }
     setIsBulkActionLoading(false);
   };
@@ -180,7 +181,7 @@ export function RuleList({
     setIsBulkActionLoading(true);
     const res = await toggleRentNotificationRules(selectedIds, active, tenantId);
     if (res.success) {
-      toast.success(`${active ? "เปิด" : "ปิด"}การใช้งาน ${selectedIds.length} รายการแล้ว`);
+      toast.success(isEn ? `${active ? "Enabled" : "Disabled"} ${selectedIds.length} rules` : `${active ? "เปิด" : "ปิด"}การใช้งาน ${selectedIds.length} รายการแล้ว`);
       setRules((prev) =>
         prev.map((r) =>
           selectedIds.includes(r.id) ? { ...r, is_active: active } : r,
@@ -188,7 +189,7 @@ export function RuleList({
       );
       setSelectedIds([]);
     } else {
-      toast.error("ล้มเหลวในการเปลี่ยนสถานะรายการแบบกลุ่ม");
+      toast.error(isEn ? "Failed to bulk update status" : "ล้มเหลวในการเปลี่ยนสถานะรายการแบบกลุ่ม");
     }
     setIsBulkActionLoading(false);
   };
@@ -213,7 +214,7 @@ export function RuleList({
       const date = new Date(dateStr);
       return formatDistanceToNow(date, {
         addSuffix: true,
-        locale: language === "th" ? th : enUS,
+        locale: isEn ? enUS : th,
       });
     } catch {
       return "-";
@@ -229,10 +230,12 @@ export function RuleList({
           <Calendar className="w-10 h-10 text-slate-300" />
         </div>
         <h3 className="text-xl font-bold text-slate-800 mb-2">
-          ยังไม่มีการตั้งค่าแจ้งเตือน
+          {isEn ? "No Rent Notification Rules Configured" : "ยังไม่มีการตั้งค่าแจ้งเตือน"}
         </h3>
         <p className="text-slate-500 mb-8 max-w-sm mx-auto">
-          เริ่มต้นสร้างการแจ้งเตือนอัตโนมัติเพื่อให้บอทช่วยตามค่าเช่าและแจ้งเตือนเมื่อสัญญาใกล้สิ้นสุด
+          {isEn
+            ? "Create automated alert rules to help track rent and notify when leases are ending."
+            : "เริ่มต้นสร้างการแจ้งเตือนอัตโนมัติเพื่อให้บอทช่วยตามค่าเช่าและแจ้งเตือนเมื่อสัญญาใกล้สิ้นสุด"}
         </p>
         <AddRuleDialog
           groups={groups}
@@ -249,8 +252,8 @@ export function RuleList({
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="ค้นหาทรัพย์ หรือ ชื่อกลุ่ม..."
-            className="pl-10 h-10 bg-white border-slate-200"
+            placeholder={isEn ? "Search property or group name..." : "ค้นหาทรัพย์ หรือ ชื่อกลุ่ม..."}
+            className="pl-10 h-10 bg-transparent border-0 border-b border-slate-200 rounded-none shadow-none focus-visible:ring-0 focus-visible:border-blue-500 focus-visible:border-b-2 transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -259,7 +262,7 @@ export function RuleList({
         {selectedIds.length > 0 && (
           <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg animate-in fade-in slide-in-from-top-2 duration-200">
             <span className="text-sm font-medium text-blue-700 mr-2">
-              เลือก {selectedIds.length} รายการ
+              {isEn ? `${selectedIds.length} selected` : `เลือก ${selectedIds.length} รายการ`}
             </span>
             <Button
               variant="outline"
@@ -269,7 +272,7 @@ export function RuleList({
               onClick={() => handleBulkToggle(true)}
             >
               <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-              เปิด
+              {isEn ? "Enable" : "เปิด"}
             </Button>
             <Button
               variant="outline"
@@ -279,7 +282,7 @@ export function RuleList({
               onClick={() => handleBulkToggle(false)}
             >
               <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
-              ปิด
+              {isEn ? "Disable" : "ปิด"}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -289,7 +292,7 @@ export function RuleList({
                   className="h-8 bg-white border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                   disabled={isBulkActionLoading}
                 >
-                  จัดการแบบกลุ่ม
+                  {isEn ? "Bulk Actions" : "จัดการแบบกลุ่ม"}
                   <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -299,7 +302,7 @@ export function RuleList({
                   onClick={handleBulkDelete}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  ลบที่เลือกทั้งหมด
+                  {isEn ? "Delete Selected" : "ลบที่เลือกทั้งหมด"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -309,7 +312,7 @@ export function RuleList({
               className="h-8 text-slate-400 hover:text-slate-600"
               onClick={() => setSelectedIds([])}
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
           </div>
         )}
@@ -324,24 +327,26 @@ export function RuleList({
                 onCheckedChange={toggleSelectAll}
               />
             </TableHead>
-            {tenantId === "ALL" && <TableHead>สาขา (Branch)</TableHead>}
-            <TableHead>ทรัพย์ (Property)</TableHead>
-            <TableHead>กลุ่มไลน์ (LINE Group)</TableHead>
-            <TableHead>การแจ้งเตือน</TableHead>
-            <TableHead>ส่งล่าสุด</TableHead>
-            <TableHead>สถานะ</TableHead>
-            <TableHead className="text-right whitespace-nowrap">จัดการ</TableHead>
+            {tenantId === "ALL" && <TableHead>{isEn ? "Branch" : "สาขา"}</TableHead>}
+            <TableHead>{isEn ? "Property" : "ทรัพย์สิน"}</TableHead>
+            <TableHead>{isEn ? "LINE Group" : "กลุ่มไลน์"}</TableHead>
+            <TableHead>{isEn ? "Schedule" : "การแจ้งเตือน"}</TableHead>
+            <TableHead>{isEn ? "Last Sent" : "ส่งล่าสุด"}</TableHead>
+            <TableHead>{isEn ? "Status" : "สถานะ"}</TableHead>
+            <TableHead className="text-right whitespace-nowrap">{isEn ? "Actions" : "จัดการ"}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rules.length === 0 ? (
             <TableRow>
               <TableCell colSpan={8} className="h-32 text-center text-slate-400">
-                ไม่พบข้อมูลที่ตรงกับการค้นหา
+                {isEn ? "No matching records found" : "ไม่พบข้อมูลที่ตรงกับการค้นหา"}
               </TableCell>
             </TableRow>
           ) : (
-            rules.map((rule) => (
+            rules.map((rule) => {
+              const displayTitle = (isEn && rule.properties?.title_en) ? rule.properties.title_en : (rule.properties?.title || (isEn ? "Unknown Property" : "ไม่ระบุทรัพย์"));
+              return (
               <TableRow key={rule.id} className={selectedIds.includes(rule.id) ? "bg-blue-50/50" : ""}>
                 <TableCell>
                   <Checkbox
@@ -365,7 +370,7 @@ export function RuleList({
                       {rule.properties?.property_images?.[0]?.image_url ? (
                         <Image
                           src={rule.properties.property_images[0].image_url}
-                          alt={rule.properties?.title || "Property image"}
+                          alt={displayTitle}
                           className="w-full h-full object-cover"
                           width={48}
                           height={48}
@@ -377,7 +382,7 @@ export function RuleList({
                     </div>
                     <div className="max-w-[200px] lg:max-w-[300px]">
                       <div className="font-semibold text-slate-900 line-clamp-1 leading-tight text-sm">
-                        {rule.properties?.title || "Unknown Property"}
+                        {displayTitle}
                       </div>
                       <div className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wider font-medium">
                         ID: {rule.property_id.split("-")[0]}
@@ -418,7 +423,7 @@ export function RuleList({
                       {(Array.isArray(rule.line_groups)
                         ? rule.line_groups[0]
                         : rule.line_groups
-                      )?.group_name || "Unknown Group"}
+                      )?.group_name || (isEn ? "Unknown Group" : "ไม่ระบุกลุ่ม")}
                     </span>
                   </div>
                 </TableCell>
@@ -426,17 +431,19 @@ export function RuleList({
                   <div className="flex flex-col gap-1">
                     <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                       <Clock className="w-3 h-3 text-blue-500" />
-                      ทุกวันที่ {rule.notification_day} เวลา {rule.notification_hour?.toString().padStart(2, "0")}:00 น.
+                      {isEn 
+                        ? `Every ${rule.notification_day} at ${rule.notification_hour?.toString().padStart(2, "0")}:00` 
+                        : `ทุกวันที่ ${rule.notification_day} เวลา ${rule.notification_hour?.toString().padStart(2, "0")}:00 น.`}
                     </div>
                     <div className="text-[10px] text-slate-400 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      สัญญาจบ: {(() => {
+                      {isEn ? "Lease Ends: " : "สัญญาจบ: "}{(() => {
                         const contracts =
                           rule.properties?.deals?.[0]?.rental_contracts || [];
                         const latestContract = contracts[0];
                         if (!latestContract?.end_date) return "-";
                         return new Date(latestContract.end_date).toLocaleDateString(
-                          language === "th" ? "th-TH" : "en-US",
+                          isEn ? "en-US" : "th-TH",
                           { month: "short", year: "numeric" }
                         );
                       })()}
@@ -463,31 +470,33 @@ export function RuleList({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">จัดการ</DropdownMenuLabel>
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                        {isEn ? "Actions" : "จัดการ"}
+                      </DropdownMenuLabel>
                       <DropdownMenuItem 
                         className="cursor-pointer text-sm" 
                         onClick={() => handleTestSend(rule.id)}
                         disabled={isSendingTest === rule.id}
                       >
                         <Send className="mr-2 h-4 w-4 text-blue-500" />
-                        ส่งข้อความทดสอบ
+                        {isEn ? "Send Test Message" : "ส่งข้อความทดสอบ"}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="cursor-pointer text-sm" onClick={() => setEditingRule(rule)}>
-                        <Edit className="mr-2 h-4 w-4 text-slate-500" /> แก้ไขกฎ
+                        <Edit className="mr-2 h-4 w-4 text-slate-500" /> {isEn ? "Edit Rule" : "แก้ไขกฎ"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600 focus:text-red-600 cursor-pointer text-sm font-medium"
                         onClick={() => setIsDeleting(rule.id)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        ลบทิ้ง
+                        {isEn ? "Delete" : "ลบทิ้ง"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))
+            );})
           )}
         </TableBody>
       </Table>

@@ -20,7 +20,7 @@ import {
 import { format } from "date-fns";
 import { th, enUS } from "date-fns/locale";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 import {
   Tooltip,
   TooltipContent,
@@ -35,7 +35,7 @@ interface HistoryItem {
   error_message: string | null;
   retry_count: number | null;
   metadata: any;
-  properties?: { title: string };
+  properties?: { title: string; title_en?: string | null };
   line_groups?: { group_name: string };
 }
 
@@ -52,6 +52,7 @@ export function HistoryList({
 }: HistoryListProps) {
   const [history, setHistory] = useState<HistoryItem[]>(initialHistory);
   const { language } = useLanguage();
+  const isEn = language === "en";
 
   useEffect(() => {
     setHistory(initialHistory);
@@ -60,7 +61,7 @@ export function HistoryList({
   const formatDateTime = (dateStr: string) => {
     try {
       return format(new Date(dateStr), "d MMM yyyy HH:mm", {
-        locale: language === "th" ? th : enUS,
+        locale: isEn ? enUS : th,
       });
     } catch {
       return dateStr;
@@ -74,10 +75,12 @@ export function HistoryList({
           <History className="w-8 h-8 text-slate-300" />
         </div>
         <h3 className="text-lg font-bold text-slate-800 mb-1">
-          ยังไม่มีประวัติการแจ้งเตือน
+          {isEn ? "No Notification History Yet" : "ยังไม่มีประวัติการแจ้งเตือน"}
         </h3>
         <p className="text-sm text-slate-500">
-          ประวัติการส่งแจ้งเตือนอัตโนมัติจะปรากฏขึ้นที่นี่เมื่อระบบเริ่มทำงาน
+          {isEn
+            ? "Automatic alert history will appear here once the system starts triggering notifications."
+            : "ประวัติการส่งแจ้งเตือนอัตโนมัติจะปรากฏขึ้นที่นี่เมื่อระบบเริ่มทำงาน"}
         </p>
       </div>
     );
@@ -89,16 +92,18 @@ export function HistoryList({
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-              <TableHead className="w-[180px]">วันที่/เวลา</TableHead>
-              <TableHead>ทรัพย์ (Property)</TableHead>
-              <TableHead>กลุ่มไลน์ (LINE Group)</TableHead>
-              <TableHead className="text-center">สถานะ</TableHead>
-              <TableHead className="text-center whitespace-nowrap">พยายามส่ง</TableHead>
-              <TableHead className="text-right whitespace-nowrap">รายละเอียด</TableHead>
+              <TableHead className="w-[180px]">{isEn ? "Date / Time" : "วันที่/เวลา"}</TableHead>
+              <TableHead>{isEn ? "Property" : "ทรัพย์สิน"}</TableHead>
+              <TableHead>{isEn ? "LINE Group" : "กลุ่มไลน์"}</TableHead>
+              <TableHead className="text-center">{isEn ? "Status" : "สถานะ"}</TableHead>
+              <TableHead className="text-center whitespace-nowrap">{isEn ? "Attempts" : "พยายามส่ง"}</TableHead>
+              <TableHead className="text-right whitespace-nowrap">{isEn ? "Details" : "รายละเอียด"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {history.map((item) => (
+            {history.map((item) => {
+              const displayTitle = (isEn && item.properties?.title_en) ? item.properties.title_en : (item.properties?.title || (isEn ? "Unknown Property" : "ไม่ระบุทรัพย์"));
+              return (
               <TableRow key={item.id}>
                 <TableCell className="text-xs font-medium text-slate-600">
                   <div className="flex items-center gap-2">
@@ -107,23 +112,23 @@ export function HistoryList({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="font-bold text-slate-900 text-sm truncate max-w-[200px]">
-                    {item.properties?.title || "Unknown Property"}
+                  <div className="font-bold text-slate-900 text-sm truncate max-w-[200px]" title={displayTitle}>
+                    {displayTitle}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="text-xs text-slate-500 truncate max-w-[150px]">
-                    {item.line_groups?.group_name || "Unknown Group"}
+                    {item.line_groups?.group_name || (isEn ? "Unknown Group" : "ไม่ระบุกลุ่ม")}
                   </div>
                 </TableCell>
                 <TableCell className="text-center">
                   {item.status === "SUCCESS" ? (
                     <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-100 gap-1 font-bold">
-                      <CheckCircle2 className="w-3 h-3" /> สำเร็จ
+                      <CheckCircle2 className="w-3 h-3" /> {isEn ? "Success" : "สำเร็จ"}
                     </Badge>
                   ) : (
                     <Badge variant="secondary" className="bg-rose-50 text-rose-700 border-rose-100 gap-1 font-bold">
-                      <XCircle className="w-3 h-3" /> ล้มเหลว
+                      <XCircle className="w-3 h-3" /> {isEn ? "Failed" : "ล้มเหลว"}
                     </Badge>
                   )}
                 </TableCell>
@@ -131,7 +136,7 @@ export function HistoryList({
                   <div className="text-xs font-bold text-slate-500">
                     {item.retry_count && item.retry_count > 0 ? (
                       <span className={item.status === "ERROR" ? "text-amber-600" : "text-slate-400"}>
-                        ครั้งที่ {item.retry_count + 1}
+                        {isEn ? `Attempt ${item.retry_count + 1}` : `ครั้งที่ ${item.retry_count + 1}`}
                       </span>
                     ) : (
                       <span className="text-slate-300">1</span>
@@ -144,7 +149,7 @@ export function HistoryList({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button className="inline-flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 font-medium bg-rose-50 px-2 py-1 rounded-lg transition-colors">
-                            <Info className="w-3 h-3" /> ดูสาเหตุ
+                            <Info className="w-3 h-3" /> {isEn ? "View Error" : "ดูสาเหตุ"}
                           </button>
                         </TooltipTrigger>
                         <TooltipContent className="bg-slate-900 text-white border-none p-3 max-w-[300px]">
@@ -154,14 +159,14 @@ export function HistoryList({
                     </TooltipProvider>
                   ) : item.metadata?.is_test ? (
                     <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold text-blue-500 border-blue-200">
-                      Test Send
+                      {isEn ? "Test Send" : "ทดสอบส่ง"}
                     </Badge>
                   ) : (
                     <span className="text-xs text-slate-400">-</span>
                   )}
                 </TableCell>
               </TableRow>
-            ))}
+            );})}
           </TableBody>
         </Table>
       </div>
