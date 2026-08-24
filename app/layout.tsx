@@ -179,6 +179,9 @@ export async function generateMetadata(): Promise<Metadata> {
         ru: `${siteConfig.url}/ru`,
         "x-default": `${siteConfig.url}/`,
       },
+      types: {
+        "application/rss+xml": `${siteConfig.url}/feed.xml`,
+      },
     },
     openGraph: {
       type: "website",

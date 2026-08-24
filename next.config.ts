@@ -82,10 +82,68 @@ const nextConfig: NextConfig = {
     })(),
   },
   compress: true,
+  async redirects() {
+    return [
+      {
+        source: "/rss",
+        destination: "/rss.xml",
+        permanent: true,
+      },
+      {
+        source: "/feed",
+        destination: "/feed.xml",
+        permanent: true,
+      },
+      {
+        source: "/blog/rss",
+        destination: "/blog/rss.xml",
+        permanent: true,
+      },
+      {
+        source: "/blog/feed",
+        destination: "/blog/feed.xml",
+        permanent: true,
+      },
+      {
+        source: "/feed/posts/default",
+        destination: "/feed.xml",
+        permanent: true,
+      },
+      {
+        source: "/rss/featured",
+        destination: "/rss.xml",
+        permanent: true,
+      },
+      {
+        source: "/articles/feed",
+        destination: "/blog/feed.xml",
+        permanent: true,
+      },
+      {
+        source: "/rss/news.xml",
+        destination: "/rss.xml",
+        permanent: true,
+      },
+      {
+        source: "/rss/index.html",
+        destination: "/rss.xml",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
         source: "/fonts/(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/images/(.*)",
         headers: [
           {
             key: "Cache-Control",
