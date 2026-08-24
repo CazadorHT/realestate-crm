@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { ReactNode } from "react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // Icon map - add icons as needed
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -79,6 +80,8 @@ export function PageHeader({
   children,
   id,
 }: PageHeaderProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const Icon = icon ? ICON_MAP[icon] : null;
   const ActionIcon = actionIcon ? ICON_MAP[actionIcon] : null;
 
@@ -130,8 +133,9 @@ export function PageHeader({
                 {count !== undefined && (
                   <>
                     {subtitle && " • "}
-                    มีทั้งหมด{" "}
-                    <span className="font-semibold text-white">{count}</span> รายการ
+                    {isEn ? "Total " : "มีทั้งหมด "}
+                    <span className="font-semibold text-white">{count}</span>
+                    {isEn ? " items" : " รายการ"}
                   </>
                 )}
               </p>

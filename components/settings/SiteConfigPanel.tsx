@@ -52,6 +52,7 @@ import {
 import {
   SiteSettings,
   siteSettingsSchema,
+  getSiteSettingsSchema,
 } from "@/features/site-settings/schema";
 import { SiteAssetUploader } from "./SiteAssetUploader";
 import { cn } from "@/lib/utils";
@@ -73,7 +74,7 @@ export function SiteConfigPanel() {
   const [showGtm, setShowGtm] = useState(false);
 
   const form = useForm<BrandingSettings>({
-    resolver: zodResolver(siteSettingsSchema),
+    resolver: zodResolver(getSiteSettingsSchema(isEn)),
     defaultValues: {
       site_name: "",
       company_name: "",

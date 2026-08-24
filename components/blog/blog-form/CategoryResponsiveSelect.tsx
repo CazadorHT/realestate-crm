@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { getCategoryDisplayName } from "@/features/blog/blog-utils";
 
 interface CategoryResponsiveSelectProps {
   value: string;
@@ -17,6 +19,8 @@ export function CategoryResponsiveSelect({
   onValueChange,
   categories,
 }: CategoryResponsiveSelectProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [open, setOpen] = useState(false);
   const options = [{ id: "General", name: "General" }, ...categories.filter(c => c.name !== "General")];
   const selected = options.find(o => o.name === value) || options[0];
@@ -30,15 +34,15 @@ export function CategoryResponsiveSelect({
           type="button"
           variant="outline"
           onClick={() => setOpen(true)}
-          className="w-full h-11 justify-between border-slate-200 bg-slate-50/50 hover:bg-white transition-all rounded-lg px-4 font-normal"
+          className="w-full h-11 justify-between border-slate-200 bg-slate-50/50 hover:bg-white transition-all rounded-lg px-4 font-normal cursor-pointer"
         >
-          <span className={cn(value ? "text-slate-900" : "text-slate-400")}>
-            {selected ? selected.name : "เลือกหมวดหมู่"}
+          <span className={cn(value ? "text-slate-900 font-medium" : "text-slate-400")}>
+            {selected ? getCategoryDisplayName(selected.name, language) : (isEn ? "Select Category" : "เลือกหมวดหมู่")}
           </span>
           <ChevronDown className="h-4 w-4 text-slate-400" />
         </Button>
       }
-      title="เลือกหมวดหมู่บทความ"
+      title={isEn ? "Select Article Category" : "เลือกหมวดหมู่บทความ"}
       className="sm:max-w-[400px] p-0"
     >
       <div className="grid gap-1 p-2 md:p-4 pb-8 md:pb-4 max-h-[60vh] overflow-y-auto">
@@ -48,7 +52,7 @@ export function CategoryResponsiveSelect({
             type="button"
             variant="ghost"
             className={cn(
-              "justify-start h-12 md:h-14 px-4 rounded-xl text-base font-semibold",
+              "justify-start h-12 md:h-14 px-4 rounded-xl text-base font-semibold cursor-pointer",
               value === option.name && "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
             )}
             onClick={() => {
@@ -56,7 +60,7 @@ export function CategoryResponsiveSelect({
               setOpen(false);
             }}
           >
-            {option.name}
+            {getCategoryDisplayName(option.name, language)}
             {value === option.name && <CheckCircle2 className="ml-auto h-4 w-4 text-emerald-600" />}
           </Button>
         ))}
@@ -64,3 +68,4 @@ export function CategoryResponsiveSelect({
     </ResponsiveDialog>
   );
 }
+

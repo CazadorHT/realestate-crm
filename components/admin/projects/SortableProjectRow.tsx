@@ -88,11 +88,13 @@ export function SortableProjectRow({
           )}
           <div>
             <span className="font-bold text-slate-900 block">
-              {isEn ? (project.name.en || project.name.th) : project.name.th}
+              {isEn ? (project.name.en || project.name.th) : (project.name.en || project.name.th)}
             </span>
-            <span className="text-xs text-slate-400 block">
-              {isEn ? project.name.th : project.name.en}
-            </span>
+            {!isEn && project.name.th && project.name.en && project.name.th !== project.name.en && (
+              <span className="text-xs text-slate-400 block">
+                {project.name.th}
+              </span>
+            )}
           </div>
         </div>
       </td>
@@ -117,8 +119,8 @@ export function SortableProjectRow({
       <td className="px-6 py-4">
         <span className="font-medium text-slate-600">{project.developer || "-"}</span>
       </td>
-      <td className="px-6 py-4 text-center">
-        <span className="font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-md text-xs line-clamp-1">
+      <td className="px-6 py-4 text-center whitespace-nowrap">
+        <span className="font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md text-xs whitespace-nowrap inline-block">
           {project.property_count || 0} {isEn ? "Units" : "ทรัพย์"}
         </span>
       </td>

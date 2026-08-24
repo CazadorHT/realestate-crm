@@ -62,7 +62,7 @@ export function Step4Description({
               <Textarea
                 value={descTh}
                 onChange={(e) => { setDescTh(e.target.value); setIsFormDirty(true); }}
-                placeholder="รายละเอียดคำบรรยายจุดขายและการเดินทางรอบโครงการ (รองรับ HTML)..."
+                placeholder={isEn ? "Project overview, selling points, and location details in Thai (HTML supported)..." : "รายละเอียดคำบรรยายจุดขายและการเดินทางรอบโครงการ (รองรับ HTML)..."}
                 rows={8}
                 className="rounded-xl border-slate-200"
               />

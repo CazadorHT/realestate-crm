@@ -167,8 +167,8 @@ export async function createPopularArea(
     const insertData: PopularAreaInsert = {
       id: crypto.randomUUID(),
       name: {
-        th: parsed.name,
-        en: parsed.name_en || "",
+        th: parsed.name || parsed.name_en || "",
+        en: parsed.name_en || parsed.name || "",
         cn: parsed.name_cn || "",
         ru: parsed.name_ru || "",
       },
@@ -197,7 +197,7 @@ export async function createPopularArea(
       {
         action: "popular_area.create",
         entity: "popular_areas_v3",
-        metadata: { name: parsed.name, province: parsed.province },
+        metadata: { name: parsed.name || parsed.name_en, province: parsed.province },
       },
     );
 
@@ -225,8 +225,8 @@ export async function updatePopularArea(
 
     const updateData: PopularAreaUpdate = {
       name: {
-        th: parsed.name,
-        en: parsed.name_en || "",
+        th: parsed.name || parsed.name_en || "",
+        en: parsed.name_en || parsed.name || "",
         cn: parsed.name_cn || "",
         ru: parsed.name_ru || "",
       },
@@ -641,12 +641,12 @@ export async function generateAreaSeoContentAction(
     const prompt = `
       You are a premium luxury and residential real estate investment analyst in Thailand.
       Generate complete information for a popular geographic area in Thailand.
-      Area Name (Thai): ${nameTh}
-      Area Name (English): ${nameEn}
-      Province: ${province}
+      Area Name (Thai): ${nameTh || "Not provided"}
+      Area Name (English): ${nameEn || "Not provided"}
+      Province: ${province || "Bangkok"}
       
       Tasks:
-      1. Translate the area name accurately into English (en), Chinese (cn), and Russian (ru).
+      1. Translate the area name accurately into all 4 languages: Thai (th), English (en), Chinese (cn), and Russian (ru).
       2. Write a short, engaging description/guide for this area in 4 languages: Thai (th), English (en), Chinese (cn), and Russian (ru). Focus on location highlights, premium lifestyle, transportation connectivity (like BTS/MRT), and residential attractiveness. Keep each translation around 80-120 words. Use simple HTML tags (<p>, <strong>, <ul>, <li>).
       3. Write a highly optimized SEO Title and SEO Meta Description for this area page in all 4 languages.
       4. Generate a clean URL slug in English (lowercase, alphanumeric characters and hyphens only, e.g., "sukhumvit" or "bang-na").
@@ -655,6 +655,7 @@ export async function generateAreaSeoContentAction(
       {
         "slug": "url-slug",
         "name": {
+          "th": "Thai area name",
           "en": "English area name",
           "cn": "Chinese area name",
           "ru": "Russian area name"

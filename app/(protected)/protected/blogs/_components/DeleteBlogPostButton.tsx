@@ -16,10 +16,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-
-import { cn } from "@/lib/utils";
 
 interface DeleteBlogPostButtonProps {
   id: string;
@@ -28,6 +27,8 @@ interface DeleteBlogPostButtonProps {
 }
 
 export function DeleteBlogPostButton({ id, variant = "icon", onSuccess }: DeleteBlogPostButtonProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -53,7 +54,7 @@ export function DeleteBlogPostButton({ id, variant = "icon", onSuccess }: Delete
         toast.error(res.message);
       }
     } catch {
-      toast.error("เกิดข้อผิดพลาดในการลบ");
+      toast.error(isEn ? "Failed to delete article" : "เกิดข้อผิดพลาดในการลบ");
     } finally {
       setIsDeleting(false);
     }
@@ -66,18 +67,18 @@ export function DeleteBlogPostButton({ id, variant = "icon", onSuccess }: Delete
           <Button
             variant="ghost"
             size="icon"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-lg"
-            title="ลบ"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-lg cursor-pointer"
+            title={isEn ? "Move to Trash" : "ลบ"}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         ) : (
           <Button
             variant="outline"
-            className="h-12 w-full rounded-xl justify-start font-bold gap-3 border-slate-200 text-destructive hover:text-destructive hover:bg-destructive/5"
+            className="h-12 w-full rounded-xl justify-start font-bold gap-3 border-slate-200 text-destructive hover:text-destructive hover:bg-destructive/5 cursor-pointer"
           >
             <Trash2 className="h-5 w-5" />
-            ย้ายลงถังขยะ
+            {isEn ? "Move to Trash" : "ย้ายลงถังขยะ"}
           </Button>
         )}
       </AlertDialogTrigger>
@@ -85,28 +86,41 @@ export function DeleteBlogPostButton({ id, variant = "icon", onSuccess }: Delete
         <AlertDialogHeader>
           <AlertDialogTitle className="font-extrabold text-xl text-slate-900 border-b border-slate-100 pb-3 mb-2 flex items-center gap-2">
             <Trash2 className="h-6 w-6 text-destructive" />
-            ย้ายบทความลงถังขยะ?
+            {isEn ? "Move Article to Trash?" : "ย้ายบทความลงถังขยะ?"}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-slate-500 font-medium leading-relaxed">
-            บทความนี้จะถูกย้ายจากหน้าหลักไปเก็บไว้ในถังขยะ 
-            <br />
-            โดยคุณสามารถ <span className="text-slate-900 font-bold underline">กู้คืน (Restore)</span> ได้ในภายหลัง
+            {isEn ? (
+              <>
+                This article will be moved from active list to the trash.
+                <br />
+                You can <span className="text-slate-900 font-bold underline">Restore</span> it anytime from the trash tab.
+              </>
+            ) : (
+              <>
+                บทความนี้จะถูกย้ายจากหน้าหลักไปเก็บไว้ในถังขยะ 
+                <br />
+                โดยคุณสามารถ <span className="text-slate-900 font-bold underline">กู้คืน (Restore)</span> ได้ในภายหลัง
+              </>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2 sm:gap-0 pt-4 mt-2">
-          <AlertDialogCancel className="rounded-xl h-11 font-bold border-slate-200">ยกเลิก</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-xl h-11 font-bold border-slate-200 cursor-pointer">
+            {isEn ? "Cancel" : "ยกเลิก"}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-destructive hover:bg-destructive/90 text-white rounded-xl h-11 font-bold shadow-lg shadow-red-100 transition-all active:scale-95"
+            className="bg-destructive hover:bg-destructive/90 text-white rounded-xl h-11 font-bold shadow-lg shadow-red-100 transition-all active:scale-95 cursor-pointer"
             disabled={isDeleting}
           >
             {isDeleting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            ย้ายลงถังขยะ
+            {isEn ? "Move to Trash" : "ย้ายลงถังขยะ"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
+

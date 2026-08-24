@@ -211,7 +211,7 @@ export async function getAllMasterDataAction(typeFilter?: string) {
   const supabase = await createClient();
   let query = supabase
     .from("ref_master_data")
-    .select("id, type, code, label, is_active, sort_order, metadata, created_at, updated_at")
+    .select("type, code, label, is_active, sort_order, metadata")
     .order("sort_order", { ascending: true });
   if (typeFilter) {
     query = query.eq("type", typeFilter);
@@ -353,7 +353,7 @@ export async function getTransitStationsWithCountsAction() {
         // 1. Fetch all transit stations
         const { data: stations, error: stationsError } = await publicClient
           .from("ref_master_data")
-          .select("id, type, code, label, is_active, sort_order, metadata")
+          .select("type, code, label, is_active, sort_order, metadata")
           .eq("type", "TRANSIT_STATION")
           .order("sort_order", { ascending: true });
 

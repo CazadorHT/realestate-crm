@@ -66,7 +66,7 @@ export default function ExecutiveDashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
-        title={isEn ? "Executive Dashboard" : "แผงควบคุมระดับบริหาร (Executive Dashboard)"}
+        title={isEn ? "Executive Dashboard" : "แผงควบคุมระดับบริหาร"}
         subtitle={
           isEn
             ? "Real-time enterprise-wide performance across all nationwide branches"

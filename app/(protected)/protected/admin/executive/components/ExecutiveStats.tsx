@@ -35,7 +35,7 @@ export function ExecutiveStats({
       <Card className="border-slate-100 shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-slate-50/30">
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            {isEn ? "Global Leads" : "ลีดทั้งหมด (Global Leads)"}
+            {isEn ? "Global Leads" : "ลูกค้าและลีดทั้งหมด"}
           </CardTitle>
           <div className="p-1.5 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
             <Users className="h-4 w-4 text-blue-600" />
@@ -61,7 +61,7 @@ export function ExecutiveStats({
       <Card className="border-slate-100 shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-slate-50/30">
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            {isEn ? "Won Deals" : "ดีลที่ปิดได้ (Won Deals)"}
+            {isEn ? "Won Deals" : "ดีลที่ปิดการขายได้"}
           </CardTitle>
           <div className="p-1.5 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
             <Briefcase className="h-4 w-4 text-emerald-600" />
@@ -87,7 +87,7 @@ export function ExecutiveStats({
       <Card className="border-slate-100 shadow-sm rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-slate-50/30">
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            {isEn ? "Active Branches" : "จำนวนสาขา (Active Branches)"}
+            {isEn ? "Active Branches" : "จำนวนสาขาทั้งหมด"}
           </CardTitle>
           <div className="p-1.5 bg-amber-50 rounded-lg group-hover:bg-amber-100 transition-colors">
             <Building2 className="h-4 w-4 text-amber-600" />

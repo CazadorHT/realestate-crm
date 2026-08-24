@@ -107,13 +107,13 @@ export function PopularAreaSearchHeader({
               value="created_at-desc"
               className="text-xs font-semibold text-indigo-600"
             >
-              {isEn ? "✨ Newest First" : "✨ ใหม่ขึ้นก่อน (Newest)"}
+              {isEn ? "✨ Newest First" : "✨ ใหม่ขึ้นก่อน"}
             </SelectItem>
             <SelectItem value="created_at-asc" className="text-xs">
-              {isEn ? "Oldest First" : "เก่าขึ้นก่อน (Oldest)"}
+              {isEn ? "Oldest First" : "เก่าขึ้นก่อน"}
             </SelectItem>
             <SelectItem value="name-asc" className="text-xs">
-              {isEn ? "Area Name (A-Z)" : "ชื่อพื้นที่ (A-Z)"}
+              {isEn ? "Area Name (A-Z)" : "ชื่อพื้นที่ (ก-ฮ)"}
             </SelectItem>
             <SelectItem value="property_count-desc" className="text-xs">
               {isEn ? "Most Properties" : "จำนวนทรัพย์มากสุด"}

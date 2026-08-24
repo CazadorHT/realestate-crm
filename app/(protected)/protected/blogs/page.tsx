@@ -1,14 +1,7 @@
-import { Plus } from "lucide-react";
-import Link from "next/link";
 import { getDeletedBlogPostsAction } from "@/features/blog/actions";
-import { Button } from "@/components/ui/button";
-import { BlogsTable } from "@/features/blog/components/BlogsTable";
-import { PageHeader } from "@/components/dashboard/PageHeader";
-import { BlogStats } from "@/features/blog/components/BlogStats";
-import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
+import { BlogsPageView } from "@/features/blog/components/BlogsPageView";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
-
-import { getAllBlogPosts, BlogPost } from "@/lib/services/blog";  // ✅ แค่นี้พอ
+import { getAllBlogPosts, BlogPost } from "@/lib/services/blog";
 
 export default async function BlogsPage(props: {
   searchParams: Promise<{ page?: string; success?: string; tab?: string }>;
@@ -32,33 +25,14 @@ export default async function BlogsPage(props: {
   }
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="p-6 space-y-6">
       {searchParams.success === "true" && <SuccessAnimation />}
-      <PageHeader
-        title="จัดการบทความ (Blogs)"
-        subtitle="สร้างและจัดการเนื้อหาบนเว็บไซต์ของคุณ"
-        count={totalPosts}
-        icon="fileText"
-        gradient="blue"
-        
-        actionSlot={
-          <Button asChild className="flex flex-1 bg-white hover:bg-blue-700  hover:text-white text-blue-600 duration-300 transition-all">
-            <Link href="/protected/blogs/new">
-              <Plus className="mr-2 h-4 w-4" />
-              สร้างบทความใหม่
-            </Link>
-          </Button>
-        }
+      <BlogsPageView
+        posts={posts}
+        totalPosts={totalPosts}
+        page={page}
+        tab={tab}
       />
-
-      {/* Statistics Cards */}
-      <BlogStats posts={posts} />
-
-      <BlogsTable posts={posts} totalCount={totalPosts} currentPage={page} />
-
-      {posts && posts.length > 0 && (
-        <TableFooterStats totalCount={totalPosts} unitLabel="บทความ" />
-      )}
     </div>
   );
 }

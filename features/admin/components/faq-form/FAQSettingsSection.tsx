@@ -28,6 +28,8 @@ import { UseFormReturn } from "react-hook-form";
 import { FAQFormValues } from "../FAQForm";
 import { ResponsiveSelectField } from "./ResponsiveSelectField";
 
+import { useLanguage } from "@/lib/i18n/language-context";
+
 interface FAQSidebarProps {
   form: UseFormReturn<FAQFormValues>;
   saving: boolean;
@@ -43,13 +45,16 @@ export function FAQSettingsSection({
   onCancel,
   isWizard = false,
 }: FAQSidebarProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const categories = [
-    { label: "ทั่วไป (General)", value: "ทั่วไป", icon: <Globe className="w-4 h-4" />, description: "ข้อมูลพื้นฐานและเรื่องทั่วไป" },
-    { label: "การซื้อ (Buying)", value: "การซื้อ", icon: <ShoppingBag className="w-4 h-4" />, description: "เรื่องขั้นตอนการซื้ออสังหาฯ" },
-    { label: "การขาย (Selling)", value: "การขาย", icon: <Key className="w-4 h-4" />, description: "เรื่องการลงประกาศและการขาย" },
-    { label: "การเช่า (Renting)", value: "การเช่า", icon: <Home className="w-4 h-4" />, description: "สัญญาและกฎระเบียบการเช่า" },
-    { label: "สินเชื่อ (Loans)", value: "สินเชื่อ", icon: <CreditCard className="w-4 h-4" />, description: "ธนาคารและดอกเบี้ยกู้ยืม" },
-    { label: "กฎหมาย (Legal)", value: "กฎหมาย", icon: <Scale className="w-4 h-4" />, description: "สัญญาและภาษีอากรต่างๆ" },
+    { label: isEn ? "General" : "ทั่วไป", value: "ทั่วไป", icon: <Globe className="w-4 h-4" />, description: isEn ? "General and platform information" : "ข้อมูลพื้นฐานและเรื่องทั่วไป" },
+    { label: isEn ? "Buying" : "การซื้อ", value: "การซื้อ", icon: <ShoppingBag className="w-4 h-4" />, description: isEn ? "Property buying procedures" : "เรื่องขั้นตอนการซื้ออสังหาฯ" },
+    { label: isEn ? "Selling" : "การขาย", value: "การขาย", icon: <Key className="w-4 h-4" />, description: isEn ? "Listing and selling process" : "เรื่องการลงประกาศและการขาย" },
+    { label: isEn ? "Renting" : "การเช่า", value: "การเช่า", icon: <Home className="w-4 h-4" />, description: isEn ? "Lease agreements and rental rules" : "สัญญาและกฎระเบียบการเช่า" },
+    { label: isEn ? "Loans & Finance" : "สินเชื่อ", value: "สินเชื่อ", icon: <CreditCard className="w-4 h-4" />, description: isEn ? "Banking, mortgages and interest" : "ธนาคารและดอกเบี้ยกู้ยืม" },
+    { label: isEn ? "Legal & Taxes" : "กฎหมาย", value: "กฎหมาย", icon: <Scale className="w-4 h-4" />, description: isEn ? "Contracts and relevant taxes" : "สัญญาและภาษีอากรต่างๆ" },
   ];
 
   return (
@@ -61,7 +66,7 @@ export function FAQSettingsSection({
           render={({ field }) => (
             <FormItem className="space-y-4">
               <ResponsiveSelectField
-                label="หมวดหมู่ข้อมูล"
+                label={isEn ? "Category" : "หมวดหมู่ข้อมูล"}
                 options={categories}
                 value={field.value ?? "ทั่วไป"}
                 onValueChange={field.onChange}
@@ -80,7 +85,7 @@ export function FAQSettingsSection({
               <div className="flex items-center gap-2 px-1">
                 <ListOrdered className="h-4 w-4 text-blue-600" />
                 <FormLabel className="text-base font-semibold text-slate-900">
-                  ลำดับความสำคัญ
+                  {isEn ? "Priority & Order" : "ลำดับความสำคัญ"}
                 </FormLabel>
               </div>
               <FormControl>
@@ -91,7 +96,7 @@ export function FAQSettingsSection({
                 />
               </FormControl>
               <FormDescription className="text-xs font-semibold text-slate-400 italic px-2">
-                * ลำดับที่เริ่มด้วย 0 จะขึ้นแสดงเป็นอันแรกๆ
+                {isEn ? "* Lower numbers (starting from 0) appear first" : "* ลำดับที่เริ่มด้วย 0 จะขึ้นแสดงเป็นอันแรกๆ"}
               </FormDescription>
               <FormMessage className="font-semibold text-xs" />
             </FormItem>
@@ -106,10 +111,10 @@ export function FAQSettingsSection({
               <FormItem className="flex flex-row items-center justify-between space-y-0 p-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
                 <div className="space-y-1 ml-2">
                   <FormLabel className="text-base font-semibold text-slate-900 cursor-pointer">
-                    สถานะการเผยแพร่
+                    {isEn ? "Publish Status" : "สถานะการเผยแพร่"}
                   </FormLabel>
                   <FormDescription className="text-[10px] font-semibold text-slate-400 leading-tight uppercase tracking-tight">
-                    Visibility Status
+                    {isEn ? "Visibility on Public Portal" : "Visibility Status"}
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -128,7 +133,9 @@ export function FAQSettingsSection({
       <div className="p-7 bg-blue-50/50 rounded-3xl border border-blue-100 flex items-start gap-4 shadow-xs">
         <Sparkles className="h-5 w-5 text-blue-500 shrink-0 mt-0.5 animate-pulse" />
         <p className="text-[11px] leading-relaxed text-blue-700/80 font-semibold italic">
-          <b>Elite Intelligence:</b> การกรอกข้อมูลหลายภาษาช่วยดึงดูดกลุ่มลูกค้า Luxury และชาวต่างชาติได้ดีเยี่ยม แนะนำให้ใช้ปุ่มแปลอัตโนมัติเพื่อความรวดเร็วครับ
+          <b>Elite Intelligence:</b> {isEn 
+            ? "Multilingual content attracts international & luxury clients. Use the AI translation button for instant localization." 
+            : "การกรอกข้อมูลหลายภาษาช่วยดึงดูดกลุ่มลูกค้า Luxury และชาวต่างชาติได้ดีเยี่ยม แนะนำให้ใช้ปุ่มแปลอัตโนมัติเพื่อความรวดเร็วครับ"}
         </p>
       </div>
 
@@ -137,22 +144,26 @@ export function FAQSettingsSection({
           <Button
             type="submit"
             disabled={saving || !form.formState.isValid || (!form.formState.isDirty && !isNew)}
-            className="w-full h-16 bg-blue-600 hover:bg-blue-700 shadow-2xl shadow-blue-200 hover:shadow-blue-300 transition-all gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed rounded-2xl font-semibold text-white active:scale-[0.97] text-base uppercase tracking-tight"
+            className="w-full h-16 bg-blue-600 hover:bg-blue-700 shadow-2xl shadow-blue-200 hover:shadow-blue-300 transition-all gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed rounded-2xl font-semibold text-white active:scale-[0.97] text-base uppercase tracking-tight cursor-pointer"
           >
             {saving ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <Save className="w-5 h-5 shadow-sm" />
             )}
-            {saving ? "กำลังส่งข้อมูล..." : isNew ? "สร้างคำถามใหม่" : "บันทึกการแก้ไข"}
+            {saving 
+              ? (isEn ? "Saving..." : "กำลังส่งข้อมูล...") 
+              : isNew 
+                ? (isEn ? "Create FAQ" : "สร้างคำถามใหม่") 
+                : (isEn ? "Save Changes" : "บันทึกการแก้ไข")}
           </Button>
           <Button
             variant="ghost"
             type="button"
             onClick={onCancel}
-            className="w-full h-14 border-slate-200 hover:bg-slate-100 transition-all font-semibold text-slate-500 rounded-2xl uppercase tracking-widest text-xs"
+            className="w-full h-14 border-slate-200 hover:bg-slate-100 transition-all font-semibold text-slate-500 rounded-2xl uppercase tracking-widest text-xs cursor-pointer"
           >
-            ยกเลิก
+            {isEn ? "Cancel" : "ยกเลิก"}
           </Button>
         </div>
       )}

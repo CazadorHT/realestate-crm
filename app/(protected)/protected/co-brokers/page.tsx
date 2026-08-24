@@ -34,7 +34,7 @@ export default async function CoBrokersPage() {
     <div className="flex-1 space-y-6 p-8 pt-6">
       <CoBrokerTour />
       <PageHeader
-        title={isEn ? "Co-Brokers Network" : "เครือข่ายคู่ค้า (Co-Brokers)"}
+        title={isEn ? "Co-Brokers Network" : "เครือข่ายคู่ค้านายหน้า"}
         subtitle={isEn ? "Manage partner profiles, track performance, and specialized areas" : "จัดการข้อมูลพาร์ทเนอร์, ตรวจสอบผลงาน และตำแหน่งพื้นที่เชี่ยวชาญ"}
         icon="users"
         gradient="blue"

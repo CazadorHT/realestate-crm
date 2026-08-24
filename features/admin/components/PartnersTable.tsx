@@ -23,6 +23,7 @@ import { EditPartnerDialog } from "./EditPartnerDialog";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { getChannelStyle, BrandIcon } from "@/features/admin/partners-utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // Dnd Kit Imports
 import { 
@@ -53,14 +54,14 @@ interface PartnersTableProps {
   onRefresh?: () => void;
 }
 
-
-
 export function PartnersTable({ 
   partners: initialPartners,
   isSuperAdmin = false,
   onRefresh
 }: PartnersTableProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isSearchActive = !!searchParams.get("q");
@@ -125,18 +126,18 @@ export function PartnersTable({
       const ids = newOrder.map((p) => p.id);
       const result = await reorderPartnersAction(ids, offset);
       if (result.success) {
-        toast.success("ปรับลำดับช่องทางเรียบร้อยแล้ว");
+        toast.success(isEn ? "Channels reordered successfully" : "ปรับลำดับช่องทางเรียบร้อยแล้ว");
         if (onRefresh) {
           onRefresh();
         } else {
           router.refresh();
         }
       } else {
-        toast.error(result.message);
+        toast.error(result.message || (isEn ? "Failed to reorder channels" : "เกิดข้อผิดพลาดในการเปลี่ยนตำแหน่ง"));
         setPartners(initialPartners); // Rollback
       }
     } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการเปลี่ยนตำแหน่ง");
+      toast.error(isEn ? "Failed to reorder channels" : "เกิดข้อผิดพลาดในการเปลี่ยนตำแหน่ง");
       setPartners(initialPartners); // Rollback
     }
   };
@@ -159,7 +160,7 @@ export function PartnersTable({
           clearSelection();
           handleSuccessFeedback();
         } else {
-          toast.error(result.message || "เกิดข้อผิดพลาด");
+          toast.error(result.message || (isEn ? "An error occurred" : "เกิดข้อผิดพลาด"));
         }
         resolve();
       });
@@ -176,10 +177,10 @@ export function PartnersTable({
             toast.success(res.message);
             handleSuccessFeedback();
           } else {
-            toast.error(res.message || "เกิดข้อผิดพลาดในการลบ");
+            toast.error(res.message || (isEn ? "Failed to delete" : "เกิดข้อผิดพลาดในการลบ"));
           }
         } catch (error: any) {
-          toast.error(error.message || "เกิดข้อผิดพลาดในการลบ");
+          toast.error(error.message || (isEn ? "Failed to delete" : "เกิดข้อผิดพลาดในการลบ"));
         } finally {
           setIsDeleting(false);
           setDeleteConfirmPartner(null);
@@ -201,7 +202,7 @@ export function PartnersTable({
           selectedCount={selectedCount}
           onClear={clearSelection}
           onDelete={handleBulkDelete}
-          entityName="ช่องทาง"
+          entityName={isEn ? "channels" : "ช่องทาง"}
           className={isPending ? "opacity-50 pointer-events-none" : ""}
         />
       )}
@@ -223,7 +224,7 @@ export function PartnersTable({
                   <Checkbox
                     checked={isAllSelected}
                     onCheckedChange={() => toggleSelectAll(allIds)}
-                    aria-label="เลือกทั้งหมด"
+                    aria-label={isEn ? "Select all" : "เลือกทั้งหมด"}
                     className={
                       isPartialSelected
                         ? "data-[state=checked]:bg-primary/50"
@@ -232,20 +233,20 @@ export function PartnersTable({
                   />
                 </TableHead>
                 <TableHead className="w-[100px] font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                  ลำดับ
+                  {isEn ? "Order" : "ลำดับ"}
                 </TableHead>
                 <TableHead className="font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                  รูปแบบการแสดง Badges
+                  {isEn ? "Badge Preview" : "รูปแบบการแสดง Badges"}
                 </TableHead>
                 <TableHead className="font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                  ลิงก์เชื่อมโยง
+                  {isEn ? "Destination Link" : "ลิงก์เชื่อมโยง"}
                 </TableHead>
                 <TableHead className="font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                  สถานะหน้าแรก
+                  {isEn ? "Homepage Status" : "สถานะหน้าแรก"}
                 </TableHead>
                 {isSuperAdmin && (
                   <TableHead className="text-right font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                    จัดการ
+                    {isEn ? "Actions" : "จัดการ"}
                   </TableHead>
                 )}
               </TableRow>
@@ -263,10 +264,10 @@ export function PartnersTable({
                       </div>
                       <div>
                         <p className="font-bold text-slate-700">
-                          ยังไม่มีข้อมูลช่องทางการตลาด
+                          {isEn ? "No marketing channels found" : "ยังไม่มีข้อมูลช่องทางการตลาด"}
                         </p>
                         <p className="text-sm text-slate-400 mt-1">
-                          คุณสามารถเริ่มต้นโดยการคลิกปุ่ม เพิ่มช่องทาง เพื่อเริ่มสร้างช่องทางใหม่
+                          {isEn ? "Get started by adding your first promotional channel badge" : "คุณสามารถเริ่มต้นโดยการคลิกปุ่ม เพิ่มช่องทาง เพื่อเริ่มสร้างช่องทางใหม่"}
                         </p>
                       </div>
                     </div>
@@ -288,6 +289,7 @@ export function PartnersTable({
                       onDelete={() => setDeleteConfirmPartner(partner)}
                       isSearchActive={isSearchActive}
                       isSuperAdmin={isSuperAdmin}
+                      isEn={isEn}
                     />
                   ))}
                 </SortableContext>
@@ -303,7 +305,7 @@ export function PartnersTable({
           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400 font-medium">
             <div className="flex flex-col items-center gap-3">
               <LayoutGrid className="h-10 w-10 text-slate-355" />
-              <p>ยังไม่มีข้อมูลช่องทางการตลาด</p>
+              <p>{isEn ? "No marketing channels found" : "ยังไม่มีข้อมูลช่องทางการตลาด"}</p>
             </div>
           </div>
         ) : (
@@ -332,15 +334,15 @@ export function PartnersTable({
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-3">
                           <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 uppercase font-bold">
-                            ลำดับ #{partner.sort_order ?? "-"}
+                            {isEn ? `Order #${partner.sort_order ?? "-"}` : `ลำดับ #${partner.sort_order ?? "-"}`}
                           </span>
                           {partner.is_active ? (
                             <Badge className="bg-emerald-50 hover:bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px] h-5 px-1.5 py-0 font-bold">
-                              เปิดใช้งาน
+                              {isEn ? "Active" : "เปิดใช้งาน"}
                             </Badge>
                           ) : (
                             <Badge className="bg-slate-50 hover:bg-slate-50 text-slate-400 border-slate-200 text-[10px] h-5 px-1.5 py-0 font-bold">
-                              ปิดใช้งาน
+                              {isEn ? "Inactive" : "ปิดใช้งาน"}
                             </Badge>
                           )}
                         </div>
@@ -362,7 +364,7 @@ export function PartnersTable({
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100 gap-4">
                     <div className="min-w-0">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        ลิงก์เชื่อมโยง
+                        {isEn ? "Destination Link" : "ลิงก์เชื่อมโยง"}
                       </span>
                       {partner.website_url ? (
                         <a
@@ -376,7 +378,7 @@ export function PartnersTable({
                         </a>
                       ) : (
                         <span className="text-xs text-slate-350 italic">
-                          ไม่มีเว็บไซต์ปลายทาง
+                          {isEn ? "No destination URL" : "ไม่มีเว็บไซต์ปลายทาง"}
                         </span>
                       )}
                     </div>
@@ -387,19 +389,19 @@ export function PartnersTable({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-9 px-3 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-100 rounded-xl font-bold text-xs transition-all active:scale-95"
+                            className="h-9 px-3 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-100 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingPartner(partner);
                             }}
                           >
                             <Edit className="h-3.5 w-3.5 mr-1.5" />
-                            แก้ไข
+                            {isEn ? "Edit" : "แก้ไข"}
                           </Button>
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-9 w-9 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-100 rounded-xl transition-all active:scale-95"
+                            className="h-9 w-9 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-100 rounded-xl transition-all active:scale-95 cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDeleteConfirmPartner(partner);
@@ -422,15 +424,27 @@ export function PartnersTable({
       <ResponsiveDialog
         open={!!deleteConfirmPartner}
         onOpenChange={(open) => !open && setDeleteConfirmPartner(null)}
-        title="ยืนยันการลบช่องทางการตลาด"
+        title={isEn ? "Confirm Channel Deletion" : "ยืนยันการลบช่องทางการตลาด"}
         description={
           deleteConfirmPartner ? (
             <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-              คุณแน่ใจหรือไม่ว่าต้องการลบช่องทางการตลาด{" "}
-              <strong className="text-slate-900 font-bold">
-                "{deleteConfirmPartner.name}"
-              </strong>{" "}
-              การลบข้อมูลนี้จะถูกย้ายออกจากหน้าแรกทันที และไม่สามารถกู้คืนข้อมูลกลับมาได้
+              {isEn ? (
+                <>
+                  Are you sure you want to delete{" "}
+                  <strong className="text-slate-900 font-bold">
+                    "{deleteConfirmPartner.name}"
+                  </strong>
+                  ? It will be removed immediately from the public homepage and cannot be recovered.
+                </>
+              ) : (
+                <>
+                  คุณแน่ใจหรือไม่ว่าต้องการลบช่องทางการตลาด{" "}
+                  <strong className="text-slate-900 font-bold">
+                    "{deleteConfirmPartner.name}"
+                  </strong>{" "}
+                  การลบข้อมูลนี้จะถูกย้ายออกจากหน้าแรกทันที และไม่สามารถกู้คืนข้อมูลกลับมาได้
+                </>
+              )}
             </p>
           ) : ""
         }
@@ -440,9 +454,9 @@ export function PartnersTable({
               variant="outline"
               disabled={isDeleting}
               onClick={() => setDeleteConfirmPartner(null)}
-              className="flex-1 rounded-xl h-12 font-bold text-slate-500 border-slate-200 h-11"
+              className="flex-1 rounded-xl h-11 font-bold text-slate-500 border-slate-200 cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button
               disabled={isDeleting}
@@ -450,15 +464,15 @@ export function PartnersTable({
                 e.preventDefault();
                 if (deleteConfirmPartner) handleDelete(deleteConfirmPartner);
               }}
-              className="flex-1 rounded-xl h-12 px-8 font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-200 transition-all active:scale-95 border-none h-11"
+              className="flex-1 rounded-xl px-8 font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-200 transition-all active:scale-95 border-none h-11 cursor-pointer"
             >
               {isDeleting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin text-white" />
-                  กำลังลบ...
+                  {isEn ? "Deleting..." : "กำลังลบ..."}
                 </>
               ) : (
-                "ยืนยันการลบ"
+                isEn ? "Confirm Delete" : "ยืนยันการลบ"
               )}
             </Button>
           </div>
@@ -484,6 +498,7 @@ interface SortableRowProps {
   onDelete: () => void;
   isSearchActive: boolean;
   isSuperAdmin: boolean;
+  isEn: boolean;
 }
 
 function SortablePartnerRow({ 
@@ -493,7 +508,8 @@ function SortablePartnerRow({
   onEdit, 
   onDelete, 
   isSearchActive,
-  isSuperAdmin
+  isSuperAdmin,
+  isEn,
 }: SortableRowProps) {
   const {
     attributes,
@@ -541,7 +557,7 @@ function SortablePartnerRow({
         <Checkbox
           checked={isSelected}
           onCheckedChange={toggleSelect}
-          aria-label={`เลือก ${partner.name}`}
+          aria-label={isEn ? `Select ${partner.name}` : `เลือก ${partner.name}`}
           className="rounded-md"
         />
       </TableCell>
@@ -572,17 +588,17 @@ function SortablePartnerRow({
             {partner.website_url} <ExternalLink className="w-3.5 h-3.5 shrink-0" />
           </a>
         ) : (
-          <span className="text-slate-350 italic text-xs">ไม่มีเว็บไซต์เชื่อมโยง</span>
+          <span className="text-slate-350 italic text-xs">{isEn ? "No link attached" : "ไม่มีเว็บไซต์เชื่อมโยง"}</span>
         )}
       </TableCell>
       <TableCell className="px-6">
         {partner.is_active ? (
           <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/80 transition-colors text-[10px] uppercase font-bold px-2.5 py-0.5">
-            เปิดใช้งาน
+            {isEn ? "Active" : "เปิดใช้งาน"}
           </Badge>
         ) : (
           <Badge className="bg-slate-55 text-slate-400 border-slate-200 hover:bg-slate-100/80 transition-colors text-[10px] uppercase font-bold px-2.5 py-0.5">
-            ปิดใช้งาน
+            {isEn ? "Inactive" : "ปิดใช้งาน"}
           </Badge>
         )}
       </TableCell>

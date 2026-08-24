@@ -84,7 +84,7 @@ export function InventoryStats({
                   <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-emerald-500 rounded-full animate-ping" />
                 </div>
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                  {isEn ? "Active Online" : "ระบบออนไลน์ (Active)"}
+                  {isEn ? "Active Online" : "ระบบออนไลน์"}
                 </div>
                 <div className="text-3xl font-semibold text-slate-900">
                   {activeCount.toLocaleString()}

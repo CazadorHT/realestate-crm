@@ -106,7 +106,7 @@ export function Step5SeoSettings({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-4">
           <div className="space-y-2">
             <Label htmlFor="sortOrder" className="text-sm font-bold text-slate-700">
-              {isEn ? "Sort Order" : "ลำดับการแสดงผล (Sort Order)"}
+              {isEn ? "Sort Order" : "ลำดับการแสดงผล"}
             </Label>
             <Input
               id="sortOrder"
@@ -125,7 +125,7 @@ export function Step5SeoSettings({
               className="rounded text-indigo-600 focus:ring-indigo-500 w-4.5 h-4.5 cursor-pointer"
             />
             <Label htmlFor="isActive" className="text-sm font-bold text-slate-700 cursor-pointer">
-              {isEn ? "Publish on public website (Active)" : "เปิดใช้งานหน้าเว็บสาธารณะ (Active)"}
+              {isEn ? "Publish on public website" : "เปิดใช้งานหน้าเว็บสาธารณะ"}
             </Label>
           </div>
         </div>

@@ -10,6 +10,7 @@ import { Globe, Search, Sparkles, Languages, BarChart3, TrendingUp, Type } from 
 import { cn } from "@/lib/utils";
 import { BlogRelatedSuggestions } from "./BlogRelatedSuggestions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface BlogSeoTabProps {
   form: UseFormReturn<BlogPostInput>;
@@ -17,9 +18,14 @@ interface BlogSeoTabProps {
 }
 
 export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const watchedTitle = form.watch("title");
+  const watchedTitleEn = form.watch("title_en");
   const watchedSlug = form.watch("slug");
   const watchedExcerpt = form.watch("excerpt");
+  const watchedExcerptEn = form.watch("excerpt_en");
   const watchedCategory = form.watch("category");
   const watchedTags = form.watch("tags") || "";
 
@@ -33,21 +39,25 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
               <Globe className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">ตัวอย่างบน Google</h3>
-              <p className="text-sm text-slate-500">ดูว่าบทความจะแสดงอย่างไรในผลการค้นหา</p>
+              <h3 className="font-semibold text-slate-900">
+                {isEn ? "Google SERP Preview" : "ตัวอย่างบน Google"}
+              </h3>
+              <p className="text-sm text-slate-500">
+                {isEn ? "See how your article appears in search engine results" : "ดูว่าบทความจะแสดงอย่างไรในผลการค้นหา"}
+              </p>
             </div>
           </div>
 
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
             <div className="space-y-1">
               <div className="text-[18px] text-[#1a0dab] hover:underline cursor-pointer truncate font-medium">
-                {watchedTitle || "หัวข้อบทความ"}
+                {watchedTitleEn || watchedTitle || (isEn ? "Article Title" : "หัวข้อบทความ")}
               </div>
               <div className="text-sm text-[#006621] truncate">
                 https://yoursite.com/blog/{watchedSlug || "slug"}
               </div>
               <div className="text-sm text-[#545454] line-clamp-2">
-                {watchedExcerpt || "กรุณาใส่ข้อความสรุปเพื่อดูตัวอย่างการแสดงผลบน Google"}
+                {watchedExcerptEn || watchedExcerpt || (isEn ? "Please enter an excerpt to see Google search preview." : "กรุณาใส่ข้อความสรุปเพื่อดูตัวอย่างการแสดงผลบน Google")}
               </div>
             </div>
           </div>
@@ -61,23 +71,25 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
             </div>
             <div>
               <h3 className="font-semibold text-slate-900">Meta Description</h3>
-              <p className="text-sm text-slate-500">ข้อความสรุปสำหรับ SEO แยกตามภาษา</p>
+              <p className="text-sm text-slate-500">
+                {isEn ? "SEO meta description summary separated by language" : "ข้อความสรุปสำหรับ SEO แยกตามภาษา"}
+              </p>
             </div>
           </div>
 
           <Tabs defaultValue="th" className="w-full">
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 bg-slate-50 p-1 h-auto rounded-xl border border-slate-100">
-              <TabsTrigger value="th" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs">
-                🇹🇭 TH
+              <TabsTrigger value="th" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer">
+                🇹🇭 {isEn ? "Thai" : "ภาษาไทย"}
               </TabsTrigger>
-              <TabsTrigger value="en" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs">
-                🇬🇧 EN
+              <TabsTrigger value="en" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer">
+                🇬🇧 English
               </TabsTrigger>
-              <TabsTrigger value="cn" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs">
-                🇨🇳 CN
+              <TabsTrigger value="cn" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer">
+                🇨🇳 {isEn ? "Chinese" : "中文 (จีน)"}
               </TabsTrigger>
-              <TabsTrigger value="ru" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs">
-                🇷🇺 RU
+              <TabsTrigger value="ru" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer">
+                🇷🇺 {isEn ? "Russian" : "Русский (รัสเซีย)"}
               </TabsTrigger>
             </TabsList>
 
@@ -88,11 +100,11 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-700 font-medium">
-                      ข้อความสรุป (ไทย)
+                      {isEn ? "Excerpt (Thai)" : "ข้อความสรุป (ไทย)"}
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="สรุปเนื้อหาบทความสั้นๆ (แนะนำ 150-160 ตัวอักษร)"
+                        placeholder={isEn ? "Short article summary (150-160 characters recommended)..." : "สรุปเนื้อหาบทความสั้นๆ (แนะนำ 150-160 ตัวอักษร)"}
                         className="min-h-[120px] resize-none border-slate-200"
                         {...field}
                       />
@@ -102,7 +114,7 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
                       <span
                         className={cn(
                           "text-xs",
-                          (field.value?.length || 0) > 160 ? "text-red-500" : "text-slate-500"
+                          (field.value?.length || 0) > 160 ? "text-red-500 font-bold" : "text-slate-500"
                         )}
                       >
                         {field.value?.length || 0}/160
@@ -120,16 +132,27 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-700 font-medium">
-                      Excerpt (English)
+                      {isEn ? "Excerpt (English)" : "ข้อความสรุป (อังกฤษ)"}
                     </FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
                         value={field.value ?? ""}
                         className="min-h-[120px] resize-none border-slate-200 text-sm"
-                        placeholder="English excerpt..."
+                        placeholder="English excerpt for SEO and search engines..."
                       />
                     </FormControl>
+                    <div className="flex justify-between">
+                      <FormMessage />
+                      <span
+                        className={cn(
+                          "text-xs",
+                          (field.value?.length || 0) > 160 ? "text-red-500 font-bold" : "text-slate-500"
+                        )}
+                      >
+                        {field.value?.length || 0}/160
+                      </span>
+                    </div>
                   </FormItem>
                 )}
               />
@@ -142,14 +165,14 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-700 font-medium">
-                      文章摘要 (Chinese)
+                      {isEn ? "Excerpt (Chinese)" : "文章摘要 (จีน)"}
                     </FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
                         value={field.value ?? ""}
                         className="min-h-[120px] resize-none border-slate-200 text-sm"
-                        placeholder="Chinese excerpt..."
+                        placeholder="中文文章摘要..."
                       />
                     </FormControl>
                   </FormItem>
@@ -164,14 +187,14 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-700 font-medium">
-                      Краткое описание (Russian)
+                      {isEn ? "Excerpt (Russian)" : "Краткое описание (รัสเซีย)"}
                     </FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
                         value={field.value ?? ""}
                         className="min-h-[120px] resize-none border-slate-200 text-sm"
-                        placeholder="Russian excerpt..."
+                        placeholder="Краткое описание статьи..."
                       />
                     </FormControl>
                   </FormItem>
@@ -190,7 +213,9 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900">Structured Data (JSON-LD)</h3>
-                <p className="text-sm text-slate-500">ข้อมูล Schema.org สำหรับ SEO</p>
+                <p className="text-sm text-slate-500">
+                  {isEn ? "Schema.org structured metadata for search engines" : "ข้อมูล Schema.org สำหรับ SEO"}
+                </p>
               </div>
             </div>
           </div>
@@ -223,8 +248,12 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
               <BarChart3 className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">ตัวชี้วัดประสิทธิภาพ</h3>
-              <p className="text-sm text-slate-500">สถานะล่าสุดของบทความ</p>
+              <h3 className="font-semibold text-slate-900">
+                {isEn ? "Performance Metrics" : "ตัวชี้วัดประสิทธิภาพ"}
+              </h3>
+              <p className="text-sm text-slate-500">
+                {isEn ? "Latest status and visibility index" : "สถานะล่าสุดของบทความ"}
+              </p>
             </div>
           </div>
 
@@ -240,7 +269,9 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
              {/* Placeholder for future Analytics Chart */}
              <div className="h-32 bg-slate-50 rounded-lg border border-dashed border-slate-200 flex items-center justify-center">
                 <p className="text-[10px] text-slate-400 text-center px-4 italic">
-                  สถิติรายวันจะพร้อมใช้งานเมื่อมีการเก็บข้อมูล History ย้อนหลังครบ 7 วัน
+                  {isEn
+                    ? "Daily trend charts will appear once 7 days of traffic history are accumulated."
+                    : "สถิติรายวันจะพร้อมใช้งานเมื่อมีการเก็บข้อมูล History ย้อนหลังครบ 7 วัน"}
                 </p>
              </div>
           </div>
@@ -256,4 +287,5 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
     </div>
   );
 }
+
 

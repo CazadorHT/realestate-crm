@@ -78,6 +78,7 @@ export type LeadActionResult =
 
 export {
   leadFormSchema,
+  getLeadFormSchema,
   type LeadFormValues,
   LEAD_SOURCES,
   LEAD_STAGES,

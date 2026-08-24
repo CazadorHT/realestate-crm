@@ -86,7 +86,7 @@ export default function NotFound() {
             <Button
               asChild
               variant="outline"
-              className="h-11 rounded-xl border-slate-200 hover:bg-slate-50 font-semibold gap-2 transition-all active:scale-95 cursor-pointer"
+              className="h-11 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-blue-600! font-semibold gap-2 transition-all active:scale-95 cursor-pointer"
             >
               <Link href="/properties">
                 <Search className="h-4 w-4 text-slate-500" />
@@ -97,7 +97,7 @@ export default function NotFound() {
             <Button
               onClick={() => router.back()}
               variant="ghost"
-              className="h-11 rounded-xl font-semibold gap-1 text-slate-600 hover:bg-slate-50 transition-all active:scale-95 cursor-pointer"
+              className="h-11 rounded-xl font-semibold gap-1 text-slate-600! hover:bg-slate-50 transition-all active:scale-95 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
               {t.goBack}

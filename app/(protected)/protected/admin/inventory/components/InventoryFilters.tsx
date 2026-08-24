@@ -71,7 +71,7 @@ export function InventoryFilters({
   // 🛡️ Pre-calculated Options with Dynamic Counts
   const tenantOptions = [
     {
-      label: isEn ? "All Branches (Global)" : "ทุกสาขา (Global)",
+      label: isEn ? "All Branches" : "ทุกสาขา",
       value: "ALL",
       icon: <Building2 className="h-4 w-4" />,
     },
@@ -100,13 +100,13 @@ export function InventoryFilters({
 
   const statusOptions = [
     { label: isEn ? "All Statuses" : "ทั้งหมด", value: "ALL" },
-    { label: isEn ? "Active (Online)" : "ออนไลน์ (Active)", value: "ACTIVE", icon: <CheckCircle2 className="h-4 w-4 text-emerald-500" />, count: filterCounts?.statuses["ACTIVE"] || 0 },
-    { label: isEn ? "Under Offer" : "ติดจอง (Offer)", value: "UNDER_OFFER", icon: <Tag className="h-4 w-4 text-amber-500" />, count: filterCounts?.statuses["UNDER_OFFER"] || 0 },
-    { label: isEn ? "Reserved" : "จองแล้ว (Reserved)", value: "RESERVED", icon: <Tag className="h-4 w-4 text-orange-500" />, count: filterCounts?.statuses["RESERVED"] || 0 },
-    { label: isEn ? "Sold" : "ขายแล้ว (Sold)", value: "SOLD", icon: <CheckCircle2 className="h-4 w-4 text-blue-500" />, count: filterCounts?.statuses["SOLD"] || 0 },
-    { label: isEn ? "Rented" : "เช่าแล้ว (Rented)", value: "RENTED", icon: <CheckCircle2 className="h-4 w-4 text-purple-500" />, count: filterCounts?.statuses["RENTED"] || 0 },
-    { label: isEn ? "Draft" : "ฉบับร่าง (Draft)", value: "DRAFT", icon: <Tag className="h-4 w-4 text-slate-400" />, count: filterCounts?.statuses["DRAFT"] || 0 },
-    { label: isEn ? "Archived" : "ยกเลิก (Archived)", value: "ARCHIVED", icon: <X className="h-4 w-4 text-rose-400" />, count: filterCounts?.statuses["ARCHIVED"] || 0 },
+    { label: isEn ? "Active Online" : "ออนไลน์", value: "ACTIVE", icon: <CheckCircle2 className="h-4 w-4 text-emerald-500" />, count: filterCounts?.statuses["ACTIVE"] || 0 },
+    { label: isEn ? "Under Offer" : "ติดจอง", value: "UNDER_OFFER", icon: <Tag className="h-4 w-4 text-amber-500" />, count: filterCounts?.statuses["UNDER_OFFER"] || 0 },
+    { label: isEn ? "Reserved" : "จองแล้ว", value: "RESERVED", icon: <Tag className="h-4 w-4 text-orange-500" />, count: filterCounts?.statuses["RESERVED"] || 0 },
+    { label: isEn ? "Sold" : "ขายแล้ว", value: "SOLD", icon: <CheckCircle2 className="h-4 w-4 text-blue-500" />, count: filterCounts?.statuses["SOLD"] || 0 },
+    { label: isEn ? "Rented" : "เช่าแล้ว", value: "RENTED", icon: <CheckCircle2 className="h-4 w-4 text-purple-500" />, count: filterCounts?.statuses["RENTED"] || 0 },
+    { label: isEn ? "Draft" : "ฉบับร่าง", value: "DRAFT", icon: <Tag className="h-4 w-4 text-slate-400" />, count: filterCounts?.statuses["DRAFT"] || 0 },
+    { label: isEn ? "Archived" : "ยกเลิก", value: "ARCHIVED", icon: <X className="h-4 w-4 text-rose-400" />, count: filterCounts?.statuses["ARCHIVED"] || 0 },
   ];
 
   const listingTypeOptions = [
@@ -182,7 +182,7 @@ export function InventoryFilters({
           >
             <div className="grid gap-6 py-4 px-6">
               <FilterOptionSelect
-                label={isEn ? "Branch" : "สาขาที่ดูแล (Branch)"}
+                label={isEn ? "Branch" : "สาขาที่ดูแล"}
                 value={tenantId}
                 options={tenantOptions}
                 onSelect={(val: string) => onFilterChange({ tenant: val })}

@@ -18,23 +18,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ServiceImageUploader } from "@/components/services/ServiceImageUploader";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // New Modular Components
 import { ServiceInfoSection } from "./service-form/ServiceInfoSection";
 import { ServiceContentSection } from "./service-form/ServiceContentSection";
 import { ServiceGallerySection } from "./service-form/ServiceGallerySection";
 
-export const formSchema = z.object({
-  title: z.string().min(1, "กรุณากรอกชื่อบริการ"),
+export const getServiceFormSchema = (isEn: boolean) => z.object({
+  title: z.string().optional(),
   title_en: z.string().optional(),
   title_cn: z.string().optional(),
   title_ru: z.string().optional(),
   slug: z
     .string()
-    .min(1, "กรุณาระบุ URL (Slug)")
+    .min(1, isEn ? "Please enter URL slug" : "กรุณาระบุ URL Slug")
     .regex(
       /^[\u0E00-\u0E7Fa-z0-9-]+$/,
-      "SLUG ต้องประกอบด้วยตัวอักษร ตัวเลข และเครื่องหมายลบ (-) เท่านั้น",
+      isEn 
+        ? "Slug can only contain letters, numbers, and dashes (-)" 
+        : "Slug ต้องประกอบด้วยตัวอักษร ตัวเลข และเครื่องหมายลบ (-) เท่านั้น",
     ),
   description: z.string().optional(),
   description_en: z.string().optional(),
@@ -53,8 +56,23 @@ export const formSchema = z.object({
   contact_link: z.string().optional(),
   sort_order: z.coerce.number(),
   is_active: z.boolean(),
+}).superRefine((data, ctx) => {
+  const hasTitle = Boolean(
+    data.title?.trim() ||
+    data.title_en?.trim() ||
+    data.title_cn?.trim() ||
+    data.title_ru?.trim()
+  );
+  if (!hasTitle) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [isEn && data.title_en !== undefined ? "title_en" : "title"],
+      message: isEn ? "Please enter service title" : "กรุณากรอกชื่อบริการ",
+    });
+  }
 });
 
+export const formSchema = getServiceFormSchema(false);
 export type ServiceFormValues = z.infer<typeof formSchema>;
 
 interface ServiceFormProps {
@@ -69,13 +87,15 @@ export function ServiceForm({
   onCancel,
 }: ServiceFormProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isNew = !initialData;
   const [saving, setSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const form = useForm<ServiceFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(getServiceFormSchema(isEn)),
     mode: "onChange",
     defaultValues: {
       title: initialData?.title || "",
@@ -115,55 +135,114 @@ export function ServiceForm({
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
     form.setValue("title", title);
-    if (isNew || !form.getValues("slug")) {
+    if ((isNew || !form.getValues("slug")) && title.trim()) {
       form.setValue("slug", generateSlug(title), { shouldValidate: true });
     }
   };
 
-  const handleTranslateService = async () => {
-    const title = form.getValues("title");
-    const description = form.getValues("description");
-    const content = form.getValues("content");
-    const priceRange = form.getValues("price_range");
+  const handleTitleEnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const titleEn = e.target.value;
+    form.setValue("title_en", titleEn);
+    if ((isNew || !form.getValues("slug")) && titleEn.trim()) {
+      form.setValue("slug", generateSlug(titleEn), { shouldValidate: true });
+    }
+  };
 
-    if (!title || title.trim() === "") {
-      toast.error("กรุณากรอกชื่อบริการภาษาไทยก่อนกดแปลครับ");
+  const handleTranslateService = async () => {
+    const titleTh = form.getValues("title");
+    const titleEn = form.getValues("title_en");
+    const titleCn = form.getValues("title_cn");
+    const titleRu = form.getValues("title_ru");
+
+    const sourceTitle =
+      (titleTh?.trim() && titleTh) ||
+      (titleEn?.trim() && titleEn) ||
+      (titleCn?.trim() && titleCn) ||
+      (titleRu?.trim() && titleRu);
+
+    if (!sourceTitle) {
+      toast.error(isEn ? "Please enter service title in any language before translating" : "กรุณากรอกชื่อบริการ (ภาษาใดก็ได้) ก่อนกดแปลครับ");
       return;
     }
 
     setIsTranslating(true);
-    const toastId = toast.loading("กำลังแปลข้อมูลบริการเป็นภาษาอังกฤษ จีน และรัสเซีย...");
+    const toastId = toast.loading(isEn ? "Translating service details into all languages..." : "กำลังแปลข้อมูลบริการเป็นทุกภาษา...");
 
     try {
-      const titleRes = await translateTextAction(title, "plain");
-      form.setValue("title_en", titleRes.en, { shouldDirty: true });
-      form.setValue("title_cn", titleRes.cn, { shouldDirty: true });
-      form.setValue("title_ru", titleRes.ru, { shouldDirty: true });
+      // 1. Translate Title
+      const titleRes = await translateTextAction(sourceTitle, "plain", ["th", "en", "cn", "ru"]);
+      if (titleRes.th) form.setValue("title", titleRes.th, { shouldDirty: true, shouldValidate: true });
+      if (titleRes.en) form.setValue("title_en", titleRes.en, { shouldDirty: true });
+      if (titleRes.cn) form.setValue("title_cn", titleRes.cn, { shouldDirty: true });
+      if (titleRes.ru) form.setValue("title_ru", titleRes.ru, { shouldDirty: true });
 
-      if (description && description.trim() !== "") {
-        const descRes = await translateTextAction(description, "plain");
-        form.setValue("description_en", descRes.en, { shouldDirty: true });
-        form.setValue("description_cn", descRes.cn, { shouldDirty: true });
-        form.setValue("description_ru", descRes.ru, { shouldDirty: true });
+      // Auto-populate slug from English title or source if empty
+      if (!form.getValues("slug")?.trim() || isNew) {
+        const slugSource = titleRes.en || sourceTitle;
+        form.setValue("slug", generateSlug(slugSource), { shouldDirty: true, shouldValidate: true });
       }
 
-      if (content && content.trim() !== "" && content !== "<p></p>") {
-        const contentRes = await translateTextAction(content, "html");
-        form.setValue("content_en", contentRes.en, { shouldDirty: true });
-        form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
-        form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
+      // 2. Translate Description
+      const descTh = form.getValues("description");
+      const descEn = form.getValues("description_en");
+      const descCn = form.getValues("description_cn");
+      const descRu = form.getValues("description_ru");
+      const sourceDesc =
+        (descTh?.trim() && descTh) ||
+        (descEn?.trim() && descEn) ||
+        (descCn?.trim() && descCn) ||
+        (descRu?.trim() && descRu);
+
+      if (sourceDesc) {
+        const descRes = await translateTextAction(sourceDesc, "plain", ["th", "en", "cn", "ru"]);
+        if (descRes.th) form.setValue("description", descRes.th, { shouldDirty: true });
+        if (descRes.en) form.setValue("description_en", descRes.en, { shouldDirty: true });
+        if (descRes.cn) form.setValue("description_cn", descRes.cn, { shouldDirty: true });
+        if (descRes.ru) form.setValue("description_ru", descRes.ru, { shouldDirty: true });
       }
 
-      if (priceRange && priceRange.trim() !== "") {
-        const priceRes = await translateTextAction(priceRange, "plain");
-        form.setValue("price_range_en", priceRes.en, { shouldDirty: true });
-        form.setValue("price_range_cn", priceRes.cn, { shouldDirty: true });
-        form.setValue("price_range_ru", priceRes.ru, { shouldDirty: true });
+      // 3. Translate Content (HTML)
+      const isHtmlEmpty = (c?: string) => !c || c.trim() === "" || c === "<p></p>";
+      const contentTh = form.getValues("content");
+      const contentEn = form.getValues("content_en");
+      const contentCn = form.getValues("content_cn");
+      const contentRu = form.getValues("content_ru");
+      const sourceContent =
+        (!isHtmlEmpty(contentTh) && contentTh) ||
+        (!isHtmlEmpty(contentEn) && contentEn) ||
+        (!isHtmlEmpty(contentCn) && contentCn) ||
+        (!isHtmlEmpty(contentRu) && contentRu);
+
+      if (sourceContent) {
+        const contentRes = await translateTextAction(sourceContent, "html", ["th", "en", "cn", "ru"]);
+        if (contentRes.th) form.setValue("content", contentRes.th, { shouldDirty: true });
+        if (contentRes.en) form.setValue("content_en", contentRes.en, { shouldDirty: true });
+        if (contentRes.cn) form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
+        if (contentRes.ru) form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
       }
 
-      toast.success("แปลข้อมูลบริการเรียบร้อยแล้ว ✨", { id: toastId });
+      // 4. Translate Price Range
+      const priceTh = form.getValues("price_range");
+      const priceEn = form.getValues("price_range_en");
+      const priceCn = form.getValues("price_range_cn");
+      const priceRu = form.getValues("price_range_ru");
+      const sourcePrice =
+        (priceTh?.trim() && priceTh) ||
+        (priceEn?.trim() && priceEn) ||
+        (priceCn?.trim() && priceCn) ||
+        (priceRu?.trim() && priceRu);
+
+      if (sourcePrice) {
+        const priceRes = await translateTextAction(sourcePrice, "plain", ["th", "en", "cn", "ru"]);
+        if (priceRes.th) form.setValue("price_range", priceRes.th, { shouldDirty: true });
+        if (priceRes.en) form.setValue("price_range_en", priceRes.en, { shouldDirty: true });
+        if (priceRes.cn) form.setValue("price_range_cn", priceRes.cn, { shouldDirty: true });
+        if (priceRes.ru) form.setValue("price_range_ru", priceRes.ru, { shouldDirty: true });
+      }
+
+      toast.success(isEn ? "Service translation complete! ✨" : "แปลข้อมูลบริการเรียบร้อยแล้ว ✨", { id: toastId });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      const message = error instanceof Error ? error.message : (isEn ? "Translation failed" : "การแปลขัดข้อง");
       toast.error(message, { id: toastId });
     } finally {
       setIsTranslating(false);
@@ -173,8 +252,13 @@ export function ServiceForm({
   async function onSubmit(values: ServiceFormValues) {
     setSaving(true);
     try {
+      const primaryTitle = values.title?.trim() || values.title_en?.trim() || values.title_cn?.trim() || values.title_ru?.trim() || "";
+      const primarySlug = values.slug?.trim() || generateSlug(values.title_en?.trim() || primaryTitle);
+      
       const finalValues = {
         ...values,
+        title: values.title?.trim() || primaryTitle,
+        slug: primarySlug,
         price_range: values.price_range?.trim() || "สอบถามราคา",
         price_range_en: values.price_range_en?.trim() || "Contact for price",
         price_range_cn: values.price_range_cn?.trim() || "询价",
@@ -186,7 +270,9 @@ export function ServiceForm({
         : await updateService({ id: initialData?.id || "", ...finalValues });
 
       if (res.success) {
-        toast.success(res.message || (isNew ? "สร้างบริการใหม่เรียบร้อยแล้ว" : "อัปเดตข้อมูลบริการเรียบร้อยแล้ว"));
+        toast.success(res.message || (isNew 
+          ? (isEn ? "Service created successfully" : "สร้างบริการใหม่เรียบร้อยแล้ว") 
+          : (isEn ? "Service updated successfully" : "อัปเดตข้อมูลบริการเรียบร้อยแล้ว")));
         
         if (onSuccess) {
           onSuccess();
@@ -195,10 +281,10 @@ export function ServiceForm({
           router.refresh();
         }
       } else {
-        toast.error(res.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        toast.error(res.message || (isEn ? "Failed to save service" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล"));
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+      const message = error instanceof Error ? error.message : (isEn ? "Failed to save service" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       toast.error(message);
     } finally {
       setSaving(false);
@@ -206,10 +292,10 @@ export function ServiceForm({
   }
 
   const steps = [
-    { id: 1, title: "ข้อมูลพื้นฐาน", description: "ชื่อบริการและราคา" },
-    { id: 2, title: "เนื้อหาละเอียด", description: "รายละเอียดบริการ" },
-    { id: 3, title: "รูปภาพและสื่อ", description: "ภาพปกและแกลเลอรี" },
-    { id: 4, title: "ตรวจสอบและยืนยัน", description: "สรุปข้อมูลและการเผยแพร่" },
+    { id: 1, title: isEn ? "Basic Info" : "ข้อมูลพื้นฐาน", description: isEn ? "Title & Price" : "ชื่อบริการและราคา" },
+    { id: 2, title: isEn ? "Detailed Content" : "เนื้อหาละเอียด", description: isEn ? "Service Details" : "รายละเอียดบริการ" },
+    { id: 3, title: isEn ? "Media & Cover" : "รูปภาพและสื่อ", description: isEn ? "Cover & Gallery" : "ภาพปกและแกลเลอรี" },
+    { id: 4, title: isEn ? "Review & Confirm" : "ตรวจสอบและยืนยัน", description: isEn ? "Summary & Publish" : "สรุปข้อมูลและการเผยแพร่" },
   ];
 
   const nextStep = async (e?: React.MouseEvent) => {
@@ -304,6 +390,7 @@ export function ServiceForm({
                 isTranslating={isTranslating}
                 onTranslate={handleTranslateService}
                 onTitleChange={handleTitleChange}
+                onTitleEnChange={handleTitleEnChange}
               />
             </div>
           )}
@@ -324,7 +411,7 @@ export function ServiceForm({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </span>
-                    รูปภาพหน้าปก (Cover Image)
+                    {isEn ? "Cover Image" : "รูปภาพหน้าปก"}
                   </h3>
                 </div>
                 <div className="p-6">
@@ -361,7 +448,7 @@ export function ServiceForm({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </span>
-                    ตรวจสอบและตั้งค่าการเผยแพร่
+                    {isEn ? "Review & Publish Settings" : "ตรวจสอบและตั้งค่าการเผยแพร่"}
                   </h3>
                 </div>
                 <div className="p-6 space-y-6">
@@ -372,9 +459,11 @@ export function ServiceForm({
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-xl border border-slate-200 p-4 bg-emerald-50/50">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base font-bold text-slate-800">สถานะการใช้งาน</FormLabel>
+                            <FormLabel className="text-base font-bold text-slate-800 cursor-pointer">
+                              {isEn ? "Active Status" : "สถานะการใช้งาน"}
+                            </FormLabel>
                             <FormDescription className="text-xs">
-                              เปิดหรือปิดการแสดงผลบริการนี้บนหน้าเว็บไซต์
+                              {isEn ? "Display or hide this service on the website" : "เปิดหรือปิดการแสดงผลบริการนี้บนหน้าเว็บไซต์"}
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -394,7 +483,9 @@ export function ServiceForm({
                       name="sort_order"
                       render={({ field }) => (
                         <FormItem className="rounded-xl border border-slate-200 p-4 bg-slate-50/50">
-                          <FormLabel className="font-bold text-slate-800">ลำดับการแสดงผล</FormLabel>
+                          <FormLabel className="font-bold text-slate-800">
+                            {isEn ? "Sort Order" : "ลำดับการแสดงผล"}
+                          </FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -403,7 +494,7 @@ export function ServiceForm({
                             />
                           </FormControl>
                           <FormDescription className="text-[10px]">
-                            ตัวเลขน้อยจะถูกแสดงก่อน
+                            {isEn ? "Lower numbers appear first" : "ตัวเลขน้อยจะถูกแสดงก่อน"}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -413,11 +504,13 @@ export function ServiceForm({
 
                   <div className="rounded-xl border border-slate-200 overflow-hidden">
                     <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">สรุปข้อมูล</p>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        {isEn ? "Service Summary" : "สรุปข้อมูล"}
+                      </p>
                     </div>
                     <div className="p-4 space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">ชื่อบริการ:</span>
+                        <span className="text-slate-500">{isEn ? "Service Name:" : "ชื่อบริการ:"}</span>
                         <span className="font-medium text-slate-800">{form.getValues("title")}</span>
                       </div>
                       <div className="flex justify-between text-sm">
@@ -425,12 +518,14 @@ export function ServiceForm({
                         <span className="font-mono text-indigo-600">/services/{form.getValues("slug")}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">ช่วงราคา:</span>
-                        <span className="font-medium text-slate-800">{form.getValues("price_range") || "สอบถามราคา"}</span>
+                        <span className="text-slate-500">{isEn ? "Price Range:" : "ช่วงราคา:"}</span>
+                        <span className="font-medium text-slate-800">{form.getValues("price_range") || (isEn ? "Contact for price" : "สอบถามราคา")}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">จำนวนรูปภาพ:</span>
-                        <span className="font-medium text-slate-800">{(form.getValues("gallery_images")?.length || 0) + (form.getValues("cover_image") ? 1 : 0)} รูป</span>
+                        <span className="text-slate-500">{isEn ? "Total Images:" : "จำนวนรูปภาพ:"}</span>
+                        <span className="font-medium text-slate-800">
+                          {(form.getValues("gallery_images")?.length || 0) + (form.getValues("cover_image") ? 1 : 0)} {isEn ? "images" : "รูป"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -447,12 +542,12 @@ export function ServiceForm({
               type="button"
               variant="ghost"
               onClick={currentStep === 1 ? (onCancel || (() => router.back())) : prevStep}
-              className="text-slate-600 hover:bg-slate-100 rounded-xl px-6 h-12 gap-2"
+              className="text-slate-600 hover:bg-slate-100 rounded-xl px-6 h-12 gap-2 cursor-pointer font-semibold"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              {currentStep === 1 ? "ยกเลิก" : "ย้อนกลับ"}
+              {currentStep === 1 ? (isEn ? "Cancel" : "ยกเลิก") : (isEn ? "Back" : "ย้อนกลับ")}
             </Button>
 
             <div className="flex gap-3">
@@ -461,9 +556,9 @@ export function ServiceForm({
                   key="next-button"
                   type="button"
                   onClick={nextStep}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-8 h-12 shadow-lg shadow-indigo-200 gap-2 font-bold transition-all hover:scale-105 active:scale-95"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-8 h-12 shadow-lg shadow-indigo-200 gap-2 font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
                 >
-                  ถัดไป
+                  {isEn ? "Next" : "ถัดไป"}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
@@ -473,16 +568,16 @@ export function ServiceForm({
                   key="save-button"
                   type="submit"
                   disabled={saving}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-10 h-12 shadow-lg shadow-emerald-200 gap-2 font-bold transition-all hover:scale-105 active:scale-95"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-10 h-12 shadow-lg shadow-emerald-200 gap-2 font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   {saving ? (
                     <div className="flex items-center gap-2">
                       <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      กำลังบันทึก...
+                      {isEn ? "Saving..." : "กำลังบันทึก..."}
                     </div>
                   ) : (
                     <>
-                      บันทึกข้อมูล
+                      {isEn ? "Save Service" : "บันทึกข้อมูล"}
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>

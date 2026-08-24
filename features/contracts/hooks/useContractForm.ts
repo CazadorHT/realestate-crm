@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { format, addMonths } from "date-fns";
 import { 
   contractFormSchema, 
+  getContractFormSchema,
   ContractFormInput, 
   type ContractDealSummary 
 } from "@/features/rental-contracts/schema";
@@ -32,7 +33,7 @@ export function useContractForm(onSuccess?: () => void) {
   const defaultEndDate = format(addMonths(new Date(), 12), "yyyy-MM-dd");
 
   const form = useForm<ContractFormInput>({
-    resolver: zodResolver(contractFormSchema) as unknown as Resolver<ContractFormInput>,
+    resolver: zodResolver(getContractFormSchema(isEn)) as unknown as Resolver<ContractFormInput>,
     mode: "onChange",
     defaultValues: {
       start_date: todayStr,

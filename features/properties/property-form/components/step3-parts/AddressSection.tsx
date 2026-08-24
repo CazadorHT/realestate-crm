@@ -977,8 +977,14 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <div className="py-16 text-center text-xs text-slate-400 space-y-3">
                 <Building2 className="w-10 h-10 mx-auto text-slate-300 stroke-1" />
                 <div>
-                  <p className="font-semibold text-slate-700">{isEn ? "No matching projects found" : `ไม่พบโครงการ "${modalSearchQuery}"`}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{isEn ? "You can create this as a new project" : "คุณสามารถกดสร้างเป็นโครงการใหม่ได้ทันที"}</p>
+                  <p className="font-semibold text-slate-700">
+                    {isEn 
+                      ? (modalSearchQuery ? `No matching projects found for "${modalSearchQuery}"` : "No matching projects found") 
+                      : (modalSearchQuery ? `ไม่พบโครงการ "${modalSearchQuery}"` : "ไม่พบข้อมูลโครงการ")}
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {isEn ? "You can create this as a new project" : "คุณสามารถกดสร้างเป็นโครงการใหม่ได้ทันที"}
+                  </p>
                 </div>
                 {modalSearchQuery.trim() && (
                   <Button

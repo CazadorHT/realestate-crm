@@ -3,7 +3,7 @@
 import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { popularAreaSchema } from "../popular-areas-validation";
+import { popularAreaSchema, getPopularAreaSchema } from "../popular-areas-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -54,7 +54,7 @@ export function PopularAreaForm({
   const [activeTab, setActiveTab] = useState("th");
 
   const form = useForm({
-    resolver: zodResolver(popularAreaSchema),
+    resolver: zodResolver(getPopularAreaSchema(isEn)),
     defaultValues: {
       name: initialData?.name || "",
       name_en: initialData?.name_en || "",
@@ -90,7 +90,12 @@ export function PopularAreaForm({
   async function onSubmit(values: PopularAreaInput) {
     setIsPending(true);
     try {
-      const result = await saveAction(values);
+      const payload: PopularAreaInput = {
+        ...values,
+        name: values.name?.trim() || values.name_en?.trim() || "",
+        name_en: values.name_en?.trim() || values.name?.trim() || "",
+      };
+      const result = await saveAction(payload);
       if (result.success) {
         toast.success(result.message || (isEn ? "Area saved successfully" : "บันทึกข้อมูลสำเร็จ"));
         onSuccess();
@@ -105,12 +110,12 @@ export function PopularAreaForm({
   }
 
   const handleGenerateAiContent = async () => {
-    const name = form.getValues("name");
+    const name = form.getValues("name") || "";
     const nameEn = form.getValues("name_en") || "";
     const province = form.getValues("province");
 
-    if (!name) {
-      toast.error(isEn ? "Please enter Thai name first before generating with AI." : "กรุณากรอกชื่อภาษาไทยก่อนสร้างเนื้อหาด้วย AI");
+    if (!name.trim() && !nameEn.trim()) {
+      toast.error(isEn ? "Please enter Thai or English name first before generating with AI." : "กรุณากรอกชื่อภาษาไทยหรืออังกฤษก่อนสร้างเนื้อหาด้วย AI");
       return;
     }
 
@@ -124,6 +129,7 @@ export function PopularAreaForm({
         }
 
         if (d.name) {
+          if (d.name.th && !form.getValues("name")) form.setValue("name", d.name.th, { shouldDirty: true });
           if (d.name.en) form.setValue("name_en", d.name.en, { shouldDirty: true });
           if (d.name.cn) form.setValue("name_cn", d.name.cn, { shouldDirty: true });
           if (d.name.ru) form.setValue("name_ru", d.name.ru, { shouldDirty: true });
@@ -245,7 +251,7 @@ export function PopularAreaForm({
                   <FormItem>
                     <FormLabel className="font-bold flex items-center gap-2 text-slate-700 text-xs">
                       <ImageIcon className="h-4 w-4 text-slate-400" />
-                      {isEn ? "Cover Image" : "รูปภาพทำเล (Cover)"}
+                      {isEn ? "Cover Image" : "รูปภาพทำเล"}
                     </FormLabel>
                     <FormControl>
                       <SiteAssetUploader
@@ -271,7 +277,7 @@ export function PopularAreaForm({
                   type="button"
                   size="sm"
                   variant="outline"
-                  disabled={isGeneratingAi || !form.watch("name")}
+                  disabled={isGeneratingAi || (!form.watch("name")?.trim() && !form.watch("name_en")?.trim())}
                   onClick={handleGenerateAiContent}
                   className="h-8 text-[11px] font-bold text-indigo-600! border-indigo-200 bg-white hover:bg-indigo-50 shrink-0 transition-all cursor-pointer"
                 >
@@ -474,7 +480,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {isEn ? "English Name" : "ชื่อภาษาอังกฤษ (English Name)"}
+                        {isEn ? "English Name" : "ชื่อภาษาอังกฤษ"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -566,7 +572,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {isEn ? "Chinese Name" : "名称 (Chinese)"}
+                        {isEn ? "Chinese Name (CN)" : "ชื่อภาษาจีน (CN)"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -587,7 +593,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {isEn ? "Description (CN)" : "描述内容 (CN)"}
+                        {isEn ? "Area Description (CN)" : "ข้อมูลบรรยายทำเล (จีน)"}
                       </FormLabel>
                       <FormControl>
                         <textarea
@@ -610,7 +616,7 @@ export function PopularAreaForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          SEO Title (CN)
+                          {isEn ? "SEO Title (CN)" : "SEO Title (จีน)"}
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -630,7 +636,7 @@ export function PopularAreaForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          SEO Description (CN)
+                          {isEn ? "SEO Description (CN)" : "SEO Description (จีน)"}
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -658,7 +664,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {isEn ? "Russian Name" : "Имя (Russian)"}
+                        {isEn ? "Russian Name (RU)" : "ชื่อภาษารัสเซีย (RU)"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -679,7 +685,7 @@ export function PopularAreaForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {isEn ? "Description (RU)" : "Описание (RU)"}
+                        {isEn ? "Area Description (RU)" : "ข้อมูลบรรยายทำเล (รัสเซีย)"}
                       </FormLabel>
                       <FormControl>
                         <textarea
@@ -702,7 +708,7 @@ export function PopularAreaForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          SEO Title (RU)
+                          {isEn ? "SEO Title (RU)" : "SEO Title (รัสเซีย)"}
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -722,7 +728,7 @@ export function PopularAreaForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          SEO Description (RU)
+                          {isEn ? "SEO Description (RU)" : "SEO Description (รัสเซีย)"}
                         </FormLabel>
                         <FormControl>
                           <Input

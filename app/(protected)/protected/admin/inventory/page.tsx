@@ -113,7 +113,7 @@ export default function GlobalInventoryPage() {
     <div className="space-y-8 animate-in fade-in duration-700 pb-12">
       {/* 🛡️ Standardized Elite Header */}
       <PageHeader
-        title={isEn ? "Global Property Inventory" : "คลังทรัพย์สินรวม (Global Inventory)"}
+        title={isEn ? "Global Property Inventory" : "คลังทรัพย์สินรวมทุกสาขา"}
         subtitle={
           isEn
             ? "Unified property catalog across all company branches for seamless cross-branch collaboration"

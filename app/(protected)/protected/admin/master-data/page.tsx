@@ -97,7 +97,7 @@ export default function MasterDataAdminPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentItem.code || !currentItem.label.th) {
-      toast.error(isEn ? "Please specify Code and Thai name" : "กรุณากรอกรหัส (Code) และชื่อภาษาไทย");
+      toast.error(isEn ? "Please specify Code and Thai name" : "กรุณากรอกรหัสและชื่อภาษาไทย");
       return;
     }
 
@@ -187,7 +187,7 @@ export default function MasterDataAdminPage() {
               <Sparkles className="h-3.5 w-3.5 animate-pulse" /> V3 Enterprise Config
             </div>
             <h1 className="text-3xl font-semibold tracking-tight bg-linear-to-r from-white via-indigo-100 to-indigo-200 bg-clip-text text-transparent">
-              {isEn ? "Master Data & Transit Categories" : "จัดการข้อมูลการเดินทางและสถานที่ (Master Data)"}
+              {isEn ? "Master Data & Transit Categories" : "จัดการข้อมูลการเดินทางและสถานที่"}
             </h1>
             <p className="text-sm text-indigo-200/80 max-w-xl font-medium">
               {isEn 
@@ -202,7 +202,7 @@ export default function MasterDataAdminPage() {
             className="h-12 px-6 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:scale-105 flex items-center gap-2 self-start md:self-auto cursor-pointer"
           >
             <Plus className="h-5 w-5" />
-            {isEn ? "Add New Entry" : "เพิ่มรายการใหม่ (Add New)"}
+            {isEn ? "Add New Entry" : "เพิ่มรายการใหม่"}
           </Button>
         </div>
       </div>
@@ -355,7 +355,7 @@ export default function MasterDataAdminPage() {
                   className="flex-1 h-10 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold border-slate-200 hover:border-indigo-200 hover:text-indigo-600 transition-all cursor-pointer"
                 >
                   <Edit2 className="h-4 w-4 mr-2" />
-                  {isEn ? "Edit" : "แก้ไข (Edit)"}
+                  {isEn ? "Edit" : "แก้ไข"}
                 </Button>
                 <Button
                   type="button"
@@ -393,7 +393,7 @@ export default function MasterDataAdminPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-slate-700">
-                  {isEn ? "Reference Code" : "รหัสอ้างอิง (Code)"} <span className="text-red-500">*</span>
+                  {isEn ? "Reference Code" : "รหัสอ้างอิง"} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={currentItem.code}
@@ -409,7 +409,7 @@ export default function MasterDataAdminPage() {
 
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-slate-700">
-                  {isEn ? "Color Badge" : "รหัสสีประจำรายการ (Color Badge)"}
+                  {isEn ? "Color Badge" : "รหัสสีประจำรายการ"}
                 </Label>
                 <div className="flex items-center gap-3">
                   <Input
@@ -438,7 +438,7 @@ export default function MasterDataAdminPage() {
             <div className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
               <Label className="text-xs font-semibold text-slate-800 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-indigo-500" />
-                {isEn ? "Multilingual Display Names" : "ชื่อแสดงผลหลายภาษา (Multilingual Labels)"}
+                {isEn ? "Multilingual Display Names" : "ชื่อแสดงผลหลายภาษา"}
               </Label>
               
               <div className="space-y-3">
@@ -489,7 +489,7 @@ export default function MasterDataAdminPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-slate-700">
-                  {isEn ? "Sort Order" : "ลำดับการแสดงผล (Sort Order)"}
+                  {isEn ? "Sort Order" : "ลำดับการแสดงผล"}
                 </Label>
                 <Input
                   type="number"
@@ -519,7 +519,7 @@ export default function MasterDataAdminPage() {
                 onClick={() => setIsModalOpen(false)}
                 className="h-11 rounded-xl font-semibold border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
-                {isEn ? "Cancel" : "ยกเลิก (Cancel)"}
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
               <Button
                 type="submit"
@@ -529,7 +529,7 @@ export default function MasterDataAdminPage() {
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                 {isSaving 
                   ? (isEn ? "Saving..." : "กำลังบันทึก...") 
-                  : (isEn ? "Save Master Data" : "บันทึกข้อมูล (Save)")}
+                  : (isEn ? "Save Master Data" : "บันทึกข้อมูล")}
               </Button>
             </DialogFooter>
           </form>

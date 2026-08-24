@@ -47,6 +47,7 @@ import { PopularAreaPropertiesDialog } from "./PopularAreaPropertiesDialog";
 import { useTenant } from "@/components/providers/TenantProvider";
 import { Info } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { translateLocation } from "@/lib/utils/provinces";
 
 // DnD Kit imports
 import {
@@ -164,26 +165,13 @@ function SortableRow({
       </TableCell>
       <TableCell className="px-6">
         <div className="flex items-center gap-3">
-          {item.image_url ? (
-            <div className="h-10 w-10 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shrink-0 shadow-sm relative">
-              <Image 
-                src={item.image_url} 
-                alt={item.name} 
-                fill 
-                className="object-cover" 
-                sizes="40px"
-              />
-            </div>
-          ) : (
-            <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 shrink-0">
-               <MapPin className="h-5 w-5" />
-            </div>
-          )}
           <div className="flex flex-col">
             <span className="font-bold text-slate-900 leading-none truncate max-w-[150px]">
               {isEn ? (item.name_en || item.name) : item.name}
             </span>
-            <span className="text-[10px] text-blue-600 font-bold mt-1 uppercase tracking-tight">{item.province}</span>
+            <span className="text-[10px] text-blue-600 font-bold mt-1 uppercase tracking-tight">
+              {translateLocation(item.province, isEn ? "en" : "th") || item.province}
+            </span>
           </div>
         </div>
       </TableCell>
@@ -542,7 +530,7 @@ export function PopularAreasTable({
             {isEn ? "Displaying property counts for " : "กำลังแสดงยอดทรัพย์แบบ "}
             <span className="font-semibold underline underline-offset-2 mx-1">
               {isGlobalMode 
-                ? (isEn ? "All Branches (Global Override)" : "ภาพรวมทุกสาขา (Global Override)")
+                ? (isEn ? "All Branches (Global Override)" : "ภาพรวมทุกสาขา")
                 : (isEn ? `Branch: ${activeTenant?.name || "Current"}` : `เฉพาะสาขา ${activeTenant?.name || "ปัจจุบัน"}`)}
             </span>
             {isGlobalMode 
@@ -579,7 +567,7 @@ export function PopularAreasTable({
                 </TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("name")}>
                   <div className="flex items-center">
-                    {isEn ? "Area Name" : "ชื่อพื้นที่"} <span className="ml-1 opacity-50 font-normal">({isEn ? "TH" : "Area Name"})</span>
+                    {isEn ? "Area Name" : "ชื่อพื้นที่"}
                     <SortIcon column="name" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} />
                   </div>
                 </TableHead>
@@ -624,8 +612,8 @@ export function PopularAreasTable({
                         className="text-indigo-600 hover:text-indigo-700 font-semibold underline underline-offset-4 cursor-pointer"
                       >
                         {isAllAcrossSelected
-                          ? (isEn ? "Clear Selection" : "ยกเลิก (Clear Selection)")
-                          : (isEn ? `Select all ${totalCount} areas across pages` : `เลือกทั้งหมด ${totalCount} รายการ (Select All Across Pages)`)}
+                          ? (isEn ? "Clear Selection" : "ยกเลิกการเลือก")
+                          : (isEn ? `Select all ${totalCount} areas across pages` : `เลือกทั้งหมด ${totalCount} รายการ`)}
                       </button>
                     </div>
                   </TableCell>
@@ -634,7 +622,7 @@ export function PopularAreasTable({
               {data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-32 text-slate-400 bg-white font-semibold italic">
-                    {isEn ? "No records found" : "ไม่พบข้อมูลที่ต้องการ (No Records Found)"}
+                    {isEn ? "No records found" : "ไม่พบข้อมูลที่ต้องการ"}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -691,7 +679,9 @@ export function PopularAreasTable({
                      {isEn ? (item.name_en || item.name) : item.name}
                    </h4>
                    <div className="flex items-center gap-2 mt-0.5">
-                     <p className="text-[11px] text-blue-600 font-semibold uppercase tracking-wider">{item.province}</p>
+                     <p className="text-[11px] text-blue-600 font-semibold uppercase tracking-wider">
+                       {translateLocation(item.province, isEn ? "en" : "th") || item.province}
+                     </p>
                      {item.created_at && (
                        <span className="text-[10px] text-slate-400 font-medium">
                          • {isEn ? "Created" : "สร้างเมื่อ"} {new Date(item.created_at).toLocaleDateString(isEn ? "en-US" : "th-TH", { day: "numeric", month: "short", year: "2-digit" })}
@@ -725,14 +715,14 @@ export function PopularAreasTable({
       <ResponsiveDialog 
         open={!!deleteConfirmItem} 
         onOpenChange={(open) => !open && setDeleteConfirmItem(null)} 
-        title={isEn ? "Delete Area Confirmation" : "ยืนยันการลบทำเล (Delete Confirm)"} 
+        title={isEn ? "Delete Area Confirmation" : "ยืนยันการลบทำเล"} 
         className="md:max-w-md!"
       >
         <div className="p-8 text-center space-y-5 italic">
           <div className="mx-auto w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-2 border border-rose-100 shadow-sm"><TriangleAlert className="h-7 w-7" /></div>
           <div>
             <h3 className="text-xl font-semibold text-slate-900">
-              {isEn ? "Are you sure?" : "คุณแน่ใจหรือไม่? (Are you sure?)"}
+              {isEn ? "Are you sure?" : "คุณแน่ใจหรือไม่?"}
             </h3>
             <p className="text-[13px] text-slate-500 mt-2 font-medium">
               {isEn
@@ -742,10 +732,10 @@ export function PopularAreasTable({
           </div>
           <div className="flex gap-3 pt-4">
             <Button variant="outline" className="flex-1 rounded-2xl h-12 font-semibold cursor-pointer" onClick={() => setDeleteConfirmItem(null)}>
-              {isEn ? "Cancel" : "ยกเลิก (Cancel)"}
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button className="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl h-12 font-semibold shadow-lg shadow-rose-200 transition-all cursor-pointer" onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : (isEn ? "Delete" : "ยืนยันการลบ (Delete)")}
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : (isEn ? "Delete" : "ยืนยันการลบ")}
             </Button>
           </div>
         </div>
@@ -762,7 +752,7 @@ export function PopularAreasTable({
           <div>
             <h3 className="text-2xl font-semibold text-slate-900 tracking-tight">
               {isAllAcrossSelected 
-                ? (isEn ? "Delete All Areas" : "ลบทิ้งทั้งหมด! (Delete All Archives)") 
+                ? (isEn ? "Delete All Areas" : "ลบทิ้งทั้งหมด") 
                 : (isEn ? "Confirm Delete Selected" : "ยืนยันการลบที่เลือก")}
             </h3>
             <p className="text-[13px] text-slate-500 mt-2 font-medium">
@@ -778,10 +768,10 @@ export function PopularAreasTable({
           </div>
           <div className="flex gap-3 pt-4">
             <Button variant="outline" className="flex-1 rounded-2xl h-14 font-semibold cursor-pointer" onClick={() => setIsBulkDeleteOpen(false)} disabled={isDeleting}>
-              {isEn ? "Cancel" : "ยกเลิก (Cancel)"}
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
             <Button className={cn("flex-1 text-white rounded-2xl h-14 font-semibold shadow-xl transition-all cursor-pointer", isAllAcrossSelected ? "bg-rose-600 hover:bg-rose-700 shadow-rose-200" : "bg-slate-900 hover:bg-black shadow-slate-200")} onClick={executeBulkDelete} disabled={isDeleting}>
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : (isEn ? "Execute Delete" : "ยืนยันลบข้อมูล (Execute Delete)")}
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : (isEn ? "Execute Delete" : "ยืนยันลบข้อมูล")}
             </Button>
           </div>
         </div>

@@ -110,7 +110,7 @@ export function ExecutiveBranchList({
           <div>
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <Building2 className="h-5 w-5 text-slate-400" />
-              {isEn ? "Branch Performance Matrix" : "รายละเอียดรายสาขา (Branch Breakdown)"}
+              {isEn ? "Branch Performance Matrix" : "รายละเอียดประสิทธิภาพรายสาขา"}
             </CardTitle>
             <CardDescription className="text-xs">
               {isEn ? "Detailed comparative branch KPI analysis" : "ข้อมูลวิเคราะห์ประสิทธิภาพเปรียบเทียบเชิงลึก"}

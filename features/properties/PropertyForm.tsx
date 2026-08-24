@@ -22,7 +22,7 @@ import {
   History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FormSchema, type PropertyFormValues } from "./schema";
+import { FormSchema, getFormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import { MissingLocationDialog } from "./components/MissingLocationDialog";
 import type {
@@ -283,7 +283,7 @@ export function PropertyForm({
   );
 
   const form = useForm<PropertyFormValues>({
-    resolver: zodResolver(FormSchema) as Resolver<PropertyFormValues>,
+    resolver: zodResolver(getFormSchema(isEn)) as Resolver<PropertyFormValues>,
     mode: "onChange",
     defaultValues:
       mode === "edit" && defaultValues

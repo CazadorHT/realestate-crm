@@ -23,12 +23,16 @@ const TiptapEditor = dynamic(() => import("@/components/blog/TiptapEditor").then
 });
 
 import { ServiceFormValues } from "../ServiceForm";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface ServiceContentSectionProps {
   form: UseFormReturn<ServiceFormValues>;
 }
 
 export function ServiceContentSection({ form }: ServiceContentSectionProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <div className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
       <div className="px-6 py-5 border-b border-slate-100 bg-linear-to-r from-slate-50 to-white">
@@ -38,10 +42,10 @@ export function ServiceContentSection({ form }: ServiceContentSectionProps) {
           </div>
           <div>
             <h3 className="font-semibold text-slate-800">
-              รายละเอียดบริการเชิงลึก
+              {isEn ? "In-depth Service Details" : "รายละเอียดบริการเชิงลึก"}
             </h3>
             <p className="text-xs text-slate-500">
-              จัดการเนื้อหาและรายละเอียดของบริการในทุกภาษา
+              {isEn ? "Manage comprehensive content and description in all languages" : "จัดการเนื้อหาและรายละเอียดของบริการในทุกภาษา"}
             </p>
           </div>
         </div>
@@ -50,17 +54,17 @@ export function ServiceContentSection({ form }: ServiceContentSectionProps) {
       <div className="p-6">
         <Tabs defaultValue="th" className="w-full">
           <TabsList className="bg-slate-100/50 p-1 rounded-xl w-full h-auto grid grid-cols-4 mb-8">
-            <TabsTrigger value="th" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm font-bold">
-              ภาษาไทย (TH)
+            <TabsTrigger value="th" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm font-bold cursor-pointer">
+              ภาษาไทย
             </TabsTrigger>
-            <TabsTrigger value="en" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm font-bold">
-              English (EN)
+            <TabsTrigger value="en" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm font-bold cursor-pointer">
+              English
             </TabsTrigger>
-            <TabsTrigger value="cn" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm font-bold">
-              Chinese (CN)
+            <TabsTrigger value="cn" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm font-bold cursor-pointer">
+              中文
             </TabsTrigger>
-            <TabsTrigger value="ru" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm font-bold">
-              Russian (RU)
+            <TabsTrigger value="ru" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm font-bold cursor-pointer">
+              Русский
             </TabsTrigger>
           </TabsList>
 
@@ -72,10 +76,10 @@ export function ServiceContentSection({ form }: ServiceContentSectionProps) {
                 <FormItem className="space-y-4">
                   <div className="flex items-center justify-between">
                     <FormLabel className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                      เนื้อหารายละเอียด (ภาษาไทย)
+                      {isEn ? "Content Details (Thai)" : "เนื้อหารายละเอียด (ภาษาไทย)"}
                     </FormLabel>
                     <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-medium">
-                      เนื้อหาหลัก
+                      {isEn ? "Primary Content" : "เนื้อหาหลัก"}
                     </Badge>
                   </div>
                   <FormControl>

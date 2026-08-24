@@ -10,9 +10,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { translateLocation } from "@/lib/utils/provinces";
 
 interface PopularAreaPropertiesDialogProps {
-  area: { id: string; name: string } | null;
+  area: { id: string; name: string; name_en?: string | null } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -74,8 +75,8 @@ export function PopularAreaPropertiesDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={
-        area?.name 
-          ? (isEn ? `Properties in Area: ${area.name}` : `ทรัพย์ในทำเล: ${area.name}`) 
+        area
+          ? (isEn ? `Properties in Area: ${area.name_en || area.name}` : `ทรัพย์ในทำเล: ${area.name}`) 
           : (isEn ? "Property List" : "รายการทรัพย์")
       }
       description={
@@ -108,7 +109,7 @@ export function PopularAreaPropertiesDialog({
               <p className="text-slate-500 text-sm mt-1 max-w-xs mx-auto">
                 {isEn
                   ? "There are currently no properties linked to this popular area."
-                  : "ยังไม่มีการผูกทรัพย์ใดๆ เข้ากับทำเลนื้ในระบบ"}
+                  : "ยังไม่มีการผูกทรัพย์ใดๆ เข้ากับทำเลนี้ในระบบ"}
               </p>
             </div>
           </div>
@@ -165,7 +166,7 @@ export function PopularAreaPropertiesDialog({
                     <div className="mt-2 flex items-center text-[11px] text-slate-500 gap-1.5">
                       <MapPin className="h-3 w-3 shrink-0" />
                       <span className="truncate">
-                        {property.district || "-"}, {property.province || "-"}
+                        {translateLocation(property.district, isEn ? "en" : "th") || property.district || "-"}, {translateLocation(property.province, isEn ? "en" : "th") || property.province || "-"}
                       </span>
                     </div>
 
@@ -286,7 +287,7 @@ function PriceDisplay({
           )}
           <span className="text-sm font-bold text-emerald-600 leading-none">
             ฿{format(rentalPrice ?? originalRentalPrice)}
-            <span className="text-[10px] ml-0.5">{isEn ? "/mo" : "/ด"}</span>
+            <span className="text-[10px] ml-0.5">{isEn ? "/mo" : "/เดือน"}</span>
           </span>
         </div>
       )}

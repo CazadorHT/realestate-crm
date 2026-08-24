@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
 import { th, enUS } from "date-fns/locale";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 import {
   Table,
   TableBody,
@@ -52,6 +52,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import { BlogPost } from "@/lib/services/blog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { getCategoryDisplayName } from "@/features/blog/blog-utils";
 
 interface BlogsTableProps {
   posts: BlogPost[];
@@ -597,7 +598,7 @@ export function BlogsTable({
                               <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
                             )}
                             <span className="font-bold line-clamp-1 truncate text-slate-900 group-hover:text-blue-600 transition-colors">
-                              {post.title}
+                              {isEn ? (post.title_en || post.title) : (post.title || post.title_en)}
                             </span>
                           </div>
                           <span className="text-[10px] font-mono text-slate-400 tracking-tight truncate">
@@ -611,7 +612,7 @@ export function BlogsTable({
                             variant="outline"
                             className="bg-blue-50/50 text-blue-700 border-blue-100 rounded-lg px-2.5 py-0.5 font-bold text-[10px]"
                           >
-                            {post.category}
+                            {getCategoryDisplayName(post.category, language)}
                           </Badge>
                         ) : (
                           <span className="text-slate-300 italic text-xs">
@@ -688,8 +689,8 @@ export function BlogsTable({
                                 title={isEn ? "Restore Article" : "กู้คืนบทความ"}
                                 description={
                                   isEn
-                                    ? `Do you want to restore "${post.title}"?`
-                                    : `คุณต้องการกู้คืนบทความ "${post.title}" ใช่หรือไม่?`
+                                    ? `Do you want to restore "${post.title_en || post.title}"?`
+                                    : `คุณต้องการกู้คืนบทความ "${post.title || post.title_en}" ใช่หรือไม่?`
                                 }
                                 confirmText={isEn ? "Restore" : "กู้คืนบทความ"}
                                 onConfirm={() =>
@@ -718,8 +719,8 @@ export function BlogsTable({
                                 title={isEn ? "Permanent Delete" : "ลบบทความถาวร"}
                                 description={
                                   isEn
-                                    ? `You are about to permanently delete "${post.title}". This cannot be undone.`
-                                    : `คุณกำลังจะลบบทความ "${post.title}" ทิ้งถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้`
+                                    ? `You are about to permanently delete "${post.title_en || post.title}". This cannot be undone.`
+                                    : `คุณกำลังจะลบบทความ "${post.title || post.title_en}" ทิ้งถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้`
                                 }
                                 confirmText={isEn ? "Delete Permanently" : "ลบถาวรทันที"}
                                 confirmString="DELETE"
@@ -755,9 +756,9 @@ export function BlogsTable({
                                 size="icon"
                                 className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                                 title={
-                                  isEn
-                                    ? (post.is_published ? "Public Preview" : "Draft articles cannot be viewed publicly")
-                                    : (post.is_published ? "Public Preview" : "ไม่สามารถดูบทความแบบร่างได้")
+                                  post.is_published
+                                    ? (isEn ? "Public Preview" : "เปิดดูหน้าเว็บ")
+                                    : (isEn ? "Draft articles cannot be viewed publicly" : "ไม่สามารถดูบทความแบบร่างได้")
                                 }
                                 onClick={() => {
                                   setNavigatingId(`preview-${post.id}`);
@@ -862,7 +863,7 @@ export function BlogsTable({
                             <Loader2 className="h-4 w-4 animate-spin text-blue-600 absolute -left-6 top-0.5" />
                           )}
                           <h4 className="font-extrabold text-slate-900 line-clamp-2 leading-tight">
-                            {post.title}
+                            {isEn ? (post.title_en || post.title) : (post.title || post.title_en)}
                           </h4>
                         </div>
                       </div>
@@ -887,7 +888,7 @@ export function BlogsTable({
                             variant="outline"
                             className="text-[9px] bg-slate-50 text-slate-500 border-slate-200 px-1.5 h-5 font-bold uppercase tracking-wider"
                           >
-                            {post.category}
+                            {getCategoryDisplayName(post.category, language)}
                           </Badge>
                         )}
                         <span className="text-[10px] font-mono text-slate-400">

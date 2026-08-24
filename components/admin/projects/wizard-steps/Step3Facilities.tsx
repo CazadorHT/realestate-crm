@@ -5,18 +5,18 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 const FACILITIES_LIST = [
-  { value: "สระว่ายน้ำ", label: "สระว่ายน้ำ (Swimming Pool)" },
-  { value: "ฟิตเนส", label: "ห้องฟิตเนส (Gym)" },
-  { value: "ห้องซาวน่า/สตรีม", label: "ห้องซาวน่า/สตรีม (Sauna/Steam)" },
-  { value: "สวนหย่อม/พื้นที่สีเขียว", label: "สวนหย่อม/พื้นที่สีเขียว (Garden)" },
-  { value: "ระบบรักษาความปลอดภัย 24 ชม.", label: "รปภ. 24 ชม. (24h Security)" },
-  { value: "กล้องวงจรปิด (cctv)", label: "กล้องวงจรปิด (CCTV)" },
-  { value: "เข้า-ออกด้วยคีย์การ์ด (key card access)", label: "เข้า-ออกด้วยคีย์การ์ด (Key Card)" },
-  { value: "ที่จอดรถ", label: "ที่จอดรถ (Parking)" },
-  { value: "สนามเด็กเล่น", label: "สนามเด็กเล่น (Playground)" },
-  { value: "ห้องสมุด/co-working space", label: "ห้องสมุด/Co-working Space" },
-  { value: "ล็อบบี้", label: "ล็อบบี้ (Lobby)" },
-  { value: "ลิฟต์โดยสาร", label: "ลิฟต์โดยสาร (Elevator)" },
+  { value: "สระว่ายน้ำ", th: "สระว่ายน้ำ", en: "Swimming Pool" },
+  { value: "ฟิตเนส", th: "ห้องฟิตเนส", en: "Fitness / Gym" },
+  { value: "ห้องซาวน่า/สตรีม", th: "ห้องซาวน่า/สตรีม", en: "Sauna / Steam Room" },
+  { value: "สวนหย่อม/พื้นที่สีเขียว", th: "สวนหย่อม / พื้นที่สีเขียว", en: "Garden / Green Area" },
+  { value: "ระบบรักษาความปลอดภัย 24 ชม.", th: "รปภ. 24 ชม.", en: "24-Hour Security" },
+  { value: "กล้องวงจรปิด", th: "กล้องวงจรปิด", en: "CCTV Security" },
+  { value: "เข้า-ออกด้วยคีย์การ์ด", th: "เข้า-ออกด้วยคีย์การ์ด", en: "Key Card Access" },
+  { value: "ที่จอดรถ", th: "ที่จอดรถ", en: "Parking" },
+  { value: "สนามเด็กเล่น", th: "สนามเด็กเล่น", en: "Playground" },
+  { value: "ห้องสมุด/co-working space", th: "ห้องสมุดและพื้นที่ทำงาน", en: "Library / Co-working Space" },
+  { value: "ล็อบบี้", th: "ล็อบบี้", en: "Lobby Reception" },
+  { value: "ลิฟต์โดยสาร", th: "ลิฟต์โดยสาร", en: "Passenger Elevator" },
 ];
 
 interface Step3FacilitiesProps {
@@ -39,13 +39,14 @@ export function Step3Facilities({
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="space-y-4">
         <h4 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-1">
-          {isEn ? "Project Amenities & Facilities" : "สิ่งอำนวยความสะดวกโครงการ (Facilities)"}
+          {isEn ? "Project Amenities & Facilities" : "สิ่งอำนวยความสะดวกโครงการ"}
         </h4>
         
         {dbFeatures.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
             {FACILITIES_LIST.map((fac) => {
               const isChecked = selectedFacilities.includes(fac.value);
+              const label = isEn ? fac.en : fac.th;
               return (
                 <label 
                   key={fac.value} 
@@ -62,7 +63,7 @@ export function Step3Facilities({
                     onChange={() => onFacilityToggle(fac.value)}
                     className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
                   />
-                  <span className="text-xs">{fac.label}</span>
+                  <span className="text-xs">{label}</span>
                 </label>
               );
             })}
@@ -91,7 +92,7 @@ export function Step3Facilities({
                           onChange={() => onFacilityToggle(fac.name)}
                           className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
                         />
-                        <span className="text-xs">{fac.name}</span>
+                        <span className="text-xs">{isEn ? (fac.name_en || fac.name) : fac.name}</span>
                       </label>
                     );
                   })}

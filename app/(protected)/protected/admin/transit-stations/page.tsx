@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { 
-  Search, Edit2, Loader2, AlertCircle, ExternalLink, Plus
+  Search, Edit2, Loader2, AlertCircle, ExternalLink, Plus, ArrowUpDown, RotateCcw, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +79,35 @@ export default function TransitStationsAdminPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [lineFilter, setLineFilter] = React.useState<string>("ALL");
   const [propertyFilter, setPropertyFilter] = React.useState<string>("ALL");
+  const [sortBy, setSortBy] = React.useState<string>("DEFAULT");
+
+  // Calculate counts for filters
+  const { lineCounts, propertyCounts } = React.useMemo(() => {
+    const lCounts: Record<string, number> = { ALL: stations.length };
+    let hasProps = 0;
+    let noProps = 0;
+
+    for (const st of stations) {
+      const line = st.metadata?.transit_type || "OTHER";
+      lCounts[line] = (lCounts[line] || 0) + 1;
+
+      const cnt = st.property_count || 0;
+      if (cnt > 0) {
+        hasProps++;
+      } else {
+        noProps++;
+      }
+    }
+
+    return {
+      lineCounts: lCounts,
+      propertyCounts: {
+        ALL: stations.length,
+        HAS_PROPERTIES: hasProps,
+        NO_PROPERTIES: noProps,
+      },
+    };
+  }, [stations]);
 
   // Modal / Edit state
   const [isEditOpen, setIsEditOpen] = React.useState(false);
@@ -128,29 +157,81 @@ export default function TransitStationsAdminPage() {
     setIsEditOpen(true);
   };
 
-  const filteredStations = stations.filter((station) => {
-    // 1. Search filter
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = 
-      station.code.toLowerCase().includes(q) ||
-      station.label.th.toLowerCase().includes(q) ||
-      station.label.en.toLowerCase().includes(q);
+  const filteredStations = React.useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
 
-    // 2. Line filter
-    const transitType = station.metadata?.transit_type || "OTHER";
-    const matchesLine = lineFilter === "ALL" || transitType === lineFilter;
+    const result = stations.filter((station) => {
+      // 1. Search filter
+      const matchesSearch = 
+        !q ||
+        station.code.toLowerCase().includes(q) ||
+        station.label.th.toLowerCase().includes(q) ||
+        station.label.en.toLowerCase().includes(q);
 
-    // 3. Property count filter
-    const count = station.property_count || 0;
-    let matchesProperty = true;
-    if (propertyFilter === "HAS_PROPERTIES") {
-      matchesProperty = count > 0;
-    } else if (propertyFilter === "NO_PROPERTIES") {
-      matchesProperty = count === 0;
-    }
+      // 2. Line filter
+      const transitType = station.metadata?.transit_type || "OTHER";
+      const matchesLine = lineFilter === "ALL" || transitType === lineFilter;
 
-    return matchesSearch && matchesLine && matchesProperty;
-  });
+      // 3. Property count filter
+      const count = station.property_count || 0;
+      let matchesProperty = true;
+      if (propertyFilter === "HAS_PROPERTIES") {
+        matchesProperty = count > 0;
+      } else if (propertyFilter === "NO_PROPERTIES") {
+        matchesProperty = count === 0;
+      }
+
+      return matchesSearch && matchesLine && matchesProperty;
+    });
+
+    // 4. Sorting logic
+    result.sort((a, b) => {
+      if (sortBy === "HAS_PROPERTIES_FIRST") {
+        const hasA = (a.property_count || 0) > 0 ? 1 : 0;
+        const hasB = (b.property_count || 0) > 0 ? 1 : 0;
+        if (hasB !== hasA) return hasB - hasA;
+        const countDiff = (b.property_count || 0) - (a.property_count || 0);
+        if (countDiff !== 0) return countDiff;
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      }
+      if (sortBy === "NO_PROPERTIES_FIRST") {
+        const hasA = (a.property_count || 0) === 0 ? 1 : 0;
+        const hasB = (b.property_count || 0) === 0 ? 1 : 0;
+        if (hasB !== hasA) return hasB - hasA;
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      }
+      if (sortBy === "PROPERTIES_DESC") {
+        const countDiff = (b.property_count || 0) - (a.property_count || 0);
+        if (countDiff !== 0) return countDiff;
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      }
+      if (sortBy === "PROPERTIES_ASC") {
+        const countDiff = (a.property_count || 0) - (b.property_count || 0);
+        if (countDiff !== 0) return countDiff;
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      }
+      if (sortBy === "NAME_ASC") {
+        const nameA = isEn ? (a.label.en || a.label.th) : (a.label.th || a.label.en);
+        const nameB = isEn ? (b.label.en || b.label.th) : (b.label.th || b.label.en);
+        return nameA.localeCompare(nameB, isEn ? "en" : "th");
+      }
+      if (sortBy === "NAME_DESC") {
+        const nameA = isEn ? (a.label.en || a.label.th) : (a.label.th || a.label.en);
+        const nameB = isEn ? (b.label.en || b.label.th) : (b.label.th || b.label.en);
+        return nameB.localeCompare(nameA, isEn ? "en" : "th");
+      }
+      if (sortBy === "CODE_ASC") {
+        return a.code.localeCompare(b.code);
+      }
+      if (sortBy === "CODE_DESC") {
+        return b.code.localeCompare(a.code);
+      }
+      // DEFAULT: sort_order
+      return (a.sort_order || 0) - (b.sort_order || 0);
+    });
+
+    return result;
+  }, [stations, searchQuery, lineFilter, propertyFilter, sortBy, isEn]);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto pb-16">
@@ -167,7 +248,7 @@ export default function TransitStationsAdminPage() {
             <p className="text-sm text-indigo-200/80 max-w-xl font-medium">
               {isEn
                 ? "Manage station search keywords, SEO Title/Description, location content, and listings near transit stations."
-                : "จัดการข้อมูลคำค้นหา คีย์เวิร์ด ชื่อหัวข้อ (SEO Title/Description) และรายละเอียดทำเลของสถานีรถไฟฟ้าสำหรับหน้าค้นหาหลัก"}
+                : "จัดการข้อมูลคำค้นหา คีย์เวิร์ด ชื่อหัวข้อ SEO และรายละเอียดทำเลของสถานีรถไฟฟ้าสำหรับหน้าค้นหาหลัก"}
             </p>
           </div>
 
@@ -177,66 +258,185 @@ export default function TransitStationsAdminPage() {
             className="h-12 px-6 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:scale-105 flex items-center gap-2 self-start md:self-auto shrink-0 cursor-pointer"
           >
             <Plus className="h-5 w-5" />
-            {isEn ? "Add New Station" : "เพิ่มสถานีรถไฟฟ้าใหม่ (Add Station)"}
+            {isEn ? "Add New Station" : "เพิ่มสถานีรถไฟฟ้าใหม่"}
           </Button>
         </div>
       </div>
 
       {/* Filter and Search controls */}
-      <div className="flex flex-col xl:flex-row gap-4 justify-between items-center bg-white p-6 rounded-2xl border border-slate-100 shadow-xs">
-        <div className="relative w-full xl:max-w-md">
-          <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
-          <Input
-            placeholder={isEn ? "Search by code or station name..." : "ค้นหาตามรหัส หรือชื่อสถานี..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
-          />
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
-          {/* Line Filter */}
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-            <Label className="text-sm font-semibold text-slate-650 shrink-0">
-              {isEn ? "Transit Line:" : "สายรถไฟฟ้า:"}
-            </Label>
-            <Select value={lineFilter} onValueChange={setLineFilter}>
-              <SelectTrigger className="w-full sm:w-56 h-10.5 rounded-xl border-slate-200 bg-white">
-                <SelectValue placeholder={isEn ? "All Transit Lines" : "เลือกสายทั้งหมด"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">{isEn ? "All Lines" : "ทุกสาย"}</SelectItem>
-                {Object.entries(LINE_LABELS).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center gap-2">
-                      {LOGO_PATHS[key] ? (
-                        <img src={LOGO_PATHS[key]} alt={key} className="h-4 w-auto object-contain shrink-0" />
-                      ) : (
-                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: LINE_COLORS[key] || "#6b7280" }} />
-                      )}
-                      <span>{label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
+        {/* Row 1: Search bar & Counter summary */}
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          <div className="relative flex-1 sm:max-w-xl">
+            <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
+            <Input
+              placeholder={isEn ? "Search by code or station name (Thai/English)..." : "ค้นหาตามรหัส หรือชื่อสถานี (ไทย/อังกฤษ)..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-9 h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 bg-slate-50/40 text-sm"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition-colors cursor-pointer"
+                title={isEn ? "Clear search" : "ล้างคำค้นหา"}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
-          {/* Property Count Filter */}
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-            <Label className="text-sm font-semibold text-slate-650 shrink-0">
-              {isEn ? "Properties Count:" : "จำนวนทรัพย์สิน:"}
-            </Label>
-            <Select value={propertyFilter} onValueChange={setPropertyFilter}>
-              <SelectTrigger className="w-full sm:w-48 h-10.5 rounded-xl border-slate-200 bg-white">
-                <SelectValue placeholder={isEn ? "All" : "ทั้งหมด"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">{isEn ? "All" : "ทั้งหมด"}</SelectItem>
-                <SelectItem value="HAS_PROPERTIES">{isEn ? "With Listings (≥ 1)" : "มีทรัพย์สิน (≥ 1)"}</SelectItem>
-                <SelectItem value="NO_PROPERTIES">{isEn ? "No Listings (0)" : "ไม่มีทรัพย์สิน (0)"}</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2.5 justify-between sm:justify-end">
+            <span className="text-xs font-bold text-slate-600 bg-slate-100/80 border border-slate-200/60 px-3.5 py-2 rounded-xl whitespace-nowrap">
+              {isEn
+                ? `Showing ${filteredStations.length} of ${stations.length} stations`
+                : `แสดง ${filteredStations.length} จาก ${stations.length} สถานี`}
+            </span>
+
+            {(searchQuery || lineFilter !== "ALL" || propertyFilter !== "ALL" || sortBy !== "DEFAULT") && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery("");
+                  setLineFilter("ALL");
+                  setPropertyFilter("ALL");
+                  setSortBy("DEFAULT");
+                }}
+                className="h-9 px-3 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl cursor-pointer font-bold flex items-center gap-1.5 shrink-0"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                {isEn ? "Reset" : "ล้างตัวกรอง"}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2: Filter dropdowns & Quick sort controls */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-3 border-t border-slate-100/80">
+          {/* Left: Filter dropdowns */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs font-bold text-slate-500 shrink-0">
+                {isEn ? "Line:" : "สายรถไฟฟ้า:"}
+              </Label>
+              <Select value={lineFilter} onValueChange={setLineFilter}>
+                <SelectTrigger className="w-48 h-9.5 rounded-xl border-slate-200 bg-slate-50/60 text-xs font-semibold">
+                  <SelectValue placeholder={isEn ? "All Transit Lines" : "เลือกสายทั้งหมด"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">{isEn ? `All Lines (${lineCounts.ALL || 0})` : `ทุกสาย (${lineCounts.ALL || 0})`}</SelectItem>
+                  {Object.entries(LINE_LABELS).map(([key, label]) => {
+                    const count = lineCounts[key] || 0;
+                    return (
+                      <SelectItem key={key} value={key}>
+                        <div className="flex items-center gap-2">
+                          {LOGO_PATHS[key] ? (
+                            <img src={LOGO_PATHS[key]} alt={key} className="h-4 w-auto object-contain shrink-0" />
+                          ) : (
+                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: LINE_COLORS[key] || "#6b7280" }} />
+                          )}
+                          <span>{label} ({count})</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label className="text-xs font-bold text-slate-500 shrink-0">
+                {isEn ? "Listings:" : "จำนวนทรัพย์:"}
+              </Label>
+              <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+                <SelectTrigger className="w-44 h-9.5 rounded-xl border-slate-200 bg-slate-50/60 text-xs font-semibold">
+                  <SelectValue placeholder={isEn ? "All" : "ทั้งหมด"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">{isEn ? `All (${propertyCounts.ALL || 0})` : `ทั้งหมด (${propertyCounts.ALL || 0})`}</SelectItem>
+                  <SelectItem value="HAS_PROPERTIES">{isEn ? `With Listings (${propertyCounts.HAS_PROPERTIES || 0})` : `มีทรัพย์ (${propertyCounts.HAS_PROPERTIES || 0})`}</SelectItem>
+                  <SelectItem value="NO_PROPERTIES">{isEn ? `No Listings (${propertyCounts.NO_PROPERTIES || 0})` : `ไม่มีทรัพย์ (${propertyCounts.NO_PROPERTIES || 0})`}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Right: Sorting dropdown & Quick toggles */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs font-bold text-slate-500 shrink-0">
+                {isEn ? "Sort:" : "การเรียง:"}
+              </Label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-56 h-9.5 rounded-xl border-slate-200 bg-slate-50/60 text-xs font-semibold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DEFAULT">
+                    {isEn ? "Default Order" : "ตามลำดับตั้งต้น"}
+                  </SelectItem>
+                  <SelectItem value="HAS_PROPERTIES_FIRST">
+                    {isEn ? "Has Listings First (≥1 then 0)" : "สถานีที่มี Listing ขึ้นก่อน"}
+                  </SelectItem>
+                  <SelectItem value="PROPERTIES_DESC">
+                    {isEn ? "Most Listings (High → Low)" : "จำนวน Listing มากสุด (มาก → น้อย)"}
+                  </SelectItem>
+                  <SelectItem value="PROPERTIES_ASC">
+                    {isEn ? "Least Listings (Low → High)" : "จำนวน Listing น้อยสุด (น้อย → มาก)"}
+                  </SelectItem>
+                  <SelectItem value="NO_PROPERTIES_FIRST">
+                    {isEn ? "No Listings First (0 then ≥1)" : "สถานีที่ยังไม่มี Listing ขึ้นก่อน"}
+                  </SelectItem>
+                  <SelectItem value="NAME_ASC">
+                    {isEn ? "Station Name (A → Z)" : "ชื่อสถานี (ก → ฮ / A → Z)"}
+                  </SelectItem>
+                  <SelectItem value="NAME_DESC">
+                    {isEn ? "Station Name (Z → A)" : "ชื่อสถานี (ฮ → ก / Z → A)"}
+                  </SelectItem>
+                  <SelectItem value="CODE_ASC">
+                    {isEn ? "Station Code (A → Z)" : "รหัสสถานี (A → Z)"}
+                  </SelectItem>
+                  <SelectItem value="CODE_DESC">
+                    {isEn ? "Station Code (Z → A)" : "รหัสสถานี (Z → A)"}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setSortBy(prev => prev === "HAS_PROPERTIES_FIRST" ? "PROPERTIES_DESC" : prev === "PROPERTIES_DESC" ? "DEFAULT" : "HAS_PROPERTIES_FIRST")}
+              className={`h-9.5 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors ${
+                sortBy === "HAS_PROPERTIES_FIRST" || sortBy === "PROPERTIES_DESC"
+                  ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+                  : "border-slate-200 text-slate-700 hover:text-indigo-650 hover:bg-indigo-50"
+              }`}
+              title={isEn ? "Sort stations with active listings first" : "จัดเรียงให้สถานีที่มีจำนวนทรัพย์สินอยู่ขึ้นก่อน"}
+            >
+              <ArrowUpDown className="h-3.5 w-3.5 text-indigo-500" />
+              {isEn ? (sortBy === "PROPERTIES_DESC" ? "Most Listings" : "Listings First") : (sortBy === "PROPERTIES_DESC" ? "Listing มากสุด" : "มี Listing ขึ้นก่อน")}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setSortBy(prev => prev === "NAME_ASC" ? "NAME_DESC" : "NAME_ASC")}
+              className={`h-9.5 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors ${
+                sortBy === "NAME_ASC" || sortBy === "NAME_DESC"
+                  ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+                  : "border-slate-200 text-slate-700 hover:text-indigo-650 hover:bg-indigo-50"
+              }`}
+              title={isEn ? "Sort by station name alphabetically" : "จัดเรียงตามชื่อสถานีตามตัวอักษร"}
+            >
+              <ArrowUpDown className="h-3.5 w-3.5 text-indigo-500" />
+              {isEn ? (sortBy === "NAME_DESC" ? "Name (Z-A)" : "Name (A-Z)") : (sortBy === "NAME_DESC" ? "ชื่อ (ฮ-ก)" : "ชื่อ (ก-ฮ)")}
+            </Button>
           </div>
         </div>
       </div>
@@ -265,9 +465,25 @@ export default function TransitStationsAdminPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/75 border-b border-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">{isEn ? "Station (TH / EN)" : "สถานี (TH / EN)"}</th>
+                  <th 
+                    className="px-6 py-4 cursor-pointer select-none hover:text-indigo-600 transition-colors"
+                    onClick={() => setSortBy(prev => prev === "NAME_ASC" ? "NAME_DESC" : "NAME_ASC")}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>{isEn ? "Station Name" : "ชื่อสถานี"}</span>
+                      <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
+                    </div>
+                  </th>
                   <th className="px-6 py-4">{isEn ? "Transit Line" : "สายรถไฟฟ้า"}</th>
-                  <th className="px-6 py-4">{isEn ? "Properties" : "จำนวนทรัพย์"}</th>
+                  <th 
+                    className="px-6 py-4 cursor-pointer select-none hover:text-indigo-600 transition-colors"
+                    onClick={() => setSortBy(prev => prev === "PROPERTIES_DESC" ? "PROPERTIES_ASC" : "PROPERTIES_DESC")}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>{isEn ? "Properties" : "จำนวนทรัพย์"}</span>
+                      <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
+                    </div>
+                  </th>
                   <th className="px-6 py-4">URL Slug</th>
                   <th className="px-6 py-4">{isEn ? "SEO Status" : "สถานะ SEO"}</th>
                   <th className="px-6 py-4 text-center">{isEn ? "Actions" : "จัดการ"}</th>
@@ -290,11 +506,13 @@ export default function TransitStationsAdminPage() {
                       <td className="px-6 py-4">
                         <div>
                           <span className="font-semibold text-slate-900 block">
-                            {isEn ? (station.label.en || station.label.th) : station.label.th}
+                            {isEn ? (station.label.en || station.label.th) : (station.label.en || station.label.th)}
                           </span>
-                          <span className="text-xs text-slate-400 block">
-                            {isEn ? station.label.th : station.label.en}
-                          </span>
+                          {!isEn && station.label.th && station.label.en && station.label.th !== station.label.en && (
+                            <span className="text-xs text-slate-400 block">
+                              {station.label.th}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">

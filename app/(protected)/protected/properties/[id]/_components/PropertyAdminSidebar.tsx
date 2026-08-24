@@ -200,7 +200,7 @@ export function PropertyAdminSidebar({
               <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <h3 className="font-bold text-white tracking-tight text-sm sm:text-base">
-              {isEn ? "Assigned Agent" : "ผู้รับผิดชอบ (Agent)"}
+              {isEn ? "Assigned Agent" : "เอเจ้นท์ผู้รับผิดชอบ"}
             </h3>
           </div>
           <div className="p-5 sm:p-6">

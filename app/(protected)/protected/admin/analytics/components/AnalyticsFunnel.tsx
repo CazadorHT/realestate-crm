@@ -25,7 +25,7 @@ export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
 
   const funnelSteps = [
     {
-      label: isEn ? "Potential (Views)" : "การเข้าชม (Views)",
+      label: isEn ? "Potential Views" : "การเข้าชมทรัพย์สิน",
       value: views,
       icon: <TrendingUp className="h-4 w-4" />,
       color: "bg-blue-500",
@@ -33,7 +33,7 @@ export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
       description: isEn ? "Total property views across channels" : "ผู้เข้าชมทรัพย์สินทั้งหมด"
     },
     {
-      label: isEn ? "Inquiry (Leads)" : "ความสนใจ (Leads)",
+      label: isEn ? "Inquiry Leads" : "ความสนใจจากลูกค้า",
       value: leads,
       icon: <Users className="h-4 w-4" />,
       color: "bg-blue-400",
@@ -42,7 +42,7 @@ export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
       conversion: leadRate
     },
     {
-      label: isEn ? "Closed (Deals)" : "ปิดการขาย (Deals)",
+      label: isEn ? "Closed Deals" : "ปิดการขายสำเร็จ",
       value: deals,
       icon: <Handshake className="h-4 w-4" />,
       color: "bg-blue-300",

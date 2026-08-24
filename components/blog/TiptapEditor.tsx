@@ -26,6 +26,7 @@ import {
 import { uploadBlogImage } from "@/features/blog/services/storage-service";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TiptapEditorProps {
   value: string;
@@ -33,20 +34,23 @@ interface TiptapEditorProps {
 }
 
 export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const handleImageUpload = useCallback(async (file: File) => {
-    const toastId = toast.loading("กำลังอัปโหลดและปรับแต่งรูปภาพ...");
+    const toastId = toast.loading(isEn ? "Uploading and optimizing image..." : "กำลังอัปโหลดและปรับแต่งรูปภาพ...");
     try {
       const response = await uploadBlogImage(file, file.name, file.type);
       if (response.success && response.data) {
-        toast.success("อัปโหลดรูปภาพเรียบร้อยแล้ว (WebP Optimized)", { id: toastId });
+        toast.success(isEn ? "Image uploaded successfully (WebP Optimized)" : "อัปโหลดรูปภาพเรียบร้อยแล้ว (WebP Optimized)", { id: toastId });
         return response.data.publicUrl;
       }
       throw new Error(response.message);
     } catch (error) {
-      toast.error("อัปโหลดรูปภาพไม่สำเร็จ", { id: toastId });
+      toast.error(isEn ? "Failed to upload image" : "อัปโหลดรูปภาพไม่สำเร็จ", { id: toastId });
       return null;
     }
-  }, []);
+  }, [isEn]);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -301,7 +305,11 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       <EditorContent editor={editor} className="p-0" />
       
       <div className="px-4 py-2 border-t border-slate-100 bg-slate-50/30 text-[10px] text-slate-400 flex items-center gap-4">
-        <span>💡 TIP: วางรูปภาพ หรือลากไฟล์มาวางใน Editor เพื่ออัปโหลดและปรับแต่งอัตโนมัติ</span>
+        <span>
+          {isEn
+            ? "💡 TIP: Paste images or drag & drop files directly into the editor for automatic WebP optimization."
+            : "💡 TIP: วางรูปภาพ หรือลากไฟล์มาวางใน Editor เพื่ออัปโหลดและปรับแต่งอัตโนมัติ"}
+        </span>
       </div>
     </div>
   );

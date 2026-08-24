@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { leadFormSchema, type LeadFormValues } from "../types";
+import { leadFormSchema, getLeadFormSchema, type LeadFormValues } from "../types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 function isNextRedirectError(e: unknown) {
   return (
@@ -20,11 +21,13 @@ export function useLeadForm(
   initialValues?: Partial<LeadFormValues>,
   onSubmitAction?: (values: LeadFormValues) => Promise<void | { success: boolean; message: string }>,
 ) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<LeadFormValues>({
-    resolver: zodResolver(leadFormSchema) as unknown as Resolver<any>,
+    resolver: zodResolver(getLeadFormSchema(isEn)) as unknown as Resolver<any>,
     mode: "onChange",
     defaultValues: {
       full_name: "",

@@ -54,7 +54,7 @@ export function ExecutiveChartsContainer({
               {isEn ? "Lead Volume by Branch" : "การเปรียบเทียบจำนวนลีดรายสาขา"}
             </CardTitle>
             <CardDescription className="text-xs">
-              {isEn ? "Acquisition efficiency across global lead distribution" : "ประสิทธิภาพในการสรรหาลูกค้า (Global Lead Distribution)"}
+              {isEn ? "Acquisition efficiency across global lead distribution" : "ประสิทธิภาพในการสรรหาลูกค้าของแต่ละสาขา"}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -71,7 +71,7 @@ export function ExecutiveChartsContainer({
               {isEn ? "Won Deals by Branch" : "การเปรียบเทียบจำนวนดีลรายสาขา"}
             </CardTitle>
             <CardDescription className="text-xs">
-              {isEn ? "Conversion performance (Conversion Success: WON)" : "ประสิทธิภาพความสำเร็จ (Conversion Success: WON)"}
+              {isEn ? "Conversion performance of successfully closed deals" : "ประสิทธิภาพความสำเร็จในการปิดการขาย"}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">

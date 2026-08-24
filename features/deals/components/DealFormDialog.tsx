@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { differenceInMonths } from "date-fns";
 import { useForm, type Resolver, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createDealSchema, CreateDealInput } from "../schema";
+import { createDealSchema, getCreateDealSchema, CreateDealInput } from "../schema";
 import { createDealAction, updateDealAction } from "../actions";
 import { DealWithProperty, DealPropertyOption } from "../types";
 import { toast } from "sonner";
@@ -120,7 +120,7 @@ export function DealFormDialog({
   };
 
   const form = useForm<CreateDealInput>({
-    resolver: zodResolver(createDealSchema) as Resolver<CreateDealInput>,
+    resolver: zodResolver(getCreateDealSchema(isEn)) as Resolver<CreateDealInput>,
     mode: "onChange",
     defaultValues: getInitialValues(),
   });

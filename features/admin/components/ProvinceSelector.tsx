@@ -8,6 +8,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { MapPin, Search, Check, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { translateLocation } from "@/lib/utils/provinces";
 
 /**
  * 🇹🇭 ProvinceSelector:
@@ -71,7 +72,7 @@ export function ProvinceSelector({
               {isEn ? "Loading provinces..." : "กำลังโหลดข้อมูล..."}
             </span>
           ) : (
-            <span className="text-slate-600">{value || (isEn ? "Select Province" : "เลือกจังหวัด")}</span>
+            <span className="text-slate-600">{(isEn ? translateLocation(value, "en") : value) || (isEn ? "Select Province" : "เลือกจังหวัด")}</span>
           )}
         </div>
         <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
@@ -105,7 +106,9 @@ export function ProvinceSelector({
             ) : (
               filteredProvinces.map((p) => {
                 const isSelected = value === p.name_th;
-                const displayName = isEn && (p as any).name_en ? `${(p as any).name_en} (${p.name_th})` : p.name_th;
+                const displayName = isEn 
+                  ? (translateLocation(p.name_th, "en") || (p as any).name_en || p.name_th) 
+                  : p.name_th;
                 return (
                   <button
                     key={p.id}

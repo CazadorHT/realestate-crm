@@ -3,6 +3,8 @@
 import { Users, CheckCircle, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+import { useLanguage } from "@/lib/i18n/language-context";
+
 interface PartnersStatsProps {
   stats: {
     totalPartners: number;
@@ -12,28 +14,31 @@ interface PartnersStatsProps {
 }
 
 export function PartnersStats({ stats }: PartnersStatsProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const statItems = [
     {
-      title: "พาร์ทเนอร์ทั้งหมด",
+      title: isEn ? "Total Partners" : "พาร์ทเนอร์ทั้งหมด",
       value: stats.totalPartners,
       icon: Users,
-      desc: "Total Partners",
+      desc: isEn ? "All marketing channels" : "ช่องทางการตลาดทั้งหมด",
       color: "text-blue-600",
       bgConfig: "bg-blue-100",
     },
     {
-      title: "กำลังใช้งาน",
+      title: isEn ? "Active" : "กำลังใช้งาน",
       value: stats.activePartners,
       icon: CheckCircle,
-      desc: "Active",
+      desc: isEn ? "Displayed on website" : "แสดงผลบนหน้าเว็บไซต์",
       color: "text-emerald-600",
       bgConfig: "bg-emerald-100",
     },
     {
-      title: "ปิดใช้งาน",
+      title: isEn ? "Inactive" : "ปิดใช้งาน",
       value: stats.inactivePartners,
       icon: XCircle,
-      desc: "Inactive",
+      desc: isEn ? "Hidden from website" : "ซ่อนจากหน้าเว็บไซต์",
       color: "text-slate-600",
       bgConfig: "bg-slate-100",
     },

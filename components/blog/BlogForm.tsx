@@ -70,7 +70,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { blogPostSchema } from "@/features/blog/schema";
+import { blogPostSchema, getBlogPostSchema } from "@/features/blog/schema";
 import { BlogPostInput, BlogPostRow, BlogAiResult } from "@/features/blog/types";
 import {
   createBlogPostAction,
@@ -79,6 +79,7 @@ import {
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { generateBlogSlug } from "@/features/blog/blog-utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 const TiptapEditor = dynamic(() => import("./TiptapEditor").then(mod => mod.TiptapEditor), {
   ssr: false,
@@ -104,6 +105,8 @@ interface BlogFormProps {
 
 export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [generationTaskId, setGenerationTaskId] = useState<string | null>(null);
@@ -166,7 +169,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       };
 
   const form = useForm<BlogPostInput>({
-    resolver: zodResolver(blogPostSchema) as Resolver<BlogPostInput>,
+    resolver: zodResolver(getBlogPostSchema(isEn)) as Resolver<BlogPostInput>,
     mode: "onChange",
     defaultValues,
   });
@@ -209,7 +212,11 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     if (slugSource) {
       const slug = generateBlogSlug(slugSource);
       setValue("slug", slug, { shouldDirty: true });
-      toast.success(`เจนเนอเรต URL จาก${titleEn?.trim() ? "ชื่อภาษาอังกฤษ" : "ชื่อภาษาไทย"}เรียบร้อย ✨`);
+      toast.success(
+        isEn
+          ? `Generated URL slug from ${titleEn?.trim() ? "English title" : "Thai title"} ✨`
+          : `สร้าง URL จาก${titleEn?.trim() ? "ชื่อภาษาอังกฤษ" : "ชื่อภาษาไทย"}เรียบร้อย ✨`
+      );
     }
   };
 
@@ -232,10 +239,10 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         );
       }
 
-      toast.success("นำเข้าข้อมูลสำเร็จ");
+      toast.success(isEn ? "Data imported successfully" : "นำเข้าข้อมูลสำเร็จ");
       setImportJsonOpen(false);
     } catch (e) {
-      toast.error("รูปแบบ JSON ไม่ถูกต้อง");
+      toast.error(isEn ? "Invalid JSON format" : "รูปแบบ JSON ไม่ถูกต้อง");
     }
   };
   const handleAiGenerated = useCallback((data: BlogAiResult) => {
@@ -280,10 +287,12 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
     const scoreMsg = data.seo_score ? ` (SEO Score: ${data.seo_score})` : "";
     toast.success(
-      `ข้อมูลบทความ หมวดหมู่ และแท็ก ถูกเติมลงในฟอร์มเรียบร้อยแล้ว${scoreMsg} ✨`,
+      isEn
+        ? `Article content, categories, and tags filled into form${scoreMsg} ✨`
+        : `ข้อมูลบทความ หมวดหมู่ และแท็ก ถูกเติมลงในฟอร์มเรียบร้อยแล้ว${scoreMsg} ✨`
     );
     setIsAiGenerating(false);
-  }, [setValue]);
+  }, [setValue, isEn]);
 
   // 🛡️ BACKGROUND GENERATION HANDLER
   useEffect(() => {
@@ -370,52 +379,80 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const [isTranslating, setIsTranslating] = useState(false);
 
   const handleTranslateBlog = async () => {
-    const title = form.getValues("title");
-    const excerpt = form.getValues("excerpt");
-    const content = form.getValues("content");
+    const titleTh = form.getValues("title");
+    const titleEn = form.getValues("title_en");
+    const titleCn = form.getValues("title_cn");
+    const titleRu = form.getValues("title_ru");
+    const sourceTitle = titleTh?.trim() || titleEn?.trim() || titleCn?.trim() || titleRu?.trim();
 
-    if (!title || title.trim() === "") {
-      toast.error("กรุณากรอกหัวข้อภาษาไทยก่อนกดแปลครับ");
+    if (!sourceTitle) {
+      toast.error(isEn ? "Please enter a blog title in any language before translating." : "กรุณากรอกหัวข้อบทความในภาษาใดภาษาหนึ่งก่อนกดแปลครับ");
       return;
     }
 
+    const excerptTh = form.getValues("excerpt");
+    const excerptEn = form.getValues("excerpt_en");
+    const excerptCn = form.getValues("excerpt_cn");
+    const excerptRu = form.getValues("excerpt_ru");
+    const sourceExcerpt = excerptTh?.trim() || excerptEn?.trim() || excerptCn?.trim() || excerptRu?.trim();
+
+    const contentTh = form.getValues("content");
+    const contentEn = form.getValues("content_en");
+    const contentCn = form.getValues("content_cn");
+    const contentRu = form.getValues("content_ru");
+    const sourceContent =
+      (contentTh && contentTh.trim() !== "" && contentTh !== "<p></p>" ? contentTh : "") ||
+      (contentEn && contentEn.trim() !== "" && contentEn !== "<p></p>" ? contentEn : "") ||
+      (contentCn && contentCn.trim() !== "" && contentCn !== "<p></p>" ? contentCn : "") ||
+      (contentRu && contentRu.trim() !== "" && contentRu !== "<p></p>" ? contentRu : "");
+
     setIsTranslating(true);
-    const processId = startProcess("กำลังแปลเนื้อหาบทความ (AI Multilingual)", {
+    const processId = startProcess(isEn ? "Translating blog post (AI Multilingual)" : "กำลังแปลเนื้อหาบทความ (AI Multilingual)", {
       type: "BLOG_TRANSLATION",
       onRetry: handleTranslateBlog
     });
 
     try {
       // 1. Translate Title (Plain)
-      finishProcess(processId, "PROCESSING", "กำลังแปลหัวข้อบทความ...");
-      const titleRes = await translateTextAction(title, "plain");
-      form.setValue("title_en", titleRes.en, { shouldDirty: true });
-      form.setValue("title_cn", titleRes.cn, { shouldDirty: true });
-      form.setValue("title_ru", titleRes.ru, { shouldDirty: true });
+      finishProcess(processId, "PROCESSING", isEn ? "Translating title..." : "กำลังแปลหัวข้อบทความ...");
+      const titleRes = await translateTextAction(sourceTitle, "plain", ["th", "en", "cn", "ru"]);
+      if (titleRes.th) form.setValue("title", titleRes.th, { shouldDirty: true });
+      if (titleRes.en) form.setValue("title_en", titleRes.en, { shouldDirty: true });
+      if (titleRes.cn) form.setValue("title_cn", titleRes.cn, { shouldDirty: true });
+      if (titleRes.ru) form.setValue("title_ru", titleRes.ru, { shouldDirty: true });
+
+      // Auto-update slug if currently empty
+      const currentSlug = form.getValues("slug");
+      if (!currentSlug || currentSlug === "") {
+        const slugSource = titleRes.en || titleRes.th || sourceTitle;
+        form.setValue("slug", generateBlogSlug(slugSource), { shouldDirty: true });
+      }
 
       // 2. Translate Excerpt (Plain)
-      if (excerpt && excerpt.trim() !== "") {
-        finishProcess(processId, "PROCESSING", "กำลังแปลเนื้อหาย่อ...");
-        const excerptRes = await translateTextAction(excerpt, "plain");
-        form.setValue("excerpt_en", excerptRes.en, { shouldDirty: true });
-        form.setValue("excerpt_cn", excerptRes.cn, { shouldDirty: true });
-        form.setValue("excerpt_ru", excerptRes.ru, { shouldDirty: true });
+      if (sourceExcerpt) {
+        finishProcess(processId, "PROCESSING", isEn ? "Translating excerpt..." : "กำลังแปลเนื้อหาย่อ...");
+        const excerptRes = await translateTextAction(sourceExcerpt, "plain", ["th", "en", "cn", "ru"]);
+        if (excerptRes.th) form.setValue("excerpt", excerptRes.th, { shouldDirty: true });
+        if (excerptRes.en) form.setValue("excerpt_en", excerptRes.en, { shouldDirty: true });
+        if (excerptRes.cn) form.setValue("excerpt_cn", excerptRes.cn, { shouldDirty: true });
+        if (excerptRes.ru) form.setValue("excerpt_ru", excerptRes.ru, { shouldDirty: true });
       }
 
       // 3. Translate Content (HTML)
-      if (content && content.trim() !== "" && content !== "<p></p>") {
-        finishProcess(processId, "PROCESSING", "กำลังแปลเนื้อหาฉบับเต็ม (HTML)...");
-        const contentRes = await translateTextAction(content, "html");
-        form.setValue("content_en", contentRes.en, { shouldDirty: true });
-        form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
-        form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
+      if (sourceContent) {
+        finishProcess(processId, "PROCESSING", isEn ? "Translating full content (HTML)..." : "กำลังแปลเนื้อหาฉบับเต็ม (HTML)...");
+        const contentRes = await translateTextAction(sourceContent, "html", ["th", "en", "cn", "ru"]);
+        if (contentRes.th) form.setValue("content", contentRes.th, { shouldDirty: true });
+        if (contentRes.en) form.setValue("content_en", contentRes.en, { shouldDirty: true });
+        if (contentRes.cn) form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
+        if (contentRes.ru) form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
       }
 
-      finishProcess(processId, "SUCCESS", "แปลเนื้อหาบทความเรียบร้อยแล้ว ✨");
+      finishProcess(processId, "SUCCESS", isEn ? "Blog translation complete! ✨" : "แปลเนื้อหาบทความเรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
     } catch (error: unknown) {
       console.error("Translation error:", error);
-      const msg = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      const msg = error instanceof Error ? error.message : (isEn ? "Translation failed" : "การแปลขัดข้อง");
       finishProcess(processId, "ERROR", msg);
     } finally {
       setIsTranslating(false);
@@ -425,28 +462,38 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const [isTranslatingContent, setIsTranslatingContent] = useState(false);
 
   const handleTranslateContentOnly = async () => {
-    const content = form.getValues("content");
-    if (!content || content.trim() === "" || content === "<p></p>") {
-      toast.error("กรุณาระบุเนื้อหาภาษาไทยก่อนแปลภาษา");
+    const contentTh = form.getValues("content");
+    const contentEn = form.getValues("content_en");
+    const contentCn = form.getValues("content_cn");
+    const contentRu = form.getValues("content_ru");
+    const sourceContent =
+      (contentTh && contentTh.trim() !== "" && contentTh !== "<p></p>" ? contentTh : "") ||
+      (contentEn && contentEn.trim() !== "" && contentEn !== "<p></p>" ? contentEn : "") ||
+      (contentCn && contentCn.trim() !== "" && contentCn !== "<p></p>" ? contentCn : "") ||
+      (contentRu && contentRu.trim() !== "" && contentRu !== "<p></p>" ? contentRu : "");
+
+    if (!sourceContent) {
+      toast.error(isEn ? "Please enter content in any language before translating." : "กรุณาระบุเนื้อหาก่อนแปลภาษา");
       return;
     }
 
-    const processId = startProcess("กำลังแปลเฉพาะเนื้อหาบทความ (AI Content Translator)", {
+    const processId = startProcess(isEn ? "Translating article content (AI Content Translator)" : "กำลังแปลเฉพาะเนื้อหาบทความ (AI Content Translator)", {
       onRetry: handleTranslateContentOnly
     });
 
     setIsTranslatingContent(true);
     try {
-      const contentRes = await translateTextAction(content, "html");
-      form.setValue("content_en", contentRes.en, { shouldDirty: true });
-      form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
-      form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
+      const contentRes = await translateTextAction(sourceContent, "html", ["th", "en", "cn", "ru"]);
+      if (contentRes.th) form.setValue("content", contentRes.th, { shouldDirty: true });
+      if (contentRes.en) form.setValue("content_en", contentRes.en, { shouldDirty: true });
+      if (contentRes.cn) form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
+      if (contentRes.ru) form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
 
-      finishProcess(processId, "SUCCESS", "แปลเฉพาะเนื้อหาเรียบร้อยแล้ว ✨");
+      finishProcess(processId, "SUCCESS", isEn ? "Content translation complete! ✨" : "แปลเฉพาะเนื้อหาเรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
     } catch (error: unknown) {
       console.error("Translation error:", error);
-      const msg = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      const msg = error instanceof Error ? error.message : (isEn ? "Translation failed" : "การแปลขัดข้อง");
       finishProcess(processId, "ERROR", msg);
     } finally {
       setIsTranslatingContent(false);
@@ -456,24 +503,31 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   async function onSubmit(data: BlogPostInput) {
     setIsSubmitting(true);
     try {
+      const payload: BlogPostInput = {
+        ...data,
+        title: data.title?.trim() || data.title_en?.trim() || data.title_cn?.trim() || data.title_ru?.trim() || "",
+        content: data.content || data.content_en || "",
+        excerpt: data.excerpt || data.excerpt_en || "",
+      };
+
       let res;
       if (initialData) {
-        res = await updateBlogPostAction(initialData.id, data);
+        res = await updateBlogPostAction(initialData.id, payload);
       } else {
-        res = await createBlogPostAction(data);
+        res = await createBlogPostAction(payload);
       }
 
       if (res.success) {
-        toast.success(res.message);
+        toast.success(res.message || (isEn ? "Blog post saved successfully" : "บันทึกบทความสำเร็จ"));
         setSuccessData({ 
-          slug: data.slug,
-          isPublished: !!data.is_published
+          slug: payload.slug,
+          isPublished: !!payload.is_published
         });
       } else {
-        toast.error(res.message);
+        toast.error(res.message || (isEn ? "Failed to save blog post" : "ไม่สามารถบันทึกบทความได้"));
       }
     } catch {
-      toast.error("เกิดข้อผิดพลาด");
+      toast.error(isEn ? "An unexpected error occurred" : "เกิดข้อผิดพลาด");
     } finally {
       setIsSubmitting(false);
     }
@@ -496,27 +550,32 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                 <Loader2 className="h-12 w-12 text-violet-600 animate-spin" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-slate-900">กำลังรับข้อมูลจาก AI...</h3>
+                <h3 className="text-xl font-bold text-slate-900">
+                  {isEn ? "Receiving AI Data..." : "กำลังรับข้อมูลจาก AI..."}
+                </h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  AI กำลังรังสรรค์เนื้อหาบทความระดับพรีเมียมให้คุณ <br/>
-                  ข้อมูลจะถูกเติมลงในฟอร์มโดยอัตโนมัติเมื่อเสร็จสิ้น
+                  {isEn
+                    ? "AI is crafting premium article content for you. Fields will autofill when complete."
+                    : "AI กำลังรังสรรค์เนื้อหาบทความระดับพรีเมียมให้คุณ ข้อมูลจะถูกเติมลงในฟอร์มโดยอัตโนมัติเมื่อเสร็จสิ้น"}
                 </p>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full border border-slate-100">
                 <div className="h-2 w-2 bg-emerald-500 rounded-full animate-ping" />
-                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Background Sync Active</span>
+                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                  {isEn ? "Background Sync Active" : "Background Sync Active"}
+                </span>
               </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors mt-2 text-xs"
+                className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors mt-2 text-xs cursor-pointer"
                 onClick={async () => {
                   if (generationTaskId) {
                     try {
                       const { cancelBackgroundTaskAction } = await import("@/lib/background-tasks/actions");
                       await cancelBackgroundTaskAction(generationTaskId);
-                      toast.success("ยกเลิกการสร้างบทความแล้ว");
+                      toast.success(isEn ? "Article generation cancelled" : "ยกเลิกการสร้างบทความแล้ว");
                     } catch (err) {
                       console.error("Failed to cancel background task:", err);
                     }
@@ -525,7 +584,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                   setGenerationTaskId(null);
                 }}
               >
-                ยกเลิกการทำงาน
+                {isEn ? "Cancel Task" : "ยกเลิกการทำงาน"}
               </Button>
             </div>
           </div>
@@ -551,22 +610,22 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
           <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100 rounded-xl h-14 md:h-20 p-1">
             <TabsTrigger
               value="content"
-              className="gap-2 rounded-lg py-2 md:py-6 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm"
+              className="gap-2 rounded-lg py-2 md:py-6 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm cursor-pointer"
             >
               <FileText className="h-4 w-4" />
-              <span className="hidden xs:inline">เนื้อหา</span>
+              <span className="hidden xs:inline">{isEn ? "Content" : "เนื้อหา"}</span>
             </TabsTrigger>
             <TabsTrigger
               value="media"
-              className="gap-2 rounded-lg py-2 md:py-6 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm"
+              className="gap-2 rounded-lg py-2 md:py-6 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm cursor-pointer"
             >
               <ImageIcon className="h-4 w-4" />
-              <span className="hidden xs:inline">รูปภาพ</span>
-              <span className="hidden md:inline">& หมวดหมู่</span>
+              <span className="hidden xs:inline">{isEn ? "Media & Category" : "รูปภาพ"}</span>
+              {!isEn && <span className="hidden md:inline">& หมวดหมู่</span>}
             </TabsTrigger>
             <TabsTrigger
               value="seo"
-              className="gap-2 rounded-lg py-2 md:py-6 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm"
+              className="gap-2 rounded-lg py-2 md:py-6 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs md:text-sm cursor-pointer"
             >
               <Search className="h-4 w-4" />
               <span className="hidden xs:inline">SEO</span>

@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { PartnerForm } from "./PartnerForm";
 import { Handshake, Plus } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface CreatePartnerDialogProps {
   onSuccess?: () => void;
 }
 
 export function CreatePartnerDialog({ onSuccess }: CreatePartnerDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [open, setOpen] = useState(false);
 
   const handleSuccess = () => {
@@ -30,10 +33,10 @@ export function CreatePartnerDialog({ onSuccess }: CreatePartnerDialogProps) {
           </div>
           <div className="flex flex-col text-left">
             <span className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
-              เพิ่มช่องทางการตลาดใหม่
+              {isEn ? "Add New Marketing Channel" : "เพิ่มช่องทางการตลาดใหม่"}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">
-              Add New Marketing Channel
+              {isEn ? "Create Partner Badge" : "Add New Marketing Channel"}
             </span>
           </div>
         </div>
@@ -41,10 +44,10 @@ export function CreatePartnerDialog({ onSuccess }: CreatePartnerDialogProps) {
       trigger={
         <Button
           size="lg"
-          className="bg-rose-600 text-white hover:bg-rose-500 shadow-md shadow-rose-200 font-bold rounded-xl gap-2 px-6 hover:shadow-lg transition-all"
+          className="bg-rose-600 text-white hover:bg-rose-500 shadow-md shadow-rose-200 font-bold rounded-xl gap-2 px-6 hover:shadow-lg transition-all cursor-pointer"
         >
           <Plus className="h-5 w-5" />
-          เพิ่มช่องทาง
+          {isEn ? "Add Channel" : "เพิ่มช่องทาง"}
         </Button>
       }
     >

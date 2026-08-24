@@ -40,7 +40,7 @@ export function CreatePopularAreaDialog({
               {isEn ? "Add Popular Area" : "เพิ่มทำเลยอดนิยม"}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">
-              {isEn ? "New Location Entry" : "Add New Popular Area"}
+              {isEn ? "New Location Entry" : "เพิ่มข้อมูลทำเลใหม่"}
             </span>
           </div>
         </div>

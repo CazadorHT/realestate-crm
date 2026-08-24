@@ -3,6 +3,7 @@
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { PartnerForm } from "./PartnerForm";
 import { Edit, Handshake } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface EditPartnerDialogProps {
   partner: any;
@@ -17,6 +18,9 @@ export function EditPartnerDialog({
   onOpenChange,
   onSuccess,
 }: EditPartnerDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <ResponsiveDialog
       open={open}
@@ -29,10 +33,10 @@ export function EditPartnerDialog({
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
-              แก้ไขข้อมูลช่องทางการตลาด
+              {isEn ? "Edit Marketing Channel" : "แก้ไขข้อมูลช่องทางการตลาด"}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">
-              Edit Marketing Channel
+              {isEn ? "Update Partner Badge" : "Edit Marketing Channel"}
             </span>
           </div>
         </div>

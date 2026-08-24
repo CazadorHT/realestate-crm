@@ -33,6 +33,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Handshake } from "lucide-react";
 import {
   rentNotificationRuleSchema,
+  getRentNotificationRuleSchema,
   RentNotificationRuleInput,
 } from "../schema";
 import {
@@ -109,7 +110,7 @@ export function AddRuleDialog({
   };
 
   const form = useForm<RentNotificationRuleInput>({
-    resolver: zodResolver(rentNotificationRuleSchema),
+    resolver: zodResolver(getRentNotificationRuleSchema(isEn)),
     defaultValues: {
       property_id: existingRule?.property_id || "",
       line_group_id: existingRule?.line_group_id || "",

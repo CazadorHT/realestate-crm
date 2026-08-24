@@ -392,7 +392,7 @@ export function PublicFooter() {
                 </Link>
                 <span className="text-slate-700">•</span>
                 <Link href="/properties?hot_deal=true" className="hover:text-blue-400 transition-colors">
-                  {language === "th" ? "ทรัพย์ราคาพิเศษ (Hot Deals)" : language === "cn" ? "特价特惠房源 (Hot Deals)" : language === "ru" ? "Горячие предложения (Hot Deals)" : "Hot Deals & Special Offers"}
+                  {language === "th" ? "ทรัพย์ราคาพิเศษ" : language === "cn" ? "特价特惠房源" : language === "ru" ? "Горячие предложения" : "Hot Deals & Special Offers"}
                 </Link>
                 <span className="text-slate-700">•</span>
                 <Link href="/properties?foreigner=true" className="hover:text-blue-400 transition-colors">

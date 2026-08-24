@@ -246,7 +246,7 @@ export function TransitStationSelector({
                         {isEn ? (stat.label.en || stat.label.th) : stat.label.th}
                       </span>
                       <span className="text-[10px] text-slate-400 leading-none">
-                        {isEn ? stat.label.th : stat.label.en} ({stat.code})
+                        {isEn ? `(${stat.code})` : (stat.label.en ? `${stat.label.en} (${stat.code})` : stat.code)}
                       </span>
                     </div>
                     <div className={cn("ml-auto flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-extrabold border uppercase tracking-wider", logoInfo.bg)}>

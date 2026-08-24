@@ -140,7 +140,7 @@ export default function BanksPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-indigo-400" />
-            <h1 className="text-2xl font-black tracking-tight">{isEn ? "Bank Management" : "ระบบจัดการธนาคาร (Bank Management)"}</h1>
+            <h1 className="text-2xl font-black tracking-tight">{isEn ? "Bank Management" : "ระบบจัดการข้อมูลธนาคาร"}</h1>
           </div>
           <p className="text-xs text-slate-300">
             {isEn ? "Manage standardized Thai bank records for agent payouts and commission transfers." : "จัดการข้อมูลธนาคารไทยมาตรฐาน เพื่อใช้สำหรับการโอนเงินและรับคอมมิชชั่นของเอเจ้นท์"}
@@ -180,7 +180,7 @@ export default function BanksPage() {
             <Table>
               <TableHeader className="bg-slate-50/30">
                 <TableRow>
-                  <TableHead className="w-24 font-bold text-slate-500 text-xs pl-6">{isEn ? "Code" : "รหัสย่อ (Code)"}</TableHead>
+                  <TableHead className="w-24 font-bold text-slate-500 text-xs pl-6">{isEn ? "Code" : "รหัสย่อ"}</TableHead>
                   <TableHead className="font-bold text-slate-500 text-xs">{isEn ? "Thai Name" : "ชื่อภาษาไทย"}</TableHead>
                   <TableHead className="font-bold text-slate-500 text-xs">{isEn ? "English Name" : "ชื่อภาษาอังกฤษ"}</TableHead>
                   <TableHead className="w-32 font-bold text-slate-500 text-xs text-center">{isEn ? "Status" : "สถานะการใช้งาน"}</TableHead>

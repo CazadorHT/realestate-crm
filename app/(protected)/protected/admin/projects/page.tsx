@@ -60,6 +60,27 @@ export default function ProjectsAdminPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [typeFilter, setTypeFilter] = React.useState<string>("ALL");
 
+  const typeCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {
+      ALL: projects.length,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "8": 0,
+      "9": 0,
+      "7": 0,
+      "4": 0,
+      "6": 0,
+      "5": 0,
+      "10": 0,
+    };
+    for (const p of projects) {
+      const typeStr = (p.property_type || 10).toString();
+      counts[typeStr] = (counts[typeStr] || 0) + 1;
+    }
+    return counts;
+  }, [projects]);
+
   // Modal State
   const [isOpen, setIsOpen] = React.useState(false);
   const [currentProject, setCurrentProject] = React.useState<ProjectAdminItem | null>(null);
@@ -77,7 +98,7 @@ export default function ProjectsAdminPage() {
       const [projs, stats, featsRes] = await Promise.all([
         getAdminProjectsAction(),
         getTransitStationsAction(),
-        supabase.from("features").select("id, name, icon_key, category").order("category").order("name")
+        supabase.from("features").select("id, name, name_en, name_cn, name_ru, icon_key, category").order("category").order("name")
       ]);
       setProjects(projs);
       setStations(stats);
@@ -206,7 +227,7 @@ export default function ProjectsAdminPage() {
         <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight">
-              {isEn ? "Project Directory (Projects)" : "จัดการโครงการอสังหาฯ (Projects)"}
+              {isEn ? "Project Directory" : "จัดการโครงการอสังหาฯ"}
             </h1>
             <p className="text-sm text-indigo-200/80 max-w-xl font-medium">
               {isEn
@@ -246,17 +267,17 @@ export default function ProjectsAdminPage() {
                 <SelectValue placeholder={isEn ? "Select type" : "เลือกประเภททรัพย์"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">{isEn ? "All Types" : "ทั้งหมด"}</SelectItem>
-                <SelectItem value="1">{isEn ? "Condominium" : "คอนโดมิเนียม"}</SelectItem>
-                <SelectItem value="2">{isEn ? "Detached House" : "บ้านเดี่ยว"}</SelectItem>
-                <SelectItem value="3">{isEn ? "Townhome" : "ทาวน์โฮม"}</SelectItem>
-                <SelectItem value="8">{isEn ? "Villa" : "วิลล่า"}</SelectItem>
-                <SelectItem value="9">{isEn ? "Pool Villa" : "พูลวิลล่า"}</SelectItem>
-                <SelectItem value="7">{isEn ? "Office Building" : "อาคารสำนักงาน"}</SelectItem>
-                <SelectItem value="4">{isEn ? "Land" : "ที่ดิน"}</SelectItem>
-                <SelectItem value="6">{isEn ? "Warehouse / Factory" : "โกดัง / โรงงาน"}</SelectItem>
-                <SelectItem value="5">{isEn ? "Commercial Building" : "อาคารพาณิชย์"}</SelectItem>
-                <SelectItem value="10">{isEn ? "Other" : "อื่นๆ"}</SelectItem>
+                <SelectItem value="ALL">{isEn ? `All Types (${typeCounts.ALL || 0})` : `ทั้งหมด (${typeCounts.ALL || 0})`}</SelectItem>
+                <SelectItem value="1">{isEn ? `Condominium (${typeCounts["1"] || 0})` : `คอนโดมิเนียม (${typeCounts["1"] || 0})`}</SelectItem>
+                <SelectItem value="2">{isEn ? `Detached House (${typeCounts["2"] || 0})` : `บ้านเดี่ยว (${typeCounts["2"] || 0})`}</SelectItem>
+                <SelectItem value="3">{isEn ? `Townhome (${typeCounts["3"] || 0})` : `ทาวน์โฮม (${typeCounts["3"] || 0})`}</SelectItem>
+                <SelectItem value="8">{isEn ? `Villa (${typeCounts["8"] || 0})` : `วิลล่า (${typeCounts["8"] || 0})`}</SelectItem>
+                <SelectItem value="9">{isEn ? `Pool Villa (${typeCounts["9"] || 0})` : `พูลวิลล่า (${typeCounts["9"] || 0})`}</SelectItem>
+                <SelectItem value="7">{isEn ? `Office Building (${typeCounts["7"] || 0})` : `อาคารสำนักงาน (${typeCounts["7"] || 0})`}</SelectItem>
+                <SelectItem value="4">{isEn ? `Land (${typeCounts["4"] || 0})` : `ที่ดิน (${typeCounts["4"] || 0})`}</SelectItem>
+                <SelectItem value="6">{isEn ? `Warehouse / Factory (${typeCounts["6"] || 0})` : `โกดัง / โรงงาน (${typeCounts["6"] || 0})`}</SelectItem>
+                <SelectItem value="5">{isEn ? `Commercial Building (${typeCounts["5"] || 0})` : `อาคารพาณิชย์ (${typeCounts["5"] || 0})`}</SelectItem>
+                <SelectItem value="10">{isEn ? `Other (${typeCounts["10"] || 0})` : `อื่นๆ (${typeCounts["10"] || 0})`}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -296,7 +317,9 @@ export default function ProjectsAdminPage() {
           <div className="text-center py-16">
             <AlertCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-slate-700">
-              {isEn ? "No matching projects found" : "ไม่พบข้อมูลโครงการตามเงื่อนไข"}
+              {isEn 
+                ? (searchQuery ? `No matching projects found for "${searchQuery}"` : "No matching projects found") 
+                : (searchQuery ? `ไม่พบข้อมูลโครงการ "${searchQuery}"` : "ไม่พบข้อมูลโครงการตามเงื่อนไข")}
             </h3>
             <p className="text-sm text-slate-400 mt-1">
               {isEn ? "Try adjusting your search criteria" : "ลองพิมพ์คำค้นหาอื่น"}
@@ -311,9 +334,9 @@ export default function ProjectsAdminPage() {
                     <th className="px-6 py-4">{isEn ? "Project" : "โครงการ"}</th>
                     <th className="px-6 py-4 w-36">{isEn ? "Type" : "ประเภท"}</th>
                     <th className="px-6 py-4">URL Slug</th>
-                    <th className="px-6 py-4">{isEn ? "Developer" : "ผู้พัฒนา (Developer)"}</th>
-                    <th className="px-6 py-4 text-center">{isEn ? "Units" : "ยูนิตเชื่อมโยง"}</th>
-                    <th className="px-6 py-4 text-center">{isEn ? "Actions" : "จัดการ"}</th>
+                    <th className="px-6 py-4">{isEn ? "Developer" : "ผู้พัฒนา"}</th>
+                    <th className="px-6 py-4 text-center w-28 whitespace-nowrap">{isEn ? "Units" : "ยูนิตเชื่อมโยง"}</th>
+                    <th className="px-6 py-4 text-center w-36 whitespace-nowrap">{isEn ? "Actions" : "จัดการ"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">

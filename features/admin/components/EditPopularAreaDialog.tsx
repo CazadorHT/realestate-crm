@@ -38,7 +38,7 @@ export function EditPopularAreaDialog({
               {isEn ? "Edit Popular Area" : "แก้ไขข้อมูลทำเล"}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">
-              {isEn ? "Edit Location Details & SEO" : "Edit Popular Area Information"}
+              {isEn ? "Edit Location Details & SEO" : "แก้ไขข้อมูลทำเลและ SEO"}
             </span>
           </div>
         </div>
@@ -50,7 +50,7 @@ export function EditPopularAreaDialog({
           </span>
           <MapPin className="h-3 w-3 text-slate-300" />
           <span className="text-[11px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded">
-            {isEn ? (area?.name_en || area?.name) : area?.name}
+            {isEn ? (area?.name_en || area?.name) : (area?.name_en ? `${area?.name} (${area?.name_en})` : area?.name)}
           </span>
         </div>
       }

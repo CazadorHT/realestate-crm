@@ -29,6 +29,7 @@ import { generateBlogPostAction } from "@/features/blog/actions";
 import { toast } from "sonner";
 import { AiUsageMonitor } from "@/components/ai-monitor/AiUsageMonitor";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 import { BlogAiResult } from "@/features/blog/types";
 import { Badge } from "../ui/badge";
@@ -39,6 +40,9 @@ interface BlogAiGeneratorProps {
 }
 
 export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [keyword, setKeyword] = useState("");
@@ -50,7 +54,7 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
 
   const handleGenerate = async () => {
     if (!keyword.trim()) {
-      toast.error("กรุณาระบุ Focus Keyword");
+      toast.error(isEn ? "Please enter a Focus Keyword" : "กรุณาระบุ Focus Keyword");
       return;
     }
 
@@ -58,7 +62,7 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
     const taskId = crypto.randomUUID();
 
     // 🏗️ Step 2: Start Process Monitor (Global)
-    startProcess(`AI Blog Generation: ${keyword}`, {
+    startProcess(isEn ? `AI Blog Generation: ${keyword}` : `AI Blog Generation: ${keyword}`, {
       id: taskId,
       type: "BLOG_GENERATION",
       payload: { keyword, targetAudience, tone, length }
@@ -94,16 +98,16 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
             type: "PROCESS_UPDATED",
             id: taskId,
             status: "SUCCESS",
-            message: "สร้างบทความเสร็จสมบูรณ์ (Sync)"
+            message: isEn ? "Article generation complete (Sync)" : "สร้างบทความเสร็จสมบูรณ์ (Sync)"
           });
         }
 
         window.dispatchEvent(new CustomEvent("BLOG_AI_GENERATED_SUCCESS", { detail: blogResult }));
         setGenerationResult(blogResult);
-        toast.success(result.message);
+        toast.success(result.message || (isEn ? "Article generated successfully" : "สร้างบทความสำเร็จ"));
       } else if (result.success && result.taskId) {
         // 🚀 ASYNC SUCCESS: We got a taskId, the process monitor is already tracking it
-        toast.success(result.message);
+        toast.success(result.message || (isEn ? "Generation started in background" : "เริ่มสร้างบทความในเบื้องหลัง"));
         
         // Close the dialog after a short delay since it's now a background task
         setTimeout(() => {
@@ -118,7 +122,7 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
       // 📢 NOTIFY ERROR: Stop loading state on the form if it fails
       window.dispatchEvent(new CustomEvent("BLOG_AI_GENERATION_ERROR"));
       
-      const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างบทความ";
+      const errorMessage = error instanceof Error ? error.message : (isEn ? "Failed to generate article" : "เกิดข้อผิดพลาดในการสร้างบทความ");
       const cleanMessage = errorMessage.replace(/^Error: /, "");
 
       if (errorMessage.includes("[RATE_LIMIT]")) {
@@ -143,11 +147,11 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
               <div className="p-1 bg-violet-100 rounded-md">
                 <Target className="h-3.5 w-3.5 text-violet-600" />
               </div>
-              Focus Keyword (คีย์เวิร์ดหลัก)
+              {isEn ? "Focus Keyword / Topic" : "Focus Keyword (คีย์เวิร์ดหลัก)"}
             </Label>
             <Input
               id="keyword"
-              placeholder="เช่น วิธีเลือกคอนโดมือสอง, การลงทุนอสังหาฯ 2026"
+              placeholder={isEn ? "e.g. Bangkok luxury condos, Property investment 2026" : "เช่น วิธีเลือกคอนโดมือสอง, การลงทุนอสังหาฯ 2026"}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="h-14 border-slate-200 bg-slate-50/50 focus:bg-white transition-all focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-lg rounded-xl px-5"
@@ -162,12 +166,12 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
               <div className="p-1 bg-indigo-100 rounded-md">
                 <Type className="h-3.5 w-3.5 text-indigo-600" />
               </div>
-              Target Audience (กลุ่มเป้าหมาย)
+              {isEn ? "Target Audience" : "Target Audience (กลุ่มเป้าหมาย)"}
             </Label>
 
             <Textarea
               id="audience"
-              placeholder="เช่น วัยทำงานกู้ซื้อบ้านหลังแรก, นักลงทุนคอนโดปล่อยเช่า"
+              placeholder={isEn ? "e.g. First-time homebuyers, High-net-worth real estate investors" : "เช่น วัยทำงานกู้ซื้อบ้านหลังแรก, นักลงทุนคอนโดปล่อยเช่า"}
               value={targetAudience}
               onChange={(e) => setTargetAudience(e.target.value)}
               className="min-h-[100px] border-slate-200 bg-slate-50/50 focus:bg-white transition-all focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-base rounded-xl p-5 resize-none shadow-xs"
@@ -183,20 +187,30 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
               <div className="p-1 bg-fuchsia-100 rounded-md">
                 <MessageSquare className="h-3.5 w-3.5 text-fuchsia-600" />
               </div>
-              Tone of Voice (โทนภาษา)
+              {isEn ? "Tone of Voice" : "Tone of Voice (โทนภาษา)"}
             </Label>
             
             <ResponsiveSelect
               value={tone}
               onValueChange={setTone}
-              options={[
-                { label: "Professional (มืออาชีพ)", value: "Professional" },
-                { label: "Conversational (เป็นกันเอง)", value: "Conversational" },
-                { label: "Persuasive (โน้มน้าวใจ)", value: "Persuasive" },
-                { label: "Educational (เน้นให้ความรู้)", value: "Educational" },
-                { label: "Luxury (หรูหราพรีเมียม)", value: "Luxury" },
-              ]}
-              placeholder="เลือกโทนภาษา"
+              options={
+                isEn
+                  ? [
+                      { label: "Professional", value: "Professional" },
+                      { label: "Conversational & Friendly", value: "Conversational" },
+                      { label: "Persuasive & Sales-driven", value: "Persuasive" },
+                      { label: "Educational & Informative", value: "Educational" },
+                      { label: "Luxury & Exclusive", value: "Luxury" },
+                    ]
+                  : [
+                      { label: "Professional (มืออาชีพ)", value: "Professional" },
+                      { label: "Conversational (เป็นกันเอง)", value: "Conversational" },
+                      { label: "Persuasive (โน้มน้าวใจ)", value: "Persuasive" },
+                      { label: "Educational (เน้นให้ความรู้)", value: "Educational" },
+                      { label: "Luxury (หรูหราพรีเมียม)", value: "Luxury" },
+                    ]
+              }
+              placeholder={isEn ? "Select tone of voice" : "เลือกโทนภาษา"}
             />
           </div>
 
@@ -206,18 +220,26 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
               <div className="p-1 bg-blue-100 rounded-md">
                 <AlignJustify className="h-3.5 w-3.5 text-blue-600" />
               </div>
-              Article Length (ความยาวบทความ)
+              {isEn ? "Article Length" : "Article Length (ความยาวบทความ)"}
             </Label>
             
             <ResponsiveSelect
               value={length}
               onValueChange={setLength}
-              options={[
-                { label: "Short (สั้นกระชับ ~800 คำ)", value: "Short" },
-                { label: "Medium (มาตรฐาน ~1,500 คำ)", value: "Medium" },
-                { label: "Long (เจาะลึกพิเศษ 2,500+ คำ)", value: "Long" },
-              ]}
-              placeholder="เลือกความยาว"
+              options={
+                isEn
+                  ? [
+                      { label: "Short (~800 words)", value: "Short" },
+                      { label: "Medium (~1,500 words)", value: "Medium" },
+                      { label: "Long / In-depth (2,500+ words)", value: "Long" },
+                    ]
+                  : [
+                      { label: "Short (สั้นกระชับ ~800 คำ)", value: "Short" },
+                      { label: "Medium (มาตรฐาน ~1,500 คำ)", value: "Medium" },
+                      { label: "Long (เจาะลึกพิเศษ 2,500+ คำ)", value: "Long" },
+                    ]
+              }
+              placeholder={isEn ? "Select article length" : "เลือกความยาว"}
             />
           </div>
         </div>
@@ -237,7 +259,7 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
                   SEO Content Analysis
                 </h4>
                 <p className="text-sm text-emerald-800/80 leading-relaxed italic">
-                  "{generationResult.seo_feedback || "บทความมีคุณภาพสูงและพร้อมสำหรับการเผยแพร่"}"
+                  "{generationResult.seo_feedback || (isEn ? "Article content is high quality and ready for publication." : "บทความมีคุณภาพสูงและพร้อมสำหรับการเผยแพร่")}"
                 </p>
               </div>
             </div>
@@ -267,9 +289,9 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
                 onGenerated(generationResult);
                 setIsOpen(false);
               }}
-              className="w-full h-14 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-lg shadow-xl shadow-emerald-500/20 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full h-14 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-lg shadow-xl shadow-emerald-500/20 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
             >
-              นำเข้าข้อมูลสู่บทความ ✨
+              {isEn ? "Import Content into Form ✨" : "นำเข้าข้อมูลสู่บทความ ✨"}
             </Button>
           </div>
         ) : (
@@ -278,22 +300,22 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
               type="button"
               onClick={handleGenerate}
               disabled={isLoading || !keyword.trim()}
-              className="w-full h-16 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-lg font-black shadow-xl shadow-violet-500/25 rounded-2xl transition-all hover:scale-[1.01] active:scale-[0.98] group"
+              className="w-full h-16 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-lg font-black shadow-xl shadow-violet-500/25 rounded-2xl transition-all hover:scale-[1.01] active:scale-[0.98] group cursor-pointer"
             >
               {isLoading ? (
                 <div className="flex flex-col items-center">
                   <div className="flex items-center">
                     <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                    <span>กำลังรังสรรค์บทความ...</span>
+                    <span>{isEn ? "Crafting your article..." : "กำลังรังสรรค์บทความ..."}</span>
                   </div>
                   <span className="text-[10px] font-normal opacity-80 mt-1">
-                    (คุณสามารถปิดหน้านี้ไปทำงานอื่นได้เลย ระบบจะรันเบื้องหลังให้ครับ)
+                    {isEn ? "(You can close this modal; AI will run in background)" : "(คุณสามารถปิดหน้านี้ไปทำงานอื่นได้เลย ระบบจะรันเบื้องหลังให้ครับ)"}
                   </span>
                 </div>
               ) : (
                 <>
                   <Sparkles className="mr-3 h-6 w-6 group-hover:animate-pulse" />
-                  <span>เริ่มสร้างบทความ SEO ทันที</span>
+                  <span>{isEn ? "Generate SEO Article with AI" : "เริ่มสร้างบทความ SEO ทันที"}</span>
                 </>
               )}
             </Button>
@@ -303,7 +325,9 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
               <div className="space-y-1">
                 <p className="text-[11px] font-bold text-amber-800 uppercase tracking-tight">Pro Tip</p>
                 <p className="text-[11px] text-amber-700/80 leading-normal">
-                  การสร้างบทความแบบเจาะลึก ใช้เวลาประมาณ 1-2 นาที คุณสามารถปิดหน้านี้ไปทำงานอื่นได้เลย ระบบจะแจ้งเตือนเมื่อเสร็จครับ
+                  {isEn
+                    ? "In-depth article generation takes 1-2 minutes. You can safely close this modal while it processes."
+                    : "การสร้างบทความแบบเจาะลึก ใช้เวลาประมาณ 1-2 นาที คุณสามารถปิดหน้านี้ไปทำงานอื่นได้เลย ระบบจะแจ้งเตือนเมื่อเสร็จครับ"}
                 </p>
               </div>
             </div>
@@ -330,7 +354,7 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
           AI Blog Architect <span className="text-violet-600 text-sm align-top ml-1 font-black">v3.0</span>
         </h2>
         <p className="text-slate-500 text-sm mt-1">
-          สร้างคอนเทนต์ระดับพรีเมียมด้วย AI ยุคใหม่
+          {isEn ? "Create premium SEO-optimized content with Next-Gen AI" : "สร้างคอนเทนต์ระดับพรีเมียมด้วย AI ยุคใหม่"}
         </p>
       </div>
     </div>
@@ -339,10 +363,10 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
   const trigger = (
     <Button
       type="button"
-      className="gap-2 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shadow-violet-500/20 h-12 px-6"
+      className="gap-2 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shadow-violet-500/20 h-12 px-6 cursor-pointer font-bold"
     >
       <Sparkles className="h-4 w-4" />
-      สร้างบทความด้วย AI
+      {isEn ? "Generate with AI" : "สร้างบทความด้วย AI"}
     </Button>
   );
 
@@ -368,12 +392,13 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
                 <MonitorX className="h-6 w-6 text-amber-600" />
               </div>
               <DialogTitle className="text-lg text-amber-950">
-                โควต้า AI เต็มชั่วคราว
+                {isEn ? "AI Quota Temporarily Full" : "โควต้า AI เต็มชั่วคราว"}
               </DialogTitle>
             </div>
             <DialogDescription className="text-amber-900/80">
-              เพื่อประสิทธิภาพสูงสุด ระบบมีการจำกัดความเร็วในการใช้งาน (Rate
-              Limit) ป้องกันการใช้งานที่หนาแน่นเกินไป
+              {isEn
+                ? "Rate limiting is active to protect service stability. Please wait a moment."
+                : "เพื่อประสิทธิภาพสูงสุด ระบบมีการจำกัดความเร็วในการใช้งาน (Rate Limit) ป้องกันการใช้งานที่หนาแน่นเกินไป"}
             </DialogDescription>
           </DialogHeader>
 
@@ -381,22 +406,27 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
             <div className="flex items-start gap-2 text-amber-800">
               <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
               <p>
-                ไม่ต้องตกใจ! ระบบจะรีเซ็ตโควต้าให้ทุกๆ{" "}
-                <span className="font-bold">1 นาที</span>
+                {isEn ? (
+                  <>Quota resets automatically every <span className="font-bold">1 minute</span></>
+                ) : (
+                  <>ไม่ต้องตกใจ! ระบบจะรีเซ็ตโควต้าให้ทุกๆ <span className="font-bold">1 นาที</span></>
+                )}
               </p>
             </div>
             <p className="text-amber-700/70 pl-6">
-              กรุณารอสักครู่ (ประมาณ 30-60 วินาที) แล้วลองกดสร้างใหม่นะครับ
+              {isEn
+                ? "Please wait ~30-60 seconds and try again."
+                : "กรุณารอสักครู่ (ประมาณ 30-60 วินาที) แล้วลองกดสร้างใหม่นะครับ"}
             </p>
           </div>
 
           <div className="flex justify-end pt-2">
             <Button
               variant="outline"
-              className="border-amber-200 text-amber-800 hover:bg-amber-50 hover:text-amber-900"
+              className="border-amber-200 text-amber-800 hover:bg-amber-50 hover:text-amber-900 cursor-pointer font-semibold"
               onClick={() => setShowLimitDialog(false)}
             >
-              ตกลง, รอสักครู่
+              {isEn ? "Understood, I will wait" : "ตกลง, รอสักครู่"}
             </Button>
           </div>
         </DialogContent>
@@ -427,9 +457,9 @@ function ResponsiveSelect({
       type="button"
       variant="outline"
       onClick={() => setOpen(true)}
-      className="w-full h-12 justify-between border-slate-200 bg-slate-50/50 hover:bg-white transition-all rounded-xl px-4 font-normal"
+      className="w-full h-12 justify-between border-slate-200 bg-slate-50/50 hover:bg-white transition-all rounded-xl px-4 font-normal cursor-pointer"
     >
-      <span className={cn(value ? "text-slate-900" : "text-slate-400")}>
+      <span className={cn(value ? "text-slate-900 font-medium" : "text-slate-400")}>
         {selectedOption ? selectedOption.label : placeholder}
       </span>
       <AlignJustify className="h-4 w-4 text-slate-400" />
@@ -450,8 +480,8 @@ function ResponsiveSelect({
             key={option.value}
             variant="ghost"
             className={cn(
-              "justify-start h-12 md:h-14 px-4 rounded-xl text-base",
-              value === option.value && "bg-violet-50 text-violet-700 hover:bg-violet-100 hover:text-violet-800"
+              "justify-start h-12 md:h-14 px-4 rounded-xl text-base cursor-pointer",
+              value === option.value && "bg-violet-50 text-violet-700 hover:bg-violet-100 hover:text-violet-800 font-bold"
             )}
             onClick={() => {
               onValueChange(option.value);
@@ -466,5 +496,6 @@ function ResponsiveSelect({
     </ResponsiveDialog>
   );
 }
+
 
 

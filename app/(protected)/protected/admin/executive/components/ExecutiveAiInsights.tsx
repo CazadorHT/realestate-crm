@@ -121,7 +121,7 @@ export function ExecutiveAiInsights({
               <div className="h-1.5 w-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
               {isEn
                 ? "Consider increasing marketing allocation in high-conversion branches."
-                : "พิจารณาการขยายงบการตลาดในสาขาที่มี Conversion Rate สูง (High Efficiency)"}
+                : "พิจารณาการขยายงบการตลาดในสาขาที่มีอัตราการปิดการขายสูง"}
             </li>
           </ul>
         </div>

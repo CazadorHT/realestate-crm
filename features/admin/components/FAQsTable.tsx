@@ -30,9 +30,35 @@ import { Input } from "@/components/ui/input";
 import { useDebounce } from "use-debounce";
 import { useEffect } from "react";
 import { FAQItem } from "@/features/admin/faqs-actions";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 type FAQ = FAQItem;
+
+const FAQ_CATEGORY_MAP: Record<string, { th: string; en: string }> = {
+  "ทั่วไป": { th: "ทั่วไป", en: "General" },
+  "General": { th: "ทั่วไป", en: "General" },
+  "การซื้อ": { th: "การซื้อ", en: "Buying" },
+  "Buying": { th: "การซื้อ", en: "Buying" },
+  "การขาย": { th: "การขาย", en: "Selling" },
+  "Selling": { th: "การขาย", en: "Selling" },
+  "การเช่า": { th: "การเช่า", en: "Renting" },
+  "Renting": { th: "การเช่า", en: "Renting" },
+  "สินเชื่อ": { th: "สินเชื่อ", en: "Loans" },
+  "Loans": { th: "สินเชื่อ", en: "Loans" },
+  "Loans & Finance": { th: "สินเชื่อ", en: "Loans & Finance" },
+  "กฎหมาย": { th: "กฎหมาย", en: "Legal & Taxes" },
+  "Legal": { th: "กฎหมาย", en: "Legal & Taxes" },
+  "Legal & Taxes": { th: "กฎหมาย", en: "Legal & Taxes" },
+};
+
+function getFaqCategoryDisplayName(category: string | null | undefined, isEn: boolean): string {
+  if (!category) return isEn ? "Uncategorized" : "ไม่ได้ระบุ";
+  const match = FAQ_CATEGORY_MAP[category];
+  if (match) {
+    return isEn ? match.en : match.th;
+  }
+  return category;
+}
 
 interface FAQsTableProps {
   faqs: FAQ[];
@@ -402,7 +428,7 @@ export function FAQsTable({
                           variant="outline"
                           className="font-bold text-[10px] bg-slate-50/50 border-slate-200 text-slate-600 rounded-lg px-2"
                         >
-                          {faq.category}
+                          {getFaqCategoryDisplayName(faq.category, isEn)}
                         </Badge>
                       ) : (
                         <span className="text-slate-300 text-xs italic">{isEn ? "Uncategorized" : "ไม่ได้ระบุ"}</span>
@@ -551,7 +577,7 @@ export function FAQsTable({
                         variant="outline"
                         className="text-[10px] font-bold bg-slate-50/50 max-w-full truncate block whitespace-nowrap rounded-lg px-2 py-0.5"
                       >
-                        {faq.category || (isEn ? "Uncategorized" : "ไม่ได้ระบุ")}
+                        {getFaqCategoryDisplayName(faq.category, isEn)}
                       </Badge>
                     </div>
 

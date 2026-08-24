@@ -48,7 +48,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { FeatureSchema, type FeatureFormValues } from "../schema";
+import { FeatureSchema, getFeatureSchema, type FeatureFormValues } from "../schema";
 import {
   createFeatureAction,
   updateFeatureAction,
@@ -67,16 +67,16 @@ interface FeaturesClientProps {
 }
 
 const CATEGORIES = [
-  "ทั่วไป (General)",
-  "ความปลอดภัย (Security)",
-  "ความสะดวกสบาย (Comfort)",
-  "ครัว (Kitchen)",
-  "ห้องน้ำ (Bathroom)",
-  "ภายนอก (Exterior)",
-  "เทคโนโลยี (Tech)",
-  "สันทนาการ (Recreation)",
-  "สถานที่ใกล้เคียง (Nearby)",
-  "อื่นๆ (Other)",
+  "ทั่วไป",
+  "ความปลอดภัย",
+  "ความสะดวกสบาย",
+  "ครัว",
+  "ห้องน้ำ",
+  "ภายนอก",
+  "เทคโนโลยี",
+  "สันทนาการ",
+  "สถานที่ใกล้เคียง",
+  "อื่นๆ",
 ];
 
 export function FeaturesClient({ features }: FeaturesClientProps) {
@@ -99,7 +99,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
   const iconCount = Object.keys(ICON_MAP).length;
 
   const form = useForm<FeatureFormValues>({
-    resolver: zodResolver(FeatureSchema),
+    resolver: zodResolver(getFeatureSchema(isEn)),
     defaultValues: {
       name: "",
       category: "",

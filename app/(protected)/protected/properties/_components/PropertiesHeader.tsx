@@ -48,7 +48,7 @@ export function PropertiesHeader({ count }: PropertiesHeaderProps) {
           >
             <div className="flex flex-col items-end">
               <Label htmlFor="all-branches-mock" className="text-xs font-bold text-white cursor-pointer select-none">
-                {isEn ? "All Branches (Multi-Branch)" : "ทุกสาขา (Multi-Branch)"}
+                {isEn ? "All Branches" : "ทุกสาขาทั่วประเทศ"}
               </Label>
               <span className="text-[10px] text-blue-200 font-medium leading-tight">Enterprise Feature</span>
             </div>

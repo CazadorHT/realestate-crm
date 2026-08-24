@@ -10,35 +10,39 @@ export const LEAD_SOURCES = LEAD_SOURCE_ORDER;
 export const LEAD_STAGES = LEAD_STAGE_ORDER;
 
 // Helper for number inputs that might be empty or NaN
-const nullableNumber = z.preprocess((val) => {
+const getNullableNumber = (isEn: boolean) => z.preprocess((val) => {
   if (val === "" || val === null || val === undefined) return null;
   const num = Number(val);
   return Number.isNaN(num) ? null : num;
-}, z.number().min(0, "ห้ามเป็นค่าติดลบ").nullable().optional());
+}, z.number().min(0, isEn ? "Cannot be negative" : "ห้ามเป็นค่าติดลบ").nullable().optional());
 
-export const leadFormSchema = z.object({
-  full_name: z.string().trim().min(1, "กรุณากรอกชื่อ"),
-  phone: z
-    .string()
-    .refine(
-      (val) => !val || /^0[0-9]{8,9}$/.test(val.replace(/[- ]/g, "")),
-      "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 9-10 หลัก)",
-    )
-    .optional()
-    .nullable(),
-  email: z
-    .string()
-    .email("อีเมลไม่ถูกต้อง")
-    .trim()
-    .optional()
-    .or(z.literal(""))
-    .nullable(),
+export const getLeadFormSchema = (isEn: boolean) => {
+  const nullableNumber = getNullableNumber(isEn);
+  return z.object({
+    full_name: z.string().trim().min(1, isEn ? "Please enter name" : "กรุณากรอกชื่อ"),
+    phone: z
+      .string()
+      .refine(
+        (val) => !val || /^0[0-9]{8,9}$/.test(val.replace(/[- ]/g, "")),
+        isEn 
+          ? "Invalid phone number (must start with 0 and have 9-10 digits)" 
+          : "เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 9-10 หลัก)",
+      )
+      .optional()
+      .nullable(),
+    email: z
+      .string()
+      .email(isEn ? "Invalid email format" : "อีเมลไม่ถูกต้อง")
+      .trim()
+      .optional()
+      .or(z.literal(""))
+      .nullable(),
 
-  // ✅ รับ PORTAL + รับ null
-  source: z.enum(LEAD_SOURCES).nullable().optional(),
+    // ✅ รับ PORTAL + รับ null
+    source: z.enum(LEAD_SOURCES).nullable().optional(),
 
-  // ✅ ใช้ค่าตาม DB จริง (มี CLOSED)
-  stage: z.enum(LEAD_STAGES).default("NEW"),
+    // ✅ ใช้ค่าตาม DB จริง (มี CLOSED)
+    stage: z.enum(LEAD_STAGES).default("NEW"),
 
   // ในตารางคุณมี property_id (nullable) — เผื่อผูก lead กับทรัพย์เดียวใน MVP
   property_id: z.string().uuid().optional().nullable(),
@@ -87,5 +91,7 @@ export const leadFormSchema = z.object({
   allow_airbnb: z.coerce.boolean().optional().nullable(),
   preferences: z.record(z.string(), z.unknown()).optional().nullable(),
 });
+};
 
+export const leadFormSchema = getLeadFormSchema(false);
 export type LeadFormValues = z.infer<typeof leadFormSchema>;

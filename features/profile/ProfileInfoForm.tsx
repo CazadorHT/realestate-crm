@@ -6,6 +6,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   profileSchema,
+  getProfileSchema,
   type ProfileFormValues,
 } from "../../lib/profile-schema";
 import { Button } from "@/components/ui/button";
@@ -131,7 +132,7 @@ export function ProfileInfoForm({
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
 
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(getProfileSchema(isEn)),
     mode: "onChange",
     defaultValues: {
       full_name: fullName || "",

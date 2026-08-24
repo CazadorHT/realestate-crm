@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FileJson } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface BlogJsonImportDialogProps {
   open: boolean;
@@ -28,6 +29,9 @@ export function BlogJsonImportDialog({
   setJsonInput,
   onImport,
 }: BlogJsonImportDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -35,17 +39,19 @@ export function BlogJsonImportDialog({
           type="button"
           variant="outline"
           size="sm"
-          className="flex gap-2 h-10 md:h-12"
+          className="flex gap-2 h-10 md:h-12 cursor-pointer font-medium"
         >
           <FileJson className="h-4 w-4" />
-          <span className="hidden md:inline">นำเข้า JSON</span>
+          <span className="hidden md:inline">{isEn ? "Import JSON" : "นำเข้า JSON"}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl w-[95vw]">
         <DialogHeader>
-          <DialogTitle>นำเข้าข้อมูลจาก JSON</DialogTitle>
+          <DialogTitle>{isEn ? "Import Data from JSON" : "นำเข้าข้อมูลจาก JSON"}</DialogTitle>
           <DialogDescription>
-            วาง JSON object เพื่อกรอกข้อมูลอัตโนมัติ
+            {isEn
+              ? "Paste a JSON object to autofill article fields."
+              : "วาง JSON object เพื่อกรอกข้อมูลอัตโนมัติ"}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -60,11 +66,12 @@ export function BlogJsonImportDialog({
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
+              className="cursor-pointer"
             >
-              ยกเลิก
+              {isEn ? "Cancel" : "ยกเลิก"}
             </Button>
-            <Button type="button" onClick={onImport}>
-              นำเข้า
+            <Button type="button" onClick={onImport} className="cursor-pointer">
+              {isEn ? "Import" : "นำเข้า"}
             </Button>
           </div>
         </div>
@@ -72,3 +79,4 @@ export function BlogJsonImportDialog({
     </Dialog>
   );
 }
+

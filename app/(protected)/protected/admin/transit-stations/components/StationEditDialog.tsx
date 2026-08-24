@@ -201,7 +201,7 @@ export function StationEditDialog({
     if (!station) return;
 
     if (mode === "add" && !formCode.trim()) {
-      toast.error(isEn ? "Please specify a Station Code" : "กรุณาระบุรหัสสถานี (Station Code)");
+      toast.error(isEn ? "Please specify a Station Code" : "กรุณาระบุรหัสสถานี");
       return;
     }
     if (mode === "add" && !formLabelTh.trim()) {
@@ -361,7 +361,7 @@ export function StationEditDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="formCode" className="text-xs font-bold text-slate-700">
-                  {isEn ? "Station Code *" : "รหัสสถานี (Station Code) *"}
+                  {isEn ? "Station Code *" : "รหัสสถานี *"}
                 </Label>
                 <Input
                   id="formCode"
@@ -552,7 +552,7 @@ export function StationEditDialog({
 
         <div className="space-y-2">
           <Label className="text-sm font-bold text-slate-700">
-            {isEn ? "Station Area Description (Description Content)" : "คำอธิบายทำเลบนหน้าเว็บ (Description Content)"}
+            {isEn ? "Station Area Description" : "คำอธิบายทำเลบนหน้าเว็บ"}
           </Label>
           <Tabs defaultValue="th" className="w-full">
             <TabsList className="grid grid-cols-4 rounded-xl h-10.5 p-1 bg-slate-100 border border-slate-200/50">

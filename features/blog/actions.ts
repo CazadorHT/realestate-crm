@@ -62,9 +62,10 @@ export async function createBlogPostAction(
     const author_id = user.id;
 
     // 🖋️ INTELLIGENCE: Handle Slugs (Auto-gen if empty, then ensure uniqueness)
+    const effectiveTitle = validated.title || validated.title_en || validated.title_cn || validated.title_ru || "";
     let finalSlug = validated.slug;
     if (!finalSlug || finalSlug.trim() === "") {
-      finalSlug = generateBlogSlug(validated.title);
+      finalSlug = generateBlogSlug(effectiveTitle);
     }
     finalSlug = await ensureUniqueSlug(supabase, finalSlug);
 
@@ -84,7 +85,7 @@ export async function createBlogPostAction(
     
     if (!structuredData) {
       structuredData = generateBlogJsonLd({
-        title: validated.title,
+        title: effectiveTitle,
         excerpt: validated.excerpt,
         cover_image: validated.cover_image,
         published_at: validated.published_at,
@@ -200,9 +201,10 @@ export async function updateBlogPostAction(
     }
 
     // 🖋️ INTELLIGENCE: Handle Slugs (Uniqueness check only if changed)
+    const effectiveTitle = validated.title || validated.title_en || validated.title_cn || validated.title_ru || "";
     let finalSlug = validated.slug;
     if (!finalSlug || finalSlug.trim() === "") {
-      finalSlug = generateBlogSlug(validated.title);
+      finalSlug = generateBlogSlug(effectiveTitle);
     }
     finalSlug = await ensureUniqueSlug(supabase, finalSlug, id);
 
@@ -220,7 +222,7 @@ export async function updateBlogPostAction(
 
     if (!structuredData) {
       structuredData = generateBlogJsonLd({
-        title: validated.title,
+        title: effectiveTitle,
         excerpt: validated.excerpt,
         cover_image: validated.cover_image,
         published_at: validated.published_at,
@@ -847,7 +849,8 @@ export async function createCategoryAction(
       }
     }
 
-    const slug = validated.name
+    const categoryName = validated.name?.trim() || validated.name_en?.trim() || validated.name_cn?.trim() || validated.name_ru?.trim() || "category";
+    const slug = categoryName
       .toLowerCase()
       .replace(/[^\w\s-]/g, "")
       .replace(/\s+/g, "-");
@@ -856,7 +859,7 @@ export async function createCategoryAction(
       .from("cms_content_v3")
       .insert({ 
         content_type: "CATEGORY",
-        title: { th: validated.name, en: validated.name_en || null, cn: validated.name_cn || null, ru: validated.name_ru || null },
+        title: { th: validated.name || validated.name_en || "", en: validated.name_en || null, cn: validated.name_cn || null, ru: validated.name_ru || null },
         slug,
         status: "PUBLISHED",
         tenant_id: resolvedTenantId

@@ -35,9 +35,11 @@ import { useRouter } from "next/navigation";
 import { SiteAssetUploader } from "@/components/settings/SiteAssetUploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const formSchema = z.object({
-  name: z.string().min(1, "กรุณาระบุชื่อช่องทาง"),
-  logo_url: z.string().url("กรุณาระบุ URL รูปภาพที่ถูกต้อง").optional().or(z.literal("")),
+import { useLanguage } from "@/lib/i18n/language-context";
+
+export const getPartnerFormSchema = (isEn: boolean) => z.object({
+  name: z.string().min(1, isEn ? "Please enter partner/channel name" : "กรุณาระบุชื่อพาร์ทเนอร์"),
+  logo_url: z.string().url(isEn ? "Please enter a valid image URL" : "กรุณาระบุ URL รูปภาพที่ถูกต้อง").optional().or(z.literal("")),
   website_url: z.string().optional().or(z.literal("")),
   sort_order: z
     .string()
@@ -46,6 +48,7 @@ const formSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
+export const formSchema = getPartnerFormSchema(false);
 type PartnerFormValues = z.infer<typeof formSchema>;
 
 interface PartnerFormProps {
@@ -62,11 +65,13 @@ export function PartnerForm({
   showFooter = true,
 }: PartnerFormProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const isNew = !initialData;
   const [saving, setSaving] = useState(false);
 
   const form = useForm<PartnerFormValues>({
-    resolver: zodResolver(formSchema) as any,
+    resolver: zodResolver(getPartnerFormSchema(isEn)) as any,
     mode: "onChange",
     defaultValues: {
       name: initialData?.name || "",
@@ -92,7 +97,9 @@ export function PartnerForm({
         : await updatePartner({ id: initialData.id, ...payload });
 
       if (result.success) {
-        toast.success(result.message || (isNew ? "สร้างพาร์ทเนอร์ใหม่สำเร็จ" : "อัปเดตข้อมูลสำเร็จ"));
+        toast.success(result.message || (isNew 
+          ? (isEn ? "Partner created successfully" : "สร้างพาร์ทเนอร์ใหม่สำเร็จ") 
+          : (isEn ? "Partner updated successfully" : "อัปเดตข้อมูลสำเร็จ")));
         
         if (onSuccess) {
           onSuccess();
@@ -100,10 +107,10 @@ export function PartnerForm({
           router.refresh();
         }
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        toast.error(result.message || (isEn ? "Failed to save partner" : "เกิดข้อผิดพลาดในการบันทึกข้อมูล"));
       }
     } catch (error: any) {
-      toast.error("เกิดข้อผิดพลาด: " + error.message);
+      toast.error((isEn ? "Error: " : "เกิดข้อผิดพลาด: ") + error.message);
     } finally {
       setSaving(false);
     }
@@ -122,7 +129,9 @@ export function PartnerForm({
               <div className="h-8 w-8 rounded-lg bg-rose-100/80 flex items-center justify-center text-rose-600">
                 <Globe className="h-4 w-4" />
               </div>
-              <h3 className="font-semibold text-slate-800 text-sm">ข้อมูลพื้นฐาน</h3>
+              <h3 className="font-semibold text-slate-800 text-sm">
+                {isEn ? "Basic Information" : "ข้อมูลพื้นฐาน"}
+              </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -132,11 +141,11 @@ export function PartnerForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-600 text-xs font-semibold">
-                      ชื่อช่องทางการตลาด
+                      {isEn ? "Partner / Channel Name" : "ชื่อช่องทางการตลาด"}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="เช่น Facebook, Instagram, LivingInsider..."
+                        placeholder={isEn ? "e.g. Facebook, Instagram, LivingInsider..." : "เช่น Facebook, Instagram, LivingInsider..."}
                         className="bg-white border-slate-200 focus:border-rose-500 focus-visible:ring-rose-500 transition-all h-11 rounded-xl text-sm"
                         {...field}
                       />
@@ -152,7 +161,7 @@ export function PartnerForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-600 text-xs font-semibold">
-                      URL เว็บไซต์ (ลิงก์ปลายทางเมื่อผู้ใช้กดคลิก)
+                      {isEn ? "Website URL (Click destination)" : "URL เว็บไซต์ (ลิงก์ปลายทางเมื่อผู้ใช้กดคลิก)"}
                     </FormLabel>
                     <FormControl>
                       <div className="relative">
@@ -171,8 +180,6 @@ export function PartnerForm({
             </div>
           </div>
 
-         
-
           {/* Visibility Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 sm:p-5 rounded-2xl border border-slate-100 bg-slate-50/30">
@@ -183,7 +190,7 @@ export function PartnerForm({
                   <FormItem className="space-y-2">
                     <FormLabel className="flex items-center gap-2 text-slate-600 font-medium text-xs">
                       <Hash className="h-3.5 w-3.5" />
-                      ลำดับการแสดงผล
+                      {isEn ? "Sort Order" : "ลำดับการแสดงผล"}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -206,10 +213,12 @@ export function PartnerForm({
                   <FormItem className="flex flex-row items-center justify-between w-full space-y-0">
                     <div className="space-y-1">
                       <FormLabel className="text-slate-700 font-bold text-sm">
-                        เปิดแสดงหน้าแรก
+                        {isEn ? "Show on Homepage" : "เปิดแสดงหน้าแรก"}
                       </FormLabel>
                       <FormDescription className="text-[11px] text-slate-400 leading-tight">
-                        เปิด/ปิด การแสดงผลปุ่ม Badge บนหน้าหลักสำหรับลูกค้าทั่วไป
+                        {isEn 
+                          ? "Enable or disable partner badge on the homepage" 
+                          : "เปิด/ปิด การแสดงผลปุ่ม Badge บนหน้าหลักสำหรับลูกค้าทั่วไป"}
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -219,8 +228,8 @@ export function PartnerForm({
                           field.onChange(checked);
                           toast.success(
                             checked
-                              ? "เปิดเผยแพร่พาร์ทเนอร์สำเร็จ"
-                              : "ปิดการเผยแพร่พาร์ทเนอร์สำเร็จ",
+                              ? (isEn ? "Partner published" : "เปิดเผยแพร่พาร์ทเนอร์สำเร็จ")
+                              : (isEn ? "Partner unpublished" : "ปิดการเผยแพร่พาร์ทเนอร์สำเร็จ"),
                           );
                         }}
                         className="data-[state=checked]:bg-emerald-500 shadow-sm"
@@ -241,9 +250,9 @@ export function PartnerForm({
                 variant="outline"
                 type="button"
                 onClick={onCancel}
-                className="w-full sm:w-auto border-slate-200 hover:bg-slate-50 text-slate-600 h-11 px-6 rounded-xl transition-all"
+                className="w-full sm:w-auto border-slate-200 hover:bg-slate-50 text-slate-600 h-11 px-6 rounded-xl transition-all cursor-pointer font-semibold"
               >
-                ยกเลิก
+                {isEn ? "Cancel" : "ยกเลิก"}
               </Button>
             )}
             <Button
@@ -251,14 +260,14 @@ export function PartnerForm({
               disabled={
                 saving || !form.formState.isValid || !isDirty
               }
-              className="w-full sm:w-auto bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-250/20 h-11 px-10 rounded-xl transition-all active:scale-95 flex items-center font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-250/20 h-11 px-10 rounded-xl transition-all active:scale-95 flex items-center font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {saving ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Save className="w-4 h-4 mr-2" />
               )}
-              {isNew ? "สร้างช่องทางใหม่" : "บันทึกการแก้ไข"}
+              {isNew ? (isEn ? "Create Partner" : "สร้างช่องทางใหม่") : (isEn ? "Save Changes" : "บันทึกการแก้ไข")}
             </Button>
           </div>
         )}

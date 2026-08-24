@@ -5,6 +5,7 @@ import { Check, ChevronRight, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface Option {
   label: string;
@@ -29,11 +30,14 @@ export function ResponsiveSelectField({
   value,
   onValueChange,
   label,
-  placeholder = "เลือกรายการ...",
+  placeholder,
   className,
   triggerClassName,
   icon,
 }: ResponsiveSelectFieldProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const defaultPlaceholder = placeholder || (isEn ? "Select an option..." : "เลือกรายการ...");
   const [open, setOpen] = useState(false);
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -55,7 +59,7 @@ export function ResponsiveSelectField({
         open={open}
         onOpenChange={setOpen}
         title={label}
-        description={`กรุณาเลือก${label}ที่ต้องการ`}
+        description={isEn ? `Please select a ${label.toLowerCase()}` : `กรุณาเลือก${label}ที่ต้องการ`}
         trigger={
           <Button
             type="button"
@@ -63,13 +67,13 @@ export function ResponsiveSelectField({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "w-full h-14 justify-between border-slate-200 bg-white hover:bg-slate-50 transition-all rounded-2xl font-semibold text-slate-700 shadow-sm px-6",
+              "w-full h-14 justify-between border-slate-200 bg-white hover:bg-slate-50 transition-all rounded-2xl font-semibold text-slate-700! shadow-sm px-6 cursor-pointer",
               triggerClassName
             )}
           >
             <div className="flex items-center gap-3">
               {selectedOption?.icon}
-              <span>{selectedOption ? selectedOption.label : placeholder}</span>
+              <span>{selectedOption ? selectedOption.label : defaultPlaceholder}</span>
             </div>
             <ChevronRight className="ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform group-hover:translate-x-0.5" />
           </Button>

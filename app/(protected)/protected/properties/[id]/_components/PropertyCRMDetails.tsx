@@ -66,14 +66,14 @@ export function PropertyCRMDetails({
           {navigatingId === relatedDeal.id ? (
             <Loader2 className="h-4 w-4 animate-spin text-blue-600 mr-2" />
           ) : null}
-          {isEn ? "Deal Details (V3)" : "รายละเอียดดีล (V3)"}
+          {isEn ? "Deal Details" : "รายละเอียดดีล"}
         </Button>
       </div>
 
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-6">
         {[
           { label: isEn ? "Commission" : "ค่าคอมมิชชั่น", value: commissionLabel, color: "text-emerald-600", desc: "Total Commission" },
-          { label: isEn ? "Lead / Client" : "ลูกค้า (Lead)", value: relatedDeal.lead?.full_name ?? "-", color: "text-slate-900", desc: "Buyer/Tenant Identity" },
+          { label: isEn ? "Lead / Client" : "ลูกค้าผู้สนใจ", value: relatedDeal.lead?.full_name ?? "-", color: "text-slate-900", desc: "Buyer/Tenant Identity" },
           { label: isEn ? "Assigned Agent" : "ดูแลโดย", value: property.agent?.full_name ?? "-", color: "text-slate-900", desc: "In-charge Agent" },
         ].map((item, idx) => (
           <m.div
@@ -100,7 +100,7 @@ export function PropertyCRMDetails({
             <div className="w-1.5 h-6 rounded-full bg-blue-500/20 flex items-center justify-center">
               <div className="w-1 h-1 rounded-full bg-blue-500" />
             </div>
-            {isEn ? "Contract Document" : "เอกสารสัญญา (Contract)"}
+            {isEn ? "Contract Documents" : "เอกสารสัญญา"}
           </div>
           {relatedContract?.id ? (
             <div className="overflow-x-auto no-scrollbar rounded-2xl border border-slate-50 bg-white/40 p-4">
@@ -124,7 +124,7 @@ export function PropertyCRMDetails({
              <div className="w-1.5 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
               <div className="w-1 h-1 rounded-full bg-indigo-500" />
             </div>
-            {isEn ? "Deal Documents" : "เอกสารดีล (Documents)"}
+            {isEn ? "Deal Documents" : "เอกสารประกอบดีล"}
           </div>
           <div className="overflow-x-auto no-scrollbar rounded-2xl border border-slate-50 bg-white/40 p-4">
             <DocumentList

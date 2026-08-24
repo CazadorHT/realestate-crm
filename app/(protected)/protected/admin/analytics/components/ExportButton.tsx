@@ -36,7 +36,7 @@ export function ExportButton({ topProperties, topAreas, totalViews }: ExportButt
           [isEn ? "Property Type" : "ประเภททรัพย์"]: p.property_type ? propertyTypeLabel(p.property_type as PropertyType, isEn ? "en" : "th") : "-",
           [isEn ? "Sale Price" : "ราคาขาย"]: p.price?.toLocaleString() || "-",
           [isEn ? "Rent Price" : "ราคาเช่า"]: p.rental_price?.toLocaleString() || "-",
-          [isEn ? "Views" : "ยอดเข้าชม (Views)"]: p.view_count,
+          [isEn ? "Views" : "ยอดเข้าชม"]: p.view_count,
           [isEn ? "Link" : "ลิงก์"]: `${window.location.origin}/protected/properties/${p.id}`
         };
       });
@@ -49,7 +49,7 @@ export function ExportButton({ topProperties, topAreas, totalViews }: ExportButt
         return {
           [isEn ? "No." : "ลำดับ"]: index + 1,
           [isEn ? "Area/Location" : "ชื่อย่าน/พื้นที่"]: displayArea,
-          [isEn ? "Views" : "ยอดเข้าชม (Views)"]: a.view_count,
+          [isEn ? "Views" : "ยอดเข้าชม"]: a.view_count,
           [isEn ? "Leads Count" : "จำนวน Leads ที่สนใจ"]: a.leads_count,
           "Market Interest Share": `${Math.round((a.view_count / (totalViews || 1)) * 100)}%`
         };

@@ -13,10 +13,10 @@ import {
 } from "./labels";
 
 /** Base Zod schema for property properties (without refinements) */
-export const PropertySchema = z
+export const getPropertySchema = (isEn: boolean) => z
   .object({
     id: z.string().uuid().optional(),
-    title: z.string().trim().min(1, "คุณยังไม่ได้กรอกชื่อทรัพย์"),
+    title: z.string().trim().min(1, isEn ? "Please enter property title" : "คุณยังไม่ได้กรอกชื่อทรัพย์"),
     title_en: z.string().trim().optional(),
     title_cn: z.string().trim().optional(),
     title_ru: z.string().trim().optional(),
@@ -27,10 +27,10 @@ export const PropertySchema = z
     description_ru: z.string().trim().optional(),
 
     property_type: z.enum(PROPERTY_TYPE_ENUM, {
-      message: "คุณยังไม่ได้เลือกประเภททรัพย์",
+      message: isEn ? "Please select property type" : "คุณยังไม่ได้เลือกประเภททรัพย์",
     }),
     listing_type: z.enum(LISTING_TYPE_ENUM, {
-      message: "คุณยังไม่ได้เลือกรูปแบบประกาศ",
+      message: isEn ? "Please select listing type" : "คุณยังไม่ได้เลือกรูปแบบประกาศ",
     }),
     status: z.enum(PROPERTY_STATUS_ENUM),
 
@@ -67,7 +67,7 @@ export const PropertySchema = z
     // 🏢 Stock Management
     total_units: z.coerce
       .number()
-      .min(1, "จำนวนยูนิตต้องอย่างน้อย 1"),
+      .min(1, isEn ? "Total units must be at least 1" : "จำนวนยูนิตต้องอย่างน้อย 1"),
     sold_units: z.coerce.number().min(0),
 
     parking_type: z.enum(["COMMON", "FIXED", "AUTO"]).optional().nullable(),
@@ -86,9 +86,9 @@ export const PropertySchema = z
     address_line1_en: z.string().trim().optional(),
     address_line1_cn: z.string().trim().optional(),
     address_line1_ru: z.string().trim().optional(),
-    province: z.string().min(1, "กรุณาเลือกจังหวัด"),
-    district: z.string().min(1, "กรุณาเลือกจังหวัดเขต / อำเภอ"),
-    subdistrict: z.string().min(1, "กรุณาเลือกจังหวัดแขวง / ตำบล"),
+    province: z.string().min(1, isEn ? "Please select province" : "กรุณาเลือกจังหวัด"),
+    district: z.string().min(1, isEn ? "Please select district" : "กรุณาเลือกเขต / อำเภอ"),
+    subdistrict: z.string().min(1, isEn ? "Please select subdistrict" : "กรุณาเลือกแขวง / ตำบล"),
     postal_code: z.string().optional(),
     google_maps_link: z.string().trim().optional().nullable(),
     popular_area: z.string().optional().nullable(),
@@ -98,7 +98,7 @@ export const PropertySchema = z
 
     // 🏢 V3 Hierarchy & Operations
     tenant_id: z.string().uuid().optional(),
-    branch_id: z.string().uuid({ message: "กรุณาเลือกสาขาที่ดูแลทรัพย์นี้" }),
+    branch_id: z.string().uuid({ message: isEn ? "Please select responsible branch" : "กรุณาเลือกสาขาที่ดูแลทรัพย์นี้" }),
     project_id: z.string().uuid().optional().nullable(),
     
     owner_id: z.string().uuid().nullable().optional(),
@@ -236,8 +236,10 @@ export const PropertySchema = z
       .optional(),
   });
 
+export const PropertySchema = getPropertySchema(false);
+
 /** Shared Zod schema for property forms (with full refinements) */
-export const FormSchema = PropertySchema
+export const getFormSchema = (isEn: boolean) => getPropertySchema(isEn)
   .superRefine((data, ctx) => {
     const priceMissing =
       data.original_price === undefined || Number.isNaN(data.original_price);
@@ -249,14 +251,14 @@ export const FormSchema = PropertySchema
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["original_price"],
-        message: "กรุณากรอกราคาตั้งขาย",
+        message: isEn ? "Please enter sale price" : "กรุณากรอกราคาตั้งขาย",
       });
     }
     if (data.listing_type === "RENT" && rentMissing) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["original_rental_price"],
-        message: "กรุณากรอกค่าเช่าต่อเดือน",
+        message: isEn ? "Please enter monthly rent price" : "กรุณากรอกค่าเช่าต่อเดือน",
       });
     }
     // If listing type is SALE_AND_RENT, require BOTH prices
@@ -265,14 +267,14 @@ export const FormSchema = PropertySchema
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["original_price"],
-          message: "กรุณากรอกราคาตั้งขาย",
+          message: isEn ? "Please enter sale price" : "กรุณากรอกราคาตั้งขาย",
         });
       }
       if (rentMissing) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["original_rental_price"],
-          message: "กรุณากรอกค่าเช่าต่อเดือน",
+          message: isEn ? "Please enter monthly rent price" : "กรุณากรอกค่าเช่าต่อเดือน",
         });
       }
     }
@@ -292,7 +294,7 @@ export const FormSchema = PropertySchema
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["commission_sale_percentage"],
-        message: "กรุณาระบุ% ค่าคอมมิชชั่นการขาย",
+        message: isEn ? "Please specify sale commission (%)" : "กรุณาระบุ % ค่าคอมมิชชั่นการขาย",
       });
     }
 
@@ -303,7 +305,7 @@ export const FormSchema = PropertySchema
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["commission_rent_months"],
-        message: "กรุณาระบุจำนวนเดือนค่าคอมมิชชั่นการเช่า",
+        message: isEn ? "Please specify rent commission (months)" : "กรุณาระบุจำนวนเดือนค่าคอมมิชชั่นการเช่า",
       });
     }
 
@@ -313,14 +315,14 @@ export const FormSchema = PropertySchema
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["co_agent_name"],
-          message: "กรุณาระบุชื่อ Co-Agent",
+          message: isEn ? "Please specify co-agent name" : "กรุณาระบุชื่อ Co-Agent",
         });
       }
       if (!data.co_agent_phone?.trim()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["co_agent_phone"],
-          message: "กรุณาระบุเบอร์โทร Co-Agent",
+          message: isEn ? "Please specify co-agent phone number" : "กรุณาระบุเบอร์โทร Co-Agent",
         });
       }
 
@@ -338,7 +340,7 @@ export const FormSchema = PropertySchema
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["co_agent_sale_commission_percent"],
-            message: "ระบุส่วนแบ่งขาย (%)",
+            message: isEn ? "Specify sale split (%)" : "ระบุส่วนแบ่งขาย (%)",
           });
         }
       }
@@ -352,11 +354,12 @@ export const FormSchema = PropertySchema
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["co_agent_rent_commission_months"],
-            message: "ระบุส่วนแบ่งเช่า (เดือน)",
+            message: isEn ? "Specify rent split (months)" : "ระบุส่วนแบ่งเช่า (เดือน)",
           });
         }
       }
     }
   });
 
+export const FormSchema = getFormSchema(false);
 export type PropertyFormValues = z.infer<typeof FormSchema>;

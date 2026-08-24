@@ -1,9 +1,5 @@
 import { getFaqs } from "@/features/admin/faqs-actions";
-import { FAQsTable } from "@/features/admin/components/FAQsTable";
-import { PageHeader } from "@/components/dashboard/PageHeader";
-import { FAQStats } from "@/features/admin/components/FAQStats";
-import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
-import { CreateFAQDialog } from "@/features/admin/components/CreateFAQDialog";
+import { FaqsPageView } from "@/features/admin/components/FaqsPageView";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { requireAuthContext } from "@/lib/authz";
 
@@ -35,52 +31,18 @@ export default async function FAQsPage(props: FAQsPageProps) {
   const { faqs, count: currentCount } = await getFaqs(page, pageSize, isTrash, search);
 
   return (
-    <div className=" space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {searchParams.success === "true" && <SuccessAnimation />}
       
-      <PageHeader
-        title={isTrash ? "ถังขยะและประวัติการลบ (FAQs)" : "คำถามที่พบบ่อย (FAQs)"}
-        subtitle={isTrash ? "จัดการข้อมูลคำถามที่ถูกลบชั่วคราว คุณสามารถกู้คืนหรือลบทิ้งถาวรได้" : "จัดการคำถามและคำตอบสำหรับลูกค้า"}
-        count={isTrash ? trashCount : activeCount}
-        icon={isTrash ? "history" : "helpCircle"}
-        actionSlot={!isTrash && isSuperAdmin && <CreateFAQDialog />}
-        gradient={isTrash ? "rose" : "blue"}
-      />
-
-      <FAQStats 
-        faqs={faqs ?? []} 
-        activeCount={activeCount}
-        trashCount={trashCount}
-        isTrash={isTrash}
-      />
-
-      <FAQsTable
+      <FaqsPageView
         faqs={faqs ?? []}
-        totalCount={currentCount}
-        currentPage={page}
-        activeTab={currentView}
+        currentCount={currentCount}
         activeCount={activeCount}
         trashCount={trashCount}
+        page={page}
+        currentView={currentView}
         isSuperAdmin={isSuperAdmin}
       />
-
-      {currentCount > 0 && (
-        <TableFooterStats
-          totalCount={currentCount}
-          unitLabel="คำถาม"
-          secondaryStats={
-            activeCount > 0
-              ? [
-                  {
-                    label: isTrash ? "ในถังขยะ" : "ใช้งานปกติ",
-                    value: isTrash ? trashCount : activeCount,
-                    color: isTrash ? "red" : ("green" as const),
-                  },
-                ]
-              : []
-          }
-        />
-      )}
     </div>
   );
 }

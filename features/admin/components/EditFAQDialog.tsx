@@ -3,8 +3,8 @@
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { FAQForm } from "./FAQForm";
 import { FaQuestion } from "react-icons/fa6";
-
 import { FAQItem } from "@/features/admin/faqs-actions";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface EditFAQDialogProps {
   faq: FAQItem | null;
@@ -19,6 +19,9 @@ export function EditFAQDialog({
   onOpenChange,
   onSuccess,
 }: EditFAQDialogProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   if (!faq) return null;
 
   return (
@@ -32,8 +35,12 @@ export function EditFAQDialog({
             <FaQuestion className="h-5 w-5 text-blue-500" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-bold text-slate-800 tracking-tight leading-tight">แก้ไขข้อมูลคำถาม (FAQs)</span>
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">Edit FAQ Intelligence</span>
+            <span className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
+              {isEn ? "Edit FAQ" : "แก้ไขข้อมูลคำถาม"}
+            </span>
+            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">
+              {isEn ? "Edit FAQ Entry" : "ปรับปรุงรายการคำถาม"}
+            </span>
           </div>
         </div>
       }

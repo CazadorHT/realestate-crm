@@ -181,7 +181,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
       <div className="flex items-center gap-2 mb-1 xl:hidden">
         <Layers className="h-4 w-4 text-blue-500" />
         <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-          {isEn ? "Filter Options" : "ตัวเลือกการกรอง (Filters)"}{" "}
+          {isEn ? "Filter Options" : "ตัวเลือกการกรอง"}{" "}
           {totalCount !== undefined && `(${totalCount.toLocaleString()})`}
         </span>
       </div>
@@ -189,7 +189,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
       {/* Action Filter */}
       <div className="space-y-1.5 xl:space-y-0">
         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">
-          {isEn ? "Event Action" : "ประเภทการดำเนินการ (Event Action)"}
+          {isEn ? "Event Action" : "ประเภทการดำเนินการ"}
         </label>
         <Select
           value={filters.action}
@@ -200,7 +200,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
           </SelectTrigger>
           <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
             <SelectItem value="ALL" className="font-semibold text-slate-500 italic">
-              {isEn ? "All Actions" : "การดำเนินการทั้งหมด (All Actions)"}
+              {isEn ? "All Actions" : "การดำเนินการทั้งหมด"}
             </SelectItem>
             {LOG_ACTIONS.map((action) => (
               <SelectItem key={action} value={action} className="font-semibold text-slate-700">
@@ -214,7 +214,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
       {/* Entity Filter */}
       <div className="space-y-1.5 xl:space-y-0">
         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">
-          {isEn ? "Entity Type" : "หมวดหมู่ข้อมูล (Entity Type)"}
+          {isEn ? "Entity Type" : "หมวดหมู่ข้อมูล"}
         </label>
         <Select
           value={filters.entity}
@@ -225,7 +225,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
           </SelectTrigger>
           <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
             <SelectItem value="ALL" className="font-semibold text-slate-500 italic">
-              {isEn ? "All Entities" : "หมวดหมู่ทั้งหมด (All Entities)"}
+              {isEn ? "All Entities" : "หมวดหมู่ทั้งหมด"}
             </SelectItem>
             {LOG_ENTITIES.map((entity) => (
               <SelectItem key={entity} value={entity} className="font-semibold text-slate-700">
@@ -239,7 +239,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
       {/* User Filter */}
       <div className="space-y-1.5 xl:space-y-0">
         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">
-          {isEn ? "Triggered User" : "ผู้ดำเนินการ (Triggered User)"}
+          {isEn ? "Triggered User" : "ผู้ดำเนินการ"}
         </label>
         <Select
           value={filters.userId}
@@ -250,7 +250,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
           </SelectTrigger>
           <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
             <SelectItem value="ALL" className="font-semibold text-slate-500 italic">
-              {isEn ? "All Users" : "ผู้ใช้ทั้งหมด (All Users)"}
+              {isEn ? "All Users" : "ผู้ใช้ทั้งหมด"}
             </SelectItem>
             {users.map((user) => (
               <SelectItem key={user.id} value={user.id} className="font-semibold text-slate-700">
@@ -264,7 +264,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
       {/* Date Range Picker */}
       <div className="space-y-1.5 xl:space-y-0">
         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">
-          {isEn ? "Time Range" : "ช่วงเวลา (Time Range)"}
+          {isEn ? "Time Range" : "ช่วงเวลา"}
         </label>
         <Popover>
           <PopoverTrigger asChild>
@@ -287,7 +287,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
                   format(date.from, "dd MMM yyyy", { locale: isEn ? enUS : th })
                 )
               ) : (
-                <span>{isEn ? "Select date range" : "เลือกช่วงเวลา (Date range)"}</span>
+                <span>{isEn ? "Select date range" : "เลือกช่วงเวลา"}</span>
               )}
             </Button>
           </PopoverTrigger>
@@ -313,7 +313,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
           className="xl:ml-auto text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-11 xl:h-10 font-semibold transition-all px-4"
         >
           <X className="h-4 w-4 mr-1.5" />
-          {isEn ? "Clear filters" : "ล้างตัวกรอง (Clear filters)"}
+          {isEn ? "Clear filters" : "ล้างตัวกรอง"}
         </Button>
       )}
 
@@ -324,7 +324,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
           disabled={isNavigating}
         >
           {isNavigating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-          {isEn ? "Apply Filters" : "ดูผลลัพธ์ข้อมูลระบบ (Apply Filter)"}
+          {isEn ? "Apply Filters" : "ดูผลลัพธ์ข้อมูลระบบ"}
         </Button>
       </div>
     </div>

@@ -145,13 +145,13 @@ export function Step1BasicInfo({
           </div>
           <div className="space-y-2">
             <Label htmlFor="developer" className="text-sm font-bold text-slate-700">
-              {isEn ? "Developer" : "ผู้พัฒนาโครงการ (Developer)"}
+              {isEn ? "Developer" : "ผู้พัฒนาโครงการ"}
             </Label>
             <Input
               id="developer"
               value={developer}
               onChange={(e) => { setDeveloper(e.target.value); setIsFormDirty(true); }}
-              placeholder={isEn ? "e.g. Sansiri" : "เช่น แสนสิริ (Sansiri)"}
+              placeholder={isEn ? "e.g. Sansiri" : "เช่น แสนสิริ"}
               className="h-10.5 rounded-xl border-slate-200"
             />
           </div>
@@ -167,22 +167,22 @@ export function Step1BasicInfo({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">{isEn ? "Condominium (Condo)" : "คอนโดมิเนียม (Condo)"}</SelectItem>
-                <SelectItem value="2">{isEn ? "Detached House (House)" : "บ้านเดี่ยว (House)"}</SelectItem>
-                <SelectItem value="3">{isEn ? "Townhome" : "ทาวน์โฮม (Townhome)"}</SelectItem>
-                <SelectItem value="8">{isEn ? "Villa" : "วิลล่า (Villa)"}</SelectItem>
-                <SelectItem value="9">{isEn ? "Pool Villa" : "พูลวิลล่า (Pool Villa)"}</SelectItem>
-                <SelectItem value="7">{isEn ? "Office Building" : "อาคารสำนักงาน (Office Building)"}</SelectItem>
-                <SelectItem value="4">{isEn ? "Land" : "ที่ดิน (Land)"}</SelectItem>
-                <SelectItem value="6">{isEn ? "Warehouse / Factory" : "โกดัง / โรงงาน (Warehouse)"}</SelectItem>
-                <SelectItem value="5">{isEn ? "Commercial Building" : "อาคารพาณิชย์ (Commercial)"}</SelectItem>
-                <SelectItem value="10">{isEn ? "Other" : "อื่นๆ (Other)"}</SelectItem>
+                <SelectItem value="1">{isEn ? "Condominium" : "คอนโดมิเนียม"}</SelectItem>
+                <SelectItem value="2">{isEn ? "Detached House" : "บ้านเดี่ยว"}</SelectItem>
+                <SelectItem value="3">{isEn ? "Townhome" : "ทาวน์โฮม"}</SelectItem>
+                <SelectItem value="8">{isEn ? "Villa" : "วิลล่า"}</SelectItem>
+                <SelectItem value="9">{isEn ? "Pool Villa" : "พูลวิลล่า"}</SelectItem>
+                <SelectItem value="7">{isEn ? "Office Building" : "อาคารสำนักงาน"}</SelectItem>
+                <SelectItem value="4">{isEn ? "Land" : "ที่ดิน"}</SelectItem>
+                <SelectItem value="6">{isEn ? "Warehouse / Factory" : "โกดัง / โรงงาน"}</SelectItem>
+                <SelectItem value="5">{isEn ? "Commercial Building" : "อาคารพาณิชย์"}</SelectItem>
+                <SelectItem value="10">{isEn ? "Other" : "อื่นๆ"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="yearCompleted" className="text-sm font-bold text-slate-700">
-              {isEn ? "Completion Year" : "ปีที่สร้างเสร็จ (พ.ศ. / ค.ศ.)"}
+              {isEn ? "Completion Year" : "ปีที่สร้างเสร็จ"}
             </Label>
             <Input
               id="yearCompleted"
@@ -210,7 +210,7 @@ export function Step1BasicInfo({
 
         <div className="space-y-2">
           <Label htmlFor="imageUrl" className="text-sm font-bold text-slate-700">
-            {isEn ? "Project Cover Image (Image URL)" : "รูปภาพหน้าปกโครงการ (Image URL)"}
+            {isEn ? "Project Cover Image URL" : "ลิงก์รูปภาพหน้าปกโครงการ"}
           </Label>
           <Input
             id="imageUrl"

@@ -10,9 +10,7 @@ import { BlogPostInput } from "@/features/blog/types";
 import { BlogAiGenerator } from "../BlogAiGenerator";
 import { BlogContentRefiner } from "../BlogContentRefiner";
 import { BlogJsonImportDialog } from "@/components/blog/blog-form/BlogJsonImportDialog";
-import { FormField } from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface BlogHeaderProps {
   form: UseFormReturn<BlogPostInput>;
@@ -43,9 +41,22 @@ export function BlogHeader({
   isTranslating,
   onTranslate,
 }: BlogHeaderProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const router = useRouter();
+
   const watchedIsPublished = form.watch("is_published");
   const watchedTitle = form.watch("title");
+  const watchedTitleEn = form.watch("title_en");
+  const watchedTitleCn = form.watch("title_cn");
+  const watchedTitleRu = form.watch("title_ru");
+
+  const hasAnyTitle = Boolean(
+    watchedTitle?.trim() ||
+    watchedTitleEn?.trim() ||
+    watchedTitleCn?.trim() ||
+    watchedTitleRu?.trim()
+  );
 
   return (
     <div className="sticky top-16 z-50 -mx-6 px-4 md:px-6 mb-6">
@@ -58,19 +69,21 @@ export function BlogHeader({
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
-              className="hover:bg-slate-100 rounded-full shrink-0"
+              className="hover:bg-slate-100 rounded-full shrink-0 cursor-pointer"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="min-w-0">
               <div className="flex flex-wrap md:flex-nowrap items-center gap-2">
                 <h1 className="text-lg md:text-xl font-bold text-slate-900 truncate">
-                  {isNew ? "สร้างบทความใหม่" : "แก้ไขบทความ"}
+                  {isNew
+                    ? (isEn ? "Create New Article" : "สร้างบทความใหม่")
+                    : (isEn ? "Edit Article" : "แก้ไขบทความ")}
                 </h1>
                 {watchedIsPublished ? (
                   <Badge className="bg-emerald-500 hover:bg-emerald-600 gap-1 text-[10px] md:text-xs">
                     <Eye className="h-3 w-3" />
-                    <span className="hidden xs:inline">เผยแพร่แล้ว</span>
+                    <span className="hidden xs:inline">{isEn ? "Published" : "เผยแพร่แล้ว"}</span>
                   </Badge>
                 ) : (
                   <Badge
@@ -78,12 +91,12 @@ export function BlogHeader({
                     className="gap-1 text-[10px] md:text-xs"
                   >
                     <EyeOff className="h-3 w-3" />
-                    <span className="hidden xs:inline">แบบร่าง</span>
+                    <span className="hidden xs:inline">{isEn ? "Draft" : "แบบร่าง"}</span>
                   </Badge>
                 )}
               </div>
-              <p className="text-[10px] md:text-sm text-slate-500 mt-0.5">
-                {characterCount.toLocaleString()} ตัวอักษร
+              <p className="text-[10px] md:text-sm text-slate-500 mt-0.5 font-medium">
+                {characterCount.toLocaleString()} {isEn ? "characters" : "ตัวอักษร"}
               </p>
             </div>
           </div>
@@ -106,7 +119,7 @@ export function BlogHeader({
             {/* AI Content Refiner */}
             <div className="hidden lg:block">
               <BlogContentRefiner
-                currentContent={form.watch("content") || ""}
+                currentContent={form.watch("content") || form.watch("content_en") || ""}
                 onRefined={(newContent) =>
                   form.setValue("content", newContent, {
                     shouldDirty: true,
@@ -120,33 +133,35 @@ export function BlogHeader({
               type="button"
               variant="outline"
               onClick={onTranslate}
-              disabled={isTranslating || !watchedTitle?.trim()}
-              className="gap-2 border-violet-200 text-violet-700! hover:bg-violet-50 h-10 md:h-12 text-xs md:text-sm font-semibold"
+              disabled={isTranslating || !hasAnyTitle}
+              className="gap-2 border-violet-200 text-violet-700! hover:bg-violet-50 h-10 md:h-12 text-xs md:text-sm font-semibold cursor-pointer"
             >
               {isTranslating ? (
                 <Loader2 className="h-4 w-4 animate-spin text-violet-600" />
               ) : (
                 <Languages className="h-4 w-4 text-violet-600" />
               )}
-              {isTranslating ? "กำลังแปลภาษา..." : "แปลภาษาด้วย AI ทั้งหมด"}
+              {isTranslating 
+                ? (isEn ? "Translating AI..." : "กำลังแปลภาษา...") 
+                : (isEn ? "AI Translate All" : "แปลภาษาด้วย AI ทั้งหมด")}
             </Button>
 
             <Button
               type="submit"
               disabled={
                 isSubmitting ||
-                !watchedTitle?.trim() ||
+                !hasAnyTitle ||
                 characterCount === 0 ||
                 !form.formState.isDirty
               }
-              className="gap-2 bg-linear-to-r h-10 md:h-12 from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm"
+              className="gap-2 bg-linear-to-r h-10 md:h-12 from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm cursor-pointer font-bold"
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              บันทึก
+              {isEn ? "Save" : "บันทึก"}
             </Button>
           </div>
         </div>
@@ -154,3 +169,4 @@ export function BlogHeader({
     </div>
   );
 }
+

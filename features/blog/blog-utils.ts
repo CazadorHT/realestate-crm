@@ -133,3 +133,42 @@ export function generateBlogJsonLd(post: {
 
   return jsonLd;
 }
+
+/**
+ * Category multilingual translation dictionary
+ */
+const CATEGORY_TRANSLATIONS: Record<string, { en: string; cn?: string; ru?: string }> = {
+  "การลงทุนอสังหาฯ": { en: "Real Estate Investment", cn: "房地产投资", ru: "Инвестиции в недвижимость" },
+  "คู่มือซื้อขายบ้าน": { en: "Home Buying & Selling Guide", cn: "房屋买卖指南", ru: "Руководство по покупке и продаже" },
+  "การทำธุรกิจ / สตาร์ทอัพ": { en: "Business & Startup", cn: "商业与创业", ru: "Бизнес и стартапы" },
+  "การทำธุรกิจ/สตาร์ทอัพ": { en: "Business & Startup", cn: "商业与创业", ru: "Бизнес и стартапы" },
+  "ข่าวสาร": { en: "News & Updates", cn: "新闻与资讯", ru: "Новости и обновления" },
+  "ข่าวสารและอัปเดต": { en: "News & Updates", cn: "新闻与资讯", ru: "Новости и обновления" },
+  "โปรโมชั่น": { en: "Promotions", cn: "促销优惠", ru: "Акции и скидки" },
+  "ทั่วไป": { en: "General", cn: "常规", ru: "Общее" },
+  "General": { en: "General", cn: "常规", ru: "Общее" },
+  "ไลฟ์สไตล์": { en: "Lifestyle", cn: "生活方式", ru: "Образ жизни" },
+  "กฎหมายและภาษี": { en: "Legal & Tax", cn: "法律与税务", ru: "Законы и налоги" },
+  "ตกแต่งบ้าน": { en: "Home Decor & Design", cn: "家居装修", ru: "Дизайн и декор" },
+  "คอนโดมิเนียม": { en: "Condominium", cn: "公寓住宅", ru: "Кондоминиумы" },
+  "บ้านเดี่ยว / ทาวน์โฮม": { en: "Single House & Townhome", cn: "独栋别墅与联排", ru: "Дома и таунхаусы" },
+  "บ้านเดี่ยว": { en: "Single House", cn: "独栋别墅", ru: "Отдельный дом" },
+  "ทาวน์โฮม": { en: "Townhome", cn: "联排别墅", ru: "Таунхаус" },
+};
+
+/**
+ * Returns localized category name according to active language
+ */
+export function getCategoryDisplayName(category: string | null | undefined, lang: string): string {
+  if (!category) return "";
+  if (lang !== "en" && lang !== "cn" && lang !== "ru") return category;
+  
+  const match = CATEGORY_TRANSLATIONS[category];
+  if (match) {
+    if (lang === "en") return match.en;
+    if (lang === "cn") return match.cn || match.en;
+    if (lang === "ru") return match.ru || match.en;
+  }
+  return category;
+}
+

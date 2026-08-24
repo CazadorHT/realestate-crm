@@ -40,26 +40,28 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50/50 border-b border-slate-100">
-              <TableHead className="w-[160px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">
-                {isEn ? "Time" : "เวลา (Time)"}
+              <TableHead className="px-4 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                {isEn ? "Time" : "เวลา"}
               </TableHead>
-              <TableHead className="w-[200px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">
-                {isEn ? "User" : "ผู้ใช้งาน (User)"}
+              <TableHead className="px-4 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                {isEn ? "User" : "ผู้ใช้งาน"}
               </TableHead>
-              <TableHead className="w-[180px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">
-                {isEn ? "Event" : "กิจกรรม (Event)"}
+              <TableHead className="px-4 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                {isEn ? "Event" : "กิจกรรม"}
               </TableHead>
-              <TableHead className="px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">
-                {isEn ? "Activity Summary" : "รายละเอียดกิจกรรม (Activity Summary)"}
+              <TableHead className="px-4 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                {isEn ? "Activity Summary" : "รายละเอียดกิจกรรม"}
               </TableHead>
-              <TableHead className="text-right w-[80px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]"></TableHead>
+              <TableHead className="px-4 py-3.5 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider w-24">
+                {isEn ? "Actions" : "จัดการ"}
+              </TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="divide-y divide-slate-100 bg-white">
             {data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center text-slate-400 font-semibold italic">
-                  {isEn ? "No audit log records found" : "ไม่พบข้อมูลประวัติการใช้งาน (No records found)"}
+                <TableCell colSpan={5} className="px-4 py-12 text-center text-slate-400 italic">
+                  {isEn ? "No audit log records found" : "ไม่พบข้อมูลประวัติการใช้งาน"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -199,7 +201,7 @@ function AuditLogDetailsDialog({ log, isEn }: { log: AuditLogWithUser; isEn: boo
 
   return (
     <ResponsiveDialog
-      title={isEn ? "Audit Log Details" : "รายละเอียดประวัติ (Audit log)"}
+      title={isEn ? "Audit Log Details" : "รายละเอียดประวัติ"}
       description={
         isEn
           ? "Technical metadata and context payload recorded by the surveillance service"
@@ -216,25 +218,25 @@ function AuditLogDetailsDialog({ log, isEn }: { log: AuditLogWithUser; isEn: boo
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 rounded-[32px] bg-slate-50/50 border border-slate-100">
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-              {isEn ? "Action" : "การดำเนินการ (Action)"}
+              {isEn ? "Action" : "การดำเนินการ"}
             </span>
             <span className="text-sm font-semibold text-slate-700">{log.action}</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-              {isEn ? "Entity" : "หมวดหมู่ (Entity)"}
+              {isEn ? "Entity" : "หมวดหมู่"}
             </span>
             <span className="text-sm font-semibold text-slate-700">{log.entity}</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-              {isEn ? "Triggered By" : "ผู้ทำรายการ (User)"}
+              {isEn ? "Triggered By" : "ผู้ทำรายการ"}
             </span>
             <span className="text-sm font-semibold text-slate-700">{log.user?.full_name} ({log.user?.role})</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-              {isEn ? "Timestamp" : "วันเวลา (Timestamp)"}
+              {isEn ? "Timestamp" : "วันเวลา"}
             </span>
             <span className="text-sm font-semibold text-slate-700">
               {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
@@ -246,7 +248,7 @@ function AuditLogDetailsDialog({ log, isEn }: { log: AuditLogWithUser; isEn: boo
         <div className="space-y-2">
           <div className="flex items-center gap-3 px-1">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-              {isEn ? "Raw Metadata" : "ข้อมูลเชิงเทคนิค (Raw Metadata)"}
+              {isEn ? "Raw Metadata" : "ข้อมูลเชิงเทคนิค"}
             </span>
             <div className="h-px flex-1 bg-slate-100" />
           </div>

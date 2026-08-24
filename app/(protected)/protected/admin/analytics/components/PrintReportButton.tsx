@@ -36,7 +36,7 @@ export function PrintReportButton() {
       ) : (
         <Printer className="h-4 w-4 text-blue-500" />
       )}
-      <span className="hidden md:block">{isEn ? "Print PDF" : "ส่งรายงาน (PDF)"}</span>
+      <span className="hidden md:block">{isEn ? "Print PDF" : "พิมพ์รายงาน PDF"}</span>
     </Button>
   );
 }

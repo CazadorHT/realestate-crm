@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const isEn = lang === "en";
 
   return {
-    title: isEn ? "Leads" : "จัดการลูกค้า (Leads)",
+    title: isEn ? "Leads" : "จัดการรายชื่อลูกค้า",
     description: isEn
       ? "Manage and track prospective real estate clients"
       : "จัดการและติดตามลูกค้าที่สนใจอสังหาริมทรัพย์",
@@ -124,7 +124,7 @@ async function PageHeaderWrapper({
 
   return (
     <PageHeader
-      title={isEn ? "Leads" : "ลูกค้า (Leads)"}
+      title={isEn ? "Leads" : "จัดการรายชื่อลูกค้า"}
       subtitle={isEn ? "Manage and track prospective clients" : "จัดการและติดตามลูกค้าที่สนใจ"}
       count={count}
       icon="users"

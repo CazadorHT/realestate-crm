@@ -13,16 +13,20 @@ import { BlogImageUploader } from "../BlogImageUploader";
 import { CategoryDialog } from "../CategoryDialog";
 import { CategoryResponsiveSelect } from "./CategoryResponsiveSelect";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface BlogMediaTabProps {
   form: UseFormReturn<BlogPostInput>;
   categories: { id: string; name: string }[];
 }
 
-
 export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const dateLocale = isEn ? enUS : th;
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
@@ -33,8 +37,12 @@ export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
               <ImageIcon className="h-5 w-5 text-orange-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">รูปภาพหน้าปก</h3>
-              <p className="text-sm text-slate-500">รูปภาพหลักของบทความ</p>
+              <h3 className="font-semibold text-slate-900">
+                {isEn ? "Cover Image" : "รูปภาพหน้าปก"}
+              </h3>
+              <p className="text-sm text-slate-500">
+                {isEn ? "Primary featured image for the article" : "รูปภาพหลักของบทความ"}
+              </p>
             </div>
           </div>
 
@@ -62,8 +70,12 @@ export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
               <Tag className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">หมวดหมู่และแท็ก</h3>
-              <p className="text-sm text-slate-500">จัดระเบียบบทความของคุณ</p>
+              <h3 className="font-semibold text-slate-900">
+                {isEn ? "Category & Tags" : "หมวดหมู่และแท็ก"}
+              </h3>
+              <p className="text-sm text-slate-500">
+                {isEn ? "Organize and classify your article" : "จัดระเบียบบทความของคุณ"}
+              </p>
             </div>
           </div>
 
@@ -74,7 +86,7 @@ export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-slate-700 font-medium">
-                    หมวดหมู่
+                    {isEn ? "Category" : "หมวดหมู่"}
                   </FormLabel>
                   <FormControl>
                     <CategoryResponsiveSelect
@@ -97,17 +109,17 @@ export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-slate-700 font-medium">
-                    แท็ก
+                    {isEn ? "Tags" : "แท็ก"}
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="ข่าว, เคล็ดลับ, 2024 (คั่นด้วยเครื่องหมายจุลภาค)"
+                      placeholder={isEn ? "News, Tips, Investment, 2026 (comma separated)" : "ข่าว, เคล็ดลับ, 2024 (คั่นด้วยเครื่องหมายจุลภาค)"}
                       className="h-11 border-slate-200"
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription className="text-slate-500">
-                    ใส่แท็กคั่นด้วยเครื่องหมายจุลภาค (,)
+                  <FormDescription className="text-slate-500 text-xs">
+                    {isEn ? "Enter tags separated by commas (,)" : "ใส่แท็กคั่นด้วยเครื่องหมายจุลภาค (,)"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -121,7 +133,7 @@ export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-slate-700 font-medium">
-                    กำหนดการเผยแพร่
+                    {isEn ? "Publishing Schedule" : "กำหนดการเผยแพร่"}
                   </FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -129,16 +141,16 @@ export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full h-11 pl-3 text-left font-normal border-slate-200",
+                            "w-full h-11 pl-3 text-left font-normal border-slate-200 cursor-pointer",
                             !field.value && "text-muted-foreground",
                           )}
                         >
                           {field.value ? (
                             format(new Date(field.value), "PPP", {
-                              locale: th,
+                              locale: dateLocale,
                             })
                           ) : (
-                            <span>เลือกวันที่</span>
+                            <span>{isEn ? "Select date" : "เลือกวันที่"}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -154,8 +166,10 @@ export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormDescription className="text-slate-500">
-                    หากเลือกวันในอนาคต บทความจะถูกตั้งเวลาเผยแพร่
+                  <FormDescription className="text-slate-500 text-xs">
+                    {isEn
+                      ? "If set to a future date, the article will be scheduled automatically."
+                      : "หากเลือกวันในอนาคต บทความจะถูกตั้งเวลาเผยแพร่"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -167,3 +181,4 @@ export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
     </div>
   );
 }
+

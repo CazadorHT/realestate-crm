@@ -43,7 +43,7 @@ export async function getAdminProjectsAction(): Promise<ProjectAdminItem[]> {
     // Fetch projects for tenant
     const { data: projects, error: projectsError } = await ctx.supabase
       .from("projects")
-      .select("id, name, slug, developer, location_lat, location_lng, is_active, sort_order, created_at, updated_at")
+      .select("id, name, slug, developer, property_type, province, district, subdistrict, latitude, longitude, google_maps_url, year_completed, total_units, description, image_url, gallery_urls, facilities, nearest_station_code, nearest_station_distance, seo_title, seo_description, is_active, sort_order, created_at, updated_at")
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
 

@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const lang = (cookieStore.get("crm-language")?.value || cookieStore.get("language")?.value || "th") as "th" | "en";
   const isEn = lang === "en";
   return {
-    title: isEn ? "Deals" : "ดีล (Deals)",
+    title: isEn ? "Deals" : "การจัดการดีล",
   };
 }
 
@@ -54,7 +54,7 @@ export default async function DealsPage({
       <DealsFinancialsTour />
       {/* 🚀 1. HEADER (Static with fast context) */}
       <PageHeader
-        title={isEn ? "Deals" : "ดีล (Deals)"}
+        title={isEn ? "Deals" : "การจัดการดีล"}
         subtitle={isEn ? "Track and manage sales and rental deals" : "จัดการและติดตามดีลการขายและเช่า"}
         icon="handshake"
         gradient="amber"

@@ -19,6 +19,7 @@ import { Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 interface Category {
   id: string;
@@ -35,6 +36,8 @@ interface CategoryManagerProps {
 }
 
 export function CategoryManager({ initialCategories }: CategoryManagerProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -59,31 +62,31 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         setNewCategoryNameEn("");
         setNewCategoryNameCn("");
         setNewCategoryNameRu("");
-        toast.success(result.message || "สร้างหมวดหมู่สำเร็จ");
+        toast.success(result.message || (isEn ? "Category created successfully" : "สร้างหมวดหมู่สำเร็จ"));
         const url = new URL(window.location.href);
         url.searchParams.set("success", "true");
         router.push(url.pathname + url.search);
         router.refresh();
       } else {
-        toast.error(result.message || "สร้างหมวดหมู่ไม่สำเร็จ");
+        toast.error(result.message || (isEn ? "Failed to create category" : "สร้างหมวดหมู่ไม่สำเร็จ"));
       }
     });
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบหมวดหมู่นี้?")) return;
+    if (!confirm(isEn ? "Are you sure you want to delete this category?" : "คุณแน่ใจหรือไม่ว่าต้องการลบหมวดหมู่นี้?")) return;
 
     startTransition(async () => {
       const result = await deleteCategoryAction(id);
       if (result.success) {
         setCategories((prev) => prev.filter((c) => c.id !== id));
-        toast.success(result.message || "ลบหมวดหมู่สำเร็จ");
+        toast.success(result.message || (isEn ? "Category deleted successfully" : "ลบหมวดหมู่สำเร็จ"));
         const url = new URL(window.location.href);
         url.searchParams.set("success", "true");
         router.push(url.pathname + url.search);
         router.refresh();
       } else {
-        toast.error(result.message || "ลบหมวดหมู่ไม่สำเร็จ");
+        toast.error(result.message || (isEn ? "Failed to delete category" : "ลบหมวดหมู่ไม่สำเร็จ"));
       }
     });
   };
@@ -102,17 +105,17 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
             )}
           </div>
           <h3 className="text-sm font-semibold text-slate-700">
-            เพิ่มหมวดหมู่ใหม่
+            {isEn ? "Add New Category" : "เพิ่มหมวดหมู่ใหม่"}
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">
-              Thai Name
+              {isEn ? "Thai Name" : "ชื่อภาษาไทย"}
             </label>
             <Input
-              placeholder="เช่น ข่าวสาร, โปรโมชั่น"
+              placeholder={isEn ? "e.g. News, Promotions" : "เช่น ข่าวสาร, โปรโมชั่น"}
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
               disabled={isPending}
@@ -121,7 +124,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">
-              English Name
+              {isEn ? "English Name" : "ชื่อภาษาอังกฤษ"}
             </label>
             <Input
               placeholder="e.g. News, Promotions"
@@ -133,7 +136,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">
-              Chinese Name
+              {isEn ? "Chinese Name" : "ชื่อภาษาจีน"}
             </label>
             <Input
               placeholder="例如：新闻、促销"
@@ -145,7 +148,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">
-              Russian Name
+              {isEn ? "Russian Name" : "ชื่อภาษารัสเซีย"}
             </label>
             <Input
               placeholder="напр. Новости, Акции"
@@ -161,14 +164,14 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           <Button
             onClick={handleCreate}
             disabled={isPending || !newCategoryName.trim()}
-            className="w-full lg:w-auto lg:min-w-[160px] bg-blue-600 hover:bg-blue-700 h-11 shadow-lg shadow-blue-500/20 transition-all"
+            className="w-full lg:w-auto lg:min-w-[160px] bg-blue-600 hover:bg-blue-700 h-11 shadow-lg shadow-blue-500/20 transition-all cursor-pointer font-semibold"
           >
             {isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <div className="mr-2 h-2 w-2 bg-white rounded-full animate-pulse" />
             )}
-            เพิ่มหมวดหมู่
+            {isEn ? "Add Category" : "เพิ่มหมวดหมู่"}
           </Button>
         </div>
       </div>
@@ -177,8 +180,8 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            หมวดหมู่ที่มีอยู่
-            <span className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-full border border-slate-200">
+            {isEn ? "Existing Categories" : "หมวดหมู่ที่มีอยู่"}
+            <span className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-full border border-slate-200 font-bold">
               {categories.length}
             </span>
           </h3>
@@ -189,12 +192,12 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           <Table>
             <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="py-4">ชื่อหมวดหมู่ (TH)</TableHead>
-                <TableHead>English (EN)</TableHead>
-                <TableHead>中文 (CN)</TableHead>
-                <TableHead>Русский (RU)</TableHead>
-                <TableHead>URL (Slug)</TableHead>
-                <TableHead className="w-[80px] text-right">จัดการ</TableHead>
+                <TableHead className="py-4">{isEn ? "Thai Name" : "ภาษาไทย"}</TableHead>
+                <TableHead>English</TableHead>
+                <TableHead>中文</TableHead>
+                <TableHead>Русский</TableHead>
+                <TableHead>URL Slug</TableHead>
+                <TableHead className="w-[80px] text-right">{isEn ? "Actions" : "จัดการ"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -243,7 +246,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                     colSpan={6}
                     className="text-center py-12 text-slate-400"
                   >
-                    ไม่พบหมวดหมู่
+                    {isEn ? "No categories found" : "ไม่พบหมวดหมู่"}
                   </TableCell>
                 </TableRow>
               )}
@@ -312,7 +315,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           ))}
           {categories.length === 0 && (
             <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-200 text-slate-400">
-              ไม่พบหมวดหมู่
+              {isEn ? "No categories found" : "ไม่พบหมวดหมู่"}
             </div>
           )}
         </div>

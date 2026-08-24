@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { ServiceForm } from "./ServiceForm";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function CreateServiceDialog() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -29,16 +32,20 @@ export function CreateServiceDialog() {
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      title="สร้างบริการใหม่"
-      description="ระบุรายละเอียดเบื้องต้นสำหรับบริการใหม่ของคุณเพื่อเริ่มการนำเสนอ"
+      title={isEn ? "Create New Service" : "สร้างบริการใหม่"}
+      description={
+        isEn
+          ? "Provide primary details for your new service to start offering it on the portal"
+          : "ระบุรายละเอียดเบื้องต้นสำหรับบริการใหม่ของคุณเพื่อเริ่มการนำเสนอ"
+      }
       className="md:max-w-6xl"
       trigger={
         <Button
           size="lg"
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25"
+          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 cursor-pointer"
         >
           <Plus className="h-5 w-5 mr-2" />
-          สร้างบริการใหม่
+          {isEn ? "Create New Service" : "สร้างบริการใหม่"}
         </Button>
       }
     >

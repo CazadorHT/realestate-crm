@@ -13,7 +13,7 @@ export function AnalyticsFilters() {
   const isEn = language === "en";
 
   const ranges = [
-    { label: isEn ? "All Time" : "ทั้งหมด (All)", value: "all" },
+    { label: isEn ? "All Time" : "ตลอดช่วงเวลา", value: "all" },
     { label: isEn ? "Last 7 Days" : "7 วันล่าสุด", value: "7" },
     { label: isEn ? "Last 14 Days" : "14 วันล่าสุด", value: "14" },
     { label: isEn ? "Last 30 Days" : "30 วันล่าสุด", value: "30" },

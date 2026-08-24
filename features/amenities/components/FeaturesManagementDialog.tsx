@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-import { FeatureSchema, type FeatureFormValues } from "../schema";
+import { FeatureSchema, getFeatureSchema, type FeatureFormValues } from "../schema";
 import {
   createFeatureAction,
   updateFeatureAction,
@@ -154,7 +154,7 @@ export function FeaturesManagementDialog({
   const [editingFeature, setEditingFeature] = useState<FeatureRow | null>(null);
 
   const form = useForm<FeatureFormValues>({
-    resolver: zodResolver(FeatureSchema),
+    resolver: zodResolver(getFeatureSchema(isEn)),
     defaultValues: {
       name: "",
       name_en: "",

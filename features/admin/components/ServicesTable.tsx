@@ -13,6 +13,8 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { ServiceForm } from "./ServiceForm";
 
+import { useLanguage } from "@/lib/i18n/language-context";
+
 interface ServicesTableProps {
   services: ServiceRow[];
   totalCount: number;
@@ -28,6 +30,9 @@ export function ServicesTable({
   activeCount = 0,
   trashCount = 0,
 }: ServicesTableProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const {
     isPending,
     isDeleting,
@@ -124,8 +129,8 @@ export function ServicesTable({
         <ResponsiveDialog
           open={!!editingService}
           onOpenChange={(open: boolean) => !open && setEditingService(null)}
-          title="แก้ไขข้อมูลบริการ"
-          description="ปรับปรุงรายละเอียดบริการและรูปภาพหน้าปก"
+          title={isEn ? "Edit Service Details" : "แก้ไขข้อมูลบริการ"}
+          description={isEn ? "Update service details and cover image" : "ปรับปรุงรายละเอียดบริการและรูปภาพหน้าปก"}
           className="md:max-w-7xl"
         >
           <div className="max-h-[80vh] overflow-y-auto px-1 py-4">

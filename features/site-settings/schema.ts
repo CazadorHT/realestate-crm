@@ -157,36 +157,36 @@ export interface SiteSettings {
   partners_description_ru?: string;
 }
 
-export const siteSettingsSchema = z.object({
-  site_name: z.string().min(1, "กรุณากรอกชื่อเว็บไซต์").max(100),
-  company_name: z.string().min(1, "กรุณากรอกชื่อบริษัท").max(100),
+export const getSiteSettingsSchema = (isEn: boolean) => z.object({
+  site_name: z.string().min(1, isEn ? "Please enter site name" : "กรุณากรอกชื่อเว็บไซต์").max(100),
+  company_name: z.string().min(1, isEn ? "Please enter company name" : "กรุณากรอกชื่อบริษัท").max(100),
   site_description: z.string().max(500),
-  contact_phone: z.string().min(1, "กรุณากรอกเบอร์โทรศัพท์"),
-  contact_email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
+  contact_phone: z.string().min(1, isEn ? "Please enter contact phone" : "กรุณากรอกเบอร์โทรศัพท์"),
+  contact_email: z.string().email(isEn ? "Invalid email address format" : "รูปแบบอีเมลไม่ถูกต้อง"),
   contact_address: z.string().max(500),
   google_maps_url: z
     .string()
-    .url("รูปแบบ URL ไม่ถูกต้อง")
+    .url(isEn ? "Invalid URL format" : "รูปแบบ URL ไม่ถูกต้อง")
     .or(z.literal(""))
     .optional(),
   facebook_url: z
     .string()
-    .url("รูปแบบ URL ไม่ถูกต้อง")
+    .url(isEn ? "Invalid URL format" : "รูปแบบ URL ไม่ถูกต้อง")
     .or(z.literal(""))
     .optional(),
   instagram_url: z
     .string()
-    .url("รูปแบบ URL ไม่ถูกต้อง")
+    .url(isEn ? "Invalid URL format" : "รูปแบบ URL ไม่ถูกต้อง")
     .or(z.literal(""))
     .optional(),
   line_url: z
     .string()
-    .url("รูปแบบ URL ไม่ถูกต้อง")
+    .url(isEn ? "Invalid URL format" : "รูปแบบ URL ไม่ถูกต้อง")
     .or(z.literal(""))
     .optional(),
   tiktok_url: z
     .string()
-    .url("รูปแบบ URL ไม่ถูกต้อง")
+    .url(isEn ? "Invalid URL format" : "รูปแบบ URL ไม่ถูกต้อง")
     .or(z.literal(""))
     .optional(),
   line_id: z.string().max(50),
@@ -242,6 +242,8 @@ export const siteSettingsSchema = z.object({
   partners_description_cn: z.string().max(1000).optional().or(z.literal("")),
   partners_description_ru: z.string().max(1000).optional().or(z.literal("")),
 });
+
+export const siteSettingsSchema = getSiteSettingsSchema(false);
 
 export const SENSITIVE_KEYS: SiteSettingKey[] = [
   "tiktok_auth_token",

@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-export const profileSchema = z.object({
-  full_name: z.string().min(1, "กรุณากรอกชื่อ-นามสกุล"),
+export const getProfileSchema = (isEn: boolean) => z.object({
+  full_name: z.string().min(1, isEn ? "Please enter full name" : "กรุณากรอกชื่อ-นามสกุล"),
   nickname: z.string().optional(),
   phone: z.string().optional(),
-  avatar_url: z.string().url("URL รูปภาพไม่ถูกต้อง").optional().or(z.literal("")),
+  avatar_url: z.string().url(isEn ? "Invalid image URL" : "URL รูปภาพไม่ถูกต้อง").optional().or(z.literal("")),
   
   // Multi-channel Identity
   line_id: z.string().optional(),
@@ -18,7 +18,7 @@ export const profileSchema = z.object({
     .string()
     .optional()
     .refine((val) => !val || /^\d+$/.test(val), {
-      message: "Telegram ID ต้องเป็นตัวเลขเท่านั้น",
+      message: isEn ? "Telegram ID must be digits only" : "Telegram ID ต้องเป็นตัวเลขเท่านั้น",
     }),
 
   // Localization & Branding
@@ -35,6 +35,8 @@ export const profileSchema = z.object({
   bank_account_name: z.string().optional(),
   other_bank_name: z.string().optional(),
 });
+
+export const profileSchema = getProfileSchema(false);
 
 // Explicit type for clarity in the IDE
 export type ProfileFormValues = {
