@@ -33,9 +33,12 @@ export default async function ProfilePage() {
   const profile = await getCurrentProfile();
 
   if (!profile) {
+    const { getServerTranslations } = await import("@/lib/i18n");
+    const { language } = await getServerTranslations();
+    const isEn = language === "en";
     return (
       <div className="text-center text-red-500 py-12">
-        Error loading profile data / เกิดข้อผิดพลาดในการโหลดข้อมูลโปรไฟล์
+        {isEn ? "Error loading profile data" : "เกิดข้อผิดพลาดในการโหลดข้อมูลโปรไฟล์"}
       </div>
     );
   }

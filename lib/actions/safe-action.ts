@@ -53,14 +53,21 @@ export function createSafeAction<TInput, TOutput>(
       return { success: true, data: result };
     } catch (err: unknown) {
       console.error("Action Error:", err);
+      let lang = "th";
+      try {
+        const { getServerLanguage } = await import("@/lib/i18n");
+        lang = await getServerLanguage();
+      } catch {}
+      const isEn = lang === "en";
+
       // Special handling for AuthzError
       const error = err as Error & { code?: string };
       if (error.name === 'AuthzError' || error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') {
-         return { success: false, error: error.message || "คุณไม่มีสิทธิ์ดำเนินการ" };
+         return { success: false, error: error.message || (isEn ? "You do not have permission to perform this action" : "คุณไม่มีสิทธิ์ดำเนินการ") };
       }
       return {
         success: false,
-        error: mapDbError(error),
+        error: mapDbError(error, lang),
       };
     }
   };

@@ -57,6 +57,10 @@ export async function getServerLanguage(explicitLocale?: string): Promise<Langua
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
+    const crmLang = cookieStore.get("crm-language")?.value;
+    if (crmLang && (SUPPORTED_LANGS as readonly string[]).includes(crmLang)) {
+      return crmLang as Language;
+    }
     const langCookie = cookieStore.get("app-language")?.value;
     if (langCookie && (SUPPORTED_LANGS as readonly string[]).includes(langCookie)) {
       return langCookie as Language;

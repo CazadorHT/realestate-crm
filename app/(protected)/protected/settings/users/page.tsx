@@ -5,6 +5,7 @@ import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { calculateUsersStats, type EliteUser } from "@/lib/users-utils";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { UsersPageView } from "@/features/users/UsersPageView";
+import { getServerTranslations } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -86,9 +87,11 @@ export default async function UsersManagementPage() {
 
   if (usersError) {
     console.error("Error fetching users:", usersError);
+    const { language } = await getServerTranslations();
+    const isEn = language === "en";
     return (
       <div className="p-8 text-center text-red-500">
-        เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้
+        {isEn ? "An error occurred while loading user data." : "เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้"}
       </div>
     );
   }
