@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {
   format,
@@ -14,6 +14,7 @@ import {
   Loader2,
   Check,
   X,
+  Search,
 } from "lucide-react";
 import { 
   FaChevronLeft, 
@@ -29,14 +30,16 @@ import {
 } from "react-icons/fa6";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { CalendarEvent } from "../queries";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Search } from "lucide-react";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { PropertyCombobox } from "@/components/PropertyCombobox";
+import { LeadCombobox } from "@/components/LeadCombobox";
+import { AgentCombobox } from "@/components/AgentCombobox";
 
 import { EventDetailsDialog } from "./EventDetailsDialog";
 
@@ -53,9 +56,9 @@ const CalendarGrid = dynamic(() => import("./CalendarGrid").then((mod) => mod.Ca
 interface CalendarViewProps {
   initialDate: Date;
   events: CalendarEvent[];
-  properties: { id: string; title: string }[];
+  properties: { id: string; title: string; title_en?: string | null }[];
   leads: { id: string; full_name: string }[];
-  agents?: { id: string; title: string }[];
+  agents?: { id: string; title: string; email?: string | null; role?: string | null; avatar_url?: string | null }[];
   currentUserId?: string;
   isAdmin?: boolean;
 }
@@ -101,6 +104,24 @@ export function CalendarView({
   const selectedProperty = searchParams.get("propertyId") || "ALL";
   const selectedLead = searchParams.get("leadId") || "ALL";
   const selectedAgent = searchParams.get("agentId") || "ALL";
+
+  const initialPropObj = useMemo(() => {
+    if (!selectedProperty || selectedProperty === "ALL") return null;
+    const p = properties.find((x) => x.id === selectedProperty);
+    return p ? { id: p.id, title: p.title, title_en: p.title_en } : null;
+  }, [selectedProperty, properties]);
+
+  const initialLeadObj = useMemo(() => {
+    if (!selectedLead || selectedLead === "ALL") return null;
+    const l = leads.find((x) => x.id === selectedLead);
+    return l ? { id: l.id, full_name: l.full_name, phone: null, email: null } : null;
+  }, [selectedLead, leads]);
+
+  const initialAgentObj = useMemo(() => {
+    if (!selectedAgent || selectedAgent === "ALL") return null;
+    const a = agents.find((x) => x.id === selectedAgent);
+    return a ? { id: a.id, title: a.title, email: a.email, role: a.role, avatar_url: a.avatar_url } : null;
+  }, [selectedAgent, agents]);
 
   const navigate = (direction: "prev" | "next") => {
     setIsLoading(true);
@@ -187,22 +208,22 @@ export function CalendarView({
 
   return (
     <div className="space-y-4 animate-in fade-in duration-700">
-      {/* Header controls - Elite Grid Overhaul */}
-      <div id="tour-calendar-controls" className="grid grid-cols-1 xl:grid-cols-[auto_1fr_auto] items-center gap-4 p-5 bg-white/80 backdrop-blur-md rounded-[32px] border border-slate-200/60 shadow-sm sticky top-0 z-20">
+      {/* Header controls - Responsive, Non-overflowing Layout */}
+      <div id="tour-calendar-controls" className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 p-3.5 sm:p-4 bg-white/80 backdrop-blur-md rounded-[28px] sm:rounded-[32px] border border-slate-200/60 shadow-sm sticky top-0 z-20">
         
         {/* Section 1: Navigation & Title Group */}
-        <div className="flex items-center justify-between xl:justify-start gap-4 w-full">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="h-11 px-4 hover:bg-slate-50 rounded-2xl flex items-center gap-3 group/btn transition-all border border-transparent hover:border-slate-100 cursor-pointer"
+                  className="h-11 px-3.5 hover:bg-slate-50 rounded-2xl flex items-center gap-2.5 group/btn transition-all border border-transparent hover:border-slate-100 cursor-pointer"
                 >
-                  <h2 className="text-xl font-semibold text-slate-800 group-hover/btn:text-indigo-600 transition-colors">
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-800 group-hover/btn:text-indigo-600 transition-colors whitespace-nowrap">
                     {format(currentDate, "MMMM yyyy", { locale: isEn ? enUS : th })}
                   </h2>
-                  <FaChevronDown className="h-3.5 w-3.5 text-slate-400 group-hover/btn:text-indigo-600 transition-all group-data-[state=open]/btn:rotate-180" />
+                  <FaChevronDown className="h-3 w-3 text-slate-400 group-hover/btn:text-indigo-600 transition-all group-data-[state=open]/btn:rotate-180" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[320px] p-4 rounded-[28px] shadow-2xl border-slate-100/60 mt-2" align="start">
@@ -284,109 +305,104 @@ export function CalendarView({
           </div>
 
           {/* Quick Nav arrows */}
-          <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/50">
+          <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/50 shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("prev")}
-              className="rounded-xl h-9 w-10 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all cursor-pointer"
+              className="rounded-xl h-9 w-9 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all cursor-pointer"
             >
-              <FaChevronLeft className="h-4 w-4" />
+              <FaChevronLeft className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("next")}
-              className="rounded-xl h-9 w-10 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all cursor-pointer"
+              className="rounded-xl h-9 w-9 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all cursor-pointer"
             >
-              <FaChevronRight className="h-4 w-4" />
+              <FaChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
 
-        {/* Section 2: Loading Spacer / Center (Hidden on XL) */}
-        <div className="hidden xl:block" />
-
-        {/* Section 3: High-Fidelity Filters & View Toggle - Tablet Optimized */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-4 w-full xl:w-auto">
+        {/* Section 2: Filters & View Toggle (Flex Wrap + Compact Proportions) */}
+        <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap justify-start xl:justify-end min-w-0">
           {/* Property Filter */}
-          <FilterDialog
-            title={isEn ? "Select Property" : "เลือกทรัพย์สิน"}
-            placeholder={isEn ? "Search property..." : "ค้นหาทรัพย์สิน..."}
-            items={properties.map(p => ({ id: p.id, title: p.title }))}
-            value={selectedProperty}
-            onSelect={handlePropertyChange}
-            icon={<FaBuilding className="h-4 w-4 mb-0.5" />}
-            allLabel={isEn ? "All Properties" : "ทรัพย์สินทั้งหมด"}
-            indicator={(id) => events.some(e => e.meta?.propertyId === id)}
-          />
+          <div className="w-[calc(50%-4px)] sm:w-[165px] md:w-[180px] xl:w-[200px] shrink-0">
+            <PropertyCombobox
+              value={selectedProperty === "ALL" ? null : selectedProperty}
+              onChangeAction={(id) => handlePropertyChange(id || "ALL")}
+              placeholder={isEn ? "All Properties" : "ทรัพย์ทั้งหมด"}
+              initialProperty={initialPropObj}
+              className="h-11 rounded-2xl border-slate-200/80 bg-slate-50/50 hover:bg-white text-xs font-semibold"
+            />
+          </div>
 
           {/* Lead Filter */}
-          <FilterDialog
-            title={isEn ? "Select Lead" : "เลือกลูกค้า"}
-            placeholder={isEn ? "Search lead name..." : "ค้นหาชื่อลูกค้า..."}
-            items={leads.map(l => ({ id: l.id, title: l.full_name }))}
-            value={selectedLead}
-            onSelect={handleLeadChange}
-            icon={<FaUser className="h-4 w-4 mb-0.5" />}
-            allLabel={isEn ? "All Leads" : "ลูกค้าทั้งหมด"}
-            indicator={(id) => events.some(e => e.meta?.leadId === id)}
-          />
+          <div className="w-[calc(50%-4px)] sm:w-[145px] md:w-[155px] xl:w-[160px] shrink-0">
+            <LeadCombobox
+              value={selectedLead === "ALL" ? null : selectedLead}
+              onChangeAction={(id) => handleLeadChange(id || "ALL")}
+              placeholder={isEn ? "All Leads" : "ลูกค้าทั้งหมด"}
+              initialLead={initialLeadObj}
+              className="h-11 rounded-2xl border-slate-200/80 bg-slate-50/50 hover:bg-white text-xs font-semibold"
+            />
+          </div>
 
           {/* Agent Filter (Admin Only) */}
           {isAdmin && (
-            <FilterDialog
-              title={isEn ? "Select Agent" : "เลือกพนักงาน"}
-              placeholder={isEn ? "Search agent name..." : "ค้นหาชื่อพนักงาน..."}
-              items={agents}
-              value={selectedAgent}
-              onSelect={handleAgentChange}
-              icon={<FaUsers className="h-4 w-4 mb-0.5" />}
-              allLabel={isEn ? "All Agents" : "พนักงานทั้งหมด"}
-              indicator={(id) => events.some(e => e.meta?.agentId === id)}
-            />
+            <div className="w-[calc(50%-4px)] sm:w-[145px] md:w-[155px] xl:w-[160px] shrink-0">
+              <AgentCombobox
+                value={selectedAgent === "ALL" ? null : selectedAgent}
+                onChangeAction={(id) => handleAgentChange(id || "ALL")}
+                placeholder={isEn ? "All Agents" : "พนักงานทั้งหมด"}
+                agents={agents}
+                initialAgent={initialAgentObj}
+                className="h-11 rounded-2xl border-slate-200/80 bg-slate-50/50 hover:bg-white text-xs font-semibold"
+              />
+            </div>
           )}
 
-          {/* View Mode Toggle - Elite Design Standardized Height */}
-          <div id="tour-calendar-view-mode" className="flex bg-slate-100/60 p-1.5 gap-1.5 rounded-2xl border border-slate-200/50 w-full lg:w-auto h-11 items-center">
+          {/* View Mode Toggle */}
+          <div id="tour-calendar-view-mode" className="flex bg-slate-100/60 p-1 gap-1 rounded-2xl border border-slate-200/50 shrink-0 h-11 items-center ml-auto xl:ml-0">
             <button
               onClick={() => handleViewChange("dayGridMonth")}
               className={cn(
-                "flex-1 lg:px-4 h-full text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer",
+                "px-3 h-full text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer",
                 viewMode === "dayGridMonth"
-                  ? "bg-white text-indigo-600 shadow-lg shadow-slate-200/80 scale-[1.03]"
+                  ? "bg-white text-indigo-600 shadow-md shadow-slate-200/80"
                   : "text-slate-500 hover:text-indigo-600 hover:bg-white/40",
               )}
               title={isEn ? "Month view" : "ตารางรายเดือน"}
             >
-              <FaCalendar className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{isEn ? "Month" : "เดือน"}</span>
+              <FaCalendar className="h-3 w-3" />
+              <span>{isEn ? "Month" : "เดือน"}</span>
             </button>
             <button
               onClick={() => handleViewChange("timeGridWeek")}
               className={cn(
-                "flex-1 lg:px-4 h-full text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer",
+                "px-3 h-full text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer",
                 viewMode === "timeGridWeek"
-                  ? "bg-white text-indigo-600 shadow-lg shadow-slate-200/80 scale-[1.03]"
+                  ? "bg-white text-indigo-600 shadow-md shadow-slate-200/80"
                   : "text-slate-500 hover:text-indigo-600 hover:bg-white/40",
               )}
               title={isEn ? "Week view" : "ตารางรายสัปดาห์"}
             >
-              <FaCalendarWeek className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{isEn ? "Week" : "สัปดาห์"}</span>
+              <FaCalendarWeek className="h-3 w-3" />
+              <span>{isEn ? "Week" : "สัปดาห์"}</span>
             </button>
             <button
               onClick={() => handleViewChange("listMonth")}
               className={cn(
-                "flex-1 lg:px-4 h-full text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer",
+                "px-3 h-full text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer",
                 viewMode === "listMonth"
-                  ? "bg-white text-indigo-600 shadow-lg shadow-slate-200/80 scale-[1.03]"
+                  ? "bg-white text-indigo-600 shadow-md shadow-slate-200/80"
                   : "text-slate-500 hover:text-indigo-600 hover:bg-white/40",
               )}
-              title={isEn ? "List view" : "มุมมองแบบรายการ"}
+              title={isEn ? "List view" : "รายการ"}
             >
-              <FaListUl className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{isEn ? "List" : "รายการ"}</span>
+              <FaListUl className="h-3 w-3" />
+              <span>{isEn ? "List" : "รายการ"}</span>
             </button>
           </div>
         </div>
@@ -434,189 +450,3 @@ export function CalendarView({
     </div>
   );
 }
-
-/**
- * 🛰️ Internal Helper: FilterDialog
- * A reusable responsive dialog for selection with search and activity indicators.
- */
-interface FilterItem {
-  id: string;
-  title: string;
-}
-
-interface FilterDialogProps {
-  title: string;
-  placeholder: string;
-  items: FilterItem[];
-  value: string;
-  onSelect: (id: string) => void;
-  icon: React.ReactNode;
-  allLabel: string;
-  indicator?: (id: string) => boolean;
-}
-
-function FilterDialog({
-  title,
-  placeholder,
-  items,
-  value,
-  onSelect,
-  icon,
-  allLabel,
-  indicator
-}: FilterDialogProps) {
-  const { language } = useLanguage();
-  const isEn = language === "en";
-
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [showOnlyActive, setShowOnlyActive] = useState(false);
-
-  const selectedItem = items.find(i => i.id === value);
-  
-  const filteredItems = items.filter(i => {
-    const matchesSearch = i.title.toLowerCase().includes(search.toLowerCase());
-    if (showOnlyActive && indicator) {
-      return matchesSearch && indicator(i.id);
-    }
-    return matchesSearch;
-  });
-
-  return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={setOpen}
-      title={title}
-      trigger={
-        <Button 
-          variant="outline" 
-          className="w-full lg:w-[150px] xl:w-[180px] rounded-xl border-slate-200 h-11 justify-between px-3 font-semibold text-slate-700 bg-white/50 hover:bg-white hover:shadow-sm transition-all cursor-pointer"
-        >
-          <div className="flex items-center gap-2 truncate text-inherit">
-            {icon}
-            <span className="truncate">
-              {value === "ALL" ? allLabel : selectedItem?.title || (isEn ? "Unknown" : "ไม่ทราบข้อมูล")}
-            </span>
-          </div>
-          <FaChevronDown className="h-3 w-3 opacity-50 shrink-0 ml-2" />
-        </Button>
-      }
-    >
-      <div className="flex flex-col h-full bg-white">
-        {/* Search Header */}
-        <div className="px-4 py-3 border-b border-slate-50 sticky top-0 bg-white/80 backdrop-blur-md z-10 space-y-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder={placeholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-indigo-500"
-              autoFocus
-            />
-            {search && (
-              <button 
-                 onClick={() => setSearch("")}
-                 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <button
-               onClick={() => setShowOnlyActive(!showOnlyActive)}
-               className={cn(
-                 "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer",
-                 showOnlyActive 
-                   ? "bg-emerald-50 border-emerald-100 text-emerald-700 shadow-sm" 
-                   : "bg-white border-slate-100 text-slate-500 hover:bg-slate-50"
-               )}
-            >
-              <div className={cn(
-                "w-1.5 h-1.5 rounded-full shrink-0",
-                showOnlyActive ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
-              )} />
-              {isEn ? "Active only" : "แสดงเฉพาะที่มีกิจกรรม"}
-            </button>
-            
-            {search && (
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                {isEn ? `Found ${filteredItems.length}` : `พบ ${filteredItems.length} รายการ`}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* List Content */}
-        <div className="flex-1 overflow-y-auto max-h-[400px] lg:max-h-[500px]">
-          <div className="p-2 space-y-1">
-            <button
-              onClick={() => {
-                onSelect("ALL");
-                setOpen(false);
-              }}
-              className={cn(
-                "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-left cursor-pointer",
-                value === "ALL" ? "bg-indigo-50 text-indigo-700 font-semibold" : "hover:bg-slate-50 text-slate-600"
-              )}
-            >
-              <span>{allLabel}</span>
-              {value === "ALL" && <Check className="h-4 w-4" />}
-            </button>
-
-            {filteredItems.map((item) => {
-              const active = indicator?.(item.id);
-              const isSelected = value === item.id;
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    onSelect(item.id);
-                    setOpen(false);
-                  }}
-                  className={cn(
-                    "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-left group cursor-pointer",
-                    isSelected ? "bg-indigo-50 text-indigo-700 font-semibold" : "hover:bg-slate-50 text-slate-600",
-                    !active && !isSelected && "opacity-50"
-                  )}
-                >
-                  <div className="flex items-center gap-3 min-w-0 text-inherit">
-                    <div className="relative shrink-0">
-                      {active && (
-                         <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                      )}
-                      <div className={cn(
-                        "h-8 w-8 rounded-lg flex items-center justify-center transition-colors",
-                        isSelected ? "bg-indigo-100 text-indigo-600" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200",
-                        !active && !isSelected && "grayscale"
-                      )}>
-                        {title.includes("ทรัพย์") || title.toLowerCase().includes("property") ? <FaBuilding className="h-4 w-4" /> : <FaUser className="h-4 w-4" />}
-                      </div>
-                    </div>
-                    <span className={cn(
-                      "truncate transition-colors",
-                      !active && !isSelected ? "text-slate-400" : ""
-                    )}>
-                      {item.title}
-                    </span>
-                  </div>
-                  {isSelected && <Check className="h-4 w-4 shrink-0" />}
-                </button>
-              );
-            })}
-            
-            {filteredItems.length === 0 && (
-              <div className="py-12 text-center">
-                <p className="text-sm text-slate-400 italic">{isEn ? "No results found" : "ไม่พบข้อมูลที่ค้นหา"}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </ResponsiveDialog>
-  );
-}
-

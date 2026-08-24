@@ -3,6 +3,7 @@ import { AnalyticsResult, ViewsTrendData, DistributionData, AreaAnalytics, Agent
 import { getListingTypeFromDb, getPropertyTypeFromDb } from "@/features/properties/labels";
 import { Database } from "@/lib/database.types.generated";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { decrypt } from "@/lib/crypto";
 
 interface AnalyticsSummary {
   daily_trends: { date: string; views: number }[];
@@ -25,6 +26,7 @@ type TopPropertyRow = {
   view_count: number | null;
   title: string | null;
   title_en: string | null;
+  project_id: string | null;
   property_images: { image_url: string; is_cover: boolean | null }[];
 };
 
@@ -97,7 +99,7 @@ export async function getAnalyticsStats(
       supabase
         .from("properties")
         .select(
-          "id, slug, listing_type:listing_type_int, property_type:property_type_int, price, rental_price, view_count, title, title_en, property_images:property_media_v3(image_url:url, is_cover)",
+          "id, slug, listing_type:listing_type_int, property_type:property_type_int, price, rental_price, view_count, title, title_en, project_id, property_images:property_media_v3(image_url:url, is_cover)",
           { count: "exact" },
         )
     );
@@ -107,6 +109,41 @@ export async function getAnalyticsStats(
       .order("view_count", { ascending: isAscending, nullsFirst: false })
       .range(offset, offset + pageSize - 1);
 
+    // Fetch project details for properties with project_id
+    const projectIds = Array.from(
+      new Set(
+        (topProps || [])
+          .map((p) => p.project_id)
+          .filter((id): id is string => Boolean(id))
+      )
+    );
+
+    const projectMap = new Map<string, { th: string; en: string }>();
+    if (projectIds.length > 0) {
+      try {
+        const { data: projects } = await supabase
+          .from("projects")
+          .select("id, name")
+          .in("id", projectIds);
+
+        if (projects) {
+          projects.forEach((proj: any) => {
+            let thName = "";
+            let enName = "";
+            if (proj.name && typeof proj.name === "object") {
+              thName = proj.name.th || proj.name.en || "";
+              enName = proj.name.en || proj.name.th || "";
+            } else if (typeof proj.name === "string") {
+              thName = proj.name;
+              enName = proj.name;
+            }
+            projectMap.set(proj.id, { th: thName, en: enName });
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to fetch project names:", err);
+      }
+    }
 
     // 3. New Enterprise RPC: Get consolidated trends, distributions, and metrics
     const { data, error: summaryError } = await supabase.rpc("get_analytics_summary_v3", {
@@ -120,17 +157,25 @@ export async function getAnalyticsStats(
     if (summaryError) {
        console.error("❌ Analytics RPC Error Details:", summaryError);
        return {
-          topProperties: ((topProps as unknown as TopPropertyRow[]) || []).map((p) => ({
-            ...p,
-            title: p.title || p.title_en || "ไม่มีชื่อ",
-            slug: p.slug || "",
-            listing_type: getListingTypeFromDb(p.listing_type),
-            property_type: getPropertyTypeFromDb(p.property_type),
-            price: p.price || null,
-            rental_price: p.rental_price || null,
-            view_count: p.view_count || 0,
-            property_images: (p.property_images || []).map(img => ({ ...img, is_cover: !!img.is_cover }))
-          })),
+          topProperties: ((topProps as unknown as TopPropertyRow[]) || []).map((p) => {
+            const proj = p.project_id ? projectMap.get(p.project_id) : null;
+            const finalProjectName = proj?.th || proj?.en || null;
+            const finalProjectNameEn = proj?.en || proj?.th || null;
+            return {
+              ...p,
+              title: p.title || p.title_en || "Untitled",
+              title_en: p.title_en || null,
+              project_name: finalProjectName,
+              project_name_en: finalProjectNameEn,
+              slug: p.slug || "",
+              listing_type: getListingTypeFromDb(p.listing_type),
+              property_type: getPropertyTypeFromDb(p.property_type),
+              price: p.price || null,
+              rental_price: p.rental_price || null,
+              view_count: p.view_count || 0,
+              property_images: (p.property_images || []).map(img => ({ ...img, is_cover: !!img.is_cover }))
+            };
+          }),
          topPropertiesCount: topPropsCount || 0,
          topAreas: [],
          totalViews: 0,
@@ -139,7 +184,7 @@ export async function getAnalyticsStats(
          viewsTrend: [],
          agentPerformance: [],
          funnel: { views: 0, leads: 0, deals: 0 },
-         error: `ระบบวิเคราะห์ข้อมูลขัดข้อง (CODE: ${summaryError.code}): ${summaryError.message}`
+         error: `Analytics RPC Error (CODE: ${summaryError.code}): ${summaryError.message}`
        };
     }
 
@@ -166,24 +211,66 @@ export async function getAnalyticsStats(
       leads_count: 0
     }));
 
-    const agentPerformance: AgentPerformanceData[] = (summary?.agent_performance || []).map((ap) => ({
+    let agentPerformance: AgentPerformanceData[] = (summary?.agent_performance || []).map((ap) => ({
       name: ap.name,
       leads_count: Number(ap.leads_count || 0),
-      deals_count: Number(ap.deals_count || 0)
+      deals_count: Number(ap.deals_count || 0),
+      avatar_url: null,
     }));
 
+    if (agentPerformance.length > 0) {
+      try {
+        const { data: identities } = await supabase
+          .from("identities_v3")
+          .select("id, display_name, email, avatar_url");
+
+        if (identities && identities.length > 0) {
+          const avatarMap = new Map<string, string>();
+          identities.forEach((iden: any) => {
+            if (!iden.avatar_url) return;
+            const rawName = decrypt(iden.display_name) || iden.display_name;
+            const rawEmail = decrypt(iden.email) || iden.email;
+            if (rawName) avatarMap.set(rawName.toLowerCase().trim(), iden.avatar_url);
+            if (iden.display_name) avatarMap.set(iden.display_name.toLowerCase().trim(), iden.avatar_url);
+            if (rawEmail) avatarMap.set(rawEmail.toLowerCase().trim(), iden.avatar_url);
+            if (iden.id) avatarMap.set(iden.id.toLowerCase().trim(), iden.avatar_url);
+          });
+
+          agentPerformance = agentPerformance.map((ap) => {
+            const cleanName = decrypt(ap.name) || ap.name;
+            const avatar = avatarMap.get(cleanName.toLowerCase().trim()) || avatarMap.get(ap.name.toLowerCase().trim()) || null;
+            return {
+              ...ap,
+              name: cleanName && !cleanName.includes("-") ? cleanName : ap.name,
+              avatar_url: avatar,
+            };
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to enrich agent performance avatars:", err);
+      }
+    }
+
     return {
-      topProperties: ((topProps as unknown as TopPropertyRow[]) || []).map((p) => ({
-        ...p,
-        title: p.title || p.title_en || "ไม่มีชื่อ",
-        slug: p.slug || "",
-        listing_type: getListingTypeFromDb(p.listing_type),
-        property_type: getPropertyTypeFromDb(p.property_type),
-        price: p.price || null,
-        rental_price: p.rental_price || null,
-        view_count: p.view_count || 0,
-        property_images: (p.property_images || []).map(img => ({ ...img, is_cover: !!img.is_cover }))
-      })),
+      topProperties: ((topProps as unknown as TopPropertyRow[]) || []).map((p) => {
+        const proj = p.project_id ? projectMap.get(p.project_id) : null;
+        const finalProjectName = proj?.th || proj?.en || null;
+        const finalProjectNameEn = proj?.en || proj?.th || null;
+        return {
+          ...p,
+          title: p.title || p.title_en || "Untitled",
+          title_en: p.title_en || null,
+          project_name: finalProjectName,
+          project_name_en: finalProjectNameEn,
+          slug: p.slug || "",
+          listing_type: getListingTypeFromDb(p.listing_type),
+          property_type: getPropertyTypeFromDb(p.property_type),
+          price: p.price || null,
+          rental_price: p.rental_price || null,
+          view_count: p.view_count || 0,
+          property_images: (p.property_images || []).map(img => ({ ...img, is_cover: !!img.is_cover }))
+        };
+      }),
       topPropertiesCount: topPropsCount || 0,
       topAreas,
       totalViews: Number(summary?.total_views || 0),

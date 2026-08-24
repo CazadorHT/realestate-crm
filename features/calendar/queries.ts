@@ -5,6 +5,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { Database } from "@/lib/database.types.generated";
 import { formatISO } from "date-fns";
 import { cookies } from "next/headers";
+import { decrypt } from "@/lib/crypto";
 
 export type EventType =
   | "viewing"
@@ -379,7 +380,7 @@ export const getCalendarEvents = cache(async (
 });
 
 
-export const getCompactProperties = cache(async (): Promise<{ id: string; title: string }[]> => {
+export const getCompactProperties = cache(async (): Promise<{ id: string; title: string; title_en?: string | null }[]> => {
   const { supabase, tenantId, role } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
@@ -387,7 +388,7 @@ export const getCompactProperties = cache(async (): Promise<{ id: string; title:
 
   let query = supabase
     .from("properties")
-    .select("id, title")
+    .select("id, title, title_en")
     .eq("status", "ACTIVE");
   
   if (isMultiTenant && tenantId && tenantId !== "ALL" && !isAdmin) {
@@ -397,7 +398,8 @@ export const getCompactProperties = cache(async (): Promise<{ id: string; title:
   const { data } = await query.order("title");
   return (data || []).map((p: any) => ({
     id: p.id!,
-    title: p.title || "Unknown Property"
+    title: p.title || "Unknown Property",
+    title_en: p.title_en || null,
   }));
 });
 
@@ -425,16 +427,117 @@ export const getCompactLeads = cache(async () => {
 });
 
 export async function getCalendarAgents() {
-  const { supabase } = await requireAuthContext();
+  const { supabase, tenantId } = await requireAuthContext();
   
-  const { data, error } = await supabase
-    .from("identities_v3")
-    .select("id, display_name")
-    .order("display_name", { ascending: true });
+  const ALLOWED_STAFF_ROLES = new Set([
+    "ADMIN",
+    "SUPER_ADMIN",
+    "TENANT_ADMIN",
+    "BRANCH_MANAGER",
+    "MANAGER",
+    "AGENT",
+    "STAFF",
+    "MEMBER",
+    "CO_BROKER",
+  ]);
 
-  if (error) {
-    console.error("Error fetching agents:", error);
-    return [];
+  const FORBIDDEN_ROLES = new Set(["LEAD", "CUSTOMER", "OWNER", "CLIENT", "USER"]);
+
+  // 1. Fetch internal staff members via tenant_members_v3
+  let membersQuery = supabase
+    .from("tenant_members_v3")
+    .select(`
+      identity_id,
+      role,
+      identity:identities_v3!identity_id (
+        id,
+        display_name,
+        email,
+        role,
+        avatar_url,
+        is_active,
+        deleted_at
+      )
+    `);
+
+  if (tenantId && tenantId !== "ALL") {
+    membersQuery = membersQuery.eq("tenant_id", tenantId);
   }
-  return (data || []).map((p: any) => ({ id: p.id, title: p.display_name || "Unknown" }));
+
+  const { data: staffMembers, error: membersError } = await membersQuery;
+
+  if (membersError) {
+    console.error("Error fetching staff members for calendar:", membersError);
+  }
+
+  // 2. Also fetch direct staff identities (ADMIN, MANAGER, AGENT)
+  let identitiesQuery = supabase
+    .from("identities_v3")
+    .select("id, display_name, email, role, avatar_url")
+    .in("role", ["ADMIN", "SUPER_ADMIN", "TENANT_ADMIN", "BRANCH_MANAGER", "MANAGER", "AGENT", "STAFF", "MEMBER"])
+    .eq("is_active", true)
+    .is("deleted_at", null);
+
+  if (tenantId && tenantId !== "ALL") {
+    identitiesQuery = identitiesQuery.eq("tenant_id", tenantId);
+  }
+
+  const { data: staffIdentities } = await identitiesQuery;
+
+  const resultList: { id: string; title: string; email?: string | null; role?: string | null; avatar_url?: string | null }[] = [];
+  const addedIds = new Set<string>();
+
+  (staffMembers || []).forEach((m: any) => {
+    const memberRole = (m.role || "").toUpperCase();
+    if (FORBIDDEN_ROLES.has(memberRole) || (!ALLOWED_STAFF_ROLES.has(memberRole) && memberRole)) {
+      return;
+    }
+
+    const iden = Array.isArray(m.identity) ? m.identity[0] : m.identity;
+    if (!iden || !iden.is_active || iden.deleted_at || addedIds.has(m.identity_id)) {
+      return;
+    }
+
+    const idenRole = (iden.role || "").toUpperCase();
+    if (FORBIDDEN_ROLES.has(idenRole)) {
+      return;
+    }
+
+    const rawName = decrypt(iden.display_name) || iden.display_name;
+    const rawEmail = decrypt(iden.email) || iden.email;
+    const name = rawName && !rawName.includes("-") ? rawName : (rawEmail ? rawEmail.split("@")[0] : "Staff Member");
+    
+    addedIds.add(m.identity_id);
+    resultList.push({
+      id: m.identity_id,
+      title: name,
+      email: rawEmail || null,
+      role: m.role || iden.role || "AGENT",
+      avatar_url: iden.avatar_url || null,
+    });
+  });
+
+  (staffIdentities || []).forEach((si: any) => {
+    const siRole = (si.role || "").toUpperCase();
+    if (FORBIDDEN_ROLES.has(siRole) || !ALLOWED_STAFF_ROLES.has(siRole)) {
+      return;
+    }
+
+    if (!addedIds.has(si.id)) {
+      const rawName = decrypt(si.display_name) || si.display_name;
+      const rawEmail = decrypt(si.email) || si.email;
+      const name = rawName && !rawName.includes("-") ? rawName : (rawEmail ? rawEmail.split("@")[0] : "Staff Member");
+
+      addedIds.add(si.id);
+      resultList.push({
+        id: si.id,
+        title: name,
+        email: rawEmail || null,
+        role: si.role || "AGENT",
+        avatar_url: si.avatar_url || null,
+      });
+    }
+  });
+
+  return resultList.sort((a, b) => a.title.localeCompare(b.title));
 }

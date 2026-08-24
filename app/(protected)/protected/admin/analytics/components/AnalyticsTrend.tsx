@@ -47,7 +47,7 @@ export function AnalyticsTrend({ data }: AnalyticsTrendProps) {
     <Card className="border-none shadow-soft overflow-hidden bg-white/50 backdrop-blur-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold text-slate-800">
-          {isEn ? "Page Views & Interest Trend" : "แนวโน้มการเข้าชม (Interest Trend)"}
+          {isEn ? "Page Views & Interest Trend" : "แนวโน้มสถิติการเข้าชม"}
         </CardTitle>
         <CardDescription>
           {isEn ? "Daily traffic and view patterns over the selected period" : "สถิติการเข้าชมรายวันในช่วงเวลาที่เลือก"}

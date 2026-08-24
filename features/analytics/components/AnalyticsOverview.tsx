@@ -4,6 +4,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Eye, TrendingUp, Building2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { getDistrictName, getProvinceName } from "@/lib/utils/provinces";
 
 interface AnalyticsOverviewProps {
   totalViews: number;
@@ -15,6 +16,14 @@ interface AnalyticsOverviewProps {
 export function AnalyticsOverview({ totalViews, topAreas, topProperties, days }: AnalyticsOverviewProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
+
+  const topAreaName = topAreas[0]?.name 
+    ? (isEn ? (getDistrictName(topAreas[0].name, "en") || getProvinceName(topAreas[0].name, "en") || topAreas[0].name) : topAreas[0].name)
+    : (isEn ? "No data" : "ไม่มีข้อมูล");
+
+  const topPropertyTitle = topProperties[0]
+    ? ((isEn && topProperties[0].title_en) ? topProperties[0].title_en : topProperties[0].title)
+    : (isEn ? "No data" : "ไม่มีข้อมูล");
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -47,7 +56,7 @@ export function AnalyticsOverview({ totalViews, topAreas, topProperties, days }:
             {isEn ? "Most Popular Area" : "ย่านยอดนิยม"}
           </CardDescription>
           <CardTitle className="text-xl md:text-2xl font-medium truncate text-slate-900 group-hover:text-blue-600 transition-colors">
-            {topAreas[0]?.name || (isEn ? "No data" : "ไม่มีข้อมูล")}
+            {topAreaName}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -66,7 +75,7 @@ export function AnalyticsOverview({ totalViews, topAreas, topProperties, days }:
             {isEn ? "Most Viewed Property" : "ทรัพย์ที่ถูกเปิดดูมากที่สุด"}
           </CardDescription>
           <CardTitle className="text-lg md:text-xl font-medium line-clamp-1 text-slate-900 group-hover:text-blue-600 transition-colors">
-            {topProperties[0]?.title || (isEn ? "No data" : "ไม่มีข้อมูล")}
+            {topPropertyTitle}
           </CardTitle>
         </CardHeader>
         <CardContent>

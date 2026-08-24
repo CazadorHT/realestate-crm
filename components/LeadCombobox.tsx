@@ -54,8 +54,12 @@ export function LeadCombobox({
 
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [items, setItems] = useState<LeadPickItem[]>([]);
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
   const selected = useMemo(() => {
     if (initialLead && initialLead.id === value) return initialLead;
@@ -67,13 +71,19 @@ export function LeadCombobox({
     if (!open) return;
     const handle = setTimeout(async () => {
       setIsLoading(true);
+      setPage(1);
       try {
         const res = await searchLeadsAction({
           q,
+          page: 1,
+          pageSize: 30,
           tenantId: tenantId ?? undefined,
         });
-        if (res.success) {
-          setItems(res.data || []);
+        if (res.success && res.data) {
+          const fetchedItems = Array.isArray(res.data) ? res.data : res.data.items || [];
+          setItems(fetchedItems);
+          setHasMore(Boolean((res.data as any).hasMore));
+          setTotalCount((res.data as any).total ?? fetchedItems.length);
         }
       } finally {
         setIsLoading(false);
@@ -86,15 +96,21 @@ export function LeadCombobox({
   useEffect(() => {
     if (!open) return;
     setQ("");
+    setPage(1);
     const loadInitial = async () => {
       setIsLoading(true);
       try {
         const res = await searchLeadsAction({ 
           q: "", 
+          page: 1,
+          pageSize: 30,
           tenantId: tenantId ?? undefined 
         });
-        if (res.success) {
-          setItems(res.data || []);
+        if (res.success && res.data) {
+          const fetchedItems = Array.isArray(res.data) ? res.data : res.data.items || [];
+          setItems(fetchedItems);
+          setHasMore(Boolean((res.data as any).hasMore));
+          setTotalCount((res.data as any).total ?? fetchedItems.length);
         }
       } finally {
         setIsLoading(false);
@@ -102,6 +118,29 @@ export function LeadCombobox({
     };
     loadInitial();
   }, [open, tenantId]);
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    const nextPage = page + 1;
+    setIsLoadingMore(true);
+    try {
+      const res = await searchLeadsAction({
+        q,
+        page: nextPage,
+        pageSize: 30,
+        tenantId: tenantId ?? undefined,
+      });
+      if (res.success && res.data) {
+        const nextItems = Array.isArray(res.data) ? res.data : res.data.items || [];
+        setItems((prev) => [...prev, ...nextItems]);
+        setPage(nextPage);
+        setHasMore(Boolean((res.data as any).hasMore));
+        setTotalCount((res.data as any).total ?? (items.length + nextItems.length));
+      }
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   const handleSelect = (item: LeadPickItem) => {
     onChangeAction(item.id, item);
@@ -119,10 +158,10 @@ export function LeadCombobox({
       <button
         type="button"
         className={cn(
-          "w-full flex items-center gap-3 text-left rounded-xl border px-3 py-2.5 transition-all duration-200 shadow-sm group cursor-pointer",
+          "w-full flex items-center gap-2.5 text-left rounded-xl border px-3 h-11 transition-all duration-200 shadow-xs group cursor-pointer",
           "hover:border-blue-400 hover:bg-blue-50/20",
           selected
-            ? "border-blue-200 bg-blue-50/30 "
+            ? "border-blue-200 bg-blue-50/30"
             : "border-slate-200 bg-white",
           className,
         )}
@@ -130,45 +169,38 @@ export function LeadCombobox({
         {/* Icon/Avatar */}
         <div
           className={cn(
-            "shrink-0 rounded-lg h-9 w-9 bg-slate-100 border border-slate-200 flex items-center justify-center transition-all",
-            selected && "bg-blue-100 border-blue-200",
+            "shrink-0 rounded-lg h-7 w-7 bg-slate-100 border border-slate-200 flex items-center justify-center transition-all",
+            selected && "bg-blue-100/80 border-blue-200",
           )}
         >
-          <User className={cn("h-4 w-4 text-slate-400", selected && "text-blue-600")} />
+          <User className={cn("h-3.5 w-3.5 text-slate-400", selected && "text-blue-600")} />
         </div>
 
         {/* Text */}
-        <div className="flex-1 min-w-0 pr-2">
+        <div className="flex-1 min-w-0 pr-1">
           {selected ? (
-            <>
-              <p className="font-bold text-slate-900 text-sm truncate">
-                {selected.full_name}
-              </p>
-              {selected.phone && (
-                <p className="text-[10px] text-slate-500 truncate flex items-center gap-1">
-                  <Phone className="h-2 w-2" /> {selected.phone}
-                </p>
-              )}
-            </>
+            <p className="font-bold text-slate-900 text-xs truncate leading-normal">
+              {selected.full_name}
+            </p>
           ) : (
-            <span className="text-slate-400 text-sm font-normal">
+            <span className="text-slate-400 text-xs font-normal truncate block">
               {defaultPlaceholder}
             </span>
           )}
         </div>
 
         {/* Right controls */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0">
           {selected && !required ? (
             <span
               role="button"
               onClick={handleClear}
-              className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors cursor-pointer"
+              className="h-6 w-6 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors cursor-pointer"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3 w-3" />
             </span>
           ) : null}
-          <ChevronsUpDown className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
+          <ChevronsUpDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
         </div>
       </button>
       {/* Hidden input for form data */}
@@ -197,12 +229,21 @@ export function LeadCombobox({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={isEn ? "Customer name or phone number..." : "ชื่อลูกค้า หรือ เบอร์โทรศัพท์..."}
-              className="pl-9 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20"
+              className="pl-9 pr-9 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20"
             />
+            {q && (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2 min-h-[400px]">
+        <div className="flex-1 overflow-y-auto p-2 min-h-[350px] max-h-[500px]">
           {items.length === 0 && !isLoading ? (
             <div className="py-12 text-center text-slate-400">
               <User className="h-10 w-10 mx-auto mb-3 opacity-20" />
@@ -221,7 +262,7 @@ export function LeadCombobox({
                       "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left cursor-pointer",
                       isSelected
                         ? "bg-blue-50 text-blue-700 ring-1 ring-blue-100"
-                        : "hover:bg-slate-200 text-slate-700 hover:text-slate-900"
+                        : "hover:bg-slate-100 text-slate-700 hover:text-slate-900"
                     )}
                   >
                     <div className={cn(
@@ -251,6 +292,31 @@ export function LeadCombobox({
                   </button>
                 );
               })}
+
+              {/* Load More Section */}
+              {hasMore && (
+                <div className="pt-3 pb-2 text-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    className="w-full h-10 rounded-xl border-slate-200 text-xs font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer"
+                  >
+                    {isLoadingMore
+                      ? (isEn ? "Loading more..." : "กำลังโหลดเพิ่มเติม...")
+                      : (isEn ? `Load More Leads (${items.length}/${totalCount})` : `โหลดข้อมูลเพิ่มเติม (${items.length}/${totalCount})`)}
+                  </Button>
+                </div>
+              )}
+
+              {/* End of results indicator */}
+              {!hasMore && items.length > 0 && (
+                <p className="text-center text-[11px] text-slate-400 py-2">
+                  {isEn ? `Showing all ${items.length} leads` : `แสดงครบทั้งหมด ${items.length} รายการ`}
+                </p>
+              )}
             </div>
           )}
         </div>

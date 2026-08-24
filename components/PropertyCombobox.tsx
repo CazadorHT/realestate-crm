@@ -262,15 +262,23 @@ export function PropertyCombobox({
 
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [items, setItems] = useState<PropertyPickItem[]>([]);
   const [counts, setCounts] = useState<PropertyStats | null>(null);
   const [q, setQ] = useState("");
   const [listingType, setListingType] = useState<string | null>(null);
   const [propertyType, setPropertyType] = useState<string | null>(null);
   const [status, setStatus] = useState<string[] | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
   const selected = useMemo(() => {
-    if (initialProperty && initialProperty.id === value) return initialProperty;
+    if (initialProperty && initialProperty.id === value) {
+      const full = items.find((x) => x.id === value);
+      if (full) return { ...initialProperty, ...full };
+      return initialProperty;
+    }
     return items.find((x) => x.id === value) ?? null;
   }, [items, value, initialProperty]);
 
@@ -279,24 +287,30 @@ export function PropertyCombobox({
     if (!open) return;
     const handle = setTimeout(async () => {
       setIsLoading(true);
+      setPage(1);
       try {
         const res = await searchPropertiesAction({
           q,
+          page: 1,
+          pageSize: 30,
           listing_type: listingType || undefined,
           property_type: propertyType || undefined,
           status: status || undefined,
           tenantId: tenantId ?? undefined,
         });
-        if (res.success) {
-          setItems((res.data.properties as PropertyPickItem[]) || []);
+        if (res.success && res.data) {
+          const fetchedProps = (res.data.properties as PropertyPickItem[]) || [];
+          setItems(fetchedProps);
           setCounts(res.data.counts || null);
+          setHasMore(Boolean((res.data as any).hasMore));
+          setTotalCount((res.data as any).total ?? fetchedProps.length);
         }
       } finally {
         setIsLoading(false);
       }
     }, 300);
     return () => clearTimeout(handle);
-  }, [open, q, listingType, propertyType, status]);
+  }, [open, q, listingType, propertyType, status, tenantId]);
 
   // Load fresh list when dialog opens
   useEffect(() => {
@@ -305,25 +319,58 @@ export function PropertyCombobox({
     setListingType(null);
     setPropertyType(null);
     setStatus(null);
+    setPage(1);
     const loadInitial = async () => {
       setIsLoading(true);
       try {
         const res = await searchPropertiesAction({
           q: "",
+          page: 1,
+          pageSize: 30,
           listing_type: undefined,
           property_type: undefined,
           status: undefined,
+          tenantId: tenantId ?? undefined,
         });
-        if (res.success) {
-          setItems((res.data.properties as PropertyPickItem[]) || []);
+        if (res.success && res.data) {
+          const fetchedProps = (res.data.properties as PropertyPickItem[]) || [];
+          setItems(fetchedProps);
           setCounts(res.data.counts || null);
+          setHasMore(Boolean((res.data as any).hasMore));
+          setTotalCount((res.data as any).total ?? fetchedProps.length);
         }
       } finally {
         setIsLoading(false);
       }
     };
     loadInitial();
-  }, [open]);
+  }, [open, tenantId]);
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    const nextPage = page + 1;
+    setIsLoadingMore(true);
+    try {
+      const res = await searchPropertiesAction({
+        q,
+        page: nextPage,
+        pageSize: 30,
+        listing_type: listingType || undefined,
+        property_type: propertyType || undefined,
+        status: status || undefined,
+        tenantId: tenantId ?? undefined,
+      });
+      if (res.success && res.data) {
+        const nextProps = (res.data.properties as PropertyPickItem[]) || [];
+        setItems((prev) => [...prev, ...nextProps]);
+        setPage(nextPage);
+        setHasMore(Boolean((res.data as any).hasMore));
+        setTotalCount((res.data as any).total ?? (items.length + nextProps.length));
+      }
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   const handleSelect = (item: PropertyPickItem) => {
     onChangeAction(item.id, item);
@@ -337,96 +384,58 @@ export function PropertyCombobox({
 
   // --- Trigger Button ---
   const trigger = (
-    <button
-      type="button"
-      className={cn(
-        "w-full flex items-center gap-3 text-left rounded-xl border px-3 py-2.5 transition-all duration-200 shadow-sm group cursor-pointer",
-        "hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-md",
-        selected
-          ? "border-blue-200 bg-blue-50/30 "
-          : "border-slate-200 bg-white",
-        className,
-      )}
-    >
-      {/* Thumbnail */}
-      <div
+    <div className="relative w-full">
+      <button
+        type="button"
         className={cn(
-          "shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center transition-all",
-          selected ? "h-10 w-10 sm:h-12 sm:w-12" : "h-9 w-9",
+          "w-full flex items-center gap-2.5 text-left rounded-xl border px-3 h-11 transition-all duration-200 shadow-xs group cursor-pointer",
+          "hover:border-blue-400 hover:bg-blue-50/20",
+          selected
+            ? "border-blue-200 bg-blue-50/30"
+            : "border-slate-200 bg-white",
+          className,
         )}
       >
-        {selected?.cover_image_url ? (
-          <div className="relative h-full w-full">
-            <Image
-              src={selected.cover_image_url}
-              alt={selected.title}
-              fill
-              className="object-cover"
-              sizes="48px"
-            />
-          </div>
-        ) : (
-          <Building2 className="h-4 w-4 text-slate-300" />
-        )}
-      </div>
 
-      {/* Text */}
-      <div className="flex-1 min-w-0 pr-2 overflow-hidden">
-        {selected ? (
-          (() => {
-            const displayTitle = (isEn && selected.title_en) ? selected.title_en : selected.title;
-            const displayArea = isEn
-              ? (selected.popular_area_en || selected.district_en || getDistrictName(selected.popular_area || selected.district || "", "en") || getProvinceName(selected.province || "", "en"))
-              : (selected.popular_area || selected.district || selected.province || "");
-
-            return (
-              <>
-                <p className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-tight wrap-break-words ">
+        {/* Text */}
+        <div className="flex-1 min-w-0 pr-1">
+          {selected ? (
+            (() => {
+              const displayTitle = (isEn && selected.title_en) ? selected.title_en : selected.title;
+              return (
+                <p className="font-bold text-slate-900 text-xs truncate leading-normal">
                   {displayTitle}
                 </p>
-                <div className="flex items-center gap-1.5 mt-1 min-w-0">
-                  <div className="shrink-0">
-                    <ListingTypeBadge type={selected.listing_type} />
-                  </div>
-                  {displayArea && (
-                    <span className="text-[10px] sm:text-xs text-slate-400 truncate flex-1 min-w-0 flex items-center gap-0.5 opacity-80">
-                      <MapPin className="h-2.5 w-2.5 shrink-0" />
-                      <span className="truncate">
-                        {displayArea}
-                      </span>
-                    </span>
-                  )}
-                </div>
-              </>
-            );
-          })()
-        ) : (
-          <span className="text-slate-400 text-sm font-normal">
-            {defaultPlaceholder}
-          </span>
-        )}
-      </div>
+              );
+            })()
+          ) : (
+            <span className="text-slate-400 text-xs font-normal truncate block">
+              {defaultPlaceholder}
+            </span>
+          )}
+        </div>
 
-      {/* Right controls */}
-      <div className="flex items-center gap-1 shrink-0">
-        {selected ? (
-          <span
-            role="button"
-            onClick={handleClear}
-            className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors cursor-pointer"
-          >
-            <X className="h-3.5 w-3.5" />
-          </span>
-        ) : null}
-        <ChevronsUpDown className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
-      </div>
+        {/* Right controls */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          {selected && !required ? (
+            <span
+              role="button"
+              onClick={handleClear}
+              className="h-6 w-6 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-colors cursor-pointer"
+            >
+              <X className="h-3 w-3" />
+            </span>
+          ) : null}
+          <ChevronsUpDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+        </div>
+      </button>
       <input
         type="hidden"
         name={name}
         value={value ?? ""}
         required={required}
       />
-    </button>
+    </div>
   );
 
   // --- Dialog Content ---
@@ -688,6 +697,31 @@ export function PropertyCombobox({
               })}
             </div>
           )}
+
+          {/* Load More Button */}
+          {hasMore && (
+            <div className="pt-4 pb-2 text-center">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="w-full h-11 rounded-xl border-slate-200 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-xs cursor-pointer"
+              >
+                {isLoadingMore
+                  ? (isEn ? "Loading more properties..." : "กำลังโหลดข้อมูลเพิ่มเติม...")
+                  : (isEn ? `Load More Properties (${items.length}/${totalCount})` : `โหลดทรัพย์เพิ่มเติม (${items.length}/${totalCount})`)}
+              </Button>
+            </div>
+          )}
+
+          {/* End of results indicator */}
+          {!hasMore && items.length > 0 && (
+            <p className="text-center text-[11px] text-slate-400 py-3">
+              {isEn ? `Showing all ${items.length} properties` : `แสดงครบทั้งหมด ${items.length} รายการ`}
+            </p>
+          )}
         </div>
       </div>
     </ResponsiveDialog>
@@ -833,7 +867,7 @@ function FilterSelector<T>({
                     <span
                       className={cn(
                         "text-[10px] font-bold uppercase tracking-widest mt-1",
-                        selected ? "text-blue-500" : "text-emerald-400",
+                        selected ? "text-blue-500" : "text-emerald-600",
                       )}
                     >
                       {count} {isEn ? "items" : "รายการ"}

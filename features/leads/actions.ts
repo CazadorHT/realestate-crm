@@ -595,6 +595,8 @@ export const searchPropertiesAction = createSafeAction(
     is_hot_deal: z.boolean().optional(),
     allow_airbnb: z.boolean().optional(),
     sort: z.string().optional(),
+    page: z.number().optional().default(1),
+    pageSize: z.number().optional().default(30),
     status: z.union([z.string(), z.array(z.string())]).optional(),
     tenantId: z.string().uuid().optional(),
   }),
@@ -618,6 +620,8 @@ export const searchPropertiesAction = createSafeAction(
       is_hot_deal,
       allow_airbnb,
       sort,
+      page = 1,
+      pageSize = 30,
       status,
       tenantId: inputTenantId,
     },
@@ -625,6 +629,8 @@ export const searchPropertiesAction = createSafeAction(
   ) => {
     const queryTerm = (q ?? "").trim();
     const effectiveTenantId = inputTenantId || contextTenantId;
+    const fromIndex = (page - 1) * pageSize;
+    const toIndex = fromIndex + pageSize - 1;
 
     // 1. Fetch facet counts using core tables (Efficient facet calculation)
     let facetSb = supabase
@@ -805,7 +811,8 @@ export const searchPropertiesAction = createSafeAction(
     // 2. Fetch filtered properties using Core + Details Join (No Views)
     let sb = supabase
       .from("properties_core")
-      .select(`
+      .select(
+        `
         id, 
         listing_type, 
         property_type, 
@@ -820,7 +827,9 @@ export const searchPropertiesAction = createSafeAction(
         projects(name),
         properties_details!inner(title, address_info, pricing_details, amenities, transit_info),
         property_media_v3(url, storage_path, is_cover, sort_order)
-      `)
+      `,
+        { count: "exact" },
+      )
       .is("deleted_at", null);
 
     if (effectiveTenantId) {
@@ -913,10 +922,13 @@ export const searchPropertiesAction = createSafeAction(
       sb = sb.order("updated_at", { ascending: false });
     }
 
-    sb = sb.limit(30);
+    sb = sb.range(fromIndex, toIndex);
 
-    const { data, error } = await sb;
+    const { data, error, count } = await sb;
     if (error) throw new Error(mapDbError(error));
+
+    const totalCount = count ?? (data?.length || 0);
+    const hasMore = toIndex + 1 < totalCount;
 
     return {
       properties: (data || []).map((x) => {
@@ -996,6 +1008,9 @@ export const searchPropertiesAction = createSafeAction(
         };
       }),
       counts,
+      total: totalCount,
+      hasMore,
+      page,
     };
   },
 );
@@ -1180,27 +1195,35 @@ export const transferLeadAction = createSafeAction(
 export const searchLeadsAction = createSafeAction(
   z.object({
     q: z.string().optional(),
+    page: z.number().optional().default(1),
+    pageSize: z.number().optional().default(30),
     tenantId: z.string().uuid().optional(),
   }),
   async (
-    { q, tenantId: inputTenantId },
+    { q, page = 1, pageSize = 30, tenantId: inputTenantId },
     { supabase, tenantId: contextTenantId },
   ) => {
     const queryTerm = (q ?? "").trim();
     const effectiveTenantId = inputTenantId || contextTenantId;
 
     try {
+      const fromIndex = (page - 1) * pageSize;
+      const toIndex = fromIndex + pageSize - 1;
+
       // Direct Join on V3 Core Tables (Explicit Identity Join)
       let sb = supabase
         .from("crm_leads_v3")
-        .select(`
+        .select(
+          `
           id,
           identities_v3!identity_id (
             display_name,
             phone,
             email
           )
-        `);
+        `,
+          { count: "exact" },
+        );
 
       if (effectiveTenantId) {
         sb = sb.eq("tenant_id", effectiveTenantId);
@@ -1209,16 +1232,16 @@ export const searchLeadsAction = createSafeAction(
       if (queryTerm) {
         sb = sb.or(
           `display_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%,email.ilike.%${queryTerm}%`,
-          { foreignTable: "identities_v3" }
+          { foreignTable: "identities_v3" },
         );
       }
 
-      sb = sb.order("created_at", { ascending: false }).limit(20);
+      sb = sb.order("created_at", { ascending: false }).range(fromIndex, toIndex);
 
-      const { data, error } = await sb;
+      const { data, error, count } = await sb;
       if (error) throw error;
 
-      return (data || []).map((lead: { 
+      const items = (data || []).map((lead: { 
         id: string; 
         identities_v3: { 
           display_name: string | null; 
@@ -1231,6 +1254,16 @@ export const searchLeadsAction = createSafeAction(
         phone: decrypt(lead.identities_v3?.phone) ?? null,
         email: decrypt(lead.identities_v3?.email) ?? null,
       }));
+
+      const totalCount = count ?? items.length;
+      const hasMore = toIndex + 1 < totalCount;
+
+      return {
+        items,
+        total: totalCount,
+        hasMore,
+        page,
+      };
     } catch (error: unknown) {
       console.error("Search lead error:", error);
       throw new Error(mapDbError(error));

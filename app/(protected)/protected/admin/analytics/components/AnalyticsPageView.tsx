@@ -66,7 +66,7 @@ export function AnalyticsPageView({
     <>
       <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700 font-sarabun">
         <PageHeader
-          title={isEn ? "Analytics & Market Insights" : "ข้อมูลวิเคราะห์ (Analytics)"}
+          title={isEn ? "Analytics & Market Insights" : "ข้อมูลวิเคราะห์เชิงลึกและการตลาด"}
           subtitle={
             isEn
               ? "Comprehensive property engagement, buyer interest, and area market trends"

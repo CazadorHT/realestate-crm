@@ -58,11 +58,11 @@ export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
         <div className="flex items-center gap-2">
           <Filter className="h-5 w-5 text-blue-500" />
           <CardTitle className="text-lg font-semibold text-slate-800">
-            {isEn ? "Conversion Funnel" : "กระบวนการแปลงสภาพ (Conversion Funnel)"}
+            {isEn ? "Conversion Funnel" : "กระบวนการเปลี่ยนสถานะผู้สนใจ"}
           </CardTitle>
         </div>
         <CardDescription>
-          {isEn ? "Stage conversion analysis from views to closed deals" : "วิเคราะห์ช่องทางและการเปลี่ยนสถานะผู้สนใจ (View-to-Deal)"}
+          {isEn ? "Stage conversion analysis from views to closed deals" : "วิเคราะห์การเปลี่ยนสถานะจากผู้เข้าชมสู่การปิดการขาย"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -107,7 +107,7 @@ export function AnalyticsFunnel({ data }: AnalyticsFunnelProps) {
           
           <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center bg-blue-50/50 p-3 rounded-2xl">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {isEn ? "Overall Efficiency" : "ประสิทธิภาพรวม (Overall Efficiency)"}
+              {isEn ? "Overall Efficiency" : "ประสิทธิภาพรวม"}
             </span>
             <div className="text-right">
                 <span className="text-lg font-bold text-blue-700">{overallRate.toFixed(2)}%</span>

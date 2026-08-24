@@ -5,6 +5,7 @@ import { AreaAnalytics, DistributionData } from "@/features/dashboard/queries";
 import { TrendingUp, MapPin, Building2, CheckCircle2 } from "lucide-react";
 import { listingTypeLabel, propertyTypeLabel, ListingType, PropertyType } from "@/features/properties/labels";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { getDistrictName, getProvinceName } from "@/lib/utils/provinces";
 
 interface QuickInsightsProps {
   topAreas: AreaAnalytics[];
@@ -21,10 +22,14 @@ export function QuickInsights({ topAreas, listingTypeDist, propertyTypeDist, tot
   const topListingType = listingTypeDist[0];
   const topPropertyType = propertyTypeDist[0];
 
+  const topAreaName = topArea
+    ? (isEn ? (getDistrictName(topArea.name, "en") || getProvinceName(topArea.name, "en") || topArea.name) : topArea.name)
+    : (isEn ? "No data" : "ไม่มีข้อมูล");
+
   const insights = [
     {
       title: isEn ? "Top #1 Area" : "ย่านยอดนิยมอันดับ 1",
-      value: topArea?.name || (isEn ? "No data" : "ไม่มีข้อมูล"),
+      value: topAreaName,
       detail: topArea ? `${topArea.view_count.toLocaleString()} Views` : "-",
       icon: MapPin,
       color: "text-blue-600",

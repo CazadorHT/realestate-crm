@@ -5,6 +5,7 @@ import { User, Trophy, BarChart2, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AgentPerformanceData } from "@/features/dashboard/queries";
 import { useLanguage } from "@/lib/i18n/language-context";
+import Image from "next/image";
 
 interface AgentPerformanceProps {
   data: AgentPerformanceData[];
@@ -20,11 +21,11 @@ export function AgentPerformance({ data }: AgentPerformanceProps) {
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-amber-500" />
           <CardTitle className="text-lg font-semibold text-slate-800">
-            {isEn ? "Agent Performance" : "ผลงานของเอเจนท์ (Agent Performance)"}
+            {isEn ? "Agent Performance" : "ผลงานของทีมงาน"}
           </CardTitle>
         </div>
         <CardDescription>
-          {isEn ? "Top performers in lead management & deal closures (Leaderboard)" : "ผู้นำด้านการจัดการ Lead และปิดการขาย (Leaderboard)"}
+          {isEn ? "Top performers in lead management & deal closures" : "ผู้นำด้านการจัดการผู้สนใจและปิดการขาย"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -44,8 +45,18 @@ export function AgentPerformance({ data }: AgentPerformanceProps) {
               )}
 
               <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-600 font-bold shadow-inner">
-                  {agent.name.charAt(0).toUpperCase()}
+                <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-linear-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-600 font-bold shadow-inner shrink-0 border border-slate-200/60">
+                  {agent.avatar_url ? (
+                    <Image
+                      src={agent.avatar_url}
+                      alt={agent.name}
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                    />
+                  ) : (
+                    agent.name.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-700">{agent.name}</p>

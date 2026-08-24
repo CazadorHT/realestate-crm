@@ -91,6 +91,9 @@ export type RiskDeal = {
 export type PropertyAnalytics = {
   id: string;
   title: string;
+  title_en?: string | null;
+  project_name?: string | null;
+  project_name_en?: string | null;
   slug: string;
   view_count: number;
   listing_type: ListingType;
@@ -120,6 +123,7 @@ export type AgentPerformanceData = {
   name: string;
   leads_count: number;
   deals_count: number;
+  avatar_url?: string | null;
 };
 
 export interface AnalyticsResult {

@@ -8,6 +8,7 @@ import { PropertyAnalytics, AreaAnalytics } from "@/features/dashboard/queries";
 import { toast } from "sonner";
 import { listingTypeLabel, propertyTypeLabel, ListingType, PropertyType } from "@/features/properties/labels";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { getDistrictName, getProvinceName } from "@/lib/utils/provinces";
 
 interface ExportButtonProps {
   topProperties: PropertyAnalytics[];
@@ -25,26 +26,34 @@ export function ExportButton({ topProperties, topAreas, totalViews }: ExportButt
     setIsExporting(true);
     try {
       // 1. Prepare Property Data
-      const propertyData = topProperties.map((p, index) => ({
-         [isEn ? "No." : "ลำดับ"]: index + 1,
-         [isEn ? "Property Title" : "ชื่อทรัพย์สิน"]: p.title,
-         "ID": p.id.slice(0, 8),
-         [isEn ? "Deal Type" : "ประเภทดีล"]: listingTypeLabel(p.listing_type as ListingType, isEn ? "en" : "th"),
-         [isEn ? "Property Type" : "ประเภททรัพย์"]: p.property_type ? propertyTypeLabel(p.property_type as PropertyType, isEn ? "en" : "th") : "-",
-         [isEn ? "Sale Price" : "ราคาขาย"]: p.price?.toLocaleString() || "-",
-         [isEn ? "Rent Price" : "ราคาเช่า"]: p.rental_price?.toLocaleString() || "-",
-         [isEn ? "Views" : "ยอดเข้าชม (Views)"]: p.view_count,
-         [isEn ? "Link" : "ลิงก์"]: `${window.location.origin}/protected/properties/${p.id}`
-      }));
+      const propertyData = topProperties.map((p, index) => {
+        const displayTitle = (isEn && p.title_en) ? p.title_en : p.title;
+        return {
+          [isEn ? "No." : "ลำดับ"]: index + 1,
+          [isEn ? "Property Title" : "ชื่อทรัพย์สิน"]: displayTitle,
+          "ID": p.id.slice(0, 8),
+          [isEn ? "Deal Type" : "ประเภทดีล"]: listingTypeLabel(p.listing_type as ListingType, isEn ? "en" : "th"),
+          [isEn ? "Property Type" : "ประเภททรัพย์"]: p.property_type ? propertyTypeLabel(p.property_type as PropertyType, isEn ? "en" : "th") : "-",
+          [isEn ? "Sale Price" : "ราคาขาย"]: p.price?.toLocaleString() || "-",
+          [isEn ? "Rent Price" : "ราคาเช่า"]: p.rental_price?.toLocaleString() || "-",
+          [isEn ? "Views" : "ยอดเข้าชม (Views)"]: p.view_count,
+          [isEn ? "Link" : "ลิงก์"]: `${window.location.origin}/protected/properties/${p.id}`
+        };
+      });
 
       // 2. Prepare Area Data
-      const areaData = topAreas.map((a, index) => ({
-         [isEn ? "No." : "ลำดับ"]: index + 1,
-         [isEn ? "Area/Location" : "ชื่อย่าน/พื้นที่"]: a.name,
-         [isEn ? "Views" : "ยอดเข้าชม (Views)"]: a.view_count,
-         [isEn ? "Leads Count" : "จำนวน Leads ที่สนใจ"]: a.leads_count,
-         "Market Interest Share": `${Math.round((a.view_count / (totalViews || 1)) * 100)}%`
-      }));
+      const areaData = topAreas.map((a, index) => {
+        const displayArea = isEn 
+          ? (getDistrictName(a.name, "en") || getProvinceName(a.name, "en") || a.name)
+          : a.name;
+        return {
+          [isEn ? "No." : "ลำดับ"]: index + 1,
+          [isEn ? "Area/Location" : "ชื่อย่าน/พื้นที่"]: displayArea,
+          [isEn ? "Views" : "ยอดเข้าชม (Views)"]: a.view_count,
+          [isEn ? "Leads Count" : "จำนวน Leads ที่สนใจ"]: a.leads_count,
+          "Market Interest Share": `${Math.round((a.view_count / (totalViews || 1)) * 100)}%`
+        };
+      });
 
       // 3. Create Workbook
       const wb = XLSX.utils.book_new();

@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { AreaAnalytics, DistributionData } from "@/features/dashboard/queries";
 import { listingTypeLabel, propertyTypeLabel, ListingType, PropertyType } from "@/features/properties/labels";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { translateLocation } from "@/lib/utils/provinces";
 
 // Custom Glassmorphism Tooltip
 interface CustomTooltipProps {
@@ -75,7 +76,7 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
 
   // Format data for Areas
   const areaData = topAreas.slice(0, 5).map(area => ({
-    name: area.name,
+    name: translateLocation(area.name, isEn ? "en" : "th") || area.name,
     views: area.view_count,
     originalValue: area.name,
   }));
@@ -100,7 +101,7 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
       <Card className="border-none shadow-soft bg-white/50 backdrop-blur-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold text-slate-800">
-            {isEn ? "Top 5 Popular Areas" : "ย่านยอดนิยม (Top 5 Areas)"}
+            {isEn ? "Top 5 Popular Areas" : "5 ย่านยอดนิยม"}
           </CardTitle>
           <CardDescription className="text-xs text-slate-500">
             {isEn ? "Traffic share broken down by geographic area" : "สัดส่วนการเข้าชมแบ่งตามพื้นที่"}
@@ -148,7 +149,7 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
             {isEn ? "Distribution by Deal Type" : "สัดส่วนตามประเภทดีล"}
           </CardTitle>
           <CardDescription className="text-xs text-slate-500">
-            {isEn ? "Comparing buyer/tenant interest (Sale vs Rent)" : "เปรียบเทียบความสนใจ ขาย vs เช่า"}
+            {isEn ? "Comparing buyer/tenant interest (Sale vs Rent)" : "เปรียบเทียบความสนใจ (ขาย vs เช่า)"}
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] mt-4 flex items-center justify-center">

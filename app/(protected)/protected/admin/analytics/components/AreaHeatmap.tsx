@@ -5,6 +5,7 @@ import { AreaAnalytics } from "@/features/dashboard/queries";
 import { cn } from "@/lib/utils";
 import { MapPin, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { translateLocation } from "@/lib/utils/provinces";
 
 interface AreaHeatmapProps {
   data: AreaAnalytics[];
@@ -22,17 +23,18 @@ export function AreaHeatmap({ data }: AreaHeatmapProps) {
         <div className="flex items-center gap-2">
            <MapPin className="h-5 w-5 text-blue-500" />
            <CardTitle className="text-lg font-semibold text-slate-800">
-             {isEn ? "Area Heatmap & Density" : "Area Heatmap (ความหนาแน่นรายพื้นที่)"}
+             {isEn ? "Area Heatmap & Density" : "แผนภาพความหนาแน่นรายพื้นที่"}
            </CardTitle>
         </div>
         <CardDescription>
-          {isEn ? "Visual geographic popularity distribution (Enterprise View)" : "วิเคราะห์ความนิยมรายย่านด้วยความร้อนของข้อมูล (Enterprise View)"}
+          {isEn ? "Visual geographic popularity distribution" : "วิเคราะห์ความนิยมรายย่านด้วยความร้อนของข้อมูลสถิติ"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
           {data.map((area) => {
             const intensity = area.view_count / maxViews;
+            const displayName = translateLocation(area.name, isEn ? "en" : "th") || area.name;
             
             return (
               <div 
@@ -51,7 +53,7 @@ export function AreaHeatmap({ data }: AreaHeatmapProps) {
                 </div>
 
                 <div className="relative z-10">
-                  <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-1 line-clamp-1">{area.name}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-1 line-clamp-1">{displayName}</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-xl font-bold">{area.view_count.toLocaleString()}</span>
                     <span className="text-[10px] font-medium opacity-70">VIEWS</span>
