@@ -42,6 +42,8 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
 
     vi.doMock("next/cache", () => ({
       revalidatePath: vi.fn(),
+      revalidateTag: vi.fn(),
+      unstable_cache: (fn: any) => fn,
     }));
 
     // Mock fetch for LINE API

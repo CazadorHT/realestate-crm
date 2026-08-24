@@ -222,7 +222,9 @@ export async function getAnalyticsStats(
       try {
         const { data: identities } = await supabase
           .from("identities_v3")
-          .select("id, display_name, email, avatar_url");
+          .select("id, display_name, email, avatar_url")
+          .not("avatar_url", "is", null)
+          .limit(50);
 
         if (identities && identities.length > 0) {
           const avatarMap = new Map<string, string>();

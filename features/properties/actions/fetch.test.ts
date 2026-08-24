@@ -6,19 +6,27 @@ import {
 import { requireAuthContext } from '@/lib/authz';
 
 // 1. สร้าง Universal Mock ที่รองรับ .range(), .or(), .is(), .order()
-const mockSupabase: any = {
-  from: vi.fn().mockReturnThis(),
-  select: vi.fn().mockReturnThis(),
-  is: vi.fn().mockReturnThis(),
-  range: vi.fn().mockReturnThis(),
-  order: vi.fn().mockReturnThis(),
-  or: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  // หัวใจสำคัญ: คืนค่าข้อมูลจำลองเมื่อถูก await
-  then: vi.fn().mockImplementation(function(this: any, resolve) {
-    return resolve({ data: [], count: 0, error: null });
-  }),
-};
+const { mockSupabase } = vi.hoisted(() => {
+  const mock: any = {
+    from: vi.fn(),
+    select: vi.fn(),
+    is: vi.fn(),
+    range: vi.fn(),
+    order: vi.fn(),
+    or: vi.fn(),
+    eq: vi.fn(),
+    then: vi.fn(),
+  };
+  mock.from.mockReturnValue(mock);
+  mock.select.mockReturnValue(mock);
+  mock.is.mockReturnValue(mock);
+  mock.range.mockReturnValue(mock);
+  mock.order.mockReturnValue(mock);
+  mock.or.mockReturnValue(mock);
+  mock.eq.mockReturnValue(mock);
+  mock.then.mockImplementation((resolve: any) => resolve({ data: [], count: 0, error: null }));
+  return { mockSupabase: mock };
+});
 
 vi.mock('@/lib/authz', () => ({
   requireAuthContext: vi.fn(),
@@ -36,15 +44,18 @@ vi.mock('@/lib/authz', () => ({
 
 describe('Property Actions - Hardened Fetching', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    // Re-link chains ให้ครบทุกตัว
-    Object.values(mockSupabase).forEach((m: any) => {
-      if (m && typeof m.mockReturnThis === 'function') m.mockReturnThis();
-    });
-    // Default success state
-then: vi.fn().mockImplementation((resolve: (value: { data: any; error: any; count?: number }) => void) => 
-  resolve({ data: [], error: null, count: 0 })
-)  });
+    (globalThis as any).__MOCK_SUPABASE__ = mockSupabase;
+    mockSupabase.from = vi.fn().mockReturnValue(mockSupabase);
+    mockSupabase.select = vi.fn().mockReturnValue(mockSupabase);
+    mockSupabase.is = vi.fn().mockReturnValue(mockSupabase);
+    mockSupabase.range = vi.fn().mockReturnValue(mockSupabase);
+    mockSupabase.order = vi.fn().mockReturnValue(mockSupabase);
+    mockSupabase.or = vi.fn().mockReturnValue(mockSupabase);
+    mockSupabase.eq = vi.fn().mockReturnValue(mockSupabase);
+    mockSupabase.then = vi.fn().mockImplementation((resolve: (value: { data: any; error: any; count?: number }) => void) => 
+      resolve({ data: [], error: null, count: 0 })
+    );
+  });
 
   describe('getGlobalPropertiesTableDataAction', () => {
     it('should apply pagination and global filters correctly', async () => {

@@ -48,6 +48,8 @@ describe("Omni-Channel Module - Actions & Queries (เทสโหดๆ แบ�
 
     vi.doMock("next/cache", () => ({
       revalidatePath: vi.fn(),
+      revalidateTag: vi.fn(),
+      unstable_cache: (fn: any) => fn,
     }));
 
     // Mock fetch for LINE API
@@ -56,6 +58,8 @@ describe("Omni-Channel Module - Actions & Queries (เทสโหดๆ แบ�
       json: vi.fn().mockResolvedValue({}),
       text: vi.fn().mockResolvedValue(""),
     });
+
+    process.env.LINE_CHANNEL_ACCESS_TOKEN = "mock_token";
 
     const actions = await import("./actions");
     const queries = await import("./queries");

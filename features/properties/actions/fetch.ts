@@ -362,6 +362,7 @@ type PropertyViewRow = {
   title_en?: string | null;
   pricing_details: PricingDetails | null;
   meta_data: MetaData | null;
+  main_image_url?: string | null;
   tenants: { name: string } | null;
   projects?: { id?: string; name?: string | MultiLang | null; name_en?: string | null } | null;
   property_images?: { image_url: string; is_cover?: boolean | null; storage_path?: string | null }[] | null;
@@ -394,18 +395,13 @@ export async function getGlobalPropertiesTableDataAction(params: {
     .select(
       `
       id, tenant_id, status, property_type, listing_type, price, original_price, rental_price, original_rental_price, created_at, 
-      bedrooms, bathrooms, size_sqm, land_size_sqwah, title, title_en, pricing_details, meta_data,
+      bedrooms, bathrooms, size_sqm, land_size_sqwah, title, title_en, pricing_details, meta_data, main_image_url,
       tenants (
         name
       ),
       projects!properties_core_project_id_fkey (
         id,
         name
-      ),
-      property_images (
-        image_url,
-        is_cover,
-        storage_path
       )
     `,
       { count: "exact" },
@@ -452,7 +448,7 @@ export async function getGlobalPropertiesTableDataAction(params: {
   const tableData = typedData.map((p: PropertyViewRow) => {
     const pricing = p.pricing_details;
     const meta = p.meta_data;
-    const coverImage = getCoverImage(p.property_images);
+    const coverImage = p.main_image_url || getCoverImage(p.property_images);
 
     // Extract Thai & English title
     let thTitle = "";
@@ -510,48 +506,59 @@ export async function getGlobalPropertiesTableDataAction(params: {
   return { tableData, count: count || 0 };
 }
 
+import { unstable_cache } from "next/cache";
+
+const fetchInventoryCountsCached = unstable_cache(
+  async (client?: any) => {
+    const supabase = client || (await createClient());
+    
+    // Fetch only necessary columns for all non-deleted properties
+    const { data, error } = await supabase
+      .from("properties")
+      .select("property_type, status, listing_type, tenant_id");
+
+    if (error || !data) {
+      if (error) console.error("getGlobalInventoryFilterCountsAction error:", error);
+      return { propertyTypes: {}, statuses: {}, listingTypes: {}, branches: {} };
+    }
+
+    const typedData = data as unknown as AggregationRow[];
+    const counts: InventoryFilterCounts = {
+      propertyTypes: {},
+      statuses: {},
+      listingTypes: {},
+      branches: {},
+    };
+
+    typedData.forEach((p) => {
+      if (p.property_type) {
+        const key = String(p.property_type).toUpperCase();
+        counts.propertyTypes[key] = (counts.propertyTypes[key] || 0) + 1;
+      }
+      if (p.status) {
+        const key = String(p.status).toUpperCase();
+        counts.statuses[key] = (counts.statuses[key] || 0) + 1;
+      }
+      if (p.listing_type) {
+        const key = String(p.listing_type).toUpperCase();
+        counts.listingTypes[key] = (counts.listingTypes[key] || 0) + 1;
+      }
+      if (p.tenant_id) {
+        counts.branches[p.tenant_id] = (counts.branches[p.tenant_id] || 0) + 1;
+      }
+    });
+
+    return counts;
+  },
+  ["inventory_filter_counts_cache"],
+  { revalidate: 60, tags: ["inventory_counts"] }
+);
+
 export async function getGlobalInventoryFilterCountsAction(): Promise<InventoryFilterCounts> {
   const { supabase, role } = await requireAuthContext();
   if (role !== "ADMIN") throw new Error("Forbidden: Admin only");
 
-  // Fetch only necessary columns for all non-deleted properties
-  const { data, error } = await supabase
-    .from("properties")
-    .select("property_type, status, listing_type, tenant_id");
-
-  if (error || !data) {
-    console.error("getGlobalInventoryFilterCountsAction error:", error);
-    return { propertyTypes: {}, statuses: {}, listingTypes: {}, branches: {} };
-  }
-
-  // 🛡️ Perform in-memory aggregation with Uppercase Normalization
-  const typedData = data as unknown as AggregationRow[];
-  const counts: InventoryFilterCounts = {
-    propertyTypes: {},
-    statuses: {},
-    listingTypes: {},
-    branches: {},
-  };
-
-  typedData.forEach((p) => {
-    if (p.property_type) {
-      const key = String(p.property_type).toUpperCase();
-      counts.propertyTypes[key] = (counts.propertyTypes[key] || 0) + 1;
-    }
-    if (p.status) {
-      const key = String(p.status).toUpperCase();
-      counts.statuses[key] = (counts.statuses[key] || 0) + 1;
-    }
-    if (p.listing_type) {
-      const key = String(p.listing_type).toUpperCase();
-      counts.listingTypes[key] = (counts.listingTypes[key] || 0) + 1;
-    }
-    if (p.tenant_id) {
-      counts.branches[p.tenant_id] = (counts.branches[p.tenant_id] || 0) + 1;
-    }
-  });
-
-  return counts;
+  return fetchInventoryCountsCached(supabase);
 }
 
 /**

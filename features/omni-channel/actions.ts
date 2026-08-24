@@ -1074,12 +1074,12 @@ export async function deleteLeadInternalNoteAction(
   }
 }
 
-/**
- * Get tenant staff list for assigning agents (Deduplicated real staff & admins only)
- */
-export async function getTenantStaffListAction(): Promise<ActionResponse<any[]>> {
-  try {
-    const { supabase } = await requireAuthContext();
+import { unstable_cache } from "next/cache";
+
+const fetchTenantStaffCached = unstable_cache(
+  async (tenantId?: string | null) => {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
 
     // 1. Fetch from profiles
     const { data: profiles } = await supabase
@@ -1087,8 +1087,8 @@ export async function getTenantStaffListAction(): Promise<ActionResponse<any[]>>
       .select("id, full_name, role, avatar_url, email")
       .in("role", ["ADMIN", "SUPER_ADMIN", "MANAGER", "BRANCH_MANAGER", "AGENT", "STAFF"]);
 
-    // 2. Fetch from tenant_members_v3
-    const { data: members } = await supabase
+    // 2. Fetch from tenant_members_v3 scoped by tenant
+    let memberQuery = supabase
       .from("tenant_members_v3")
       .select(`
         id,
@@ -1101,6 +1101,12 @@ export async function getTenantStaffListAction(): Promise<ActionResponse<any[]>>
         )
       `)
       .in("role", ["ADMIN", "SUPER_ADMIN", "MANAGER", "BRANCH_MANAGER", "AGENT", "STAFF"]);
+
+    if (tenantId) {
+      memberQuery = memberQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: members } = await memberQuery;
 
     const staffMap = new Map<string, any>();
 
@@ -1171,6 +1177,19 @@ export async function getTenantStaffListAction(): Promise<ActionResponse<any[]>>
       return a.name.localeCompare(b.name);
     });
 
+    return finalStaff;
+  },
+  ["tenant_staff_list_cache"],
+  { revalidate: 180, tags: ["staff_list"] }
+);
+
+/**
+ * Get tenant staff list for assigning agents (Deduplicated real staff & admins only)
+ */
+export async function getTenantStaffListAction(): Promise<ActionResponse<any[]>> {
+  try {
+    const { tenantId } = await requireAuthContext();
+    const finalStaff = await fetchTenantStaffCached(tenantId);
     return { success: true, data: finalStaff };
   } catch (err: unknown) {
     console.error("[getTenantStaffListAction] Error:", err);

@@ -20,6 +20,8 @@ vi.mock('@/lib/ai/gemini', () => ({
 // 3. Mock Next.js Cache & Headers
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+  unstable_cache: (fn: any) => fn,
 }));
 
 vi.mock('next/headers', () => ({
