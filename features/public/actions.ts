@@ -269,7 +269,7 @@ ${sanitizedDetails || "-"}`),
 
   await sendLineNotification({
     type: "flex",
-    altText: "🏠 มีคนฝากทรัพย์ใหม่ระครับ!",
+    altText: "🏠 มีคนฝากทรัพย์ใหม่นะครับ!",
     contents: flexBubble,
   });
 
