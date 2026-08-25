@@ -117,8 +117,11 @@ export async function uploadDepositPreviewAction(formData: FormData) {
       return { success: false, message: "อัปโหลดรูปภาพไม่สำเร็จ" };
     }
 
-    const cdnUrl = `https://cdn.vccasset.com/storage/v1/object/public/property-images/${fileName}`;
-    return { success: true, url: cdnUrl };
+    const { data: publicUrlData } = supabase.storage
+      .from("property-images")
+      .getPublicUrl(fileName);
+    const publicUrl = publicUrlData?.publicUrl || getPublicImageUrl(fileName, "property-images");
+    return { success: true, url: publicUrl };
   } catch (err: any) {
     console.error("[Deposit Preview Upload Exception]:", err);
     return { success: false, message: "เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ" };
@@ -183,14 +186,15 @@ export async function createDepositLeadAction(data: DepositLeadInput) {
       p_wechat_id: sanitizeInput(data.wechatId),
       p_whatsapp: sanitizeInput(data.whatsapp),
       p_property_type: data.propertyType,
-      p_note: encrypt(`[ฝากทรัพย์] 
+      p_note: encrypt(`[ฝากทรัพย์]
 อีเมล: ${sanitizedEmail || "-"}
 Line: ${cleanLineId || "-"}
 WeChat: ${sanitizeInput(data.wechatId) || "-"}
 WhatsApp: ${sanitizeInput(data.whatsapp) || "-"}
 Type: ${data.propertyType}
 Image: ${data.propertyImage || "-"}
-Details: ${sanitizedDetails || "-"}`),
+Details:
+${sanitizedDetails || "-"}`),
     }
   );
 
@@ -271,7 +275,7 @@ Details: ${sanitizedDetails || "-"}`),
 
   // 🚀 Bridge to Telegram for Website Deposit
   try {
-    const { sendAdminNotification } = await import("@/lib/telegram");
+    const { sendAdminNotification, sendAdminPhoto } = await import("@/lib/telegram");
     const propTypeThai = PROPERTY_TYPE_MAP[data.propertyType] || data.propertyType;
     let tgMessage = `🏠 <b>มีคนฝากทรัพย์สินใหม่ (จาก Website)</b>\n━━━━━━━━━━━━━━━━━━\n\n` +
       `👤 <b>ผู้ฝาก:</b> ${data.fullName}\n` +
@@ -286,7 +290,12 @@ Details: ${sanitizedDetails || "-"}`),
 
     tgMessage += `📝 <b>รายละเอียด:</b> ${data.details || "-"}\n\n` +
       `📂 <a href="${siteConfig.url}/protected/leads/${leadId}">คลิกจัดการข้อมูลลูกค้าใน CRM</a>`;
-    await sendAdminNotification(tgMessage, { parseMode: "HTML" });
+
+    if (data.propertyImage) {
+      await sendAdminPhoto(data.propertyImage, tgMessage, { parseMode: "HTML" });
+    } else {
+      await sendAdminNotification(tgMessage, { parseMode: "HTML" });
+    }
   } catch (tgErr) {
     console.error("[BRIDGE] Telegram notification failed for website deposit:", tgErr);
   }

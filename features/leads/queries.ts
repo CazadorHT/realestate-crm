@@ -32,6 +32,40 @@ type ListArgs = {
   pageSize?: number;
   sortOrder?: "asc" | "desc";
 };
+function extractLeadNote(lead: any): string | null {
+  if (!lead) return null;
+  const utmData = (lead.utm_data as Record<string, any>) || {};
+  const prefs = utmData.preferences || {};
+  
+  // 1. Try note_encrypted
+  if (utmData.note_encrypted && typeof utmData.note_encrypted === "string") {
+    const decrypted = decrypt(utmData.note_encrypted);
+    if (decrypted) return decrypted;
+    return utmData.note_encrypted;
+  }
+  
+  // 2. Try utm_data.note
+  if (utmData.note && typeof utmData.note === "string") {
+    const decrypted = decrypt(utmData.note);
+    if (decrypted) return decrypted;
+    return utmData.note;
+  }
+  
+  // 3. Try prefs.note
+  if (prefs.note && typeof prefs.note === "string") {
+    const decrypted = decrypt(prefs.note);
+    if (decrypted) return decrypted;
+    return prefs.note;
+  }
+  
+  // 4. Try ai_summary
+  if (lead.ai_summary && typeof lead.ai_summary === "string") {
+    return lead.ai_summary;
+  }
+  
+  return null;
+}
+
 // ใช้สำหรับแสดง leads หลายรายการ
 export async function getLeadsQuery(args: ListArgs = {}) {
   const { supabase, role, tenantId } = await requireAuthContext();
@@ -76,13 +110,17 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   if (error) throw new Error(mapDbError(error));
 
-  const rawLeads = (data || []).map((l: any) => ({
-    ...l,
-    full_name: decrypt(l.identity?.display_name) || "Unknown",
-    phone: decrypt(l.identity?.phone) || null,
-    email: decrypt(l.identity?.email) || null,
-    note: l.ai_summary || null,
-  }));
+  const rawLeads = (data || []).map((l: any) => {
+    const utmData = (l.utm_data as Record<string, any>) || {};
+    return {
+      ...l,
+      full_name: decrypt(l.identity?.display_name) || "Unknown",
+      phone: decrypt(l.identity?.phone) || null,
+      email: decrypt(l.identity?.email) || null,
+      note: extractLeadNote(l),
+      utm_source: utmData.utm_source || null,
+    };
+  });
 
   // Group by name/phone so each unique customer appears once in the leads table
   const uniqueLeadsMap = new Map<string, any>();
@@ -252,13 +290,13 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
     
     // preferences unpacks
     preferences: prefs,
-    note: prefs.note || lead.ai_summary || null,
+    note: extractLeadNote(lead),
     nationality: prefs.nationality || null,
     is_foreigner: !!prefs.is_foreigner,
     lead_type: prefs.lead_type || "INDIVIDUAL",
     id_card: prefs.id_card || null,
     passport: prefs.passport || null,
-    preferred_property_types: prefs.property_types || null,
+    preferred_property_types: prefs.property_types || (utmData.property_type ? [utmData.property_type] : null),
     min_bedrooms: lead.min_bedrooms !== null && lead.min_bedrooms !== undefined ? Number(lead.min_bedrooms) : (prefs.min_bedrooms ? Number(prefs.min_bedrooms) : null),
     min_bathrooms: prefs.min_bathrooms || null,
     min_size_sqm: prefs.min_size || null,
@@ -324,13 +362,13 @@ export async function getLeadWithActivitiesQuery(
       
       // preferences unpacks
       preferences: prefs,
-      note: prefs.note || lead.ai_summary || null,
+      note: extractLeadNote(lead),
       nationality: prefs.nationality || null,
       is_foreigner: !!prefs.is_foreigner,
       lead_type: prefs.lead_type || "INDIVIDUAL",
       id_card: prefs.id_card || null,
       passport: prefs.passport || null,
-      preferred_property_types: prefs.property_types || null,
+      preferred_property_types: prefs.property_types || (utmData.property_type ? [utmData.property_type] : null),
       min_bedrooms: lead.min_bedrooms !== null && lead.min_bedrooms !== undefined ? Number(lead.min_bedrooms) : (prefs.min_bedrooms ? Number(prefs.min_bedrooms) : null),
       min_bathrooms: prefs.min_bathrooms || null,
       min_size_sqm: prefs.min_size || null,

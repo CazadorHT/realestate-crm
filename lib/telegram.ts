@@ -61,8 +61,9 @@ export async function sendAdminPhoto(
   if (!targetId) return;
 
   try {
+    const safeCaption = caption.length > 1024 ? caption.slice(0, 1020) + "..." : caption;
     await telegramBot.api.sendPhoto(targetId, photoUrl, {
-      caption,
+      caption: safeCaption,
       parse_mode: options.parseMode || "HTML",
       reply_markup: options.replyMarkup,
     });

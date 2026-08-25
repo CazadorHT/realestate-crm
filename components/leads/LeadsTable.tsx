@@ -18,6 +18,7 @@ import { LeadRowActions } from "@/components/leads/LeadRowActions";
 import {
   leadStageLabelNullable,
   leadSourceLabelNullable,
+  getLeadSubSource,
 } from "@/features/leads/labels";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
@@ -59,51 +60,6 @@ import { TransferLeadsDialog } from "@/features/leads/components/TransferLeadsDi
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
-function getLeadSubSource(lead: any, isEn?: boolean): string | null {
-  const note = (lead.note || lead.ai_summary || "").toLowerCase();
-  const utmData = (lead.utm_data as Record<string, any>) || {};
-  const prefNote = (utmData.preferences?.note || "").toLowerCase();
-  const utmNote = (utmData.note || "").toLowerCase();
-  const combined = `${note} ${prefNote} ${utmNote}`;
-
-  if (combined.includes("footer newsletter") || combined.includes("subscribe") || combined.includes("ข่าวสาร")) {
-    return isEn ? "Newsletter" : "สมัครรับข่าวสาร";
-  }
-  if (combined.includes("feed") || combined.includes("comment") || combined.includes("คอมเมนต์") || combined.includes("คอมเม้น")) {
-    return isEn ? "Comment" : "คอมเมนต์";
-  }
-  if (
-    combined.includes("messenger") ||
-    combined.includes("chat") ||
-    combined.includes("ทักแชต") ||
-    combined.includes("line") ||
-    combined.includes("whatsapp") ||
-    combined.includes("telegram") ||
-    combined.includes("profile") ||
-    combined.includes("dm")
-  ) {
-    return isEn ? "Chat / DM" : "ช่องแชท";
-  }
-  if (combined.includes("wechat") || combined.includes("วีแชต") || combined.includes("วีแชท")) {
-    return isEn ? "WeChat" : "วีแชท (WeChat)";
-  }
-  if (combined.includes("leadgen") || combined.includes("lead ad")) {
-    return isEn ? "Lead Ad" : "โฆษณา Lead Ad";
-  }
-  if (lead.source === "WEBSITE") {
-    const hasPropertyType = !!utmData.property_type;
-    const hasPropertyId = !!utmData.property_id || !!lead.property_id;
-    if (hasPropertyType || combined.includes("ฝาก") || combined.includes("deposit")) {
-      return isEn ? "Deposit Property" : "ฝากทรัพย์";
-    }
-    if (hasPropertyId || combined.includes("สนใจ") || combined.includes("inquiry")) {
-      return isEn ? "Property Inquiry" : "สนใจทรัพย์";
-    }
-    return isEn ? "General Web" : "เว็บทั่วไป";
-  }
-  return null;
-}
-
 const SUB_SOURCE_STYLES: Record<string, string> = {
   "คอมเมนต์": "text-purple-700 bg-purple-50 border-purple-200/60",
   "Comment": "text-purple-700 bg-purple-50 border-purple-200/60",
@@ -115,6 +71,8 @@ const SUB_SOURCE_STYLES: Record<string, string> = {
   "WeChat": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
   "ฝากทรัพย์": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
   "Deposit Property": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
+  "ฝากทรัพย์หน้าเว็บไซต์": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
+  "Deposit Property (Website)": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
   "สนใจทรัพย์": "text-blue-700 bg-blue-50 border-blue-200/60",
   "Property Inquiry": "text-blue-700 bg-blue-50 border-blue-200/60",
   "เว็บทั่วไป": "text-slate-600 bg-slate-50 border-slate-200/60",
@@ -122,6 +80,42 @@ const SUB_SOURCE_STYLES: Record<string, string> = {
   "สมัครรับข่าวสาร": "text-indigo-700 bg-indigo-50 border-indigo-200/60",
   "Newsletter": "text-indigo-700 bg-indigo-50 border-indigo-200/60",
 };
+
+const PROPERTY_TYPE_MAP: Record<string, string> = {
+  CONDO: "คอนโด",
+  HOUSE: "บ้านเดี่ยว",
+  TOWNHOME: "ทาวน์โฮม",
+  LAND: "ที่ดิน",
+  COMMERCIAL: "อาคารพาณิชย์",
+  APARTMENT: "อพาร์ทเมนท์",
+  HOTEL: "โรงแรม",
+  OFFICE: "สำนักงาน",
+  WAREHOUSE: "โกดัง",
+  FACTORY: "โรงงาน",
+};
+
+export function formatLeadNotePreview(note?: string | null): string {
+  if (!note || !note.trim()) return "-";
+
+  // Handle deposit template: [ฝากทรัพย์] ... Details: ...
+  if (note.includes("[ฝากทรัพย์]")) {
+    const detailsMatch = note.match(/Details:\s*([^\n\r]+)/i);
+    const typeMatch = note.match(/Type:\s*([^\n\r]+)/i);
+    const details = detailsMatch && detailsMatch[1] && detailsMatch[1].trim() !== "-" ? detailsMatch[1].trim() : "";
+    const rawType = typeMatch && typeMatch[1] && typeMatch[1].trim() !== "-" ? typeMatch[1].trim() : "";
+    const type = PROPERTY_TYPE_MAP[rawType.toUpperCase()] || rawType;
+
+    if (details) {
+      return type ? `[${type}] ${details}` : details;
+    }
+    if (type) {
+      return `ฝากทรัพย์ (${type})`;
+    }
+    return "ฝากทรัพย์";
+  }
+
+  return note.replace(/[\r\n]+/g, " ").trim() || "-";
+}
 
 const SOURCE_STYLES: Record<string, string> = {
   FACEBOOK: "text-blue-700 bg-blue-50 border-blue-200/80",
@@ -446,7 +440,7 @@ export function LeadsTable({
                       className="max-w-[200px] truncate text-[11px] text-muted-foreground"
                       title={l.note || ""}
                     >
-                      {l.note || "-"}
+                      {formatLeadNotePreview(l.note)}
                     </div>
                   </TableCell>
                   {/* Stage */}
@@ -765,8 +759,8 @@ export function LeadsTable({
                       {l.note && (
                         <div className="mt-3 p-3 bg-slate-50/50 border border-slate-100/50 rounded-2xl text-[11px] text-slate-500 italic flex gap-2">
                           <FaNoteSticky className="h-3 w-3 text-slate-300 shrink-0 mt-0.5" />
-                          <span className="line-clamp-2 leading-relaxed">
-                            {l.note}
+                          <span className="line-clamp-2 leading-relaxed" title={l.note}>
+                            {formatLeadNotePreview(l.note)}
                           </span>
                         </div>
                       )}

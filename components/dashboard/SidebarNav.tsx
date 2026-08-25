@@ -658,15 +658,21 @@ export function SidebarNav({
         <LayoutGroup>
           <div
             className={cn(
-              "py-6 relative px-4] ",
-              isCollapsed && "flex justify-center",
+              "py-6 relative transition-all duration-300 flex items-center justify-center px-4",
+              isCollapsed && "px-0",
             )}
           >
-            <div className="flex items-center">
+            <Link
+              href="/protected"
+              className={cn(
+                "flex items-center justify-center transition-all duration-200 group/brand cursor-pointer",
+                isCollapsed ? "w-full" : "gap-3.5",
+              )}
+            >
               <m.div
                 layout
                 className={cn(
-                  "shrink-0",
+                  "shrink-0 flex items-center justify-center transition-transform group-hover/brand:scale-105",
                   isCollapsed ? "scale-90" : "scale-100",
                 )}
               >
@@ -685,9 +691,9 @@ export function SidebarNav({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="min-w-0 px-4"
+                    className="min-w-0"
                   >
-                    <h1 className="text-lg font-bold tracking-tight text-slate-900 uppercase">
+                    <h1 className="text-lg font-bold tracking-tight text-slate-900 uppercase truncate group-hover/brand:text-blue-700 transition-colors">
                       {siteConfig.name}
                     </h1>
                     <p className="text-[9px] uppercase tracking-[0.2em] text-blue-600 font-bold leading-none">
@@ -696,7 +702,7 @@ export function SidebarNav({
                   </m.div>
                 )}
               </AnimatePresence>
-            </div>
+            </Link>
 
             <button
               onClick={toggleCollapse}

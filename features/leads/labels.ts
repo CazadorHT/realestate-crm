@@ -124,6 +124,71 @@ export function leadActivityTypeLabelNullable(
   return LEAD_ACTIVITY_TYPE_LABELS[v as LeadActivityType] ?? v;
 }
 
+export function getLeadSubSource(lead: any, isEn?: boolean): string | null {
+  if (!lead) return null;
+  const note = (lead.note || lead.ai_summary || "").toLowerCase();
+  const utmData = (lead.utm_data as Record<string, any>) || {};
+  const prefNote = (utmData.preferences?.note || "").toLowerCase();
+  const utmNote = (utmData.note || "").toLowerCase();
+  const combined = `${note} ${prefNote} ${utmNote}`;
+
+  // 1. Check for Deposit Property (Highest priority for website deposits)
+  const hasDepositPropertyType = !!utmData.property_type;
+  if (
+    hasDepositPropertyType ||
+    combined.includes("[ฝากทรัพย์]") ||
+    combined.includes("ฝากทรัพย์") ||
+    combined.includes("deposit") ||
+    combined.includes("ฝากขาย") ||
+    combined.includes("ฝากเช่า")
+  ) {
+    return isEn ? "Deposit Property (Website)" : "ฝากทรัพย์หน้าเว็บไซต์";
+  }
+
+  // 2. Check for Property Inquiry (Website property details page)
+  const hasPropertyId = !!utmData.property_id || !!lead.property_id;
+  if (hasPropertyId || combined.includes("สนใจทรัพย์") || combined.includes("inquiry")) {
+    return isEn ? "Property Inquiry" : "สนใจทรัพย์";
+  }
+
+  // 3. Check for Newsletter / Subscribe
+  if (combined.includes("footer newsletter") || combined.includes("subscribe") || combined.includes("สมัครรับข่าวสาร")) {
+    return isEn ? "Newsletter" : "สมัครรับข่าวสาร";
+  }
+
+  // 4. Check for Social Lead Ads
+  if (combined.includes("leadgen") || combined.includes("lead ad") || combined.includes("โฆษณา")) {
+    return isEn ? "Lead Ad" : "โฆษณา Lead Ad";
+  }
+
+  // 5. Check for Social / Chat specific channels
+  if (combined.includes("feed") || combined.includes("comment") || combined.includes("คอมเมนต์") || combined.includes("คอมเม้น")) {
+    return isEn ? "Comment" : "คอมเมนต์";
+  }
+  if (combined.includes("wechat") || combined.includes("วีแชต") || combined.includes("วีแชท")) {
+    return isEn ? "WeChat" : "วีแชท (WeChat)";
+  }
+  if (
+    combined.includes("messenger") ||
+    combined.includes("ทักแชต") ||
+    combined.includes("profile") ||
+    combined.includes("dm") ||
+    combined.includes("inbox") ||
+    lead.source === "LINE" ||
+    lead.source === "WHATSAPP" ||
+    lead.source === "WECHAT"
+  ) {
+    return isEn ? "Chat / DM" : "ช่องแชท";
+  }
+
+  // 6. Website General
+  if (lead.source === "WEBSITE") {
+    return isEn ? "General Web" : "เว็บทั่วไป";
+  }
+
+  return null;
+}
+
 /** fallback เผื่อเจอ string แปลก ๆ (ข้อมูลเก่าหรือ null) */
 export function safeEnumLabel(map: Record<string, any>, v: any, lang?: string) {
   if (!v) return "-";

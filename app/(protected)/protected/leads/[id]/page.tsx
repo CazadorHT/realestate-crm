@@ -13,6 +13,7 @@ import { getPropertySummariesByIdsQuery } from "@/features/leads/queries";
 import {
   leadStageLabelNullable,
   leadSourceLabelNullable,
+  getLeadSubSource,
   type LeadStage,
   type LeadSource,
 } from "@/features/leads/labels";
@@ -161,38 +162,40 @@ export default async function LeadDetailPage({
   })) || [];
 
   // V3 Unpack Identity Profile
-  const identity = (lead as any).identity_v3;
+  const identity = (lead as any).identity || (lead as any).identity_v3;
   const socialLinks = (identity?.social_links as Record<string, any>) || {};
-  const fullName = identity?.display_name || (lead as any).full_name || "Unknown";
+  const fullName = (lead as any).full_name || identity?.display_name || "Unknown";
 
   const leadV3: LeadV3Mapped = {
     ...lead as any,
     full_name: fullName,
-    phone: identity?.phone || (lead as any).phone || null,
-    email: socialLinks.email || (lead as any).email || null,
-    nationality: socialLinks.nationality || (lead as any).nationality || null,
-    is_foreigner: socialLinks.is_foreigner || !!(lead as any).is_foreigner,
-    note: socialLinks.note || (lead as any).note || null,
-    line_id: identity?.line_id || (lead as any).line_id || null,
-    wechat_id: socialLinks.wechat_id || (lead as any).wechat_id || null,
-    whatsapp: socialLinks.whatsapp || (lead as any).whatsapp || null,
+    phone: (lead as any).phone || identity?.phone || null,
+    email: (lead as any).email || socialLinks.email || null,
+    nationality: (lead as any).nationality || socialLinks.nationality || null,
+    is_foreigner: (lead as any).is_foreigner ?? socialLinks.is_foreigner ?? false,
+    note: (lead as any).note || socialLinks.note || null,
+    line_id: (lead as any).line_id || identity?.line_id || null,
+    wechat_id: (lead as any).wechat_id || socialLinks.wechat_id || null,
+    whatsapp: (lead as any).whatsapp || socialLinks.whatsapp || null,
     pdpa_consent: (lead as any).pdpa_consent,
     consent_date: (lead as any).consent_date,
     ai_summary_content: (lead as any).ai_summary_content,
     lead_activities: ((lead as any).lead_activities || []) as unknown as LeadActivity[],
     // V3 Preferences Mapping
-    preferred_locations: (lead as any).preferences?.locations || null,
-    budget_min: (lead as any).preferences?.budget_min || null,
-    budget_max: (lead as any).preferences?.budget_max || null,
-    min_bedrooms: (lead as any).preferences?.min_bedrooms || null,
-    min_bathrooms: (lead as any).preferences?.min_bathrooms || null,
-    min_size_sqm: (lead as any).preferences?.min_size_sqm || null,
-    max_size_sqm: (lead as any).preferences?.max_size_sqm || null,
-    num_occupants: (lead as any).preferences?.occupants || null,
-    has_pets: (lead as any).preferences?.pets || null,
-    preferred_property_types: (lead as any).preferences?.property_types || null,
-    need_company_registration: (lead as any).preferences?.company_registration || null,
-    allow_airbnb: (lead as any).preferences?.allow_airbnb || null,
+    preferred_locations: (lead as any).preferences?.locations || (lead as any).preferred_locations || null,
+    budget_min: (lead as any).preferences?.budget_min || (lead as any).budget_min || null,
+    budget_max: (lead as any).preferences?.budget_max || (lead as any).budget_max || null,
+    min_bedrooms: (lead as any).preferences?.min_bedrooms || (lead as any).min_bedrooms || null,
+    min_bathrooms: (lead as any).preferences?.min_bathrooms || (lead as any).min_bathrooms || null,
+    min_size_sqm: (lead as any).preferences?.min_size_sqm || (lead as any).min_size_sqm || null,
+    max_size_sqm: (lead as any).preferences?.max_size_sqm || (lead as any).max_size_sqm || null,
+    num_occupants: (lead as any).preferences?.occupants || (lead as any).num_occupants || null,
+    has_pets: (lead as any).preferences?.pets ?? (lead as any).has_pets ?? null,
+    preferred_property_types: (lead as any).preferences?.property_types 
+      || ((lead as any).preferred_property_types)
+      || ((lead as any).utm_data?.property_type ? [(lead as any).utm_data.property_type] : null),
+    need_company_registration: (lead as any).preferences?.company_registration || (lead as any).need_company_registration || null,
+    allow_airbnb: (lead as any).preferences?.allow_airbnb || (lead as any).allow_airbnb || null,
     preferences: (lead as any).preferences as LeadPreferences | null,
   };
 
@@ -258,13 +261,23 @@ export default async function LeadDetailPage({
             <h1 className="text-3xl md:text-4xl font-semibold text-white tracking-tight">
               K. {fullName}
             </h1>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
               <div className="px-3 py-1 rounded-lg bg-blue-500/20 border border-blue-400/30 text-xs font-semibold text-blue-200">
                 {leadStageLabelNullable((lead as any).stage as LeadStage | null, lang)}
               </div>
               <div className="px-3 py-1 rounded-lg bg-slate-700/50 border border-slate-600/50 text-xs font-semibold text-slate-300">
                 {leadSourceLabelNullable((lead as any).source as LeadSource | null, lang)}
               </div>
+              {getLeadSubSource(leadV3, isEn) && (
+                <div className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm border ${
+                  getLeadSubSource(leadV3, isEn)?.includes("ฝากทรัพย์") || getLeadSubSource(leadV3, isEn)?.includes("Deposit")
+                    ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-300 ring-1 ring-emerald-400/20"
+                    : "bg-indigo-500/20 border-indigo-400/40 text-indigo-200 ring-1 ring-indigo-400/20"
+                }`}>
+                  <span>{getLeadSubSource(leadV3, isEn)?.includes("ฝากทรัพย์") || getLeadSubSource(leadV3, isEn)?.includes("Deposit") ? "🏠" : "📌"}</span>
+                  <span>{getLeadSubSource(leadV3, isEn)}</span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -167,7 +167,7 @@ describe('Public Server Actions - Brutal Hardening Tests', () => {
         p_wechat_id: undefined,
         p_whatsapp: undefined,
         p_property_type: 'CONDO',
-        p_note: 'enc:[ฝากทรัพย์] \nอีเมล: dep@test.com\nLine: -\nWeChat: -\nWhatsApp: -\nType: CONDO\nImage: -\nDetails: High floor'
+        p_note: 'enc:[ฝากทรัพย์]\nอีเมล: dep@test.com\nLine: -\nWeChat: -\nWhatsApp: -\nType: CONDO\nImage: -\nDetails:\nHigh floor'
       });
     });
 
@@ -240,6 +240,25 @@ describe('Public Server Actions - Brutal Hardening Tests', () => {
       const res4 = await createDepositLeadAction(updatedDetailsPayload);
       expect(res4.success).toBe(true);
       expect(res4.leadId).toBe('lead-id-3');
+    });
+
+    it('should handle deposit with propertyImage successfully', async () => {
+      mockRpc.mockResolvedValue({ data: 'lead-img-1', error: null });
+
+      const payloadWithImg = {
+        fullName: 'User With Image',
+        phone: '0822222222',
+        propertyType: 'CONDO' as any,
+        propertyImage: 'https://example.com/property-image.webp',
+        details: 'Condo with nice view',
+      };
+
+      const res = await createDepositLeadAction(payloadWithImg);
+      expect(res.success).toBe(true);
+      expect(res.leadId).toBe('lead-img-1');
+      expect(mockRpc).toHaveBeenCalledWith('create_deposit_lead', expect.objectContaining({
+        p_note: expect.stringContaining('Image: https://example.com/property-image.webp')
+      }));
     });
   });
 });
