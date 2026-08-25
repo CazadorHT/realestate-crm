@@ -371,6 +371,101 @@ export function PropertyForm({
     }
   }, [defaultValues]);
 
+  // Handle prefill from Lead Deposit (via sessionStorage or searchParams)
+  const [depositLeadBanner, setDepositLeadBanner] = React.useState<{
+    ownerName: string;
+    leadId: string;
+  } | null>(null);
+  const [isExtractingAi, setIsExtractingAi] = React.useState(false);
+
+  const handleAiAutoExtract = async () => {
+    const desc = form.getValues("description") || form.getValues("description_en") || "";
+    if (!desc.trim()) {
+      toast.error(isEn ? "No deposit text found to extract" : "ไม่พบข้อความฝากทรัพย์ที่จะแยกข้อมูล");
+      return;
+    }
+
+    setIsExtractingAi(true);
+    try {
+      const { extractPropertyFromDepositAction } = await import(
+        "./property-form/actions/ai-deposit-extractor"
+      );
+      const result = await extractPropertyFromDepositAction(desc);
+
+      if (!result.success || !result.data) {
+        toast.error(result.message || (isEn ? "AI extraction failed" : "เกิดข้อผิดพลาดในการแยกข้อมูล"));
+        return;
+      }
+
+      const d = result.data;
+      if (d.title) form.setValue("title", d.title, { shouldDirty: true });
+      if (d.property_type) form.setValue("property_type", d.property_type, { shouldDirty: true });
+      if (d.listing_type) form.setValue("listing_type", d.listing_type, { shouldDirty: true });
+      if (d.price !== undefined) form.setValue("price", d.price, { shouldDirty: true });
+      if (d.rental_price !== undefined) form.setValue("rental_price", d.rental_price, { shouldDirty: true });
+      if (d.bedrooms !== undefined) form.setValue("bedrooms", d.bedrooms, { shouldDirty: true });
+      if (d.bathrooms !== undefined) form.setValue("bathrooms", d.bathrooms, { shouldDirty: true });
+      if (d.size_sqm !== undefined) form.setValue("size_sqm", d.size_sqm, { shouldDirty: true });
+      if (d.floor !== undefined) form.setValue("floor", d.floor, { shouldDirty: true });
+
+      toast.success(
+        isEn
+          ? `✨ AI extracted property details successfully!`
+          : `✨ AI แยกข้อมูลเข้าฟอร์มเรียบร้อยแล้ว (ขนาด ${d.size_sqm || "-"} ตร.ม. / ${d.bedrooms || "-"} นอน / ${d.price ? d.price.toLocaleString() + " บาท" : ""})`
+      );
+    } catch (err: any) {
+      console.error("AI Auto Extract error:", err);
+      toast.error(err?.message || "Error");
+    } finally {
+      setIsExtractingAi(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (mode === "create" && typeof window !== "undefined") {
+      const stored = sessionStorage.getItem("lead_deposit_prefill");
+      const urlOwnerId = searchParams?.get("owner_id");
+      const urlLeadId = searchParams?.get("from_lead");
+      const urlPropType = searchParams?.get("property_type");
+
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          sessionStorage.removeItem("lead_deposit_prefill");
+
+          if (data.ownerId) {
+            form.setValue("owner_id", data.ownerId, { shouldDirty: true });
+          }
+          if (data.propertyType) {
+            form.setValue("property_type", data.propertyType, { shouldDirty: true });
+          }
+          if (data.description) {
+            form.setValue("description", data.description, { shouldDirty: true });
+            form.setValue("description_en", data.description, { shouldDirty: true });
+          }
+          if (data.title) {
+            form.setValue("title", data.title, { shouldDirty: true });
+            form.setValue("title_en", data.title, { shouldDirty: true });
+          }
+
+          if (data.ownerName) {
+            setDepositLeadBanner({
+              ownerName: data.ownerName,
+              leadId: data.leadId || urlLeadId || "",
+            });
+          }
+        } catch (e) {
+          console.error("Failed to parse lead_deposit_prefill", e);
+        }
+      } else if (urlOwnerId) {
+        form.setValue("owner_id", urlOwnerId, { shouldDirty: true });
+        if (urlPropType) {
+          form.setValue("property_type", urlPropType as any, { shouldDirty: true });
+        }
+      }
+    }
+  }, [mode, form, searchParams]);
+
   // Clear irrelevant fields when listing type changes
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -998,6 +1093,57 @@ export function PropertyForm({
             handleNext={handleNext}
             form={form}
           />
+          {depositLeadBanner && (
+            <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-linear-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200/80 shadow-sm text-emerald-900 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-200 shrink-0">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm font-bold">
+                    {isEn
+                      ? `Data auto-imported from Deposit Lead (K. ${depositLeadBanner.ownerName})`
+                      : `ดึงข้อมูลจากลีดฝากทรัพย์ (K. ${depositLeadBanner.ownerName}) เรียบร้อยแล้ว`}
+                  </p>
+                  <p className="text-[11px] text-emerald-700">
+                    {isEn
+                      ? "Click AI Auto-Extract to parse price, room sizes, bedrooms, and amenities into the form."
+                      : "กดปุ่ม AI แยกข้อมูล เพื่อดึงราคา, ขนาดห้อง, จำนวนห้องนอน และสิ่งอำนวยความสะดวกเข้าฟอร์มอัตโนมัติ"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAiAutoExtract}
+                  disabled={isExtractingAi}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-9 px-3.5 text-xs font-bold gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer"
+                >
+                  {isExtractingAi ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>{isEn ? "Extracting..." : "กำลังสกัดข้อมูล..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>{isEn ? "AI Auto-Extract" : "✨ AI แยกข้อมูลเข้าฟอร์ม"}</span>
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDepositLeadBanner(null)}
+                  className="text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/50 rounded-xl h-9 px-2.5 text-xs cursor-pointer"
+                >
+                  {isEn ? "Dismiss" : "ปิด"}
+                </Button>
+              </div>
+            </div>
+          )}
           <Form {...form}>
             <form
               onKeyDown={handleFormKeyDown}

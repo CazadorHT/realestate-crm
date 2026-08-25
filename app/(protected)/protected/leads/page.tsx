@@ -41,6 +41,7 @@ export default async function LeadsPage({
     q?: string;
     stage?: string;
     source?: string;
+    lead_type?: string;
     page?: string;
     view?: string;
     allBranches?: string;
@@ -186,11 +187,12 @@ async function LeadsContentWrapper({
       q: sp.q,
       stage: sp.stage,
       source: sp.source,
+      leadType: sp.lead_type,
       page,
       pageSize: 20,
     });
 
-    const isEmptyState = listLeads.length === 0 && page === 1 && !sp.q && !sp.stage && !sp.source;
+    const isEmptyState = listLeads.length === 0 && page === 1 && !sp.q && !sp.stage && !sp.source && !sp.lead_type;
 
     return (
       <div className="space-y-4">

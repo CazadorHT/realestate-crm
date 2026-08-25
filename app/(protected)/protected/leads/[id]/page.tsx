@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { UserPlus, Briefcase, History as HistoryIcon, Pencil } from "lucide-react";
+import { UserPlus, Briefcase, History as HistoryIcon, Pencil, UserCheck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getLeadWithActivitiesQuery } from "@/features/leads/queries";
 import { createLeadActivityAction } from "@/features/leads/actions";
@@ -32,6 +32,7 @@ import { LeadSummaryCard } from "@/features/leads/components/LeadSummaryCard";
 import { PDPAStatus } from "@/features/leads/components/PDPAStatus";
 import { LeadTransferButton } from "@/features/leads/components/LeadTransferButton";
 import { LeadSmartMatch } from "@/features/smart-match/components/LeadSmartMatch";
+import { ConvertLeadToPropertyDialog } from "@/features/leads/components/ConvertLeadToPropertyDialog";
 
 type LeadActivity = Database["public"]["Tables"]["activity_timeline_v3"]["Row"];
 
@@ -278,10 +279,17 @@ export default async function LeadDetailPage({
                   <span>{getLeadSubSource(leadV3, isEn)}</span>
                 </div>
               )}
+              {((leadV3 as any)?.utm_data?.converted_to_owner_id || (leadV3 as any)?.is_converted_to_owner) && (
+                <div className="px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm border bg-emerald-500/30 border-emerald-400/50 text-emerald-200 ring-1 ring-emerald-400/30">
+                  <UserCheck className="h-3.5 w-3.5 text-emerald-300" />
+                  <span>{isEn ? "Converted to Owner" : "แปลงเป็นเจ้าของทรัพย์ (Owner) แล้ว"}</span>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            <ConvertLeadToPropertyDialog lead={leadV3} />
             <Link
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-white h-12 px-6 text-sm font-semibold text-slate-900 hover:bg-slate-50 transition-all active:scale-[0.98] shadow-lg shadow-black/5 cursor-pointer"
               href={`/protected/leads/${id}/edit`}

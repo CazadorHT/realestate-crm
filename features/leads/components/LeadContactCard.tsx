@@ -285,7 +285,7 @@ export function LeadContactCard({ lead }: LeadContactCardProps) {
                 
                 <div className="relative group/note bg-slate-50/70 p-4 rounded-xl border border-slate-200/70">
                   <div className="absolute left-0 top-3 bottom-3 w-1.5 bg-emerald-400 rounded-r-full" />
-                  <div className="space-y-1.5 text-xs sm:text-sm text-slate-700 leading-relaxed pl-2.5">
+                  <div className="max-h-64 sm:max-h-80 overflow-y-auto pr-2 space-y-1.5 text-xs sm:text-sm text-slate-700 leading-relaxed pl-2.5 scrollbar-thin">
                     {lines.map((line, idx) => {
                       const trimmed = line.trim();
                       if (!trimmed) {

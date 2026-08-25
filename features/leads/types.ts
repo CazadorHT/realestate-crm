@@ -58,6 +58,7 @@ export type LeadWithJoins = LeadRow & {
   id_card?: string | null;
   passport?: string | null;
   preferred_property_types?: string[] | null;
+  is_owner?: boolean;
   [key: string]: any;
 };
 

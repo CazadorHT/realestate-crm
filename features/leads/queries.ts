@@ -28,6 +28,7 @@ type ListArgs = {
   q?: string;
   stage?: string;
   source?: string;
+  leadType?: string;
   page?: number;
   pageSize?: number;
   sortOrder?: "asc" | "desc";
@@ -122,6 +123,36 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     };
   });
 
+  const leadType = (args.leadType ?? "").toLowerCase().trim();
+
+  let filteredRawLeads = rawLeads;
+  if (leadType === "deposit") {
+    filteredRawLeads = rawLeads.filter((l) => {
+      const note = l.note || "";
+      const utmData = (l.utm_data as Record<string, any>) || {};
+      return (
+        note.includes("[ฝากทรัพย์]") ||
+        Boolean(utmData.property_type) ||
+        utmData.channel === "deposit" ||
+        utmData.source === "deposit" ||
+        utmData.sub_source === "deposit"
+      );
+    });
+  } else if (leadType === "inquiry") {
+    filteredRawLeads = rawLeads.filter((l) => {
+      const note = l.note || "";
+      const utmData = (l.utm_data as Record<string, any>) || {};
+      const isDeposit = (
+        note.includes("[ฝากทรัพย์]") ||
+        Boolean(utmData.property_type) ||
+        utmData.channel === "deposit" ||
+        utmData.source === "deposit" ||
+        utmData.sub_source === "deposit"
+      );
+      return !isDeposit;
+    });
+  }
+
   // Group by name/phone so each unique customer appears once in the leads table
   const uniqueLeadsMap = new Map<string, any>();
   const interactionCounts: Record<string, number> = {};
@@ -134,7 +165,30 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     return `id:${l.identity_id || l.id}`;
   };
 
-  rawLeads.forEach((l) => {
+  const convertedLeadIdSet = new Set<string>();
+
+  const { data: ownerIdentities } = await supabase
+    .from("identities_v3")
+    .select("id, social_links")
+    .eq("category", 2);
+
+  (ownerIdentities || []).forEach((o: any) => {
+    const conv = o.social_links?.converted_from_lead_id;
+    if (conv) convertedLeadIdSet.add(conv);
+  });
+
+  const { data: convertTimelines } = await supabase
+    .from("activity_timeline_v3")
+    .select("target_id, metadata")
+    .eq("target_entity", "LEAD");
+
+  (convertTimelines || []).forEach((t: any) => {
+    if (t.metadata?.converted_to_owner_id && t.target_id) {
+      convertedLeadIdSet.add(t.target_id);
+    }
+  });
+
+  filteredRawLeads.forEach((l) => {
     const key = getLeadKey(l);
     interactionCounts[key] = (interactionCounts[key] || 0) + 1;
     if (!uniqueLeadsMap.has(key)) {
@@ -144,8 +198,16 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   const leads = Array.from(uniqueLeadsMap.values()).map((l) => {
     const key = getLeadKey(l);
+    const utmData = (l.utm_data as Record<string, any>) || {};
+
+    const isOwner = Boolean(
+      utmData.converted_to_owner_id ||
+      convertedLeadIdSet.has(l.id)
+    );
+
     return {
       ...l,
+      is_owner: isOwner,
       interaction_count: interactionCounts[key] || 1,
     };
   }) as unknown as LeadWithJoins[];
@@ -306,6 +368,12 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
     need_company_registration: !!prefs.need_company,
     allow_airbnb: !!prefs.allow_airbnb,
     property_id: prefs.property_id || null,
+    is_owner: Boolean(
+      utmData.converted_to_owner_id ||
+      socialLinks.converted_from_lead_id ||
+      lead.identity?.category === 2 ||
+      lead.identity?.role === "OWNER"
+    ),
   } as unknown as LeadWithJoins;
 }
 // ใช้สำหรับแสดง leads พร้อมกับ activities
@@ -346,6 +414,11 @@ export async function getLeadWithActivitiesQuery(
     const utmData = (lead.utm_data as Record<string, any>) || {};
     const prefs = utmData.preferences || {};
     const socialLinks = lead.identity?.social_links || {};
+    const hasConvertActivity = (activities || []).some((a: any) =>
+      a.metadata?.converted_to_owner_id ||
+      a.description?.includes("เจ้าของทรัพย์") ||
+      a.description?.includes("Property Owner")
+    );
     return {
       ...lead,
       full_name: decrypt(lead.identity?.display_name) || "Unknown",
@@ -359,6 +432,13 @@ export async function getLeadWithActivitiesQuery(
       pdpa_consent: !!utmData.pdpa_consent,
       consent_date: utmData.consent_date || null,
       ai_summary_content: lead.ai_summary || null,
+      is_owner: Boolean(
+        utmData.converted_to_owner_id ||
+        socialLinks.converted_from_lead_id ||
+        hasConvertActivity ||
+        lead.identity?.category === 2 ||
+        lead.identity?.role === "OWNER"
+      ),
       
       // preferences unpacks
       preferences: prefs,

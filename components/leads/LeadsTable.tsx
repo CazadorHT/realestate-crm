@@ -35,11 +35,13 @@ import {
   MessageSquare,
   Calendar,
   User,
+  UserCheck,
   Building2,
   Loader2,
   CheckCircle2,
   ChevronRight,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   FaPhone,
   FaLine,
@@ -225,6 +227,38 @@ export function LeadsTable({
     });
   };
 
+  const [isBulkConverting, setIsBulkConverting] = useState(false);
+  const [showBulkConvertDialog, setShowBulkConvertDialog] = useState(false);
+
+  const handleBulkConvert = async () => {
+    setIsBulkConverting(true);
+    try {
+      const { bulkConvertLeadsToOwnersAction } = await import(
+        "@/features/leads/convert-lead-to-owner-action"
+      );
+      const ids = Array.from(selectedIds);
+      const result = await bulkConvertLeadsToOwnersAction(ids);
+
+      if (result.success) {
+        toast.success(
+          isEn
+            ? `Successfully converted ${result.convertedCount} leads to Property Owners ✨`
+            : `แปลงเป็นเจ้าของทรัพย์สำเร็จ ${result.convertedCount} รายการ ✨`
+        );
+        clearSelection();
+        setShowBulkConvertDialog(false);
+        handleSuccessFeedback();
+      } else {
+        toast.error(result.message || (isEn ? "Failed to convert leads" : "ไม่สามารถแปลงข้อมูลได้"));
+      }
+    } catch (err: any) {
+      console.error("Bulk convert error:", err);
+      toast.error(err?.message || "Error");
+    } finally {
+      setIsBulkConverting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <BulkActionToolbar
@@ -240,8 +274,35 @@ export function LeadsTable({
             ? () => setIsTransferDialogOpen(true)
             : undefined
         }
+        extraActions={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowBulkConvertDialog(true)}
+            className="rounded-xl border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 font-semibold gap-1.5 h-9 cursor-pointer"
+          >
+            <UserCheck className="h-4 w-4 text-emerald-600" />
+            <span>{isEn ? "Convert to Owners" : "ย้ายเป็น Owner"}</span>
+          </Button>
+        }
         entityName={isEn ? "leads" : "ลีด"}
         className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}
+      />
+
+      <ConfirmDialog
+        open={showBulkConvertDialog}
+        onOpenChange={setShowBulkConvertDialog}
+        title={isEn ? "Convert Leads to Property Owners" : "แปลงลีดที่เลือกเป็นเจ้าของทรัพย์ (Owner)"}
+        description={
+          isEn
+            ? `Are you sure you want to convert ${selectedCount} selected leads into Property Owners in the directory?`
+            : `คุณต้องการแปลงลีดที่เลือกจำนวน ${selectedCount} รายการ เป็นเจ้าของทรัพย์ (Owner) ในระบบใช่หรือไม่?`
+        }
+        confirmText={isEn ? "Confirm Conversion" : "ยืนยันแปลงเป็น Owner"}
+        cancelText={isEn ? "Cancel" : "ยกเลิก"}
+        onConfirm={handleBulkConvert}
+        variant="default"
       />
 
       {/* Global Selection Indicator */}
@@ -375,15 +436,21 @@ export function LeadsTable({
                           )}
                         </div>
                       </div>
-                      {l.created_at &&
-                        differenceInHours(new Date(), new Date(l.created_at)) <
-                          24 && (
-                          <div className="w-fit">
+                      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                        {l.created_at &&
+                          differenceInHours(new Date(), new Date(l.created_at)) <
+                            24 && (
                             <div className="bg-amber-500 text-white text-[11px] px-1.5 py-0.5 rounded-md font-bold uppercase shadow-sm">
                               NEW
                             </div>
-                          </div>
+                          )}
+                        {(l.is_owner || (l as any).utm_data?.converted_to_owner_id || (l as any).is_converted_to_owner) && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-300 shadow-2xs whitespace-nowrap">
+                            <UserCheck className="h-3 w-3 text-emerald-600" />
+                            <span>{isEn ? "Converted to Owner" : "ย้ายไป Owner แล้ว"}</span>
+                          </span>
                         )}
+                      </div>
                     </div>
                   </TableCell>
                   {/* เบอร์โทร */}
@@ -506,6 +573,7 @@ export function LeadsTable({
                       fullName={l.full_name}
                       phone={l.phone}
                       email={l.email}
+                      lead={l}
                     />
                   </TableCell>
                 </TableRow>
@@ -601,6 +669,12 @@ export function LeadsTable({
                               >
                                 {l.full_name}
                               </div>
+                              {(l.is_owner || (l as any).utm_data?.converted_to_owner_id || (l as any).is_converted_to_owner) && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-md border border-emerald-300 shrink-0">
+                                  <UserCheck className="h-2.5 w-2.5 text-emerald-600" />
+                                  <span>{isEn ? "Converted to Owner" : "ย้ายไป Owner แล้ว"}</span>
+                                </span>
+                              )}
                               {isNew && (
                                 <Badge className="h-4 px-1.5 text-[9px] bg-amber-500 hover:bg-amber-600 border-0 font-semibold uppercase tracking-tighter animate-pulse">
                                   NEW
@@ -629,6 +703,7 @@ export function LeadsTable({
                             fullName={l.full_name}
                             phone={l.phone}
                             email={l.email}
+                            lead={l}
                           />
                         </div>
                       </div>
