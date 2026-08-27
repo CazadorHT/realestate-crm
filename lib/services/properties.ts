@@ -428,13 +428,13 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           facets = (facetData as unknown) as PropertyFacets | null;
         }
 
-        const facetAreas = Object.keys(facets?.availableAreas || {});
+        const facetAreas = Object.keys(facets?.availableAreas || {}).filter((a) => Boolean(a && a.trim()));
         const popularAreaNames = Array.from(
           new Set([
             ...facetAreas,
             ...(propertiesData || [])
               .map((row: any) => row.popular_area)
-              .filter((area: string | null): area is string => !!area),
+              .filter((area: string | null): area is string => Boolean(area && area.trim())),
           ])
         );
         const areaTranslationsMap = new Map<
