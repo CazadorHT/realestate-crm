@@ -90,7 +90,8 @@ export function PropertySearchPage({
       filters.minPrice || filters.maxPrice ||
       filters.debouncedKeyword ||
       (filters.petFriendly && (filters.companyRegistered || filters.nearTrain || filters.isForeigner || filters.fullyFurnished || filters.isHotDeal || filters.listingType !== "ALL")) ||
-      (filters.luxuryVilla)
+      filters.luxuryVilla ||
+      filters.cbd
     );
 
     if (hasMultipleFilters) {
@@ -165,7 +166,7 @@ export function PropertySearchPage({
     filters.debouncedKeyword, filters.type, filters.listingType, filters.minPrice, 
     filters.maxPrice, filters.area, filters.province, filters.nearTrain, 
     filters.petFriendly, filters.fullyFurnished, filters.bedrooms, 
-    filters.isForeigner, filters.isHotDeal, filters.transitStation
+    filters.isForeigner, filters.isHotDeal, filters.luxuryVilla, filters.cbd, filters.transitStation
   ]);
 
   useEffect(() => {
@@ -243,6 +244,8 @@ export function PropertySearchPage({
                   ? language === "en" ? "Pet-Friendly properties" : language === "cn" ? "允许养宠物的房源" : language === "ru" ? "объектов, разрешенных для животных" : "คอนโดเลี้ยงสัตว์ได้"
                   : filters.luxuryVilla
                   ? language === "en" ? "Luxury Villas" : language === "cn" ? "独栋奢华别墅" : language === "ru" ? "роскошных вилл" : "วิลล่าหรู"
+                  : filters.cbd
+                  ? language === "en" ? "Prime CBD & New CBD Properties" : language === "cn" ? "核心CBD与新CBD房源" : language === "ru" ? "CBD и New CBD объекты" : "ทำเล CBD & New CBD"
                   : undefined
               }
             />

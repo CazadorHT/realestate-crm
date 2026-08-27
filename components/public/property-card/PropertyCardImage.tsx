@@ -4,12 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, PawPrint, ChevronLeft, ChevronRight, CheckSquare, Square, MoreVertical, Share2, Copy, Check } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
-import { getTypeLabel, getListingBadge } from "@/lib/property-utils";
+import { getTypeLabel, getListingBadge, isCbdProperty } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { MdOutlinePets } from "react-icons/md";
 import { PiFireFill } from "react-icons/pi";
-import { FaAirbnb } from "react-icons/fa6";
+import { FaAirbnb, FaCity } from "react-icons/fa6";
 import { HiBuildingOffice2 } from "react-icons/hi2";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
@@ -444,6 +444,16 @@ export function PropertyCardImage({
             <MdOutlinePets className="w-5 h-5 rotate-25" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               Pet Friendly
+            </span>
+          </div>
+        )}
+
+        {/* Prime CBD Badge */}
+        {isCbdProperty(property) && (
+          <div className={`flex items-center bg-white/90 backdrop-blur-md text-emerald-700 p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+            <FaCity className="w-5 h-5 shrink-0 text-emerald-600" />
+            <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
+              Prime CBD
             </span>
           </div>
         )}

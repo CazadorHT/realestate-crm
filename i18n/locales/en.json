@@ -25,7 +25,11 @@
     "blog": "Blog",
     "services": "Services",
     "rent": "Rent",
-    "sale": "Sale"
+    "sale": "Sale",
+    "prime_cbd": "Prime CBD & New CBD",
+    "pet_friendly_condo": "Pet Friendly Living",
+    "office_for_rent": "Offices & Commercials",
+    "luxury_villa": "Luxury Villa & Residence"
   },
   "error_boundary": {
     "title": "Oops! Something went wrong",
@@ -379,7 +383,9 @@
     "office_for_rent_title": "Office Space for Rent in Prime Locations | {siteName}",
     "office_for_rent_description": "Find premier office spaces, commercial buildings, and home offices for rent. Locations near BTS/MRT, flexible layouts, and company registration ready.",
     "luxury_villa_title": "Luxury Villas & High-End Houses for Sale | {siteName}",
-    "luxury_villa_description": "Browse premium luxury houses, masterpieces, and private pool villas priced from 8 Million THB. Exquisite design, double volume ceilings, and top security."
+    "luxury_villa_description": "Browse premium luxury houses, masterpieces, and private pool villas priced from 8 Million THB. Exquisite design, double volume ceilings, and top security.",
+    "prime_cbd_title": "Prime CBD & New CBD Bangkok Properties for Sale & Rent | {siteName}",
+    "prime_cbd_description": "Explore luxury condos, houses, and commercial workspaces across Bangkok CBD & New CBD in Sukhumvit, Sathorn, Silom, and Rama 9 near BTS & MRT stations."
   },
   "loading": {
     "search_dream_home": "Finding your dream places...",
@@ -590,6 +596,7 @@
       "rama_9": "Rama 9"
     },
     "pet_allowed": "Pet Friendly",
+    "cbd_location": "CBD Area",
     "fully_furnished": "Fully Furnished",
     "view_results": "View Results",
     "items": "Items",
@@ -1412,6 +1419,15 @@
       "description": "Enter the pinnacle of architectural prestige. Discover high-end private residences, pool villas, and mansions featuring double-volume ceilings, private swimming pools, and elite gated security in Thailand's finest neighborhoods.",
       "feature1": "Double Volume Ceiling Spaces",
       "feature2": "Private Swimming Pools & Gardens"
+    },
+    "prime_cbd": {
+      "badge1": "Prime & New CBD Collection",
+      "badge2": "Bangkok's Core Business & Lifestyle Hub near BTS/MRT",
+      "title_line1": "Prime CBD & New CBD Properties",
+      "title_line2": "Bangkok's Premier City Center",
+      "description": "Experience unparalleled urban living in the heart of Bangkok. Explore an exclusive portfolio of luxury condos, residences, and commercial workspaces in Sukhumvit, Sathorn, Silom, Thonglor, and Rama 9 with seamless access to BTS and MRT mass transit lines.",
+      "feature1": "Prime CBD & Lifestyle Destination",
+      "feature2": "Direct Access to BTS & MRT Transit"
     }
   }
 }

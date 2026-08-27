@@ -26,12 +26,14 @@ import {
   ChevronUp,
   ChevronDown,
   Sparkles,
+  Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   bulkTranslatePopularAreasAction,
   deletePopularArea,
   reorderPopularAreasAction,
+  toggleCbdPopularAreaAction,
 } from "@/features/admin/popular-areas-actions";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
@@ -80,6 +82,7 @@ export type PopularArea = {
   property_count?: number | null;
   featured?: boolean | null;
   is_active?: boolean | null;
+  is_cbd?: boolean | null;
   slug?: string | null;
   image_url?: string | null;
   sort_order: number | null;
@@ -194,6 +197,32 @@ function SortableRow({
         ) : (
           <span className="text-slate-300">-</span>
         )}
+      </TableCell>
+      <TableCell className="px-6 text-center">
+        <button
+          type="button"
+          onClick={async (e) => {
+            e.stopPropagation();
+            const newCbd = !item.is_cbd;
+            const res = await toggleCbdPopularAreaAction(item.id, newCbd);
+            if (res.success) {
+              toast.success(res.message);
+              window.location.reload();
+            } else {
+              toast.error(res.message);
+            }
+          }}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95 shadow-2xs",
+            item.is_cbd
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-300 ring-1 ring-emerald-600/20 hover:bg-emerald-100"
+              : "bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600"
+          )}
+          title={item.is_cbd ? (isEn ? "Click to disable CBD" : "คลิกเพื่อยกเลิกสถานะ CBD") : (isEn ? "Click to enable CBD" : "คลิกเพื่อตั้งเป็นทำเล CBD")}
+        >
+          <Building2 className={cn("w-3.5 h-3.5", item.is_cbd ? "text-emerald-600" : "text-slate-400")} />
+          <span>{item.is_cbd ? "CBD" : (isEn ? "+ Set CBD" : "+ ตั้งเป็น CBD")}</span>
+        </button>
       </TableCell>
       <TableCell className="px-6 text-center">
         <button
@@ -586,6 +615,9 @@ export function PopularAreasTable({
                     <SortIcon column="created_at" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} />
                   </div>
                 </TableHead>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 text-center">
+                  {isEn ? "CBD Zone" : "ทำเล CBD"}
+                </TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 text-center cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("property_count")}>
                   <div className="flex items-center justify-center">
                     {isEn ? "Units" : "ทรัพย์"}
@@ -600,7 +632,7 @@ export function PopularAreasTable({
             <TableBody>
               {isAllSelected && totalCount > data.length && (
                 <TableRow className="bg-indigo-50/30 border-b border-indigo-100/50 hover:bg-indigo-50/50 transition-colors italic">
-                  <TableCell colSpan={9} className="py-4 px-6 text-center">
+                  <TableCell colSpan={10} className="py-4 px-6 text-center">
                     <div className="flex items-center justify-center gap-2 text-[13px]">
                       <span className="text-slate-500 font-semibold">
                         {isEn

@@ -27,6 +27,7 @@ interface FilteringOptions {
   sort: string;
   transitStation: string;
   luxuryVilla?: boolean;
+  cbd?: boolean;
 }
 
 /**
@@ -43,8 +44,15 @@ export function usePropertyFiltering(
     nearTrain, petFriendly, fullyFurnished, bedrooms,
     isForeigner, companyRegistered, isHotDeal, allowAirbnb,
     minPrice, maxPrice, minSize, maxSize, sort, transitStation,
-    luxuryVilla,
+    luxuryVilla, cbd,
   } = options;
+
+  const CBD_AREAS = useMemo(() => [
+    "สุขุมวิท", "สาทร", "สีลม", "ทองหล่อ", "พร้อมพงษ์", "พระราม 9",
+    "เพลินจิต", "ชิดลม - เพลินจิต", "ชิดลม", "อโศก", "เอกมัย", "วิทยุ",
+    "หลังสวน - ลุมพินี", "หลังสวน", "ลุมพินี", "ราชดำริ", "นานา",
+    "ช่องนนทรี", "ศาลาแดง", "สุรศักดิ์", "รัชดา", "รัชดาภิเษก"
+  ], []);
 
   // --- ⚡ Centralized Search Intent (Diamond Optimization) ---
   const searchIntent = useMemo(() => {
@@ -153,6 +161,12 @@ export function usePropertyFiltering(
       if (!isVillaOrPoolVilla && !isLuxuryHouse) return false;
     }
 
+    if (!excludeFilters.includes("cbd") && cbd) {
+      const matchesArea = p.popular_area ? CBD_AREAS.some(a => p.popular_area?.includes(a) || a.includes(p.popular_area || "")) : false;
+      const isCbdAmenity = (p as any).amenities?.is_cbd === true || (p as any).meta_data?.is_cbd === true;
+      if (!matchesArea && !isCbdAmenity) return false;
+    }
+
     if (!excludeFilters.includes("bedrooms") && bedrooms !== "ALL") {
       const beds = p.bedrooms || 0;
       if (bedrooms === "4+") { if (beds < 4) return false; }
@@ -199,7 +213,7 @@ export function usePropertyFiltering(
     }
 
     return true;
-  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, minPrice, maxPrice, minSize, maxSize, transitStation]);
+  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, cbd, CBD_AREAS, minPrice, maxPrice, minSize, maxSize, transitStation]);
 
   // Single-Pass Engine (O(N))
   const results = useMemo(() => {
@@ -349,7 +363,7 @@ export function usePropertyFiltering(
     // If we have active category/quick/landing filters, the local quickCounts accurately reflect this subset.
     // Use serverFacets only when no restrictive filters are applied.
     const hasActiveRestrictions = Boolean(
-      petFriendly || luxuryVilla || (type && type !== "ALL") || (province && province !== "ALL") || (area && area !== "ALL") || searchIntent
+      petFriendly || luxuryVilla || cbd || (type && type !== "ALL") || (province && province !== "ALL") || (area && area !== "ALL") || searchIntent
     );
 
     return {
@@ -368,7 +382,7 @@ export function usePropertyFiltering(
       availablePrices: serverFacets.availablePrices || undefined,
       availableSizes: serverFacets.availableSizes || undefined,
     };
-  }, [results, serverFacets, petFriendly, luxuryVilla, type, province, area, searchIntent]);
+  }, [results, serverFacets, petFriendly, luxuryVilla, cbd, type, province, area, searchIntent]);
 
   return {
     ...finalFacets,

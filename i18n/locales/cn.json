@@ -23,7 +23,11 @@
     "blog": "博客文章",
     "services": "我们的服务",
     "rent": "租房",
-    "sale": "买房"
+    "sale": "买房",
+    "prime_cbd": "核心CBD与新CBD",
+    "pet_friendly_condo": "可养宠物房源",
+    "office_for_rent": "写字楼与商用物业",
+    "luxury_villa": "奢华别墅与豪宅"
   },
   "error_boundary": {
     "title": "抱歉！出错了",
@@ -377,7 +381,9 @@
     "office_for_rent_title": "办公室出租 | 黄金地段写字楼及商用空间 | {siteName}",
     "office_for_rent_description": "寻找黄金地段的办公室、商业大楼和家庭办公室出租。交通便利，紧邻轻轨/地铁，提供灵活布局，并可用于公司注册。",
     "luxury_villa_title": "奢华别墅 & 高端住宅出售 | 豪华泳池别墅 | {siteName}",
-    "luxury_villa_description": "浏览价格从 800 万泰铢起的高端豪华住宅、经典杰作及私人泳池别墅。高挑空客厅、卓越设计和顶级安保。"
+    "luxury_villa_description": "浏览价格从 800 万泰铢起的高端豪华住宅、经典杰作及私人泳池别墅。高挑空客厅、卓越设计和顶级安保。",
+    "prime_cbd_title": "曼谷核心CBD与新CBD地标房产 (出租·出售) | {siteName}",
+    "prime_cbd_description": "精选曼谷核心CBD及新CBD（素坤逸、沙吞、是隆、拉玛九）高端公寓、住宅与写字楼，毗邻BTS/MRT轨道交通，100%真实优质房源。"
   },
   "loading": {
     "search_dream_home": "正在为您寻找梦想之所...",
@@ -588,7 +594,8 @@
       "rama_9": "拉玛 9 (Rama 9)"
     },
     "pet_allowed": "允许宠物",
-    "fully_furnished": "全家具",
+    "cbd_location": "CBD商圈",
+    "fully_furnished": "全配家具",
     "view_results": "查看结果",
     "items": "项目",
     "sort_by": "排序方式",
@@ -1400,6 +1407,15 @@
       "description": "步入顶级奢华居住空间。为您呈现精选高端私人住宅、泳池别墅及庄园，拥有双层挑高大堂（Double Volume）、私人游泳池及顶级社区安保系统。",
       "feature1": "双层高挑空客厅空间",
       "feature2": "私人游泳池与精致花园"
+    },
+    "prime_cbd": {
+      "badge1": "核心CBD与新CBD地标合集",
+      "badge2": "曼谷黄金商务与生活中心 毗邻BTS/MRT",
+      "title_line1": "曼谷核心CBD与新CBD房产",
+      "title_line2": "尽享都市顶奢地标生活",
+      "description": "尊享曼谷核心都市圈尊贵生活。精选素坤逸、沙吞、是隆、通罗、澎蓬及拉玛九新CBD高端公寓、独立住宅与现代化写字楼，紧邻BTS/MRT轨道交通，卓越地段兼具奢华自住与丰厚投资回报。",
+      "feature1": "核心CBD地段 环伺顶级商圈",
+      "feature2": "无缝接驳BTS/MRT轨道交通"
     }
   }
 }

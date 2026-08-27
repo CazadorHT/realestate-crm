@@ -654,12 +654,24 @@ export async function updatePropertyAction(
     revalidatePath("/");
     revalidatePath(`/properties/${seoData.slug}`);
     revalidatePath("/properties");
+    revalidatePath("/properties/prime-cbd");
+    revalidatePath("/properties/pet-friendly-condo");
+    revalidatePath("/properties/luxury-villa");
+    revalidatePath("/properties/office-for-rent");
     revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
-    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache([`/properties/${seoData.slug}`, "/properties", "/", "/api/public/properties"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache([
+      `/properties/${seoData.slug}`,
+      "/properties",
+      "/properties/prime-cbd",
+      "/properties/pet-friendly-condo",
+      "/properties/luxury-villa",
+      "/properties/office-for-rent",
+      "/",
+      "/api/public/properties",
+    ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {

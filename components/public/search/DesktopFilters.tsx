@@ -29,6 +29,7 @@ import {
 import {
   FaFire as FireIcon,
   FaTrainSubway as TrainIcon,
+  FaCity as CityIcon,
 } from "react-icons/fa6";
 import { PriceRangeSelect } from "./PriceRangeSelect";
 import { AreaSizeSelect } from "./AreaSizeSelect";
@@ -105,6 +106,8 @@ interface DesktopFiltersProps {
   setIsHotDeal: (v: boolean) => void;
   allowAirbnb: boolean;
   setAllowAirbnb: (v: boolean) => void;
+  cbd?: boolean;
+  setCbd?: (v: boolean) => void;
   availableBedrooms: Record<string, number>;
   availableStations: {
     name: string;
@@ -238,6 +241,8 @@ export function DesktopFilters({
   setIsHotDeal,
   allowAirbnb,
   setAllowAirbnb,
+  cbd,
+  setCbd,
   availableBedrooms,
   availableStations,
   allStations,
@@ -325,7 +330,8 @@ export function DesktopFilters({
       isForeigner ||
       companyRegistered ||
       isHotDeal ||
-      allowAirbnb
+      allowAirbnb ||
+      !!cbd
     );
   }, [
     keyword,
@@ -345,6 +351,7 @@ export function DesktopFilters({
     companyRegistered,
     isHotDeal,
     allowAirbnb,
+    cbd,
   ]);
 
   const hasBadges = useMemo(() => {
@@ -364,7 +371,8 @@ export function DesktopFilters({
       isForeigner ||
       companyRegistered ||
       isHotDeal ||
-      allowAirbnb
+      allowAirbnb ||
+      !!cbd
     );
   }, [
     province,
@@ -383,6 +391,7 @@ export function DesktopFilters({
     companyRegistered,
     isHotDeal,
     allowAirbnb,
+    cbd,
   ]);
 
   const formatPrice = (val: string) => {
@@ -641,6 +650,8 @@ export function DesktopFilters({
           setIsHotDeal={setIsHotDeal}
           allowAirbnb={allowAirbnb}
           setAllowAirbnb={setAllowAirbnb}
+          cbd={cbd}
+          setCbd={setCbd}
           availableQuickFilters={availableQuickFilters}
           t={t}
         />
@@ -842,6 +853,14 @@ export function DesktopFilters({
                           label={t("search.pet_allowed")}
                           onClear={() => setPetFriendly(false)}
                           variant="purple"
+                        />
+                      )}
+                      {cbd && (
+                        <Badge
+                          label={t("search.cbd_location") || "ย่าน CBD"}
+                          onClear={() => setCbd?.(false)}
+                          variant="emerald"
+                          icon={<CityIcon className="w-3 h-3" />}
                         />
                       )}
                       {fullyFurnished && (

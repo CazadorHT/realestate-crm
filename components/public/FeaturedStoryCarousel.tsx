@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
@@ -10,6 +10,78 @@ import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
+import { isCbdProperty } from "@/lib/property-utils";
+import { cn } from "@/lib/utils";
+
+export type StoryCarouselTheme = "blue" | "emerald" | "amber" | "purple" | "rose";
+
+const THEME_CONFIGS: Record<StoryCarouselTheme, {
+  hoverShadow: string;
+  progressBar: string;
+  progressGlow: string;
+  sparkleColor: string;
+  titleHover: string;
+  locationBadge: string;
+  locationIcon: string;
+  ctaButton: string;
+  ctaShadow: string;
+}> = {
+  blue: {
+    hoverShadow: "hover:shadow-blue-500/10",
+    progressBar: "bg-linear-to-r from-blue-400 via-indigo-400 to-sky-500",
+    progressGlow: "shadow-[0_0_10px_rgba(59,130,246,0.9)]",
+    sparkleColor: "text-blue-600",
+    titleHover: "group-hover:text-blue-600",
+    locationBadge: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    locationIcon: "text-indigo-600",
+    ctaButton: "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
+    ctaShadow: "shadow-blue-500/25",
+  },
+  emerald: {
+    hoverShadow: "hover:shadow-emerald-500/15",
+    progressBar: "bg-linear-to-r from-emerald-400 via-teal-400 to-emerald-500",
+    progressGlow: "shadow-[0_0_10px_rgba(16,185,129,0.9)]",
+    sparkleColor: "text-emerald-600",
+    titleHover: "group-hover:text-emerald-600",
+    locationBadge: "bg-emerald-50 text-emerald-800 border-emerald-200/80",
+    locationIcon: "text-emerald-600",
+    ctaButton: "bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700",
+    ctaShadow: "shadow-emerald-500/25",
+  },
+  amber: {
+    hoverShadow: "hover:shadow-amber-500/15",
+    progressBar: "bg-linear-to-r from-amber-400 via-orange-400 to-amber-500",
+    progressGlow: "shadow-[0_0_10px_rgba(245,158,11,0.9)]",
+    sparkleColor: "text-amber-600",
+    titleHover: "group-hover:text-amber-600",
+    locationBadge: "bg-amber-50 text-amber-800 border-amber-200/80",
+    locationIcon: "text-amber-600",
+    ctaButton: "bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700",
+    ctaShadow: "shadow-amber-500/25",
+  },
+  purple: {
+    hoverShadow: "hover:shadow-purple-500/15",
+    progressBar: "bg-linear-to-r from-violet-400 via-purple-400 to-indigo-500",
+    progressGlow: "shadow-[0_0_10px_rgba(168,85,247,0.9)]",
+    sparkleColor: "text-purple-600",
+    titleHover: "group-hover:text-purple-600",
+    locationBadge: "bg-purple-50 text-purple-800 border-purple-200/80",
+    locationIcon: "text-purple-600",
+    ctaButton: "bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700",
+    ctaShadow: "shadow-purple-500/25",
+  },
+  rose: {
+    hoverShadow: "hover:shadow-rose-500/15",
+    progressBar: "bg-linear-to-r from-rose-400 via-pink-400 to-rose-500",
+    progressGlow: "shadow-[0_0_10px_rgba(244,63,94,0.9)]",
+    sparkleColor: "text-rose-600",
+    titleHover: "group-hover:text-rose-600",
+    locationBadge: "bg-rose-50 text-rose-800 border-rose-200/80",
+    locationIcon: "text-rose-600",
+    ctaButton: "bg-linear-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700",
+    ctaShadow: "shadow-rose-500/25",
+  },
+};
 
 export interface StoryPropertyItem {
   id: string;
@@ -37,6 +109,9 @@ export interface StoryPropertyItem {
   cover_image?: string | null;
   images?: string[] | { url?: string; image_url?: string }[] | null;
   project_name?: string | null;
+  pets_allowed?: boolean | null;
+  is_pet_friendly?: boolean | null;
+  is_cbd?: boolean | null;
   projects?: {
     name_th?: string | null;
     name_en?: string | null;
@@ -49,12 +124,14 @@ interface FeaturedStoryCarouselProps {
   properties: StoryPropertyItem[];
   language?: string;
   autoPlayIntervalMs?: number;
+  theme?: StoryCarouselTheme;
 }
 
 export function FeaturedStoryCarousel({
   properties: initialProperties,
   language: initialLanguage,
   autoPlayIntervalMs = 4500,
+  theme: explicitTheme,
 }: FeaturedStoryCarouselProps) {
   const { language: clientLanguage } = useLanguage();
   const language = clientLanguage || initialLanguage || "th";
@@ -95,6 +172,19 @@ export function FeaturedStoryCarousel({
 
   const totalItems = properties.length;
   const currentProperty = properties[currentIndex] || properties[0];
+
+  // Active theme calculation (explicit prop > auto category detection > default blue)
+  const activeTheme: StoryCarouselTheme = useMemo(() => {
+    if (explicitTheme) return explicitTheme;
+    if (currentProperty) {
+      if (isCbdProperty(currentProperty)) return "emerald";
+      if (currentProperty.is_pet_friendly || currentProperty.pets_allowed) return "amber";
+      if (currentProperty.property_type === "VILLA" || currentProperty.property_type === "HOUSE") return "purple";
+    }
+    return "blue";
+  }, [explicitTheme, currentProperty]);
+
+  const currentThemeConfig = THEME_CONFIGS[activeTheme] || THEME_CONFIGS.blue;
 
   // Helper for localized title
   const getDisplayTitle = useCallback(
@@ -160,7 +250,10 @@ export function FeaturedStoryCarousel({
       `}</style>
 
       <div
-        className="relative w-full max-w-full mx-auto bg-white rounded-3xl overflow-hidden shadow-xl shadow-slate-200/60 border border-slate-200/80 text-slate-900 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 group"
+        className={cn(
+          "relative w-full max-w-full mx-auto bg-white rounded-3xl overflow-hidden shadow-xl shadow-slate-200/60 border border-slate-200/80 text-slate-900 transition-all duration-300 hover:shadow-2xl group",
+          currentThemeConfig.hoverShadow
+        )}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
@@ -182,7 +275,11 @@ export function FeaturedStoryCarousel({
                 <div
                   key={`${currentIndex}-${idx}`}
                   onAnimationEnd={isActive ? handleNext : undefined}
-                  className="h-full bg-linear-to-r from-blue-400 via-indigo-400 to-sky-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.9)]"
+                  className={cn(
+                    "h-full rounded-full transition-colors duration-300",
+                    currentThemeConfig.progressBar,
+                    currentThemeConfig.progressGlow
+                  )}
                   style={{
                     width: isCompleted ? "100%" : isActive ? undefined : "0%",
                     animationName: isActive ? "storyProgressFill" : "none",
@@ -235,7 +332,7 @@ export function FeaturedStoryCarousel({
           <div className="absolute top-6 left-4 right-4 z-20 flex justify-between items-center mt-2">
             <div className="flex items-center gap-2 max-w-[75%]">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md text-slate-900 text-xs font-semibold shadow-lg border border-white/90 ring-1 ring-slate-900/5 truncate">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse shrink-0" />
+                <Sparkles className={cn("w-3.5 h-3.5 animate-pulse shrink-0", currentThemeConfig.sparkleColor)} />
                 <span className="truncate">
                   {getProjectName(currentProperty)}
                 </span>
@@ -273,13 +370,13 @@ export function FeaturedStoryCarousel({
         <div className="p-4 sm:p-5 bg-white space-y-3 border-t border-slate-100">
           {/* Row 1: Title & Location Badge */}
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-base sm:text-lg font-semibold text-slate-900 truncate  max-w-[70%] group-hover:text-blue-600 transition-colors">
+            <h3 className={cn("text-base sm:text-lg font-semibold text-slate-900 truncate max-w-[70%] transition-colors", currentThemeConfig.titleHover)}>
               {getDisplayTitle(currentProperty)}
             </h3>
 
             {(currentProperty.transit_station || currentProperty.popular_area) && (
-              <div className="flex items-center gap-1 text-xs text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100 shrink-0 shadow-2xs">
-                <MapPin className="w-3 h-3 text-indigo-600 shrink-0" />
+              <div className={cn("flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0 shadow-2xs", currentThemeConfig.locationBadge)}>
+                <MapPin className={cn("w-3 h-3 shrink-0", currentThemeConfig.locationIcon)} />
                 <span className="truncate max-w-[120px]">
                   {getLocaleValue(currentProperty, "popular_area", language) ||
                     currentProperty.transit_station ||
@@ -385,7 +482,11 @@ export function FeaturedStoryCarousel({
             {/* Compact Action Button */}
             <Link
               href={detailLink}
-              className="inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs shadow-md shadow-blue-500/25 transition-all shrink-0 active:scale-95"
+              className={cn(
+                "inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl text-white font-semibold text-xs shadow-md transition-all shrink-0 active:scale-95",
+                currentThemeConfig.ctaButton,
+                currentThemeConfig.ctaShadow
+              )}
             >
               <span>
                 {language === "en"

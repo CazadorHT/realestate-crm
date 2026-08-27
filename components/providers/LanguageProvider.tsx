@@ -129,6 +129,12 @@ export function LanguageProvider({
       document.title = l1 && !l1.includes("silo_landing.")
         ? `${l1} ${l2 || ""} | ${siteName}`
         : getNestedValue(dict, "metadata.office_for_rent_title")?.replace("{siteName}", siteName) || document.title;
+    } else if (pathname.includes("/properties/prime-cbd")) {
+      const l1 = getNestedValue(dict, "silo_landing.prime_cbd.title_line1");
+      const l2 = getNestedValue(dict, "silo_landing.prime_cbd.title_line2");
+      document.title = l1 && !l1.includes("silo_landing.")
+        ? `${l1} ${l2 || ""} | ${siteName}`
+        : getNestedValue(dict, "metadata.prime_cbd_title")?.replace("{siteName}", siteName) || document.title;
     } else if (pathname === "/properties" || pathname.startsWith("/properties/")) {
       const propTitle =
         getNestedValue(dict, "metadata.search_title") ||

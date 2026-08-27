@@ -7,7 +7,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 interface ScrollToPropertiesProps {
   targetId: string;
   label?: string;
-  theme?: "light" | "dark" | "orange";
+  theme?: "light" | "dark" | "orange" | "emerald";
 }
 
 export function ScrollToProperties({ targetId, label, theme = "light" }: ScrollToPropertiesProps) {
@@ -24,13 +24,15 @@ export function ScrollToProperties({ targetId, label, theme = "light" }: ScrollT
   const themeClasses = {
     light: "border-slate-200 hover:border-blue-600 text-slate-500 hover:text-blue-600 bg-white/80 hover:bg-blue-50/50 shadow-2xs hover:shadow-md",
     dark: "border-slate-800 hover:border-amber-500 text-slate-400 hover:text-amber-500 bg-slate-900/60 hover:bg-amber-950/20 shadow-lg hover:shadow-amber-500/10",
-    orange: "border-orange-100 hover:border-orange-500 text-slate-500 hover:text-orange-600 bg-white/80 hover:bg-orange-50/50 shadow-2xs hover:shadow-md"
+    orange: "border-orange-100 hover:border-orange-500 text-slate-500 hover:text-orange-600 bg-white/80 hover:bg-orange-50/50 shadow-2xs hover:shadow-md",
+    emerald: "border-emerald-100 hover:border-emerald-500 text-slate-500 hover:text-emerald-700 bg-white/80 hover:bg-emerald-50/50 shadow-2xs hover:shadow-md hover:shadow-emerald-500/10"
   };
 
   const arrowColors = {
     light: "text-blue-600",
     dark: "text-amber-500",
-    orange: "text-orange-600"
+    orange: "text-orange-600",
+    emerald: "text-emerald-600"
   };
 
   const getDefaultLabel = () => {

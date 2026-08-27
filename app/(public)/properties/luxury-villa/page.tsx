@@ -121,6 +121,13 @@ export async function generateMetadata(props: {
     ],
     alternates: {
       canonical: canonicalUrl,
+      languages: {
+        th: `${siteConfig.url}/properties/luxury-villa?lang=th`,
+        en: `${siteConfig.url}/properties/luxury-villa?lang=en`,
+        "zh-CN": `${siteConfig.url}/properties/luxury-villa?lang=cn`,
+        ru: `${siteConfig.url}/properties/luxury-villa?lang=ru`,
+        "x-default": canonicalUrl,
+      },
     },
     openGraph: {
       title: t("metadata.luxury_villa_title", { siteName: siteConfig.name }),
@@ -302,6 +309,7 @@ export default async function LuxuryVillaPage(props: {
               <FeaturedStoryCarousel
                 properties={initialData.properties.slice(0, 6)}
                 language={language}
+                theme="purple"
               />
             </div>
 

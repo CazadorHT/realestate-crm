@@ -180,6 +180,7 @@ export interface GetPropertiesOptions {
   companyRegistered?: boolean;
   allowAirbnb?: boolean;
   luxuryVilla?: boolean;
+  cbd?: boolean;
   transitStation?: string;
   includeFacets?: boolean;
   sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "AREA_ASC" | "AREA_DESC";
@@ -222,6 +223,10 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         if (options.luxuryVilla) {
           query = query.or('and(property_type.in.(VILLA,POOL_VILLA),or(price.gt.0,rental_price.gt.0)),and(property_type.eq.HOUSE,price.gte.8000000)');
+        }
+
+        if (options.cbd) {
+          query = query.or('amenities->>is_cbd.eq.true,popular_area.in.("สุขุมวิท","สาทร","สีลม","ทองหล่อ","พร้อมพงษ์","พระราม 9","เพลินจิต","ชิดลม - เพลินจิต","ชิดลม","อโศก","เอกมัย","วิทยุ","หลังสวน - ลุมพินี","หลังสวน","ลุมพินี","ราชดำริ","นานา","ช่องนนทรี","ศาลาแดง","สุรศักดิ์","รัชดา","รัชดาภิเษก")');
         }
 
         if (options.listingType && options.listingType !== "ALL") {

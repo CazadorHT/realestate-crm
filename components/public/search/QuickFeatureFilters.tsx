@@ -1,6 +1,6 @@
 "use client";
 
-import { FaTrainSubway, FaAirbnb } from "react-icons/fa6";
+import { FaTrainSubway, FaAirbnb, FaCity } from "react-icons/fa6";
 import { MdOutlinePets, MdWork } from "react-icons/md";
 import { RiArmchairFill } from "react-icons/ri";
 import { GiEarthAmerica } from "react-icons/gi";
@@ -28,6 +28,8 @@ interface QuickFeatureFiltersProps {
   setIsHotDeal: (v: boolean) => void;
   allowAirbnb: boolean;
   setAllowAirbnb: (v: boolean) => void;
+  cbd?: boolean;
+  setCbd?: (v: boolean) => void;
   availableQuickFilters: Record<string, number>;
   t: (key: string) => string;
 }
@@ -47,12 +49,15 @@ export function QuickFeatureFilters({
   setIsHotDeal,
   allowAirbnb,
   setAllowAirbnb,
+  cbd,
+  setCbd,
   availableQuickFilters,
   t,
 }: QuickFeatureFiltersProps) {
   const features = [
     { key: "nearTrain", state: nearTrain, setState: setNearTrain, icon: FaTrainSubway, label: "near_train", color: "blue" },
     { key: "petFriendly", state: petFriendly, setState: setPetFriendly, icon: MdOutlinePets, label: "pet_allowed", color: "orange" },
+    ...(setCbd ? [{ key: "cbd", state: !!cbd, setState: setCbd, icon: FaCity, label: "cbd_location", color: "emerald" }] : []),
     { key: "fullyFurnished", state: fullyFurnished, setState: setFullyFurnished, icon: RiArmchairFill, label: "fully_furnished", color: "emerald" },
     { key: "isForeigner", state: isForeigner, setState: setIsForeigner, icon: GiEarthAmerica, label: "foreigner", color: "purple" },
     { key: "companyRegistered", state: companyRegistered, setState: setCompanyRegistered, icon: MdWork, label: "company_registered", color: "indigo" },

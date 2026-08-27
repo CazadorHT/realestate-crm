@@ -10,6 +10,8 @@ import Link from "next/link";
 // ✅ Always use production URL — siteConfig.url returns localhost in dev mode
 const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
 
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
+
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
   const settings = await getSiteSettings();

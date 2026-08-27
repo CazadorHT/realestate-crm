@@ -15,7 +15,7 @@ interface PopularAreaTagsProps {
   language: string;
   basePath: string; // e.g. "/properties/pet-friendly-condo"
   targetId: string; // e.g. "offices-list" to scroll to
-  themeColor: "orange" | "blue" | "violet";
+  themeColor: "orange" | "blue" | "violet" | "emerald";
   isDark?: boolean;
 }
 
@@ -82,6 +82,13 @@ export function PopularAreaTags({
         ? "border-violet-500/40 text-violet-400 bg-violet-950/20 hover:bg-violet-600 hover:text-white" 
         : "border-violet-200 text-violet-700 bg-violet-50/50 hover:bg-violet-600 hover:text-white",
     },
+    emerald: {
+      hoverBg: "hover:bg-emerald-600",
+      textCount: isDark ? "text-emerald-400" : "text-emerald-600",
+      borderMore: isDark 
+        ? "border-emerald-500/40 text-emerald-400 bg-emerald-950/20 hover:bg-emerald-600 hover:text-white" 
+        : "border-emerald-200 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-600 hover:text-white",
+    },
   };
 
   const activeTheme = themeClasses[themeColor] || themeClasses.blue;
@@ -90,11 +97,11 @@ export function PopularAreaTags({
   const labelColorClass = isDark ? "text-slate-400" : "text-slate-500";
 
   // Let's render a mobile list (max 4 items + More) and desktop list (max 8 items + More)
-  const renderTag = (area: AreaItem) => {
+  const renderTag = (area: AreaItem, index: number) => {
     const label = getLocalizedArea(area);
     return (
       <Link 
-        key={area.name}
+        key={area.name || label || index}
         href={`${basePath}?popular_area=${encodeURIComponent(area.name)}`}
         className={`px-3 py-1.5 rounded-full border text-xs font-semibold ${bgClass} ${activeTheme.hoverBg} group hover:text-white transition-all shadow-3xs flex items-center gap-1.5 shrink-0`}
       >

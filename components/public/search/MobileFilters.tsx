@@ -42,6 +42,7 @@ import {
   FaFire as FireIcon,
   FaTrainSubway as TrainIcon,
   FaAirbnb,
+  FaCity as CityIcon,
 } from "react-icons/fa6";
 import { GiEarthAmerica as EarthIcon } from "react-icons/gi";
 import { RiArmchairFill as ArmchairIcon } from "react-icons/ri";
@@ -66,12 +67,12 @@ const LOGO_PATHS: Record<string, string> = {
   MRT: "/images/transit/MRT_(Bangkok)_logo.svg",
   MRT_PURPLE: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
   MRT_YELLOW: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
-  MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
+  MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_logo.svg",
   MRT_ORANGE: "/images/transit/MRT_(Bangkok)_Orange_logo.svg",
-  ARL: "/images/transit/ARLbangkok.svg",
-  SRT_RED: "/images/transit/SRT_Red_Lines_icon.svg",
-  SRT: "/images/transit/SRT_Red_Lines_icon.svg",
-  BRT: "/images/transit/Bangkok_BRT_logo.svg",
+  ARL: "/images/transit/ARL_(Bangkok)_logo.svg",
+  SRT_RED: "/images/transit/SRT_(Bangkok)_Red_logo.svg",
+  SRT: "/images/transit/SRT_(Bangkok)_Red_logo.svg",
+  BRT: "/images/transit/BRT_(Bangkok)_logo.svg",
 };
 
 interface MobileFiltersProps {
@@ -95,6 +96,8 @@ interface MobileFiltersProps {
   setIsHotDeal: (v: boolean) => void;
   allowAirbnb: boolean;
   setAllowAirbnb: (v: boolean) => void;
+  cbd?: boolean;
+  setCbd?: (v: boolean) => void;
   type: string;
   setType: (v: string) => void;
   listingType: string;
@@ -176,6 +179,8 @@ export function MobileFilters({
   setIsHotDeal,
   allowAirbnb,
   setAllowAirbnb,
+  cbd,
+  setCbd,
   type,
   setType,
   listingType,
@@ -536,6 +541,15 @@ export function MobileFilters({
                       color: "orange",
                       size: "h-6 w-6",
                     },
+                    ...(setCbd ? [{
+                      key: "cbd",
+                      state: !!cbd,
+                      setState: setCbd,
+                      icon: CityIcon,
+                      label: "cbd_location",
+                      color: "emerald",
+                      size: "h-5 w-5",
+                    }] : []),
                     {
                       key: "fullyFurnished",
                       state: fullyFurnished,

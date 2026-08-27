@@ -59,6 +59,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: getAlternates("/properties/office-for-rent"),
     },
     {
+      url: `${baseUrl}/properties/prime-cbd`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+      alternates: getAlternates("/properties/prime-cbd"),
+    },
+    {
       url: `${baseUrl}/properties/luxury-villa`,
       lastModified: new Date(),
       changeFrequency: "daily",

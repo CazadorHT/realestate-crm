@@ -35,6 +35,8 @@ function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
       rawParams["isForeigner"] = value === "true";
     } else if (key === "company_registered") {
       rawParams["companyRegistered"] = value === "true";
+    } else if (key === "cbd") {
+      rawParams["cbd"] = value === "true";
     } else if (key === "hot_deal") {
       rawParams["filter"] = value === "true" ? "hot_deals" : "all";
     } else if (key === "min_price") {

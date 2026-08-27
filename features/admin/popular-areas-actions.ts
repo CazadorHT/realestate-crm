@@ -11,6 +11,8 @@ import { Database, type Json } from "@/lib/database.types.generated";
 import { logAudit } from "@/lib/audit";
 import { type SupabaseClient } from "@supabase/supabase-js";
 
+import { isCbdProperty } from "@/lib/property-utils";
+
 /** Row shape returned by the get_popular_areas_with_counts RPC.
  *  Defined here because the Supabase generated types lag behind the DB schema
  *  (name_ru was added after the last type generation). */
@@ -25,6 +27,7 @@ interface PopularAreaRpcRow {
   sort_order: number | null;
   is_active: boolean | null;
   featured: boolean | null;
+  is_cbd?: boolean | null;
   province: string | null;
   property_count: number | null;
   created_at: string | null;
@@ -117,8 +120,19 @@ export async function getPopularAreas({
 
     if (error) throw error;
 
-    // Cast to our explicit type since the RPC returns name_ru but generated types don't know
-    const areas = (rawAreas ?? []) as unknown as PopularAreaRpcRow[];
+    // Cast to our explicit type and map is_cbd dynamically
+    const areas = ((rawAreas ?? []) as unknown as PopularAreaRpcRow[]).map(
+      (area) => {
+        const isCbd =
+          (area.description as any)?.is_cbd !== undefined
+            ? Boolean((area.description as any).is_cbd)
+            : isCbdProperty(area);
+        return {
+          ...area,
+          is_cbd: isCbd,
+        };
+      }
+    );
 
     return {
       success: true,
@@ -179,7 +193,10 @@ export async function createPopularArea(
       is_active: parsed.is_active,
       sort_order: nextOrder,
       tenant_id: ctx.tenantId ?? null,
-      description: parsed.description || {},
+      description: {
+        ...(parsed.description || {}),
+        is_cbd: parsed.is_cbd ?? false,
+      },
       seo_title: parsed.seo_title || {},
       seo_description: parsed.seo_description || {},
       is_ai_generated: parsed.is_ai_generated || false,
@@ -235,7 +252,10 @@ export async function updatePopularArea(
       image_url: parsed.image_url,
       featured: parsed.featured,
       is_active: parsed.is_active,
-      description: parsed.description || {},
+      description: {
+        ...(parsed.description || {}),
+        is_cbd: parsed.is_cbd ?? false,
+      },
       seo_title: parsed.seo_title || {},
       seo_description: parsed.seo_description || {},
       is_ai_generated: parsed.is_ai_generated,
@@ -269,6 +289,67 @@ export async function updatePopularArea(
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ" };
   } catch (error: unknown) {
     console.error("updatePopularArea error:", error);
+    return { success: false, message: mapDbError(error) };
+  }
+}
+
+/**
+ * Toggle CBD Status of a popular area
+ */
+export async function toggleCbdPopularAreaAction(id: string, is_cbd: boolean) {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    const supabase = await createClient();
+
+    const { data: area } = await supabase
+      .from("popular_areas_v3")
+      .select("id, description")
+      .eq("id", id)
+      .single();
+
+    const currentDesc = (area?.description as Record<string, any>) || {};
+    const updatedDesc = {
+      ...currentDesc,
+      is_cbd,
+    };
+
+    let query = supabase
+      .from("popular_areas_v3")
+      .update({
+        description: updatedDesc,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (ctx.tenantId) {
+      query = query.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { error } = await query;
+    if (error) throw error;
+
+    await logAudit(
+      { supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
+      {
+        action: "popular_area.toggle_cbd",
+        entity: "popular_areas_v3",
+        entityId: id,
+        metadata: { is_cbd },
+      },
+    );
+
+    revalidatePath("/protected/admin/popular-areas");
+    revalidatePath("/properties/prime-cbd");
+    revalidatePath("/properties");
+
+    return {
+      success: true,
+      message: is_cbd ? "ตั้งเป็นทำเล CBD สำเร็จ" : "ยกเลิกสถานะทำเล CBD สำเร็จ",
+    };
+  } catch (error: unknown) {
+    console.error("toggleCbdPopularAreaAction error:", error);
     return { success: false, message: mapDbError(error) };
   }
 }

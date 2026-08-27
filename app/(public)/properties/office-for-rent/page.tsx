@@ -117,6 +117,13 @@ export async function generateMetadata(props: {
     ],
     alternates: {
       canonical: canonicalUrl,
+      languages: {
+        th: `${siteConfig.url}/properties/office-for-rent?lang=th`,
+        en: `${siteConfig.url}/properties/office-for-rent?lang=en`,
+        "zh-CN": `${siteConfig.url}/properties/office-for-rent?lang=cn`,
+        ru: `${siteConfig.url}/properties/office-for-rent?lang=ru`,
+        "x-default": canonicalUrl,
+      },
     },
     openGraph: {
       title: t("metadata.office_for_rent_title", { siteName: siteConfig.name }),
@@ -299,6 +306,7 @@ export default async function OfficeForRentPage(props: {
               <FeaturedStoryCarousel
                 properties={initialData.properties.slice(0, 6)}
                 language={language}
+                theme="blue"
               />
             </div>
           </div>

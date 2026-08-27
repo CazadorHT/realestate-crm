@@ -156,6 +156,10 @@ export async function deletePropertyAction(formData: FormData) {
 
     revalidatePath("/");
     revalidatePath("/properties");
+    revalidatePath("/properties/prime-cbd");
+    revalidatePath("/properties/pet-friendly-condo");
+    revalidatePath("/properties/luxury-villa");
+    revalidatePath("/properties/office-for-rent");
     revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
@@ -165,7 +169,15 @@ export async function deletePropertyAction(formData: FormData) {
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
-    purgeCloudflareCache(["/properties", "/", "/api/public/properties"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache([
+      "/properties",
+      "/properties/prime-cbd",
+      "/properties/pet-friendly-condo",
+      "/properties/luxury-villa",
+      "/properties/office-for-rent",
+      "/",
+      "/api/public/properties",
+    ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePropertyAction → error:", error);

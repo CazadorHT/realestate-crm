@@ -24,6 +24,7 @@ import {
   MapPin,
   Image as ImageIcon,
   Sparkles,
+  Building2,
 } from "lucide-react";
 import { ProvinceSelector } from "./ProvinceSelector";
 import { toast } from "sonner";
@@ -64,6 +65,7 @@ export function PopularAreaForm({
       province: initialData?.province || "กรุงเทพมหานคร",
       image_url: initialData?.image_url || "",
       featured: initialData?.featured || false,
+      is_cbd: initialData?.is_cbd || false,
       is_active: initialData?.is_active ?? true,
       description: initialData?.description || { th: "", en: "", cn: "", ru: "" },
       seo_title: initialData?.seo_title || { th: "", en: "", cn: "", ru: "" },
@@ -262,6 +264,37 @@ export function PopularAreaForm({
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* CBD Business District Switch */}
+            <div className="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-2 shadow-xs">
+              <FormField
+                control={form.control}
+                name="is_cbd"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5 pr-2">
+                      <FormLabel className="text-xs font-bold text-emerald-950 flex items-center gap-1.5 cursor-pointer">
+                        <Building2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                        {isEn ? "Prime CBD & New CBD Zone" : "ทำเลย่านธุรกิจ (Prime CBD & New CBD)"}
+                      </FormLabel>
+                      <p className="text-[10px] text-emerald-700 font-medium leading-tight">
+                        {isEn
+                          ? "Show 'Prime CBD' badge on cards and include in Prime CBD landing page"
+                          : "แสดงป้าย 'Prime CBD' บนการ์ดทรัพย์ และดึงทรัพย์ในย่านนี้ไปแสดงในหน้า Prime CBD"}
+                      </p>
+                    </div>
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="h-4 w-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600 shrink-0"
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />

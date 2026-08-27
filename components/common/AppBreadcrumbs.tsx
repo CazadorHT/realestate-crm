@@ -23,6 +23,10 @@ const routeLabels: Record<string, string> = {
   projects: "breadcrumb.projects",
   rent: "breadcrumb.rent",
   sale: "breadcrumb.sale",
+  "prime-cbd": "breadcrumb.prime_cbd",
+  "pet-friendly-condo": "breadcrumb.pet_friendly_condo",
+  "office-for-rent": "breadcrumb.office_for_rent",
+  "luxury-villa": "breadcrumb.luxury_villa",
 
   // CRM / Protected (Fallback to nav if breadcrumb section doesn't have it)
   dashboard: "nav.dashboard",

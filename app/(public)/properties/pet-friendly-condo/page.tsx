@@ -149,6 +149,13 @@ export async function generateMetadata(props: {
     ],
     alternates: {
       canonical: canonicalUrl,
+      languages: {
+        th: `${siteConfig.url}/properties/pet-friendly-condo?lang=th`,
+        en: `${siteConfig.url}/properties/pet-friendly-condo?lang=en`,
+        "zh-CN": `${siteConfig.url}/properties/pet-friendly-condo?lang=cn`,
+        ru: `${siteConfig.url}/properties/pet-friendly-condo?lang=ru`,
+        "x-default": canonicalUrl,
+      },
     },
     openGraph: {
       title: t("metadata.pet_friendly_condo_title", {
@@ -366,6 +373,7 @@ export default async function PetFriendlyCondoPage(props: {
               <FeaturedStoryCarousel
                 properties={initialData.properties.slice(0, 6)}
                 language={language}
+                theme="amber"
               />
             </div>
           </div>

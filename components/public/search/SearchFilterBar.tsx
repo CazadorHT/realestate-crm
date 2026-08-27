@@ -46,6 +46,8 @@ interface SearchFilterBarProps {
   setIsHotDeal: (v: boolean) => void;
   allowAirbnb: boolean;
   setAllowAirbnb: (v: boolean) => void;
+  cbd?: boolean;
+  setCbd?: (v: boolean) => void;
   priceType?: string;
   setPriceType?: (v: string) => void;
   bedrooms: string;
@@ -123,6 +125,8 @@ export function SearchFilterBar({
   setIsHotDeal,
   allowAirbnb,
   setAllowAirbnb,
+  cbd,
+  setCbd,
   priceType,
   setPriceType,
   bedrooms,
@@ -389,6 +393,9 @@ export function SearchFilterBar({
     setFullyFurnished(false);
     setIsForeigner(false);
     setCompanyRegistered(false);
+    setIsHotDeal(false);
+    setAllowAirbnb(false);
+    setCbd && setCbd(false);
     setBedrooms("ALL");
     setTransitStation("");
     setPriceType && setPriceType("");
@@ -418,6 +425,8 @@ export function SearchFilterBar({
           setIsHotDeal={setIsHotDeal}
           allowAirbnb={allowAirbnb}
           setAllowAirbnb={setAllowAirbnb}
+          cbd={cbd}
+          setCbd={setCbd}
           transitStation={transitStation}
           setTransitStation={setTransitStation}
           type={type}
@@ -504,6 +513,8 @@ export function SearchFilterBar({
           setIsHotDeal={setIsHotDeal}
           allowAirbnb={allowAirbnb}
           setAllowAirbnb={setAllowAirbnb}
+          cbd={cbd}
+          setCbd={setCbd}
           transitStation={transitStation}
           setTransitStation={setTransitStation}
           availableBedrooms={availableBedrooms}

@@ -10,6 +10,7 @@ export interface DefaultPropertyFilters {
   minPrice?: string;
   maxPrice?: string;
   luxuryVilla?: boolean;
+  cbd?: boolean;
 }
 
 export function usePropertyFilters(
@@ -87,6 +88,9 @@ export function usePropertyFilters(
   const [luxuryVilla, setLuxuryVilla] = useState(
     () => searchParams.get("luxury_villa") === "true" || (searchParams.get("luxury_villa") === null && !!defaultFilters?.luxuryVilla)
   );
+  const [cbd, setCbd] = useState(
+    () => searchParams.get("cbd") === "true" || (searchParams.get("cbd") === null && !!defaultFilters?.cbd)
+  );
 
   // --- Agentic AI State ---
   const [aiInsight, setAiInsight] = useState<string | null>(null);
@@ -119,6 +123,7 @@ export function usePropertyFilters(
     setAllowAirbnb(searchParams.get("airbnb") === "true");
     setBedrooms(searchParams.get("bedrooms") || "ALL");
     setLuxuryVilla(searchParams.get("luxury_villa") === "true" || (searchParams.get("luxury_villa") === null && !!defaultFilters?.luxuryVilla));
+    setCbd(searchParams.get("cbd") === "true" || (searchParams.get("cbd") === null && !!defaultFilters?.cbd));
     
     const fromUrl = searchParams.get("transit_station") || "";
     if (fromUrl) {
@@ -165,6 +170,7 @@ export function usePropertyFilters(
     if (isHotDeal) params.set("hot_deal", "true"); else params.delete("hot_deal");
     if (allowAirbnb) params.set("airbnb", "true"); else params.delete("airbnb");
     if (luxuryVilla) params.set("luxury_villa", "true"); else params.delete("luxury_villa");
+    if (cbd) params.set("cbd", "true"); else params.delete("cbd");
     if (transitStation) params.set("transit_station", transitStation); else params.delete("transit_station");
     if (minSize) params.set("min_size", minSize); else params.delete("min_size");
     if (maxSize) params.set("max_size", maxSize); else params.delete("max_size");
@@ -185,7 +191,7 @@ export function usePropertyFilters(
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
-    companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, minSize, maxSize, transitStation,
+    companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, cbd, minSize, maxSize, transitStation,
     basePath
   ]);
 
@@ -208,6 +214,7 @@ export function usePropertyFilters(
     setIsHotDeal(false);
     setAllowAirbnb(false);
     setLuxuryVilla(!!defaultFilters?.luxuryVilla);
+    setCbd(!!defaultFilters?.cbd);
     setBedrooms("ALL");
     setTransitStation(defaultTransitStation);
     setAiInsight(null);
@@ -232,6 +239,7 @@ export function usePropertyFilters(
     if (isHotDeal) p.set("hot_deal", "true");
     if (allowAirbnb) p.set("airbnb", "true");
     if (luxuryVilla) p.set("luxury_villa", "true");
+    if (cbd) p.set("cbd", "true");
     if (transitStation) p.set("transit_station", transitStation);
     if (minSize) p.set("min_size", minSize);
     if (maxSize) p.set("max_size", maxSize);
@@ -240,7 +248,7 @@ export function usePropertyFilters(
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
-    companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, minSize, maxSize, transitStation
+    companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, cbd, minSize, maxSize, transitStation
   ]);
 
   /**
@@ -262,6 +270,7 @@ export function usePropertyFilters(
     if (updates.isHotDeal !== undefined) setIsHotDeal(updates.isHotDeal);
     if (updates.allowAirbnb !== undefined) setAllowAirbnb(updates.allowAirbnb);
     if (updates.luxuryVilla !== undefined) setLuxuryVilla(updates.luxuryVilla);
+    if (updates.cbd !== undefined) setCbd(updates.cbd);
     if (updates.transitStation !== undefined) setTransitStation(updates.transitStation);
     if (updates.aiInsight !== undefined) setAiInsight(updates.aiInsight);
   }, []);
@@ -288,6 +297,7 @@ export function usePropertyFilters(
     isHotDeal, setIsHotDeal,
     allowAirbnb, setAllowAirbnb,
     luxuryVilla, setLuxuryVilla,
+    cbd, setCbd,
     transitStation, setTransitStation,
     aiInsight, setAiInsight,
     clearFilters,

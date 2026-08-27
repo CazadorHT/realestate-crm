@@ -375,6 +375,10 @@ export function PublicFooter() {
                       : "Featured Categories"}
               </h4>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400">
+                <Link href="/properties/prime-cbd" className="hover:text-emerald-400 transition-colors">
+                  {language === "th" ? "ทำเล CBD & New CBD" : language === "cn" ? "核心CBD与新CBD精选" : language === "ru" ? "CBD и New CBD районы" : "Prime CBD & New CBD"}
+                </Link>
+                <span className="text-slate-700">•</span>
                 <Link href="/properties/pet-friendly-condo" className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "คอนโด & บ้านเลี้ยงสัตว์ได้" : language === "cn" ? "允许养宠物的住宅与公寓" : language === "ru" ? "Дома и кондо с животными" : "Pet-Friendly House & Condos"}
                 </Link>

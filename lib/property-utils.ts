@@ -393,3 +393,91 @@ export function parseAirbnbMinContract(value: string | null | undefined): { numb
   return { number: "", unit: "day" };
 }
 
+/**
+ * CBD Popular Areas list matching backend database queries
+ */
+export const CBD_POPULAR_AREAS = [
+  // สีลม - สาทร
+  "สาทร",
+  "สีลม",
+  "ช่องนนทรี",
+  "ศาลาแดง",
+  "สุรศักดิ์",
+  "sathorn",
+  "silom",
+  "chong nonsi",
+  "sala daeng",
+  "surasak",
+
+  // เพลินจิต - ลุมพินี - วิทยุ
+  "เพลินจิต",
+  "ชิดลม",
+  "ชิดลม - เพลินจิต",
+  "วิทยุ",
+  "หลังสวน",
+  "หลังสวน - ลุมพินี",
+  "ราชดำริ",
+  "ลุมพินี",
+  "ploenchit",
+  "chidlom",
+  "witthayu",
+  "wireless",
+  "langsuan",
+  "lumpini",
+  "ratchadamri",
+
+  // สุขุมวิทชั้นใน (Prime Sukhumvit)
+  "สุขุมวิท",
+  "นานา",
+  "อโศก",
+  "พร้อมพงษ์",
+  "ทองหล่อ",
+  "เอกมัย",
+  "sukhumvit",
+  "nana",
+  "asoke",
+  "phrom phong",
+  "thonglor",
+  "thong lo",
+  "ekkamai",
+
+  // New CBD
+  "พระราม 9",
+  "รัชดา",
+  "รัชดาภิเษก",
+  "rama 9",
+  "rama ix",
+  "ratchada",
+  "ratchadapisek",
+];
+
+/**
+ * Helper to determine if a property is in a CBD location
+ */
+export function isCbdProperty(property: {
+  popular_area?: string | null;
+  meta_data?: any;
+  amenities?: any;
+  is_cbd?: boolean | null;
+  description?: any;
+}): boolean {
+  if (property.is_cbd === true) return true;
+  if (property.is_cbd === false) return false;
+  if (property.amenities?.is_cbd === true) return true;
+  if (property.meta_data?.is_cbd === true) return true;
+  if (
+    typeof property.description === "object" &&
+    property.description?.is_cbd !== undefined
+  ) {
+    return property.description.is_cbd === true;
+  }
+  if (property.popular_area) {
+    const area = property.popular_area.toLowerCase();
+    return CBD_POPULAR_AREAS.some((cbdArea) =>
+      area.includes(cbdArea.toLowerCase())
+    );
+  }
+  return false;
+}
+
+

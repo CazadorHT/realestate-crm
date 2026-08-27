@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import FavoritesPageClient from "./FavoritesPageClient";
 
+export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
+
 export const metadata: Metadata = {
   title: "My Favorites (รายการโปรด)",
   description:
