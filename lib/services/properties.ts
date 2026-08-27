@@ -520,7 +520,9 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             : getSafeImages(legacyImages);
 
           const bumpedAt = ((row as any).meta_data?.bumped_at as string) || (row as any).bumped_at || null;
-          const effectiveTime = bumpedAt ? new Date(bumpedAt).getTime() : new Date(row.created_at).getTime();
+          const bumpTime = bumpedAt ? new Date(bumpedAt).getTime() : 0;
+          const createTime = row.created_at ? new Date(row.created_at).getTime() : 0;
+          const effectiveTime = Math.max(bumpTime, createTime);
 
           return {
             ...cardBase,
@@ -544,6 +546,10 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             nearby_transits: getSafeNearbyTransits(row.nearby_transits),
           };
         });
+
+        if (effectiveSort === "NEWEST") {
+          finalProperties.sort((a, b) => (b.created_at_time || 0) - (a.created_at_time || 0));
+        }
 
         return { properties: finalProperties, facets };
       },

@@ -889,7 +889,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => translateDescription()}
+                            onClick={() => translateDescription(false, true)}
                             disabled={isTranslating}
                             className="w-full sm:w-auto mt-2 sm:mt-0 border-blue-100 text-blue-600 hover:bg-white hover:text-blue-600 gap-2 h-9 sm:h-10 px-4 sm:px-5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 text-[11px] sm:text-xs"
                           >

@@ -49,6 +49,16 @@ import {
 } from "@/components/ui/tooltip";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, RefreshCw, Zap } from "lucide-react";
+
 export function DescriptionSection({
   form: formProp,
   isReadOnly,
@@ -58,6 +68,38 @@ export function DescriptionSection({
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const { isTranslating, translateDescription } = useAITranslation(form);
+
+  const [activeTab, setActiveTab] = React.useState<"th" | "en" | "cn" | "ru">("th");
+
+  const descTh = form.watch("description");
+  const descEn = form.watch("description_en");
+  const descCn = form.watch("description_cn");
+  const descRu = form.watch("description_ru");
+
+  const isContentNonEmpty = (val: any) =>
+    typeof val === "string" && val.trim() !== "" && val !== "<p></p>";
+
+  const hasTh = isContentNonEmpty(descTh);
+  const hasEn = isContentNonEmpty(descEn);
+  const hasCn = isContentNonEmpty(descCn);
+  const hasRu = isContentNonEmpty(descRu);
+
+  const emptyLangs = [
+    !hasTh && "TH",
+    !hasEn && "EN",
+    !hasCn && "CN",
+    !hasRu && "RU",
+  ].filter(Boolean) as string[];
+
+  const handleSmartTranslate = () => {
+    if (emptyLangs.length > 0) {
+      // Smart Fill: Only translate missing empty languages!
+      translateDescription({ sourceLang: activeTab, silent: false });
+    } else {
+      // If all are filled, re-translate from active tab
+      translateDescription({ sourceLang: activeTab, forceAll: true, silent: false });
+    }
+  };
 
   const handleGenerate = useCallback(
     async (currentValue: string): Promise<string> => {
@@ -110,35 +152,143 @@ export function DescriptionSection({
               {isFeatureEnabled("ai_auto_description") && (
                 <>
                   <AiWriterButton />
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-full sm:w-auto">
+                  <div className="flex items-center gap-1 w-full sm:w-auto">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => translateDescription()}
+                            onClick={handleSmartTranslate}
                             disabled={isTranslating}
-                            className="border-blue-100 text-blue-600! hover:bg-blue-50 gap-2 h-10 sm:h-9 px-4 rounded-xl shadow-sm w-full justify-center font-medium"
+                            className="border-blue-200 text-blue-600! hover:bg-blue-50 gap-2 h-10 sm:h-9 px-3.5 rounded-l-xl rounded-r-none shadow-sm flex-1 sm:flex-initial justify-center font-semibold"
                           >
                             {isTranslating ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               <Languages className="h-4 w-4 text-blue-500" />
                             )}
-                            <span>{isEn ? "AI Translate All" : "AI แปลภาษาทั้งหมด"}</span>
+                            <span>
+                              {emptyLangs.length > 0
+                                ? isEn
+                                  ? `AI Fill (${emptyLangs.join(", ")})`
+                                  : `AI แปลภาษาที่เหลือ (${emptyLangs.join(", ")})`
+                                : isEn
+                                ? "AI Translate All"
+                                : "AI แปลใหม่ทุกภาษา"}
+                            </span>
                           </Button>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">
-                        <div className="flex items-center gap-2">
-                          <Languages className="w-3 h-3 text-blue-400" />
-                          <span>{isEn ? "Automatically translates description to all other languages 🌐" : "แปลคำบรรยายจากภาษาไทยไปยังภาษาอื่นทั้งหมดโดยอัตโนมัติ 🌐"}</span>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <Languages className="w-3 h-3 text-blue-400" />
+                            <span>
+                              {emptyLangs.length > 0
+                                ? isEn
+                                  ? `Smartly translates only missing languages (${emptyLangs.join(", ")}) while keeping current content 🌐`
+                                  : `แปลเฉพาะภาษาที่ยังว่างอยู่ (${emptyLangs.join(", ")}) โดยไม่แตะต้องเนื้อหาเดิมที่เขียนไว้ 🌐`
+                                : isEn
+                                ? "Translates to all other languages from active tab 🌐"
+                                : "แปลคำบรรยายใหม่ทุกภาษาจากแท็บปัจจุบัน 🌐"}
+                            </span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    {/* Translation Dropdown Options */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isTranslating}
+                          className="border-l-0 border-blue-200 text-blue-600! hover:bg-blue-50 h-10 sm:h-9 px-2 rounded-r-xl rounded-l-none shadow-sm"
+                          title={isEn ? "More translation options" : "ตัวเลือกการแปลเพิ่มเติม"}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-64 rounded-xl p-1.5 shadow-xl">
+                        <DropdownMenuLabel className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 py-1">
+                          {isEn ? "Translation Mode" : "โหมดการแปลภาษา"}
+                        </DropdownMenuLabel>
+                        
+                        <DropdownMenuItem
+                          onClick={() => translateDescription({ sourceLang: activeTab, silent: false })}
+                          className="rounded-lg gap-2.5 py-2 cursor-pointer"
+                        >
+                          <Zap className="h-4 w-4 text-amber-500 shrink-0" />
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-slate-800">
+                              {isEn ? "Fill Missing Only" : "แปลเฉพาะภาษาที่ยังว่าง"}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-medium">
+                              {emptyLangs.length > 0
+                                ? `(${emptyLangs.join(", ")})`
+                                : isEn
+                                ? "All languages filled"
+                                : "กรอกครบทุกภาษาแล้ว"}
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => translateDescription({ sourceLang: activeTab, forceAll: true, silent: false })}
+                          className="rounded-lg gap-2.5 py-2 cursor-pointer"
+                        >
+                          <RefreshCw className="h-4 w-4 text-blue-500 shrink-0" />
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-slate-800">
+                              {isEn ? `Re-translate All (from ${activeTab.toUpperCase()})` : `แปลใหม่ทุกภาษา (จากแท็บ ${activeTab.toUpperCase()})`}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-medium">
+                              {isEn ? "Overwrites EN, CN, RU" : "เขียนทับภาษาอื่นทั้งหมด"}
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator className="my-1" />
+                        <DropdownMenuLabel className="text-[11px] font-semibold text-slate-400 px-2 py-0.5">
+                          {isEn ? "Translate Single Language" : "แปลเฉพาะภาษานี้"}
+                        </DropdownMenuLabel>
+
+                        <DropdownMenuItem
+                          onClick={() => translateDescription({ sourceLang: activeTab, targetLanguages: ["en"], silent: false })}
+                          className="rounded-lg gap-2 py-1.5 cursor-pointer text-xs"
+                        >
+                          <span className="fi fi-us rounded-xs" />
+                          <span>{isEn ? "Translate English (EN) only" : "แปลเฉพาะภาษาอังกฤษ (EN)"}</span>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => translateDescription({ sourceLang: activeTab, targetLanguages: ["cn"], silent: false })}
+                          className="rounded-lg gap-2 py-1.5 cursor-pointer text-xs"
+                        >
+                          <span className="fi fi-cn rounded-xs" />
+                          <span>{isEn ? "Translate Chinese (CN) only" : "แปลเฉพาะภาษาจีน (CN)"}</span>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => translateDescription({ sourceLang: activeTab, targetLanguages: ["ru"], silent: false })}
+                          className="rounded-lg gap-2 py-1.5 cursor-pointer text-xs"
+                        >
+                          <span className="fi fi-ru rounded-xs" />
+                          <span>{isEn ? "Translate Russian (RU) only" : "แปลเฉพาะภาษารัสเซีย (RU)"}</span>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => translateDescription({ sourceLang: activeTab, targetLanguages: ["th"], silent: false })}
+                          className="rounded-lg gap-2 py-1.5 cursor-pointer text-xs"
+                        >
+                          <span className="fi fi-th rounded-xs" />
+                          <span>{isEn ? "Translate Thai (TH) only" : "แปลเฉพาะภาษาไทย (TH)"}</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </>
               )}
             </div>
@@ -146,7 +296,11 @@ export function DescriptionSection({
         </CardHeader>
 
         <CardContent className="p-0 flex-1 flex flex-col">
-          <Tabs defaultValue="th" className="w-full flex-1 flex flex-col">
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as any)}
+            className="w-full flex-1 flex flex-col"
+          >
             <div className="px-4 sm:px-6 pt-4">
               <TabsList className="bg-slate-100/80 p-1 rounded-xl w-full sm:w-auto grid grid-cols-4 sm:flex gap-1 h-[48px]">
                 <TabsTrigger

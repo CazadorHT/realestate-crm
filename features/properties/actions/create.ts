@@ -472,6 +472,7 @@ export async function createPropertyAction(
           property_source: propertyData.property_source,
           video_url: safeValues.video_url,
           floor_plan_url: safeValues.floor_plan_url,
+          bumped_at: new Date().toISOString(),
           version: 1,
         },
       });

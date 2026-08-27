@@ -79,11 +79,19 @@ Instructions:
     try {
       parsed = JSON.parse(rawOutput);
     } catch (parseErr) {
-      console.error("AI JSON Parse error:", parseErr, rawOutput);
-      return {
-        success: false,
-        message: "AI output could not be parsed",
-      };
+      const objMatch = rawOutput.match(/\{[\s\S]*?\}/);
+      if (objMatch) {
+        try {
+          parsed = JSON.parse(objMatch[0]);
+        } catch {}
+      }
+      if (!parsed) {
+        console.error("AI JSON Parse error:", parseErr, rawOutput);
+        return {
+          success: false,
+          message: "AI output could not be parsed",
+        };
+      }
     }
 
     const { logAiUsage } = await import("@/features/ai-monitor/actions");

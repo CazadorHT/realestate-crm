@@ -12,6 +12,13 @@ const isNonEmptyString = (val: any): boolean => {
   return typeof val === "string" && val.trim() !== "" && val !== "<p></p>";
 };
 
+export type TranslateOptions = {
+  silent?: boolean;
+  forceAll?: boolean;
+  targetLanguages?: ("th" | "en" | "cn" | "ru")[];
+  sourceLang?: "th" | "en" | "cn" | "ru";
+};
+
 export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues>) {
   const { language } = useLanguage();
   const isEn = language === "en";
@@ -24,163 +31,276 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslatingAll, setIsTranslatingAll] = useState(false);
 
-  // 1. Translate Title (Auto-detect source language: TH, EN, CN, RU)
-  const translateTitle = async (silent = false, force = false) => {
+  // 1. Translate Title (Smart auto-detect source & selective target translation)
+  const translateTitle = async (
+    optionsOrSilent: boolean | TranslateOptions = false,
+    forceLegacy = false
+  ) => {
+    const opts: TranslateOptions =
+      typeof optionsOrSilent === "object"
+        ? optionsOrSilent
+        : { silent: optionsOrSilent, forceAll: forceLegacy };
+
     const titleTh = form.getValues("title");
     const currentEn = form.getValues("title_en");
     const currentCn = form.getValues("title_cn");
     const currentRu = form.getValues("title_ru");
-
-    const sourceText =
-      (isNonEmptyString(titleTh) && titleTh) ||
-      (isNonEmptyString(currentEn) && currentEn) ||
-      (isNonEmptyString(currentCn) && currentCn) ||
-      (isNonEmptyString(currentRu) && currentRu);
-
-    if (!sourceText) {
-      if (!silent) toast.error(isEn ? "Please enter a title in any language before translating." : "กรุณากรอกชื่อทรัพย์ในช่องภาษาใดก็ได้ก่อนกดแปลครับ");
-      return;
-    }
 
     const hasTh = isNonEmptyString(titleTh);
     const hasEn = isNonEmptyString(currentEn);
     const hasCn = isNonEmptyString(currentCn);
     const hasRu = isNonEmptyString(currentRu);
 
-    if (!force && hasTh && hasEn && hasCn && hasRu) {
-      if (!silent) toast.success(isEn ? "Title translation completed ✨" : "ชื่อทรัพย์แปลครบถ้วนแล้ว ✨");
-      return;
+    let sourceText = "";
+    let detectedSourceLang: "th" | "en" | "cn" | "ru" = "th";
+
+    if (opts.sourceLang === "en" && hasEn) {
+      sourceText = currentEn!;
+      detectedSourceLang = "en";
+    } else if (opts.sourceLang === "cn" && hasCn) {
+      sourceText = currentCn!;
+      detectedSourceLang = "cn";
+    } else if (opts.sourceLang === "ru" && hasRu) {
+      sourceText = currentRu!;
+      detectedSourceLang = "ru";
+    } else if (hasTh) {
+      sourceText = titleTh!;
+      detectedSourceLang = "th";
+    } else if (hasEn) {
+      sourceText = currentEn!;
+      detectedSourceLang = "en";
+    } else if (hasCn) {
+      sourceText = currentCn!;
+      detectedSourceLang = "cn";
+    } else if (hasRu) {
+      sourceText = currentRu!;
+      detectedSourceLang = "ru";
+    }
+
+    if (!sourceText) {
+      if (!opts.silent)
+        toast.error(
+          isEn
+            ? "Please enter a title in any language before translating."
+            : "กรุณากรอกชื่อทรัพย์ในช่องภาษาใดก็ได้ก่อนกดแปลครับ"
+        );
+      return false;
+    }
+
+    let targets: ("th" | "en" | "cn" | "ru")[] = [];
+
+    if (opts.targetLanguages && opts.targetLanguages.length > 0) {
+      targets = opts.targetLanguages.filter((l) => l !== detectedSourceLang);
+    } else if (opts.forceAll) {
+      targets = (["th", "en", "cn", "ru"] as const).filter((l) => l !== detectedSourceLang);
+    } else {
+      // Smart Fill Mode: Only translate to empty fields!
+      targets = (["th", "en", "cn", "ru"] as const).filter((l) => {
+        if (l === detectedSourceLang) return false;
+        if (l === "th") return !hasTh;
+        if (l === "en") return !hasEn;
+        if (l === "cn") return !hasCn;
+        if (l === "ru") return !hasRu;
+        return false;
+      });
+
+      if (targets.length === 0) {
+        if (!opts.silent)
+          toast.info(
+            isEn
+              ? "All title languages are already filled ✨"
+              : "ชื่อทรัพย์กรอกครบทุกภาษาแล้วครับ ✨"
+          );
+        return true;
+      }
     }
 
     setIsTranslating(true);
-    const processId = !silent
-      ? startProcess(isEn ? `Translating title: ${sourceText}` : `แปลชื่อทรัพย์: ${sourceText}`, {
-          type: "PROPERTY_TRANSLATION",
-        })
+    const targetNames = targets.map((t) => t.toUpperCase()).join(", ");
+    const processId = !opts.silent
+      ? startProcess(
+          isEn
+            ? `Translating title to ${targetNames}`
+            : `แปลชื่อทรัพย์ไปยังภาษา (${targetNames})`,
+          { type: "PROPERTY_TRANSLATION" }
+        )
       : null;
 
     try {
-      const result = await translateTextAction(sourceText, "plain");
-      if (force || !hasTh) {
-        if (result.th) {
-          form.setValue("title", result.th, {
-            shouldDirty: true,
-            shouldTouch: true,
-          });
-        }
+      const result = await translateTextAction(sourceText, "plain", targets);
+      if (targets.includes("th") && result.th) {
+        form.setValue("title", result.th, { shouldDirty: true, shouldTouch: true });
       }
-      if (force || !hasEn) {
-        if (result.en) {
-          form.setValue("title_en", result.en, {
-            shouldDirty: true,
-            shouldTouch: true,
-          });
-        }
+      if (targets.includes("en") && result.en) {
+        form.setValue("title_en", result.en, { shouldDirty: true, shouldTouch: true });
       }
-      if (force || !hasCn) {
-        if (result.cn) {
-          form.setValue("title_cn", result.cn, {
-            shouldDirty: true,
-            shouldTouch: true,
-          });
-        }
+      if (targets.includes("cn") && result.cn) {
+        form.setValue("title_cn", result.cn, { shouldDirty: true, shouldTouch: true });
       }
-      if (force || !hasRu) {
-        if (result.ru) {
-          form.setValue("title_ru", result.ru, {
-            shouldDirty: true,
-            shouldTouch: true,
-          });
-        }
+      if (targets.includes("ru") && result.ru) {
+        form.setValue("title_ru", result.ru, { shouldDirty: true, shouldTouch: true });
       }
-      if (processId) finishProcess(processId, "SUCCESS", isEn ? "Title translated successfully ✨" : "แปลชื่อทรัพย์เรียบร้อยแล้ว ✨");
+
+      if (processId)
+        finishProcess(
+          processId,
+          "SUCCESS",
+          isEn
+            ? `Title translated to (${targetNames}) successfully ✨`
+            : `แปลชื่อทรัพย์ (${targetNames}) เรียบร้อยแล้ว ✨`
+        );
+      if (!opts.silent && !processId) {
+        toast.success(
+          isEn
+            ? `Title translated to (${targetNames}) ✨`
+            : `แปลชื่อทรัพย์ (${targetNames}) เรียบร้อยแล้ว ✨`
+        );
+      }
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : (isEn ? "Translation failed" : "การแปลขัดข้อง");
+      const msg =
+        error instanceof Error ? error.message : isEn ? "Translation failed" : "การแปลขัดข้อง";
       if (processId) finishProcess(processId, "ERROR", msg);
+      if (!opts.silent) toast.error(msg);
       return false;
     } finally {
       setIsTranslating(false);
     }
   };
 
-  // 2. Translate Description (Auto-detect source language: TH, EN, CN, RU)
-  const translateDescription = async (silent = false, force = false) => {
+  // 2. Translate Description (Smart auto-detect source & selective target translation)
+  const translateDescription = async (
+    optionsOrSilent: boolean | TranslateOptions = false,
+    forceLegacy = false
+  ) => {
+    const opts: TranslateOptions =
+      typeof optionsOrSilent === "object"
+        ? optionsOrSilent
+        : { silent: optionsOrSilent, forceAll: forceLegacy };
+
     const descTh = form.getValues("description");
     const currentEn = form.getValues("description_en");
     const currentCn = form.getValues("description_cn");
     const currentRu = form.getValues("description_ru");
-
-    const sourceText =
-      (isNonEmptyString(descTh) && descTh) ||
-      (isNonEmptyString(currentEn) && currentEn) ||
-      (isNonEmptyString(currentCn) && currentCn) ||
-      (isNonEmptyString(currentRu) && currentRu);
-
-    if (!sourceText) {
-      if (!silent) toast.error(isEn ? "Please enter a description in any language before translating." : "กรุณากรอกคำบรรยายในช่องภาษาใดก็ได้ก่อนกดแปลครับ");
-      return;
-    }
 
     const hasTh = isNonEmptyString(descTh);
     const hasEn = isNonEmptyString(currentEn);
     const hasCn = isNonEmptyString(currentCn);
     const hasRu = isNonEmptyString(currentRu);
 
-    if (!force && hasTh && hasEn && hasCn && hasRu) {
-      if (!silent) toast.success(isEn ? "Description translation completed ✨" : "คำบรรยายแปลครบถ้วนแล้ว ✨");
-      return;
+    let sourceText = "";
+    let detectedSourceLang: "th" | "en" | "cn" | "ru" = "th";
+
+    if (opts.sourceLang === "en" && hasEn) {
+      sourceText = currentEn!;
+      detectedSourceLang = "en";
+    } else if (opts.sourceLang === "cn" && hasCn) {
+      sourceText = currentCn!;
+      detectedSourceLang = "cn";
+    } else if (opts.sourceLang === "ru" && hasRu) {
+      sourceText = currentRu!;
+      detectedSourceLang = "ru";
+    } else if (hasTh) {
+      sourceText = descTh!;
+      detectedSourceLang = "th";
+    } else if (hasEn) {
+      sourceText = currentEn!;
+      detectedSourceLang = "en";
+    } else if (hasCn) {
+      sourceText = currentCn!;
+      detectedSourceLang = "cn";
+    } else if (hasRu) {
+      sourceText = currentRu!;
+      detectedSourceLang = "ru";
+    }
+
+    if (!sourceText) {
+      if (!opts.silent)
+        toast.error(
+          isEn
+            ? "Please enter a description in any language before translating."
+            : "กรุณากรอกคำบรรยายในช่องภาษาใดก็ได้ก่อนกดแปลครับ"
+        );
+      return false;
+    }
+
+    let targets: ("th" | "en" | "cn" | "ru")[] = [];
+
+    if (opts.targetLanguages && opts.targetLanguages.length > 0) {
+      targets = opts.targetLanguages.filter((l) => l !== detectedSourceLang);
+    } else if (opts.forceAll) {
+      targets = (["th", "en", "cn", "ru"] as const).filter((l) => l !== detectedSourceLang);
+    } else {
+      // Smart Fill Mode: Only translate to empty fields!
+      targets = (["th", "en", "cn", "ru"] as const).filter((l) => {
+        if (l === detectedSourceLang) return false;
+        if (l === "th") return !hasTh;
+        if (l === "en") return !hasEn;
+        if (l === "cn") return !hasCn;
+        if (l === "ru") return !hasRu;
+        return false;
+      });
+
+      if (targets.length === 0) {
+        if (!opts.silent)
+          toast.info(
+            isEn
+              ? "All description languages are already filled ✨"
+              : "คำบรรยายกรอกครบทุกภาษาแล้วครับ ✨"
+          );
+        return true;
+      }
     }
 
     setIsTranslating(true);
-    const processId = !silent
-      ? startProcess(isEn ? "Translating property description (HTML)" : "แปลคำบรรยายทรัพย์ (HTML)", {
-          type: "PROPERTY_TRANSLATION",
-        })
+    const targetNames = targets.map((t) => t.toUpperCase()).join(", ");
+    const processId = !opts.silent
+      ? startProcess(
+          isEn
+            ? `Translating description to ${targetNames}`
+            : `แปลคำบรรยายไปยังภาษา (${targetNames})`,
+          { type: "PROPERTY_TRANSLATION" }
+        )
       : null;
 
     try {
-      const result = await translateTextAction(sourceText, "html");
-      if (force || !hasTh) {
-        if (result.th) {
-          form.setValue("description", result.th, {
-            shouldDirty: true,
-            shouldTouch: true,
-          });
-        }
+      const result = await translateTextAction(sourceText, "html", targets);
+      if (targets.includes("th") && result.th) {
+        form.setValue("description", result.th, { shouldDirty: true, shouldTouch: true });
       }
-      if (force || !hasEn) {
-        if (result.en) {
-          form.setValue("description_en", result.en, {
-            shouldDirty: true,
-            shouldTouch: true,
-          });
-        }
+      if (targets.includes("en") && result.en) {
+        form.setValue("description_en", result.en, { shouldDirty: true, shouldTouch: true });
       }
-      if (force || !hasCn) {
-        if (result.cn) {
-          form.setValue("description_cn", result.cn, {
-            shouldDirty: true,
-            shouldTouch: true,
-          });
-        }
+      if (targets.includes("cn") && result.cn) {
+        form.setValue("description_cn", result.cn, { shouldDirty: true, shouldTouch: true });
       }
-      if (force || !hasRu) {
-        if (result.ru) {
-          form.setValue("description_ru", result.ru, {
-            shouldDirty: true,
-            shouldTouch: true,
-          });
-        }
+      if (targets.includes("ru") && result.ru) {
+        form.setValue("description_ru", result.ru, { shouldDirty: true, shouldTouch: true });
       }
+
       if (processId)
-        finishProcess(processId, "SUCCESS", isEn ? "Description translated successfully ✨" : "แปลคำบรรยายเรียบร้อยแล้ว ✨");
+        finishProcess(
+          processId,
+          "SUCCESS",
+          isEn
+            ? `Description translated to (${targetNames}) successfully ✨`
+            : `แปลคำบรรยาย (${targetNames}) เรียบร้อยแล้ว ✨`
+        );
+      if (!opts.silent && !processId) {
+        toast.success(
+          isEn
+            ? `Description translated to (${targetNames}) ✨`
+            : `แปลคำบรรยาย (${targetNames}) เรียบร้อยแล้ว ✨`
+        );
+      }
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : (isEn ? "Translation failed" : "การแปลขัดข้อง");
+      const msg =
+        error instanceof Error ? error.message : isEn ? "Translation failed" : "การแปลขัดข้อง";
       if (processId) finishProcess(processId, "ERROR", msg);
+      if (!opts.silent) toast.error(msg);
       return false;
     } finally {
       setIsTranslating(false);

@@ -147,12 +147,23 @@ export async function translatePlaceNamesAction(texts: string[]) {
 
   try {
     const response = await generateText(prompt);
-    const cleaned = response.text
+    let cleaned = response.text
       .trim()
-      .replace(/^```json/, "")
-      .replace(/^```/, "")
-      .replace(/```$/, "");
-    const parsedJson = JSON.parse(cleaned);
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    let parsedJson: any;
+    try {
+      parsedJson = JSON.parse(cleaned);
+    } catch {
+      const match = cleaned.match(/\[[\s\S]*?\]/);
+      if (match) {
+        try {
+          parsedJson = JSON.parse(match[0]);
+        } catch {}
+      }
+    }
     const json = Array.isArray(parsedJson) ? parsedJson : [];
 
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
@@ -737,24 +748,62 @@ Return ONLY the JSON array of strings. Do not include markdown code block format
       responseMimeType: "application/json"
     });
 
-    const parsed = JSON.parse(response.text.trim());
-    if (Array.isArray(parsed)) {
-      const allIds = new Set(features.map((f: { id: string; name: string }) => f.id));
-      const validatedIds = parsed.filter(id => allIds.has(id));
+    let cleaned = (response.text || "")
+      .trim()
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
 
-      const { logAiUsage } = await import("@/features/ai-monitor/actions");
-      await logAiUsage({
-        model: modelName,
-        feature: "features_detection",
-        status: "success",
-        promptTokens: response.usage?.promptTokens,
-        completionTokens: response.usage?.completionTokens,
-      });
-
-      return { success: true, matchedFeatureIds: validatedIds };
+    let parsed: any;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      const match = cleaned.match(/\[[\s\S]*?\]/);
+      if (match) {
+        try {
+          parsed = JSON.parse(match[0]);
+        } catch {}
+      } else {
+        const objMatch = cleaned.match(/\{[\s\S]*?\}/);
+        if (objMatch) {
+          try {
+            parsed = JSON.parse(objMatch[0]);
+          } catch {}
+        }
+      }
     }
 
-    throw new Error("Invalid feature IDs array returned by AI");
+    let candidates: string[] = [];
+    if (Array.isArray(parsed)) {
+      candidates = parsed;
+    } else if (parsed && typeof parsed === "object") {
+      for (const key of ["features", "feature_ids", "matchedFeatureIds", "ids", "matched_features", "data", "result"]) {
+        if (Array.isArray(parsed[key])) {
+          candidates = parsed[key];
+          break;
+        }
+      }
+      if (candidates.length === 0) {
+        const firstArray = Object.values(parsed).find((val) => Array.isArray(val));
+        if (firstArray) {
+          candidates = firstArray as string[];
+        }
+      }
+    }
+
+    const allIds = new Set(features.map((f: { id: string; name: string }) => f.id));
+    const validatedIds = candidates.filter((id) => typeof id === "string" && allIds.has(id));
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: modelName,
+      feature: "features_detection",
+      status: "success",
+      promptTokens: response.usage?.promptTokens,
+      completionTokens: response.usage?.completionTokens,
+    });
+
+    return { success: true, matchedFeatureIds: validatedIds };
   } catch (error: any) {
     console.error("AI Feature Detection Error:", error);
 

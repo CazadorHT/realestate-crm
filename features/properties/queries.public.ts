@@ -208,7 +208,13 @@ export async function searchByTypeAndArea(propertyType: string, area: string, li
     return [];
   }
 
-  return sortPropertyImages(data || []);
+  const sortedByTime = (data || []).sort((a: any, b: any) => {
+    const timeA = Math.max(a.meta_data?.bumped_at ? new Date(a.meta_data.bumped_at).getTime() : 0, a.created_at ? new Date(a.created_at).getTime() : 0);
+    const timeB = Math.max(b.meta_data?.bumped_at ? new Date(b.meta_data.bumped_at).getTime() : 0, b.created_at ? new Date(b.created_at).getTime() : 0);
+    return timeB - timeA;
+  });
+
+  return sortPropertyImages(sortedByTime);
 }
 
 export async function getHotProperties(limit = 10) {
@@ -227,7 +233,13 @@ export async function getHotProperties(limit = 10) {
     return [];
   }
 
-  return sortPropertyImages(data || []);
+  const sortedByTime = (data || []).sort((a: any, b: any) => {
+    const timeA = Math.max(a.meta_data?.bumped_at ? new Date(a.meta_data.bumped_at).getTime() : 0, a.created_at ? new Date(a.created_at).getTime() : 0);
+    const timeB = Math.max(b.meta_data?.bumped_at ? new Date(b.meta_data.bumped_at).getTime() : 0, b.created_at ? new Date(b.created_at).getTime() : 0);
+    return timeB - timeA;
+  });
+
+  return sortPropertyImages(sortedByTime);
 }
 
 export async function getPopularAreaTranslations() {

@@ -260,7 +260,7 @@ export function QuickInfoSection({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => translateTitle()}
+                    onClick={() => translateTitle(false, true)}
                     disabled={isTranslating}
                     className="h-8 text-blue-700 bg-blue-50/50 border-blue-200/80 hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 hover:text-white hover:border-transparent hover:shadow-md hover:shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] gap-1.5 transition-all duration-300 text-sm font-semibold rounded-lg px-3 group"
                   >

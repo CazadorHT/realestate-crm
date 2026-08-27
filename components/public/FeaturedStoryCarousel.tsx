@@ -305,20 +305,20 @@ export function FeaturedStoryCarousel({
                 const formatMil = (val: number) => {
                   if (val >= 1_000_000) {
                     const millionVal = (val / 1_000_000).toFixed(val % 1_000_000 === 0 ? 0 : 2);
-                    if (language === "en") return `฿${millionVal}M`;
-                    if (language === "cn") return `฿${millionVal}百万`;
-                    if (language === "ru") return `฿${millionVal} млн`;
-                    return `฿${millionVal} ล้าน`;
+                    if (language === "en") return `฿ ${millionVal}M`;
+                    if (language === "cn") return `฿ ${millionVal}百万`;
+                    if (language === "ru") return `฿ ${millionVal} млн`;
+                    return `฿ ${millionVal} ล้าน`;
                   }
-                  return `฿${val.toLocaleString("th-TH")}`;
+                  return `฿ ${val.toLocaleString("th-TH")}`;
                 };
 
                 const formatR = (val: number) => {
                   const formatted = val.toLocaleString("th-TH");
-                  if (language === "en") return `฿${formatted}/mo`;
-                  if (language === "cn") return `฿${formatted}/月`;
-                  if (language === "ru") return `฿${formatted}/мес`;
-                  return `฿${formatted}/เดือน`;
+                  if (language === "en") return `฿ ${formatted}/mo`;
+                  if (language === "cn") return `฿ ${formatted}/月`;
+                  if (language === "ru") return `฿ ${formatted}/мес`;
+                  return `฿ ${formatted}/เดือน`;
                 };
 
                 if (rentVal && saleVal && (currentProperty.listing_type === "BOTH" || currentProperty.listing_type === "SALE_AND_RENT")) {

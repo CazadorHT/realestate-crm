@@ -413,6 +413,7 @@ export function PropertyForm({
           ? `✨ AI extracted property details successfully!`
           : `✨ AI แยกข้อมูลเข้าฟอร์มเรียบร้อยแล้ว (ขนาด ${d.size_sqm || "-"} ตร.ม. / ${d.bedrooms || "-"} นอน / ${d.price ? d.price.toLocaleString() + " บาท" : ""})`
       );
+      setDepositLeadBanner(null);
     } catch (err: any) {
       console.error("AI Auto Extract error:", err);
       toast.error(err?.message || "Error");
@@ -439,13 +440,33 @@ export function PropertyForm({
           if (data.propertyType) {
             form.setValue("property_type", data.propertyType, { shouldDirty: true });
           }
+          const isThaiText = (text?: string | null) => Boolean(text && /[\u0E00-\u0E7F]/.test(text));
+
           if (data.description) {
-            form.setValue("description", data.description, { shouldDirty: true });
-            form.setValue("description_en", data.description, { shouldDirty: true });
+            if (isThaiText(data.description)) {
+              form.setValue("description", data.description, { shouldDirty: true });
+              if (data.description_en) {
+                form.setValue("description_en", data.description_en, { shouldDirty: true });
+              }
+            } else {
+              form.setValue("description_en", data.description, { shouldDirty: true });
+              if (data.description_th) {
+                form.setValue("description", data.description_th, { shouldDirty: true });
+              }
+            }
           }
           if (data.title) {
-            form.setValue("title", data.title, { shouldDirty: true });
-            form.setValue("title_en", data.title, { shouldDirty: true });
+            if (isThaiText(data.title)) {
+              form.setValue("title", data.title, { shouldDirty: true });
+              if (data.title_en) {
+                form.setValue("title_en", data.title_en, { shouldDirty: true });
+              }
+            } else {
+              form.setValue("title_en", data.title, { shouldDirty: true });
+              if (data.title_th) {
+                form.setValue("title", data.title_th, { shouldDirty: true });
+              }
+            }
           }
 
           if (data.ownerName) {
@@ -1093,7 +1114,7 @@ export function PropertyForm({
             handleNext={handleNext}
             form={form}
           />
-          {depositLeadBanner && (
+          {depositLeadBanner && currentStep === 1 && (
             <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-linear-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200/80 shadow-sm text-emerald-900 animate-in fade-in slide-in-from-top-2">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-200 shrink-0">
