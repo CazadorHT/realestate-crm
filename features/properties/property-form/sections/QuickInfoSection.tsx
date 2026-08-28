@@ -43,6 +43,7 @@ import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
+import { isCbdProperty } from "@/lib/property-utils";
 
 type Props = {
   popularAreas: string[];
@@ -119,6 +120,13 @@ export function QuickInfoSection({
     }
   }, [highlightedAreaIndex]);
 
+  const selectArea = (selectedArea: string | undefined, field: any) => {
+    field.onChange(selectedArea);
+    if (selectedArea && isCbdProperty({ popular_area: selectedArea })) {
+      form.setValue("is_cbd", true, { shouldDirty: true, shouldValidate: true });
+    }
+  };
+
   const handleAreaKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     field: any,
@@ -135,11 +143,11 @@ export function QuickInfoSection({
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (highlightedAreaIndex === 0) {
-        field.onChange(undefined);
+        selectArea(undefined, field);
       } else {
         const selectedArea = sortedFilteredAreas[highlightedAreaIndex - 1];
         if (selectedArea) {
-          field.onChange(selectedArea);
+          selectArea(selectedArea, field);
         }
       }
       if (isMobile) {
@@ -545,7 +553,7 @@ export function QuickInfoSection({
                                     key={a}
                                     type="button"
                                     onClick={() => {
-                                      field.onChange(a);
+                                      selectArea(a, field);
                                       setAreaOpen(false);
                                     }}
                                     data-highlighted={isHighlighted ? "true" : "false"}
@@ -605,7 +613,7 @@ export function QuickInfoSection({
                           <button
                             type="button"
                             onClick={() => {
-                              field.onChange(undefined);
+                              selectArea(undefined, field);
                               setDesktopAreaOpen(false);
                             }}
                             data-highlighted={highlightedAreaIndex === 0 ? "true" : "false"}
@@ -638,7 +646,7 @@ export function QuickInfoSection({
                                     key={a}
                                     type="button"
                                     onClick={() => {
-                                      field.onChange(a);
+                                      selectArea(a, field);
                                       setDesktopAreaOpen(false);
                                     }}
                                     data-highlighted={isHighlighted ? "true" : "false"}

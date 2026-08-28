@@ -36,6 +36,7 @@ import { generateKeywords, prepareSEOData } from "../logic/seo";
 import { FormSchema } from "../schema";
 import { mapDbError } from "@/lib/db-error";
 import { encrypt, generateBlindIndex } from "@/lib/crypto";
+import { isCbdProperty } from "@/lib/property-utils";
 
 
 function parseCoordinatesFromGoogleMaps(url: string): { lat: number; lng: number } | null {
@@ -377,7 +378,7 @@ export async function createPropertyAction(
           is_fully_fitted: safeValues.is_fully_fitted,
           is_green_building: safeValues.is_green_building,
           has_flexible_lease: safeValues.has_flexible_lease,
-          is_cbd: safeValues.is_cbd,
+          is_cbd: safeValues.is_cbd ?? isCbdProperty({ popular_area: safeValues.popular_area }),
           is_smart_home: safeValues.is_smart_home,
           has_private_elevator: safeValues.has_private_elevator,
           is_handicapped_friendly: safeValues.is_handicapped_friendly,

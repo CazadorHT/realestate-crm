@@ -43,6 +43,7 @@ import { AddressSelectorField } from "./AddressSelectorField";
 import { QuickCreateProjectDialog } from "./QuickCreateProjectDialog";
 import { QuickCreateAreaDialog } from "./QuickCreateAreaDialog";
 import { checkPopularAreaExistsAction } from "@/features/properties/actions/popular-area-actions";
+import { isCbdProperty } from "@/lib/property-utils";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import {
@@ -941,6 +942,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           form.setValue("popular_area_en", area.en, { shouldDirty: true });
           form.setValue("popular_area_cn", area.cn, { shouldDirty: true });
           form.setValue("popular_area_ru", area.ru, { shouldDirty: true });
+          if (isCbdProperty({ popular_area: area.th })) {
+            form.setValue("is_cbd", true, { shouldDirty: true, shouldValidate: true });
+          }
           setShowAreaPrompt(false);
         }}
       />

@@ -417,7 +417,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             p_listing_type: options.listingType || undefined
           };
 
-          const cacheKey = `facets-${JSON.stringify(rpcParams)}`;
+          const cacheKey = `facets-v3-${JSON.stringify(rpcParams)}`;
           const getCachedFacets = unstable_cache(
             async () => {
               const { data: facetData } = await supabase.rpc("get_public_property_facets_v2", rpcParams);

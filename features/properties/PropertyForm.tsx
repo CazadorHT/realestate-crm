@@ -22,6 +22,7 @@ import {
   History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isCbdProperty } from "@/lib/property-utils";
 import { FormSchema, getFormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
 import { MissingLocationDialog } from "./components/MissingLocationDialog";
@@ -531,6 +532,9 @@ export function PropertyForm({
         if (newAreaRu.trim()) {
           form.setValue("popular_area_ru", newAreaRu.trim(), { shouldDirty: true });
         }
+        if (isCbdProperty({ popular_area: addedAreaName })) {
+          form.setValue("is_cbd", true, { shouldDirty: true, shouldValidate: true });
+        }
         setNewArea("");
         setNewAreaEn("");
         setNewAreaCn("");
@@ -720,6 +724,10 @@ export function PropertyForm({
       shouldDirty: true,
       shouldTouch: true,
     });
+    if (isCbdProperty({ popular_area: areaName })) {
+      form.setValue("is_cbd", true, { shouldDirty: true, shouldValidate: true });
+      updatedValues.is_cbd = true;
+    }
     setPendingValuesWithoutArea(null);
     await executeSubmit(updatedValues);
   };
@@ -766,6 +774,10 @@ export function PropertyForm({
         }
         if (areaData.name_ru) {
           form.setValue("popular_area_ru", areaData.name_ru, { shouldDirty: true });
+        }
+        if (isCbdProperty({ popular_area: areaData.name })) {
+          form.setValue("is_cbd", true, { shouldDirty: true, shouldValidate: true });
+          updatedValues.is_cbd = true;
         }
 
         setShowMissingAreaDialog(false);
