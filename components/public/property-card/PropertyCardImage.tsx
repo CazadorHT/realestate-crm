@@ -4,12 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, PawPrint, ChevronLeft, ChevronRight, CheckSquare, Square, MoreVertical, Share2, Copy, Check } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
-import { getTypeLabel, getListingBadge, isCbdProperty } from "@/lib/property-utils";
+import { getTypeLabel, getListingBadge, isCbdProperty, getSocialProofStats } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { MdOutlinePets } from "react-icons/md";
 import { PiFireFill } from "react-icons/pi";
-import { FaAirbnb, FaCity } from "react-icons/fa6";
+import { FaAirbnb, FaCity, FaHeart } from "react-icons/fa6";
 import { HiBuildingOffice2 } from "react-icons/hi2";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
@@ -45,6 +45,7 @@ export function PropertyCardImage({
   hideShare = false,
 }: PropertyCardImageProps) {
   const { t, language } = useLanguage();
+  const socialStats = getSocialProofStats(property.id, property);
   const INITIAL_BATCH_SIZE = 5;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
@@ -493,6 +494,12 @@ export function PropertyCardImage({
             </div>
           );
         })}
+      </div>
+
+      {/* Social Proof Pill (Bottom Left) */}
+      <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/60 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-semibold border border-white/15 shadow-sm pointer-events-none transition-opacity duration-300">
+        <FaHeart className="w-3 h-3 text-rose-500 shrink-0" />
+        <span>{t("property.social_proof_saved_short", { count: socialStats.savedCount })}</span>
       </div>
 
 

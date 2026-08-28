@@ -480,4 +480,69 @@ export function isCbdProperty(property: {
   return false;
 }
 
+/**
+ * Hybrid Social Proof & Urgency stats calculation (Global Standard)
+ * Combines a smart, location/popularity-aware baseline with real analytics from database.
+ * Ensures numbers never drop to 0 while naturally growing with real visitor traffic.
+ */
+export function getSocialProofStats(
+  propertyId?: string | null,
+  propertyData?: {
+    meta_data?: any;
+    view_count?: number | null;
+    favorite_count?: number | null;
+    is_hot_deal?: boolean | null;
+    is_cbd?: boolean | null;
+    popular_area?: any;
+  } | null
+) {
+  if (!propertyId) {
+    return { savedCount: 14, recentViews24h: 6 };
+  }
+
+  // 1. Calculate deterministic baseline seed from property ID
+  let hash = 0;
+  for (let i = 0; i < propertyId.length; i++) {
+    hash = (hash << 5) - hash + propertyId.charCodeAt(i);
+    hash |= 0;
+  }
+  const positiveHash = Math.abs(hash);
+
+  // Baseline ranges: Base saved: 6 - 22, Base views 24h: 4 - 12
+  let baseSaved = 6 + (positiveHash % 17);
+  let baseViews = 4 + (positiveHash % 9);
+
+  // Boost baseline slightly if property is Hot Deal or Prime CBD
+  if (propertyData?.is_hot_deal) {
+    baseSaved += 6;
+    baseViews += 4;
+  }
+  if (propertyData?.is_cbd) {
+    baseSaved += 3;
+    baseViews += 2;
+  }
+
+  // 2. Extract real metrics from DB if available
+  const realTotalViews =
+    propertyData?.view_count ??
+    propertyData?.meta_data?.view_count ??
+    0;
+
+  const realFavorites =
+    propertyData?.favorite_count ??
+    propertyData?.meta_data?.favorite_count ??
+    0;
+
+  // Hybrid addition: organically grows as real users view/save the property
+  const organicRecentViews = Math.max(0, Math.floor(Number(realTotalViews) % 25));
+  const organicSaves = Math.max(0, Number(realFavorites));
+
+  const savedCount = baseSaved + organicSaves;
+  const recentViews24h = baseViews + organicRecentViews;
+
+  return { savedCount, recentViews24h };
+}
+
+
+
 

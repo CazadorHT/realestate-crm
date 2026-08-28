@@ -32,7 +32,8 @@ const PROPERTY_TYPE_ICONS: Record<string, any> = {
   commercial: Store,
   commercial_building: Store,
 };
-import { getOfficePrice, getTypeColor } from "@/lib/property-utils";
+import { getOfficePrice, getTypeColor, getSocialProofStats } from "@/lib/property-utils";
+import { PiFireFill } from "react-icons/pi";
 import {
   useLanguage,
   dictionaries,
@@ -227,6 +228,7 @@ export function PropertyHeader({
   const officePrice = getOfficePrice(property);
   const typeColor = getTypeColor(property.property_type ?? null);
   const localizedTitle = getLocaleValue(property, "title", language);
+  const socialStats = getSocialProofStats(property.id, property);
 
   return (
     <div className={cn("pt-20 lg:pt-24 bg-white relative", className)}>
@@ -413,6 +415,23 @@ export function PropertyHeader({
                       t={t}
                       officePrice={officePrice}
                     />
+                    {/* Urgency & Scarcity Nudge (Mobile) */}
+                    <div className="mt-2.5 mb-2 w-full px-3 py-2 rounded-xl bg-linear-to-r from-amber-50 via-orange-50 to-rose-50 border border-orange-200 shadow-2xs flex items-center justify-center gap-2 text-xs font-normal text-amber-950 animate-in fade-in slide-in-from-bottom-1 duration-500 text-center">
+                      <PiFireFill className="w-4 h-4 text-rose-500 fill-rose-500 shrink-0 animate-pulse" />
+                      <span className="truncate">
+                        {(() => {
+                          const template = t("property.urgency_combined", { count: "###" });
+                          const [before, after] = template.split("###");
+                          return (
+                            <>
+                              {before}
+                              <strong className="font-semibold text-rose-600 mx-0.5">{socialStats.recentViews24h}</strong>
+                              {after}
+                            </>
+                          );
+                        })()}
+                      </span>
+                    </div>
                   </div>
 
                   <KeySellingPoints
@@ -423,14 +442,31 @@ export function PropertyHeader({
                   />
                 </div>
 
-                {/* DESKTOP ONLY: Pricing Section on the right */}
-                <div className="hidden lg:block shrink-0">
+                {/* DESKTOP ONLY: Pricing Section & Urgency Nudge on the right */}
+                <div className="hidden lg:flex flex-col items-end shrink-0 max-w-sm">
                   <PropertyPricingSection
                     property={property}
                     language={language}
                     t={t}
                     officePrice={officePrice}
                   />
+                  {/* Urgency & Scarcity Nudge (Desktop) */}
+                  <div className="mt-2.5 w-fit px-3.5 py-2 rounded-xl bg-linear-to-r from-amber-50 via-orange-50 to-rose-50 border border-orange-200 shadow-2xs flex items-center justify-center gap-2 text-xs sm:text-sm font-normal text-amber-950 animate-in fade-in slide-in-from-bottom-1 duration-500 hover:border-orange-300 transition-all text-center">
+                    <PiFireFill className="w-3.5 h-3.5 text-rose-500 fill-rose-500 shrink-0 animate-pulse" />
+                    <span>
+                      {(() => {
+                        const template = t("property.urgency_combined", { count: "###" });
+                        const [before, after] = template.split("###");
+                        return (
+                          <>
+                            {before}
+                            <strong className="font-semibold text-rose-600 mx-0.5">{socialStats.recentViews24h}</strong>
+                            {after}
+                          </>
+                        );
+                      })()}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

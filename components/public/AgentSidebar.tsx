@@ -150,6 +150,11 @@ export function AgentSidebar({
           <div className="text-sm text-slate-500">
             {t("property.professional_agent")}
           </div>
+          {/* Trust Enhancer */}
+          <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold w-fit border border-emerald-100 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span>{t("property.trust_avg_response_time")}</span>
+          </div>
         </div>
       </div>
 
@@ -161,7 +166,7 @@ export function AgentSidebar({
           </h4>
           <Button
             asChild
-            className="w-full h-13 rounded-2xl text-base md:text-sm xl:text-base font-semibold bg-linear-to-r from-[#06C755] to-[#05B04C] hover:from-[#05B04C] hover:to-[#049d43] text-white shadow-lg shadow-green-200/50 transition-all hover:-translate-y-0.5 active:scale-95"
+            className="w-full h-13 rounded-2xl text-base md:text-sm xl:text-base font-bold bg-linear-to-r from-[#06C755] to-[#05B04C] hover:from-[#05B04C] hover:to-[#049d43] text-white shadow-lg shadow-green-200/50 transition-all hover:-translate-y-0.5 active:scale-95"
           >
             <a
               href={
@@ -185,7 +190,7 @@ export function AgentSidebar({
               }}
             >
               <FaLine className="w-6 h-6 md:w-5 md:h-5 xl:w-6 xl:h-6 mr-2 shrink-0" />
-              <span className="truncate">{t("property.viewing_cta")}</span>
+              <span className="truncate">{t("property.cta_book_viewing_free")}</span>
             </a>
           </Button>
 
