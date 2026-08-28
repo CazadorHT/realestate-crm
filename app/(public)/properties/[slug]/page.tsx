@@ -14,6 +14,7 @@ import { getSafeNearbyPlaces } from "@/lib/property-hardened-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import { siteConfig } from "@/lib/site-config";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { isCbdProperty } from "@/lib/property-utils";
 
 // Static Components
 import { PropertyHeader } from "@/components/public/property-detail/PropertyHeader";
@@ -128,8 +129,10 @@ export default async function PublicPropertyDetailPage(props: {
                 imageAlt={`${getLocaleValue(data, "title", language)} ${t("seo.in")} ${data.district || ""}, ${data.province || ""}`}
                 isHot={!!data.is_hot_deal}
                 verified={!!data.verified}
+                isCbd={!!data.is_cbd || isCbdProperty(data)}
                 petFriendly={!!data.is_pet_friendly}
                 allowAirbnb={!!data.allow_airbnb}
+                isTaxRegistered={!!data.is_tax_registered}
               />
             </section>
           </div>

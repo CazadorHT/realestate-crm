@@ -455,12 +455,13 @@ export const CBD_POPULAR_AREAS = [
  * Helper to determine if a property is in a CBD location
  */
 export function isCbdProperty(property: {
-  popular_area?: string | null;
+  popular_area?: string | { th?: string; en?: string; cn?: string; ru?: string } | null;
   meta_data?: any;
   amenities?: any;
   is_cbd?: boolean | null;
   description?: any;
-}): boolean {
+} | Record<string, any>): boolean {
+  if (!property) return false;
   if (property.is_cbd === true) return true;
   if (property.is_cbd === false) return false;
   if (property.amenities?.is_cbd === true) return true;
@@ -472,7 +473,10 @@ export function isCbdProperty(property: {
     return property.description.is_cbd === true;
   }
   if (property.popular_area) {
-    const area = property.popular_area.toLowerCase();
+    const rawArea = typeof property.popular_area === "string"
+      ? property.popular_area
+      : (property.popular_area as any).th || (property.popular_area as any).en || "";
+    const area = rawArea.toLowerCase();
     return CBD_POPULAR_AREAS.some((cbdArea) =>
       area.includes(cbdArea.toLowerCase())
     );

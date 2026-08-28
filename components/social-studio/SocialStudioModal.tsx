@@ -302,8 +302,8 @@ export function SocialStudioModal({
     const amount = isRent ? property.original_rental_price : property.original_price;
     if (!amount) return undefined;
     return language === "en" || language === "zh" || language === "ru"
-      ? `฿${amount.toLocaleString()}`
-      : `฿${amount.toLocaleString()} บาท`;
+      ? `฿ ${amount.toLocaleString()}`
+      : `฿ ${amount.toLocaleString()} บาท`;
   }, [property.listing_type, property.original_price, property.original_rental_price, language]);
 
   const locationDisplay = useMemo(() => {

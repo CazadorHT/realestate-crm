@@ -233,17 +233,44 @@ export async function postPropertyToTikTokAction(
       postMode: "MEDIA_UPLOAD",
     });
 
-    if (!publishResult.success) {
+    if (!publishResult.success || !publishResult.publish_id) {
       // Handle specific TikTok error codes & messages
-      let errorMsg = publishResult.error;
+      let errorMsg = publishResult.error || "ไม่สามารถส่งแบบร่างไปยัง TikTok ได้";
+      const errCode = (publishResult as any).error_code || publishResult.error || "";
       
-      if (publishResult.error_code === 401) {
-        errorMsg = "Session หมดอายุ กรุณาตัดการเชื่อมต่อและเชื่อมต่อ TikTok ใหม่อีกครั้ง";
+      if (errCode === 401 || String(errCode).includes("access_token_invalid")) {
+        errorMsg = "Session หมดอายุ กรุณาตัดการเชื่อมต่อและเชื่อมต่อ TikTok ใหม่อีกครั้งในหน้าตั้งค่า";
+      } else if (String(errCode).includes("spam_risk_too_many_pending_share") || String(errorMsg).includes("spam_risk_too_many_pending_share")) {
+        errorMsg = "มีแบบร่าง (Draft) ค้างอยู่ในกล่องข้อความ TikTok มากเกินไป กรุณาเปิดแอป TikTok > Inbox เพื่อกดยืนยันโพสต์หรือลบแบบร่างที่ค้างอยู่เดิมออกก่อน จึงจะส่งฉบับใหม่ได้ครับ";
+      } else if (String(errCode).includes("unaudited_client")) {
+        errorMsg = "บัญชี TikTok ยังไม่ได้รับอนุญาตในฐานะ Test Account หรือแอป TikTok Developer ยังไม่ผ่านการอนุมัติ";
       }
 
       return { 
         success: false, 
         message: `เกิดข้อผิดพลาดจาก TikTok: ${errorMsg}` 
+      };
+    }
+
+    // รอตรวจสอบสถานะจาก TikTok เล็กน้อย (2 วินาที) เพื่อดึง fail_reason หาก TikTok ปฏิเสธทันที
+    let finalStatus = "PROCESSING";
+    let failReason = "";
+    try {
+      await new Promise((r) => setTimeout(r, 2500));
+      const statusCheck = await getTikTokPublishStatus(accessToken, publishResult.publish_id);
+      if (statusCheck.success && statusCheck.status) {
+        finalStatus = statusCheck.status;
+        failReason = statusCheck.fail_reason || "";
+      }
+    } catch (statusErr) {
+      console.warn("[TikTok] Initial status check skipped:", statusErr);
+    }
+
+    if (finalStatus === "FAILED") {
+      return {
+        success: false,
+        message: `TikTok ปฏิเสธการโพสต์: ${failReason || "ไม่ผ่านเกณฑ์การตรวจสอบหรือบัญชีไม่ได้รับอนุญาต (หากอยู่ในโหมด Development ต้องเพิ่มเป็น Test Account ใน TikTok Developer Portal)"}`,
+        publish_id: publishResult.publish_id
       };
     }
 
@@ -257,7 +284,7 @@ export async function postPropertyToTikTokAction(
 
     return {
       success: true,
-      message: "ดำเนินการสำเร็จ!\nส่งแบบร่างสำเร็จ!  กรุณาเปิดแอป TikTok > Inbox > System Notifications เพื่อกดยืนยันการโพสต์",
+      message: "ดำเนินการสำเร็จ!\nส่งแบบร่างสำเร็จ! กรุณาเปิดแอป TikTok > กล่องขาเข้า (Inbox) > การแจ้งเตือนของระบบ (System notifications / ข้อความจาก TikTok) เพื่อกดยืนยันการโพสต์",
       publish_id: publishResult.publish_id
     };
   } catch (err: any) {

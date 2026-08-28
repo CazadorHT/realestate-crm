@@ -196,7 +196,7 @@ export async function publishTikTokPhotoPost(
 
 export interface TikTokPublishStatusResponse {
   success: boolean;
-  status: "PROCESSING" | "FAILED" | "SUCCESS" | "UNKNOWN";
+  status: "PROCESSING" | "FAILED" | "SUCCESS" | "SEND_TO_USER_INBOX" | "UNKNOWN" | string;
   publish_id?: string;
   fail_reason?: string;
   public_url?: string;

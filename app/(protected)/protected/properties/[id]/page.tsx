@@ -21,6 +21,7 @@ import { PropertyHeader } from "@/components/public/property-detail/PropertyHead
 import { PropertyMapSection } from "@/components/public/property-detail/PropertyMapSection";
 import { PropertyGallery } from "@/components/public/PropertyGallery";
 import { PropertySpecs } from "@/components/public/PropertySpecs";
+import { isCbdProperty } from "@/lib/property-utils";
 import { requireAuthContext } from "@/lib/authz";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -425,8 +426,10 @@ export default async function PropertyDetailsPage({
                 title={property.title ?? "-"}
                 isHot={property.is_hot_deal}
                 verified={!!property.verified}
+                isCbd={isCbdProperty(property)}
                 petFriendly={property.is_pet_friendly}
                 allowAirbnb={!!property.allow_airbnb}
+                isTaxRegistered={!!property.is_tax_registered}
                 language={lang}
               />
             </section>

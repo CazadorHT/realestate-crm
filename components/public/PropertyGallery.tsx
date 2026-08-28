@@ -33,6 +33,8 @@ import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { PropertyImage } from "@/features/properties/types";
 import { MdOutlinePets } from "react-icons/md";
 import { FaAirbnb } from "react-icons/fa6";
+import { FaCity } from "react-icons/fa";
+import { HiBuildingOffice2 } from "react-icons/hi2";
 
 import { type Language } from "@/lib/i18n";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
@@ -51,8 +53,10 @@ interface PropertyGalleryProps {
   title: string;
   isHot?: boolean;
   verified?: boolean;
+  isCbd?: boolean;
   petFriendly?: boolean;
   allowAirbnb?: boolean;
+  isTaxRegistered?: boolean;
   propertyId?: string;
   language?: Language;
   imageAlt?: string;
@@ -148,8 +152,10 @@ export function PropertyGallery({
   title,
   isHot,
   verified,
+  isCbd,
   petFriendly,
   allowAirbnb,
+  isTaxRegistered,
   propertyId,
   language: customLanguage,
   imageAlt,
@@ -299,6 +305,16 @@ export function PropertyGallery({
             </div>
           )}
 
+          {/* Prime CBD Badge */}
+          {isCbd && (
+            <div className="flex items-center bg-white/90 backdrop-blur-md text-emerald-700 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+              <FaCity className="w-5 h-5 shrink-0 text-emerald-600" />
+              <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
+                Prime CBD
+              </span>
+            </div>
+          )}
+
           {/* Pet Friendly Badge */}
           {petFriendly && (
             <div className="flex items-center bg-white/90 backdrop-blur-md text-orange-600 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
@@ -315,6 +331,16 @@ export function PropertyGallery({
               <FaAirbnb className="w-5 h-5 shrink-0" />
               <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 Airbnb
+              </span>
+            </div>
+          )}
+
+          {/* Company Registered Badge */}
+          {isTaxRegistered && (
+            <div className="flex items-center bg-emerald-600/90 backdrop-blur-md text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+              <HiBuildingOffice2 className="w-5 h-5 shrink-0" />
+              <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[110px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
+                {language === "th" ? "จดบริษัทได้" : "Company Reg."}
               </span>
             </div>
           )}
@@ -382,6 +408,26 @@ export function PropertyGallery({
                 </span>
               </div>
             )}
+            {isCbd && (
+              <div
+                className={`h-7 flex items-center bg-white/90 backdrop-blur-md text-emerald-700 rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                  inlineActiveIndex !== 0
+                    ? "w-7 justify-center p-0"
+                    : "px-2 justify-start"
+                }`}
+              >
+                <FaCity className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span
+                  className={`overflow-hidden whitespace-nowrap text-[9px] font-bold transition-all duration-300 uppercase ${
+                    inlineActiveIndex !== 0
+                      ? "max-w-0 opacity-0 ml-0"
+                      : "max-w-[150px] opacity-100 ml-1"
+                  }`}
+                >
+                  Prime CBD
+                </span>
+              </div>
+            )}
             {petFriendly && (
               <div
                 className={`h-7 flex items-center bg-white/90 backdrop-blur-md text-orange-600 rounded-full shadow-lg transition-all duration-300 cursor-default ${
@@ -419,6 +465,26 @@ export function PropertyGallery({
                   }`}
                 >
                   Airbnb
+                </span>
+              </div>
+            )}
+            {isTaxRegistered && (
+              <div
+                className={`h-7 flex items-center bg-emerald-600/90 backdrop-blur-md text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                  inlineActiveIndex !== 0
+                    ? "w-7 justify-center p-0"
+                    : "px-2 justify-start"
+                }`}
+              >
+                <HiBuildingOffice2 className="w-3.5 h-3.5 shrink-0" />
+                <span
+                  className={`overflow-hidden whitespace-nowrap text-[9px] font-bold transition-all duration-300 uppercase ${
+                    inlineActiveIndex !== 0
+                      ? "max-w-0 opacity-0 ml-0"
+                      : "max-w-[150px] opacity-100 ml-1"
+                  }`}
+                >
+                  {language === "th" ? "จดบริษัทได้" : "Company Reg."}
                 </span>
               </div>
             )}

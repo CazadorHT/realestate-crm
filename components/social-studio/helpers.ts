@@ -255,7 +255,7 @@ function formatSinglePriceValue(
   }
 
   const numStr = amount.toLocaleString();
-  return isRent ? `฿${numStr} ${rentSuffix}` : `฿${numStr}`;
+  return isRent ? `฿ ${numStr} ${rentSuffix}` : `฿ ${numStr}`;
 }
 
 /**

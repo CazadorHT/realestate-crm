@@ -115,6 +115,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { isCbdProperty } from "@/lib/property-utils";
 
 // Hardened types for tables that might be missing from generated types
 interface ExtendedDatabase extends Database {
@@ -449,8 +450,6 @@ export function Step6Review({ mode }: Step6ReviewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const isAiActive = isGenerating || isTranslating || isTranslatingAll;
-  const isAiActiveRef = React.useRef(isAiActive);
-  isAiActiveRef.current = isAiActive;
   useEffect(() => {
     // Only set form value when isAiActive actually changes, no cleanup to avoid cascading updates
     form.setValue("is_ai_generating", isAiActive, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
@@ -767,8 +766,10 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                 title={values.title}
                 isHot={false}
                 verified={values.verified}
+                isCbd={values.is_cbd || isCbdProperty({ popular_area: values.popular_area })}
                 petFriendly={values.is_pet_friendly}
                 allowAirbnb={values.allow_airbnb}
+                isTaxRegistered={values.is_tax_registered}
                 language={previewLanguage}
               />
             </section>

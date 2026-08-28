@@ -938,12 +938,16 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
             cn: area.cn,
             ru: area.ru,
           });
-          form.setValue("popular_area", area.th, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-          form.setValue("popular_area_en", area.en, { shouldDirty: true });
-          form.setValue("popular_area_cn", area.cn, { shouldDirty: true });
-          form.setValue("popular_area_ru", area.ru, { shouldDirty: true });
-          if (isCbdProperty({ popular_area: area.th })) {
-            form.setValue("is_cbd", true, { shouldDirty: true, shouldValidate: true });
+          // Do not overwrite existing popular_area if the user already specified one (if empty, populate it)
+          const currentPopularArea = form.getValues("popular_area")?.trim();
+          if (!currentPopularArea) {
+            form.setValue("popular_area", area.th, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+            form.setValue("popular_area_en", area.en, { shouldDirty: true });
+            form.setValue("popular_area_cn", area.cn, { shouldDirty: true });
+            form.setValue("popular_area_ru", area.ru, { shouldDirty: true });
+            if (isCbdProperty({ popular_area: area.th })) {
+              form.setValue("is_cbd", true, { shouldDirty: true, shouldValidate: true });
+            }
           }
           setShowAreaPrompt(false);
         }}
