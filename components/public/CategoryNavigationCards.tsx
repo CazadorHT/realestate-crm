@@ -44,7 +44,7 @@ export function CategoryNavigationCards({
                     ? "独栋奢华别墅与豪宅"
                     : language === "ru"
                       ? "Роскошные виллы и дома"
-                      : "วิลล่าหรูและคฤหาสน์"}
+                      : "บ้านหรูและพูลวิลล่า"}
               </h3>
               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-2">
                 {language === "en"
@@ -69,7 +69,7 @@ export function CategoryNavigationCards({
               <span>→</span>
             </div>
           </div>
-          <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 xl:w-44 xl:h-44 shrink-0 -mr-2 sm:-mr-3 z-10">
+          <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 -mr-2 sm:-mr-3 z-10">
             <Image
               src="/images/luxury_vilas.webp"
               alt="Luxury Villa"
@@ -118,12 +118,12 @@ export function CategoryNavigationCards({
                     ? "浏览所有宠物友好房源"
                     : language === "ru"
                       ? "Посмотреть все варианты"
-                      : "ดูคอนโดเลี้ยงสัตว์ได้"}
+                      : "ดูโครงการเลี้ยงสัตว์ได้"}
               </span>
               <span>→</span>
             </div>
           </div>
-          <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 xl:w-44 xl:h-44 shrink-0 -mr-2 sm:-mr-3 z-10">
+          <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 -mr-2 sm:-mr-3 z-10">
             <Image
               src="/images/pet-friendly-condo.webp"
               alt="Pet Friendly Condo"
@@ -152,7 +152,7 @@ export function CategoryNavigationCards({
                     ? "写字楼与商用物业"
                     : language === "ru"
                       ? "Офисы и коммерция"
-                      : "ออฟฟิศและพื้นที่ธุรกิจ"}
+                      : "ออฟฟิศและธุรกิจ"}
               </h3>
               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-2">
                 {language === "en"
@@ -167,7 +167,7 @@ export function CategoryNavigationCards({
             <div className="text-xs font-bold text-blue-600 flex items-center gap-1.5 group-hover:translate-x-1.5 transition-transform pt-1">
               <span>
                 {language === "en"
-                  ? "Explore Office Spaces"
+                  ? "Explore Office"
                   : language === "cn"
                     ? "浏览所有写字楼"
                     : language === "ru"
@@ -177,7 +177,7 @@ export function CategoryNavigationCards({
               <span>→</span>
             </div>
           </div>
-          <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 xl:w-44 xl:h-44 shrink-0 -mr-2 sm:-mr-3 z-10">
+          <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 -mr-2 sm:-mr-3 z-10">
             <Image
               src="/images/office.webp"
               alt="Offices & Commercials"
@@ -206,7 +206,7 @@ export function CategoryNavigationCards({
                     ? "核心CBD与新CBD精选"
                     : language === "ru"
                       ? "CBD и New CBD районы"
-                      : "ทำเล CBD & New CBD"}
+                      : "CBD & New CBD"}
               </h3>
               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-2">
                 {language === "en"
@@ -226,12 +226,12 @@ export function CategoryNavigationCards({
                     ? "浏览所有CBD房源"
                     : language === "ru"
                       ? "Посмотреть объекты CBD"
-                      : "ดูทรัพย์ย่าน CBD ทั้งหมด"}
+                      : "ดูทรัพย์ย่าน CBD "}
               </span>
               <span>→</span>
             </div>
           </div>
-          <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 xl:w-44 xl:h-44 shrink-0 -mr-2 sm:-mr-3 z-10">
+          <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 -mr-2 sm:-mr-3 z-10">
             <Image
               src="/images/cbd-prime-city.webp"
               alt="Prime CBD & New CBD"
