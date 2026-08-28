@@ -972,7 +972,7 @@
     "urgency_combined": "Popular Area • {count} people viewed in 24h",
     "trust_avg_response_time": "Avg. response time: 15 mins",
     "cta_book_viewing_free": "Book Free Exclusive Viewing",
-    "cta_line_viewing": "Book Viewing (LINE)",
+    "cta_line_viewing": "Book Viewing",
     "cta_call_agent": "Call Agent Now",
     "contact_dialog": {
       "trigger": "Interested / Book Viewing",

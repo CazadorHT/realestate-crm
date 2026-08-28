@@ -137,8 +137,8 @@ export function MobilePropertyActions({
                   } catch (e) {}
                 }}
               >
-                <SiGooglemessages className="w-4 h-4 mr-1 sm:mr-1.5 shrink-0" />
-                <span className="truncate">{t("property.book_viewing")}</span>
+                <SiGooglemessages className="w-4 h-4  sm:mr-1.5 shrink-0" />
+                <span className="truncate sm:block hidden">{t("property.book_viewing")}</span>
               </Button>
             }
           />

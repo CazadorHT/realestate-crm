@@ -181,30 +181,6 @@ export function PropertyGallery({
   // Thumbnail container ref for auto-scrolling
   const thumbContainerRef = useRef<HTMLDivElement>(null);
 
-  // Lightbox Touch Handlers Fallback
-  const lightboxTouchStartX = useRef(0);
-  const lightboxTouchEndX = useRef(0);
-
-  const handleLightboxTouchStart = (e: React.TouchEvent) => {
-    lightboxTouchStartX.current = e.touches[0].clientX;
-    lightboxTouchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleLightboxTouchMove = (e: React.TouchEvent) => {
-    lightboxTouchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleLightboxTouchEnd = () => {
-    const deltaX = lightboxTouchStartX.current - lightboxTouchEndX.current;
-    if (Math.abs(deltaX) > 30) {
-      if (deltaX > 0) {
-        handleNext();
-      } else {
-        handlePrev();
-      }
-    }
-  };
-
   // Auto-scroll active thumbnail into view when current index or lightbox visibility changes
   useEffect(() => {
     if (open && thumbContainerRef.current) {
@@ -535,7 +511,7 @@ export function PropertyGallery({
 
           <div
             ref={scrollRef}
-            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar touch-pan-x touch-pan-y"
+            className="flex overflow-x-auto snap-x snap-mandatory h-full w-full no-scrollbar touch-pan-x overscroll-x-contain"
             onScroll={(e) => {
               const scrollLeft = e.currentTarget.scrollLeft;
               const width = e.currentTarget.offsetWidth;
@@ -733,12 +709,12 @@ export function PropertyGallery({
               fixed! inset-0!
               left-0! top-0!
               translate-x-0! translate-y-0!
-              w-screen! h-screen!
+              w-full! h-[100dvh]! max-h-[100dvh]!
               max-w-none!
               rounded-none!
-              p-0 border-none bg-black/85
+              p-0 border-none bg-black/90
               flex flex-col items-center justify-center
-              z-150"
+              z-150 overflow-hidden"
           showCloseButton={false}
           overlayClassName="z-150"
         >
@@ -752,8 +728,11 @@ export function PropertyGallery({
             </DialogDescription>
           </VisuallyHidden>
 
-          {/* Lightbox Header - Split Design matching screenshot but refined */}
-          <div className="absolute top-4 left-4 right-16 z-50 flex flex-col gap-2 pointer-events-none">
+          {/* Lightbox Header - Split Design with Safe Area Top */}
+          <div
+            className="absolute top-0 left-0 right-16 z-50 flex flex-col gap-2 p-4 pointer-events-none"
+            style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))" }}
+          >
             <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 w-fit max-w-full">
               <span className="text-white font-bold text-sm md:text-base line-clamp-1">
                 {title}
@@ -769,17 +748,13 @@ export function PropertyGallery({
           <button
             onClick={() => setOpen(false)}
             aria-label="Close gallery"
-            className="absolute top-4 right-4 p-2.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg"
+            className="absolute right-4 p-2.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg cursor-pointer"
+            style={{ top: "max(1rem, env(safe-area-inset-top, 1rem))" }}
           >
             <X className="h-6 w-6" />
           </button>
 
-          <div
-            className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12 overflow-hidden touch-pan-y"
-            onTouchStart={handleLightboxTouchStart}
-            onTouchMove={handleLightboxTouchMove}
-            onTouchEnd={handleLightboxTouchEnd}
-          >
+          <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-6 md:p-10 mb-24 md:mb-28 mt-20 md:mt-24 overflow-hidden select-none">
             <AnimatePresence initial={false} custom={direction}>
               <m.div
                 key={currentIndex}
@@ -804,24 +779,24 @@ export function PropertyGallery({
                 animate="center"
                 exit="exit"
                 transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  x: { type: "spring", stiffness: 350, damping: 35 },
                   opacity: { duration: 0.2 },
                 }}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={1}
+                dragElastic={0.2}
                 onDragEnd={(e, { offset, velocity }) => {
                   const swipe =
-                    Math.abs(offset.x) > 25 || Math.abs(velocity.x) > 200;
+                    Math.abs(offset.x) > 30 || Math.abs(velocity.x) > 300;
                   if (swipe) {
-                    if (offset.x > 0) {
+                    if (offset.x > 0 || velocity.x > 300) {
                       handlePrev();
-                    } else {
+                    } else if (offset.x < 0 || velocity.x < -300) {
                       handleNext();
                     }
                   }
                 }}
-                className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 select-none touch-none"
+                className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 select-none touch-pan-y"
               >
                 <ImageWithFallback
                   img={sortedImages[currentIndex]}
@@ -863,18 +838,23 @@ export function PropertyGallery({
             </>
           )}
 
-          {/* Thumbnails Strip (Bottom) - Compact */}
-          <div className="absolute bottom-2 md:bottom-4 left-0 right-0 z-50 px-2 md:px-4 pointer-events-auto">
+          {/* Thumbnails Strip (Bottom Footer) - Elevated above iOS Safari Navigation Bar */}
+          <div
+            className="absolute bottom-0 left-0 right-0 z-50 px-2 md:px-4 pt-3 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-auto"
+            style={{
+              paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
+            }}
+          >
             <div
               ref={thumbContainerRef}
-              className="flex justify-start md:justify-center items-center gap-1.5 md:gap-2 overflow-x-auto py-2 md:py-3 no-scrollbar max-w-full w-max mx-auto"
+              className="flex justify-start md:justify-center items-center gap-1.5 md:gap-2 overflow-x-auto py-1.5 md:py-2.5 no-scrollbar max-w-full w-max mx-auto"
             >
               {sortedImages.map((img, idx) => (
                 <button
                   key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
                   onClick={() => setCurrentIndex(idx)}
                   className={cn(
-                    "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0",
+                    "relative w-12 h-12 md:w-16 md:h-16 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0 cursor-pointer",
                     currentIndex === idx
                       ? "border-white scale-105 md:scale-110 shadow-lg"
                       : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60",

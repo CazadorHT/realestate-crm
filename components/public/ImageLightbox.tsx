@@ -37,29 +37,6 @@ export function ImageLightbox({
     }
   }, [currentIndex, isOpen]);
 
-  const lightboxTouchStartX = useRef(0);
-  const lightboxTouchEndX = useRef(0);
-
-  const handleLightboxTouchStart = (e: React.TouchEvent) => {
-    lightboxTouchStartX.current = e.touches[0].clientX;
-    lightboxTouchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleLightboxTouchMove = (e: React.TouchEvent) => {
-    lightboxTouchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleLightboxTouchEnd = () => {
-    const deltaX = lightboxTouchStartX.current - lightboxTouchEndX.current;
-    if (Math.abs(deltaX) > 30) {
-      if (deltaX > 0) {
-        handleNext();
-      } else {
-        handlePrev();
-      }
-    }
-  };
-
   const handleNext = useCallback(() => {
     setDirection(1);
     onIndexChange((currentIndex + 1) % images.length);
@@ -93,18 +70,21 @@ export function ImageLightbox({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="fixed! inset-0! left-0! top-0! translate-x-0! translate-y-0! w-screen! h-screen! max-w-none! rounded-none! p-0 border-none bg-black/90 flex flex-col items-center justify-center z-150"
+        className="fixed! inset-0! left-0! top-0! translate-x-0! translate-y-0! w-full! h-[100dvh]! max-h-[100dvh]! max-w-none! rounded-none! p-0 border-none bg-black/90 flex flex-col items-center justify-center z-150 overflow-hidden"
         showCloseButton={false}
         overlayClassName="z-150"
       >
         <VisuallyHidden>
           <DialogTitle>
-            {title || "Gallery"} ({currentIndex + 1}/{images.length})
+            รูปภาพ: {title || "Image"} ({currentIndex + 1}/{images.length})
           </DialogTitle>
         </VisuallyHidden>
 
-        {/* Header Bar */}
-        <div className="absolute top-4 left-4 right-16 z-50 flex flex-col gap-2 pointer-events-none">
+        {/* Header with Safe Area Top */}
+        <div
+          className="absolute top-0 left-0 right-16 z-50 flex flex-col gap-2 p-4 pointer-events-none"
+          style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))" }}
+        >
           {title && (
             <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 w-fit max-w-full">
               <span className="text-white font-bold text-sm md:text-base line-clamp-1">
@@ -123,18 +103,13 @@ export function ImageLightbox({
         <button
           onClick={onClose}
           aria-label="Close gallery"
-          className="absolute top-4 right-4 p-2.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg"
+          className="absolute right-4 p-2.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg cursor-pointer"
+          style={{ top: "max(1rem, env(safe-area-inset-top, 1rem))" }}
         >
           <X className="h-6 w-6" />
         </button>
 
-        {/* Main Content Area */}
-        <div
-          className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12 overflow-hidden touch-pan-y"
-          onTouchStart={handleLightboxTouchStart}
-          onTouchMove={handleLightboxTouchMove}
-          onTouchEnd={handleLightboxTouchEnd}
-        >
+        <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-6 md:p-10 mb-24 md:mb-28 mt-20 md:mt-24 overflow-hidden select-none">
           <AnimatePresence initial={false} custom={direction}>
             <m.div
               key={currentIndex}
@@ -159,24 +134,24 @@ export function ImageLightbox({
               animate="center"
               exit="exit"
               transition={{
-                x: { type: "spring", stiffness: 300, damping: 30 },
+                x: { type: "spring", stiffness: 350, damping: 35 },
                 opacity: { duration: 0.2 },
               }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={1}
+              dragElastic={0.2}
               onDragEnd={(e, { offset, velocity }) => {
                 const swipe =
-                  Math.abs(offset.x) > 25 || Math.abs(velocity.x) > 200;
+                  Math.abs(offset.x) > 30 || Math.abs(velocity.x) > 300;
                 if (swipe) {
-                  if (offset.x > 0) {
+                  if (offset.x > 0 || velocity.x > 300) {
                     handlePrev();
-                  } else {
+                  } else if (offset.x < 0 || velocity.x < -300) {
                     handleNext();
                   }
                 }
               }}
-              className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 select-none touch-none"
+              className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 select-none touch-pan-y"
             >
               <div className="relative w-full h-full">
                 <Image
@@ -201,7 +176,7 @@ export function ImageLightbox({
                 handlePrev();
               }}
               aria-label="Previous image"
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50 cursor-pointer"
             >
               <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
             </button>
@@ -211,18 +186,23 @@ export function ImageLightbox({
                 handleNext();
               }}
               aria-label="Next image"
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50 cursor-pointer"
             >
               <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
             </button>
           </>
         )}
 
-        {/* Thumbnails */}
-        <div className="absolute bottom-2 md:bottom-4 left-0 right-0 z-50 px-2 md:px-4 pointer-events-auto">
+        {/* Thumbnails (Bottom Footer) */}
+        <div
+          className="absolute bottom-0 left-0 right-0 z-50 px-2 md:px-4 pt-3 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-auto"
+          style={{
+            paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
+          }}
+        >
           <div
             ref={thumbContainerRef}
-            className="flex justify-start md:justify-center items-center gap-1.5 md:gap-2 overflow-x-auto py-2 md:py-3 no-scrollbar max-w-full w-max mx-auto"
+            className="flex justify-start md:justify-center items-center gap-1.5 md:gap-2 overflow-x-auto py-1.5 md:py-2.5 no-scrollbar max-w-full w-max mx-auto"
           >
             {images.map((img, idx) => (
               <button
@@ -232,7 +212,7 @@ export function ImageLightbox({
                   onIndexChange(idx);
                 }}
                 className={cn(
-                  "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0",
+                  "relative w-12 h-12 md:w-16 md:h-16 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0 cursor-pointer",
                   currentIndex === idx
                     ? "border-white scale-105 md:scale-110 shadow-lg"
                     : "border-white/30 opacity-60 hover:opacity-100 hover:border-white/60",

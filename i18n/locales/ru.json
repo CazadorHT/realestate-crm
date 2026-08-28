@@ -967,7 +967,7 @@
     "urgency_combined": "Популярный район • {count} просмотров за 24 ч",
     "trust_avg_response_time": "Среднее время ответа: 15 минут",
     "cta_book_viewing_free": "Бесплатный эксклюзивный просмотр",
-    "cta_line_viewing": "Запись на просмотр (LINE)",
+    "cta_line_viewing": "Запись на просмотр",
     "cta_call_agent": "Позвонить агенту",
     "contact_dialog": {
       "trigger": "Интересно / Просмотр",
