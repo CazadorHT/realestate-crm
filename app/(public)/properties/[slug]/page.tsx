@@ -121,7 +121,7 @@ export default async function PublicPropertyDetailPage(props: {
         {/* Gallery: order-1 on mobile, order-2 on desktop */}
         <div className="order-1 lg:order-2 pt-16 lg:pt-0">
           <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8 mt-0 lg:mt-8">
-            <section className="mb-0 lg:mb-10">
+            <section className="mb-0">
               <PropertyGallery
                 images={data.images}
                 title={getLocaleValue(data, "title", language)}
@@ -151,7 +151,7 @@ export default async function PublicPropertyDetailPage(props: {
         {/* 3. Main Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
           {/* Left Content */}
-          <div className="space-y-6 md:space-y-10">
+          <div className="space-y-6">
             <PropertySpecs
               {...data}
               type={data.property_type}

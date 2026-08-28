@@ -208,9 +208,15 @@ export function PropertyGallery({
   // Auto-scroll active thumbnail into view when current index or lightbox visibility changes
   useEffect(() => {
     if (open && thumbContainerRef.current) {
-      const activeThumb = thumbContainerRef.current.children[currentIndex] as HTMLElement;
+      const activeThumb = thumbContainerRef.current.children[
+        currentIndex
+      ] as HTMLElement;
       if (activeThumb) {
-        activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        activeThumb.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
       }
     }
   }, [currentIndex, open]);
@@ -238,7 +244,9 @@ export function PropertyGallery({
 
   const handlePrev = () => {
     setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + sortedImages.length) % sortedImages.length);
+    setCurrentIndex(
+      (prev) => (prev - 1 + sortedImages.length) % sortedImages.length,
+    );
   };
 
   // Keyboard Navigation
@@ -250,7 +258,9 @@ export function PropertyGallery({
         setOpen(false);
       } else if (e.key === "ArrowLeft") {
         setDirection(-1);
-        setCurrentIndex((prev) => (prev - 1 + sortedImages.length) % sortedImages.length);
+        setCurrentIndex(
+          (prev) => (prev - 1 + sortedImages.length) % sortedImages.length,
+        );
       } else if (e.key === "ArrowRight") {
         setDirection(1);
         setCurrentIndex((prev) => (prev + 1) % sortedImages.length);
@@ -339,7 +349,7 @@ export function PropertyGallery({
           {isTaxRegistered && (
             <div className="flex items-center bg-emerald-600/90 backdrop-blur-md text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
               <HiBuildingOffice2 className="w-5 h-5 shrink-0" />
-              <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[110px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
+              <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 {language === "th" ? "จดบริษัทได้" : "Company Reg."}
               </span>
             </div>
@@ -355,7 +365,10 @@ export function PropertyGallery({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (typeof window !== "undefined" && window.history.length > 1) {
+                if (
+                  typeof window !== "undefined" &&
+                  window.history.length > 1
+                ) {
                   router.back();
                 } else {
                   router.push("/properties");
@@ -493,7 +506,9 @@ export function PropertyGallery({
           <div className="absolute top-3 right-3 z-35 flex flex-col items-end gap-2">
             <div className="h-7 px-2.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white flex items-center justify-center shadow-md transition-all border border-white/15 text-[10px] font-medium cursor-default select-none">
               <ImageIcon className="w-3 h-3 mr-1 shrink-0" />
-              <span>{sortedImages.length} {t("common.images")}</span>
+              <span>
+                {sortedImages.length} {t("common.images")}
+              </span>
             </div>
           </div>
 
@@ -503,7 +518,7 @@ export function PropertyGallery({
               {sortedImages
                 .slice(
                   Math.floor(inlineActiveIndex / 10) * 10,
-                  Math.floor(inlineActiveIndex / 10) * 10 + 10
+                  Math.floor(inlineActiveIndex / 10) * 10 + 10,
                 )
                 .map((_, i) => (
                   <div
@@ -529,7 +544,10 @@ export function PropertyGallery({
                 setInlineActiveIndex(newIndex);
               }
               // Progressive load: expand when user swipes near end of visible images
-              if (newIndex >= mobileImages.length - 2 && mobileImages.length < sortedImages.length) {
+              if (
+                newIndex >= mobileImages.length - 2 &&
+                mobileImages.length < sortedImages.length
+              ) {
                 setVisibleMobileCount(sortedImages.length);
               }
             }}
@@ -566,7 +584,7 @@ export function PropertyGallery({
                 />
                 {/* Main Content Image */}
                 <ImageWithFallback
-                   img={img}
+                  img={img}
                   alt={`${imageAlt || title} - ${idx + 1}`}
                   containerClassName="relative z-10 "
                   className="object-contain "
@@ -581,7 +599,7 @@ export function PropertyGallery({
         </div>
 
         {/* Desktop Grid (Hidden on Mobile and Small Tablets) */}
-        <div className="hidden lg:grid grid-cols-4 gap-1.5 md:gap-2 h-[350px] lg:h-[450px] xl:h-[550px] rounded-2xl lg:rounded-3xl overflow-hidden relative">
+        <div className="hidden lg:grid grid-cols-4 gap-1.5 md:gap-2 h-[350px] lg:h-[450px] xl:h-[550px] rounded-2xl lg:rounded-3xl overflow-hidden relative shadow-xl shadow-slate-200/70 ">
           {/* Main Image (Large Left) */}
           <div
             className={`${
@@ -633,8 +651,8 @@ export function PropertyGallery({
                 sortedImages.length === 2
                   ? "grid-cols-1"
                   : sortedImages.length === 3
-                  ? "grid-cols-1 grid-rows-2"
-                  : "grid-cols-2 grid-rows-2"
+                    ? "grid-cols-1 grid-rows-2"
+                    : "grid-cols-2 grid-rows-2"
               }`}
             >
               {subImages.map((img, idx) => {
@@ -698,7 +716,7 @@ export function PropertyGallery({
           <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 z-30">
             <Button
               variant="secondary"
-              className="bg-white/90 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-9 lg:h-10 px-3 lg:px-4 rounded-xl text-sm font-semibold"
+              className="bg-white/80 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-9 lg:h-10 px-3 lg:px-4 rounded-xl text-sm font-semibold"
               onClick={() => setOpen(true)}
             >
               <ImageIcon className="w-4 h-4 mr-1.5 lg:mr-2" />
@@ -737,7 +755,7 @@ export function PropertyGallery({
           {/* Lightbox Header - Split Design matching screenshot but refined */}
           <div className="absolute top-4 left-4 right-16 z-50 flex flex-col gap-2 pointer-events-none">
             <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 w-fit max-w-full">
-               <span className="text-white font-bold text-sm md:text-base line-clamp-1">
+              <span className="text-white font-bold text-sm md:text-base line-clamp-1">
                 {title}
               </span>
             </div>

@@ -78,7 +78,7 @@ export default function Loading() {
         {/* 3. Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] xl:grid-cols-[2fr_1fr] gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
             {/* Left Content */}
-            <div className="space-y-6 md:space-y-10">
+            <div className="space-y-6">
               {/* Specs Grid */}
               <section className="animate-pulse">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">

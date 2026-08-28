@@ -473,7 +473,7 @@ export function PropertyCardImage({
         {property.is_tax_registered && (
           <div className={`flex items-center bg-emerald-600/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <HiBuildingOffice2 className="w-5 h-5 shrink-0" />
-            <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[110px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
+            <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               {language === "th" ? "จดบริษัทได้" : "Company Reg."}
             </span>
           </div>

@@ -33,7 +33,7 @@ export function PropertyCardFooter({
     const monthsText = `${months} ${t("common.months_short")}`;
     if (months >= 12 && months % 12 === 0) {
       const years = months / 12;
-      return `${monthsText} (${years} ${t("common.year")})`;
+      return `${years} ${t("common.year")} (${monthsText})`;
     }
     return monthsText;
   };

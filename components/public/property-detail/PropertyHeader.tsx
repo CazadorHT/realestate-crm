@@ -195,9 +195,23 @@ export function PropertyHeader({
     return result;
   };
 
-  const provinceStr = getLocaleValue(property, "province", language);
-  const districtStr = getLocaleValue(property, "district", language);
-  const subdistrictStr = getLocaleValue(property, "subdistrict", language);
+  const addressSource =
+    (property as any)?.properties_details?.address_info ||
+    (property as any)?.address_info ||
+    property;
+
+  const provinceStr =
+    getLocaleValue(property, "province", language) ||
+    getLocaleValue(addressSource, "province", language);
+  const districtStr =
+    getLocaleValue(property, "district", language) ||
+    getLocaleValue(addressSource, "district", language);
+  const subdistrictStr =
+    getLocaleValue(property, "subdistrict", language) ||
+    getLocaleValue(addressSource, "subdistrict", language);
+  const popularAreaStr =
+    getLocaleValue(property, "popular_area", language) ||
+    getLocaleValue(addressSource, "popular_area", language);
 
   const { localized, loading: locationLoading } = useAddressLocalization(
     provinceStr,
@@ -211,16 +225,50 @@ export function PropertyHeader({
   const displayDistrict = localized.district || districtStr;
   const displaySubdistrict = localized.subdistrict || subdistrictStr;
 
-  const locationParts =
-    incomingLocationParts ||
-    [
-      getLocaleValue(property, "popular_area", language),
-      displaySubdistrict,
-      displayDistrict,
-      displayProvince,
-    ]
-      .filter(Boolean)
-      .join(", ");
+  const normalizeLoc = (name?: string | null): string => {
+    if (!name) return "";
+    return name
+      .replace(/^(เขต|อำเภอ|อ\.|แขวง|ตำบล|ต\.|จังหวัด|จ\.)\s*/i, "")
+      .replace(/\s*(district|khet|sub-district|subdistrict|tambon|khwaeng)$/i, "")
+      .replace(/^(district|khet|sub-district|subdistrict|tambon|khwaeng)\s*/i, "")
+      .trim()
+      .toLowerCase();
+  };
+
+  const normArea = normalizeLoc(popularAreaStr);
+  const normDistrict = normalizeLoc(displayDistrict);
+  const normSubdistrict = normalizeLoc(displaySubdistrict);
+
+  // If district name matches or contains popular area, omit district to avoid "สาทร, เขตสาทร"
+  const isDistrictRedundant = Boolean(
+    normArea &&
+      normDistrict &&
+      (normArea === normDistrict ||
+        normDistrict.includes(normArea) ||
+        normArea.includes(normDistrict)),
+  );
+
+  // If subdistrict name matches popular area or district, omit subdistrict to avoid duplication
+  const isSubdistrictRedundant = Boolean(
+    (normArea && normSubdistrict === normArea) ||
+      (!isDistrictRedundant && normDistrict && normSubdistrict === normDistrict),
+  );
+
+  const rawParts = [
+    popularAreaStr,
+    !isSubdistrictRedundant ? displaySubdistrict : null,
+    !isDistrictRedundant ? displayDistrict : null,
+    displayProvince,
+  ].filter(Boolean) as string[];
+
+  const uniqueParts = rawParts.filter(
+    (item, index, self) =>
+      self.findIndex(
+        (other) => normalizeLoc(other) === normalizeLoc(item),
+      ) === index,
+  );
+
+  const locationParts = incomingLocationParts || uniqueParts.join(", ");
 
   const unitSpecialFeatures = getUnitSpecialFeatures(property, t);
   const finalKeySellingPoints = incomingKeySellingPoints || unitSpecialFeatures;
