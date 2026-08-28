@@ -12,6 +12,7 @@ import {
   FacetRPCParams
 } from "@/features/properties/types/search";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { getPopularAreasLookupMap } from "@/features/public/popular-areas";
 import { detectSearchIntent } from "../search-config";
 
 export type PropertyRow = {
@@ -449,7 +450,6 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         if (popularAreaNames.length > 0) {
           try {
-            const { getPopularAreasLookupMap } = await import("@/features/public/popular-areas");
             const lookupMap = await getPopularAreasLookupMap();
             popularAreaNames.forEach((name) => {
               const matched = lookupMap[name.trim().toLowerCase()];
