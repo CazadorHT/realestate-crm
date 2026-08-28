@@ -56,6 +56,7 @@
   },
   "common": {
     "id_copied": "ID объекта скопирован",
+    "copy_property_id": "Скопировать ID",
     "verified_100": "100% Проверено",
     "safe_transaction": "Безопасные сделки",
     "fast_response": "Быстрый ответ в течение 24ч",
@@ -955,6 +956,8 @@
     "viewing_msg": "Меня интересует просмотр этого объекта. Я доступен...",
     "inquiry_msg": "Я хотел бы получить больше информации о...",
     "share_property": "Поделиться",
+    "view_area_properties": "Все объекты в районе {area}",
+    "view_project": "Посмотреть проект {project}",
     "book_viewing": "Записаться на просмотр",
     "inquiry": "Запрос",
     "social_proof_saved": "Сохранили {count} раз",

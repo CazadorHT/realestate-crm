@@ -270,6 +270,26 @@ export function PropertyHeader({
 
   const locationParts = incomingLocationParts || uniqueParts.join(", ");
 
+  // Mobile Smart Truncate: [Primary Location, Short Province]
+  const shortProvince =
+    displayProvince === "กรุงเทพมหานคร"
+      ? "กรุงเทพฯ"
+      : displayProvince;
+
+  const shortPrimary =
+    popularAreaStr ||
+    (!isDistrictRedundant ? displayDistrict : null) ||
+    displaySubdistrict;
+
+  const shortRawParts = [shortPrimary, shortProvince].filter(Boolean) as string[];
+
+  const shortUniqueParts = shortRawParts.filter(
+    (item, index, self) =>
+      self.findIndex((other) => normalizeLoc(other) === normalizeLoc(item)) === index,
+  );
+
+  const shortLocationParts = incomingLocationParts || shortUniqueParts.join(", ");
+
   const unitSpecialFeatures = getUnitSpecialFeatures(property, t);
   const finalKeySellingPoints = incomingKeySellingPoints || unitSpecialFeatures;
 
@@ -340,7 +360,7 @@ export function PropertyHeader({
 
             <div className="flex flex-col lg:items-start gap-4 lg:gap-0">
               <div className="flex lg:flex-row flex-col gap-4 w-full justify-between lg:items-end items-start">
-                <div className="space-y-2.5 lg:space-y-3 grow min-w-0 xl:max-w-[1000px]">
+                <div className="space-y-2.5 lg:space-y-3 grow min-w-0 xl:max-w-250">
                   <div className="flex w-full items-center gap-1.5 md:gap-2 overflow-x-auto no-scrollbar flex-nowrap py-1">
                     <Badge
                       className={`shrink-0 rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
@@ -373,12 +393,36 @@ export function PropertyHeader({
                       </Badge>
                     )}
 
+                    {popularAreaStr && (
+                      <Link
+                        href={
+                          property.popular_area_slug
+                            ? `/areas/${property.popular_area_slug}`
+                            : `/properties?popular_area=${encodeURIComponent(
+                                typeof property.popular_area === "object"
+                                  ? property.popular_area?.th || popularAreaStr
+                                  : property.popular_area || popularAreaStr,
+                              )}`
+                        }
+                        title={t("property.view_area_properties", { area: popularAreaStr }) || `ดูทรัพย์ทั้งหมดในย่าน ${popularAreaStr}`}
+                        className="shrink-0 group/area"
+                      >
+                        <Badge
+                          variant="outline"
+                          className="shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white shadow-2xs hover:shadow-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 active:scale-95"
+                        >
+                          <MapPin className="w-3.5 h-3.5 text-current shrink-0" />
+                          <span>{popularAreaStr}</span>
+                        </Badge>
+                      </Link>
+                    )}
+
                     {property.is_fully_furnished && (
                       <Badge
                         variant="outline"
                         className="shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
                       >
-                        ✨ {t("property.specs.fully_furnished")}
+                      {t("property.specs.fully_furnished")}
                       </Badge>
                     )}
 
@@ -387,7 +431,7 @@ export function PropertyHeader({
                         variant="outline"
                         className="shrink-0 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
                       >
-                        🏗️ {t("property.specs.bare_shell")}
+                      {t("property.specs.bare_shell")}
                       </Badge>
                     )}
                   </div>
@@ -409,7 +453,7 @@ export function PropertyHeader({
                           <Link
                             href={`/projects/${property.project.slug}`}
                             className="group/proj h-9 lg:h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
-                            title={`ดูโครงการ ${projectName}`}
+                            title={t("property.view_project", { project: projectName }) || `ดูโครงการ ${projectName}`}
                           >
                             <div className="flex items-center gap-2">
                               <ProjectIcon className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
@@ -430,7 +474,12 @@ export function PropertyHeader({
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 shrink-0" />
                       <span className="line-clamp-1">
-                        {locationParts || t("common.no_location")}
+                        <span className="inline sm:hidden">
+                          {shortLocationParts || t("common.no_location")}
+                        </span>
+                        <span className="hidden sm:inline">
+                          {locationParts || t("common.no_location")}
+                        </span>
                       </span>
                     </div>
                     <button
@@ -447,7 +496,7 @@ export function PropertyHeader({
                         } catch (e) {}
                       }}
                       className="flex items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors group/copy cursor-pointer"
-                      title="Copy Property ID"
+                      title={t("common.copy_property_id") || "Copy Property ID"}
                     >
                       <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover/copy:scale-110 transition-transform" />
                       <span className="text-[11px] sm:text-xs font-mono lowercase">

@@ -54,6 +54,7 @@
   },
   "common": {
     "id_copied": "物业 ID 已复制",
+    "copy_property_id": "复制房源编号",
     "verified_100": "100% 真实查验",
     "safe_transaction": "交易安全保障",
     "fast_response": "24小时内快速回复",
@@ -957,6 +958,8 @@
     "inquiry_msg": "我想了解更多关于此房产的信息...",
     "contact_admin": "联系管理员",
     "share_property": "分享房产",
+    "view_area_properties": "查看 {area} 的所有房源",
+    "view_project": "查看项目 {project}",
     "book_viewing": "预约看房",
     "inquiry": "在线咨询",
     "social_proof_saved": "已有 {count} 人收藏",

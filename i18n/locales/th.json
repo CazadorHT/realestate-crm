@@ -54,6 +54,7 @@
   },
   "common": {
     "id_copied": "คัดลอกรหัสทรัพย์แล้ว",
+    "copy_property_id": "คัดลอกรหัสทรัพย์",
     "verified_100": "ตรวจสอบแล้ว 100%",
     "safe_transaction": "ปลอดภัยทุกธุรกรรม",
     "fast_response": "ตอบกลับไวใน 24 ชม.",
@@ -959,6 +960,8 @@
     "inquiry_msg": "สอบถามข้อมูลเพิ่มเติมครับ...",
     "contact_admin": "ติดต่อผ่านแอดมิน",
     "share_property": "แชร์ทรัพย์นี้",
+    "view_area_properties": "ดูทรัพย์ทั้งหมดในย่าน {area}",
+    "view_project": "ดูโครงการ {project}",
     "book_viewing": "นัดชม",
     "inquiry": "สอบถาม",
     "social_proof_saved": "บันทึกแล้ว {count} ครั้ง",

@@ -56,6 +56,7 @@
   },
   "common": {
     "id_copied": "Property ID copied",
+    "copy_property_id": "Copy Property ID",
     "verified_100": "100% Verified",
     "safe_transaction": "Secure Transactions",
     "fast_response": "Fast Reply within 24h",
@@ -960,6 +961,8 @@
     "inquiry_msg": "I'd like more information regarding...",
     "contact_admin": "Contact Admin",
     "share_property": "Share Property",
+    "view_area_properties": "View all properties in {area}",
+    "view_project": "View project {project}",
     "book_viewing": "Book Viewing",
     "inquiry": "Inquiry",
     "social_proof_saved": "Saved {count} times",
