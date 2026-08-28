@@ -101,6 +101,9 @@ export function PropertySearchPage({
     if (filters.petFriendly && serverFacets?.availableQuickFilters?.petFriendly !== undefined) {
       return serverFacets.availableQuickFilters.petFriendly;
     }
+    if (filters.cbd && serverFacets?.availableQuickFilters?.cbd !== undefined) {
+      return serverFacets.availableQuickFilters.cbd;
+    }
     if (filters.nearTrain && serverFacets?.availableQuickFilters?.nearTrain !== undefined) {
       return serverFacets.availableQuickFilters.nearTrain;
     }

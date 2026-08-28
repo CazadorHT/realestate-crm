@@ -29,6 +29,7 @@ export interface PropertyFacets {
     companyRegistered: number;
     isHotDeal: number;
     allowAirbnb: number;
+    cbd?: number;
   };
   availablePrices?: Record<string, number>;
   availableSizes?: Record<string, number>;

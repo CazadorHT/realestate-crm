@@ -2,6 +2,7 @@ import { useMemo, useCallback } from "react";
 import { PropertyCardProps } from "@/components/public/PropertyCard";
 import { PropertyFacets } from "@/features/properties/types/search";
 import { detectSearchIntent } from "@/lib/search-config";
+import { isCbdProperty } from "@/lib/property-utils";
 
 type ApiProperty = PropertyCardProps;
 
@@ -162,9 +163,7 @@ export function usePropertyFiltering(
     }
 
     if (!excludeFilters.includes("cbd") && cbd) {
-      const matchesArea = p.popular_area ? CBD_AREAS.some(a => p.popular_area?.includes(a) || a.includes(p.popular_area || "")) : false;
-      const isCbdAmenity = (p as any).amenities?.is_cbd === true || (p as any).meta_data?.is_cbd === true;
-      if (!matchesArea && !isCbdAmenity) return false;
+      if (!isCbdProperty(p)) return false;
     }
 
     if (!excludeFilters.includes("bedrooms") && bedrooms !== "ALL") {
@@ -222,7 +221,7 @@ export function usePropertyFiltering(
     const areaMap = new Map<string, { count: number; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
     const typeCounts: Record<string, number> = {};
     const listingTypeCounts: Record<string, number> = { ALL: 0, SALE: 0, RENT: 0, SALE_AND_RENT: 0 };
-    const quickCounts = { nearTrain: 0, petFriendly: 0, fullyFurnished: 0, isForeigner: 0, companyRegistered: 0, isHotDeal: 0, allowAirbnb: 0 };
+    const quickCounts = { nearTrain: 0, petFriendly: 0, fullyFurnished: 0, isForeigner: 0, companyRegistered: 0, isHotDeal: 0, allowAirbnb: 0, cbd: 0 };
     const bedroomCounts: Record<string, number> = { ALL: 0, "1": 0, "2": 0, "3": 0, "4+": 0 };
     const stationMap = new Map<string, { count: number; type: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
     const allStationsMap = new Map<string, { type: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
@@ -290,6 +289,7 @@ export function usePropertyFiltering(
 
       if (checkMatch(p, ["nearTrain"]) && (p.near_transit || (p.nearby_transits && p.nearby_transits.length > 0))) quickCounts.nearTrain++;
       if (checkMatch(p, ["petFriendly"]) && p.is_pet_friendly) quickCounts.petFriendly++;
+      if (checkMatch(p, ["cbd"]) && isCbdProperty(p)) quickCounts.cbd++;
       if (checkMatch(p, ["fullyFurnished"]) && p.is_fully_furnished) quickCounts.fullyFurnished++;
       if (checkMatch(p, ["isForeigner"]) && p.is_foreigner_quota) quickCounts.isForeigner++;
       if (checkMatch(p, ["companyRegistered"]) && p.is_tax_registered) quickCounts.companyRegistered++;
