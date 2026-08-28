@@ -118,6 +118,26 @@ export function AppBreadcrumbs({
   const parentHref = parentItem?.href || "/";
   const parentLabel = parentItem?.label || t("common.back") || "ย้อนกลับ";
 
+  const handleBack = () => {
+    if (typeof window !== "undefined") {
+      // If navigated internally within our website, go back to retain search state/filters
+      if (
+        document.referrer &&
+        document.referrer.includes(window.location.host) &&
+        window.history.length > 1
+      ) {
+        router.back();
+        return;
+      }
+    }
+    // Fallback gracefully to parent breadcrumb category or home
+    if (parentHref) {
+      router.push(parentHref);
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <>
       <script
@@ -125,8 +145,22 @@ export function AppBreadcrumbs({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
       
-      {/* Desktop (lg+): Full Breadcrumbs */}
-      <div className="hidden lg:block">
+      {/* Desktop (lg+): Full Breadcrumbs with Circular Back Arrow */}
+      <div className="hidden lg:flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleBack}
+          className={cn(
+            "flex items-center justify-center h-8 w-8 rounded-full border transition-all duration-200 hover:scale-110 active:scale-95 shadow-2xs cursor-pointer shrink-0 hover:-translate-x-0.5 hover:shadow-md",
+            variant === "on-dark"
+              ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+              : "bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border-slate-200/90"
+          )}
+          title={t("common.back") || "Back"}
+          aria-label={t("common.back") || "Back"}
+        >
+          <ArrowLeft className="w-4 h-4 shrink-0" />
+        </button>
         <Breadcrumb items={breadcrumbs} variant={variant} className={className} />
       </div>
 
@@ -134,15 +168,7 @@ export function AppBreadcrumbs({
       <div className={cn("block lg:hidden", className)}>
         <button
           type="button"
-          onClick={() => {
-            if (typeof window !== "undefined" && window.history.length > 1) {
-              router.back();
-            } else if (parentHref) {
-              router.push(parentHref);
-            } else {
-              router.push("/");
-            }
-          }}
+          onClick={handleBack}
           className={cn(
             "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold shadow-2xs border transition-all active:scale-95 cursor-pointer touch-manipulation",
             variant === "on-dark"
