@@ -141,7 +141,10 @@ export function QuickCreateAreaDialog({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <span>🇹🇭 {isEn ? "Area / Neighborhood Name (Thai)" : "ชื่อย่าน/ทำเล (ภาษาไทย)"}</span>
+              <span className="flex items-center gap-1.5">
+                <span className="fi fi-th h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+                <span>{isEn ? "Area / Neighborhood Name (Thai)" : "ชื่อย่าน/ทำเล (ภาษาไทย)"}</span>
+              </span>
               <span className="text-red-500">*</span>
             </Label>
             <button
@@ -170,8 +173,9 @@ export function QuickCreateAreaDialog({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           {/* English */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-              <span>🇺🇸 English (EN)</span>
+            <Label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span className="fi fi-us h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+              <span>English (EN)</span>
             </Label>
             <Input
               value={nameEn}
@@ -183,8 +187,9 @@ export function QuickCreateAreaDialog({
 
           {/* Chinese */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-              <span>🇨🇳 中文 (CN)</span>
+            <Label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span className="fi fi-cn h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+              <span>中文 (CN)</span>
             </Label>
             <Input
               value={nameCn}
@@ -196,8 +201,9 @@ export function QuickCreateAreaDialog({
 
           {/* Russian */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-              <span>🇷🇺 Русский (RU)</span>
+            <Label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span className="fi fi-ru h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+              <span>Русский (RU)</span>
             </Label>
             <Input
               value={nameRu}

@@ -451,49 +451,53 @@ export function PropertyShareDialog({
               type="button"
               onClick={() => setSelectedLang("th")}
               className={cn(
-                "px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                "px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
                 selectedLang === "th"
                   ? "bg-white text-blue-600 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               )}
             >
-              🇹🇭 {isEn ? "TH" : "ไทย"}
+              <span className="fi fi-th h-3 w-4 rounded-xs shadow-2xs shrink-0" />
+              <span>{isEn ? "TH" : "ไทย"}</span>
             </button>
             <button
               type="button"
               onClick={() => setSelectedLang("en")}
               className={cn(
-                "px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                "px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
                 selectedLang === "en"
                   ? "bg-white text-blue-600 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               )}
             >
-              🇬🇧 EN
+              <span className="fi fi-gb h-3 w-4 rounded-xs shadow-2xs shrink-0" />
+              <span>EN</span>
             </button>
             <button
               type="button"
               onClick={() => setSelectedLang("cn")}
               className={cn(
-                "px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                "px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
                 selectedLang === "cn"
                   ? "bg-white text-blue-600 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               )}
             >
-              🇨🇳 中文
+              <span className="fi fi-cn h-3 w-4 rounded-xs shadow-2xs shrink-0" />
+              <span>中文</span>
             </button>
             <button
               type="button"
               onClick={() => setSelectedLang("ru")}
               className={cn(
-                "px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                "px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
                 selectedLang === "ru"
                   ? "bg-white text-blue-600 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               )}
             >
-              🇷🇺 RU
+              <span className="fi fi-ru h-3 w-4 rounded-xs shadow-2xs shrink-0" />
+              <span>RU</span>
             </button>
           </div>
         </div>

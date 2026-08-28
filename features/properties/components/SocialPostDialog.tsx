@@ -485,23 +485,23 @@ export function SocialPostDialog({
                   </Label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: "th", label: isEn ? "Thai" : "ไทย", flag: "🇹🇭" },
-                      { id: "en", label: isEn ? "English" : "อังกฤษ", flag: "🇺🇸" },
-                      { id: "cn", label: isEn ? "Chinese" : "จีน", flag: "🇨🇳" },
-                      { id: "ru", label: isEn ? "Russian" : "รัสเซีย", flag: "🇷🇺" },
+                      { id: "th", label: isEn ? "Thai" : "ไทย", flagClass: "fi fi-th" },
+                      { id: "en", label: isEn ? "English" : "อังกฤษ", flagClass: "fi fi-us" },
+                      { id: "cn", label: isEn ? "Chinese" : "จีน", flagClass: "fi fi-cn" },
+                      { id: "ru", label: isEn ? "Russian" : "รัสเซีย", flagClass: "fi fi-ru" },
                     ].map((l) => (
                       <button
                         key={l.id}
                         onClick={() => toggleLang(l.id as any)}
                         className={cn(
-                          "flex flex-col items-center gap-1 py-3 px-2 rounded-xl border transition-all cursor-pointer",
+                          "flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl border transition-all cursor-pointer",
                           selectedLangs.includes(l.id as any)
                             ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm font-bold"
                             : "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100"
                         )}
                       >
-                        <span className="text-2xl">{l.flag}</span>
-                        <span className="text-[8px] uppercase tracking-wider font-bold">{l.label}</span>
+                        <span className={cn(l.flagClass, "h-5 w-7 rounded-xs shadow-xs")} />
+                        <span className="text-[9px] uppercase tracking-wider font-bold">{l.label}</span>
                       </button>
                     ))}
                   </div>
@@ -720,10 +720,10 @@ export function SocialPostDialog({
           <div className="flex items-center gap-2 mr-6 xs:mr-8">
             <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200">
               {[
-                { id: "th", label: "TH", flag: "🇹🇭" },
-                { id: "en", label: "EN", flag: "🇺🇸" },
-                { id: "cn", label: "CN", flag: "🇨🇳" },
-                { id: "ru", label: "RU", flag: "🇷🇺" },
+                { id: "th", label: "TH", flagClass: "fi fi-th" },
+                { id: "en", label: "EN", flagClass: "fi fi-us" },
+                { id: "cn", label: "CN", flagClass: "fi fi-cn" },
+                { id: "ru", label: "RU", flagClass: "fi fi-ru" },
               ].map((l) => {
                 const isActive = selectedLangs.includes(l.id as any);
                 return (
@@ -731,13 +731,13 @@ export function SocialPostDialog({
                     key={l.id}
                     onClick={() => toggleLang(l.id as any)}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs xs:text-sm transition-all duration-200 font-bold cursor-pointer",
+                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs xs:text-sm transition-all duration-200 font-bold cursor-pointer",
                       isActive
                         ? "bg-white border border-slate-200 shadow-xs text-slate-800"
                         : "text-slate-400 hover:text-slate-600"
                     )}
                   >
-                    <span className="text-sm xs:text-base">{l.flag}</span>
+                    <span className={cn(l.flagClass, "h-3.5 w-5 rounded-xs shadow-2xs shrink-0")} />
                     <span>{l.label}</span>
                   </button>
                 );

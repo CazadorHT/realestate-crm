@@ -79,17 +79,21 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
 
           <Tabs defaultValue="th" className="w-full">
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 bg-slate-50 p-1 h-auto rounded-xl border border-slate-100">
-              <TabsTrigger value="th" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer">
-                🇹🇭 {isEn ? "Thai" : "ภาษาไทย"}
+              <TabsTrigger value="th" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer flex items-center justify-center">
+                <span className="fi fi-th h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+                <span>{isEn ? "Thai" : "ภาษาไทย"}</span>
               </TabsTrigger>
-              <TabsTrigger value="en" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer">
-                🇬🇧 English
+              <TabsTrigger value="en" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer flex items-center justify-center">
+                <span className="fi fi-gb h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+                <span>English</span>
               </TabsTrigger>
-              <TabsTrigger value="cn" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer">
-                🇨🇳 {isEn ? "Chinese" : "中文 (จีน)"}
+              <TabsTrigger value="cn" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer flex items-center justify-center">
+                <span className="fi fi-cn h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+                <span>{isEn ? "Chinese" : "中文 (จีน)"}</span>
               </TabsTrigger>
-              <TabsTrigger value="ru" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer">
-                🇷🇺 {isEn ? "Russian" : "Русский (รัสเซีย)"}
+              <TabsTrigger value="ru" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs cursor-pointer flex items-center justify-center">
+                <span className="fi fi-ru h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+                <span>{isEn ? "Russian" : "Русский (รัสเซีย)"}</span>
               </TabsTrigger>
             </TabsList>
 

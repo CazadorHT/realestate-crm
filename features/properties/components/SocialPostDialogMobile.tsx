@@ -285,23 +285,23 @@ export function SocialPostDialogMobile({
                 </Label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "th", label: "Thai", flag: "🇹🇭" },
-                    { id: "en", label: "English", flag: "🇺🇸" },
-                    { id: "cn", label: "Chinese", flag: "🇨🇳" },
-                    { id: "ru", label: "Russian", flag: "🇷🇺" },
+                    { id: "th", label: "Thai", flagClass: "fi fi-th" },
+                    { id: "en", label: "English", flagClass: "fi fi-us" },
+                    { id: "cn", label: "Chinese", flagClass: "fi fi-cn" },
+                    { id: "ru", label: "Russian", flagClass: "fi fi-ru" },
                   ].map((l) => (
                     <button
                       key={l.id}
                       onClick={() => toggleLang(l.id as any)}
                       className={cn(
-                        "flex flex-col items-center gap-1 py-3 px-2 rounded-xl border transition-all",
+                        "flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl border transition-all cursor-pointer",
                         selectedLangs.includes(l.id as any)
                           ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm font-bold"
                           : "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100"
                       )}
                     >
-                      <span className="text-2xl">{l.flag}</span>
-                      <span className="text-[8px] uppercase tracking-wider">{l.label}</span>
+                      <span className={cn(l.flagClass, "h-5 w-7 rounded-xs shadow-xs")} />
+                      <span className="text-[9px] uppercase tracking-wider font-bold">{l.label}</span>
                     </button>
                   ))}
                 </div>

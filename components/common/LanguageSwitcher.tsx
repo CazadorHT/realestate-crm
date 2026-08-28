@@ -16,10 +16,12 @@ const languages: {
   code: Language;
   label: string;
   nativeLabel: string;
-  flag: string;
+  flagClass: string;
 }[] = [
-  { code: "en", label: "English", nativeLabel: "English", flag: "🇺🇸" },
-  { code: "th", label: "Thai", nativeLabel: "ไทย", flag: "🇹🇭" },
+  { code: "th", label: "Thai", nativeLabel: "ไทย", flagClass: "fi fi-th" },
+  { code: "en", label: "English", nativeLabel: "English", flagClass: "fi fi-us" },
+  { code: "cn", label: "Chinese", nativeLabel: "中文", flagClass: "fi fi-cn" },
+  { code: "ru", label: "Russian", nativeLabel: "Русский", flagClass: "fi fi-ru" },
 ];
 
 export function LanguageSwitcher({ className }: { className?: string }) {
@@ -34,12 +36,12 @@ export function LanguageSwitcher({ className }: { className?: string }) {
           variant="outline"
           size="sm"
           className={cn(
-            "h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-blue-500 font-semibold gap-1.5 transition-all shadow-2xs hover:shadow-xs",
+            "h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 hover:text-blue-500 font-semibold gap-2 transition-all shadow-2xs hover:shadow-xs",
             className,
           )}
           aria-label="Change Language"
         >
-          <span className="text-base leading-none">{current.flag}</span>
+          <span className={cn(current.flagClass, "h-3.5 w-5 rounded-xs shadow-xs shrink-0")} />
           <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">
             {current.code}
           </span>
@@ -66,8 +68,8 @@ export function LanguageSwitcher({ className }: { className?: string }) {
                   : "text-slate-700 hover:bg-slate-50 hover:text-slate-900",
               )}
             >
-              <div className="flex items-center gap-2">
-                <span className="text-base leading-none">{lang.flag}</span>
+              <div className="flex items-center gap-2.5">
+                <span className={cn(lang.flagClass, "h-3.5 w-5 rounded-xs shadow-xs shrink-0")} />
                 <span>{lang.nativeLabel}</span>
               </div>
               {isSelected && <Check className="w-3.5 h-3.5 text-blue-600 ml-2" />}

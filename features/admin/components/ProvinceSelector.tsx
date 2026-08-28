@@ -11,7 +11,7 @@ import { useLanguage } from "@/lib/i18n/language-context";
 import { translateLocation } from "@/lib/utils/provinces";
 
 /**
- * 🇹🇭 ProvinceSelector:
+ * ProvinceSelector:
  * A premium searchable province selector using ResponsiveDialog.
  * Desktop: Searchable Modal
  * Mobile: Searchable Drawer

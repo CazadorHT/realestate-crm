@@ -523,10 +523,10 @@ export function AddRuleDialog({
                                   className="w-full h-11 justify-between hover:text-blue-500 px-4 rounded-xl border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 transition-colors font-medium cursor-pointer"
                                 >
                                   <span className="flex items-center gap-2">
-                                    {field.value === "th" && (isEn ? "🇹🇭 Thai" : "🇹🇭 ไทย")}
-                                    {field.value === "en" && (isEn ? "🇬🇧 English" : "🇬🇧 อังกฤษ")}
-                                    {field.value === "cn" && (isEn ? "🇨🇳 Chinese" : "🇨🇳 จีน")}
-                                    {field.value === "ru" && (isEn ? "🇷🇺 Russian" : "🇷🇺 รัสเซีย")}
+                                    {field.value === "th" && <><span className="fi fi-th h-3.5 w-5 rounded-xs shadow-2xs shrink-0" /><span>{isEn ? "Thai" : "ไทย"}</span></>}
+                                    {field.value === "en" && <><span className="fi fi-gb h-3.5 w-5 rounded-xs shadow-2xs shrink-0" /><span>{isEn ? "English" : "อังกฤษ"}</span></>}
+                                    {field.value === "cn" && <><span className="fi fi-cn h-3.5 w-5 rounded-xs shadow-2xs shrink-0" /><span>{isEn ? "Chinese" : "จีน"}</span></>}
+                                    {field.value === "ru" && <><span className="fi fi-ru h-3.5 w-5 rounded-xs shadow-2xs shrink-0" /><span>{isEn ? "Russian" : "รัสเซีย"}</span></>}
                                   </span>
                                   <ChevronsUpDown className="w-4 h-4 text-slate-400" />
                                 </Button>
@@ -534,10 +534,10 @@ export function AddRuleDialog({
                             >
                               <div className="grid gap-2 p-4 pointer-events-auto ">
                                 {[
-                                  { value: "th", label: isEn ? "Thai" : "ไทย", flag: "🇹🇭" },
-                                  { value: "en", label: isEn ? "English" : "อังกฤษ", flag: "🇬🇧" },
-                                  { value: "cn", label: isEn ? "Chinese" : "จีน", flag: "🇨🇳" },
-                                  { value: "ru", label: isEn ? "Russian" : "รัสเซีย", flag: "🇷🇺" },
+                                  { value: "th", label: isEn ? "Thai" : "ไทย", flagClass: "fi fi-th" },
+                                  { value: "en", label: isEn ? "English" : "อังกฤษ", flagClass: "fi fi-gb" },
+                                  { value: "cn", label: isEn ? "Chinese" : "จีน", flagClass: "fi fi-cn" },
+                                  { value: "ru", label: isEn ? "Russian" : "รัสเซีย", flagClass: "fi fi-ru" },
                                 ].map((lang) => (
                                   <Button
                                     key={lang.value}
@@ -552,7 +552,7 @@ export function AddRuleDialog({
                                       setIsLanguageOpen(false);
                                     }}
                                   >
-                                    <span className="text-xl">{lang.flag}</span>
+                                    <span className={cn(lang.flagClass, "h-4 w-6 rounded-xs shadow-2xs shrink-0")} />
                                     <span className="font-medium">{lang.label}</span>
                                     {field.value === lang.value && (
                                       <Check className="w-4 h-4 ml-auto" />

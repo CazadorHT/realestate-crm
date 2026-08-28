@@ -1127,25 +1127,25 @@ export function TemplateDialog({
                       </Label>
                       <div className="grid grid-cols-4 gap-2 p-1 bg-slate-100/50 rounded-2xl border border-slate-200/50">
                         {[
-                          { id: "th", label: isEn ? "Thai" : "ไทย", icon: "🇹🇭" },
-                          { id: "en", label: "EN", icon: "🇺🇸" },
-                          { id: "cn", label: "中文", icon: "🇨🇳" },
-                          { id: "ru", label: "Русский", icon: "🇷🇺" },
+                          { id: "th", label: isEn ? "Thai" : "ไทย", flagClass: "fi fi-th" },
+                          { id: "en", label: "EN", flagClass: "fi fi-us" },
+                          { id: "cn", label: "中文", flagClass: "fi fi-cn" },
+                          { id: "ru", label: "Русский", flagClass: "fi fi-ru" },
                         ].map((lang) => (
                           <Button
                             key={lang.id}
                             variant={language === lang.id ? "default" : "ghost"}
                             size="sm"
                             className={cn(
-                              "h-10 rounded-xl text-xs font-semibold transition-all",
+                              "h-10 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5",
                               language === lang.id
                                 ? "bg-white hover:bg-blue-50 text-blue-600 shadow-sm border border-slate-200"
                                 : "text-slate-500 hover:bg-white/50",
                             )}
                             onClick={() => setLanguage(lang.id)}
                           >
-                            <span className="mr-1.5 text-sm">{lang.icon}</span>
-                            {lang.label}
+                            <span className={cn(lang.flagClass, "h-3.5 w-5 rounded-xs shadow-2xs shrink-0")} />
+                            <span>{lang.label}</span>
                           </Button>
                         ))}
                       </div>

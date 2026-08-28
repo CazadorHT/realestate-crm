@@ -64,8 +64,8 @@ export function BlogContentTab({
             render={({ field }) => (
               <FormItem className="space-y-2">
                 <FormLabel className="font-semibold text-xs text-slate-700 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <span className="text-base">🇹🇭</span>
+                  <span className="flex items-center gap-2">
+                    <span className="fi fi-th h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
                     {isEn ? "Title (Thai)" : "หัวข้อบทความ (ไทย)"}
                   </span>
                   <span className="text-[10px] text-slate-400 font-normal">Primary / Fallback</span>
@@ -93,8 +93,8 @@ export function BlogContentTab({
             render={({ field }) => (
               <FormItem className="space-y-2">
                 <FormLabel className="font-semibold text-xs text-slate-700 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <span className="text-base">🇬🇧</span>
+                  <span className="flex items-center gap-2">
+                    <span className="fi fi-gb h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
                     {isEn ? "Title (English)" : "หัวข้อบทความ (อังกฤษ)"}
                   </span>
                   <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-md font-bold">SEO Slug</span>
@@ -122,9 +122,9 @@ export function BlogContentTab({
             name="title_cn"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="font-semibold text-xs text-slate-700 flex items-center gap-1.5">
-                  <span className="text-base">🇨🇳</span>
-                  {isEn ? "Title (Chinese)" : "文章标题 (จีน)"}
+                <FormLabel className="font-semibold text-xs text-slate-700 flex items-center gap-2">
+                  <span className="fi fi-cn h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+                  <span>{isEn ? "Title (Chinese)" : "文章标题 (จีน)"}</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -145,9 +145,9 @@ export function BlogContentTab({
             name="title_ru"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="font-semibold text-xs text-slate-700 flex items-center gap-1.5">
-                  <span className="text-base">🇷🇺</span>
-                  {isEn ? "Title (Russian)" : "Заголовок (รัสเซีย)"}
+                <FormLabel className="font-semibold text-xs text-slate-700 flex items-center gap-2">
+                  <span className="fi fi-ru h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
+                  <span>{isEn ? "Title (Russian)" : "Заголовок (รัสเซีย)"}</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -251,20 +251,20 @@ export function BlogContentTab({
 
         <Tabs defaultValue="th" className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 bg-slate-50 p-1 h-auto rounded-xl border border-slate-100">
-            <TabsTrigger value="th" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm cursor-pointer">
-              <span className="text-lg">🇹🇭</span>
+            <TabsTrigger value="th" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm cursor-pointer flex items-center justify-center">
+              <span className="fi fi-th h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
               <span className="text-xs md:text-sm font-medium">{isEn ? "Thai" : "ภาษาไทย"}</span>
             </TabsTrigger>
-            <TabsTrigger value="en" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm cursor-pointer">
-              <span className="text-lg">🇬🇧</span>
+            <TabsTrigger value="en" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm cursor-pointer flex items-center justify-center">
+              <span className="fi fi-gb h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
               <span className="text-xs md:text-sm font-medium">English</span>
             </TabsTrigger>
-            <TabsTrigger value="cn" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm cursor-pointer">
-              <span className="text-lg">🇨🇳</span>
+            <TabsTrigger value="cn" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm cursor-pointer flex items-center justify-center">
+              <span className="fi fi-cn h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
               <span className="text-xs md:text-sm font-medium">{isEn ? "Chinese" : "中文 (จีน)"}</span>
             </TabsTrigger>
-            <TabsTrigger value="ru" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm cursor-pointer">
-              <span className="text-lg">🇷🇺</span>
+            <TabsTrigger value="ru" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm cursor-pointer flex items-center justify-center">
+              <span className="fi fi-ru h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
               <span className="text-xs md:text-sm font-medium">{isEn ? "Russian" : "Русский (รัสเซีย)"}</span>
             </TabsTrigger>
           </TabsList>

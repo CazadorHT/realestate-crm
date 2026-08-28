@@ -401,16 +401,16 @@ export function SocialStudioModal({
     fetchAIContent(newLang);
     const langName =
       newLang === "en"
-        ? "English 🇬🇧"
+        ? "English (EN)"
         : newLang === "zh"
-          ? "中文 🇨🇳"
+          ? "中文 (CN)"
           : newLang === "ru"
-            ? "Русский 🇷🇺"
-            : "ภาษาไทย 🇹🇭";
+            ? "Русский (RU)"
+            : "ภาษาไทย (TH)";
     toast.success(
       isEn
-        ? `Language changed to ${langName}! 🌐`
-        : `เปลี่ยนภาษาเป็น ${langName} แล้ว! 🌐`
+        ? `Language changed to ${langName}!`
+        : `เปลี่ยนภาษาเป็น ${langName} แล้ว!`
     );
   };
 

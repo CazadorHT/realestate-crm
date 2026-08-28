@@ -248,7 +248,7 @@ export function TemplateEditorCard({
                     "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                   )}
                 >
-                  <span className="text-base sm:text-lg shrink-0">🇹🇭</span>
+                  <span className="fi fi-th h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
                   <span className="text-[11px] sm:text-xs">{isEn ? "Thai" : "ไทย"}</span>
                   {templates[activePlatform].th && (
                     <div className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white shadow-xs" title="Template exists" />
@@ -262,7 +262,7 @@ export function TemplateEditorCard({
                     "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                   )}
                 >
-                  <span className="text-base sm:text-lg shrink-0">🇺🇸</span>
+                  <span className="fi fi-us h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
                   <span className="text-[11px] sm:text-xs">EN</span>
                   {templates[activePlatform].en && (
                     <div className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white shadow-xs" title="Template exists" />
@@ -276,7 +276,7 @@ export function TemplateEditorCard({
                     "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                   )}
                 >
-                  <span className="text-base sm:text-lg shrink-0">🇨🇳</span>
+                  <span className="fi fi-cn h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
                   <span className="text-[11px] sm:text-xs">中文</span>
                   {templates[activePlatform].cn && (
                     <div className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white shadow-xs" title="Template exists" />
@@ -290,7 +290,7 @@ export function TemplateEditorCard({
                     "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                   )}
                 >
-                  <span className="text-base sm:text-lg shrink-0">🇷🇺</span>
+                  <span className="fi fi-ru h-3.5 w-5 rounded-xs shadow-2xs shrink-0" />
                   <span className="text-[11px] sm:text-xs">RU</span>
                   {templates[activePlatform].ru && (
                     <div className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white shadow-xs" title="Template exists" />
