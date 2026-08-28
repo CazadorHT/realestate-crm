@@ -319,7 +319,7 @@ export function PropertyHeader({
                           },
                         ]
                       : []),
-                    ...(property.province
+                    ...(provinceStr
                       ? [
                           {
                             label: displayProvince || provinceStr || "...",
@@ -327,20 +327,16 @@ export function PropertyHeader({
                           },
                         ]
                       : []),
-                    ...(property.popular_area
+                    ...(popularAreaStr
                       ? [
                           {
-                            label: getLocaleValue(
-                              property,
-                              "popular_area",
-                              language,
-                            ),
+                            label: popularAreaStr,
                             href: property.popular_area_slug
                               ? `/areas/${property.popular_area_slug}`
                               : `/properties?popular_area=${encodeURIComponent(
                                   typeof property.popular_area === "object"
-                                    ? property.popular_area?.th || ""
-                                    : property.popular_area || "",
+                                    ? property.popular_area?.th || popularAreaStr
+                                    : property.popular_area || popularAreaStr,
                                 )}`,
                           },
                         ]

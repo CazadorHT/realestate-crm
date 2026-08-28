@@ -328,6 +328,25 @@ export async function createPropertyAction(
       return { success: false, message: mapDbError(coreError) };
     }
 
+    // Enrich Popular Area Translations from master table if missing or matching Thai
+    let popularAreaEn = propertyData.popular_area_en;
+    let popularAreaCn = propertyData.popular_area_cn;
+    let popularAreaRu = propertyData.popular_area_ru;
+
+    if (propertyData.popular_area) {
+      const { data: areaData } = await supabase
+        .from("popular_areas")
+        .select("name_en, name_cn, name_ru")
+        .eq("name", propertyData.popular_area)
+        .maybeSingle();
+
+      if (areaData) {
+        if (!popularAreaEn || popularAreaEn === propertyData.popular_area) popularAreaEn = areaData.name_en || popularAreaEn;
+        if (!popularAreaCn || popularAreaCn === propertyData.popular_area) popularAreaCn = areaData.name_cn || popularAreaCn;
+        if (!popularAreaRu || popularAreaRu === propertyData.popular_area) popularAreaRu = areaData.name_ru || popularAreaRu;
+      }
+    }
+
     // 2. Insert into properties_details (Warm Layer / JSONB)
     const { error: detailsError } = await supabase
       .from("properties_details")
@@ -356,9 +375,9 @@ export async function createPropertyAction(
           postal_code: propertyData.postal_code,
           maps_link: propertyData.google_maps_link,
           popular_area: propertyData.popular_area,
-          popular_area_en: propertyData.popular_area_en,
-          popular_area_cn: propertyData.popular_area_cn,
-          popular_area_ru: propertyData.popular_area_ru,
+          popular_area_en: popularAreaEn,
+          popular_area_cn: popularAreaCn,
+          popular_area_ru: popularAreaRu,
           slug: seoData.slug, // V3 Standard: Store slug in address_info too
         },
         amenities: {

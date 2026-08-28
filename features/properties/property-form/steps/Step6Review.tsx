@@ -232,25 +232,47 @@ export function Step6Review({ mode }: Step6ReviewProps) {
         if (profile) setCurrentUser(profile);
       }
 
-      // 3. Load Popular Area Translations if missing
-      if (
-        values.popular_area &&
-        (!values.popular_area_en || !values.popular_area_cn || !values.popular_area_ru)
-      ) {
-        const { data: areaData } = await db
+      // 3. Load Popular Area Translations if missing or out of sync
+      if (values.popular_area) {
+        let transEn: string | null = null;
+        let transCn: string | null = null;
+        let transRu: string | null = null;
+
+        const { data: areaDataV3 } = await db
           .from("popular_areas_v3")
           .select("name")
           .eq("name->>th", values.popular_area)
           .maybeSingle();
 
-        if (areaData && areaData.name && typeof areaData.name === "object") {
-          const nameObj = areaData.name as any;
-          if (!values.popular_area_en)
-            form.setValue("popular_area_en", nameObj.en || null);
-          if (!values.popular_area_cn)
-            form.setValue("popular_area_cn", nameObj.cn || null);
-          if (!values.popular_area_ru)
-            form.setValue("popular_area_ru", nameObj.ru || null);
+        if (areaDataV3 && areaDataV3.name && typeof areaDataV3.name === "object") {
+          const nameObj = areaDataV3.name as any;
+          transEn = nameObj.en || null;
+          transCn = nameObj.cn || null;
+          transRu = nameObj.ru || null;
+        }
+
+        if (!transEn) {
+          const { data: areaData } = await db
+            .from("popular_areas")
+            .select("name_en, name_cn, name_ru")
+            .eq("name", values.popular_area)
+            .maybeSingle();
+
+          if (areaData) {
+            transEn = areaData.name_en || null;
+            transCn = areaData.name_cn || null;
+            transRu = areaData.name_ru || null;
+          }
+        }
+
+        if (transEn && (!values.popular_area_en || values.popular_area_en !== transEn)) {
+          form.setValue("popular_area_en", transEn, { shouldDirty: true });
+        }
+        if (transCn && (!values.popular_area_cn || values.popular_area_cn !== transCn)) {
+          form.setValue("popular_area_cn", transCn, { shouldDirty: true });
+        }
+        if (transRu && (!values.popular_area_ru || values.popular_area_ru !== transRu)) {
+          form.setValue("popular_area_ru", transRu, { shouldDirty: true });
         }
       }
     }

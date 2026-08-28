@@ -385,6 +385,25 @@ export async function updatePropertyAction(
 
     if (coreUpdateError) return { success: false, message: mapDbError(coreUpdateError) };
 
+    // Enrich Popular Area Translations from master table if missing or matching Thai
+    let popularAreaEn = safeValues.popular_area_en;
+    let popularAreaCn = safeValues.popular_area_cn;
+    let popularAreaRu = safeValues.popular_area_ru;
+
+    if (safeValues.popular_area) {
+      const { data: areaData } = await supabase
+        .from("popular_areas")
+        .select("name_en, name_cn, name_ru")
+        .eq("name", safeValues.popular_area)
+        .maybeSingle();
+
+      if (areaData) {
+        if (!popularAreaEn || popularAreaEn === safeValues.popular_area) popularAreaEn = areaData.name_en || popularAreaEn;
+        if (!popularAreaCn || popularAreaCn === safeValues.popular_area) popularAreaCn = areaData.name_cn || popularAreaCn;
+        if (!popularAreaRu || popularAreaRu === safeValues.popular_area) popularAreaRu = areaData.name_ru || popularAreaRu;
+      }
+    }
+
     // 4.2 Update properties_details (Warm Layer / JSONB)
     const { error: detailsUpdateError } = await supabase
       .from("properties_details")
@@ -410,9 +429,9 @@ export async function updatePropertyAction(
           postal_code: safeValues.postal_code,
           maps_link: safeValues.google_maps_link,
           popular_area: safeValues.popular_area,
-          popular_area_en: safeValues.popular_area_en,
-          popular_area_cn: safeValues.popular_area_cn,
-          popular_area_ru: safeValues.popular_area_ru,
+          popular_area_en: popularAreaEn,
+          popular_area_cn: popularAreaCn,
+          popular_area_ru: popularAreaRu,
           nearby_places: safeValues.nearby_places || [],
         },
         amenities: {
