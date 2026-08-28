@@ -2,7 +2,7 @@
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
 
 export type BulkDeleteResult = {
@@ -64,6 +64,11 @@ export async function bulkDeletePopularAreasAction(
     );
 
     revalidatePath("/protected/admin/popular-areas");
+    revalidatePath("/properties");
+    revalidatePath("/");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("area-translations", "seconds");
+    revalidateTag("public-data", "seconds");
 
     const finalCount = count ?? 0;
     return {
@@ -253,6 +258,11 @@ export async function bulkGenerateAreaSeoContentAction(
     );
 
     revalidatePath("/protected/admin/popular-areas");
+    revalidatePath("/properties");
+    revalidatePath("/");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("area-translations", "seconds");
+    revalidateTag("public-data", "seconds");
 
     return {
       success: true,

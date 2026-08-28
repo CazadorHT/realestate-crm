@@ -164,6 +164,8 @@ export async function deletePropertyAction(formData: FormData) {
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    revalidateTag("public-properties", "seconds");
+    revalidateTag("property-facets", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");

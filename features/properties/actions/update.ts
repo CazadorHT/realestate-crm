@@ -662,6 +662,8 @@ export async function updatePropertyAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    revalidateTag("public-properties", "seconds");
+    revalidateTag("property-facets", "seconds");
     purgeCloudflareCache([
       `/properties/${seoData.slug}`,
       "/properties",

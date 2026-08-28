@@ -127,8 +127,38 @@ function generateSlug(code: string): string {
 }
 
 // ============================================================
+// ============================================================
 // Server Actions
 // ============================================================
+
+/**
+ * [S-Tier] Universal Cached Master Data for Transit Stations
+ * Shared across all station views, hub pages, detail pages, and build steps.
+ */
+export const getMasterTransitStationsList = unstable_cache(
+  async () => {
+    try {
+      const supabase = createPublicClient();
+      const { data, error } = await supabase
+        .from("ref_master_data")
+        .select("code, label, metadata, sort_order")
+        .eq("type", "TRANSIT_STATION")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching transit stations master data:", error.message);
+        return [];
+      }
+      return data || [];
+    } catch (err) {
+      console.error("getMasterTransitStationsList error:", err);
+      return [];
+    }
+  },
+  ["transit-stations-master-list-v1"],
+  { revalidate: 31536000, tags: ["master-data", "transit-stations"] }
+);
 
 /**
  * Get all transit lines with their stations for the hub page
@@ -160,19 +190,8 @@ export const getTransitLinesWithStations = unstable_cache(
       }
     });
 
-    // 2. ดึงข้อมูล Master Data ของรายชื่อสถานีรถไฟฟ้าทั้งหมด (ref_master_data)
-    const { data: masterStations, error: masterError } = await supabase
-      .from("ref_master_data")
-      .select("code, label, metadata, sort_order")
-      .eq("type", "TRANSIT_STATION")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
-
-    if (masterError) {
-      console.error("Error fetching transit stations master data:", masterError.message);
-      return [];
-    }
-
+    // 2. ดึงข้อมูล Master Data ของรายชื่อสถานีรถไฟฟ้าทั้งหมดจาก Shared Cache
+    const masterStations = await getMasterTransitStationsList();
     if (!masterStations || masterStations.length === 0) return [];
 
     // Map โครงสร้าง Default ของสายรถไฟฟ้าแต่ละประเภท
@@ -285,18 +304,10 @@ export const getTransitLinesWithStations = unstable_cache(
 export async function getStationBySlug(slug: string): Promise<StationDetail | null> {
   return unstable_cache(
     async () => {
-      const supabase = createPublicClient();
+      // Fetch all stations from shared cache to find by slug and determine neighbors
+      const data = await getMasterTransitStationsList();
 
-      // Fetch all stations to find by slug and determine neighbors
-      const { data, error } = await supabase
-        .from("ref_master_data")
-        .select("code, label, metadata, sort_order")
-        .eq("type", "TRANSIT_STATION")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-
-      if (error || !data) {
-        console.error("Error fetching station by slug:", error?.message);
+      if (!data || data.length === 0) {
         return null;
       }
 
@@ -465,21 +476,15 @@ export async function getPropertiesNearStation(
  */
 export const getAllStationSlugs = unstable_cache(
   async (): Promise<string[]> => {
-    const supabase = createPublicClient();
+    // 1. ดึงข้อมูลสถานีทั้งหมดที่เป็น Active จาก Shared Cache
+    const stations = await getMasterTransitStationsList();
 
-    // 1. ดึงข้อมูลสถานีทั้งหมดที่เป็น Active จาก Master Data
-    const { data: stations, error } = await supabase
-      .from("ref_master_data")
-      .select("code, label, metadata")
-      .eq("type", "TRANSIT_STATION")
-      .eq("is_active", true);
-
-    if (error || !stations) {
-      console.error("Error fetching station slugs:", error?.message);
+    if (!stations || stations.length === 0) {
       return [];
     }
 
     // 2. ดึงเฉพาะรายชื่อสถานีที่มีทรัพย์สินจริงจาก Materialized View (เบาหวิวระดับกิโลไบต์!)
+    const supabase = createPublicClient();
     const { data: activeStats, error: statsError } = await supabase
       .from("mv_station_property_stats")
       .select("station_name");

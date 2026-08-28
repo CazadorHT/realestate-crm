@@ -15,6 +15,7 @@ import type {
   PropertyTransitV3
 } from "../types/v3";
 import { getSiteSettings } from "@/features/site-settings/actions";
+import { getPopularAreasLookupMap } from "@/features/public/popular-areas";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -260,27 +261,13 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
   let popularAreaSlug: string | null = null;
   const areaNameName = address.popular_area;
   if (areaNameName) {
-    const trimmedArea = areaNameName.trim();
-    popularAreaSlug = await unstable_cache(
-      async () => {
-        try {
-          const { createAdminClient } = await import("@/lib/supabase/admin");
-          const adminClient = await createAdminClient();
-          const { data: areaObj } = await adminClient
-            .from("popular_areas_v3")
-            .select("slug")
-            .eq("name->>th", trimmedArea)
-            .eq("is_active", true)
-            .maybeSingle();
-          return areaObj?.slug || null;
-        } catch (err) {
-          console.error("Error looking up popular area slug in fetch-public-property:", err);
-          return null;
-        }
-      },
-      [`popular-area-slug-${trimmedArea}`],
-      { revalidate: 31536000, tags: ["popular-areas", `area-slug-${trimmedArea}`] }
-    )();
+    const trimmedArea = areaNameName.trim().toLowerCase();
+    try {
+      const lookupMap = await getPopularAreasLookupMap();
+      popularAreaSlug = lookupMap[trimmedArea]?.slug || null;
+    } catch (err) {
+      console.error("Error looking up popular area slug in fetch-public-property:", err);
+    }
   }
 
   const data: PropertyDetail = {

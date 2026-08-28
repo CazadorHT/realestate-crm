@@ -448,27 +448,18 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         >();
 
         if (popularAreaNames.length > 0) {
-          const sortedNames = [...popularAreaNames].sort();
-          const cacheKey = `area-trans-${sortedNames.join(",")}`;
-          const getCachedAreaTranslations = unstable_cache(
-            async () => {
-              const { data: areaData } = await supabase
-                .from("popular_areas")
-                .select("name, name_en, name_cn, name_ru")
-                .in("name", sortedNames);
-              return areaData || [];
-            },
-            [cacheKey],
-            {
-              revalidate: 31536000, // 1 year cache
-              tags: ["popular-areas", "area-translations"],
-            }
-          );
-
-          const areaData = await getCachedAreaTranslations();
-          (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null; name_ru: string | null }) =>
-            areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru }),
-          );
+          try {
+            const { getPopularAreasLookupMap } = await import("@/features/public/popular-areas");
+            const lookupMap = await getPopularAreasLookupMap();
+            popularAreaNames.forEach((name) => {
+              const matched = lookupMap[name.trim().toLowerCase()];
+              if (matched) {
+                areaTranslationsMap.set(name, { en: matched.en, cn: matched.cn, ru: matched.ru });
+              }
+            });
+          } catch (err) {
+            console.error("Error populating areaTranslationsMap:", err);
+          }
         }
 
         const projectIds = Array.from(

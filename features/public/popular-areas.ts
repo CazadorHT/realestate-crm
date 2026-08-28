@@ -521,3 +521,54 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
   { revalidate: 31536000, tags: ["suggestions", "master-data", "projects", "public-data"] }
 );
 
+export type PopularAreaLookupRecord = {
+  th: string;
+  en: string | null;
+  cn: string | null;
+  ru: string | null;
+  slug: string | null;
+};
+
+/**
+ * [S-Tier] Universal Cross-Request Cache for All Popular Areas Lookup
+ * Eliminates single-row & repetitive queries by caching full multilingual mapping in memory.
+ */
+export const getPopularAreasLookupMap = unstable_cache(
+  async (): Promise<Record<string, PopularAreaLookupRecord>> => {
+    try {
+      const client = createPublicClient();
+      const { data, error } = await client
+        .from("popular_areas_v3")
+        .select("name, name_th, name_en, name_cn, name_ru, slug")
+        .eq("is_active", true);
+
+      if (error) {
+        console.error("Error fetching popular_areas_v3 for lookup map:", error);
+        return {};
+      }
+
+      const lookup: Record<string, PopularAreaLookupRecord> = {};
+
+      (data || []).forEach((item: any) => {
+        const th = item.name_th || (typeof item.name === "object" ? item.name?.th : item.name) || "";
+        const en = item.name_en || (typeof item.name === "object" ? item.name?.en : null) || null;
+        const cn = item.name_cn || (typeof item.name === "object" ? item.name?.cn : null) || null;
+        const ru = item.name_ru || (typeof item.name === "object" ? item.name?.ru : null) || null;
+        const slug = item.slug || null;
+
+        const record: PopularAreaLookupRecord = { th, en, cn, ru, slug };
+        if (th) lookup[th.trim().toLowerCase()] = record;
+        if (en) lookup[en.trim().toLowerCase()] = record;
+        if (slug) lookup[slug.trim().toLowerCase()] = record;
+      });
+
+      return lookup;
+    } catch (e) {
+      console.error("getPopularAreasLookupMap error:", e);
+      return {};
+    }
+  },
+  ["all-popular-areas-lookup-map-v1"],
+  { revalidate: 31536000, tags: ["popular-areas", "area-translations"] }
+);
+

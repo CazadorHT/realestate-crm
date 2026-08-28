@@ -547,6 +547,8 @@ export async function createPropertyAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    revalidateTag("public-properties", "seconds");
+    revalidateTag("property-facets", "seconds");
     purgeCloudflareCache([
       `/properties/${seoData.slug}`,
       "/properties",
@@ -790,6 +792,8 @@ export async function duplicatePropertyAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    revalidateTag("public-properties", "seconds");
+    revalidateTag("property-facets", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     purgeCloudflareCache(["/properties", "/", "/api/public/properties"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
