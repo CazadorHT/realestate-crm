@@ -241,10 +241,10 @@ export const processPropertyCreated = inngest.createFunction(
 
         const newDesc = {
           ...oldDesc,
-          ...(aiResult.th ? { th: aiResult.th } : {}),
-          ...(aiResult.en ? { en: aiResult.en } : {}),
-          ...(aiResult.cn ? { cn: aiResult.cn } : {}),
-          ...(aiResult.ru ? { ru: aiResult.ru } : {}),
+          ...(aiResult.th && (!oldDesc.th || oldDesc.th.trim() === "") ? { th: aiResult.th } : {}),
+          ...(aiResult.en && (!oldDesc.en || oldDesc.en.trim() === "") ? { en: aiResult.en } : {}),
+          ...(aiResult.cn && (!oldDesc.cn || oldDesc.cn.trim() === "") ? { cn: aiResult.cn } : {}),
+          ...(aiResult.ru && (!oldDesc.ru || oldDesc.ru.trim() === "") ? { ru: aiResult.ru } : {}),
         };
 
         const newMeta = {

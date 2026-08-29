@@ -69,7 +69,8 @@ export function craftPropertyDescriptionPrompt(property: any, hasImage: boolean 
        - Location Highlights
        - Call to action
     3. **SEO**: Generate a Meta Title (max 60 chars) and Meta Description (max 160 chars) optimized for search engines.
-    4. **Output Format**: MANDATORY JSON. Do not include any markdown formatting or extra text outside the JSON block.
+    4. **STRICT COMPLIANCE**: Do NOT hallucinate or invent prices, sizes, or any numbers. Use ONLY the data provided.
+    5. **Output Format**: MANDATORY JSON. Do not include any markdown formatting or extra text outside the JSON block.
 
     ### JSON REGUIRED SCHEMA:
     {
