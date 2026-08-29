@@ -164,8 +164,9 @@ export function BrandIntroLoader() {
                       100% { transform: translate(0, 0); opacity: 1; }
                     }
                     @keyframes assembleTop {
-                      0% { transform: translateY(-35px); opacity: 0; }
-                      100% { transform: translateY(0); opacity: 0.85; }
+                      0% { transform: translateY(-48px); opacity: 0; }
+                      35% { opacity: 0.75; }
+                      100% { transform: translateY(0); opacity: 0.88; }
                     }
                     @keyframes assembleText {
                       0% { transform: translateY(-12px); opacity: 0; }
@@ -187,13 +188,13 @@ export function BrandIntroLoader() {
                     }
                     /* Piece 2: Right column flies in from bottom-right */
                     .side-c {
-                      animation: assembleC 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+                      animation: assembleC 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
                       fill: url(#vccGradDarkSplash);
                       will-change: transform, opacity;
                     }
-                    /* Piece 3: Top roof cap drops down and snaps into place */
+                    /* Piece 3: Top roof cap glides down gracefully from above and settles into place */
                     .side-top {
-                      animation: assembleTop 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
+                      animation: assembleTop 0.95s cubic-bezier(0.25, 1, 0.5, 1) 0.32s both;
                       fill: #3B82F6;
                       will-change: transform, opacity;
                     }
