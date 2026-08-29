@@ -23,6 +23,7 @@ import { getTransitLinesWithStations } from "@/features/public/stations";
 import { CategoryNavigationCards } from "@/components/public/CategoryNavigationCards";
 
 // Critical Above-the-Fold components (Stay static for visual stability)
+import { BrandIntroLoader } from "@/components/public/BrandIntroLoader";
 import { HeroSection } from "@/components/public/HeroSection";
 import { PropertyTypeGrid } from "@/components/public/PropertyTypeGrid";
 import { StatsBand } from "@/components/public/StatsBand";
@@ -263,6 +264,9 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden scroll-smooth selection:bg-blue-100">
+      {/* Luxury First-Visit Brand Intro Loader */}
+      <BrandIntroLoader />
+
       {/* RealEstateAgent Schema */}
       <script
         type="application/ld+json"
