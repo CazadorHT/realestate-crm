@@ -102,7 +102,7 @@ export async function HeroSection({
               <div className="lg:col-span-4 w-full max-w-md mx-auto lg:max-w-none relative z-20">
 
                 {!hasProperties && (
-                  <div className="absolute max-w-sm inset-0 z-50 bg-white/40 backdrop-blur-[2px] rounded-2xl flex items-center justify-center">
+                  <div className="absolute  inset-0 z-50 bg-white/40 backdrop-blur-[2px] rounded-2xl flex items-center justify-center">
                     <div className="bg-white px-6 py-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100/50 text-center transform -translate-y-4">
                       <div className="w-12 h-12 mb-3 rounded-full bg-slate-50 flex items-center justify-center mx-auto">
                         <svg

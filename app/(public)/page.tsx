@@ -153,7 +153,7 @@ export default async function LandingPage() {
   ] = await Promise.all([
     getPublicProvincesAction(),
     getPublicProperties({ limit: 12, sort: "NEWEST" }),
-    getPublicProperties({ filter: 'hot_deals', limit: 4 }),
+    getPublicProperties({ filter: 'hot_deals', limit: 4, includeFacets: false }),
     getBlogPosts(undefined, 4),
     getPublicPartnersCached(),
     getServerFAQs(),
