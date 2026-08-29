@@ -405,7 +405,9 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         
         if (error) {
           console.error("Error fetching properties:", error);
-          return { properties: [], facets: null };
+          // 🚨 CRITICAL: Throw the error instead of returning [] so Next.js doesn't cache the empty array for 1 year.
+          // If this is an ISR revalidation, throwing will cause Next.js to keep serving the old Stale Cache instead of an empty page.
+          throw new Error(`Database error fetching properties: ${error.message}`);
         }
 
         let facets: PropertyFacets | null = null;
