@@ -38,6 +38,8 @@ interface StudioLayoutControlsProps {
   setCustomAccentColor: (c: string) => void;
   fontSizeScale: FontSizeScale;
   setFontSizeScale: (f: FontSizeScale) => void;
+  priceFontSizeScale: FontSizeScale;
+  setPriceFontSizeScale: (f: FontSizeScale) => void;
   contentPosition: ContentPosition;
   setContentPosition: (p: ContentPosition) => void;
   photoFilter: PhotoFilter;
@@ -65,6 +67,8 @@ export function StudioLayoutControls({
   setCustomAccentColor,
   fontSizeScale,
   setFontSizeScale,
+  priceFontSizeScale,
+  setPriceFontSizeScale,
   contentPosition,
   setContentPosition,
   photoFilter,
@@ -311,6 +315,41 @@ export function StudioLayoutControls({
                 className={`py-1.5 px-1 rounded-xl border text-xs font-medium transition-all text-center flex flex-col items-center gap-0.5 cursor-pointer ${
                   fontSizeScale === f.id
                     ? "bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-xs scale-102"
+                    : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
+                }`}
+              >
+                <span className="text-[11px] font-bold">{f.label}</span>
+                <span className="text-[9px] opacity-70">{f.sub}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 2.5 Price Font Size */}
+        <div className="space-y-3 bg-slate-900/40 p-3 rounded-2xl border border-slate-700/50 shadow-inner">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
+              <span className="font-bold text-sm">$</span>
+              {isEn ? "Price Font Size" : "ขนาดฟอนต์ราคา"}
+            </Label>
+            <span className="text-[10px] text-emerald-400 font-mono">
+              {priceFontSizeScale === "sm" ? "85%" : priceFontSizeScale === "lg" ? "116%" : priceFontSizeScale === "xl" ? "130%" : "100%"}
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-1">
+            {[
+              { id: "sm", label: isEn ? "Small" : "เล็ก", sub: "85%" },
+              { id: "md", label: isEn ? "Normal" : "ปกติ", sub: "100%" },
+              { id: "lg", label: isEn ? "Large" : "ใหญ่", sub: "116%" },
+              { id: "xl", label: isEn ? "XL" : "ยักษ์", sub: "130%" },
+            ].map((f) => (
+              <button
+                key={`price-${f.id}`}
+                type="button"
+                onClick={() => setPriceFontSizeScale(f.id as FontSizeScale)}
+                className={`py-1.5 px-1 rounded-xl border text-xs font-medium transition-all text-center flex flex-col items-center gap-0.5 cursor-pointer ${
+                  priceFontSizeScale === f.id
+                    ? "bg-emerald-500 text-slate-950 border-emerald-400 font-bold shadow-xs scale-102"
                     : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
                 }`}
               >

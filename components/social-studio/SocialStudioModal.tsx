@@ -58,6 +58,9 @@ import { StudioContentEditor } from "./components/StudioContentEditor";
 import { StudioAlbumPackager } from "./components/StudioAlbumPackager";
 import { StudioShareDialog } from "./components/StudioShareDialog";
 import { StudioCarouselPresets } from "./components/StudioCarouselPresets";
+import { StudioPresetManager } from "./components/StudioPresetManager";
+import { getSocialStudioPresets, saveSocialStudioPreset } from "@/features/properties/actions/social-presets";
+import type { SocialStudioPresetConfig } from "./types";
 
 export type { SocialStudioProperty };
 
@@ -112,6 +115,7 @@ export function SocialStudioModal({
   // Typography Scaling & Content Alignment
   const [contentPosition, setContentPosition] = useState<ContentPosition>("bottom");
   const [fontSizeScale, setFontSizeScale] = useState<FontSizeScale>("md");
+  const [priceFontSizeScale, setPriceFontSizeScale] = useState<FontSizeScale>("md");
   const [specFontSizeScale, setSpecFontSizeScale] = useState<SpecFontSizeScale>("xl");
 
   // Dual Independent Zones Assignment & Offsets
@@ -224,6 +228,8 @@ export function SocialStudioModal({
   const [isSharingAlbum, setIsSharingAlbum] = useState<boolean>(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState<boolean>(false);
   const [shareCoverImageUrl, setShareCoverImageUrl] = useState<string | null>(null);
+  const [presets, setPresets] = useState<Record<string, SocialStudioPresetConfig>>({});
+  const [isLoadingPresets, setIsLoadingPresets] = useState(true);
   const [shareCoverFile, setShareCoverFile] = useState<File | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -279,6 +285,87 @@ export function SocialStudioModal({
 
     return urls;
   }, [property.images]);
+
+  // ---- Preset Logic ----
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoadingPresets(true);
+      getSocialStudioPresets().then((data) => {
+        setPresets(data || {});
+        setIsLoadingPresets(false);
+      });
+    }
+  }, [isOpen]);
+
+  const handleApplyPreset = (key: string) => {
+    const config = presets[key];
+    if (!config) return;
+    
+    if (config.aspectRatio) setAspectRatio(config.aspectRatio);
+    if (config.theme) setTheme(config.theme);
+    if (config.layout) setLayout(config.layout);
+    if (config.contentPosition) setContentPosition(config.contentPosition);
+    if (config.fontSizeScale) setFontSizeScale(config.fontSizeScale);
+    if (config.priceFontSizeScale) setPriceFontSizeScale(config.priceFontSizeScale);
+    if (config.specFontSizeScale) setSpecFontSizeScale(config.specFontSizeScale);
+    if (config.zoneMapping) setZoneMapping(config.zoneMapping);
+    if (config.card1YOffset !== undefined) setCard1YOffset(config.card1YOffset);
+    if (config.card2YOffset !== undefined) setCard2YOffset(config.card2YOffset);
+    if (config.cardHeightPercent !== undefined) setCardHeightPercent(config.cardHeightPercent);
+    if (config.cardWidthPercent !== undefined) setCardWidthPercent(config.cardWidthPercent);
+    if (config.cardTextAlign) setCardTextAlign(config.cardTextAlign);
+    if (config.cardOpacity !== undefined) setCardOpacity(config.cardOpacity);
+    if (config.scrimOpacity !== undefined) setScrimOpacity(config.scrimOpacity);
+    if (config.topScrimOpacity !== undefined) setTopScrimOpacity(config.topScrimOpacity);
+    if (config.bottomScrimOpacity !== undefined) setBottomScrimOpacity(config.bottomScrimOpacity);
+    if (config.priceFormatStyle) setPriceFormatStyle(config.priceFormatStyle);
+    if (config.cardBackground) setCardBackground(config.cardBackground);
+    if (config.cardYOffset !== undefined) setCardYOffset(config.cardYOffset);
+    if (config.customAccentColor) setCustomAccentColor(config.customAccentColor);
+    if (config.promoPosition) setPromoPosition(config.promoPosition);
+    if (config.promoColor) setPromoColor(config.promoColor);
+    if (config.promoTextColor) setPromoTextColor(config.promoTextColor);
+    if (config.photoFilter) setPhotoFilter(config.photoFilter);
+    if (config.gridLineWidth !== undefined) setGridLineWidth(config.gridLineWidth);
+    if (config.gridLineColor) setGridLineColor(config.gridLineColor);
+    if (config.customTitleColor) setCustomTitleColor(config.customTitleColor);
+    if (config.customPriceColor) setCustomPriceColor(config.customPriceColor);
+    if (config.customHeadlineColor) setCustomHeadlineColor(config.customHeadlineColor);
+    if (config.customProjectNameColor) setCustomProjectNameColor(config.customProjectNameColor);
+    if (config.customCardBgColor) setCustomCardBgColor(config.customCardBgColor);
+    if (config.customCanvasBgColor) setCustomCanvasBgColor(config.customCanvasBgColor);
+    if (config.customListingBadgeBgColor) setCustomListingBadgeBgColor(config.customListingBadgeBgColor);
+    if (config.customListingBadgeTextColor) setCustomListingBadgeTextColor(config.customListingBadgeTextColor);
+    if (config.showBrandingHeader !== undefined) setShowBrandingHeader(config.showBrandingHeader);
+    if (config.showTopListingBadge !== undefined) setShowTopListingBadge(config.showTopListingBadge);
+    if (config.headerFontSizeScale) setHeaderFontSizeScale(config.headerFontSizeScale);
+    if (config.badgeFontSizeScale) setBadgeFontSizeScale(config.badgeFontSizeScale);
+    if (config.headerYOffset !== undefined) setHeaderYOffset(config.headerYOffset);
+    if (config.cardRightMargin !== undefined) setCardRightMargin(config.cardRightMargin);
+    if (config.showHeadline !== undefined) setShowHeadline(config.showHeadline);
+
+    toast.success(`Applied Custom ${key.split("_")[1]} preset!`);
+  };
+
+  const handleSavePreset = async (key: string) => {
+    const config: SocialStudioPresetConfig = {
+      aspectRatio, theme, layout, contentPosition, fontSizeScale, priceFontSizeScale, specFontSizeScale, zoneMapping,
+      card1YOffset, card2YOffset, cardHeightPercent, cardWidthPercent, cardTextAlign, cardOpacity, scrimOpacity,
+      topScrimOpacity, bottomScrimOpacity, priceFormatStyle, cardBackground, cardYOffset, customAccentColor,
+      promoPosition, promoColor, promoTextColor, photoFilter, gridLineWidth, gridLineColor, customTitleColor,
+      customPriceColor, customHeadlineColor, customProjectNameColor, customCardBgColor, customCanvasBgColor,
+      customListingBadgeBgColor, customListingBadgeTextColor, showBrandingHeader, showTopListingBadge,
+      headerFontSizeScale, badgeFontSizeScale, headerYOffset, cardRightMargin, showHeadline
+    };
+
+    const res = await saveSocialStudioPreset(key, config);
+    if (res.success) {
+      setPresets((prev) => ({ ...prev, [key]: config }));
+      toast.success(`Saved as Custom ${key.split("_")[1]} preset!`);
+    } else {
+      toast.error(`Failed to save preset: ${res.error}`);
+    }
+  };
 
   // Auto-select all real photos for album by default
   useEffect(() => {
@@ -447,6 +534,7 @@ export function SocialStudioModal({
         cardRightMargin,
         contentPosition,
         fontSizeScale,
+        priceFontSizeScale,
         customAccentColor,
         promoText,
         promoPosition,
@@ -554,6 +642,7 @@ export function SocialStudioModal({
     cardRightMargin,
     contentPosition,
     fontSizeScale,
+    priceFontSizeScale,
     customAccentColor,
     customTitleColor,
     customPriceColor,
@@ -956,6 +1045,14 @@ export function SocialStudioModal({
               {/* TAB 1: Layout & Theme */}
               {activeTab === "layout" && (
                 <div className="space-y-4 animate-in fade-in duration-200">
+                  <StudioPresetManager
+                    availablePresets={presets}
+                    isLoading={isLoadingPresets}
+                    onApplyPreset={handleApplyPreset}
+                    onSavePreset={handleSavePreset}
+                  />
+
+
                   <StudioLanguageBar
                     language={language}
                     onLanguageChange={handleLanguageChange}
@@ -978,6 +1075,8 @@ export function SocialStudioModal({
                     setCustomAccentColor={setCustomAccentColor}
                     fontSizeScale={fontSizeScale}
                     setFontSizeScale={setFontSizeScale}
+                    priceFontSizeScale={priceFontSizeScale}
+                    setPriceFontSizeScale={setPriceFontSizeScale}
                     contentPosition={contentPosition}
                     setContentPosition={setContentPosition}
                     photoFilter={photoFilter}

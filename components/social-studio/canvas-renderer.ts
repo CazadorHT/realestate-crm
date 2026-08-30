@@ -440,6 +440,7 @@ export async function renderBannerToCanvas(
 
   // Font Size Multiplier
   const fScale = options.fontSizeScale === "sm" ? 0.85 : options.fontSizeScale === "lg" ? 1.16 : options.fontSizeScale === "xl" ? 1.30 : 1.0;
+  const priceFScale = options.priceFontSizeScale === "sm" ? 0.85 : options.priceFontSizeScale === "lg" ? 1.16 : options.priceFontSizeScale === "xl" ? 1.30 : (options.priceFontSizeScale ? 1.0 : fScale);
   const isSplitMode = options.contentPosition === "split_hero";
 
   const isStory = options.aspectRatio === "9:16";
@@ -553,10 +554,12 @@ export async function renderBannerToCanvas(
   const getListingPrefix = () => {
     if (options.showListingType === false || !options.listingType) return "";
     const isRent = options.listingType === "RENT";
-    if (lang === "en") return isRent ? "[Rent] " : "[Sale] ";
-    if (lang === "zh") return isRent ? "[出租] " : "[出售] ";
-    if (lang === "ru") return isRent ? "[Аренда] " : "[Продажа] ";
-    return isRent ? "[เช่า] " : "[ขาย] ";
+    const isBoth = options.listingType === "SALE_AND_RENT";
+    
+    if (lang === "en") return isBoth ? "[Sale/Rent] " : isRent ? "[Rent] " : "[Sale] ";
+    if (lang === "zh") return isBoth ? "[售/租] " : isRent ? "[出租] " : "[出售] ";
+    if (lang === "ru") return isBoth ? "[Продажа/Аренда] " : isRent ? "[Аренда] " : "[Продажа] ";
+    return isBoth ? "[ขาย/เช่า] " : isRent ? "[เช่า] " : "[ขาย] ";
   };
 
   const getListingBadgeText = () => {
@@ -919,7 +922,7 @@ export async function renderBannerToCanvas(
       ctx.textBaseline = "top";
       
       // Auto-fit font size if long dual price
-      let priceFontSize = Math.round(44 * fScale);
+      let priceFontSize = Math.round(44 * priceFScale);
       ctx.font = `bold ${priceFontSize}px 'Prompt', sans-serif`;
       let pWidth = ctx.measureText(options.priceText).width;
       if (pWidth > innerW) {

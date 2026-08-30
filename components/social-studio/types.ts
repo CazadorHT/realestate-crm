@@ -96,6 +96,7 @@ export interface BannerRenderOptions {
   priceFormatStyle?: StudioPriceFormatStyle;
   contentPosition?: ContentPosition;
   fontSizeScale?: FontSizeScale;
+  priceFontSizeScale?: FontSizeScale;
 
   // Feature 1: Custom Accent Color & Custom Element Colors
   customAccentColor?: string;
@@ -179,3 +180,49 @@ export interface AvailableBadgeItem {
   labelEn?: string;
 }
 
+
+// Preset Settings (Everything except content/text)
+export interface SocialStudioPresetConfig {
+  aspectRatio: AspectRatio;
+  theme: StudioTheme;
+  layout: StudioLayout;
+  contentPosition: ContentPosition;
+  fontSizeScale: FontSizeScale;
+  priceFontSizeScale: FontSizeScale;
+  specFontSizeScale: SpecFontSizeScale;
+  zoneMapping: ElementZoneMapping;
+  card1YOffset: number;
+  card2YOffset: number;
+  cardHeightPercent: number;
+  cardWidthPercent: number;
+  cardTextAlign: "left" | "center" | "right";
+  cardOpacity: number;
+  scrimOpacity: number;
+  topScrimOpacity: number;
+  bottomScrimOpacity: number;
+  priceFormatStyle: StudioPriceFormatStyle;
+  cardBackground: CardBackground;
+  cardYOffset: number;
+  customAccentColor: string;
+  promoPosition: PromoPosition;
+  promoColor: string;
+  promoTextColor: string;
+  photoFilter: PhotoFilter;
+  gridLineWidth: number;
+  gridLineColor: string;
+  customTitleColor: string;
+  customPriceColor: string;
+  customHeadlineColor: string;
+  customProjectNameColor: string;
+  customCardBgColor: string;
+  customCanvasBgColor: string;
+  customListingBadgeBgColor: string;
+  customListingBadgeTextColor: string;
+  showBrandingHeader: boolean;
+  showTopListingBadge: boolean;
+  headerFontSizeScale: FontSizeScale;
+  badgeFontSizeScale: FontSizeScale;
+  headerYOffset: number;
+  cardRightMargin: number;
+  showHeadline: boolean;
+}
