@@ -89,14 +89,14 @@ export async function GET(request: NextRequest) {
  */
 async function getSmartRedirect(supabase: any, userId: string): Promise<string> {
   try {
-    const { data: profile } = await supabase
-      .from("profiles")
+    const { data: identity } = await supabase
+      .from("identities_v3")
       .select("is_active, role")
       .eq("id", userId)
       .maybeSingle();
 
-    if (profile?.is_active) {
-      const role = (profile.role as string || "").toUpperCase();
+    if (identity?.is_active) {
+      const role = (identity.role as string || "").toUpperCase();
       if (role === "ADMIN" || role === "AGENT" || role === "MANAGER" || role === "OWNER") {
         console.log(`✅ [Auth Confirm] User ${userId} is approved staff (${role}), redirecting to /protected`);
         return "/protected";

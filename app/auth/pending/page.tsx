@@ -40,13 +40,13 @@ export default function PendingApprovalPage() {
         if (!user || !isSubscribed) return;
 
         // 1. Initial check
-        const { data: profile } = await supabase
-          .from("profiles")
+        const { data: identity } = await supabase
+          .from("identities_v3")
           .select("is_active")
           .eq("id", user.id)
           .single();
 
-        if (isSubscribed && profile && profile.is_active) {
+        if (isSubscribed && identity && identity.is_active) {
           setIsApproved(true);
           setCountdown(5);
           return;
@@ -141,14 +141,14 @@ export default function PendingApprovalPage() {
                 return;
               }
 
-              // 2. ตรวจสอบข้อมูลจาก DB profiles โดยตรง
-              const { data: profile } = await supabase
-                .from("profiles")
+              // 2. ตรวจสอบข้อมูลจาก DB identities_v3 โดยตรง (แหล่งความจริงเดียวใน V3)
+              const { data: identity } = await supabase
+                .from("identities_v3")
                 .select("is_active")
                 .eq("id", user.id)
                 .maybeSingle();
 
-              if (profile && profile.is_active) {
+              if (identity && identity.is_active) {
                 // บังคับรีเฟรช Session เพื่อดึงสิทธิ์ (JWT app_metadata role) ล่าสุดจาก Supabase
                 await supabase.auth.refreshSession();
                 setIsApproved(true);
