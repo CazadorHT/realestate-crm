@@ -156,6 +156,10 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
     ...defaultFields,
     ...profile,
     id: identity.id,
+    is_active:
+      identity.is_active !== undefined && identity.is_active !== null
+        ? identity.is_active
+        : (profile?.is_active ?? true),
     email: identity.email || user.email || null,
     role: (identity.role as UserRole) || "AGENT",
     category: identity.category ?? undefined,

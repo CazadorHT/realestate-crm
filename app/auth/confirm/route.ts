@@ -3,6 +3,7 @@ import { type EmailOtpType } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { type NextRequest, NextResponse } from "next/server";
 import { notifySignupAction } from "@/features/audit/actions";
+import { isStaff } from "@/lib/auth-shared";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -95,12 +96,9 @@ async function getSmartRedirect(supabase: any, userId: string): Promise<string> 
       .eq("id", userId)
       .maybeSingle();
 
-    if (identity?.is_active) {
-      const role = (identity.role as string || "").toUpperCase();
-      if (role === "ADMIN" || role === "AGENT" || role === "MANAGER" || role === "OWNER") {
-        console.log(`✅ [Auth Confirm] User ${userId} is approved staff (${role}), redirecting to /protected`);
-        return "/protected";
-      }
+    if (identity?.is_active && isStaff(identity.role)) {
+      console.log(`✅ [Auth Confirm] User ${userId} is approved staff (${identity.role}), redirecting to /protected`);
+      return "/protected";
     }
   } catch (err) {
     console.error("[Auth Confirm] Smart redirect check failed:", err);

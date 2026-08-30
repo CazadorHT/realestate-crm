@@ -1,9 +1,20 @@
-export type UserRole = "ADMIN" | "AGENT" | "MANAGER" | "USER" | "OWNER" | "owner";
+export type UserRole =
+  | "ADMIN"
+  | "AGENT"
+  | "MANAGER"
+  | "USER"
+  | "OWNER"
+  | "owner"
+  | "BRANCH_MANAGER"
+  | "SUPER_ADMIN"
+  | "TENANT_ADMIN"
+  | "STAFF";
 
 /** 👑 Global Admin: จัดการได้ทั้งระบบ ทุกสาขา */
 export function isAdmin(role: string | null | undefined) {
   if (!role) return false;
-  return role.toUpperCase() === "ADMIN";
+  const r = role.toUpperCase();
+  return r === "ADMIN" || r === "SUPER_ADMIN";
 }
 
 /** 🏠 Branch Owner: เจ้าของสาขา มีสิทธิ์สูงสุดในสาขาตัวเอง */
@@ -16,7 +27,16 @@ export function isOwner(role: string | null | undefined) {
 export function isStaff(role: string | null | undefined) {
   if (!role) return false;
   const r = role.toUpperCase();
-  return r === "ADMIN" || r === "AGENT" || r === "MANAGER" || r === "OWNER";
+  return (
+    r === "ADMIN" ||
+    r === "AGENT" ||
+    r === "MANAGER" ||
+    r === "OWNER" ||
+    r === "BRANCH_MANAGER" ||
+    r === "SUPER_ADMIN" ||
+    r === "TENANT_ADMIN" ||
+    r === "STAFF"
+  );
 }
 
 export const ROLE_LABELS: Record<string, string> = {
