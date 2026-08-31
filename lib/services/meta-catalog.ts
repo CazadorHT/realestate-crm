@@ -174,186 +174,251 @@ function buildMetaCatalogXml(propertiesData: any[]) {
     const originalRentalPrice =
       (pricingObj.original_rental_price as number) || null;
 
-    // --- PRICE LOGIC ---
-    const listingTypeInt = p.listing_type;
-    let listingType =
-      listingTypeInt === 1 ? "for_rent_by_agent" : "for_sale_by_agent";
-    let currentPrice = listingTypeInt === 1 ? p.rent_price : p.sale_price;
-    let originalPrice =
-      listingTypeInt === 1 ? originalRentalPrice : originalSalePrice;
+    type ListingMode = {
+      id: string;
+      mode: "sale" | "rent";
+      listingType: string;
+      availability: string;
+      currentPrice: number;
+      originalPrice: number | null;
+      hasDiscount: boolean;
+      title: string;
+      priceBand: string;
+      modeTh: string;
+    };
 
-    if (listingTypeInt === 2 && !currentPrice && p.rent_price) {
-      listingType = "for_rent_by_agent";
-      currentPrice = p.rent_price;
-      originalPrice = originalRentalPrice;
+    const modesToGenerate: ListingMode[] = [];
+
+    const hasSale = (p.listing_type === 0 || p.listing_type === 2) && Boolean(p.sale_price && p.sale_price > 0);
+    const hasRent = (p.listing_type === 1 || p.listing_type === 2) && Boolean(p.rent_price && p.rent_price > 0);
+    const isBoth = hasSale && hasRent;
+
+    if (hasSale) {
+      const price = p.sale_price!;
+      const orig = originalSalePrice;
+      const disc = Boolean(orig && orig > price);
+      let pb = "";
+      if (price < 3000000) pb = "ขายต่ำกว่า 3 ล้าน";
+      else if (price < 10000000) pb = "ขาย 3-10 ล้าน";
+      else if (price < 30000000) pb = "ขาย 10-30 ล้าน";
+      else pb = "ขาย 30 ล้าน+";
+
+      modesToGenerate.push({
+        id: isBoth ? `${p.id}-sale` : p.id,
+        mode: "sale",
+        listingType: "for_sale_by_agent",
+        availability: "for_sale",
+        currentPrice: price,
+        originalPrice: orig,
+        hasDiscount: disc,
+        title: isBoth ? formatTitleForMode(title, "sale") : title,
+        priceBand: pb,
+        modeTh: "ขาย",
+      });
+    }
+
+    if (hasRent) {
+      const price = p.rent_price!;
+      const orig = originalRentalPrice;
+      const disc = Boolean(orig && orig > price);
+      let pb = "";
+      if (price < 15000) pb = "เช่าต่ำกว่า 15,000";
+      else if (price < 30000) pb = "เช่า 15,000-30,000";
+      else if (price < 80000) pb = "เช่า 30,000-80,000";
+      else pb = "เช่า 80,000+";
+
+      modesToGenerate.push({
+        id: isBoth ? `${p.id}-rent` : p.id,
+        mode: "rent",
+        listingType: "for_rent_by_agent",
+        availability: "for_rent",
+        currentPrice: price,
+        originalPrice: orig,
+        hasDiscount: disc,
+        title: isBoth ? formatTitleForMode(title, "rent") : title,
+        priceBand: pb,
+        modeTh: "ให้เช่า",
+      });
+    }
+
+    // Fallback: If neither hasSale nor hasRent matched via flags, but there is any price:
+    if (modesToGenerate.length === 0) {
+      if (p.rent_price && p.rent_price > 0) {
+        modesToGenerate.push({
+          id: p.id,
+          mode: "rent",
+          listingType: "for_rent_by_agent",
+          availability: "for_rent",
+          currentPrice: p.rent_price,
+          originalPrice: originalRentalPrice,
+          hasDiscount: Boolean(originalRentalPrice && originalRentalPrice > p.rent_price),
+          title: title,
+          priceBand: p.rent_price < 30000 ? "เช่า 15,000-30,000" : "เช่า 30,000+",
+          modeTh: "ให้เช่า",
+        });
+      } else if (p.sale_price && p.sale_price > 0) {
+        modesToGenerate.push({
+          id: p.id,
+          mode: "sale",
+          listingType: "for_sale_by_agent",
+          availability: "for_sale",
+          currentPrice: p.sale_price,
+          originalPrice: originalSalePrice,
+          hasDiscount: Boolean(originalSalePrice && originalSalePrice > p.sale_price),
+          title: title,
+          priceBand: "ขาย",
+          modeTh: "ขาย",
+        });
+      }
     }
 
     // --- LEAN GUARD: Skip properties without price (Meta rejects them) ---
-    if (!currentPrice) continue;
+    if (modesToGenerate.length === 0) continue;
 
-    xml += `  <listing>\n`;
+    for (const item of modesToGenerate) {
+      xml += `  <listing>\n`;
 
-    // --- REQUIRED FIELDS ---
-    xml += `    <home_listing_id>${p.id}</home_listing_id>\n`;
-    xml += `    <name><![CDATA[${title}]]></name>\n`;
-    xml += `    <description><![CDATA[${description}]]></description>\n`;
-    xml += `    <url>${propertyUrl}</url>\n`;
+      // --- REQUIRED FIELDS ---
+      xml += `    <home_listing_id>${item.id}</home_listing_id>\n`;
+      xml += `    <name><![CDATA[${item.title}]]></name>\n`;
+      xml += `    <description><![CDATA[${description}]]></description>\n`;
+      xml += `    <url>${propertyUrl}${item.mode === "rent" && isBoth ? "?action=rent" : ""}</url>\n`;
 
-    xml += `    <listing_type>${listingType}</listing_type>\n`;
-    xml += `    <availability>${listingTypeInt === 1 ? "for_rent" : "for_sale"}</availability>\n`;
-    xml += `    <property_type>${mapMetaPropertyType(p.property_type)}</property_type>\n`;
+      xml += `    <listing_type>${item.listingType}</listing_type>\n`;
+      xml += `    <availability>${item.availability}</availability>\n`;
+      xml += `    <property_type>${mapMetaPropertyType(p.property_type)}</property_type>\n`;
 
-    // Price
-    const hasDiscount = originalPrice && currentPrice && originalPrice > currentPrice;
-    if (hasDiscount) {
-      xml += `    <price>${originalPrice} THB</price>\n`;
-      xml += `    <sale_price>${currentPrice} THB</sale_price>\n`;
-    } else {
-      xml += `    <price>${currentPrice} THB</price>\n`;
-    }
-
-    // Images — Cover first via <image_url>, then all via nested <image><url>
-    const images = p.media || [];
-    xml += `    <image_url><![CDATA[${coverImage}]]></image_url>\n`;
-    images.slice(0, 20).forEach((img) => {
-      if (img.url) {
-        xml += `    <image>\n      <url><![CDATA[${img.url}]]></url>\n    </image>\n`;
+      // Price
+      if (item.hasDiscount && item.originalPrice) {
+        xml += `    <price>${item.originalPrice} THB</price>\n`;
+        xml += `    <sale_price>${item.currentPrice} THB</sale_price>\n`;
+      } else {
+        xml += `    <price>${item.currentPrice} THB</price>\n`;
       }
-    });
 
-    // --- ADDRESS ---
-    const addrLine1 = (addrObj.address_line1 as string)?.trim() || "Bangkok";
-    const district = (addrObj.district as string)?.trim() || "Bangkok";
-    const province = (addrObj.province as string)?.trim() || "Bangkok";
+      // Images — Cover first via <image_url>, then all via nested <image><url>
+      const images = p.media || [];
+      xml += `    <image_url><![CDATA[${coverImage}]]></image_url>\n`;
+      images.slice(0, 20).forEach((img) => {
+        if (img.url) {
+          xml += `    <image>\n      <url><![CDATA[${img.url}]]></url>\n    </image>\n`;
+        }
+      });
 
-    xml += `    <address format="simple">\n`;
-    xml += `      <component name="addr1"><![CDATA[${addrLine1}]]></component>\n`;
-    xml += `      <component name="city"><![CDATA[${district}]]></component>\n`;
-    xml += `      <component name="region"><![CDATA[${province}]]></component>\n`;
-    xml += `      <component name="country">TH</component>\n`;
-    xml += `    </address>\n`;
+      // --- ADDRESS ---
+      const addrLine1 = (addrObj.address_line1 as string)?.trim() || "Bangkok";
+      const district = (addrObj.district as string)?.trim() || "Bangkok";
+      const province = (addrObj.province as string)?.trim() || "Bangkok";
 
-    // --- PROPERTY DETAILS ---
-    if (p.bedrooms != null) {
-      xml += `    <num_beds>${p.bedrooms}</num_beds>\n`;
+      xml += `    <address format="simple">\n`;
+      xml += `      <component name="addr1"><![CDATA[${addrLine1}]]></component>\n`;
+      xml += `      <component name="city"><![CDATA[${district}]]></component>\n`;
+      xml += `      <component name="region"><![CDATA[${province}]]></component>\n`;
+      xml += `      <component name="country">TH</component>\n`;
+      xml += `    </address>\n`;
+
+      // --- PROPERTY DETAILS ---
+      if (p.bedrooms != null) {
+        xml += `    <num_beds>${p.bedrooms}</num_beds>\n`;
+      }
+      if (p.bathrooms != null) {
+        xml += `    <num_baths>${p.bathrooms}</num_baths>\n`;
+      }
+      if (p.floor_area) {
+        xml += `    <area_size>${Math.round(p.floor_area)}</area_size>\n`;
+        xml += `    <area_unit>sq_m</area_unit>\n`;
+      }
+      const floor = metaObj.floor as string | undefined;
+      if (floor) {
+        xml += `    <floor_size>${floor}</floor_size>\n`;
+      }
+
+      // --- AMENITIES (Meta boolean fields) ---
+      const isFullyFurnished = amenitiesObj.is_fully_furnished as boolean | undefined;
+      if (isFullyFurnished != null) {
+        xml += `    <furnish_type>${isFullyFurnished ? "furnished" : "unfurnished"}</furnish_type>\n`;
+      }
+
+      const parkingSlots = (amenitiesObj.parking_slots as number) || 0;
+      xml += `    <parking_type>${parkingSlots > 0 ? "garage" : "none"}</parking_type>\n`;
+
+      const isPetFriendly = amenitiesObj.is_pet_friendly as boolean | undefined;
+      xml += `    <pet_policy>${isPetFriendly ? "all" : "none"}</pet_policy>\n`;
+
+      // --- NEIGHBORHOOD & PROJECT ---
+      const popularArea = addrObj.popular_area as string | undefined;
+      const neighborhoodVal = projectName
+        ? (popularArea ? `${projectName}, ${popularArea}` : projectName)
+        : popularArea;
+      if (neighborhoodVal) {
+        xml += `    <neighborhood><![CDATA[${neighborhoodVal}]]></neighborhood>\n`;
+      }
+
+      // Meta Real Estate group_id: Groups all listings in the same housing community / project
+      if (p.project_id) {
+        xml += `    <group_id>${p.project_id}</group_id>\n`;
+      }
+
+      // Google Maps Link
+      const googleMapsLink = addrObj.google_maps_link as string | undefined;
+      if (googleMapsLink) {
+        xml += `    <virtual_tour_url>${googleMapsLink}</virtual_tour_url>\n`;
+      }
+
+      // Agent Contact
+      const agent = p.assigned_agent;
+      const agentName = agent?.display_name;
+      const agentPhone = agent?.phone ? decrypt(agent.phone) : null;
+
+      if (agentName) {
+        xml += `    <agent_name><![CDATA[${agentName}]]></agent_name>\n`;
+      }
+      if (agentPhone) {
+        xml += `    <agent_phone><![CDATA[${agentPhone}]]></agent_phone>\n`;
+      }
+
+      // =====================================================================
+      // CUSTOM LABELS — Thai Dynamic Ad Copy Engine (Lean Budget Optimizer)
+      // Use in Ads Manager: {{product.custom_label_0}} etc.
+      // =====================================================================
+
+      const nearTransit = transitObj.near_transit as boolean | undefined;
+
+      // label_0: ป้ายดึงดูด (Attention Hook)
+      let hookLabel = "";
+      if (item.hasDiscount) hookLabel = "🔥 Hot Deal";
+      else if (p.is_exclusive) hookLabel = "⭐ Exclusive";
+      else if (p.verified) hookLabel = "✅ Verified";
+      else hookLabel = "🆕 New Listing";
+      xml += `    <custom_label_0><![CDATA[${hookLabel}]]></custom_label_0>\n`;
+
+      // label_1: ไลฟ์สไตล์ (Lifestyle Tags)
+      const lifestyleParts: string[] = [];
+      if (nearTransit) lifestyleParts.push("ใกล้รถไฟฟ้า");
+      if (isPetFriendly) lifestyleParts.push("เลี้ยงสัตว์ได้");
+      if (isFullyFurnished) lifestyleParts.push("แต่งครบพร้อมอยู่");
+      const allowAirbnb = amenitiesObj.allow_airbnb as boolean | undefined;
+      if (allowAirbnb) lifestyleParts.push("ปล่อย Airbnb ได้");
+      xml += `    <custom_label_1><![CDATA[${lifestyleParts.join(" | ") || "คุณภาพจาก VCC"}]]></custom_label_1>\n`;
+
+      // label_2: โครงการ หรือ โซนทำเล (Project / Location Tag)
+      const locationTag = (popularArea || district || "Bangkok").replace(/^เขต/, "");
+      const clusterTag = projectName || locationTag;
+      xml += `    <custom_label_2><![CDATA[${clusterTag}]]></custom_label_2>\n`;
+
+      // label_3: ประเภท + โหมด (Cluster) — ใช้แยก Product Set ขาย vs เช่า ได้ 100%
+      const typeNameMap: Record<string, string> = {
+        condo: "คอนโด", house: "บ้านเดี่ยว", townhouse: "ทาวน์โฮม",
+        land: "ที่ดิน", other: "อสังหาฯ",
+      };
+      const typeTh = typeNameMap[mapMetaPropertyType(p.property_type)] || "อสังหาฯ";
+      xml += `    <custom_label_3><![CDATA[${typeTh}${item.modeTh}]]></custom_label_3>\n`;
+
+      // label_4: ช่วงราคา (Price Band) — ใช้ยิง Lookalike ตาม Budget Segment
+      xml += `    <custom_label_4><![CDATA[${item.priceBand}]]></custom_label_4>\n`;
+
+      xml += `  </listing>\n`;
     }
-    if (p.bathrooms != null) {
-      xml += `    <num_baths>${p.bathrooms}</num_baths>\n`;
-    }
-    if (p.floor_area) {
-      xml += `    <area_size>${Math.round(p.floor_area)}</area_size>\n`;
-      xml += `    <area_unit>sq_m</area_unit>\n`;
-    }
-    const floor = metaObj.floor as string | undefined;
-    if (floor) {
-      xml += `    <floor_size>${floor}</floor_size>\n`;
-    }
-
-    // --- AMENITIES (Meta boolean fields) ---
-    const isFullyFurnished = amenitiesObj.is_fully_furnished as boolean | undefined;
-    if (isFullyFurnished != null) {
-      xml += `    <furnish_type>${isFullyFurnished ? "furnished" : "unfurnished"}</furnish_type>\n`;
-    }
-
-    const parkingSlots = (amenitiesObj.parking_slots as number) || 0;
-    xml += `    <parking_type>${parkingSlots > 0 ? "garage" : "none"}</parking_type>\n`;
-
-    const isPetFriendly = amenitiesObj.is_pet_friendly as boolean | undefined;
-    xml += `    <pet_policy>${isPetFriendly ? "all" : "none"}</pet_policy>\n`;
-
-    // --- NEIGHBORHOOD & PROJECT ---
-    const popularArea = addrObj.popular_area as string | undefined;
-    const neighborhoodVal = projectName
-      ? (popularArea ? `${projectName}, ${popularArea}` : projectName)
-      : popularArea;
-    if (neighborhoodVal) {
-      xml += `    <neighborhood><![CDATA[${neighborhoodVal}]]></neighborhood>\n`;
-    }
-
-    // Meta Real Estate group_id: Groups all listings in the same housing community / project
-    if (p.project_id) {
-      xml += `    <group_id>${p.project_id}</group_id>\n`;
-    }
-
-    // Google Maps Link
-    const googleMapsLink = addrObj.google_maps_link as string | undefined;
-    if (googleMapsLink) {
-      xml += `    <virtual_tour_url>${googleMapsLink}</virtual_tour_url>\n`;
-    }
-
-    // Agent Contact
-    const agent = p.assigned_agent;
-    const agentName = agent?.display_name;
-    const agentPhone = agent?.phone ? decrypt(agent.phone) : null;
-
-    if (agentName) {
-      xml += `    <agent_name><![CDATA[${agentName}]]></agent_name>\n`;
-    }
-    if (agentPhone) {
-      xml += `    <agent_phone><![CDATA[${agentPhone}]]></agent_phone>\n`;
-    }
-
-    // =====================================================================
-    // CUSTOM LABELS — Thai Dynamic Ad Copy Engine (Lean Budget Optimizer)
-    // Use in Ads Manager: {{product.custom_label_0}} etc.
-    // =====================================================================
-
-    const nearTransit = transitObj.near_transit as boolean | undefined;
-
-    // label_0: ป้ายดึงดูด (Attention Hook) — ยัดขึ้นหัวข้อโฆษณาได้เลย
-    // ผลลัพธ์: "🔥 Hot Deal", "✅ Verified", "⭐ Exclusive", "🆕 New Listing"
-    let hookLabel = "";
-    if (hasDiscount) hookLabel = "🔥 Hot Deal";
-    else if (p.is_exclusive) hookLabel = "⭐ Exclusive";
-    else if (p.verified) hookLabel = "✅ Verified";
-    else hookLabel = "🆕 New Listing";
-    xml += `    <custom_label_0><![CDATA[${hookLabel}]]></custom_label_0>\n`;
-
-    // label_1: ไลฟ์สไตล์ (Lifestyle Tags) — ใช้ทำ Product Set + Dynamic Caption
-    // ผลลัพธ์: "ใกล้รถไฟฟ้า | เลี้ยงสัตว์ได้ | แต่งครบพร้อมอยู่"
-    const lifestyleParts: string[] = [];
-    if (nearTransit) lifestyleParts.push("ใกล้รถไฟฟ้า");
-    if (isPetFriendly) lifestyleParts.push("เลี้ยงสัตว์ได้");
-    if (isFullyFurnished) lifestyleParts.push("แต่งครบพร้อมอยู่");
-    const allowAirbnb = amenitiesObj.allow_airbnb as boolean | undefined;
-    if (allowAirbnb) lifestyleParts.push("ปล่อย Airbnb ได้");
-    xml += `    <custom_label_1><![CDATA[${lifestyleParts.join(" | ") || "คุณภาพจาก VCC"}]]></custom_label_1>\n`;
-
-    // label_2: โครงการ หรือ โซนทำเล (Project / Location Tag) — ใช้แบ่ง Product Set ตามโครงการหรือโซน
-    // ผลลัพธ์: "โอกะ เฮาส์", "เอกมัย", "บางนา"
-    const locationTag = (popularArea || district || "Bangkok").replace(/^เขต/, "");
-    const clusterTag = projectName || locationTag;
-    xml += `    <custom_label_2><![CDATA[${clusterTag}]]></custom_label_2>\n`;
-
-    // label_3: ประเภท + โหมด (Cluster) — ใช้แยก Product Set ขาย vs เช่า
-    // ผลลัพธ์: "คอนโดให้เช่า", "บ้านเดี่ยวขาย"
-    const typeNameMap: Record<string, string> = {
-      condo: "คอนโด", house: "บ้านเดี่ยว", townhouse: "ทาวน์โฮม",
-      land: "ที่ดิน", other: "อสังหาฯ",
-    };
-    const typeTh = typeNameMap[mapMetaPropertyType(p.property_type)] || "อสังหาฯ";
-    const modeTh = listingTypeInt === 1 ? "ให้เช่า" : "ขาย";
-    xml += `    <custom_label_3><![CDATA[${typeTh}${modeTh}]]></custom_label_3>\n`;
-
-    // label_4: ช่วงราคา (Price Band) — ใช้ยิง Lookalike ตาม Budget Segment
-    // ผลลัพธ์: "ต่ำกว่า 15,000", "15,000-30,000", "30,000-80,000", "80,000+"
-    let priceBand = "";
-    if (listingTypeInt === 1) {
-      // Rent bands (ต่อเดือน)
-      if (currentPrice < 15000) priceBand = "เช่าต่ำกว่า 15,000";
-      else if (currentPrice < 30000) priceBand = "เช่า 15,000-30,000";
-      else if (currentPrice < 80000) priceBand = "เช่า 30,000-80,000";
-      else priceBand = "เช่า 80,000+";
-    } else {
-      // Sale bands
-      if (currentPrice < 3000000) priceBand = "ขายต่ำกว่า 3 ล้าน";
-      else if (currentPrice < 10000000) priceBand = "ขาย 3-10 ล้าน";
-      else if (currentPrice < 30000000) priceBand = "ขาย 10-30 ล้าน";
-      else priceBand = "ขาย 30 ล้าน+";
-    }
-    xml += `    <custom_label_4><![CDATA[${priceBand}]]></custom_label_4>\n`;
-
-    xml += `  </listing>\n`;
   }
 
   xml += `</listings>`;
@@ -416,4 +481,20 @@ function stripHtml(html: any): string {
   text = text.replace(/\n\s*\n+/g, "\n\n").trim();
   
   return text;
+}
+
+/**
+ * Adjusts title tags based on whether the listing is for sale or rent
+ * e.g. converts "[ขาย/ให้เช่า] พูลวิลล่า" -> "[ขาย] พูลวิลล่า" or "[ให้เช่า] พูลวิลล่า"
+ */
+function formatTitleForMode(title: string, mode: "sale" | "rent"): string {
+  if (mode === "rent") {
+    return title
+      .replace(/\[\s*(ขาย\s*\/\s*เช่า|ขาย\s*\/\s*ให้เช่า|เช่า\s*\/\s*ขาย)\s*\]/gi, "[ให้เช่า]")
+      .replace(/(ขาย\s*\/\s*เช่า|ขาย\s*\/\s*ให้เช่า|เช่า\s*\/\s*ขาย)/gi, "ให้เช่า");
+  } else {
+    return title
+      .replace(/\[\s*(ขาย\s*\/\s*เช่า|ขาย\s*\/\s*ให้เช่า|เช่า\s*\/\s*ขาย)\s*\]/gi, "[ขาย]")
+      .replace(/(ขาย\s*\/\s*เช่า|ขาย\s*\/\s*ให้เช่า|เช่า\s*\/\s*ขาย)/gi, "ขาย");
+  }
 }
