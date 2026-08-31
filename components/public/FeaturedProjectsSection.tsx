@@ -7,7 +7,7 @@ import { m } from "framer-motion";
 import { ChevronLeft, ChevronRight, Building2, ArrowRight, Sparkles, MapPin } from "lucide-react";
 import type { PublicProject } from "@/features/public/projects";
 import { SectionBackground } from "./SectionBackground";
-import { getProvinceName } from "@/lib/utils/provinces";
+import { getProvinceName, getDistrictName, translateLocation } from "@/lib/utils/provinces";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface FeaturedProjectsSectionProps {
@@ -234,20 +234,28 @@ export function FeaturedProjectsSection({
               const hasSale = proj.priceMin != null;
               const hasRent = proj.rentalMin != null;
               
-              const areaName = (
+              let areaName = (
                 language === "en" ? proj.popularAreaEn :
                 language === "cn" ? (proj.popularAreaCn || proj.popularAreaEn) :
                 language === "ru" ? (proj.popularAreaRu || proj.popularAreaEn) :
                 proj.popularArea
-              ) || proj.popularArea;
+              );
+              if (!areaName && proj.popularArea) {
+                areaName = language !== "th" ? translateLocation(proj.popularArea, language) : proj.popularArea;
+              } else if (language !== "th" && areaName && areaName === proj.popularArea) {
+                const translated = translateLocation(areaName, language);
+                if (translated) areaName = translated;
+              }
 
               const provinceName = proj.province ? getProvinceName(proj.province, language) : "";
-              const districtName = proj.district || "";
+              const districtName = proj.district 
+                ? (language !== "th" ? getDistrictName(proj.district, language) : proj.district)
+                : "";
 
               const locationText = areaName 
-                ? `${areaName}, ${provinceName}`
+                ? (provinceName ? `${areaName}, ${provinceName}` : areaName)
                 : districtName 
-                  ? `${districtName}, ${provinceName}`
+                  ? (provinceName ? `${districtName}, ${provinceName}` : districtName)
                   : provinceName;
 
               return (

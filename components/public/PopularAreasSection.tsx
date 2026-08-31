@@ -87,7 +87,9 @@ export function PopularAreasSection({
       "สมุทรสาคร",
       "นครปฐม",
     ];
-    return raw.filter((p) => !vicinities.includes(p.id));
+    const filtered = raw.filter((p) => !vicinities.includes(p.id));
+    if (filtered.length > 0) return filtered;
+    return [{ id: "กรุงเทพมหานคร", display: "Bangkok" }];
   });
   const [isNextHovered, setIsNextHovered] = useState(false);
   const [activeProvIndex, setActiveProvIndex] = useState(() => {
@@ -152,7 +154,7 @@ export function PopularAreasSection({
 
   // Initialize AOS & Fetch Provinces if not provided
   useEffect(() => {
-    if (initialProvinces) {
+    if (initialProvinces && initialProvinces.length > 0) {
       setIsMounted(true);
       return;
     }

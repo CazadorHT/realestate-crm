@@ -54,7 +54,7 @@ export const getPublicProvincesAction = unstable_cache(
       return [];
     }
   },
-  ["public-provinces-list-v5"],
+  ["public-provinces-list-v6"],
   { revalidate: 31536000, tags: ["provinces", "popular-areas", "public-data"] }
 );
 
@@ -235,15 +235,23 @@ export const getPopularAreasAction = unstable_cache(
 
       // 4. [S-Tier Optimization] ดึงรูปภาพภาพหน้าปก (main_image) จากทรัพย์สินล่าสุดในแต่ละย่าน (เฉพาะปากช่องย่านท็อป 16 เท่านั้น)
       // การดึงเจาะจงเฉพาะกลุ่ม 16 ย่านนี้ ช่วยเซฟปริมาณดาวน์โหลด Egress เป็นศูนย์และค้นหาเสร็จ in เสี้ยววินาทีครับ
-      const targetProvincesForCover = (province && provinceMap[province]) ? provinceMap[province] : (province ? [province] : []);
-      const { data: recentProps } = await client
+      const targetProvincesForCover = (province && provinceMap[province])
+        ? provinceMap[province]
+        : (province ? [province] : bkkVicinity);
+
+      let propsCoverQuery = client
         .from("properties")
         .select("popular_area, subdistrict, district, main_image")
         .eq("status", "ACTIVE")
         .is("deleted_at", null)
         .not("main_image", "is", null)
-        .in("province", targetProvincesForCover)
         .order("created_at", { ascending: false });
+
+      if (targetProvincesForCover.length > 0) {
+        propsCoverQuery = propsCoverQuery.in("province", targetProvincesForCover);
+      }
+
+      const { data: recentProps } = await propsCoverQuery;
 
       const areaCoverMap = new Map<string, string>();
       if (recentProps) {
@@ -251,6 +259,9 @@ export const getPopularAreasAction = unstable_cache(
           const areaClean = (p.popular_area || p.subdistrict || p.district || "").trim().toLowerCase();
           if (areaClean && p.main_image && !areaCoverMap.has(areaClean)) {
             areaCoverMap.set(areaClean, p.main_image);
+          }
+          if (p.popular_area && p.main_image && !areaCoverMap.has(p.popular_area.trim().toLowerCase())) {
+            areaCoverMap.set(p.popular_area.trim().toLowerCase(), p.main_image);
           }
         }
       }
@@ -282,7 +293,7 @@ export const getPopularAreasAction = unstable_cache(
       return [];
     }
   },
-  ["popular-areas-cache-v12"],
+  ["popular-areas-cache-v13"],
   { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
 );
 

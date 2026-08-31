@@ -82,6 +82,21 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
         return [];
       }
 
+      // ดึงข้อมูลชื่อย่านแปลภาษาจาก popular_areas_v3 สำหรับ fallback แปลภาษา
+      const { data: areaRows } = await supabase
+        .from("popular_areas_v3")
+        .select("name");
+      const areaI18nMap = new Map<string, { en?: string; cn?: string; ru?: string }>();
+      (areaRows || []).forEach((r: any) => {
+        if (r.name && typeof r.name === "object" && r.name.th) {
+          areaI18nMap.set(r.name.th.trim().toLowerCase(), {
+            en: r.name.en,
+            cn: r.name.cn,
+            ru: r.name.ru,
+          });
+        }
+      });
+
       // ดึงรูปภาพ cover (main_image) ยูนิตแรกของแต่ละโครงการมาแสดงเป็นรูปภาพคู่ตัวการ์ดโครงการ (เพื่อความไวสูงสุดแบบ Zero Egress)
       const { data: recentProps } = await supabase
         .from("properties")
@@ -120,6 +135,9 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
         // ดึงภาพหน้าปกโครงการ (ใช้ภาพโครงการเป็นหลัก ถ้าไม่มี ดึงภาพอสังหาฯ ล่าสุดในโครงการนั้นมาเป็น Cover Image)
         const coverImage = p.image_url || propData?.main_image || null;
 
+        const popAreaTh = stat?.primary_popular_area || null;
+        const popAreaI18n = popAreaTh ? areaI18nMap.get(popAreaTh.trim().toLowerCase()) : null;
+
         return {
           id: p.id,
           name: p.name || { th: "", en: "" },
@@ -146,15 +164,15 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
           priceMax: stat ? stat.price_max : null,
           rentalMin: stat ? stat.rental_min : null,
           rentalMax: stat ? stat.rental_max : null,
-          popularArea: stat ? stat.primary_popular_area : null,
-          popularAreaEn: propData?.popular_area_en || null,
-          popularAreaCn: propData?.popular_area_cn || null,
-          popularAreaRu: propData?.popular_area_ru || null,
+          popularArea: popAreaTh,
+          popularAreaEn: propData?.popular_area_en || popAreaI18n?.en || null,
+          popularAreaCn: propData?.popular_area_cn || popAreaI18n?.cn || null,
+          popularAreaRu: propData?.popular_area_ru || popAreaI18n?.ru || null,
           sortOrder: p.sort_order ?? 0,
         };
       }).filter((p: any) => p.propertyCount > 0); // กรองเอาเฉพาะโครงการที่มีอสังหาฯ พร้อมขายจริง
     },
-    ["public-projects-list-v1"],
+    ["public-projects-list-v2"],
     { revalidate: 31536000, tags: ["projects", "properties", "public-data"] }
   )();
 }
@@ -192,6 +210,39 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         console.error("Error fetching project view stats by slug:", statErr.message);
       }
 
+      // Fallback image from property if project image is not set
+      let coverImage = p.image_url;
+      if (!coverImage) {
+        const { data: propImg } = await supabase
+          .from("properties")
+          .select("main_image")
+          .eq("project_id", p.id)
+          .eq("status", "ACTIVE")
+          .is("deleted_at", null)
+          .not("main_image", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        coverImage = propImg?.main_image || null;
+      }
+
+      // Resolve area translations from popular_areas_v3 if available
+      let areaI18n: { en?: string; cn?: string; ru?: string } | null = null;
+      if (stat?.primary_popular_area) {
+        const { data: areaRow } = await supabase
+          .from("popular_areas_v3")
+          .select("name")
+          .eq("name->>th", stat.primary_popular_area)
+          .maybeSingle();
+        if (areaRow?.name && typeof areaRow.name === "object") {
+          areaI18n = {
+            en: (areaRow.name as any).en,
+            cn: (areaRow.name as any).cn,
+            ru: (areaRow.name as any).ru,
+          };
+        }
+      }
+
       return {
         id: p.id,
         name: typeof p.name === "object" && p.name !== null ? (p.name as { th: string; en: string }) : { th: String(p.name || ""), en: String(p.name || "") },
@@ -206,7 +257,7 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         yearCompleted: p.year_completed,
         totalUnits: p.total_units,
         description: p.description as PublicProject["description"],
-        imageUrl: getPublicImageUrl(p.image_url) || null,
+        imageUrl: getPublicImageUrl(coverImage) || null,
         galleryUrls: (Array.isArray(p.gallery_urls) ? p.gallery_urls : []).map((url: any) => getPublicImageUrl(String(url))).filter(Boolean),
         facilities: (Array.isArray(p.facilities) ? p.facilities : []) as any[],
         nearestStationCode: p.nearest_station_code,
@@ -219,13 +270,13 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         rentalMin: stat ? stat.rental_min : null,
         rentalMax: stat ? stat.rental_max : null,
         popularArea: stat ? stat.primary_popular_area : null,
-        popularAreaEn: null,
-        popularAreaCn: null,
-        popularAreaRu: null,
+        popularAreaEn: areaI18n?.en || null,
+        popularAreaCn: areaI18n?.cn || null,
+        popularAreaRu: areaI18n?.ru || null,
         sortOrder: p.sort_order ?? 0,
       };
     },
-    ["public-project-by-slug", slug],
+    ["public-project-by-slug-v2", slug],
     { revalidate: 31536000, tags: ["projects", "public-data"] }
   )();
 }
