@@ -127,12 +127,20 @@ export function OwnerForm(props: Props) {
   });
 
   const checkLiveDuplicate = async (field: "phone" | "line_id", value: string | null | undefined) => {
-    if (!value || props.mode !== "create") return;
+    if (props.mode !== "create") return;
+    const trimmed = value?.trim();
+    if (!trimmed) {
+      setLiveValidation((prev) => ({
+        ...prev,
+        [field]: { isDuplicate: false },
+      }));
+      return;
+    }
     try {
       const isPhone = field === "phone";
       const res = await checkOwnerDuplicateAction(
-        isPhone ? value : undefined,
-        !isPhone ? value : undefined
+        isPhone ? trimmed : undefined,
+        !isPhone ? trimmed : undefined
       );
       if (res.success && res.isDuplicate) {
         setLiveValidation((prev) => ({
@@ -237,6 +245,20 @@ export function OwnerForm(props: Props) {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
+  const handleUseExisting = (ownerId?: string) => {
+    const targetId = ownerId || duplicateOwner?.id;
+    if (targetId) {
+      toast.success(
+        isEn ? "Selected existing owner" : "เลือกใช้ข้อมูลเจ้าของที่มีอยู่ในระบบแล้ว"
+      );
+      if (props.onSuccess) {
+        props.onSuccess(targetId);
+      } else {
+        router.push(`/protected/owners/${targetId}`);
+      }
+    }
+  };
+
   if (isMobile) {
     return (
       <OwnerMobileView
@@ -253,11 +275,7 @@ export function OwnerForm(props: Props) {
         liveValidation={liveValidation}
         checkLiveDuplicate={checkLiveDuplicate}
         duplicateOwner={duplicateOwner}
-        onUseExisting={() => {
-          if (duplicateOwner && props.onSuccess) {
-            props.onSuccess(duplicateOwner.id);
-          }
-        }}
+        onUseExisting={handleUseExisting}
       />
     );
   }
@@ -274,11 +292,7 @@ export function OwnerForm(props: Props) {
       liveValidation={liveValidation}
       checkLiveDuplicate={checkLiveDuplicate}
       duplicateOwner={duplicateOwner}
-      onUseExisting={() => {
-        if (duplicateOwner && props.onSuccess) {
-          props.onSuccess(duplicateOwner.id);
-        }
-      }}
+      onUseExisting={handleUseExisting}
     />
   );
 }

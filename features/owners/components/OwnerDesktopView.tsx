@@ -9,6 +9,7 @@ import {
   Save,
   X,
   Building2,
+  UserCheck,
 } from "lucide-react";
 import { FaFacebook, FaLine } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ interface OwnerDesktopViewProps {
   };
   checkLiveDuplicate?: (field: "phone" | "line_id", value: string | null | undefined) => void;
   duplicateOwner?: { id: string; name: string } | null;
-  onUseExisting?: () => void;
+  onUseExisting?: (ownerId?: string) => void;
 }
 
 export function OwnerDesktopView({
@@ -79,7 +80,7 @@ export function OwnerDesktopView({
           </p>
           <Button
             type="button"
-            onClick={onUseExisting}
+            onClick={() => onUseExisting?.(duplicateOwner.id)}
             className="w-full sm:w-auto h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 rounded-lg shadow-sm transition-colors cursor-pointer"
           >
             {isEn ? "Use Existing Owner Record" : "ดึงข้อมูลเจ้าของท่านนี้มาใช้ทันที"}
@@ -193,11 +194,24 @@ export function OwnerDesktopView({
                 />
               </div>
               {liveValidation?.phone?.isDuplicate && (
-                <p className="text-xs text-amber-600 font-semibold ml-1">
-                  {isEn
-                    ? `⚠️ This phone number is already registered under K. ${liveValidation.phone.ownerName}`
-                    : `⚠️ เบอร์โทรศัพท์นี้ถูกใช้งานแล้วโดย K. ${liveValidation.phone.ownerName}`}
-                </p>
+                <div className="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <p className="text-xs text-amber-800 font-medium">
+                    {isEn
+                      ? <>⚠️ Phone matches owner <strong>K. {liveValidation.phone.ownerName}</strong></>
+                      : <>⚠️ เบอร์ตรงกับเจ้าของชื่อ <strong>K. {liveValidation.phone.ownerName}</strong></>}
+                  </p>
+                  {liveValidation.phone.ownerId && onUseExisting && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => onUseExisting(liveValidation.phone?.ownerId)}
+                      className="h-7 px-2.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shadow-sm shrink-0 cursor-pointer flex items-center gap-1 transition-colors"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      {isEn ? "Select this owner" : "เลือกใช้เจ้าของคนนี้"}
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -222,11 +236,24 @@ export function OwnerDesktopView({
                 />
               </div>
               {liveValidation?.line_id?.isDuplicate && (
-                <p className="text-xs text-amber-600 font-semibold ml-1">
-                  {isEn
-                    ? `⚠️ This Line ID is already registered under K. ${liveValidation.line_id.ownerName}`
-                    : `⚠️ Line ID นี้ถูกใช้งานแล้วโดย K. ${liveValidation.line_id.ownerName}`}
-                </p>
+                <div className="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <p className="text-xs text-amber-800 font-medium">
+                    {isEn
+                      ? <>⚠️ Line matches owner <strong>K. {liveValidation.line_id.ownerName}</strong></>
+                      : <>⚠️ ไลน์ตรงกับเจ้าของชื่อ <strong>K. {liveValidation.line_id.ownerName}</strong></>}
+                  </p>
+                  {liveValidation.line_id.ownerId && onUseExisting && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => onUseExisting(liveValidation.line_id?.ownerId)}
+                      className="h-7 px-2.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shadow-sm shrink-0 cursor-pointer flex items-center gap-1 transition-colors"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      {isEn ? "Select this owner" : "เลือกใช้เจ้าของคนนี้"}
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
 

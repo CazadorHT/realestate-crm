@@ -12,6 +12,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Building2,
+  UserCheck,
 } from "lucide-react";
 import { FaFacebook, FaLine } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ interface OwnerMobileViewProps {
   };
   checkLiveDuplicate?: (field: "phone" | "line_id", value: string | null | undefined) => void;
   duplicateOwner?: { id: string; name: string } | null;
-  onUseExisting?: () => void;
+  onUseExisting?: (ownerId?: string) => void;
 }
 
 export function OwnerMobileView({
@@ -79,7 +80,7 @@ export function OwnerMobileView({
           </p>
           <Button
             type="button"
-            onClick={onUseExisting}
+            onClick={() => onUseExisting?.(duplicateOwner.id)}
             className="w-full h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
           >
             {isEn ? "Use Existing Record" : "ใช้เจ้าของเดิมทันที"}
@@ -229,11 +230,24 @@ export function OwnerMobileView({
                           </p>
                         )}
                         {liveValidation?.phone?.isDuplicate && (
-                          <p className="text-xs text-amber-600 font-semibold ml-1">
-                            {isEn
-                              ? `⚠️ This phone number is already used by K. ${liveValidation.phone.ownerName}`
-                              : `⚠️ เบอร์โทรศัพท์นี้ถูกใช้งานแล้วโดย K. ${liveValidation.phone.ownerName}`}
-                          </p>
+                          <div className="p-3 bg-amber-50/90 border border-amber-200 rounded-2xl space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <p className="text-xs text-amber-800 font-medium">
+                              {isEn
+                                ? <>⚠️ Phone matches owner <strong>K. {liveValidation.phone.ownerName}</strong></>
+                                : <>⚠️ เบอร์ตรงกับเจ้าของชื่อ <strong>K. {liveValidation.phone.ownerName}</strong></>}
+                            </p>
+                            {liveValidation.phone.ownerId && onUseExisting && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => onUseExisting(liveValidation.phone?.ownerId)}
+                                className="w-full h-8 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
+                              >
+                                <UserCheck className="w-3.5 h-3.5" />
+                                {isEn ? "Select this owner" : "เลือกใช้เจ้าของคนนี้"}
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
 
@@ -255,11 +269,24 @@ export function OwnerMobileView({
                           />
                         </div>
                         {liveValidation?.line_id?.isDuplicate && (
-                          <p className="text-xs text-amber-600 font-semibold ml-1">
-                            {isEn
-                              ? `⚠️ This Line ID is already used by K. ${liveValidation.line_id.ownerName}`
-                              : `⚠️ Line ID นี้ถูกใช้งานแล้วโดย K. ${liveValidation.line_id.ownerName}`}
-                          </p>
+                          <div className="p-3 bg-amber-50/90 border border-amber-200 rounded-2xl space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <p className="text-xs text-amber-800 font-medium">
+                              {isEn
+                                ? <>⚠️ Line matches owner <strong>K. {liveValidation.line_id.ownerName}</strong></>
+                                : <>⚠️ ไลน์ตรงกับเจ้าของชื่อ <strong>K. {liveValidation.line_id.ownerName}</strong></>}
+                            </p>
+                            {liveValidation.line_id.ownerId && onUseExisting && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => onUseExisting(liveValidation.line_id?.ownerId)}
+                                className="w-full h-8 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
+                              >
+                                <UserCheck className="w-3.5 h-3.5" />
+                                {isEn ? "Select this owner" : "เลือกใช้เจ้าของคนนี้"}
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
