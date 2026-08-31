@@ -565,10 +565,13 @@ export async function createPropertyAction(
     revalidatePath("/properties/office-for-rent");
     revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
+    revalidatePath("/api/syndication/feed/meta");
+    revalidatePath("/api/syndication/feed/facebook");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     revalidateTag("public-properties", "seconds");
     revalidateTag("property-facets", "seconds");
+    revalidateTag("meta-catalog-feed", "seconds");
     purgeCloudflareCache([
       `/properties/${seoData.slug}`,
       "/properties",
@@ -578,6 +581,8 @@ export async function createPropertyAction(
       "/properties/office-for-rent",
       "/",
       "/api/public/properties",
+      "/api/syndication/feed/meta",
+      "/api/syndication/feed/facebook",
     ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
@@ -810,12 +815,15 @@ export async function duplicatePropertyAction(
     revalidatePath("/properties");
     revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
+    revalidatePath("/api/syndication/feed/meta");
+    revalidatePath("/api/syndication/feed/facebook");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     revalidateTag("public-properties", "seconds");
     revalidateTag("property-facets", "seconds");
+    revalidateTag("meta-catalog-feed", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache(["/properties", "/", "/api/public/properties"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache(["/properties", "/", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");

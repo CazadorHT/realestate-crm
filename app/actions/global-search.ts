@@ -46,19 +46,30 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
 
   // Parallel queries for speed
   const [propertiesRes, leadsRes, dealsRes, agentsRes, ownersRes] = await Promise.all([
-    // 1. Properties - Expanded with Smart Token Logic
+    // 1. Properties - Expanded with Smart Token Logic & Project Lookup
     (async () => {
-      let q = getBaseQuery("properties", "id, title, popular_area, district, province, property_type, address_line1, assigned_to");
+      let q = getBaseQuery(
+        "properties", 
+        "id, title, popular_area, district, province, property_type, address_line1, assigned_to, project_id, projects:projects!properties_core_project_id_fkey(name)"
+      );
       if (isUUID) return q.eq("id", cleanQuery).limit(10);
 
       const tokens = cleanQuery.split(/\s+/).filter(t => t.length > 0);
       
-      // [AGENT LOOKUP] - Pre-fetch matching agent IDs for precise filtering
-      const { data: matchingAgents } = await supabase
-        .from("profiles")
-        .select("id")
-        .ilike("full_name", `%${fuzzyQuery}%`);
-      const agentIds = matchingAgents?.map(a => a.id) || [];
+      // [AGENT & PROJECT LOOKUP] - Pre-fetch matching agent IDs and project IDs for precise filtering
+      const [matchingAgentsResult, matchingProjectsResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id")
+          .ilike("full_name", `%${fuzzyQuery}%`),
+        supabase
+          .from("projects")
+          .select("id")
+          .or(`name->>th.ilike.%${fuzzyQuery}%,name->>en.ilike.%${fuzzyQuery}%,name->>cn.ilike.%${fuzzyQuery}%,slug.ilike.%${fuzzyQuery}%`),
+      ]);
+
+      const agentIds = matchingAgentsResult.data?.map((a: any) => a.id) || [];
+      const projectIds = matchingProjectsResult.data?.map((p: any) => p.id) || [];
 
       // Base Text Conditions
       let conditions = [
@@ -69,6 +80,11 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
         `address_line1.ilike.%${fuzzyQuery}%`
       ];
 
+      // Project Search: match properties belonging to the searched project
+      if (projectIds.length > 0) {
+        conditions.push(`project_id.in.(${projectIds.map((id: string) => `"${id}"`).join(",")})`);
+      }
+
       // ID Search
       const isHexFragment = /^[0-9a-fA-F-]+$/.test(cleanQuery);
       if (isHexFragment) {
@@ -77,7 +93,7 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
 
       // Agent Search
       if (agentIds.length > 0) {
-        conditions.push(`assigned_to.in.(${agentIds.map(id => `"${id}"`).join(",")})`);
+        conditions.push(`assigned_to.in.(${agentIds.map((id: string) => `"${id}"`).join(",")})`);
       }
 
       // Intelligent Mapping Conditions
@@ -131,12 +147,11 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
       return q.or(conditions.join(","));
     })().limit(5),
 
-    // 3. Deals - Search by deal ID
+    // 3. Deals - Search by deal ID (only valid when query is UUID)
     (isUUID 
-      ? getBaseQuery("deals", "id, property:properties(title), lead:leads(full_name)").eq("id", cleanQuery)
-      : getBaseQuery("deals", "id, property:properties(title), lead:leads(full_name)")
-          .or(`id.ilike.%${cleanQuery}%`)
-    ).limit(5),
+      ? getBaseQuery("deals", "id, property:properties(title)").eq("id", cleanQuery).limit(5)
+      : supabase.from("deals").select("id, property:properties(title)").limit(0)
+    ),
 
     // 4. Agents (Profiles)
     supabase.from("profiles")
@@ -144,11 +159,11 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
       .or(`full_name.ilike.%${cleanQuery}%,email.ilike.%${cleanQuery}%,phone.ilike.%${cleanQuery}%`)
       .limit(5),
 
-    // 5. Owners
+    // 5. Owners (search by full_name or phone)
     (isUUID 
-      ? getBaseQuery("owners", "id, full_name, phone, company_name").eq("id", cleanQuery)
-      : getBaseQuery("owners", "id, full_name, phone, company_name")
-          .or(`full_name.ilike.%${fuzzyQuery}%,phone.ilike.%${fuzzyQuery}%,company_name.ilike.%${fuzzyQuery}%`)
+      ? getBaseQuery("owners", "id, full_name, phone").eq("id", cleanQuery)
+      : getBaseQuery("owners", "id, full_name, phone")
+          .or(`full_name.ilike.%${fuzzyQuery}%,phone.ilike.%${fuzzyQuery}%`)
     ).limit(5),
   ]);
 
@@ -156,12 +171,21 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
 
   // Map Results with type safety
   if (propertiesRes.data) {
-    (propertiesRes.data as unknown as PropertyMinimal[]).forEach((p: PropertyMinimal) => {
+    (propertiesRes.data as unknown as any[]).forEach((p: any) => {
+      const projectName = typeof p.projects?.name === "object"
+        ? p.projects?.name?.th || p.projects?.name?.en || p.projects?.name?.default || ""
+        : typeof p.projects?.name === "string"
+        ? p.projects?.name
+        : "";
+
+      const locationInfo = p.popular_area || p.district || "ไม่ระบุทำเล";
+      const projectInfo = projectName ? ` | 🏢 ${projectName}` : "";
+
       results.push({
         id: p.id,
         type: "property",
         title: p.title || "ไม่ระบุชื่อทรัพย์",
-        subtitle: `REF: #${p.id.slice(0, 8)} | ${p.popular_area || p.district || "ไม่ระบุทำเล"}`,
+        subtitle: `REF: #${p.id.slice(0, 8)}${projectInfo} | ${locationInfo}`,
         url: `/protected/properties/${p.id}`,
       });
     });
@@ -218,7 +242,7 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
         id: o.id,
         type: "owner",
         title: o.full_name || "ไม่ระบุชื่อเจ้าของ",
-        subtitle: `${o.phone || ""} ${o.company_name ? `| ${o.company_name}` : ""}`,
+        subtitle: o.phone || undefined,
         url: `/protected/owners/${o.id}`,
       });
     });

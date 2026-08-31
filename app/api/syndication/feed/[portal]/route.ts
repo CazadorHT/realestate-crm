@@ -10,8 +10,18 @@ export async function GET(
   const { portal: portalParam } = await params;
   const portal = portalParam.toLowerCase();
 
+  const searchParams = req.nextUrl.searchParams;
+  const isForceRefresh =
+    searchParams.get("refresh") === "1" ||
+    searchParams.get("force") === "1" ||
+    searchParams.get("bypass") === "1";
+
   const acceptEncoding = req.headers.get("accept-encoding") || "";
   const supportsGzip = acceptEncoding.includes("gzip");
+
+  const cacheControlHeader = isForceRefresh
+    ? "no-cache, no-store, must-revalidate"
+    : "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400";
 
   const createCompressedResponse = (xml: string) => {
     if (supportsGzip) {
@@ -20,7 +30,7 @@ export async function GET(
         headers: {
           "Content-Type": "application/xml; charset=utf-8",
           "Content-Encoding": "gzip",
-          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate",
+          "Cache-Control": cacheControlHeader,
         },
       });
     }
@@ -28,14 +38,14 @@ export async function GET(
     return new Response(xml, {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, s-maxage=86400, stale-while-revalidate",
+        "Cache-Control": cacheControlHeader,
       },
     });
   };
 
   try {
     if (portal === "meta" || portal === "facebook" || portal === "instagram") {
-      const xml = await generateMetaCatalogFeed();
+      const xml = await generateMetaCatalogFeed(isForceRefresh);
       return createCompressedResponse(xml);
     }
 

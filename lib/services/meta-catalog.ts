@@ -11,52 +11,65 @@ import { decrypt } from "@/lib/crypto";
  */
 import { unstable_cache } from "next/cache";
 
-export async function generateMetaCatalogFeed() {
-  return unstable_cache(
-    async () => {
-      const supabase = createPublicClient();
+async function fetchAndBuildCatalog() {
+  const supabase = createPublicClient();
 
-      // Fetch active properties directly from V3 Core tables
-      // Completely eliminates select(*) to save bandwidth and reduce payload size
-      const { data: propertiesData, error } = await supabase
-        .from("properties_core")
-        .select(
-          `
-          id,
-          listing_type,
-          property_type,
-          sale_price,
-          rent_price,
-          bedrooms,
-          bathrooms,
-          floor_area,
-          verified,
-          is_exclusive,
-          co_broker_id,
-          details:properties_details!properties_details_property_id_fkey (
-            title,
-            description,
-            address_info,
-            amenities,
-            pricing_details,
-            meta_data,
-            transit_info
-          ),
-          media:property_media_v3!property_media_v3_property_id_fkey (
-            url,
-            is_cover
-          )
-        `,
-        )
-        .eq("status", 1) // 1 = ACTIVE
-        .limit(500);
+  // Fetch active properties directly from V3 Core tables
+  // Completely eliminates select(*) to save bandwidth and reduce payload size
+  const { data: propertiesData, error } = await supabase
+    .from("properties_core")
+    .select(
+      `
+      id,
+      listing_type,
+      property_type,
+      sale_price,
+      rent_price,
+      bedrooms,
+      bathrooms,
+      floor_area,
+      verified,
+      is_exclusive,
+      co_broker_id,
+      project_id,
+      project:projects!properties_core_project_id_fkey (
+        id,
+        name,
+        developer
+      ),
+      details:properties_details!properties_details_property_id_fkey (
+        title,
+        description,
+        address_info,
+        amenities,
+        pricing_details,
+        meta_data,
+        transit_info
+      ),
+      media:property_media_v3!property_media_v3_property_id_fkey (
+        url,
+        is_cover
+      )
+    `,
+    )
+    .eq("status", 1) // 1 = ACTIVE
+    .limit(500);
 
-      if (error) throw error;
-      return buildMetaCatalogXml(propertiesData || []);
-    },
-    ["meta-catalog-feed-v1"],
-    { revalidate: 86400, tags: ["meta-catalog-feed"] }
-  )();
+  if (error) throw error;
+  return buildMetaCatalogXml(propertiesData || []);
+}
+
+const getCachedMetaCatalogFeed = unstable_cache(
+  fetchAndBuildCatalog,
+  ["meta-catalog-feed-v1"],
+  { revalidate: 86400, tags: ["meta-catalog-feed"] }
+);
+
+export async function generateMetaCatalogFeed(forceRefresh = false) {
+  if (forceRefresh) {
+    return fetchAndBuildCatalog();
+  }
+  return getCachedMetaCatalogFeed();
 }
 
 function buildMetaCatalogXml(propertiesData: any[]) {
@@ -73,6 +86,12 @@ function buildMetaCatalogXml(propertiesData: any[]) {
     verified: boolean | null;
     is_exclusive: boolean | null;
     co_broker_id: string | null;
+    project_id: string | null;
+    project: {
+      id: string;
+      name: Json;
+      developer: string | null;
+    } | null;
     details: {
       title: Json;
       description: Json | null;
@@ -114,15 +133,40 @@ function buildMetaCatalogXml(propertiesData: any[]) {
     const coverImage = p.media?.find(m => m.is_cover)?.url || p.media?.[0]?.url;
     if (!coverImage) continue;
 
-    const title = (titleObj.th ||
+    // --- PROJECT RESOLUTION ---
+    const project = p.project;
+    const projNameObj = (project?.name as Record<string, unknown>) || {};
+    const projNameTh = typeof project?.name === "string" ? project.name : (projNameObj.th as string || "");
+    const projNameEn = typeof project?.name === "string" ? "" : (projNameObj.en as string || "");
+    const projectName = projNameTh || projNameEn;
+    const projectDeveloper = project?.developer;
+
+    let title = (titleObj.th ||
       titleObj.en ||
       titleObj.default ||
       "Untitled") as string;
+
+    // Smart Append: Include project name in title if not already present
+    if (projectName) {
+      const lowerTitle = title.toLowerCase();
+      const alreadyHas =
+        (projNameTh && lowerTitle.includes(projNameTh.toLowerCase())) ||
+        (projNameEn && lowerTitle.includes(projNameEn.toLowerCase()));
+      if (!alreadyHas) {
+        title = `${title} | โครงการ ${projectName}`;
+      }
+    }
+
     const rawDescription = (descObj.th ||
       descObj.en ||
       descObj.default ||
       title) as string;
-    const description = stripHtml(rawDescription);
+
+    let description = stripHtml(rawDescription);
+
+    if (projectName && !description.includes(projectName)) {
+      description = `โครงการ: ${projectName}${projectDeveloper ? ` (${projectDeveloper})` : ""}\n\n${description}`;
+    }
     const slug = (metaObj.slug as string) || p.id;
     const propertyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://your-crm.com"}/properties/${slug}`;
 
@@ -217,10 +261,18 @@ function buildMetaCatalogXml(propertiesData: any[]) {
     const isPetFriendly = amenitiesObj.is_pet_friendly as boolean | undefined;
     xml += `    <pet_policy>${isPetFriendly ? "all" : "none"}</pet_policy>\n`;
 
-    // --- NEIGHBORHOOD ---
+    // --- NEIGHBORHOOD & PROJECT ---
     const popularArea = addrObj.popular_area as string | undefined;
-    if (popularArea) {
-      xml += `    <neighborhood><![CDATA[${popularArea}]]></neighborhood>\n`;
+    const neighborhoodVal = projectName
+      ? (popularArea ? `${projectName}, ${popularArea}` : projectName)
+      : popularArea;
+    if (neighborhoodVal) {
+      xml += `    <neighborhood><![CDATA[${neighborhoodVal}]]></neighborhood>\n`;
+    }
+
+    // Meta Real Estate group_id: Groups all listings in the same housing community / project
+    if (p.project_id) {
+      xml += `    <group_id>${p.project_id}</group_id>\n`;
     }
 
     // Google Maps Link
@@ -267,10 +319,11 @@ function buildMetaCatalogXml(propertiesData: any[]) {
     if (allowAirbnb) lifestyleParts.push("ปล่อย Airbnb ได้");
     xml += `    <custom_label_1><![CDATA[${lifestyleParts.join(" | ") || "คุณภาพจาก VCC"}]]></custom_label_1>\n`;
 
-    // label_2: โซน/ทำเลทอง (Location Tag) — ใช้แบ่ง Product Set ตามโซน
-    // ผลลัพธ์: "เอกมัย", "บางนา", "สุขุมวิท"
+    // label_2: โครงการ หรือ โซนทำเล (Project / Location Tag) — ใช้แบ่ง Product Set ตามโครงการหรือโซน
+    // ผลลัพธ์: "โอกะ เฮาส์", "เอกมัย", "บางนา"
     const locationTag = (popularArea || district || "Bangkok").replace(/^เขต/, "");
-    xml += `    <custom_label_2><![CDATA[${locationTag}]]></custom_label_2>\n`;
+    const clusterTag = projectName || locationTag;
+    xml += `    <custom_label_2><![CDATA[${clusterTag}]]></custom_label_2>\n`;
 
     // label_3: ประเภท + โหมด (Cluster) — ใช้แยก Product Set ขาย vs เช่า
     // ผลลัพธ์: "คอนโดให้เช่า", "บ้านเดี่ยวขาย"

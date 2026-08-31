@@ -14,12 +14,18 @@ export async function purgeCloudflareCache(pathsOrUrls?: string[]) {
   }
 
   try {
-    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || siteConfig.url || "https://vccasset.com").replace(/\/+$/, "");
+    let baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || siteConfig.url || "https://vccasset.com").replace(/\/+$/, "");
+    if (baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1")) {
+      baseUrl = "https://vccasset.com";
+    }
     
     let body: Record<string, unknown>;
     if (pathsOrUrls && pathsOrUrls.length > 0) {
-      // Normalize relative paths into full absolute URLs (Cloudflare requires full URLs)
+      // Normalize relative paths into full absolute URLs (Cloudflare requires full URLs on the registered domain)
       const fullUrls = pathsOrUrls.map((p) => {
+        if (p.startsWith("http://localhost") || p.startsWith("https://localhost")) {
+          return p.replace(/https?:\/\/localhost(:\d+)?/, "https://vccasset.com");
+        }
         if (p.startsWith("http://") || p.startsWith("https://")) return p;
         return `${baseUrl}${p.startsWith("/") ? "" : "/"}${p}`;
       });

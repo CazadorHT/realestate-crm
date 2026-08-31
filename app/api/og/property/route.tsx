@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
 
             const { data: propRow } = await supabaseClient
               .from("properties")
-              .select("main_image, main_image_url")
+              .select("main_image")
               .eq("id", id)
               .maybeSingle();
 

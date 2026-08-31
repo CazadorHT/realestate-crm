@@ -162,10 +162,13 @@ export async function deletePropertyAction(formData: FormData) {
     revalidatePath("/properties/office-for-rent");
     revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
+    revalidatePath("/api/syndication/feed/meta");
+    revalidatePath("/api/syndication/feed/facebook");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     revalidateTag("public-properties", "seconds");
     revalidateTag("property-facets", "seconds");
+    revalidateTag("meta-catalog-feed", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
@@ -179,6 +182,8 @@ export async function deletePropertyAction(formData: FormData) {
       "/properties/office-for-rent",
       "/",
       "/api/public/properties",
+      "/api/syndication/feed/meta",
+      "/api/syndication/feed/facebook",
     ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {

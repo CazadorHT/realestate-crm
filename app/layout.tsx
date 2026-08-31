@@ -78,24 +78,36 @@ interface ActiveLocation {
   province: string | null;
 }
 
-// 🔒 Caching Active Property Locations for SEO Performance (1-hour TTL)
+// 🔒 Caching Popular Areas for SEO Performance from Master Data
 const getActiveLocations = unstable_cache(
   async (): Promise<ActiveLocation[]> => {
     try {
       const supabase = createPublicClient();
-      const { data } = await supabase
-        .from("properties")
-        .select("popular_area, popular_area_en, popular_area_cn, popular_area_ru, province")
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null);
-      return (data || []) as ActiveLocation[];
+      const { data, error } = await supabase
+        .from("popular_areas_v3")
+        .select("name, province")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true, nullsFirst: false });
+
+      if (error) throw error;
+
+      return (data || []).map((area: any) => {
+        const nameObj = typeof area.name === "object" ? area.name : {};
+        return {
+          popular_area: typeof area.name === "string" ? area.name : nameObj?.th || nameObj?.default || "",
+          popular_area_en: nameObj?.en || null,
+          popular_area_cn: nameObj?.cn || null,
+          popular_area_ru: nameObj?.ru || null,
+          province: area.province || null,
+        };
+      }) as ActiveLocation[];
     } catch (err) {
-      console.error("Failed to fetch active property locations:", err);
+      console.error("Failed to fetch active locations from popular_areas_v3:", err);
       return [];
     }
   },
-  ["active-property-locations"],
-  { revalidate: 31536000, tags: ["active-property-locations"] }
+  ["active-popular-areas-seo-v1"],
+  { revalidate: 31536000, tags: ["active-property-locations", "popular-areas"] }
 );
 
 export async function generateMetadata(): Promise<Metadata> {

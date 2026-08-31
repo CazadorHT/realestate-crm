@@ -106,10 +106,13 @@ export async function softDeleteProperty(id: string) {
 
     revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
+    revalidatePath("/api/syndication/feed/meta");
+    revalidatePath("/api/syndication/feed/facebook");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    revalidateTag("meta-catalog-feed", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache(["/properties", "/", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     return { success: true };
   } catch (err: unknown) {
@@ -187,10 +190,13 @@ export async function restoreProperty(id: string) {
     });
     revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
+    revalidatePath("/api/syndication/feed/meta");
+    revalidatePath("/api/syndication/feed/facebook");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    revalidateTag("meta-catalog-feed", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache(["/properties", "/", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     return { success: true };
   } catch (err: unknown) {
@@ -279,10 +285,13 @@ export async function permanentDeleteProperty(id: string) {
     revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
+    revalidatePath("/api/syndication/feed/meta");
+    revalidatePath("/api/syndication/feed/facebook");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    revalidateTag("meta-catalog-feed", "seconds");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache(["/properties", "/", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     return { success: true };
   } catch (err: unknown) {

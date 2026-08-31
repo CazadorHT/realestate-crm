@@ -680,10 +680,13 @@ export async function updatePropertyAction(
     revalidatePath("/properties/office-for-rent");
     revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
+    revalidatePath("/api/syndication/feed/meta");
+    revalidatePath("/api/syndication/feed/facebook");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     revalidateTag("public-properties", "seconds");
     revalidateTag("property-facets", "seconds");
+    revalidateTag("meta-catalog-feed", "seconds");
     purgeCloudflareCache([
       `/properties/${seoData.slug}`,
       "/properties",
@@ -693,6 +696,8 @@ export async function updatePropertyAction(
       "/properties/office-for-rent",
       "/",
       "/api/public/properties",
+      "/api/syndication/feed/meta",
+      "/api/syndication/feed/facebook",
     ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
@@ -807,8 +812,11 @@ export async function updatePropertyStatusAction(input: {
 
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    revalidateTag("meta-catalog-feed", "seconds");
+    revalidatePath("/api/syndication/feed/meta");
+    revalidatePath("/api/syndication/feed/facebook");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache(["/properties", "/", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (err) {
     return { success: false, message: mapDbError(err) };

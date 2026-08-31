@@ -395,7 +395,7 @@ export async function getGlobalPropertiesTableDataAction(params: {
     .select(
       `
       id, tenant_id, status, property_type, listing_type, price, original_price, rental_price, original_rental_price, created_at, 
-      bedrooms, bathrooms, size_sqm, land_size_sqwah, title, title_en, pricing_details, meta_data, main_image_url,
+      bedrooms, bathrooms, size_sqm, land_size_sqwah, title, title_en, pricing_details, meta_data, main_image_url:main_image,
       tenants (
         name
       ),

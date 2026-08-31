@@ -17,7 +17,7 @@ interface LeadWithIdentity {
 interface AgendaLeadWithIdentity {
   id: string;
   created_at: string | null;
-  lead_type: string;
+  lead_type?: string | null;
   identity: { display_name: string | null } | null;
 }
 
@@ -313,7 +313,7 @@ export async function getTodayAgenda(
   const { data: newLeads } = await applyFilters(
     supabase
       .from("crm_leads_v3")
-      .select("id, created_at, lead_type, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
+      .select("id, created_at, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
       .gte("created_at", todayIso)
       .order("created_at", { ascending: false }),
     "assigned_to",

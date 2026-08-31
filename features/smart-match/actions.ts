@@ -231,7 +231,7 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
         if (profile?.line_user_id) {
           const { data: propData } = await (supabase as any)
             .from("properties")
-            .select("main_image_url")
+            .select("main_image_url:main_image")
             .eq("id", topMatch.id)
             .maybeSingle();
 
