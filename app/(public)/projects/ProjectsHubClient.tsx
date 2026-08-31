@@ -24,7 +24,7 @@ import {
   HelpCircle
 } from "lucide-react";
 import type { PublicProject } from "@/features/public/projects";
-import { getProvinceName } from "@/lib/utils/provinces";
+import { getProvinceName, translateLocation } from "@/lib/utils/provinces";
 import {
   Select,
   SelectContent,
@@ -424,12 +424,15 @@ export function ProjectsHubClient({
 
       if (p.popularArea && matchesProvince && matchesType && matchesDeveloper && matchesSearch) {
         const areaTh = p.popularArea.trim();
-        const areaLang = (
+        const rawLang = (
           language === "en" ? p.popularAreaEn :
           language === "cn" ? p.popularAreaCn :
           language === "ru" ? p.popularAreaRu :
           p.popularArea
-        ) || p.popularArea;
+        );
+        const areaLang = (language !== "th" && rawLang && rawLang === p.popularArea)
+          ? (translateLocation(rawLang, language) || rawLang)
+          : (rawLang || (language !== "th" ? translateLocation(areaTh, language) : areaTh));
         
         const existing = areaMap.get(areaTh) || { th: areaTh, lang: areaLang, count: 0 };
         existing.count += 1;
@@ -1080,12 +1083,17 @@ export function ProjectsHubClient({
                 const hasSale = project.priceMin != null;
                 const hasRent = project.rentalMin != null;
                 
-                const areaName = (
+                let areaName = (
                   language === "en" ? project.popularAreaEn :
                   language === "cn" ? project.popularAreaCn :
                   language === "ru" ? project.popularAreaRu :
                   project.popularArea
-                ) || project.popularArea;
+                );
+                if (language !== "th" && areaName && areaName === project.popularArea) {
+                  areaName = translateLocation(areaName, language) || areaName;
+                } else if (!areaName && project.popularArea) {
+                  areaName = language !== "th" ? translateLocation(project.popularArea, language) : project.popularArea;
+                }
 
                 // Find type config
                 const typeConfig = PROJECT_PROPERTY_TYPES.find((t) => t.value === String(project.propertyType));

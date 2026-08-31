@@ -869,16 +869,29 @@ export async function getPropertySocialContent(
   // Fetch popular area translations separately from master table
   if (property.popular_area) {
     try {
-      const { data: areaData } = await supabase
-        .from("popular_areas")
-        .select("name, name_en, name_cn, name_ru")
-        .eq("name", property.popular_area)
-        .limit(1);
-      if (areaData && areaData[0]) {
-        const area = areaData[0];
-        property.popular_area_en = area.name_en || property.popular_area_en;
-        property.popular_area_cn = area.name_cn || property.popular_area_cn;
-        property.popular_area_ru = area.name_ru || property.popular_area_ru;
+      const { data: areaV3 } = await supabase
+        .from("popular_areas_v3")
+        .select("name")
+        .eq("name->>th", property.popular_area)
+        .maybeSingle();
+
+      if (areaV3?.name && typeof areaV3.name === "object") {
+        const n = areaV3.name as any;
+        property.popular_area_en = n.en || property.popular_area_en;
+        property.popular_area_cn = n.cn || property.popular_area_cn;
+        property.popular_area_ru = n.ru || property.popular_area_ru;
+      } else {
+        const { data: areaData } = await supabase
+          .from("popular_areas")
+          .select("name, name_en, name_cn, name_ru")
+          .eq("name", property.popular_area)
+          .limit(1);
+        if (areaData && areaData[0]) {
+          const area = areaData[0];
+          property.popular_area_en = area.name_en || property.popular_area_en;
+          property.popular_area_cn = area.name_cn || property.popular_area_cn;
+          property.popular_area_ru = area.name_ru || property.popular_area_ru;
+        }
       }
     } catch (err) {
       console.warn("[Social] Failed to fetch popular area translation:", err);

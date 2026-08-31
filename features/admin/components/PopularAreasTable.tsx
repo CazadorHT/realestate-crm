@@ -27,6 +27,7 @@ import {
   ChevronDown,
   Sparkles,
   Building2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -168,6 +169,18 @@ function SortableRow({
       </TableCell>
       <TableCell className="px-6">
         <div className="flex items-center gap-3">
+          <div className="relative w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-200/80 bg-slate-50 flex items-center justify-center">
+            {item.image_url ? (
+              <img
+                src={item.image_url}
+                alt={item.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <ImageIcon className="w-4 h-4 text-slate-300" />
+            )}
+          </div>
           <div className="flex flex-col">
             <span className="font-bold text-slate-900 leading-none truncate max-w-[150px]">
               {isEn ? (item.name_en || item.name) : item.name}

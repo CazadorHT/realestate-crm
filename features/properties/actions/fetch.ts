@@ -1,4 +1,5 @@
 "use server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   requireAuthContext,
@@ -339,6 +340,12 @@ export async function addPopularAreaAction(data: {
     console.error("addPopularAreaAction error:", error);
     return { success: false, message: error.message };
   }
+
+  revalidatePath("/protected/admin/popular-areas");
+  revalidatePath("/properties");
+  revalidatePath("/");
+  revalidateTag("popular-areas", "seconds");
+  revalidateTag("public-data", "seconds");
 
   return { success: true };
 }

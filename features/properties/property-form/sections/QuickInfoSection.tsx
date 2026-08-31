@@ -42,7 +42,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
-import { getProvinceName, getDistrictName } from "@/lib/utils/provinces";
+import { getProvinceName, getDistrictName, translateLocation } from "@/lib/utils/provinces";
 import { isCbdProperty } from "@/lib/property-utils";
 
 type Props = {
@@ -122,8 +122,26 @@ export function QuickInfoSection({
 
   const selectArea = (selectedArea: string | undefined, field: any) => {
     field.onChange(selectedArea);
-    if (selectedArea && isCbdProperty({ popular_area: selectedArea })) {
-      form.setValue("is_cbd", true, { shouldDirty: true, shouldValidate: true });
+    if (selectedArea) {
+      if (isCbdProperty({ popular_area: selectedArea })) {
+        form.setValue("is_cbd", true, { shouldDirty: true, shouldValidate: true });
+      }
+      const en = translateLocation(selectedArea, "en");
+      const cn = translateLocation(selectedArea, "cn");
+      const ru = translateLocation(selectedArea, "ru");
+      if (en && en !== selectedArea) {
+        form.setValue("popular_area_en", en, { shouldDirty: true });
+      }
+      if (cn && cn !== selectedArea) {
+        form.setValue("popular_area_cn", cn, { shouldDirty: true });
+      }
+      if (ru && ru !== selectedArea) {
+        form.setValue("popular_area_ru", ru, { shouldDirty: true });
+      }
+    } else {
+      form.setValue("popular_area_en", "", { shouldDirty: true });
+      form.setValue("popular_area_cn", "", { shouldDirty: true });
+      form.setValue("popular_area_ru", "", { shouldDirty: true });
     }
   };
 

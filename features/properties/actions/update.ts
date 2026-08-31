@@ -391,16 +391,29 @@ export async function updatePropertyAction(
     let popularAreaRu = safeValues.popular_area_ru;
 
     if (safeValues.popular_area) {
-      const { data: areaData } = await supabase
-        .from("popular_areas")
-        .select("name_en, name_cn, name_ru")
-        .eq("name", safeValues.popular_area)
+      const { data: areaV3 } = await supabase
+        .from("popular_areas_v3")
+        .select("name")
+        .eq("name->>th", safeValues.popular_area)
         .maybeSingle();
 
-      if (areaData) {
-        if (!popularAreaEn || popularAreaEn === safeValues.popular_area) popularAreaEn = areaData.name_en || popularAreaEn;
-        if (!popularAreaCn || popularAreaCn === safeValues.popular_area) popularAreaCn = areaData.name_cn || popularAreaCn;
-        if (!popularAreaRu || popularAreaRu === safeValues.popular_area) popularAreaRu = areaData.name_ru || popularAreaRu;
+      if (areaV3?.name && typeof areaV3.name === "object") {
+        const n = areaV3.name as any;
+        if (!popularAreaEn || popularAreaEn === safeValues.popular_area) popularAreaEn = n.en || popularAreaEn;
+        if (!popularAreaCn || popularAreaCn === safeValues.popular_area) popularAreaCn = n.cn || popularAreaCn;
+        if (!popularAreaRu || popularAreaRu === safeValues.popular_area) popularAreaRu = n.ru || popularAreaRu;
+      } else {
+        const { data: areaData } = await supabase
+          .from("popular_areas")
+          .select("name_en, name_cn, name_ru")
+          .eq("name", safeValues.popular_area)
+          .maybeSingle();
+
+        if (areaData) {
+          if (!popularAreaEn || popularAreaEn === safeValues.popular_area) popularAreaEn = areaData.name_en || popularAreaEn;
+          if (!popularAreaCn || popularAreaCn === safeValues.popular_area) popularAreaCn = areaData.name_cn || popularAreaCn;
+          if (!popularAreaRu || popularAreaRu === safeValues.popular_area) popularAreaRu = areaData.name_ru || popularAreaRu;
+        }
       }
     }
 

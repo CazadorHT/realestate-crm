@@ -570,14 +570,25 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
       const typedRow = data as unknown as PropertyRow;
       let trans = { en: null as string | null, cn: null as string | null, ru: null as string | null };
       if (typedRow.popular_area) {
-        const { data: areaData } = await supabase
-          .from("popular_areas")
-          .select("name, name_en, name_cn, name_ru")
-          .eq("name", typedRow.popular_area)
-          .single();
-        if (areaData) {
-          const a = areaData as { name_en: string | null; name_cn: string | null; name_ru: string | null };
-          trans = { en: a.name_en, cn: a.name_cn, ru: a.name_ru };
+        const { data: areaV3 } = await supabase
+          .from("popular_areas_v3")
+          .select("name")
+          .eq("name->>th", typedRow.popular_area)
+          .maybeSingle();
+
+        if (areaV3?.name && typeof areaV3.name === "object") {
+          const a = areaV3.name as any;
+          trans = { en: a.en || null, cn: a.cn || null, ru: a.ru || null };
+        } else {
+          const { data: areaData } = await supabase
+            .from("popular_areas")
+            .select("name, name_en, name_cn, name_ru")
+            .eq("name", typedRow.popular_area)
+            .maybeSingle();
+          if (areaData) {
+            const a = areaData as { name_en: string | null; name_cn: string | null; name_ru: string | null };
+            trans = { en: a.name_en, cn: a.name_cn, ru: a.name_ru };
+          }
         }
       }
 

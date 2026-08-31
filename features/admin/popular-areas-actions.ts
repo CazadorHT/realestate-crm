@@ -716,6 +716,11 @@ export async function bulkTranslatePopularAreasAction(
     );
 
     revalidatePath("/protected/admin/popular-areas");
+    revalidatePath("/properties");
+    revalidatePath("/");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("area-translations", "seconds");
+    revalidateTag("public-data", "seconds");
     return {
       success: true,
       message: `แปลภาษาสำเร็จ ${validUpdates.length} รายการ`,
