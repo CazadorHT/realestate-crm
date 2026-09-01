@@ -3,6 +3,7 @@ import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
 import { cache } from "react";
 import { getPublicPropertyDetail as getRawPublicPropertyDetail } from "@/features/properties/actions/fetch-public-property";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { 
   generateMetaTitle, 
   generateMetaDescription, 
@@ -32,16 +33,12 @@ export async function generatePropertyMetadataAsync(slug: string): Promise<Metad
 
   // 2. Resolve Cover Image and Optimize for Social Sharing
   const propertyImages = data.images || [];
-  let COVER_IMAGE =
+  let rawCover =
     propertyImages.find((img) => img.is_cover)?.image_url ||
     propertyImages[0]?.image_url ||
     "/images/hero-realestate.png";
 
-  // S-Tier Strengthening: Use Supabase transformations for faster social previews
-  // Ensures social cards (LINE/FB) load instantly
-  if (COVER_IMAGE.includes("supabase.co") && !COVER_IMAGE.includes("width=")) {
-    COVER_IMAGE = `${COVER_IMAGE}?width=1200&height=630&resize=contain`;
-  }
+  let COVER_IMAGE = getPublicImageUrl(rawCover) || rawCover;
 
   if (COVER_IMAGE && !COVER_IMAGE.startsWith("http")) {
     const cleanPath = COVER_IMAGE.startsWith("/") ? COVER_IMAGE : `/${COVER_IMAGE}`;

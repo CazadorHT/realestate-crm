@@ -2,6 +2,7 @@ import { createPublicClient } from "@/lib/supabase/server";
 import { Database, Json } from "../database.types.generated";
 import { siteConfig } from "@/lib/site-config";
 import { decrypt } from "@/lib/crypto";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 /**
  * Generates an XML feed for Meta Real Estate Catalog directly from V3 Core tables
@@ -130,8 +131,9 @@ function buildMetaCatalogXml(propertiesData: any[]) {
     const transitObj = (details?.transit_info as Record<string, unknown>) || {};
 
     // --- LEAN GUARD: Skip properties without images (waste ad budget) ---
-    const coverImage = p.media?.find(m => m.is_cover)?.url || p.media?.[0]?.url;
-    if (!coverImage) continue;
+    const rawCoverImage = p.media?.find(m => m.is_cover)?.url || p.media?.[0]?.url;
+    if (!rawCoverImage) continue;
+    const coverImage = getPublicImageUrl(rawCoverImage);
 
     // --- PROJECT RESOLUTION ---
     const project = p.project;
@@ -296,12 +298,14 @@ function buildMetaCatalogXml(propertiesData: any[]) {
         xml += `    <price>${item.currentPrice} THB</price>\n`;
       }
 
-      // Images — Cover first via <image_url>, then all via nested <image><url>
+      // Images — Cover first via <image_url>, then up to 5 secondary images via nested <image><url> (optimal for Meta Carousel)
+      // Routed through Cloudflare CDN (cdn.vccasset.com) to eliminate Supabase Storage Cached Egress
       const images = p.media || [];
       xml += `    <image_url><![CDATA[${coverImage}]]></image_url>\n`;
-      images.slice(0, 20).forEach((img) => {
+      images.slice(0, 5).forEach((img) => {
         if (img.url) {
-          xml += `    <image>\n      <url><![CDATA[${img.url}]]></url>\n    </image>\n`;
+          const cdnImageUrl = getPublicImageUrl(img.url);
+          xml += `    <image>\n      <url><![CDATA[${cdnImageUrl}]]></url>\n    </image>\n`;
         }
       });
 

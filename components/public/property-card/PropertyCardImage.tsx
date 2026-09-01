@@ -16,6 +16,7 @@ import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 interface PropertyCardImageProps {
   property: PropertyCardProps;
@@ -125,21 +126,22 @@ export function PropertyCardImage({
         return 0;
       })
       .map(img => {
-        if (typeof img === 'string') return img;
-        if (img && typeof img === 'object') {
+        let target = '';
+        if (typeof img === 'string') target = img;
+        else if (img && typeof img === 'object') {
           if ('url' in img && typeof img.url === 'string') {
-            return img.url;
-          }
-          if ('image_url' in img && typeof (img as any).image_url === 'string') {
-            return (img as any).image_url;
+            target = img.url;
+          } else if ('image_url' in img && typeof (img as any).image_url === 'string') {
+            target = (img as any).image_url;
           }
         }
-        return '';
+        return target ? getPublicImageUrl(target) : '';
       })
       .filter(url => typeof url === 'string' && url.trim() !== "");
 
-    if (property.image_url && mapped.includes(property.image_url) && mapped[0] !== property.image_url) {
-      return [property.image_url, ...mapped.filter(u => u !== property.image_url)];
+    const coverUrl = property.image_url ? getPublicImageUrl(property.image_url) : "";
+    if (coverUrl && mapped.includes(coverUrl) && mapped[0] !== coverUrl) {
+      return [coverUrl, ...mapped.filter(u => u !== coverUrl)];
     }
 
     return mapped;

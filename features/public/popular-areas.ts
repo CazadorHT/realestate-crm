@@ -164,7 +164,7 @@ export const getPopularAreasAction = unstable_cache(
           nameRu: areaNameRu,
           province: area.province || "",
           count: totalCount,
-          cover: area.image_url || null,
+          cover: getPublicImageUrl(area.image_url) || null,
           slug: area.slug || encodeURIComponent(areaNameTh),
         };
       });

@@ -1,4 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/server";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 /**
  * Generates an XML feed for LivingInsider
@@ -43,13 +44,16 @@ export async function generateLivingInsiderXML() {
     xml += `    <bedrooms>${p.bedrooms || 0}</bedrooms>\n`;
     xml += `    <bathrooms>${p.bathrooms || 0}</bathrooms>\n`;
 
-    // Images
-    const images = Array.isArray(p.images) ? p.images : [];
+    // Images (routed via Cloudflare CDN to eliminate Supabase Storage Egress)
+    const images: any[] = Array.isArray(p.images) ? (p.images as any[]) : [];
     if (images.length > 0) {
       xml += `    <images>\n`;
-      images.forEach((img: any) => {
-        const url = typeof img === "string" ? img : img.url;
-        xml += `      <image>${url}</image>\n`;
+      images.slice(0, 8).forEach((img: any) => {
+        const rawUrl = typeof img === "string" ? img : img.url;
+        const cdnUrl = getPublicImageUrl(rawUrl);
+        if (cdnUrl) {
+          xml += `      <image>${cdnUrl}</image>\n`;
+        }
       });
       xml += `    </images>\n`;
     }
