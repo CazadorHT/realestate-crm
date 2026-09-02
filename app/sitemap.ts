@@ -10,21 +10,15 @@ import { getAllBlogSlugs, getAllServiceSlugs } from "@/lib/services/blog";
 
 export const revalidate = 31536000; // Cache Sitemap generation for 1 year (tag-invalidated on update)
 
+import { getSeoAlternates } from "@/lib/seo-utils";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
   const supabase = createPublicClient();
 
-  // Helper to generate alternate language objects for search engine indexing
   const getAlternates = (path: string) => {
-    // Ensure trailing slash is clean
-    const cleanPath = path === "/" ? "" : path;
     return {
-      languages: {
-        th: `${baseUrl}/th${cleanPath}`,
-        en: `${baseUrl}/en${cleanPath}`,
-        cn: `${baseUrl}/cn${cleanPath}`,
-        ru: `${baseUrl}/ru${cleanPath}`,
-      },
+      languages: getSeoAlternates(path).languages,
     };
   };
 
@@ -136,12 +130,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 3. Fetch Published Blogs (Cached 1 year)
   const blogs = await getAllBlogSlugs();
-  const blogRoutes: MetadataRoute.Sitemap = blogs.map((blog: { slug: string; updated_at: string }) => ({
+  const blogRoutes: MetadataRoute.Sitemap = blogs.map((blog: { slug: string; updated_at: string; cover_image?: string }) => ({
     url: `${baseUrl}/blog/${blog.slug}`,
     lastModified: blog.updated_at ? new Date(blog.updated_at) : new Date(),
     changeFrequency: "monthly",
     priority: 0.6,
     alternates: getAlternates(`/blog/${blog.slug}`),
+    images: blog.cover_image ? [blog.cover_image] : undefined,
   }));
 
   // 4. Fetch Active Services (Cached 1 year)

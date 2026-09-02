@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { siteConfig } from "@/lib/site-config";
+import { getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import { getPublicProperties, GetPropertiesOptions } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
@@ -211,6 +212,7 @@ export async function generateMetadata(props: { searchParams: Promise<any> }): P
   return {
     title,
     description,
+    alternates: getSeoAlternates("/properties"),
     ...(hasNoResults && {
       robots: {
         index: false,

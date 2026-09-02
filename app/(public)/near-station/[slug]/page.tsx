@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Train, ChevronRight, ChevronLeft, MapPin, Building2, ArrowRight, Home, DollarSign } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
-import { formatPrioritySeoTitle } from "@/lib/seo-utils";
+import { formatPrioritySeoTitle, getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations, getLocalizedField } from "@/lib/i18n";
 import {
   getStationBySlug,
@@ -184,9 +184,7 @@ export async function generateMetadata(
       siteName: siteConfig.name,
       type: "website",
     },
-    alternates: {
-      canonical: `${siteConfig.url}/near-station/${station.slug}`,
-    },
+    alternates: getSeoAlternates(`/near-station/${station.slug}`),
   };
 }
 

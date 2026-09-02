@@ -3,6 +3,7 @@ import Image from "next/image";
 import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { siteConfig } from "@/lib/site-config";
+import { getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import {
   getPublicProperties,
@@ -119,16 +120,7 @@ export async function generateMetadata(props: {
       "Luxury house for sale Bangkok",
       "Phuket luxury real estate",
     ],
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        th: `${siteConfig.url}/properties/luxury-villa?lang=th`,
-        en: `${siteConfig.url}/properties/luxury-villa?lang=en`,
-        "zh-CN": `${siteConfig.url}/properties/luxury-villa?lang=cn`,
-        ru: `${siteConfig.url}/properties/luxury-villa?lang=ru`,
-        "x-default": canonicalUrl,
-      },
-    },
+    alternates: getSeoAlternates("/properties/luxury-villa"),
     openGraph: {
       title: t("metadata.luxury_villa_title", { siteName: siteConfig.name }),
       description: t("metadata.luxury_villa_description"),

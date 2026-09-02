@@ -241,11 +241,11 @@ export async function getRelatedPosts(
  * Get all blog slugs for sitemap generation (Cached 1 year)
  */
 export const getAllBlogSlugs = unstable_cache(
-  async (): Promise<{ slug: string; updated_at: string }[]> => {
+  async (): Promise<{ slug: string; updated_at: string; cover_image?: string }[]> => {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("blog_posts")
-      .select("slug, updated_at")
+      .select("slug, updated_at, cover_image")
       .eq("is_published", true)
       .not("slug", "is", null);
 
@@ -253,9 +253,10 @@ export const getAllBlogSlugs = unstable_cache(
     return (data || []).map((item: any) => ({
       slug: item.slug,
       updated_at: item.updated_at || new Date().toISOString(),
+      cover_image: item.cover_image || undefined,
     }));
   },
-  ["all-blog-slugs-v1"],
+  ["all-blog-slugs-v2"],
   { revalidate: 31536000, tags: ["cms", "blog", "public-data"] }
 );
 

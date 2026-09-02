@@ -205,53 +205,6 @@ export function RecentlyViewedSection({
   }, [items]);
 
   const schemaScript = useMemo(() => {
-    // สร้าง priceSpecification พร้อมราคาก่อนลด (ถ้ามี)
-    const buildPriceSpec = (
-      currentPrice: number,
-      originalPrice: number | null | undefined,
-      unitCode?: string,
-    ) => {
-      const base: Record<string, any> = {
-        "@type": "UnitPriceSpecification",
-        "price": currentPrice,
-        "priceCurrency": "THB",
-        "valueAddedTaxIncluded": true,
-        ...(unitCode && {
-          "referenceQuantity": { "@type": "QuantitativeValue", "value": 1, "unitCode": unitCode },
-        }),
-      };
-      if (originalPrice && originalPrice > currentPrice) {
-        return [
-          base,
-          {
-            "@type": "UnitPriceSpecification",
-            "name": "Original Price",
-            "price": originalPrice,
-            "priceCurrency": "THB",
-            "valueAddedTaxIncluded": true,
-            ...(unitCode && {
-              "referenceQuantity": { "@type": "QuantitativeValue", "value": 1, "unitCode": unitCode },
-            }),
-          },
-        ];
-      }
-      return base;
-    };
-
-    const createOffer = (
-      priceVal: number | null | undefined,
-      originalVal: number | null | undefined,
-      businessFunc: string,
-      unitCode?: string,
-    ) => ({
-      "@type": "Offer",
-      "price": Math.max(1, priceVal || 0),
-      "priceCurrency": "THB",
-      "availability": "https://schema.org/InStock",
-      "businessFunction": businessFunc,
-      "priceSpecification": buildPriceSpec(Math.max(1, priceVal || 0), originalVal, unitCode),
-    });
-
     const schemaData = {
       "@context": "https://schema.org",
       "@type": "ItemList",
@@ -269,32 +222,11 @@ export function RecentlyViewedSection({
           ? `${siteConfig.url}/properties/${item.slug}`
           : `${siteConfig.url}/properties/${item.id}`;
 
-        const isRent = item.listing_type === "RENT";
-        const isSaleAndRent = item.listing_type === "SALE_AND_RENT";
-
-        let offersStructure: any;
-        if (isSaleAndRent && item.price && item.rental_price) {
-          offersStructure = [
-            createOffer(item.price, item.original_price, "http://purl.org/goodrelations/v1#Sell"),
-            createOffer(item.rental_price, item.original_rental_price, "http://purl.org/goodrelations/v1#LeaseOut", "MON"),
-          ];
-        } else if (isRent) {
-          offersStructure = createOffer(item.rental_price, item.original_rental_price, "http://purl.org/goodrelations/v1#LeaseOut", "MON");
-        } else {
-          offersStructure = createOffer(item.price, item.original_price, "http://purl.org/goodrelations/v1#Sell");
-        }
-
         return {
           "@type": "ListItem",
           "position": index + 1,
-          "item": {
-            "@type": "RealEstateListing",
-            "@id": `${propertyUrl}#recent-item-${item.id}`,
-            "name": propertyName,
-            "url": propertyUrl,
-            "image": item.image_url || `${siteConfig.url}${siteConfig.ogImage}`,
-            "offers": offersStructure,
-          },
+          "name": propertyName,
+          "url": propertyUrl,
         };
       }),
     };

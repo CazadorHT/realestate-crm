@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, MapPin, Building2, Calendar, LayoutGrid, CheckCircle } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
-import { formatPrioritySeoTitle } from "@/lib/seo-utils";
+import { formatPrioritySeoTitle, getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations, getLocalizedField } from "@/lib/i18n";
 import { getProjectBySlug, getPropertiesInProject, getAllProjectSlugs, getRelatedProjects } from "@/features/public/projects";
 const getProjectBySlugCached = cache(getProjectBySlug);
@@ -99,9 +99,7 @@ export async function generateMetadata(
       images: project.imageUrl ? [{ url: project.imageUrl }] : undefined,
       type: "website",
     },
-    alternates: {
-      canonical: `${siteConfig.url}/projects/${project.slug}`,
-    },
+    alternates: getSeoAlternates(`/projects/${project.slug}`),
   };
 }
 
@@ -132,10 +130,6 @@ export default async function ProjectDetailPage(
     return val;
   };
 
-  // Deterministic Google Rich Snippets aggregate review score
-  const ratingValue = (4.4 + (parseInt(project.id.slice(0, 2), 16) % 6) / 10).toFixed(1); // yields 4.4 - 4.9
-  const ratingCount = 12 + (parseInt(project.id.slice(2, 4), 16) % 24); // yields 12 - 35 reviews
-
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ApartmentComplex",
@@ -153,13 +147,6 @@ export default async function ProjectDetailPage(
       latitude: project.latitude,
       longitude: project.longitude,
     } : undefined,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: ratingValue,
-      reviewCount: ratingCount,
-      bestRating: "5",
-      worstRating: "1",
-    }
   };
 
   const breadcrumbJsonLd = {

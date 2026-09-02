@@ -18,6 +18,8 @@ import { siteConfig } from "@/lib/site-config";
 
 import { Metadata } from "next";
 
+import { getSeoAlternates } from "@/lib/seo-utils";
+
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 interface BlogListingPageProps {
@@ -30,6 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("metadata.blog_title", { siteName: siteConfig.name }),
     description: t("metadata.blog_description"),
+    alternates: getSeoAlternates("/blog"),
   };
 }
 

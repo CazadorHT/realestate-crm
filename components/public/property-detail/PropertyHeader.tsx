@@ -312,6 +312,7 @@ export function PropertyHeader({
             {!hideBreadcrumbs && (
               <div className="mb-2 hidden lg:block">
                 <AppBreadcrumbs
+                  renderSchema={false}
                   items={[
                     { label: t("nav.home"), href: "/" },
                     { label: t("nav.properties"), href: "/properties" },
@@ -353,6 +354,7 @@ export function PropertyHeader({
                         localizedTitle?.length && localizedTitle.length > 40
                           ? `${localizedTitle.slice(0, 40)}...`
                           : localizedTitle,
+                      href: `/properties/${encodeURIComponent(property.slug || property.id)}`,
                       className:
                         "text-slate-600 font-medium pointer-events-none",
                     },

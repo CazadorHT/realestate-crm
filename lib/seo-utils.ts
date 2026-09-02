@@ -849,6 +849,7 @@ export function generateBreadcrumbSchema(
 ): Record<string, any> {
   const lang = (language === "ru" ? "ru" : language === "cn" ? "cn" : language === "en" ? "en" : "th") as "th" | "en" | "cn" | "ru";
   const title = getLocalizedField<string>(data, "title", language);
+  const langPrefix = language === "th" ? "" : `/${language}`;
   
   const actionLabel = data.listing_type === "RENT" 
     ? SEO_LABELS.FOR_RENT[lang] 
@@ -859,21 +860,21 @@ export function generateBreadcrumbSchema(
     : "Property";
     
   // 1. Home
-  const itemListElement = [
+  const itemListElement: Array<{ "@type": string; position: number; name: string; item: string }> = [
     {
       "@type": "ListItem",
       position: 1,
       name: language === "en" ? "Home" : language === "cn" ? "首页" : language === "ru" ? "Главная" : "หน้าแรก",
-      item: `${siteConfig.url}/${language === "th" ? "" : language}`,
+      item: `${siteConfig.url}${langPrefix || "/"}`,
     },
   ];
 
   // 2. Action + Type (e.g. "Condo For Rent")
   itemListElement.push({
     "@type": "ListItem",
-    position: 2,
+    position: itemListElement.length + 1,
     name: `${typeLabel} ${actionLabel}`,
-    item: `${siteConfig.url}/${language === "th" ? "" : language}/properties?listing=${data.listing_type}&type=${data.property_type}`,
+    item: `${siteConfig.url}${langPrefix}/properties?listing=${data.listing_type}&type=${data.property_type}`,
   });
 
   // 3. Location (Province)
@@ -881,9 +882,9 @@ export function generateBreadcrumbSchema(
   if (province) {
     itemListElement.push({
       "@type": "ListItem",
-      position: 3,
+      position: itemListElement.length + 1,
       name: province,
-      item: `${siteConfig.url}/${language === "th" ? "" : language}/properties?province=${encodeURIComponent(data.province || province || "")}`,
+      item: `${siteConfig.url}${langPrefix}/properties?province=${encodeURIComponent(data.province || province || "")}`,
     });
   }
 
@@ -895,9 +896,9 @@ export function generateBreadcrumbSchema(
   if (subLocation && subLocation !== province) {
     itemListElement.push({
       "@type": "ListItem",
-      position: province ? 4 : 3,
+      position: itemListElement.length + 1,
       name: subLocation,
-      item: `${siteConfig.url}/${language === "th" ? "" : language}/properties?${area ? 'popular_area' : 'district'}=${encodeURIComponent( (area ? (data.popular_area || area) : (data.district || district)) || "" )}`,
+      item: `${siteConfig.url}${langPrefix}/properties?${area ? 'popular_area' : 'district'}=${encodeURIComponent( (area ? (data.popular_area || area) : (data.district || district)) || "" )}`,
     });
   }
 
@@ -906,7 +907,12 @@ export function generateBreadcrumbSchema(
     "@type": "ListItem",
     position: itemListElement.length + 1,
     name: title,
-    item: `${siteConfig.url}/properties/${data.slug || data.id}`,
+    item: `${siteConfig.url}/properties/${encodeURIComponent(data.slug || data.id)}`,
+  });
+
+  // Ensure strict sequential 1-based indexing
+  itemListElement.forEach((el, idx) => {
+    el.position = idx + 1;
   });
 
   return {
@@ -918,8 +924,8 @@ export function generateBreadcrumbSchema(
 
 /**
  * Generate Structured Data (JSON-LD)
- * Uses RealEstateListing schema to avoid Product-specific validation
- * (hasMerchantReturnPolicy, shippingDetails, gtin, brand).
+ * Uses RealEstateListing with properly nested mainEntity and offers.
+ * In Schema.org, offers belong to the residential Accommodation / SingleFamilyResidence / Apartment (mainEntity).
  */
 export function generateStructuredData(
   data: PropertyDataForSEO,
@@ -941,15 +947,17 @@ export function generateStructuredData(
 
   const propertySchemaType = schemaTypeMap[data.property_type] || "Accommodation";
 
+  const propertyUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || data.id)}`;
+
   const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
     "name": data.title,
     "description": data.description?.replace(/<[^>]*>?/gm, "") || data.title,
-    "url": `${siteConfig.url}/properties/${data.slug || data.id}`,
+    "url": propertyUrl,
   };
 
-  // Main Entity — ปรับดึงค่าตรงจาก Data Object ป้องกัน getLocalizedField ทำงานพลาด
+  // Main Entity — represents the physical property
   const mainEntity: Record<string, any> = {
     "@type": propertySchemaType,
     "name": data.title,
@@ -957,7 +965,7 @@ export function generateStructuredData(
       "@type": "PostalAddress",
       "streetAddress": data.address_line1 || "",
       "addressLocality": data.district || "",
-      "addressRegion": data.province || "Bangkok", // ใส่ Fallback เผื่อข้อมูลในเบสว่าง
+      "addressRegion": data.province || "Bangkok",
       "postalCode": data.postal_code || "",
       "addressCountry": "TH",
     },
@@ -969,11 +977,9 @@ export function generateStructuredData(
     mainEntity.floorSize = {
       "@type": "QuantitativeValue",
       "value": data.size_sqm,
-      "unitCode": "MTK", // ตารางเมตรสากล
+      "unitCode": "MTK",
     };
   }
-
-  structuredData.mainEntity = mainEntity;
 
   const offerList: Record<string, any>[] = [];
 
@@ -1019,7 +1025,7 @@ export function generateStructuredData(
         "referenceQuantity": {
           "@type": "QuantitativeValue",
           "value": 1,
-          "unitCode": "MON", // ต่อเดือนสากล
+          "unitCode": "MON",
         },
       },
     ];
@@ -1049,11 +1055,14 @@ export function generateStructuredData(
     });
   }
 
+  // In Schema.org, offers belong to the Accommodation / Apartment (mainEntity), not to the RealEstateListing WebPage
   if (offerList.length === 1) {
-    structuredData.offers = offerList[0];          
+    mainEntity.offers = offerList[0];
   } else if (offerList.length > 1) {
-    structuredData.offers = offerList;             
+    mainEntity.offers = offerList;
   }
+
+  structuredData.mainEntity = mainEntity;
 
   return structuredData;
 }
@@ -1250,5 +1259,30 @@ export function formatSeoTitle(coreText: string, siteName: string, maxLen: numbe
   }
 
   return formatPrioritySeoTitle({ primarySubject: cleanCore }, siteName, maxLen);
+}
+
+/**
+ * Standardized Hreflang Alternates Generator
+ * Enforces 100% parity between XML sitemaps and HTML <head> hreflang tags.
+ * Validated against ISO 639-1 / BCP 47 and Google Search Central requirements.
+ */
+export function getSeoAlternates(path: string): {
+  canonical: string;
+  languages: Record<string, string>;
+} {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const suffix = cleanPath === "/" ? "" : cleanPath;
+  const canonicalUrl = `${siteConfig.url}${suffix}`;
+
+  return {
+    canonical: canonicalUrl,
+    languages: {
+      th: `${siteConfig.url}/th${suffix}`,
+      en: `${siteConfig.url}/en${suffix}`,
+      "zh-Hans": `${siteConfig.url}/cn${suffix}`,
+      ru: `${siteConfig.url}/ru${suffix}`,
+      "x-default": canonicalUrl,
+    },
+  };
 }
 

@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Building2, MapPin, ChevronRight, Home, DollarSign, Calendar } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
+import { getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import { getPublicProjects, type PublicProject } from "@/features/public/projects";
 import { ProjectsHubClient } from "./ProjectsHubClient";
@@ -91,9 +92,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: siteConfig.name,
       type: "website",
     },
-    alternates: {
-      canonical: `${siteConfig.url}/projects`,
-    },
+    alternates: getSeoAlternates("/projects"),
   };
 }
 

@@ -6,6 +6,8 @@ import {
 } from "@/lib/services/blog";
 const getBlogPostBySlugCached = cache(getBlogPostBySlug);
 import { BlogCard } from "@/components/public/BlogCard";
+import { PropertyCard } from "@/components/public/PropertyCard";
+import { getPublicProperties } from "@/lib/services/properties";
 import { notFound } from "next/navigation";
 import { Home, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
@@ -166,6 +168,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     author: {
       "@type": "Person",
       name: author.name,
+      ...(author.avatar ? { image: author.avatar } : {}),
+      jobTitle: "Real Estate Specialist",
+      worksFor: {
+        "@type": "Organization",
+        name: siteConfig.company,
+        url: siteConfig.url,
+      },
     },
     publisher: {
       "@type": "Organization",
@@ -174,7 +183,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         "@type": "ImageObject",
         url: `${siteConfig.url}${siteConfig.logo}`,
       },
-      address: { // ✅ Fix: Added Address
+      address: {
         "@type": "PostalAddress",
         streetAddress: "กรุงเทพมหานคร",
         addressLocality: "Bangkok",
@@ -193,6 +202,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   // If we have AI-generated structured data, we use it. 
   // Often it's a list [schema1, schema2] or a single object.
   const finalSchema = post.structured_data || defaultSchema;
+
+  // Contextual Content-to-Inventory Linking (Pass PageRank to listing inventory)
+  const { properties: featuredProperties } = await getPublicProperties({ limit: 4, sort: "NEWEST" });
 
   return (
     <article className="min-h-screen bg-slate-50 pb-20 pt-16 md:pt-16">
@@ -242,9 +254,34 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
       </div>
 
+      {/* Contextual Inventory Linking: Recommended Properties for readers */}
+      {featuredProperties && featuredProperties.length > 0 && (
+        <div className="container px-4 md:px-6 mt-16 max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-8 border-b border-slate-200/80 pb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-indigo-600 rounded-full"></div>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900">
+                {t("property_listing.title") || "อสังหาริมทรัพย์แนะนำล่าสุด"}
+              </h2>
+            </div>
+            <Link
+              href="/properties"
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
+            >
+              {t("common.more") || "ดูทั้งหมด"} →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredProperties.map((property: any) => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Related Articles Section (Full Width) at the bottom */}
       {relatedPosts.length > 3 && (
-        <div className="container px-4 md:px-6 mt-20 max-w-6xl mx-auto">
+        <div className="container px-4 md:px-6 mt-16 max-w-6xl mx-auto">
           <div className="flex items-center gap-2 mb-8">
             <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
             <h2 className="text-2xl font-bold">

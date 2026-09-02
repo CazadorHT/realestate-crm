@@ -31,25 +31,7 @@ export function RecentlyViewedCard({
       onClick={(e) => {
         if (isDragging) e.preventDefault();
       }}
-      itemScope
-      itemType="https://schema.org/RealEstateListing"
     >
-      <meta itemProp="name" content={getLocaleValue(item, "title", language)} />
-      <meta
-        itemProp="url"
-        content={item.slug ? `/properties/${item.slug}` : `/properties/${item.id}`}
-      />
-      {item.image_url && <meta itemProp="image" content={item.image_url} />}
-      <meta
-        itemProp="description"
-        content={`${t("common.sale")}/${t("common.rent")} ${getLocaleValue(
-          item,
-          "title",
-          language,
-        )} ${getLocaleValue(item, "popular_area", language) || ""} ${
-          getProvinceName(item.province || "", language) || ""
-        } ${item.price_text}`}
-      />
 
       {/* Image Section */}
       <div className="relative h-36 md:h-44 bg-slate-100 overflow-hidden">

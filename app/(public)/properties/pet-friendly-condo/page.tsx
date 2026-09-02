@@ -4,6 +4,7 @@ import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { FaqAccordion } from "@/components/public/FaqAccordion";
 import { siteConfig } from "@/lib/site-config";
+import { getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import {
   getPublicProperties,
@@ -147,16 +148,7 @@ export async function generateMetadata(props: {
       "Dog friendly house Bangkok",
       "Cat friendly condo Bangkok",
     ],
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        th: `${siteConfig.url}/properties/pet-friendly-condo?lang=th`,
-        en: `${siteConfig.url}/properties/pet-friendly-condo?lang=en`,
-        "zh-CN": `${siteConfig.url}/properties/pet-friendly-condo?lang=cn`,
-        ru: `${siteConfig.url}/properties/pet-friendly-condo?lang=ru`,
-        "x-default": canonicalUrl,
-      },
-    },
+    alternates: getSeoAlternates("/properties/pet-friendly-condo"),
     openGraph: {
       title: t("metadata.pet_friendly_condo_title", {
         siteName: siteConfig.name,

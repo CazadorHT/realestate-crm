@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
+import { getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import { HotDealsSkeleton } from "@/components/public/HotDealsSkeleton";
 import { MortgageCalculatorSkeleton } from "@/components/public/MortgageCalculatorSkeleton";
@@ -115,6 +116,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("metadata.home_title", { siteName: siteConfig.name }),
     description: t("metadata.home_description"),
+    alternates: getSeoAlternates("/"),
     openGraph: {
       type: "website",
       locale: currentLocale,

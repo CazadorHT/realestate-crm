@@ -3,6 +3,7 @@ import Image from "next/image";
 import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { siteConfig } from "@/lib/site-config";
+import { getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import {
   getPublicProperties,
@@ -115,16 +116,7 @@ export async function generateMetadata(props: {
       "Commercial space for rent",
       "Home office for rent",
     ],
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        th: `${siteConfig.url}/properties/office-for-rent?lang=th`,
-        en: `${siteConfig.url}/properties/office-for-rent?lang=en`,
-        "zh-CN": `${siteConfig.url}/properties/office-for-rent?lang=cn`,
-        ru: `${siteConfig.url}/properties/office-for-rent?lang=ru`,
-        "x-default": canonicalUrl,
-      },
-    },
+    alternates: getSeoAlternates("/properties/office-for-rent"),
     openGraph: {
       title: t("metadata.office_for_rent_title", { siteName: siteConfig.name }),
       description: t("metadata.office_for_rent_description"),

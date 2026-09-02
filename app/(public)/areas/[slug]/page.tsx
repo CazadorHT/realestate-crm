@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Train, Building2, ChevronRight, BarChart3, HelpCircle, Compass } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
-import { formatPrioritySeoTitle, generateAreaFAQSchema } from "@/lib/seo-utils";
+import { formatPrioritySeoTitle, generateAreaFAQSchema, getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import {
   getAreaBySlug,
@@ -75,9 +75,7 @@ export async function generateMetadata(
       images: area.imageUrl ? [{ url: area.imageUrl }] : undefined,
       type: "website",
     },
-    alternates: {
-      canonical: `${siteConfig.url}/areas/${area.slug}`,
-    },
+    alternates: getSeoAlternates(`/areas/${area.slug}`),
   };
 }
 

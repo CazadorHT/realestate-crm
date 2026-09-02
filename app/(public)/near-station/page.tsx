@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Train, MapPin, ChevronRight, Building2, Home } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
+import { getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import { getTransitLinesWithStations, type TransitLine } from "@/features/public/stations";
 
@@ -123,9 +124,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: siteConfig.name,
       type: "website",
     },
-    alternates: {
-      canonical: `${siteConfig.url}/near-station`,
-    },
+    alternates: getSeoAlternates("/near-station"),
   };
 }
 

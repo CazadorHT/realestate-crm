@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { siteConfig } from "@/lib/site-config";
+import { getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import {
   getPublicProperties,
@@ -120,16 +121,7 @@ export async function generateMetadata(props: {
       "Кондо Саторн",
       "Кондо Силом",
     ],
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        th: `${siteConfig.url}/properties/prime-cbd?lang=th`,
-        en: `${siteConfig.url}/properties/prime-cbd?lang=en`,
-        "zh-CN": `${siteConfig.url}/properties/prime-cbd?lang=cn`,
-        ru: `${siteConfig.url}/properties/prime-cbd?lang=ru`,
-        "x-default": canonicalUrl,
-      },
-    },
+    alternates: getSeoAlternates("/properties/prime-cbd"),
     openGraph: {
       title: t("metadata.prime_cbd_title", { siteName: siteConfig.name }),
       description: t("metadata.prime_cbd_description"),

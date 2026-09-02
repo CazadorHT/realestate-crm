@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import ContactPageClient from "./ContactPageClient";
 
 import { siteConfig } from "@/lib/site-config";
+import { getSeoAlternates } from "@/lib/seo-utils";
 import { getServerTranslations } from "@/lib/i18n";
 import { getSiteSettings } from "@/features/site-settings/actions";
 
@@ -12,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("metadata.contact_title", { siteName: siteConfig.name }),
     description: t("metadata.contact_description"),
+    alternates: getSeoAlternates("/contact"),
   };
 }
 

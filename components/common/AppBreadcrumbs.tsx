@@ -38,6 +38,7 @@ interface AppBreadcrumbsProps {
   variant?: "default" | "on-dark";
   showHome?: boolean;
   items?: { label: string; href?: string; className?: string }[];
+  renderSchema?: boolean;
 }
 
 export function AppBreadcrumbs({
@@ -45,6 +46,7 @@ export function AppBreadcrumbs({
   variant = "default",
   showHome = true,
   items: customItems,
+  renderSchema = true,
 }: AppBreadcrumbsProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -97,17 +99,28 @@ export function AppBreadcrumbs({
 
   // Schema.org for SEO
   const schemaData = useMemo(() => {
+    if (!renderSchema) return null;
+
     return {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
-      itemListElement: breadcrumbs.map((item, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        name: item.label,
-        item: item.href ? `${siteConfig.url}${item.href}` : undefined,
-      })),
+      itemListElement: breadcrumbs.map((item, index) => {
+        let itemUrl = item.href
+          ? (item.href.startsWith("http")
+              ? item.href
+              : `${siteConfig.url}${item.href.startsWith("/") ? "" : "/"}${item.href}`)
+          : `${siteConfig.url}${pathname}`;
+        itemUrl = itemUrl.replace(/([^:]\/)\/+/g, "$1");
+
+        return {
+          "@type": "ListItem",
+          position: index + 1,
+          name: item.label,
+          item: itemUrl,
+        };
+      }),
     };
-  }, [breadcrumbs]);
+  }, [breadcrumbs, renderSchema, pathname]);
 
   // If we're on the home page and not showing home explicitly, or if there are no items
   if (pathname === "/" || breadcrumbs.length <= (showHome ? 1 : 0)) {
@@ -140,10 +153,12 @@ export function AppBreadcrumbs({
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-      />
+      {renderSchema && schemaData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+        />
+      )}
       
       {/* Desktop (lg+): Full Breadcrumbs with Circular Back Arrow */}
       <div className="hidden lg:flex items-center gap-3">
