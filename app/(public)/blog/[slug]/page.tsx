@@ -125,7 +125,9 @@ export async function generateMetadata({
 
 export async function generateStaticParams() {
   try {
-    const posts = await getBlogPosts(undefined, 100).catch(() => []);
+    // 🚀 Hybrid Strategy: Pre-render top 5 latest posts at build time for instant CDN delivery.
+    // Remaining posts render on-demand and are cached for 1 year with zero database egress.
+    const posts = await getBlogPosts(undefined, 5).catch(() => []);
     return posts.map((post) => ({
       slug: post.slug,
     }));
