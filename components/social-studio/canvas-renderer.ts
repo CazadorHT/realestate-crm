@@ -427,13 +427,13 @@ export async function renderBannerToCanvas(
   if (showHeader) {
     ctx.textBaseline = "top";
     ctx.font = `bold ${Math.round(30 * hScale)}px 'Prompt', 'Noto Sans Thai', sans-serif`;
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = options.brandingTitleColor || "#FFFFFF";
     ctx.textAlign = "left";
-    ctx.fillText(options.companyName || "VCC ASSET", outerMarginX, topY);
+    ctx.fillText(options.customCompanyName || options.companyName || "VCC ASSET", outerMarginX, topY);
 
     ctx.font = `500 ${Math.round(16 * hScale)}px 'Prompt', sans-serif`;
-    ctx.fillStyle = primaryColor;
-    ctx.fillText("PREMIUM REAL ESTATE", outerMarginX, topY + Math.round(38 * hScale));
+    ctx.fillStyle = options.brandingSubtitleColor || primaryColor;
+    ctx.fillText(options.customCompanySubtitle || "PREMIUM REAL ESTATE", outerMarginX, topY + Math.round(38 * hScale));
   }
 
   if (showBadge) {

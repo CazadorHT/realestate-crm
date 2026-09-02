@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Wand2, Type, Sliders, RotateCw, Compass, Palette, ShieldAlert, Zap, ChevronDown, Move, Maximize2 } from "lucide-react";
-import type { TextEffectTemplate, TextEffectPosition, FontSizeScale } from "../types";
+import { Sparkles, Wand2, Type, Sliders, RotateCw, Compass, Palette, ShieldAlert, Zap, ChevronDown, Move, Maximize2, Layers, Building2, BedDouble, DollarSign, Plus, RotateCcw, Check, Trash2 } from "lucide-react";
+import type { TextEffectTemplate, TextEffectPosition, FontSizeScale, TextEffectLineConfig } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { PRESET_VIRAL_HOOKS } from "../viral-hooks";
 
@@ -38,6 +38,29 @@ interface StudioTextEffectControlsProps {
   setTextEffectCustomBgAlpha?: (a: number) => void;
   textEffectCustomBorderWidth?: number;
   setTextEffectCustomBorderWidth?: (w: number) => void;
+  // Sub-line (Line 2) Independent Styling Props (Legacy fallback)
+  textEffectLine2Template?: TextEffectTemplate | "same";
+  setTextEffectLine2Template?: (t: TextEffectTemplate | "same") => void;
+  textEffectLine2SizeScale?: number;
+  setTextEffectLine2SizeScale?: (s: number) => void;
+  textEffectLine2CustomTextColor?: string;
+  setTextEffectLine2CustomTextColor?: (c: string) => void;
+  textEffectLine2CustomBgColor?: string;
+  setTextEffectLine2CustomBgColor?: (c: string) => void;
+  textEffectLine2CustomBorderColor?: string;
+  setTextEffectLine2CustomBorderColor?: (c: string) => void;
+  textEffectLineSpacing?: number;
+  setTextEffectLineSpacing?: (g: number) => void;
+  // Multi-line Dynamic Layers (Canva / CapCut Universal Standard)
+  textEffectLineConfigs?: TextEffectLineConfig[];
+  setTextEffectLineConfigs?: (c: TextEffectLineConfig[]) => void;
+  onAddTextEffectLine?: (text?: string, template?: TextEffectTemplate) => void;
+  onUpdateTextEffectLine?: (id: string, updates: Partial<TextEffectLineConfig>) => void;
+  onRemoveTextEffectLine?: (id: string) => void;
+  // Dynamic Real Estate Property Hooks
+  propertyProjectName?: string;
+  propertySpecsText?: string;
+  propertyPriceTag?: string;
   headline?: string;
   title?: string;
   priceText?: string;
@@ -434,6 +457,29 @@ export function StudioTextEffectControls({
   setTextEffectCustomBgAlpha,
   textEffectCustomBorderWidth = 2,
   setTextEffectCustomBorderWidth,
+  // Line 2 (Sub-line) Independent Styling
+  textEffectLine2Template = "same",
+  setTextEffectLine2Template,
+  textEffectLine2SizeScale = 0.85,
+  setTextEffectLine2SizeScale,
+  textEffectLine2CustomTextColor = "",
+  setTextEffectLine2CustomTextColor,
+  textEffectLine2CustomBgColor = "",
+  setTextEffectLine2CustomBgColor,
+  textEffectLine2CustomBorderColor = "",
+  setTextEffectLine2CustomBorderColor,
+  textEffectLineSpacing = 12,
+  setTextEffectLineSpacing,
+  // Multi-line Dynamic Layers (Canva / CapCut Universal Standard)
+  textEffectLineConfigs = [],
+  setTextEffectLineConfigs,
+  onAddTextEffectLine,
+  onUpdateTextEffectLine,
+  onRemoveTextEffectLine,
+  // Dynamic Real Estate Property Hooks
+  propertyProjectName = "",
+  propertySpecsText = "",
+  propertyPriceTag = "",
   headline,
   title,
   priceText,
@@ -444,11 +490,32 @@ export function StudioTextEffectControls({
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>("all");
   const [showHooksDrawer, setShowHooksDrawer] = useState<boolean>(false);
   const [hookCategory, setHookCategory] = useState<"all" | "urgency" | "location" | "space" | "finance">("all");
+  const [activeLineIdx, setActiveLineIdx] = useState<number>(0);
+  const [lineCustomColorsOpen, setLineCustomColorsOpen] = useState<boolean>(false);
+
+  // Universal Dynamic lines fallback list
+  const linesList: TextEffectLineConfig[] =
+    textEffectLineConfigs && textEffectLineConfigs.length > 0
+      ? textEffectLineConfigs
+      : [
+          {
+            id: "line-1",
+            text: textEffectText || propertyProjectName || "ดีลเด็ด คอนโดพร้อมอยู่!",
+            template: "same",
+            sizeScale: 1.0,
+          },
+        ];
+
+  const currentActiveIdx = Math.min(activeLineIdx, linesList.length - 1);
+  const activeLine = linesList[currentActiveIdx] || linesList[0];
 
   const handleRandomizeHook = () => {
     const list = PRESET_VIRAL_HOOKS[language === "en" ? "en" : "th"] || PRESET_VIRAL_HOOKS.th;
     const item = list[Math.floor(Math.random() * list.length)];
     if (item) {
+      if (onUpdateTextEffectLine) {
+        onUpdateTextEffectLine(activeLine.id, { text: item.text });
+      }
       setTextEffectText(item.text);
     }
   };
@@ -497,580 +564,709 @@ export function StudioTextEffectControls({
         )}
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px]">
-        {[
-          { id: "all", label: isEn ? "All" : "ทั้งหมด (22)" },
-          { id: "viral", label: "🎵 TikTok/Reels" },
-          { id: "lemon8", label: "🍋 Lemon8/Cafe" },
-          { id: "minimal", label: "⚪ Minimal" },
-          { id: "realestate", label: "🏢 Real Estate" },
-          { id: "illustrator", label: "🎨 Illustrator" },
-          { id: "custom", label: "🛠️ Custom" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setSelectedCategory(tab.id as TemplateCategory)}
-            className={`px-2.5 py-1 rounded-xl font-medium shrink-0 cursor-pointer transition-all ${
-              selectedCategory === tab.id
-                ? "bg-amber-500 text-slate-950 font-bold shadow-xs scale-102"
-                : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Universal Dynamic Text Layers Switcher (Canva / CapCut Standard) */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <Layers className="h-3.5 w-3.5 text-amber-400" />
+            <span>{isEn ? "Text Layers (1, 2, 3...)" : "เลเยอร์ข้อความ (แยกบรรทัดอิสระ)"}</span>
+          </Label>
+          <span className="text-[10px] text-slate-400">
+            {linesList.length} ข้อความ
+          </span>
+        </div>
 
-      {/* Template Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-800">
-        {filteredTemplates.map((t) => {
-          const isSelected = textEffectTemplate === t.id;
-          return (
+        {/* Dynamic Line Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px]">
+          {linesList.map((lineItem, idx) => {
+            const isActive = currentActiveIdx === idx;
+            return (
+              <button
+                key={lineItem.id || idx}
+                type="button"
+                onClick={() => setActiveLineIdx(idx)}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                  isActive
+                    ? "bg-amber-500 text-slate-950 shadow-sm scale-102"
+                    : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                }`}
+              >
+                <span>{idx + 1}️⃣</span>
+                <span className="max-w-[120px] truncate">{lineItem.text.trim() || `ข้อความ ${idx + 1}`}</span>
+              </button>
+            );
+          })}
+
+          {/* Add Text Layer Button */}
+          {onAddTextEffectLine && linesList.length < 6 && (
             <button
-              key={t.id}
               type="button"
               onClick={() => {
-                setTextEffectTemplate(t.id);
-                // If selecting curved template and curve is 0, auto set curve to 28
-                if (t.id === "illustrator_curve" && textEffectCurve === 0 && setTextEffectCurve) {
-                  setTextEffectCurve(28);
-                }
+                onAddTextEffectLine("");
+                setActiveLineIdx(linesList.length);
               }}
-              className={`p-2.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer group ${
-                isSelected
-                  ? "bg-amber-500/15 border-amber-400 ring-1 ring-amber-400/50 shadow-md"
-                  : "bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
-              }`}
+              className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 transition-all flex items-center gap-1 cursor-pointer shrink-0"
+              title="เพิ่มข้อความอีกบรรทัด"
             >
-              {/* Miniature Preview Badge */}
-              <div className="h-8 rounded-lg flex items-center justify-center px-2 mb-2 overflow-hidden shadow-inner" style={{ background: t.badgeBg, border: t.badgeBorder }}>
-                <span
-                  className="font-black text-[10px] tracking-tight truncate"
-                  style={{ color: t.badgeTextColor }}
-                >
-                  {t.sampleText}
-                </span>
-              </div>
-
-              <div>
-                <div className="text-[11px] font-bold text-slate-200 truncate group-hover:text-amber-300">
-                  {isEn ? t.nameEn : t.name}
-                </div>
-                <div className="text-[9px] text-slate-400 line-clamp-1">
-                  {isEn ? t.descEn : t.desc}
-                </div>
-              </div>
-
-              {isSelected && (
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-amber-400/30" />
-              )}
+              <Plus className="h-3.5 w-3.5" />
+              <span>เพิ่มข้อความ</span>
             </button>
-          );
-        })}
+          )}
+        </div>
       </div>
 
-      {/* When a template is active, show inputs & controls */}
-      {textEffectTemplate !== "none" && (
-        <div className="space-y-3 pt-2 border-t border-slate-800/80">
-          {/* Custom Style Color Pickers (if template === "custom") */}
-          {textEffectTemplate === "custom" && (
-            <div className="p-3 rounded-xl bg-slate-900/80 border border-blue-500/40 space-y-2.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-blue-300">
-                <Palette className="h-3.5 w-3.5" />
-                {isEn ? "Custom Color & Border Studio" : "กำหนดสีและขอบเองอิสระ"}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-[10px]">
-                {/* Text Color */}
-                <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">
-                    {isEn ? "Text Color" : "สีตัวหนังสือ"}
-                  </Label>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="color"
-                      value={textEffectCustomTextColor}
-                      onChange={(e) => setTextEffectCustomTextColor?.(e.target.value)}
-                      className="h-6 w-8 rounded border border-slate-700 bg-transparent cursor-pointer"
-                    />
-                    <span className="font-mono text-slate-300">{textEffectCustomTextColor}</span>
-                  </div>
-                </div>
-
-                {/* BG Color */}
-                <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">
-                    {isEn ? "Background Color" : "สีพื้นหลัง"}
-                  </Label>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="color"
-                      value={textEffectCustomBgColor}
-                      onChange={(e) => setTextEffectCustomBgColor?.(e.target.value)}
-                      className="h-6 w-8 rounded border border-slate-700 bg-transparent cursor-pointer"
-                    />
-                    <span className="font-mono text-slate-300">{textEffectCustomBgColor}</span>
-                  </div>
-                </div>
-
-                {/* Border Color */}
-                <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">
-                    {isEn ? "Border Color" : "สีขอบป้าย"}
-                  </Label>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="color"
-                      value={textEffectCustomBorderColor}
-                      onChange={(e) => setTextEffectCustomBorderColor?.(e.target.value)}
-                      className="h-6 w-8 rounded border border-slate-700 bg-transparent cursor-pointer"
-                    />
-                    <span className="font-mono text-slate-300">{textEffectCustomBorderColor}</span>
-                  </div>
-                </div>
-
-                {/* BG Opacity */}
-                <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">
-                    {isEn ? `Opacity: ${textEffectCustomBgAlpha}%` : `ความทึบ: ${textEffectCustomBgAlpha}%`}
-                  </Label>
-                  <Slider
-                    value={[textEffectCustomBgAlpha]}
-                    onValueChange={(val) => setTextEffectCustomBgAlpha?.(val[0])}
-                    min={0}
-                    max={100}
-                    step={5}
-                    className="py-1"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Text Input */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Type className="h-3.5 w-3.5 text-amber-400" />
-                {isEn ? "Effect Text / Hook Phrase" : "ข้อความบนเอฟเฟกต์ (พาดหัวไวรัล)"}
-              </Label>
-
-              {/* Quick Preset Text Buttons */}
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={handleRandomizeHook}
-                  className="text-[9px] px-2 py-0.5 rounded bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-bold hover:brightness-110 cursor-pointer flex items-center gap-1 shadow-xs"
-                  title="สุ่มพาดหัวไวรัลหยุดนิ้ว 3 วินาที"
-                >
-                  <Zap className="h-2.5 w-2.5 fill-current" />
-                  <span>สุ่ม Hook</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowHooksDrawer(!showHooksDrawer)}
-                  className={`text-[9px] px-1.5 py-0.5 rounded border transition-colors cursor-pointer flex items-center gap-1 ${
-                    showHooksDrawer
-                      ? "bg-amber-500/20 text-amber-300 border-amber-400/40 font-bold"
-                      : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                  }`}
-                >
-                  <span>คลัง Hook</span>
-                  <ChevronDown className={`h-2.5 w-2.5 transition-transform ${showHooksDrawer ? "rotate-180" : ""}`} />
-                </button>
-
-                {headline && (
-                  <button
-                    type="button"
-                    onClick={() => setTextEffectText(headline)}
-                    className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer"
-                  >
-                    AI Hook
-                  </button>
-                )}
-                {priceText && (
-                  <button
-                    type="button"
-                    onClick={() => setTextEffectText(priceText)}
-                    className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 cursor-pointer"
-                  >
-                    💰 Price
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Categorized Viral Hook Drawer */}
-            {showHooksDrawer && (
-              <div className="p-3 bg-slate-950/90 border border-amber-500/30 rounded-xl space-y-2.5 shadow-lg animate-in fade-in duration-150">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-amber-300 flex items-center gap-1">
-                    ⚡ คลังพาดหัวหยุดนิ้ว 3 วินาที (Viral Real Estate Hooks)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleRandomizeHook}
-                    className="text-[9px] text-amber-400 hover:underline cursor-pointer flex items-center gap-0.5"
-                  >
-                    <Zap className="h-2.5 w-2.5" /> สุ่มอีกรอบ
-                  </button>
-                </div>
-
-                {/* Category Pills */}
-                <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none text-[9px]">
-                  {[
-                    { id: "all", label: "ทั้งหมด" },
-                    { id: "urgency", label: "🔥 ดีลเด็ด / หลุดจอง" },
-                    { id: "location", label: "🚆 ทำเล / BTS 0 ม." },
-                    { id: "space", label: "🛋️ พื้นที่ / วิวสวย" },
-                    { id: "finance", label: "💰 การเงิน / ผลตอบแทน" },
-                  ].map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setHookCategory(c.id as any)}
-                      className={`px-2 py-0.5 rounded-full whitespace-nowrap transition-all cursor-pointer ${
-                        hookCategory === c.id
-                          ? "bg-amber-500 text-slate-950 font-bold"
-                          : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      {c.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Hook Items Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[160px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-800">
-                  {(PRESET_VIRAL_HOOKS[language === "en" ? "en" : "th"] || PRESET_VIRAL_HOOKS.th)
-                    .filter((h) => hookCategory === "all" || h.category === hookCategory)
-                    .map((h) => (
-                      <button
-                        key={h.id}
-                        type="button"
-                        onClick={() => {
-                          setTextEffectText(h.text);
-                          setShowHooksDrawer(false);
-                        }}
-                        className="p-2 text-left bg-slate-900/90 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/40 rounded-lg transition-all group cursor-pointer"
-                      >
-                        <div className="text-[9px] text-amber-400/80 font-bold mb-0.5">{h.badge}</div>
-                        <div className="text-[10px] font-medium text-slate-200 group-hover:text-amber-200 leading-tight">
-                          {h.text}
-                        </div>
-                      </button>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            <textarea
-              value={textEffectText}
-              onChange={(e) => setTextEffectText(e.target.value)}
-              rows={2}
-              placeholder={
-                headline ||
-                title ||
-                (isEn ? "e.g. HOT DEAL!\nREADY TO MOVE IN" : "เช่น 🔥 หลุดจองด่วน\nผ่อนถูกกว่าเช่า!")
-              }
-              className="w-full bg-slate-900/90 border border-slate-700/80 text-white placeholder:text-slate-500 text-xs font-medium focus:border-amber-400 p-2 rounded-xl resize-none leading-relaxed"
-            />
-            <div className="flex items-center justify-between text-[10px] text-slate-400">
-              <span className="text-amber-400/90 font-medium">💡 กด Enter เพื่อเว้นบรรทัด / จัดข้อความหลายบรรทัดได้</span>
-            </div>
-
-            {/* Ready-to-use viral hooks chips */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none text-[9px]">
-              {[
-                "🔥 หลุดจองด่วน ต่ำกว่าทุน!",
-                "✨ ผ่อนถูกกว่าเช่า พร้อมอยู่",
-                "📍 ติด BTS 0 เมตร เดิน 1 นาที",
-                "💎 การันตีผลตอบแทน 8% ต่อปี",
-                "👑 PENTHOUSE วิวแม่น้ำ 360°",
-                "⚡ FLASH SALE วันนี้เท่านั้น",
-              ].map((phrase) => (
-                <button
-                  key={phrase}
-                  type="button"
-                  onClick={() => setTextEffectText(phrase)}
-                  className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-amber-300 hover:border-amber-400/40 shrink-0 cursor-pointer transition-colors"
-                >
-                  {phrase}
-                </button>
-              ))}
-            </div>
+      {/* Selected Line Inspector Card */}
+      <div className="p-3 rounded-2xl bg-slate-900/90 border border-amber-500/40 space-y-3 shadow-inner">
+        {/* Layer Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="h-5 w-5 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center">
+              {currentActiveIdx + 1}
+            </span>
+            <span className="text-xs font-bold text-amber-300">
+              {isEn ? `Text Layer ${currentActiveIdx + 1}` : `ปรับแต่งข้อความที่ ${currentActiveIdx + 1}`}
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono">
+              ({activeLine.template === "same" || !activeLine.template ? "✨ ตามข้อความแรก" : `แม่แบบ: ${activeLine.template}`})
+            </span>
           </div>
 
-          {/* Curved Arc Text Engine (องศาโค้งได้ -60 ถึง +60) */}
-          {setTextEffectCurve && (
-            <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Compass className="h-3.5 w-3.5 text-amber-400" />
-                  {isEn ? "Curved / Arc Text (องศาโค้ง)" : "ดัดองศาโค้ง (Curved Arc Text)"}
-                </span>
-                <span className="font-mono font-bold text-amber-400 text-[11px]">
-                  {textEffectCurve > 0 ? `+${textEffectCurve}° (หงาย ⌒)` : textEffectCurve < 0 ? `${textEffectCurve}° (คว่ำ ⌣)` : "0° (เส้นตรง)"}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Slider
-                  value={[textEffectCurve]}
-                  onValueChange={(val) => setTextEffectCurve(val[0])}
-                  min={-60}
-                  max={60}
-                  step={2}
-                  className="flex-1"
-                />
-
-                {/* Quick curve presets */}
-                <div className="flex items-center gap-1 shrink-0">
-                  {[
-                    { deg: -30, label: "⌣ คว่ำ" },
-                    { deg: 0, label: "ตรง" },
-                    { deg: 30, label: "⌒ หงาย" },
-                  ].map((btn) => (
-                    <button
-                      key={btn.deg}
-                      type="button"
-                      onClick={() => setTextEffectCurve(btn.deg)}
-                      className={`text-[9px] px-1.5 py-0.5 rounded border cursor-pointer ${
-                        textEffectCurve === btn.deg
-                          ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
-                          : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Curved Text Size Scaling (ย่อ-ขยายข้อความโค้ง) */}
-              <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-300 flex items-center gap-1">
-                    <Maximize2 className="h-3 w-3 text-amber-400" />
-                    {isEn ? "Curved Text Size (Scale)" : "ย่อ-ขยายขนาดข้อความโค้ง"}
-                  </span>
-                  <span className="font-mono font-bold text-amber-400 text-[11px] uppercase">
-                    {textEffectSize}
-                  </span>
-                </div>
-                <div className="grid grid-cols-5 gap-1">
-                  {[
-                    { id: "sm", label: isEn ? "S (Small)" : "S เล็ก" },
-                    { id: "md", label: isEn ? "M (Mid)" : "M กลาง" },
-                    { id: "lg", label: isEn ? "L (Big)" : "L ใหญ่" },
-                    { id: "xl", label: isEn ? "XL (Huge)" : "XL ใหญ่มาก" },
-                    { id: "2xl", label: isEn ? "2XL (Max)" : "2XL เด่นสุด" },
-                  ].map((sz) => (
-                    <button
-                      key={sz.id}
-                      type="button"
-                      onClick={() => setTextEffectSize(sz.id as any)}
-                      className={`py-1 rounded border text-[10px] font-bold transition-all cursor-pointer ${
-                        textEffectSize === sz.id
-                          ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs scale-102"
-                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      {sz.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {linesList.length > 1 && onRemoveTextEffectLine && (
+            <button
+              type="button"
+              onClick={() => {
+                onRemoveTextEffectLine(activeLine.id);
+                setActiveLineIdx(Math.max(0, currentActiveIdx - 1));
+              }}
+              className="text-[10px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2 py-1 rounded-lg border border-rose-500/30 flex items-center gap-1 cursor-pointer transition-all"
+            >
+              <Trash2 className="h-3 w-3" />
+              <span>ลบข้อความนี้</span>
+            </button>
           )}
+        </div>
 
-          {/* Position Selection (With Safe Zones & Corner Pinning) */}
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-              <Compass className="h-3 w-3 text-amber-400" />
-              {isEn ? "Position & Safe Zones" : "ตำแหน่งจัดวาง (พร้อม Safe Zone หลบ UI)"}
+        {/* Text Input for this line */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-xs">
+            <Label className="text-[11px] font-semibold text-slate-300">
+              {isEn ? "Text Content" : "ข้อความ"}
             </Label>
+            <span className="text-[9px] text-slate-500">{activeLine.text.length} ตัวอักษร</span>
+          </div>
+          <Input
+            value={activeLine.text}
+            onChange={(e) => {
+              const newText = e.target.value;
+              onUpdateTextEffectLine?.(activeLine.id, { text: newText });
+              const updated = linesList.map((l, i) => i === currentActiveIdx ? newText : l.text);
+              setTextEffectText(updated.join("\n"));
+            }}
+            placeholder={
+              currentActiveIdx === 0
+                ? (propertyProjectName || "เช่น ไอดีโอ โมบิ สุขุมวิท 40")
+                : (isEn ? "Type text here..." : "เช่น 2 นอน 2 น้ำ 65 ตร.ม. หรือ ราคา 4.5 ล้านบาท")
+            }
+            className="w-full bg-slate-950/90 border border-slate-700/80 text-white text-xs font-semibold focus:border-amber-400 p-2 rounded-xl"
+          />
+        </div>
 
-            {/* Standard & Safe Zones */}
-            <div className="grid grid-cols-5 gap-1 text-[10px]">
-              {[
-                { id: "top", label: "Top (บน)" },
-                { id: "safe_top", label: "🛡️ Safe Top" },
-                { id: "center", label: "🎯 Center (กลาง)" },
-                { id: "safe_bottom", label: "🛡️ Safe Bot" },
-                { id: "bottom", label: "Bottom (ล่าง)" },
-              ].map((pos) => (
+        {/* 1-Click Smart Property Hooks */}
+        {(propertyProjectName || propertySpecsText || propertyPriceTag) && (
+          <div className="p-2 rounded-xl bg-slate-950/70 border border-amber-500/20 space-y-1.5">
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="font-bold text-amber-300 flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-amber-400" />
+                <span>ดึงข้อมูลทรัพย์ลงข้อความนี้ (1-Click)</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+              {propertyProjectName && (
                 <button
-                  key={pos.id}
                   type="button"
-                  onClick={() => setTextEffectPosition(pos.id as TextEffectPosition)}
-                  className={`py-1.5 px-1 rounded-lg border text-center cursor-pointer font-medium transition-all ${
-                    textEffectPosition === pos.id
-                      ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
-                      : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
+                  onClick={() => {
+                    onUpdateTextEffectLine?.(activeLine.id, { text: propertyProjectName });
+                    const updated = linesList.map((l, i) => i === currentActiveIdx ? propertyProjectName : l.text);
+                    setTextEffectText(updated.join("\n"));
+                  }}
+                  className="px-2 py-0.5 rounded-lg bg-slate-800/90 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-400/50 text-slate-200 hover:text-amber-300 font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                >
+                  <Building2 className="h-3 w-3 text-amber-400" />
+                  <span>🏢 {propertyProjectName}</span>
+                </button>
+              )}
+              {propertySpecsText && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onUpdateTextEffectLine?.(activeLine.id, { text: propertySpecsText });
+                    const updated = linesList.map((l, i) => i === currentActiveIdx ? propertySpecsText : l.text);
+                    setTextEffectText(updated.join("\n"));
+                  }}
+                  className="px-2 py-0.5 rounded-lg bg-slate-800/90 hover:bg-sky-500/20 border border-slate-700 hover:border-sky-400/50 text-slate-200 hover:text-sky-300 font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                >
+                  <BedDouble className="h-3 w-3 text-sky-400" />
+                  <span>🛏️ {propertySpecsText}</span>
+                </button>
+              )}
+              {propertyPriceTag && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onUpdateTextEffectLine?.(activeLine.id, { text: propertyPriceTag });
+                    const updated = linesList.map((l, i) => i === currentActiveIdx ? propertyPriceTag : l.text);
+                    setTextEffectText(updated.join("\n"));
+                  }}
+                  className="px-2 py-0.5 rounded-lg bg-slate-800/90 hover:bg-emerald-500/20 border border-slate-700 hover:border-emerald-400/50 text-slate-200 hover:text-emerald-300 font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                >
+                  <DollarSign className="h-3 w-3 text-emerald-400" />
+                  <span>🏷️ {propertyPriceTag}</span>
+                </button>
+              )}
+            </div>
+
+            {/* Quick Add Line with Property Data */}
+            {onAddTextEffectLine && linesList.length < 6 && (
+              <div className="pt-1.5 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[9px]">
+                <span className="text-slate-400 shrink-0 font-medium">✨ เพิ่มเป็นอีกข้อความ:</span>
+                {propertySpecsText && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onAddTextEffectLine(propertySpecsText);
+                      setActiveLineIdx(linesList.length);
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-sky-500/15 hover:bg-sky-500/30 border border-sky-500/40 text-sky-200 shrink-0 cursor-pointer font-medium"
+                  >
+                    + เพิ่มสเปกห้อง
+                  </button>
+                )}
+                {propertyPriceTag && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onAddTextEffectLine(propertyPriceTag);
+                      setActiveLineIdx(linesList.length);
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-200 shrink-0 cursor-pointer font-medium"
+                  >
+                    + เพิ่มราคา
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Template Selector for this line */}
+        <div className="space-y-1.5 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs">
+            <Label className="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 text-amber-400" />
+              {isEn ? "Effect Template for this line" : "เลือกแม่แบบเอฟเฟกต์เฉพาะข้อความนี้"}
+            </Label>
+            {currentActiveIdx > 0 && activeLine.template !== "same" && (
+              <button
+                type="button"
+                onClick={() => onUpdateTextEffectLine?.(activeLine.id, { template: "same" })}
+                className="text-[10px] text-amber-400 hover:underline cursor-pointer"
+              >
+                ↺ ใช้ตามข้อความแรก
+              </button>
+            )}
+          </div>
+
+          {currentActiveIdx > 0 && (
+            <button
+              type="button"
+              onClick={() => onUpdateTextEffectLine?.(activeLine.id, { template: "same" })}
+              className={`w-full py-1.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                activeLine.template === "same" || !activeLine.template
+                  ? "bg-amber-500 text-slate-950 border-amber-400 shadow-sm"
+                  : "bg-slate-950/80 border-slate-800 text-slate-300 hover:bg-slate-800"
+              }`}
+            >
+              <span>✨ ใช้แม่แบบเหมือนข้อความแรก (ตามต้นฉบับ)</span>
+            </button>
+          )}
+
+          {/* Category Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[10px]">
+            {[
+              { id: "all", label: "ทั้งหมด (22)" },
+              { id: "viral", label: "🎵 TikTok" },
+              { id: "lemon8", label: "🍋 Lemon8" },
+              { id: "minimal", label: "⚪ Minimal" },
+              { id: "realestate", label: "🏢 Property" },
+              { id: "illustrator", label: "🎨 3D Pop" },
+              { id: "custom", label: "🛠️ Custom" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedCategory(tab.id as TemplateCategory)}
+                className={`px-2 py-0.5 rounded-lg font-medium shrink-0 cursor-pointer transition-all ${
+                  selectedCategory === tab.id
+                    ? "bg-amber-500 text-slate-950 font-bold shadow-xs"
+                    : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Template Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[170px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-800">
+            {filteredTemplates.map((t) => {
+              const isSelected = activeLine.template === "same"
+                ? (currentActiveIdx === 0 ? textEffectTemplate === t.id : textEffectTemplate === t.id && activeLine.template === "same")
+                : activeLine.template === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    onUpdateTextEffectLine?.(activeLine.id, { template: t.id });
+                    if (currentActiveIdx === 0) {
+                      setTextEffectTemplate(t.id);
+                      if (t.id === "illustrator_curve" && textEffectCurve === 0 && setTextEffectCurve) {
+                        setTextEffectCurve(28);
+                      }
+                    }
+                  }}
+                  className={`p-2 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer group ${
+                    isSelected
+                      ? "bg-amber-500/20 border-amber-400 ring-1 ring-amber-400/50 shadow-md"
+                      : "bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
                   }`}
                 >
-                  {pos.label}
+                  <div className="h-7 rounded-lg flex items-center justify-center px-1.5 mb-1 overflow-hidden shadow-inner" style={{ background: t.badgeBg, border: t.badgeBorder }}>
+                    <span className="font-black text-[9px] tracking-tight truncate" style={{ color: t.badgeTextColor }}>
+                      {t.sampleText}
+                    </span>
+                  </div>
+                  <div className="text-[10px] font-bold text-slate-200 truncate group-hover:text-amber-300">
+                    {isEn ? t.nameEn : t.name}
+                  </div>
+                  {isSelected && (
+                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-amber-400/30" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Size Scale Slider for this line */}
+        <div className="space-y-1.5 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-slate-300 flex items-center gap-1">
+              <Maximize2 className="h-3 w-3 text-amber-400" />
+              {isEn ? "Text Size (Scale)" : "ขนาดตัวอักษรเฉพาะข้อความนี้"}
+            </span>
+            <span className="font-mono font-bold text-amber-400 text-[11px]">
+              {Math.round((activeLine.sizeScale ?? (currentActiveIdx === 0 ? 1.0 : 0.85)) * 100)}%
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Slider
+              value={[Math.round((activeLine.sizeScale ?? (currentActiveIdx === 0 ? 1.0 : 0.85)) * 100)]}
+              onValueChange={(val) => onUpdateTextEffectLine?.(activeLine.id, { sizeScale: val[0] / 100 })}
+              min={50}
+              max={150}
+              step={5}
+              className="flex-1"
+            />
+            <div className="flex items-center gap-1 shrink-0">
+              {[
+                { ratio: 0.65, label: "65% เล็ก" },
+                { ratio: 0.85, label: "85% แนะนำ" },
+                { ratio: 1.0, label: "100% ปกติ" },
+                { ratio: 1.25, label: "125% ใหญ่" },
+              ].map((btn) => (
+                <button
+                  key={btn.ratio}
+                  type="button"
+                  onClick={() => onUpdateTextEffectLine?.(activeLine.id, { sizeScale: btn.ratio })}
+                  className={`text-[9px] px-1.5 py-0.5 rounded border cursor-pointer ${
+                    Math.abs((activeLine.sizeScale ?? (currentActiveIdx === 0 ? 1.0 : 0.85)) - btn.ratio) < 0.04
+                      ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
+                      : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {btn.label}
                 </button>
               ))}
             </div>
+          </div>
+        </div>
 
-            {/* Card Aware & Corner Pinning */}
-            <div className="grid grid-cols-4 gap-1 text-[10px] pt-1">
-              <button
-                type="button"
-                onClick={() => setTextEffectPosition("above_card")}
-                className={`py-1 px-1.5 rounded-lg border text-center cursor-pointer font-medium transition-all ${
-                  textEffectPosition === "above_card"
-                    ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
-                    : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
-                }`}
-              >
-                {isEn ? "Above Card" : "📦 เหนือการ์ด"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setTextEffectPosition("below_card")}
-                className={`py-1 px-1.5 rounded-lg border text-center cursor-pointer font-medium transition-all ${
-                  textEffectPosition === "below_card"
-                    ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
-                    : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
-                }`}
-              >
-                {isEn ? "Below Card" : "📦 ใต้การ์ด"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setTextEffectPosition("top_left")}
-                className={`py-1 px-1.5 rounded-lg border text-center cursor-pointer font-medium transition-all ${
-                  textEffectPosition === "top_left"
-                    ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
-                    : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
-                }`}
-              >
-                ↖️ บนซ้าย
-              </button>
-              <button
-                type="button"
-                onClick={() => setTextEffectPosition("top_right")}
-                className={`py-1 px-1.5 rounded-lg border text-center cursor-pointer font-medium transition-all ${
-                  textEffectPosition === "top_right"
-                    ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
-                    : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
-                }`}
-              >
-                ↗️ บนขวา
-              </button>
-            </div>
+        {/* Curved Arc Text for this line (ดัดองศาโค้งเฉพาะข้อความนี้) */}
+        <div className="space-y-1.5 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+              <Compass className="h-3.5 w-3.5 text-amber-400" />
+              <span>{isEn ? "Curved Arc for this text" : "ดัดองศาโค้งเฉพาะข้อความนี้ (Curved Arc)"}</span>
+            </span>
+            <span className="font-mono font-bold text-amber-400 text-[11px]">
+              {(activeLine.curve ?? 0) > 0
+                ? `+${activeLine.curve}° (หงาย ⌒)`
+                : (activeLine.curve ?? 0) < 0
+                ? `${activeLine.curve}° (คว่ำ ⌣)`
+                : "0° (ตรง)"}
+            </span>
           </div>
 
-          {/* Size & Adjustments */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            {/* Font Size */}
-            <div className="space-y-1">
-              <Label className="text-[10px] text-slate-400 block">
-                {isEn ? "Font Size Scale" : "ขนาดตัวอักษร"}
-              </Label>
-              <div className="grid grid-cols-5 gap-1">
-                {(["sm", "md", "lg", "xl", "2xl"] as const).map((sz) => (
-                  <button
-                    key={sz}
-                    type="button"
-                    onClick={() => setTextEffectSize(sz)}
-                    className={`py-1 rounded border text-[10px] font-bold uppercase cursor-pointer transition-all ${
-                      textEffectSize === sz
-                        ? "bg-amber-500/20 border-amber-400 text-amber-300"
-                        : "bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800"
-                    }`}
-                  >
-                    {sz}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="flex items-center gap-3">
+            <Slider
+              value={[activeLine.curve ?? 0]}
+              onValueChange={(val) => {
+                onUpdateTextEffectLine?.(activeLine.id, { curve: val[0] });
+                if (currentActiveIdx === 0 && setTextEffectCurve) {
+                  setTextEffectCurve(val[0]);
+                }
+              }}
+              min={-60}
+              max={60}
+              step={2}
+              className="flex-1"
+            />
 
-            {/* Rotation Tilt */}
-            <div className="space-y-1">
-              <Label className="text-[10px] text-slate-400 block flex items-center justify-between">
-                <span>{isEn ? "Sticker Tilt" : "ความเอียง (Tilt)"}</span>
-                <span className="font-mono text-amber-400">{textEffectRotation}°</span>
-              </Label>
-              <div className="flex items-center gap-1">
-                {[-4, -2, 0, 2, 4].map((deg) => (
-                  <button
-                    key={deg}
-                    type="button"
-                    onClick={() => setTextEffectRotation(deg)}
-                    className={`flex-1 py-1 rounded border text-[10px] font-mono font-medium cursor-pointer ${
-                      textEffectRotation === deg
-                        ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
-                        : "bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800"
-                    }`}
-                  >
-                    {deg > 0 ? `+${deg}°` : `${deg}°`}
-                  </button>
-                ))}
-              </div>
+            {/* Quick curve presets */}
+            <div className="flex items-center gap-1 shrink-0">
+              {[
+                { deg: -30, label: "⌣ คว่ำ" },
+                { deg: 0, label: "ตรง" },
+                { deg: 30, label: "⌒ หงาย" },
+              ].map((btn) => (
+                <button
+                  key={btn.deg}
+                  type="button"
+                  onClick={() => {
+                    onUpdateTextEffectLine?.(activeLine.id, { curve: btn.deg });
+                    if (currentActiveIdx === 0 && setTextEffectCurve) {
+                      setTextEffectCurve(btn.deg);
+                    }
+                  }}
+                  className={`text-[9px] px-1.5 py-0.5 rounded border cursor-pointer ${
+                    (activeLine.curve ?? 0) === btn.deg
+                      ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
+                      : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              ))}
             </div>
           </div>
+        </div>
 
-          {/* Fine Tune X & Y Position Offset Sliders */}
-          <div className="space-y-2 pt-1 border-t border-slate-800/60">
-            {/* Y Offset */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-[10px] text-slate-400">
-                <span className="flex items-center gap-1">
-                  <Sliders className="h-3 w-3" />
-                  {isEn ? "Fine-tune Y Position" : "เลื่อนตำแหน่ง แกน Y (ขึ้น-ลง)"}
-                </span>
-                <span className="font-mono text-slate-300">{textEffectYOffset} px</span>
-              </div>
-              <Slider
-                value={[textEffectYOffset]}
-                onValueChange={(val) => setTextEffectYOffset(val[0])}
-                min={-250}
-                max={250}
-                step={5}
-                className="py-1"
-              />
-            </div>
-
-            {/* X Offset */}
-            {setTextEffectXOffset && (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[10px] text-slate-400">
-                  <span className="flex items-center gap-1">
-                    <Sliders className="h-3 w-3" />
-                    {isEn ? "Fine-tune X Position" : "เลื่อนตำแหน่ง แกน X (ซ้าย-ขวา)"}
-                  </span>
-                  <span className="font-mono text-slate-300">{textEffectXOffset} px</span>
-                </div>
-                <Slider
-                  value={[textEffectXOffset]}
-                  onValueChange={(val) => setTextEffectXOffset(val[0])}
-                  min={-250}
-                  max={250}
-                  step={5}
-                  className="py-1"
-                />
-              </div>
+        {/* Move & Rotate for this line (ย้ายตำแหน่ง & หมุนเอียงเฉพาะข้อความนี้) */}
+        <div className="space-y-2 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+              <Move className="h-3.5 w-3.5 text-amber-400" />
+              <span>{isEn ? "Move & Rotate this text" : "ย้ายตำแหน่ง & หมุนเอียงเฉพาะข้อความนี้"}</span>
+            </span>
+            {((activeLine.xOffset ?? 0) !== 0 || (activeLine.yOffset ?? 0) !== 0 || (activeLine.rotation ?? 0) !== 0) && (
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateTextEffectLine?.(activeLine.id, { xOffset: 0, yOffset: 0, rotation: 0 });
+                }}
+                className="text-[10px] text-amber-400 hover:underline cursor-pointer"
+              >
+                ↺ รีเซ็ตตำแหน่งข้อความนี้
+              </button>
             )}
+          </div>
 
-            {/* Drag Hint Banner */}
-            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center gap-2 text-[10px] text-amber-300">
-              <Move className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-              <span>
-                {isEn
-                  ? "Pro Tip: You can also click and drag the text directly on the preview screen!"
-                  : "💡 เคล็ดลับ: สามารถใช้เมาส์คลิกค้างแล้วลากข้อความบนจอ Preview ได้โดยตรง"}
+          {/* Y Offset */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-slate-400">
+              <span>เลื่อนแกน Y (ขึ้น-ลง เฉพาะข้อความนี้)</span>
+              <span className="font-mono text-slate-300">{activeLine.yOffset ?? 0} px</span>
+            </div>
+            <Slider
+              value={[activeLine.yOffset ?? 0]}
+              onValueChange={(val) => {
+                onUpdateTextEffectLine?.(activeLine.id, { yOffset: val[0] });
+                if (currentActiveIdx === 0 && setTextEffectYOffset) {
+                  setTextEffectYOffset(val[0]);
+                }
+              }}
+              min={-250}
+              max={250}
+              step={5}
+              className="py-1"
+            />
+          </div>
+
+          {/* X Offset */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-slate-400">
+              <span>เลื่อนแกน X (ซ้าย-ขวา เฉพาะข้อความนี้)</span>
+              <span className="font-mono text-slate-300">{activeLine.xOffset ?? 0} px</span>
+            </div>
+            <Slider
+              value={[activeLine.xOffset ?? 0]}
+              onValueChange={(val) => {
+                onUpdateTextEffectLine?.(activeLine.id, { xOffset: val[0] });
+                if (currentActiveIdx === 0 && setTextEffectXOffset) {
+                  setTextEffectXOffset(val[0]);
+                }
+              }}
+              min={-250}
+              max={250}
+              step={5}
+              className="py-1"
+            />
+          </div>
+
+          {/* Rotation Tilt */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-slate-400">
+              <span className="flex items-center gap-1">
+                <RotateCw className="h-3 w-3" />
+                <span>หมุนเอียงเฉพาะข้อความนี้</span>
               </span>
+              <span className="font-mono text-slate-300">{activeLine.rotation ?? 0}°</span>
+            </div>
+            <Slider
+              value={[activeLine.rotation ?? 0]}
+              onValueChange={(val) => {
+                onUpdateTextEffectLine?.(activeLine.id, { rotation: val[0] });
+                if (currentActiveIdx === 0 && setTextEffectRotation) {
+                  setTextEffectRotation(val[0]);
+                }
+              }}
+              min={-45}
+              max={45}
+              step={1}
+              className="py-1"
+            />
+          </div>
+        </div>
+
+        {/* Custom Colors for this line ("แก้สีเฉพาะข้อความนี้ ไม่กระทบข้อความอื่น") */}
+        <div className="pt-2 border-t border-slate-800 space-y-2">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setLineCustomColorsOpen(!lineCustomColorsOpen)}
+              className="text-xs font-bold text-amber-300 flex items-center gap-1.5 hover:text-amber-200 cursor-pointer"
+            >
+              <Palette className="h-3.5 w-3.5 text-amber-400" />
+              <span>🎨 ปรับแต่งสีเฉพาะข้อความนี้ (ไม่กระทบข้อความอื่น)</span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${lineCustomColorsOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {(activeLine.customTextColor || activeLine.customBgColor || activeLine.customBorderColor) && (
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateTextEffectLine?.(activeLine.id, {
+                    customTextColor: undefined,
+                    customBgColor: undefined,
+                    customBorderColor: undefined,
+                  });
+                }}
+                className="text-[10px] text-rose-400 hover:underline cursor-pointer"
+              >
+                รีเซ็ตสีข้อความนี้
+              </button>
+            )}
+          </div>
+
+          {lineCustomColorsOpen && (
+            <div className="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-2 animate-in fade-in">
+              <div className="grid grid-cols-3 gap-2 text-[10px]">
+                <div>
+                  <Label className="text-[10px] text-slate-400 block mb-1">สีตัวหนังสือ</Label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      value={activeLine.customTextColor || "#FFFFFF"}
+                      onChange={(e) => onUpdateTextEffectLine?.(activeLine.id, { customTextColor: e.target.value })}
+                      className="h-6 w-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                    />
+                    <span className="font-mono text-slate-300 text-[9px] truncate">
+                      {activeLine.customTextColor || "แม่แบบ"}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-[10px] text-slate-400 block mb-1">สีพื้นหลัง</Label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      value={activeLine.customBgColor || "#0F172A"}
+                      onChange={(e) => onUpdateTextEffectLine?.(activeLine.id, { customBgColor: e.target.value })}
+                      className="h-6 w-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                    />
+                    <span className="font-mono text-slate-300 text-[9px] truncate">
+                      {activeLine.customBgColor || "แม่แบบ"}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-[10px] text-slate-400 block mb-1">สีกรอบ</Label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      value={activeLine.customBorderColor || "#F59E0B"}
+                      onChange={(e) => onUpdateTextEffectLine?.(activeLine.id, { customBorderColor: e.target.value })}
+                      className="h-6 w-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                    />
+                    <span className="font-mono text-slate-300 text-[9px] truncate">
+                      {activeLine.customBorderColor || "แม่แบบ"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Global Line Spacing (Gap ระหว่างเลเยอร์ข้อความ) */}
+      {setTextEffectLineSpacing && (
+        <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-slate-300 text-[11px] flex items-center gap-1.5">
+              <Sliders className="h-3 w-3 text-amber-400" />
+              {isEn ? "Line Spacing (Gap between layers)" : "ระยะห่างระหว่างบรรทัด (Gap ระหว่างข้อความ 1 และ 2...)"}
+            </span>
+            <span className="font-mono font-bold text-amber-400 text-[10px]">
+              {textEffectLineSpacing}px
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Slider
+              value={[textEffectLineSpacing]}
+              onValueChange={(val) => setTextEffectLineSpacing(val[0])}
+              min={0}
+              max={120}
+              step={2}
+              className="flex-1"
+            />
+            <div className="flex items-center gap-1 shrink-0">
+              {[
+                { px: 4, label: "ชิด 4px" },
+                { px: 16, label: "ปกติ 16px" },
+                { px: 36, label: "ห่าง 36px" },
+                { px: 64, label: "กว้าง 64px" },
+              ].map((btn) => (
+                <button
+                  key={btn.px}
+                  type="button"
+                  onClick={() => setTextEffectLineSpacing(btn.px)}
+                  className={`text-[9px] px-1.5 py-0.5 rounded border cursor-pointer ${
+                    textEffectLineSpacing === btn.px
+                      ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
+                      : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
       )}
+
+      {/* Overall Anchor Position Selection (With Safe Zones & Corner Pinning) */}
+      <div className="space-y-1.5">
+        <Label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+          <Compass className="h-3 w-3 text-amber-400" />
+          {isEn ? "Anchor Position on Canvas" : "ตำแหน่งจัดวางหลักบนภาพ (พร้อม Safe Zone)"}
+        </Label>
+
+        {/* Standard & Safe Zones */}
+        <div className="grid grid-cols-5 gap-1 text-[10px]">
+          {[
+            { id: "top", label: "Top (บน)" },
+            { id: "safe_top", label: "🛡️ Safe Top" },
+            { id: "center", label: "🎯 Center (กลาง)" },
+            { id: "safe_bottom", label: "🛡️ Safe Bot" },
+            { id: "bottom", label: "Bottom (ล่าง)" },
+          ].map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setTextEffectPosition(p.id as TextEffectPosition)}
+              className={`py-1.5 px-1 rounded-lg border text-center cursor-pointer font-medium transition-all ${
+                textEffectPosition === p.id
+                  ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
+                  : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Card Aware & Corner Pinning */}
+        <div className="grid grid-cols-4 gap-1 text-[10px] pt-1">
+          <button
+            type="button"
+            onClick={() => setTextEffectPosition("above_card")}
+            className={`py-1 px-1.5 rounded-lg border text-center cursor-pointer font-medium transition-all ${
+              textEffectPosition === "above_card"
+                ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
+                : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
+            }`}
+          >
+            {isEn ? "Above Card" : "📦 เหนือการ์ด"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTextEffectPosition("below_card")}
+            className={`py-1 px-1.5 rounded-lg border text-center cursor-pointer font-medium transition-all ${
+              textEffectPosition === "below_card"
+                ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
+                : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
+            }`}
+          >
+            {isEn ? "Below Card" : "📦 ใต้การ์ด"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTextEffectPosition("top_left")}
+            className={`py-1 px-1.5 rounded-lg border text-center cursor-pointer font-medium transition-all ${
+              textEffectPosition === "top_left"
+                ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
+                : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
+            }`}
+          >
+            ↖️ บนซ้าย
+          </button>
+          <button
+            type="button"
+            onClick={() => setTextEffectPosition("top_right")}
+            className={`py-1 px-1.5 rounded-lg border text-center cursor-pointer font-medium transition-all ${
+              textEffectPosition === "top_right"
+                ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
+                : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
+            }`}
+          >
+            ↗️ บนขวา
+          </button>
+        </div>
+      </div>
+
+      {/* Drag Hint Banner */}
+      <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center gap-2 text-[10px] text-amber-300">
+        <Move className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+        <span>
+          {isEn
+            ? "💡 Tip: Select text layer 1️⃣ 2️⃣ 3️⃣ above to adjust position, size, and curve independently!"
+            : "💡 เคล็ดลับ: สามารถคลิกเลือกแท็บ 1️⃣ 2️⃣ 3️⃣ ด้านบน เพื่อย้ายตำแหน่ง ดัดโค้ง หรือปรับขนาดแยกแต่ละข้อความได้อย่างอิสระ"}
+        </span>
+      </div>
     </div>
   );
 }

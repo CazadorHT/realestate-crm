@@ -38,6 +38,7 @@ import type {
   CalloutPointer,
   CustomTextItem,
   BannerRenderOptions,
+  TextEffectLineConfig,
 } from "../types";
 
 export interface UseSocialStudioStateProps {
@@ -140,6 +141,10 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   // Modular Field Visibility Toggles
   const [showCardContent, setShowCardContent] = useState<boolean>(true);
   const [showBrandingHeader, setShowBrandingHeader] = useState<boolean>(true);
+  const [brandingTitleColor, setBrandingTitleColor] = useState<string>("");
+  const [brandingSubtitleColor, setBrandingSubtitleColor] = useState<string>("");
+  const [customCompanyName, setCustomCompanyName] = useState<string>("");
+  const [customCompanySubtitle, setCustomCompanySubtitle] = useState<string>("");
   const [showTopListingBadge, setShowTopListingBadge] = useState<boolean>(true);
   const [headerFontSizeScale, setHeaderFontSizeScale] = useState<FontSizeScale>("md");
   const [badgeFontSizeScale, setBadgeFontSizeScale] = useState<FontSizeScale>("md");
@@ -169,6 +174,65 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const [textEffectCustomShadowColor, setTextEffectCustomShadowColor] = useState<string>("rgba(0,0,0,0.5)");
   const [textEffectCustomBgAlpha, setTextEffectCustomBgAlpha] = useState<number>(85);
   const [textEffectCustomBorderWidth, setTextEffectCustomBorderWidth] = useState<number>(2);
+
+  // Line 2 (Sub-line) Independent Typography & Styling
+  const [textEffectLine2Template, setTextEffectLine2Template] = useState<TextEffectTemplate | "same">("same");
+  const [textEffectLine2SizeScale, setTextEffectLine2SizeScale] = useState<number>(0.85);
+  const [textEffectLine2CustomTextColor, setTextEffectLine2CustomTextColor] = useState<string>("");
+  const [textEffectLine2CustomBgColor, setTextEffectLine2CustomBgColor] = useState<string>("");
+  const [textEffectLine2CustomBorderColor, setTextEffectLine2CustomBorderColor] = useState<string>("");
+  const [textEffectLine2CustomShadowColor, setTextEffectLine2CustomShadowColor] = useState<string>("");
+  const [textEffectLineSpacing, setTextEffectLineSpacing] = useState<number>(12);
+
+  // Dynamic Multi-Line Text Effect Layers (Universal Canva / CapCut standard)
+  const [textEffectLineConfigs, setTextEffectLineConfigs] = useState<TextEffectLineConfig[]>([
+    {
+      id: "line-1",
+      text: property.project_name || property.title || "ดีลเด็ด คอนโดพร้อมอยู่!",
+      template: "same",
+      sizeScale: 1.0,
+      xOffset: 0,
+      yOffset: 0,
+      rotation: 0,
+      curve: 0,
+    },
+  ]);
+
+  const addTextEffectLine = useCallback((text?: string, template?: TextEffectTemplate) => {
+    setTextEffectLineConfigs((prev) => {
+      if (prev.length >= 6) {
+        toast.info("จำกัดข้อความสูงสุด 6 บรรทัดครับ");
+        return prev;
+      }
+      const newLine: TextEffectLineConfig = {
+        id: `line-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        text: text || "",
+        template: template || "same",
+        sizeScale: 0.85,
+        xOffset: 0,
+        yOffset: 0,
+        rotation: 0,
+        curve: 0,
+      };
+      return [...prev, newLine];
+    });
+  }, []);
+
+  const updateTextEffectLine = useCallback((id: string, updates: Partial<TextEffectLineConfig>) => {
+    setTextEffectLineConfigs((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+    );
+  }, []);
+
+  const removeTextEffectLine = useCallback((id: string) => {
+    setTextEffectLineConfigs((prev) => {
+      if (prev.length <= 1) {
+        toast.info("ต้องมีข้อความอย่างน้อย 1 บรรทัดครับ");
+        return prev;
+      }
+      return prev.filter((item) => item.id !== id);
+    });
+  }, []);
 
   // Callout Feature Pointers
   const [calloutPointers, setCalloutPointers] = useState<CalloutPointer[]>([]);
@@ -329,6 +393,10 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.customListingBadgeBgColor) setCustomListingBadgeBgColor(config.customListingBadgeBgColor);
     if (config.customListingBadgeTextColor) setCustomListingBadgeTextColor(config.customListingBadgeTextColor);
     if (config.showBrandingHeader !== undefined) setShowBrandingHeader(config.showBrandingHeader);
+    if (config.brandingTitleColor !== undefined) setBrandingTitleColor(config.brandingTitleColor);
+    if (config.brandingSubtitleColor !== undefined) setBrandingSubtitleColor(config.brandingSubtitleColor);
+    if (config.customCompanyName !== undefined) setCustomCompanyName(config.customCompanyName);
+    if (config.customCompanySubtitle !== undefined) setCustomCompanySubtitle(config.customCompanySubtitle);
     if (config.showTopListingBadge !== undefined) setShowTopListingBadge(config.showTopListingBadge);
     if (config.headerFontSizeScale) setHeaderFontSizeScale(config.headerFontSizeScale);
     if (config.badgeFontSizeScale) setBadgeFontSizeScale(config.badgeFontSizeScale);
@@ -349,6 +417,9 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.textEffectCustomShadowColor) setTextEffectCustomShadowColor(config.textEffectCustomShadowColor);
     if (config.textEffectCustomBgAlpha !== undefined) setTextEffectCustomBgAlpha(config.textEffectCustomBgAlpha);
     if (config.textEffectCustomBorderWidth !== undefined) setTextEffectCustomBorderWidth(config.textEffectCustomBorderWidth);
+    if (config.textEffectLineConfigs && config.textEffectLineConfigs.length > 0) {
+      setTextEffectLineConfigs(config.textEffectLineConfigs);
+    }
     if (config.calloutPointers) setCalloutPointers(config.calloutPointers);
     if (config.bgDimOpacity !== undefined) setBgDimOpacity(config.bgDimOpacity);
     if (config.customTexts) setCustomTexts(config.customTexts);
@@ -364,10 +435,11 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
       promoPosition, promoColor, promoTextColor, photoFilter, gridLineWidth, gridLineColor, customTitleColor,
       customPriceColor, customHeadlineColor, customProjectNameColor, customCardBgColor, customCanvasBgColor,
       customListingBadgeBgColor, customListingBadgeTextColor, showBrandingHeader, showTopListingBadge,
+      brandingTitleColor, brandingSubtitleColor, customCompanyName, customCompanySubtitle,
       headerFontSizeScale, badgeFontSizeScale, headerYOffset, cardRightMargin, showHeadline,
       showCardContent, textEffectTemplate, textEffectPosition, textEffectSize, textEffectXOffset, textEffectYOffset, textEffectRotation,
       textEffectCurve, textEffectCustomTextColor, textEffectCustomBgColor, textEffectCustomBorderColor,
-      textEffectCustomShadowColor, textEffectCustomBgAlpha, textEffectCustomBorderWidth, calloutPointers,
+      textEffectCustomShadowColor, textEffectCustomBgAlpha, textEffectCustomBorderWidth, textEffectLineConfigs, calloutPointers,
       bgDimOpacity, customTexts,
     };
 
@@ -577,10 +649,22 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         textEffectCustomShadowColor,
         textEffectCustomBgAlpha,
         textEffectCustomBorderWidth,
+        textEffectLine2Template,
+        textEffectLine2SizeScale,
+        textEffectLine2CustomTextColor,
+        textEffectLine2CustomBgColor,
+        textEffectLine2CustomBorderColor,
+        textEffectLine2CustomShadowColor,
+        textEffectLineSpacing,
+        textEffectLineConfigs,
         calloutPointers,
         bgDimOpacity,
         customTexts,
         showBrandingHeader,
+        brandingTitleColor,
+        brandingSubtitleColor,
+        customCompanyName,
+        customCompanySubtitle,
         showTopListingBadge,
         headerFontSizeScale,
         badgeFontSizeScale,
@@ -720,6 +804,12 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     textEffectCustomShadowColor,
     textEffectCustomBgAlpha,
     textEffectCustomBorderWidth,
+    textEffectLineSpacing,
+    textEffectLineConfigs,
+    brandingTitleColor,
+    brandingSubtitleColor,
+    customCompanyName,
+    customCompanySubtitle,
     calloutPointers,
     bgDimOpacity,
     customTexts,
@@ -801,6 +891,10 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     // Field toggles
     showCardContent, setShowCardContent,
     showBrandingHeader, setShowBrandingHeader,
+    brandingTitleColor, setBrandingTitleColor,
+    brandingSubtitleColor, setBrandingSubtitleColor,
+    customCompanyName, setCustomCompanyName,
+    customCompanySubtitle, setCustomCompanySubtitle,
     showTopListingBadge, setShowTopListingBadge,
     headerFontSizeScale, setHeaderFontSizeScale,
     badgeFontSizeScale, setBadgeFontSizeScale,
@@ -829,6 +923,17 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     textEffectCustomShadowColor, setTextEffectCustomShadowColor,
     textEffectCustomBgAlpha, setTextEffectCustomBgAlpha,
     textEffectCustomBorderWidth, setTextEffectCustomBorderWidth,
+    // Line 2 (Sub-line) Independent Typography & Styling
+    textEffectLine2Template, setTextEffectLine2Template,
+    textEffectLine2SizeScale, setTextEffectLine2SizeScale,
+    textEffectLine2CustomTextColor, setTextEffectLine2CustomTextColor,
+    textEffectLine2CustomBgColor, setTextEffectLine2CustomBgColor,
+    textEffectLine2CustomBorderColor, setTextEffectLine2CustomBorderColor,
+    textEffectLine2CustomShadowColor, setTextEffectLine2CustomShadowColor,
+    textEffectLineSpacing, setTextEffectLineSpacing,
+    // Dynamic Multi-Line Text Effect Layers (Universal Canva / CapCut standard)
+    textEffectLineConfigs, setTextEffectLineConfigs,
+    addTextEffectLine, updateTextEffectLine, removeTextEffectLine,
     // Callout Pointers
     calloutPointers, setCalloutPointers,
     addCalloutPointer, updateCalloutPointer, removeCalloutPointer,
@@ -855,5 +960,6 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     priceDisplay, originalPriceDisplay, locationDisplay,
     // Presets
     presets, isLoadingPresets, handleApplyPreset, handleSavePreset,
+    siteConfig,
   };
 }

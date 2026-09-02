@@ -79,6 +79,22 @@ export type TextEffectPosition =
   | "bottom_left"
   | "bottom_right";
 
+export interface TextEffectLineConfig {
+  id: string;
+  text: string;
+  template: TextEffectTemplate | "same";
+  sizeScale?: number; // 0.5x to 1.6x ratio (default 1.0 for line 1, 0.85 for sub-lines)
+  customTextColor?: string;
+  customBgColor?: string;
+  customBorderColor?: string;
+  // Independent layer positioning, transforms & curve
+  position?: TextEffectPosition;
+  xOffset?: number; // -350 to +350 px
+  yOffset?: number; // -350 to +350 px
+  rotation?: number; // -45 to +45 deg
+  curve?: number; // -60 to +60 deg (Curved Arc per layer!)
+}
+
 export type CalloutPointerStyle = "lemon8_yellow" | "clean_white" | "neon_glow" | "dark_luxury";
 export type CalloutPointerDirection = "top_left" | "top_right" | "bottom_left" | "bottom_right";
 
@@ -226,6 +242,17 @@ export interface BannerRenderOptions {
   textEffectCustomShadowColor?: string;
   textEffectCustomBgAlpha?: number;
   textEffectCustomBorderWidth?: number;
+
+  // Sub-line / Line 2 Independent Typography & Styling
+  textEffectLine2Template?: TextEffectTemplate | "same";
+  textEffectLine2SizeScale?: number; // 0.5x to 1.6x ratio (default 0.85)
+  textEffectLine2CustomTextColor?: string;
+  textEffectLine2CustomBgColor?: string;
+  textEffectLine2CustomBorderColor?: string;
+  textEffectLine2CustomShadowColor?: string;
+  textEffectLineSpacing?: number; // gap between pills (default 12)
+  textEffectLineConfigs?: TextEffectLineConfig[]; // Multi-line Dynamic Text Layers (Canva / CapCut standard)
+
   calloutPointers?: CalloutPointer[];
   bgDimOpacity?: number; // 0 - 100 (% of dark overlay on background image)
   customTexts?: CustomTextItem[];
@@ -233,6 +260,10 @@ export interface BannerRenderOptions {
   // Modular Field Toggles
   showBrandingHeader?: boolean;
   showTopListingBadge?: boolean;
+  brandingTitleColor?: string;
+  brandingSubtitleColor?: string;
+  customCompanyName?: string;
+  customCompanySubtitle?: string;
   headerYOffset?: number;
   headerFontSizeScale?: FontSizeScale;
   badgeFontSizeScale?: FontSizeScale;
@@ -325,6 +356,10 @@ export interface SocialStudioPresetConfig {
   customListingBadgeTextColor: string;
   showBrandingHeader: boolean;
   showTopListingBadge: boolean;
+  brandingTitleColor?: string;
+  brandingSubtitleColor?: string;
+  customCompanyName?: string;
+  customCompanySubtitle?: string;
   headerFontSizeScale: FontSizeScale;
   badgeFontSizeScale: FontSizeScale;
   headerYOffset: number;
@@ -344,6 +379,14 @@ export interface SocialStudioPresetConfig {
   textEffectCustomShadowColor?: string;
   textEffectCustomBgAlpha?: number;
   textEffectCustomBorderWidth?: number;
+  textEffectLine2Template?: TextEffectTemplate | "same";
+  textEffectLine2SizeScale?: number;
+  textEffectLine2CustomTextColor?: string;
+  textEffectLine2CustomBgColor?: string;
+  textEffectLine2CustomBorderColor?: string;
+  textEffectLine2CustomShadowColor?: string;
+  textEffectLineSpacing?: number;
+  textEffectLineConfigs?: TextEffectLineConfig[];
   calloutPointers?: CalloutPointer[];
   bgDimOpacity?: number;
   customTexts?: CustomTextItem[];

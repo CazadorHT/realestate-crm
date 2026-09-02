@@ -53,6 +53,15 @@ interface StudioCardCustomizerProps {
   setCustomListingBadgeTextColor?: (c: string) => void;
   showCardContent?: boolean;
   setShowCardContent?: (s: boolean) => void;
+  brandingTitleColor?: string;
+  setBrandingTitleColor?: (c: string) => void;
+  brandingSubtitleColor?: string;
+  setBrandingSubtitleColor?: (c: string) => void;
+  customCompanyName?: string;
+  setCustomCompanyName?: (name: string) => void;
+  customCompanySubtitle?: string;
+  setCustomCompanySubtitle?: (sub: string) => void;
+  companyNameDefault?: string;
 }
 
 export function StudioCardCustomizer({
@@ -101,6 +110,15 @@ export function StudioCardCustomizer({
   setCustomListingBadgeTextColor,
   showCardContent = true,
   setShowCardContent,
+  brandingTitleColor,
+  setBrandingTitleColor,
+  brandingSubtitleColor,
+  setBrandingSubtitleColor,
+  customCompanyName,
+  setCustomCompanyName,
+  customCompanySubtitle,
+  setCustomCompanySubtitle,
+  companyNameDefault,
 }: StudioCardCustomizerProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
@@ -539,31 +557,152 @@ export function StudioCardCustomizer({
           </div>
 
           {showBrandingHeader && (
-            <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
-              <span className="text-[10px] text-slate-400">
-                {isEn ? "Branding Font Size:" : "ขนาดฟอนต์ Branding:"}
-              </span>
-              <div className="flex gap-1">
-                {[
-                  { id: "sm", label: isEn ? "Small" : "เล็ก" },
-                  { id: "md", label: isEn ? "Medium" : "ปกติ" },
-                  { id: "lg", label: isEn ? "Large" : "ใหญ่" },
-                  { id: "xl", label: isEn ? "XL" : "ยักษ์" },
-                ].map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setHeaderFontSizeScale(f.id as FontSizeScale)}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all cursor-pointer ${
-                      headerFontSizeScale === f.id
-                        ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
-                        : "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
+            <div className="space-y-2.5 pt-2 border-t border-slate-800/60">
+              {/* Size scaling */}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400">
+                  {isEn ? "Branding Font Size:" : "ขนาดฟอนต์ Branding:"}
+                </span>
+                <div className="flex gap-1">
+                  {[
+                    { id: "sm", label: isEn ? "Small" : "เล็ก" },
+                    { id: "md", label: isEn ? "Medium" : "ปกติ" },
+                    { id: "lg", label: isEn ? "Large" : "ใหญ่" },
+                    { id: "xl", label: isEn ? "XL" : "ยักษ์" },
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setHeaderFontSizeScale(f.id as FontSizeScale)}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all cursor-pointer ${
+                        headerFontSizeScale === f.id
+                          ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
+                          : "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {/* Line 1: Company / Brand Name */}
+              <div className="p-2 rounded-lg bg-slate-950/70 border border-slate-800 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-slate-300">
+                    🏢 บรรทัดที่ 1 (ชื่อบริษัท / แบรนด์)
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      value={brandingTitleColor || "#FFFFFF"}
+                      onChange={(e) => setBrandingTitleColor?.(e.target.value)}
+                      className="h-5 w-7 rounded border border-slate-700 bg-transparent cursor-pointer"
+                      title="เลือกสีชื่อบริษัท"
+                    />
+                    <span className="text-[9px] font-mono text-slate-400">
+                      {brandingTitleColor || "#FFFFFF"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={customCompanyName ?? ""}
+                    onChange={(e) => setCustomCompanyName?.(e.target.value)}
+                    placeholder={companyNameDefault || "VCC ASSET"}
+                    className="flex-1 px-2 py-1 text-xs rounded bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-hidden focus:border-amber-400"
+                  />
+                  <div className="flex items-center gap-1">
+                    {[
+                      { c: "#FFFFFF", l: "⚪" },
+                      { c: "#F59E0B", l: "🟡" },
+                      { c: "#38BDF8", l: "🔵" },
+                      { c: "#0F172A", l: "⚫" },
+                    ].map((btn) => (
+                      <button
+                        key={btn.c}
+                        type="button"
+                        onClick={() => setBrandingTitleColor?.(btn.c)}
+                        className={`h-5 w-5 rounded border flex items-center justify-center text-[10px] cursor-pointer ${
+                          brandingTitleColor === btn.c ? "border-amber-400 scale-110" : "border-slate-700"
+                        }`}
+                        title={btn.c}
+                      >
+                        {btn.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Line 2: Subtitle / Tagline */}
+              <div className="p-2 rounded-lg bg-slate-950/70 border border-slate-800 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-slate-300">
+                    ✨ บรรทัดที่ 2 (สโลแกน / สับไตเติ้ล)
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      value={brandingSubtitleColor || "#F59E0B"}
+                      onChange={(e) => setBrandingSubtitleColor?.(e.target.value)}
+                      className="h-5 w-7 rounded border border-slate-700 bg-transparent cursor-pointer"
+                      title="เลือกสีสโลแกน"
+                    />
+                    <span className="text-[9px] font-mono text-slate-400">
+                      {brandingSubtitleColor || "สีธีม"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={customCompanySubtitle ?? ""}
+                    onChange={(e) => setCustomCompanySubtitle?.(e.target.value)}
+                    placeholder="PREMIUM REAL ESTATE"
+                    className="flex-1 px-2 py-1 text-xs rounded bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-hidden focus:border-amber-400"
+                  />
+                  <div className="flex items-center gap-1">
+                    {[
+                      { c: "#F59E0B", l: "🟡" },
+                      { c: "#FFFFFF", l: "⚪" },
+                      { c: "#F97316", l: "🟠" },
+                      { c: "#10B981", l: "🟢" },
+                    ].map((btn) => (
+                      <button
+                        key={btn.c}
+                        type="button"
+                        onClick={() => setBrandingSubtitleColor?.(btn.c)}
+                        className={`h-5 w-5 rounded border flex items-center justify-center text-[10px] cursor-pointer ${
+                          brandingSubtitleColor === btn.c ? "border-amber-400 scale-110" : "border-slate-700"
+                        }`}
+                        title={btn.c}
+                      >
+                        {btn.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Reset Branding Colors */}
+              {(brandingTitleColor || brandingSubtitleColor || customCompanyName || customCompanySubtitle) && (
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBrandingTitleColor?.("");
+                      setBrandingSubtitleColor?.("");
+                      setCustomCompanyName?.("");
+                      setCustomCompanySubtitle?.("");
+                    }}
+                    className="text-[10px] text-rose-400 hover:text-rose-300 hover:underline cursor-pointer"
+                  >
+                    ↺ รีเซ็ตข้อความและสี Branding
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

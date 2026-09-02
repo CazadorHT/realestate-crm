@@ -16,7 +16,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import type { StudioLanguage, PromoPosition, TextEffectTemplate, TextEffectPosition, FontSizeScale, CalloutPointer, CustomTextItem } from "../types";
+import type { StudioLanguage, PromoPosition, TextEffectTemplate, TextEffectPosition, FontSizeScale, CalloutPointer, CustomTextItem, SocialStudioProperty, TextEffectLineConfig } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { AVAILABLE_BADGES } from "../helpers";
 import { StudioTextEffectControls } from "./StudioTextEffectControls";
@@ -24,6 +24,7 @@ import { StudioCalloutControls } from "./StudioCalloutControls";
 import { StudioCustomTextControls } from "./StudioCustomTextControls";
 
 interface StudioContentEditorProps {
+  property?: SocialStudioProperty;
   language: StudioLanguage;
   selectedBadges: string[];
   onToggleBadge: (label: string) => void;
@@ -99,6 +100,24 @@ interface StudioContentEditorProps {
   setTextEffectCustomBgAlpha?: (a: number) => void;
   textEffectCustomBorderWidth?: number;
   setTextEffectCustomBorderWidth?: (w: number) => void;
+  // Line 2 (Sub-line) Independent Typography & Styling
+  textEffectLine2Template?: TextEffectTemplate | "same";
+  setTextEffectLine2Template?: (t: TextEffectTemplate | "same") => void;
+  textEffectLine2SizeScale?: number;
+  setTextEffectLine2SizeScale?: (s: number) => void;
+  textEffectLine2CustomTextColor?: string;
+  setTextEffectLine2CustomTextColor?: (c: string) => void;
+  textEffectLine2CustomBgColor?: string;
+  setTextEffectLine2CustomBgColor?: (c: string) => void;
+  textEffectLine2CustomBorderColor?: string;
+  setTextEffectLine2CustomBorderColor?: (c: string) => void;
+  textEffectLineSpacing?: number;
+  setTextEffectLineSpacing?: (g: number) => void;
+  textEffectLineConfigs?: TextEffectLineConfig[];
+  setTextEffectLineConfigs?: (c: TextEffectLineConfig[]) => void;
+  onAddTextEffectLine?: (text?: string, template?: TextEffectTemplate) => void;
+  onUpdateTextEffectLine?: (id: string, updates: Partial<TextEffectLineConfig>) => void;
+  onRemoveTextEffectLine?: (id: string) => void;
   calloutPointers?: CalloutPointer[];
   onAddCallout?: (pointer: CalloutPointer) => void;
   onUpdateCallout?: (id: string, updates: Partial<CalloutPointer>) => void;
@@ -185,6 +204,23 @@ export function StudioContentEditor({
   setTextEffectCustomBgAlpha,
   textEffectCustomBorderWidth = 2,
   setTextEffectCustomBorderWidth,
+  textEffectLine2Template = "same",
+  setTextEffectLine2Template,
+  textEffectLine2SizeScale = 0.85,
+  setTextEffectLine2SizeScale,
+  textEffectLine2CustomTextColor,
+  setTextEffectLine2CustomTextColor,
+  textEffectLine2CustomBgColor,
+  setTextEffectLine2CustomBgColor,
+  textEffectLine2CustomBorderColor,
+  setTextEffectLine2CustomBorderColor,
+  textEffectLineSpacing = 12,
+  setTextEffectLineSpacing,
+  textEffectLineConfigs,
+  setTextEffectLineConfigs,
+  onAddTextEffectLine,
+  onUpdateTextEffectLine,
+  onRemoveTextEffectLine,
   calloutPointers = [],
   onAddCallout,
   onUpdateCallout,
@@ -195,9 +231,49 @@ export function StudioContentEditor({
   onRemoveCustomText,
   priceText,
   showCardContent = true,
+  property,
 }: StudioContentEditorProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
+
+  // Compute smart real estate hook texts from property data
+  const propertyProjectName =
+    customProjectName?.trim() ||
+    property?.project_name?.trim() ||
+    (typeof property?.project?.name === "string" ? property.project.name.trim() : "") ||
+    property?.title?.trim() ||
+    "";
+
+  const specParts: string[] = [];
+  if (property?.bedrooms) specParts.push(`${property.bedrooms} นอน`);
+  if (property?.bathrooms) specParts.push(`${property.bathrooms} น้ำ`);
+  if (property?.size_sqm) specParts.push(`${property.size_sqm} ตร.ม.`);
+  const propertySpecsText = specParts.join(" ");
+
+  const formatSalePrice = (p: number) => {
+    if (p >= 1_000_000) {
+      const inMillion = p / 1_000_000;
+      const rounded = Number(inMillion.toFixed(2));
+      return `${rounded} ล้านบาท`;
+    }
+    return `${p.toLocaleString("th-TH")} บาท`;
+  };
+
+  const formatRentPrice = (r: number) => `${r.toLocaleString("th-TH")} บาท/ด.`;
+
+  let propertyPriceTag = "";
+  if (property?.listing_type === "SALE_AND_RENT" && property?.price && property?.rental_price) {
+    propertyPriceTag = `${formatSalePrice(property.price)} | ${formatRentPrice(property.rental_price)}`;
+  } else if (property?.listing_type === "RENT" && property?.rental_price) {
+    propertyPriceTag = formatRentPrice(property.rental_price);
+  } else if (property?.price) {
+    propertyPriceTag = formatSalePrice(property.price);
+  } else if (property?.rental_price) {
+    propertyPriceTag = formatRentPrice(property.rental_price);
+  } else if (priceText) {
+    propertyPriceTag = priceText;
+  }
+
   return (
     <div className="space-y-4">
       {/* 0. Viral Text Effects (TikTok / Reels / Lemon8 Cover Typography) */}
@@ -231,6 +307,26 @@ export function StudioContentEditor({
           setTextEffectCustomBgAlpha={setTextEffectCustomBgAlpha}
           textEffectCustomBorderWidth={textEffectCustomBorderWidth}
           setTextEffectCustomBorderWidth={setTextEffectCustomBorderWidth}
+          textEffectLine2Template={textEffectLine2Template}
+          setTextEffectLine2Template={setTextEffectLine2Template}
+          textEffectLine2SizeScale={textEffectLine2SizeScale}
+          setTextEffectLine2SizeScale={setTextEffectLine2SizeScale}
+          textEffectLine2CustomTextColor={textEffectLine2CustomTextColor}
+          setTextEffectLine2CustomTextColor={setTextEffectLine2CustomTextColor}
+          textEffectLine2CustomBgColor={textEffectLine2CustomBgColor}
+          setTextEffectLine2CustomBgColor={setTextEffectLine2CustomBgColor}
+          textEffectLine2CustomBorderColor={textEffectLine2CustomBorderColor}
+          setTextEffectLine2CustomBorderColor={setTextEffectLine2CustomBorderColor}
+          textEffectLineSpacing={textEffectLineSpacing}
+          setTextEffectLineSpacing={setTextEffectLineSpacing}
+          textEffectLineConfigs={textEffectLineConfigs}
+          setTextEffectLineConfigs={setTextEffectLineConfigs}
+          onAddTextEffectLine={onAddTextEffectLine}
+          onUpdateTextEffectLine={onUpdateTextEffectLine}
+          onRemoveTextEffectLine={onRemoveTextEffectLine}
+          propertyProjectName={propertyProjectName}
+          propertySpecsText={propertySpecsText}
+          propertyPriceTag={propertyPriceTag}
           headline={headline}
           title={customTitle}
           priceText={priceText}

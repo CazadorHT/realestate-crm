@@ -322,6 +322,15 @@ export function SocialStudioModal({
                       setCardBackground={state.setCardBackground}
                       showBrandingHeader={state.showBrandingHeader}
                       setShowBrandingHeader={state.setShowBrandingHeader}
+                      brandingTitleColor={state.brandingTitleColor}
+                      setBrandingTitleColor={state.setBrandingTitleColor}
+                      brandingSubtitleColor={state.brandingSubtitleColor}
+                      setBrandingSubtitleColor={state.setBrandingSubtitleColor}
+                      customCompanyName={state.customCompanyName}
+                      setCustomCompanyName={state.setCustomCompanyName}
+                      customCompanySubtitle={state.customCompanySubtitle}
+                      setCustomCompanySubtitle={state.setCustomCompanySubtitle}
+                      companyNameDefault={state.siteConfig?.name || "VCC ASSET"}
                       showTopListingBadge={state.showTopListingBadge}
                       setShowTopListingBadge={state.setShowTopListingBadge}
                       headerFontSizeScale={state.headerFontSizeScale}
@@ -438,6 +447,23 @@ export function SocialStudioModal({
                       setTextEffectCustomBgAlpha={state.setTextEffectCustomBgAlpha}
                       textEffectCustomBorderWidth={state.textEffectCustomBorderWidth}
                       setTextEffectCustomBorderWidth={state.setTextEffectCustomBorderWidth}
+                      textEffectLine2Template={state.textEffectLine2Template}
+                      setTextEffectLine2Template={state.setTextEffectLine2Template}
+                      textEffectLine2SizeScale={state.textEffectLine2SizeScale}
+                      setTextEffectLine2SizeScale={state.setTextEffectLine2SizeScale}
+                      textEffectLine2CustomTextColor={state.textEffectLine2CustomTextColor}
+                      setTextEffectLine2CustomTextColor={state.setTextEffectLine2CustomTextColor}
+                      textEffectLine2CustomBgColor={state.textEffectLine2CustomBgColor}
+                      setTextEffectLine2CustomBgColor={state.setTextEffectLine2CustomBgColor}
+                      textEffectLine2CustomBorderColor={state.textEffectLine2CustomBorderColor}
+                      setTextEffectLine2CustomBorderColor={state.setTextEffectLine2CustomBorderColor}
+                      textEffectLineSpacing={state.textEffectLineSpacing}
+                      setTextEffectLineSpacing={state.setTextEffectLineSpacing}
+                      textEffectLineConfigs={state.textEffectLineConfigs}
+                      setTextEffectLineConfigs={state.setTextEffectLineConfigs}
+                      onAddTextEffectLine={state.addTextEffectLine}
+                      onUpdateTextEffectLine={state.updateTextEffectLine}
+                      onRemoveTextEffectLine={state.removeTextEffectLine}
                       calloutPointers={state.calloutPointers}
                       onAddCallout={state.addCalloutPointer}
                       onUpdateCallout={state.updateCalloutPointer}
@@ -448,6 +474,7 @@ export function SocialStudioModal({
                       onRemoveCustomText={state.removeCustomText}
                       priceText={state.priceDisplay}
                       showCardContent={state.showCardContent}
+                      property={property}
                     />
 
                     <StudioFieldRouter
