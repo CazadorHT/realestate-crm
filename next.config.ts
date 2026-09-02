@@ -158,6 +158,7 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
+    cpus: 4,
     optimizePackageImports: [
       "lucide-react",
       "react-icons",

@@ -75,6 +75,21 @@ export async function updateSession(request: NextRequest) {
 
     let userState = activeUserCache.get(user.id);
 
+    // 🍪 Check short-lived cookie session first (prevents cold-start DB queries across serverless instances)
+    if (!userState) {
+      const stateCookie = request.cookies.get("sb-user-state")?.value;
+      if (stateCookie) {
+        const [cUserId, cActive, cRole] = stateCookie.split(":");
+        if (cUserId === user.id && cRole) {
+          userState = {
+            isActive: cActive === "1",
+            role: cRole,
+          };
+          activeUserCache.set(user.id, userState);
+        }
+      }
+    }
+
     if (!userState) {
       const statelessRole = user.app_metadata?.role as string | undefined;
       const statelessIsActive = user.app_metadata?.is_active as boolean | undefined;
@@ -102,6 +117,14 @@ export async function updateSession(request: NextRequest) {
           setTimeout(() => activeUserCache.delete(user.id), CACHE_TTL_MS);
         }
       }
+
+      // 🍪 Cache state in short-lived HTTP-only cookie (5 minutes) for zero subsequent DB egress
+      response.cookies.set("sb-user-state", `${user.id}:${userState.isActive ? "1" : "0"}:${userState.role}`, {
+        path: "/",
+        maxAge: 300, // 5 minutes
+        sameSite: "lax",
+        httpOnly: true,
+      });
     }
 
     if (!isPendingPage && !userState.isActive) {

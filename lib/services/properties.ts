@@ -15,6 +15,14 @@ import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getPopularAreasLookupMap } from "@/features/public/popular-areas";
 import { detectSearchIntent } from "../search-config";
 
+// 🚀 Fast Memory Cache for Public Search Facets (1-hour TTL) for zero database egress across search queries
+const facetsMemoryCache = new Map<string, { data: any; timestamp: number }>();
+const FACETS_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+export function invalidateFacetsMemoryCache() {
+  facetsMemoryCache.clear();
+}
+
 export type PropertyRow = {
   id: string;
   slug: string;
@@ -420,20 +428,28 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           };
 
           const cacheKey = `facets-v3-${JSON.stringify(rpcParams)}`;
-          const getCachedFacets = unstable_cache(
-            async () => {
-              const { data: facetData } = await supabase.rpc("get_public_property_facets_v2", rpcParams);
-              return facetData;
-            },
-            [cacheKey],
-            {
-              revalidate: 31536000, // 1 year cache
-              tags: ["property-facets", "public-properties"],
-            }
-          );
+          const now = Date.now();
+          const cachedMemoryFacets = facetsMemoryCache.get(cacheKey);
 
-          const facetData = await getCachedFacets();
-          facets = (facetData as unknown) as PropertyFacets | null;
+          if (cachedMemoryFacets && now - cachedMemoryFacets.timestamp < FACETS_CACHE_TTL_MS) {
+            facets = cachedMemoryFacets.data as PropertyFacets | null;
+          } else {
+            const getCachedFacets = unstable_cache(
+              async () => {
+                const { data: facetData } = await supabase.rpc("get_public_property_facets_v2", rpcParams);
+                return facetData;
+              },
+              [cacheKey],
+              {
+                revalidate: 31536000, // 1 year cache
+                tags: ["property-facets", "public-properties"],
+              }
+            );
+
+            const facetData = await getCachedFacets();
+            facets = (facetData as unknown) as PropertyFacets | null;
+            facetsMemoryCache.set(cacheKey, { data: facets, timestamp: now });
+          }
         }
 
         const facetAreas = Object.keys(facets?.availableAreas || {}).filter((a) => Boolean(a && a.trim()));

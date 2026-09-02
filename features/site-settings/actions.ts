@@ -159,10 +159,28 @@ export async function skipOnboardingStepAction(
   return updateSiteSetting(key, true);
 }
 
+// 🚀 Fast In-Memory Cache for Site Settings (1-hour TTL) for zero database egress across navigations
+const siteSettingsMemoryCache = new Map<string, { data: SiteSettings; timestamp: number }>();
+const SITE_SETTINGS_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+export async function invalidateSiteSettingsCache(tenantId?: string) {
+  if (tenantId) {
+    siteSettingsMemoryCache.delete(tenantId);
+  } else {
+    siteSettingsMemoryCache.clear();
+  }
+}
+
 /**
- * Internal function to get all site settings (Hits DB)
+ * Internal function to get all site settings (Hits DB only on cache miss)
  */
 async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> {
+  const now = Date.now();
+  const cached = siteSettingsMemoryCache.get(tenantId);
+  if (cached && now - cached.timestamp < SITE_SETTINGS_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
   try {
     const { createAdminClient } = await import("@/lib/supabase/admin");
     const supabase = await createAdminClient();
@@ -244,6 +262,7 @@ async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> 
       }
     }
 
+    siteSettingsMemoryCache.set(tenantId, { data: settings, timestamp: now });
     return settings;
   } catch (error: unknown) {
     console.error("Error in getSiteSettings:", error);
@@ -354,6 +373,8 @@ export async function updateSiteSetting(
     revalidatePath("/protected/settings");
     revalidateTag(`site-settings-${ctx.tenantId || "global"}`, "hours");
     revalidateTag("site-settings", "hours");
+    invalidateSiteSettingsCache(ctx.tenantId || "global");
+    invalidateSiteSettingsCache("global");
 
     const { purgeCloudflareCache } = await import("@/lib/cloudflare");
     purgeCloudflareCache().catch((e) =>

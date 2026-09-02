@@ -78,9 +78,17 @@ interface ActiveLocation {
   province: string | null;
 }
 
-// 🔒 Caching Popular Areas for SEO Performance from Master Data
+// 🔒 Caching Popular Areas for SEO Performance from Master Data (In-Memory + Edge CDN)
+let activeLocationsMemoryCache: { data: ActiveLocation[]; timestamp: number } | null = null;
+const LOCATIONS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 const getActiveLocations = unstable_cache(
   async (): Promise<ActiveLocation[]> => {
+    const now = Date.now();
+    if (activeLocationsMemoryCache && now - activeLocationsMemoryCache.timestamp < LOCATIONS_CACHE_TTL_MS) {
+      return activeLocationsMemoryCache.data;
+    }
+
     try {
       const supabase = createPublicClient();
       const { data, error } = await supabase
@@ -91,7 +99,7 @@ const getActiveLocations = unstable_cache(
 
       if (error) throw error;
 
-      return (data || []).map((area: any) => {
+      const result = (data || []).map((area: any) => {
         const nameObj = typeof area.name === "object" ? area.name : {};
         return {
           popular_area: typeof area.name === "string" ? area.name : nameObj?.th || nameObj?.default || "",
@@ -101,9 +109,12 @@ const getActiveLocations = unstable_cache(
           province: area.province || null,
         };
       }) as ActiveLocation[];
+
+      activeLocationsMemoryCache = { data: result, timestamp: now };
+      return result;
     } catch (err) {
       console.error("Failed to fetch active locations from popular_areas_v3:", err);
-      return [];
+      return activeLocationsMemoryCache?.data || [];
     }
   },
   ["active-popular-areas-seo-v1"],

@@ -90,9 +90,9 @@ export async function generateMetadata(props: {
 
   const initialData = await getPublicProperties({
     ...options,
-    limit: 60,
-    includeFacets: true,
-  });
+    limit: 1,
+    includeFacets: false,
+  }).catch(() => ({ properties: [] }));
   const hasNoResults = initialData.properties.length === 0;
   const canonicalUrl = `${siteConfig.url}/properties/pet-friendly-condo`;
 
@@ -191,9 +191,9 @@ export default async function PetFriendlyCondoPage(props: {
   // Prefetch initial data
   const initialData = await getPublicProperties({
     ...options,
-    limit: 60,
+    limit: 24,
     includeFacets: true,
-  });
+  }).catch(() => ({ properties: [], facets: null }));
 
   const totalCount = initialData.properties.length < 60
     ? initialData.properties.length

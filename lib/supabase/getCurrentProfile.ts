@@ -27,7 +27,19 @@ type IdentityWithProfile = IdentityRow & {
 
 import { cache } from "react";
 
-// ดึงข้อมูลโปรไฟล์ปัจจุบันจาก Supabase Auth และตาราง profiles (Memoized per request)
+// 🚀 In-memory cache for user profiles (3-minute TTL) to prevent repeated DB egress across navigations
+const profileMemoryCache = new Map<string, { profile: Profile; timestamp: number }>();
+const PROFILE_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+
+export function invalidateProfileCache(userId?: string) {
+  if (userId) {
+    profileMemoryCache.delete(userId);
+  } else {
+    profileMemoryCache.clear();
+  }
+}
+
+// ดึงข้อมูลโปรไฟล์ปัจจุบันจาก Supabase Auth และตาราง profiles (Memoized per request + Memory Cache)
 export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
 
@@ -44,6 +56,13 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
       console.error("auth.getUser error", userError);
     }
     return null;
+  }
+
+  // 🚀 Check memory cache before querying DB
+  const now = Date.now();
+  const cached = profileMemoryCache.get(user.id);
+  if (cached && now - cached.timestamp < PROFILE_CACHE_TTL_MS) {
+    return cached.profile;
   }
 
   // 2. ดึงข้อมูลแบบแยกกัน (ตาราง identities_v3 และ profiles) เพื่อเลี่ยงการใช้ Join query ที่ต้องการ constraint
@@ -151,8 +170,7 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
     deleted_at: null,
   };
 
-  // Merge Identity & Profile (Identity is the master for communication & role)
-  return {
+  const finalProfile = {
     ...defaultFields,
     ...profile,
     id: identity.id,
@@ -185,4 +203,7 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
     whatsapp_user_id:
       identity.whatsapp_user_id || profile?.whatsapp_user_id || null,
   } as Profile;
+
+  profileMemoryCache.set(user.id, { profile: finalProfile, timestamp: now });
+  return finalProfile;
 });

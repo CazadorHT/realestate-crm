@@ -173,14 +173,29 @@ export async function getPropertiesFastCountQuery(allBranches?: string): Promise
   return count || 0;
 }
 
+// 🚀 Memory Cache for AI Review Count Badge (3-minute TTL) to prevent repeated HEAD queries during CRM navigation
+const aiReviewMemoryCache = new Map<string, { count: number; timestamp: number }>();
+const AI_REVIEW_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+
+export function invalidateAiReviewCountCache() {
+  aiReviewMemoryCache.clear();
+}
+
 /**
  * ⚡ FAST COUNT: Returns only the count of properties requiring AI review for sidebar badge.
- * Uses 'head: true' to minimize data transfer and DB load (0 bytes payload egress).
+ * Uses 'head: true' to minimize data transfer and DB load (0 bytes payload egress) + 3-min Memory Cache.
  */
 export async function getAiReviewCountQuery(allBranches?: string): Promise<number> {
   const { supabase, role, tenantId } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
+
+  const cacheKey = `${role}-${tenantId || "default"}-${allBranches || "false"}`;
+  const now = Date.now();
+  const cached = aiReviewMemoryCache.get(cacheKey);
+  if (cached && now - cached.timestamp < AI_REVIEW_CACHE_TTL_MS) {
+    return cached.count;
+  }
 
   let query = supabase
     .from("properties")
@@ -200,5 +215,7 @@ export async function getAiReviewCountQuery(allBranches?: string): Promise<numbe
   }
 
   const { count } = await query;
-  return count || 0;
+  const total = count || 0;
+  aiReviewMemoryCache.set(cacheKey, { count: total, timestamp: now });
+  return total;
 }
