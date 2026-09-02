@@ -10,6 +10,7 @@ import {
   Smartphone,
   Palette,
   Sliders,
+  Moon,
 } from "lucide-react";
 import type {
   AspectRatio,
@@ -21,7 +22,7 @@ import type {
 } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 
-interface StudioLayoutControlsProps {
+export interface StudioLayoutControlsProps {
   layout: StudioLayout;
   setLayout: (l: StudioLayout) => void;
   imageUrls: string[];
@@ -44,6 +45,8 @@ interface StudioLayoutControlsProps {
   setContentPosition: (p: ContentPosition) => void;
   photoFilter: PhotoFilter;
   setPhotoFilter: (f: PhotoFilter) => void;
+  bgDimOpacity?: number;
+  setBgDimOpacity?: (val: number) => void;
   gridLineWidth: number;
   setGridLineWidth: (w: number) => void;
   gridLineColor: string;
@@ -73,6 +76,8 @@ export function StudioLayoutControls({
   setContentPosition,
   photoFilter,
   setPhotoFilter,
+  bgDimOpacity = 0,
+  setBgDimOpacity,
   gridLineWidth,
   setGridLineWidth,
   gridLineColor,
@@ -431,6 +436,62 @@ export function StudioLayoutControls({
           ))}
         </div>
       </div>
+
+      {/* 5.1 Background Dimming / Dark Overlay (Custom Dark Tint) */}
+      {setBgDimOpacity && (
+        <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <Moon className="h-3.5 w-3.5 text-indigo-400" />
+              {isEn ? "Dark Tint Overlay" : "ความมืดของภาพพื้นหลัง (Dark Tint Overlay)"}
+            </Label>
+            <span className="text-[10px] text-indigo-400 font-mono font-bold">
+              {bgDimOpacity === 0 ? (isEn ? "0% (Original)" : "0% (สว่างตามปกติ)") : `${bgDimOpacity}% มืดลง`}
+            </span>
+          </div>
+
+          <p className="text-[10px] text-slate-400">
+            {isEn
+              ? "Darken the background image to make texts and badges pop with high contrast."
+              : "ปรับความมืด/โปร่งใสของสีดำ เพื่อดึงให้ข้อความและป้ายราคาโดดเด่น อ่านง่ายชัดเจน"}
+          </p>
+
+          <div className="space-y-2">
+            <div className="grid grid-cols-5 gap-1">
+              {[
+                { label: isEn ? "0% Off" : "0% ใส", value: 0 },
+                { label: isEn ? "20% Light" : "20% บาง", value: 20 },
+                { label: isEn ? "40% Mid ⭐" : "40% พอดี ⭐", value: 40 },
+                { label: isEn ? "60% Dark" : "60% เข้ม", value: 60 },
+                { label: isEn ? "80% Deep" : "80% มืดจัด", value: 80 },
+              ].map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setBgDimOpacity(p.value)}
+                  className={`py-1 rounded-lg text-[10px] font-medium border transition-all cursor-pointer ${
+                    bgDimOpacity === p.value
+                      ? "bg-indigo-600 text-white border-indigo-500 font-bold shadow-xs scale-102"
+                      : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="range"
+              min="0"
+              max="90"
+              step="5"
+              value={bgDimOpacity}
+              onChange={(e) => setBgDimOpacity(parseInt(e.target.value, 10))}
+              className="w-full accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+            />
+          </div>
+        </div>
+      )}
 
       {/* 6. Grid Line Border Controls */}
       <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">

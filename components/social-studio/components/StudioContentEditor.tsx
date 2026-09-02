@@ -16,9 +16,12 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import type { StudioLanguage, PromoPosition } from "../types";
+import type { StudioLanguage, PromoPosition, TextEffectTemplate, TextEffectPosition, FontSizeScale, CalloutPointer, CustomTextItem } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { AVAILABLE_BADGES } from "../helpers";
+import { StudioTextEffectControls } from "./StudioTextEffectControls";
+import { StudioCalloutControls } from "./StudioCalloutControls";
+import { StudioCustomTextControls } from "./StudioCustomTextControls";
 
 interface StudioContentEditorProps {
   language: StudioLanguage;
@@ -67,6 +70,45 @@ interface StudioContentEditorProps {
   setCustomLocationColor?: (c: string) => void;
   customSpecsColor?: string;
   setCustomSpecsColor?: (c: string) => void;
+  // Text Effect
+  textEffectTemplate?: TextEffectTemplate;
+  setTextEffectTemplate?: (t: TextEffectTemplate) => void;
+  textEffectText?: string;
+  setTextEffectText?: (t: string) => void;
+  textEffectPosition?: TextEffectPosition;
+  setTextEffectPosition?: (p: TextEffectPosition) => void;
+  textEffectSize?: FontSizeScale | "2xl";
+  setTextEffectSize?: (s: FontSizeScale | "2xl") => void;
+  textEffectXOffset?: number;
+  setTextEffectXOffset?: (x: number) => void;
+  textEffectYOffset?: number;
+  setTextEffectYOffset?: (y: number) => void;
+  textEffectRotation?: number;
+  setTextEffectRotation?: (r: number) => void;
+  textEffectCurve?: number;
+  setTextEffectCurve?: (c: number) => void;
+  textEffectCustomTextColor?: string;
+  setTextEffectCustomTextColor?: (c: string) => void;
+  textEffectCustomBgColor?: string;
+  setTextEffectCustomBgColor?: (c: string) => void;
+  textEffectCustomBorderColor?: string;
+  setTextEffectCustomBorderColor?: (c: string) => void;
+  textEffectCustomShadowColor?: string;
+  setTextEffectCustomShadowColor?: (c: string) => void;
+  textEffectCustomBgAlpha?: number;
+  setTextEffectCustomBgAlpha?: (a: number) => void;
+  textEffectCustomBorderWidth?: number;
+  setTextEffectCustomBorderWidth?: (w: number) => void;
+  calloutPointers?: CalloutPointer[];
+  onAddCallout?: (pointer: CalloutPointer) => void;
+  onUpdateCallout?: (id: string, updates: Partial<CalloutPointer>) => void;
+  onRemoveCallout?: (id: string) => void;
+  customTexts?: CustomTextItem[];
+  onAddCustomText?: (item: CustomTextItem) => void;
+  onUpdateCustomText?: (id: string, updates: Partial<CustomTextItem>) => void;
+  onRemoveCustomText?: (id: string) => void;
+  priceText?: string;
+  showCardContent?: boolean;
 }
 
 export function StudioContentEditor({
@@ -115,11 +157,109 @@ export function StudioContentEditor({
   setCustomLocationColor,
   customSpecsColor,
   setCustomSpecsColor,
+  textEffectTemplate = "none",
+  setTextEffectTemplate,
+  textEffectText = "",
+  setTextEffectText,
+  textEffectPosition = "center",
+  setTextEffectPosition,
+  textEffectSize = "lg",
+  setTextEffectSize,
+  textEffectXOffset = 0,
+  setTextEffectXOffset,
+  textEffectYOffset = 0,
+  setTextEffectYOffset,
+  textEffectRotation = 0,
+  setTextEffectRotation,
+  textEffectCurve = 0,
+  setTextEffectCurve,
+  textEffectCustomTextColor = "#FFFFFF",
+  setTextEffectCustomTextColor,
+  textEffectCustomBgColor = "#0F172A",
+  setTextEffectCustomBgColor,
+  textEffectCustomBorderColor = "#F59E0B",
+  setTextEffectCustomBorderColor,
+  textEffectCustomShadowColor = "rgba(0,0,0,0.5)",
+  setTextEffectCustomShadowColor,
+  textEffectCustomBgAlpha = 85,
+  setTextEffectCustomBgAlpha,
+  textEffectCustomBorderWidth = 2,
+  setTextEffectCustomBorderWidth,
+  calloutPointers = [],
+  onAddCallout,
+  onUpdateCallout,
+  onRemoveCallout,
+  customTexts = [],
+  onAddCustomText,
+  onUpdateCustomText,
+  onRemoveCustomText,
+  priceText,
+  showCardContent = true,
 }: StudioContentEditorProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
   return (
-    <div className="space-y-3.5">
+    <div className="space-y-4">
+      {/* 0. Viral Text Effects (TikTok / Reels / Lemon8 Cover Typography) */}
+      {setTextEffectTemplate && setTextEffectText && setTextEffectPosition && setTextEffectSize && setTextEffectYOffset && setTextEffectRotation && (
+        <StudioTextEffectControls
+          textEffectTemplate={textEffectTemplate}
+          setTextEffectTemplate={setTextEffectTemplate}
+          textEffectText={textEffectText}
+          setTextEffectText={setTextEffectText}
+          textEffectPosition={textEffectPosition}
+          setTextEffectPosition={setTextEffectPosition}
+          textEffectSize={textEffectSize}
+          setTextEffectSize={setTextEffectSize}
+          textEffectXOffset={textEffectXOffset}
+          setTextEffectXOffset={setTextEffectXOffset}
+          textEffectYOffset={textEffectYOffset}
+          setTextEffectYOffset={setTextEffectYOffset}
+          textEffectRotation={textEffectRotation}
+          setTextEffectRotation={setTextEffectRotation}
+          textEffectCurve={textEffectCurve}
+          setTextEffectCurve={setTextEffectCurve}
+          textEffectCustomTextColor={textEffectCustomTextColor}
+          setTextEffectCustomTextColor={setTextEffectCustomTextColor}
+          textEffectCustomBgColor={textEffectCustomBgColor}
+          setTextEffectCustomBgColor={setTextEffectCustomBgColor}
+          textEffectCustomBorderColor={textEffectCustomBorderColor}
+          setTextEffectCustomBorderColor={setTextEffectCustomBorderColor}
+          textEffectCustomShadowColor={textEffectCustomShadowColor}
+          setTextEffectCustomShadowColor={setTextEffectCustomShadowColor}
+          textEffectCustomBgAlpha={textEffectCustomBgAlpha}
+          setTextEffectCustomBgAlpha={setTextEffectCustomBgAlpha}
+          textEffectCustomBorderWidth={textEffectCustomBorderWidth}
+          setTextEffectCustomBorderWidth={setTextEffectCustomBorderWidth}
+          headline={headline}
+          title={customTitle}
+          priceText={priceText}
+          showCardContent={showCardContent}
+        />
+      )}
+
+      {/* 0.5. Callout Feature Pointers (Lemon8 Style Pointers & Arrows) */}
+      {onAddCallout && onUpdateCallout && onRemoveCallout && (
+        <StudioCalloutControls
+          calloutPointers={calloutPointers}
+          onAddCallout={onAddCallout}
+          onUpdateCallout={onUpdateCallout}
+          onRemoveCallout={onRemoveCallout}
+          isEn={isEn}
+        />
+      )}
+
+      {/* 0.6. Additional Custom Text Badges & Stickers */}
+      {onAddCustomText && onUpdateCustomText && onRemoveCustomText && (
+        <StudioCustomTextControls
+          language={_studioLang || (language === "cn" ? "zh" : language as StudioLanguage)}
+          customTexts={customTexts}
+          onAddCustomText={onAddCustomText}
+          onUpdateCustomText={onUpdateCustomText}
+          onRemoveCustomText={onRemoveCustomText}
+        />
+      )}
+
       {/* 1. Sticker Badges Selection */}
       <div className="space-y-1.5">
         <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
@@ -208,17 +348,18 @@ export function StudioContentEditor({
           />
         </div>
 
-        {/* Editable AI Headline */}
+        {/* Editable AI Headline (Multi-line Support) */}
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-slate-400 font-medium">
             <span>{isEn ? "✨ AI Hook Headline" : "✨ พาดหัวบนภาพ (AI Hook)"}</span>
-            <span className="text-[10px] text-amber-400/80">{isEn ? "Catchy & Short" : "สั้น กระชับ ดึงดูด"}</span>
+            <span className="text-[10px] text-amber-400/80">{isEn ? "Press Enter to wrap" : "กด Enter เพื่อเว้นบรรทัดได้"}</span>
           </div>
-          <Input
+          <textarea
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
-            placeholder={isEn ? "Catchy headline on top of the image..." : "ข้อความพาดหัวกระตุ้นความสนใจบนรูปภาพ..."}
-            className="bg-slate-800/80 border-slate-700 text-white text-xs h-8 rounded-xl focus-visible:ring-amber-400"
+            rows={2}
+            placeholder={isEn ? "Catchy headline on image (Press Enter to wrap lines)..." : "ข้อความพาดหัวบนภาพ (กด Enter เพื่อขึ้นบรรทัดใหม่ / เว้นบรรทัดได้)..."}
+            className="w-full bg-slate-800/80 border border-slate-700 text-white text-xs p-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-400 resize-none font-medium leading-relaxed placeholder:text-slate-500"
           />
         </div>
 

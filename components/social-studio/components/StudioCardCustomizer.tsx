@@ -51,6 +51,8 @@ interface StudioCardCustomizerProps {
   setCustomListingBadgeBgColor?: (c: string) => void;
   customListingBadgeTextColor?: string;
   setCustomListingBadgeTextColor?: (c: string) => void;
+  showCardContent?: boolean;
+  setShowCardContent?: (s: boolean) => void;
 }
 
 export function StudioCardCustomizer({
@@ -97,6 +99,8 @@ export function StudioCardCustomizer({
   setCustomListingBadgeBgColor,
   customListingBadgeTextColor,
   setCustomListingBadgeTextColor,
+  showCardContent = true,
+  setShowCardContent,
 }: StudioCardCustomizerProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
@@ -104,8 +108,55 @@ export function StudioCardCustomizer({
 
   return (
     <div className="space-y-3.5">
+      {/* 0. Master Toggle: Show Card Content */}
+      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-amber-500/30 shadow-md space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-amber-400 shrink-0" />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white">
+                  {isEn ? "Property Card Content" : "กรอบข้อมูลทรัพย์ (Card Content)"}
+                </span>
+                <span
+                  className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                    showCardContent
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-400/30"
+                      : "bg-slate-800 text-slate-400 border border-slate-700"
+                  }`}
+                >
+                  {showCardContent ? (isEn ? "Visible" : "เปิดแสดง") : (isEn ? "Hidden" : "🚫 ปิดซ่อน")}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400">
+                {isEn
+                  ? "Toggle on to show property info card, or off for 100% clean image"
+                  : "เปิดเพื่อแสดงกรอบข้อมูลทรัพย์ หรือปิดเพื่อซ่อนการ์ดแสดงรูปภาพเต็มใบ 100%"}
+              </p>
+            </div>
+          </div>
+          {setShowCardContent && (
+            <Switch
+              checked={showCardContent}
+              onCheckedChange={setShowCardContent}
+            />
+          )}
+        </div>
+
+        {!showCardContent && (
+          <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800 text-[10px] text-slate-300 flex items-center gap-2">
+            <span className="text-amber-400">💡</span>
+            <span>
+              {isEn
+                ? "Card is hidden. Background photo will be displayed clean without overlay card. You can add viral Text Effects in the Content tab."
+                : "ซ่อนการ์ดข้อมูลอยู่: รูปภาพจะแสดงแบบคลีนเต็มตา สามารถใส่ Text Effect สไตล์ TikTok / Lemon8 เพิ่มในแท็บ Content ได้"}
+            </span>
+          </div>
+        )}
+      </div>
+
       {/* 1. Card Height & Background */}
-      <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
+      <div className={`p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5 transition-opacity ${!showCardContent ? "opacity-60" : ""}`}>
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Sliders className="h-3.5 w-3.5 text-amber-400" />

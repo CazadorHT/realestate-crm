@@ -1,10 +1,10 @@
 "use client";
 
-import React, { RefObject } from "react";
+import React, { RefObject, useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Download, Copy, Check, FolderArchive, Share } from "lucide-react";
+import { RefreshCw, Download, Copy, Check, FolderArchive, Share, Move, Hand } from "lucide-react";
 import { PlatformUiOverlay, type PlatformOverlayType } from "../PlatformUiOverlay";
-import type { AspectRatio } from "../types";
+import type { AspectRatio, CalloutPointer, CustomTextItem } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 interface StudioPreviewPanelProps {
@@ -23,6 +23,15 @@ interface StudioPreviewPanelProps {
   onDownloadSingle: () => void;
   onCopyImage: () => void;
   onApplyCoverToPost?: () => void;
+  // Drag-to-Position Props
+  textEffectXOffset?: number;
+  setTextEffectXOffset?: (x: number) => void;
+  textEffectYOffset?: number;
+  setTextEffectYOffset?: (y: number) => void;
+  calloutPointers?: CalloutPointer[];
+  onUpdateCallout?: (id: string, updates: Partial<CalloutPointer>) => void;
+  customTexts?: CustomTextItem[];
+  onUpdateCustomText?: (id: string, updates: Partial<CustomTextItem>) => void;
 }
 
 export function StudioPreviewPanel({
@@ -41,14 +50,138 @@ export function StudioPreviewPanel({
   onDownloadSingle,
   onCopyImage,
   onApplyCoverToPost,
+  textEffectXOffset = 0,
+  setTextEffectXOffset,
+  textEffectYOffset = 0,
+  setTextEffectYOffset,
+  calloutPointers = [],
+  onUpdateCallout,
+  customTexts = [],
+  onUpdateCustomText,
 }: StudioPreviewPanelProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
 
+  // Drag-to-Position State
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragTarget, setDragTarget] = useState<"text_effect" | string | null>(null);
+  const [dragStartPos, setDragStartPos] = useState<{ clientX: number; clientY: number }>({ clientX: 0, clientY: 0 });
+  const [initialOffsets, setInitialOffsets] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [dragFeedbackText, setDragFeedbackText] = useState<string>("");
+
+  const handleStartDrag = (clientX: number, clientY: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const relX = clientX - rect.left;
+    const relY = clientY - rect.top;
+
+    // Check if clicked near any custom text badge (within 48px distance)
+    let foundCustomText: CustomTextItem | null = null;
+    for (const ct of customTexts) {
+      const ctx = (ct.x / 100) * rect.width;
+      const cty = (ct.y / 100) * rect.height;
+      const dist = Math.hypot(relX - ctx, relY - cty);
+      if (dist <= 48) {
+        foundCustomText = ct;
+        break;
+      }
+    }
+
+    if (foundCustomText) {
+      setDragTarget(`custom_text:${foundCustomText.id}`);
+      setDragStartPos({ clientX, clientY });
+      setInitialOffsets({ x: foundCustomText.x, y: foundCustomText.y });
+      setIsDragging(true);
+      setDragFeedbackText(`🏷️ ${foundCustomText.text} (${foundCustomText.x}%, ${foundCustomText.y}%)`);
+      return;
+    }
+
+    // Check if clicked near any callout pointer (within 48px distance)
+    let foundCallout: CalloutPointer | null = null;
+    for (const cp of calloutPointers) {
+      const cpx = (cp.x / 100) * rect.width;
+      const cpy = (cp.y / 100) * rect.height;
+      const dist = Math.hypot(relX - cpx, relY - cpy);
+      if (dist <= 48) {
+        foundCallout = cp;
+        break;
+      }
+    }
+
+    if (foundCallout) {
+      setDragTarget(foundCallout.id);
+      setDragStartPos({ clientX, clientY });
+      setInitialOffsets({ x: foundCallout.x, y: foundCallout.y });
+      setIsDragging(true);
+      setDragFeedbackText(`🎯 ${foundCallout.text} (${foundCallout.x}%, ${foundCallout.y}%)`);
+    } else if (setTextEffectYOffset) {
+      // Default to dragging main text effect
+      setDragTarget("text_effect");
+      setDragStartPos({ clientX, clientY });
+      setInitialOffsets({ x: textEffectXOffset, y: textEffectYOffset });
+      setIsDragging(true);
+      setDragFeedbackText(`🖐️ Text Effect (X: ${textEffectXOffset}px, Y: ${textEffectYOffset}px)`);
+    }
+  };
+
+  const handleMoveDrag = useCallback((clientX: number, clientY: number) => {
+    if (!isDragging || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const dx = clientX - dragStartPos.clientX;
+    const dy = clientY - dragStartPos.clientY;
+
+    if (dragTarget === "text_effect") {
+      // Map screen delta to canvas scale (1080p base)
+      const scale = 1080 / rect.width;
+      const newX = Math.round(initialOffsets.x + dx * scale);
+      const newY = Math.round(initialOffsets.y + dy * scale);
+
+      // Clamp within reasonable canvas bounds (-450 to +450)
+      const clampedX = Math.max(-450, Math.min(450, newX));
+      const clampedY = Math.max(-450, Math.min(450, newY));
+
+      setTextEffectXOffset?.(clampedX);
+      setTextEffectYOffset?.(clampedY);
+      setDragFeedbackText(`🖐️ X: ${clampedX > 0 ? `+${clampedX}` : clampedX}px | Y: ${clampedY > 0 ? `+${clampedY}` : clampedY}px`);
+    } else if (typeof dragTarget === "string" && dragTarget.startsWith("custom_text:") && onUpdateCustomText) {
+      const id = dragTarget.replace("custom_text:", "");
+      const deltaXPercent = (dx / rect.width) * 100;
+      const deltaYPercent = (dy / rect.height) * 100;
+
+      const newPercentX = Math.round(Math.max(5, Math.min(95, initialOffsets.x + deltaXPercent)));
+      const newPercentY = Math.round(Math.max(5, Math.min(95, initialOffsets.y + deltaYPercent)));
+
+      onUpdateCustomText(id, { x: newPercentX, y: newPercentY });
+      setDragFeedbackText(`🏷️ Text Badge (X: ${newPercentX}%, Y: ${newPercentY}%)`);
+    } else if (typeof dragTarget === "string" && onUpdateCallout) {
+      // Dragging a specific callout pointer
+      const deltaXPercent = (dx / rect.width) * 100;
+      const deltaYPercent = (dy / rect.height) * 100;
+
+      const newPercentX = Math.round(Math.max(10, Math.min(90, initialOffsets.x + deltaXPercent)));
+      const newPercentY = Math.round(Math.max(10, Math.min(90, initialOffsets.y + deltaYPercent)));
+
+      onUpdateCallout(dragTarget, { x: newPercentX, y: newPercentY });
+      setDragFeedbackText(`🎯 Pointer (X: ${newPercentX}%, Y: ${newPercentY}%)`);
+    }
+  }, [isDragging, dragTarget, dragStartPos, initialOffsets, setTextEffectXOffset, setTextEffectYOffset, onUpdateCallout, onUpdateCustomText]);
+
+  const handleEndDrag = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      setDragTarget(null);
+    }
+  };
+
   return (
     <div
-      className="w-full md:w-1/2 p-4 sm:p-6 flex flex-col items-center justify-center bg-slate-950/70 border-r border-slate-800/80 relative overflow-y-auto min-h-0 shrink-0"
+      className="w-full md:w-1/2 p-4 sm:p-6 flex flex-col items-center justify-center bg-slate-950/70 border-r border-slate-800/80 relative overflow-y-auto min-h-0 shrink-0 select-none"
       style={{ width: "50%", minWidth: "380px" }}
+      onMouseMove={(e) => isDragging && handleMoveDrag(e.clientX, e.clientY)}
+      onMouseUp={handleEndDrag}
+      onTouchMove={(e) => isDragging && e.touches[0] && handleMoveDrag(e.touches[0].clientX, e.touches[0].clientY)}
+      onTouchEnd={handleEndDrag}
     >
       {isRendering && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/50 backdrop-blur-xs">
@@ -83,15 +216,21 @@ export function StudioPreviewPanel({
         ))}
       </div>
 
-      {/* Canvas Container */}
+      {/* Canvas Container with Interactive Drag-to-Position Surface */}
       <div
-        className="relative shadow-2xl rounded-2xl overflow-hidden border border-slate-700/80 transition-all duration-300 flex items-center justify-center shrink-0 bg-slate-950"
+        ref={containerRef}
+        onMouseDown={(e) => handleStartDrag(e.clientX, e.clientY)}
+        onTouchStart={(e) => e.touches[0] && handleStartDrag(e.touches[0].clientX, e.touches[0].clientY)}
+        className={`relative shadow-2xl rounded-2xl overflow-hidden border border-slate-700/80 transition-shadow duration-300 flex items-center justify-center shrink-0 bg-slate-950 group ${
+          isDragging ? "cursor-grabbing ring-2 ring-amber-400/80 shadow-amber-500/20" : "cursor-grab hover:border-amber-500/50"
+        }`}
         style={{
           width: aspectRatio === "9:16" ? "340px" : aspectRatio === "4:5" ? "420px" : "460px",
           height: aspectRatio === "9:16" ? "604px" : aspectRatio === "4:5" ? "525px" : "460px",
           maxHeight: "calc(94vh - 180px)",
           maxWidth: "100%",
         }}
+        title={isEn ? "Click and drag to position text and callouts" : "คลิกค้างแล้วลากเพื่อย้ายตำแหน่งข้อความและลูกศร"}
       >
         <canvas
           ref={canvasRef}
@@ -104,6 +243,22 @@ export function StudioPreviewPanel({
           aspectRatio={aspectRatio}
           accountName={agentFullName ? agentFullName.toLowerCase().replace(/\s+/g, ".") : "vcc.asset"}
         />
+
+        {/* Floating Active Drag Coordinate Pill */}
+        {isDragging && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold text-[11px] shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95 pointer-events-none">
+            <Move className="h-3 w-3" />
+            <span>{dragFeedbackText}</span>
+          </div>
+        )}
+
+        {/* Hover Drag Hint (Visible on hover when not dragging) */}
+        {!isDragging && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 px-2.5 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-slate-800 text-slate-300 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-1.5 shadow-md">
+            <Hand className="h-3 w-3 text-amber-400 animate-pulse" />
+            <span>{isEn ? "Drag to Reposition Text / Pointers" : "คลิกลากย้ายตำแหน่งข้อความ / ลูกศร"}</span>
+          </div>
+        )}
       </div>
 
       {/* Export & Sharing Action Dock */}
@@ -118,6 +273,7 @@ export function StudioPreviewPanel({
             <span>{isEn ? "✨ Attach Cover to Social Post" : "✨ นำภาพปกนี้ไปใส่ในโพสต์โซเชียล"}</span>
           </Button>
         )}
+
         {/* Primary Button: Download Full Album (Cover + Real Photos ZIP) */}
         <Button
           type="button"
@@ -175,4 +331,3 @@ export function StudioPreviewPanel({
     </div>
   );
 }
-

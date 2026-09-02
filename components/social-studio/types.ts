@@ -25,6 +25,88 @@ export type PromoPosition = "top_left" | "top_right" | "bottom_left" | "bottom_r
 // Feature 5: Carousel Page Types
 export type CarouselPageType = "cover" | "specs_highlights" | "location_map" | "contact_cta";
 
+export type TextEffectTemplate =
+  | "none"
+  // TikTok & Social Hook
+  | "tiktok_yellow"
+  | "tiktok_red"
+  | "tiktok_dark"
+  | "yt_bold_stroke"
+  // CapCut
+  | "capcut_outline"
+  | "capcut_neon"
+  | "capcut_gradient"
+  // Lemon8 & Lifestyle
+  | "lemon8_magazine"
+  | "lemon8_highlighter"
+  | "lemon8_bubble"
+  | "lemon8_tag"
+  | "korean_cafe"
+  // Minimal & Modern
+  | "minimal_clean"
+  | "minimal_glass"
+  | "minimal_underline"
+  | "minimal_monochrome"
+  // Business, Property & Ads
+  | "real_estate_badge"
+  | "luxury_editorial"
+  | "urgent_promo"
+  | "price_tag"
+  // Graphic & Vector / Illustrator
+  | "illustrator_pop"
+  | "illustrator_stamp"
+  | "illustrator_dashed"
+  | "illustrator_gold"
+  | "illustrator_curve"
+  | "sticker_border"
+  // Custom
+  | "custom";
+
+export type TextEffectPosition =
+  // Standard vertical
+  | "top"
+  | "center"
+  | "bottom"
+  // Layout-aware
+  | "above_card"
+  | "below_card"
+  // Safe-zone positions (สำหรับ TikTok / Reels / Shorts หลบ UI แพลตฟอร์ม)
+  | "safe_top"
+  | "safe_bottom"
+  // Pinning corners (สำหรับป้ายราคา / โปรโมชันมุมภาพ)
+  | "top_left"
+  | "top_right"
+  | "bottom_left"
+  | "bottom_right";
+
+export type CalloutPointerStyle = "lemon8_yellow" | "clean_white" | "neon_glow" | "dark_luxury";
+export type CalloutPointerDirection = "top_left" | "top_right" | "bottom_left" | "bottom_right";
+
+export interface CalloutPointer {
+  id: string;
+  text: string;
+  x: number; // 0 to 100 (% of canvas width)
+  y: number; // 0 to 100 (% of canvas height)
+  direction: CalloutPointerDirection;
+  style: CalloutPointerStyle;
+  fontSize?: number; // Font size in px (default 22, range 16 to 36)
+  arrowScale?: number; // Arrow length & size scale (default 1.0, range 0.5 to 2.0)
+}
+
+export interface CustomTextItem {
+  id: string;
+  text: string;
+  x: number; // 0 to 100 (% of canvas width)
+  y: number; // 0 to 100 (% of canvas height)
+  fontSize?: number; // 16 to 64px (default 30)
+  textColor?: string; // default #FFFFFF
+  bgColor?: string; // default rgba(15, 23, 42, 0.88)
+  borderColor?: string; // default #F59E0B
+  borderWidth?: number; // 0 to 4 (default 1.5)
+  borderRadius?: number; // 0 to 30 (default 12)
+  isBold?: boolean; // default true
+}
+
 export interface CarouselPageConfig {
   type: CarouselPageType;
   enabled: boolean;
@@ -69,6 +151,7 @@ export interface SocialStudioProperty {
   transit_station_name_cn?: string | null;
   transit_station_name_ru?: string | null;
   transit_distance_meters?: number | null;
+  is_pet_friendly?: boolean | null;
   images?: (string | { url?: string; image_url?: string; storage_path?: string })[] | null;
   assigned_agent?: {
     full_name?: string | null;
@@ -124,6 +207,28 @@ export interface BannerRenderOptions {
   zoneMapping?: ElementZoneMapping;
   card1YOffset?: number;
   card2YOffset?: number;
+
+  // Card Content Master Toggle
+  showCardContent?: boolean;
+
+  // Text Effect Template (TikTok / CapCut / Lemon8 / Minimal / Illustrator / Custom)
+  textEffectTemplate?: TextEffectTemplate;
+  textEffectText?: string;
+  textEffectPosition?: TextEffectPosition;
+  textEffectSize?: FontSizeScale | "2xl";
+  textEffectXOffset?: number;
+  textEffectYOffset?: number;
+  textEffectRotation?: number;
+  textEffectCurve?: number; // Arc curve degrees (-60 to 60, 0 = straight)
+  textEffectCustomTextColor?: string;
+  textEffectCustomBgColor?: string;
+  textEffectCustomBorderColor?: string;
+  textEffectCustomShadowColor?: string;
+  textEffectCustomBgAlpha?: number;
+  textEffectCustomBorderWidth?: number;
+  calloutPointers?: CalloutPointer[];
+  bgDimOpacity?: number; // 0 - 100 (% of dark overlay on background image)
+  customTexts?: CustomTextItem[];
 
   // Modular Field Toggles
   showBrandingHeader?: boolean;
@@ -225,4 +330,21 @@ export interface SocialStudioPresetConfig {
   headerYOffset: number;
   cardRightMargin: number;
   showHeadline: boolean;
+  showCardContent?: boolean;
+  textEffectTemplate?: TextEffectTemplate;
+  textEffectPosition?: TextEffectPosition;
+  textEffectSize?: FontSizeScale | "2xl";
+  textEffectXOffset?: number;
+  textEffectYOffset?: number;
+  textEffectRotation?: number;
+  textEffectCurve?: number;
+  textEffectCustomTextColor?: string;
+  textEffectCustomBgColor?: string;
+  textEffectCustomBorderColor?: string;
+  textEffectCustomShadowColor?: string;
+  textEffectCustomBgAlpha?: number;
+  textEffectCustomBorderWidth?: number;
+  calloutPointers?: CalloutPointer[];
+  bgDimOpacity?: number;
+  customTexts?: CustomTextItem[];
 }

@@ -2,7 +2,8 @@
 
 import React from "react";
 import { Label } from "@/components/ui/label";
-import { Tag } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Tag, Layers } from "lucide-react";
 import type { ElementZoneMapping, ContentPosition, FontSizeScale, SpecFontSizeScale, StudioPriceFormatStyle } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 
@@ -35,6 +36,8 @@ interface StudioFieldRouterProps {
   showQrCode: boolean;
   setShowQrCode: (s: boolean) => void;
   hasOriginalPrice: boolean;
+  showCardContent?: boolean;
+  setShowCardContent?: (s: boolean) => void;
 }
 
 export function StudioFieldRouter({
@@ -66,6 +69,8 @@ export function StudioFieldRouter({
   showQrCode,
   setShowQrCode,
   hasOriginalPrice,
+  showCardContent = true,
+  setShowCardContent,
 }: StudioFieldRouterProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
@@ -91,8 +96,38 @@ export function StudioFieldRouter({
   };
 
   return (
-    <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
-      <div className="flex items-center justify-between">
+    <div className="space-y-2.5">
+      {/* Master Toggle: Show Card Content */}
+      <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Layers className="h-4 w-4 text-amber-400 shrink-0" />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-white">
+                {isEn ? "Show Card Content" : "แสดงกรอบข้อมูลทรัพย์ (Card Content)"}
+              </span>
+              <span
+                className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                  showCardContent
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-400/30"
+                    : "bg-slate-800 text-slate-400 border border-slate-700"
+                }`}
+              >
+                {showCardContent ? (isEn ? "ON" : "เปิดแสดง") : (isEn ? "OFF" : "🚫 ซ่อน")}
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400">
+              {isEn ? "Hide info card for 100% clean photo" : "ปิดเพื่อซ่อนกรอบข้อมูลและแสดงภาพเต็มผืน"}
+            </p>
+          </div>
+        </div>
+        {setShowCardContent && (
+          <Switch checked={showCardContent} onCheckedChange={setShowCardContent} />
+        )}
+      </div>
+
+      <div className={`p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5 transition-opacity ${!showCardContent ? "opacity-50" : ""}`}>
+        <div className="flex items-center justify-between">
         <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
           <Tag className="h-3.5 w-3.5 text-amber-400" />
           {isSplitMode
@@ -277,6 +312,7 @@ export function StudioFieldRouter({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

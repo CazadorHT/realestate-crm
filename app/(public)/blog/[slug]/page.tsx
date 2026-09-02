@@ -204,7 +204,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const finalSchema = post.structured_data || defaultSchema;
 
   // Contextual Content-to-Inventory Linking (Pass PageRank to listing inventory)
-  const { properties: featuredProperties } = await getPublicProperties({ limit: 4, sort: "NEWEST" });
+  const { properties: featuredProperties } = await getPublicProperties({ limit: 4, sort: "NEWEST" }).catch(() => ({ properties: [] }));
 
   return (
     <article className="min-h-screen bg-slate-50 pb-20 pt-16 md:pt-16">
