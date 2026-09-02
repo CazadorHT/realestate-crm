@@ -124,16 +124,9 @@ export async function generateMetadata({
 }
 
 export async function generateStaticParams() {
-  try {
-    // 🚀 Hybrid Strategy: Pre-render top 5 latest posts at build time for instant CDN delivery.
-    // Remaining posts render on-demand and are cached for 1 year with zero database egress.
-    const posts = await getBlogPosts(undefined, 5).catch(() => []);
-    return posts.map((post) => ({
-      slug: post.slug,
-    }));
-  } catch {
-    return [];
-  }
+  // 🚀 Resilient On-Demand ISR: Prevents database statement timeouts (57014) from failing Vercel builds.
+  // Pages are statically rendered on first visit and cached on Edge CDN for 1 year (revalidate = 31536000) with zero database egress.
+  return [];
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
