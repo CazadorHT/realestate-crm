@@ -34,6 +34,8 @@ import { BlogViewCounter } from "@/components/public/blog/BlogViewCounter";
 
 import { siteConfig } from "@/lib/site-config";
 
+export const dynamicParams = true;
+
 interface BlogPostPageProps {
   params: Promise<{
     slug: string;
@@ -43,83 +45,99 @@ interface BlogPostPageProps {
 export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug);
-  const post = await getBlogPostBySlugCached(decodedSlug);
-  const { t, language } = await getServerTranslations();
+  try {
+    const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
+    const post = await getBlogPostBySlugCached(decodedSlug).catch(() => null);
+    const { t, language } = await getServerTranslations();
 
-  if (!post) {
-    return {
-      title: "Post Not Found",
-    };
-  }
-
-  // Prevent draft leakage to non-admin/staff visitors
-  if (!post.is_published) {
-    const { getCurrentProfile } = await import("@/lib/supabase/getCurrentProfile");
-    const user = await getCurrentProfile();
-    const isStaff = user && ["ADMIN", "AGENT", "MANAGER"].includes(user.role);
-    if (!isStaff) {
+    if (!post) {
       return {
         title: "Post Not Found",
       };
     }
-  }
 
-  let COVER_IMAGE = post.cover_image || `${siteConfig.url}${siteConfig.ogImage}`;
-  if (COVER_IMAGE.startsWith("/")) {
-    COVER_IMAGE = `${siteConfig.url}${COVER_IMAGE}`;
-  }
+    // Prevent draft leakage to non-admin/staff visitors
+    if (!post.is_published) {
+      try {
+        const { getCurrentProfile } = await import("@/lib/supabase/getCurrentProfile");
+        const user = await getCurrentProfile().catch(() => null);
+        const isStaff = user && ["ADMIN", "AGENT", "MANAGER"].includes(user.role);
+        if (!isStaff) {
+          return {
+            title: "Post Not Found",
+          };
+        }
+      } catch {
+        return {
+          title: "Post Not Found",
+        };
+      }
+    }
 
-  const canonicalUrl = `${siteConfig.url}/blog/${encodeURIComponent(decodedSlug)}`;
+    let COVER_IMAGE = post.cover_image || `${siteConfig.url}${siteConfig.ogImage}`;
+    if (COVER_IMAGE.startsWith("/")) {
+      COVER_IMAGE = `${siteConfig.url}${COVER_IMAGE}`;
+    }
 
-  return {
-    title: `${getLocalizedField(post, "title", language)} | ${t("blog.article_label")}`,
-    description:
-      getLocalizedField(post, "excerpt", language) ||
-      `${t("blog.schema_desc")} - ${getLocalizedField(post, "title", language)}`,
-    keywords: `${
-      post.category
-    }, ${t("home.hero.title_highlight")}, ${post.tags?.join(", ")}`,
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        th: `${siteConfig.url}/th/blog/${encodeURIComponent(decodedSlug)}`,
-        en: `${siteConfig.url}/en/blog/${encodeURIComponent(decodedSlug)}`,
-        "zh-Hans": `${siteConfig.url}/cn/blog/${encodeURIComponent(decodedSlug)}`,
-        ru: `${siteConfig.url}/ru/blog/${encodeURIComponent(decodedSlug)}`,
-        "x-default": canonicalUrl,
+    const canonicalUrl = `${siteConfig.url}/blog/${encodeURIComponent(decodedSlug)}`;
+
+    return {
+      title: `${getLocalizedField(post, "title", language)} | ${t("blog.article_label")}`,
+      description:
+        getLocalizedField(post, "excerpt", language) ||
+        `${t("blog.schema_desc")} - ${getLocalizedField(post, "title", language)}`,
+      keywords: `${
+        post.category
+      }, ${t("home.hero.title_highlight")}, ${post.tags?.join(", ")}`,
+      alternates: {
+        canonical: canonicalUrl,
+        languages: {
+          th: `${siteConfig.url}/th/blog/${encodeURIComponent(decodedSlug)}`,
+          en: `${siteConfig.url}/en/blog/${encodeURIComponent(decodedSlug)}`,
+          "zh-Hans": `${siteConfig.url}/cn/blog/${encodeURIComponent(decodedSlug)}`,
+          ru: `${siteConfig.url}/ru/blog/${encodeURIComponent(decodedSlug)}`,
+          "x-default": canonicalUrl,
+        },
       },
-    },
-    openGraph: {
-      title: getLocalizedField(post, "title", language),
-      description: getLocalizedField(post, "excerpt", language) || "",
-      url: canonicalUrl,
-      images: [COVER_IMAGE],
-      type: "article",
-      publishedTime: post.published_at || undefined,
-      authors: post.profiles?.full_name ? [post.profiles.full_name] : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: getLocalizedField(post, "title", language),
-      description: getLocalizedField(post, "excerpt", language) || "",
-      images: [COVER_IMAGE],
-    },
-  };
+      openGraph: {
+        title: getLocalizedField(post, "title", language),
+        description: getLocalizedField(post, "excerpt", language) || "",
+        url: canonicalUrl,
+        images: [COVER_IMAGE],
+        type: "article",
+        publishedTime: post.published_at || undefined,
+        authors: post.profiles?.full_name ? [post.profiles.full_name] : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: getLocalizedField(post, "title", language),
+        description: getLocalizedField(post, "excerpt", language) || "",
+        images: [COVER_IMAGE],
+      },
+    };
+  } catch {
+    return {
+      title: "Blog | Article",
+    };
+  }
 }
 
 export async function generateStaticParams() {
-  const posts = await getBlogPosts();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+  try {
+    const posts = await getBlogPosts(undefined, 100).catch(() => []);
+    return posts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
-  const post = await getBlogPostBySlugCached(decodedSlug);
+  const post = await getBlogPostBySlugCached(decodedSlug).catch(() => null);
 
   if (!post) {
     notFound();
@@ -127,10 +145,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   // Prevent draft leakage to non-admin/staff visitors
   if (!post.is_published) {
-    const { getCurrentProfile } = await import("@/lib/supabase/getCurrentProfile");
-    const user = await getCurrentProfile();
-    const isStaff = user && ["ADMIN", "AGENT", "MANAGER"].includes(user.role);
-    if (!isStaff) {
+    try {
+      const { getCurrentProfile } = await import("@/lib/supabase/getCurrentProfile");
+      const user = await getCurrentProfile().catch(() => null);
+      const isStaff = user && ["ADMIN", "AGENT", "MANAGER"].includes(user.role);
+      if (!isStaff) {
+        notFound();
+      }
+    } catch {
       notFound();
     }
   }
@@ -152,7 +174,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     : "";
 
   const relatedPosts = post.category
-    ? await getRelatedPosts(decodedSlug, post.category)
+    ? await getRelatedPosts(decodedSlug, post.category).catch(() => [])
     : [];
 
   // Schema.org Article markup
@@ -199,9 +221,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     keywords: post.tags?.join(", ") || "",
   };
 
-  // If we have AI-generated structured data, we use it. 
-  // Often it's a list [schema1, schema2] or a single object.
-  const finalSchema = post.structured_data || defaultSchema;
+  // Safe structured data handling
+  let finalSchema = defaultSchema;
+  if (post.structured_data) {
+    try {
+      finalSchema = typeof post.structured_data === "string" 
+        ? JSON.parse(post.structured_data) 
+        : post.structured_data;
+    } catch {
+      finalSchema = defaultSchema;
+    }
+  }
 
   // Contextual Content-to-Inventory Linking (Pass PageRank to listing inventory)
   const { properties: featuredProperties } = await getPublicProperties({ limit: 4, sort: "NEWEST" }).catch(() => ({ properties: [] }));
