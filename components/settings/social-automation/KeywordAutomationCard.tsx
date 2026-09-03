@@ -181,7 +181,7 @@ export function KeywordAutomationCard({
 
         {/* Global Save Section */}
         {keywords.length > 0 && (
-          <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ">
+          <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex -space-x-1.5 items-center">
                 <div className="w-6 h-6 rounded-full border border-white bg-blue-600 flex items-center justify-center shadow-xs">

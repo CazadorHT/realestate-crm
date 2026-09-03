@@ -85,13 +85,13 @@ export function PhoneSimulator({
   return (
     <div className="flex flex-col items-center justify-center p-2 lg:sticky lg:top-24">
       {/* Tab Switcher */}
-      <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-6 w-full max-w-[320px] shadow-inner">
+      <div className="flex bg-slate-100 p-1 rounded-xl mb-6 w-full max-w-[320px] shadow-inner">
         <button
           onClick={() => setActiveTab("post")}
           className={`flex-1 text-center py-2 text-xs font-semibold rounded-lg transition-all ${
             activeTab === "post"
-              ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-              : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
           Post Feed
@@ -100,8 +100,8 @@ export function PhoneSimulator({
           onClick={() => setActiveTab("comments")}
           className={`flex-1 text-center py-2 text-xs font-semibold rounded-lg transition-all ${
             activeTab === "comments"
-              ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-              : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
           Comments
@@ -110,8 +110,8 @@ export function PhoneSimulator({
           onClick={() => setActiveTab("dm")}
           className={`flex-1 text-center py-2 text-xs font-semibold rounded-lg transition-all ${
             activeTab === "dm"
-              ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-              : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
           Direct DM

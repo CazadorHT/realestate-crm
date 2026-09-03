@@ -15,6 +15,9 @@ import { unstable_cache } from "next/cache";
 async function fetchAndBuildCatalog() {
   const supabase = createPublicClient();
 
+  // Filter properties active and updated within the last 60 days (2 months) for fresh inventory
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+
   // Fetch active properties directly from V3 Core tables
   // Completely eliminates select(*) to save bandwidth and reduce payload size
   const { data: propertiesData, error } = await supabase
@@ -33,6 +36,7 @@ async function fetchAndBuildCatalog() {
       is_exclusive,
       co_broker_id,
       project_id,
+      updated_at,
       project:projects!properties_core_project_id_fkey (
         id,
         name,
@@ -54,7 +58,9 @@ async function fetchAndBuildCatalog() {
     `,
     )
     .eq("status", 1) // 1 = ACTIVE
-    .limit(500);
+    .gte("updated_at", sixtyDaysAgo)
+    .order("updated_at", { ascending: false })
+    .limit(300);
 
   if (error) throw error;
   return buildMetaCatalogXml(propertiesData || []);
@@ -298,16 +304,9 @@ function buildMetaCatalogXml(propertiesData: any[]) {
         xml += `    <price>${item.currentPrice} THB</price>\n`;
       }
 
-      // Images — Cover first via <image_url>, then up to 5 secondary images via nested <image><url> (optimal for Meta Carousel)
+      // Image — Single high-converting Cover Image via <image_url> (optimal for Real Estate Carousel & Product Sets)
       // Routed through Cloudflare CDN (cdn.vccasset.com) to eliminate Supabase Storage Cached Egress
-      const images = p.media || [];
       xml += `    <image_url><![CDATA[${coverImage}]]></image_url>\n`;
-      images.slice(0, 5).forEach((img) => {
-        if (img.url) {
-          const cdnImageUrl = getPublicImageUrl(img.url);
-          xml += `    <image>\n      <url><![CDATA[${cdnImageUrl}]]></url>\n    </image>\n`;
-        }
-      });
 
       // --- ADDRESS ---
       const addrLine1 = (addrObj.address_line1 as string)?.trim() || "Bangkok";
@@ -388,12 +387,24 @@ function buildMetaCatalogXml(propertiesData: any[]) {
 
       const nearTransit = transitObj.near_transit as boolean | undefined;
 
-      // label_0: ป้ายดึงดูด (Attention Hook)
+      // label_0: ป้ายดึงดูด & SEO Keyword Hook (Search Intent & Advantage+ Catalog Ads)
+      // ผสมคำค้นหายอดนิยม (High-Intent SEO Keywords) เพื่อให้ Meta Algorithm จับกลุ่มผู้ค้นหาได้แม่นยำขึ้น
       let hookLabel = "";
-      if (item.hasDiscount) hookLabel = "🔥 Hot Deal";
-      else if (p.is_exclusive) hookLabel = "⭐ Exclusive";
-      else if (p.verified) hookLabel = "✅ Verified";
-      else hookLabel = "🆕 New Listing";
+      if (item.hasDiscount) {
+        hookLabel = "🔥 ราคาพิเศษ Hot Deal";
+      } else if (p.is_exclusive) {
+        hookLabel = "⭐ สัญญาพิเศษ Exclusive";
+      } else if (isPetFriendly) {
+        hookLabel = "🐾 เลี้ยงสัตว์ได้ Pet-Friendly";
+      } else if (nearTransit) {
+        hookLabel = "🚇 ติดรถไฟฟ้า BTS-MRT";
+      } else if (isFullyFurnished) {
+        hookLabel = "✨ แต่งครบพร้อมอยู่ Ready to Move";
+      } else if (p.verified) {
+        hookLabel = "✅ ห้องจริงตรงปก Verified";
+      } else {
+        hookLabel = "💎 ยูนิตคัดพิเศษ New Listing";
+      }
       xml += `    <custom_label_0><![CDATA[${hookLabel}]]></custom_label_0>\n`;
 
       // label_1: ไลฟ์สไตล์ (Lifestyle Tags)

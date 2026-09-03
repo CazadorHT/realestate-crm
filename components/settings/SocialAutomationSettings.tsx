@@ -569,7 +569,7 @@ export function SocialAutomationSettings({
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   {isEn ? "Story Ads & General Welcome Flow" : "ระบบต้อนรับ Story Ads & ข้อความกว้าง (Story Ads Flow)"}
                 </h4>
-                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full ">
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/50 px-2 py-0.5 rounded-full">
                   Smart Fallback & Lead Capture
                 </span>
               </div>
@@ -621,7 +621,7 @@ export function SocialAutomationSettings({
                     </label>
                     
                     {/* Language Tabs */}
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
                       {[
                         { key: "th", label: "🇹🇭 TH" },
                         { key: "en", label: "🇬🇧 EN" },
@@ -634,8 +634,8 @@ export function SocialAutomationSettings({
                           onClick={() => setStoryAdsTab(tab.key as any)}
                           className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all ${
                             storyAdsTab === tab.key
-                              ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                              : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                              ? "bg-white text-blue-600 shadow-sm"
+                              : "text-slate-500 hover:text-slate-700"
                           }`}
                         >
                           {tab.label}
@@ -663,7 +663,7 @@ export function SocialAutomationSettings({
                         ? "Здравствуйте! Спасибо за обращение ✨..."
                         : "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨..."
                     }
-                    className="w-full text-xs text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full text-xs text-slate-800 bg-white border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                   <div className="flex items-center justify-between mt-1 mb-4">
                     <span className="text-[11px] text-slate-400">
@@ -675,12 +675,12 @@ export function SocialAutomationSettings({
 
                   {/* Story Ads Custom Buttons Builder */}
                   {storyAdsButtonsEnabled && (
-                    <div className="p-4 bg-slate-50/70 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                    <div className="p-4 bg-slate-50/70 rounded-xl border border-slate-200/80">
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <div className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                          <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                             <span>{isEn ? "Interactive Buttons (Max 3)" : "ปุ่มกดของข้อความต้อนรับ (สูงสุด 3 ปุ่ม)"}</span>
-                            <span className="text-[10px] font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                            <span className="text-[10px] font-medium bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
                               {storyAdsCustomButtons.length > 0 ? `${storyAdsCustomButtons.length}/3 Custom` : "3 Default"}
                             </span>
                           </div>
@@ -698,7 +698,7 @@ export function SocialAutomationSettings({
                               setStoryAdsCustomButtons([]);
                               setIsDirty(true);
                             }}
-                            className="text-[11px] text-slate-500 hover:text-red-600 dark:text-slate-400 font-medium transition-colors"
+                            className="text-[11px] text-slate-500 hover:text-red-600 font-medium transition-colors"
                           >
                             {isEn ? "Reset to Defaults" : "รีเซ็ตเป็นปุ่มมาตรฐาน"}
                           </button>
@@ -713,7 +713,7 @@ export function SocialAutomationSettings({
                               ]);
                               setIsDirty(true);
                             }}
-                            className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-lg transition-all"
+                            className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg transition-all"
                           >
                             + {isEn ? "Customize Buttons" : "กำหนดปุ่มเอง (เช่น ใส่ลิงก์เว็บ)"}
                           </button>
@@ -721,7 +721,7 @@ export function SocialAutomationSettings({
                       </div>
 
                       {storyAdsCustomButtons.length === 0 ? (
-                        <div className="text-xs text-slate-500 bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <div className="text-xs text-slate-500 bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-emerald-500">✓</span>
                             <span>
@@ -736,7 +736,7 @@ export function SocialAutomationSettings({
                           {storyAdsCustomButtons.map((btn, idx) => (
                             <div
                               key={idx}
-                              className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2"
+                              className="p-3 bg-white rounded-lg border border-slate-200 space-y-2"
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-[11px] font-bold text-slate-400">#{idx + 1}</span>
@@ -752,7 +752,7 @@ export function SocialAutomationSettings({
                                       setIsDirty(true);
                                     }}
                                     placeholder={isEn ? "Button Title (Max 20 chars)" : "ชื่อปุ่ม (ไม่เกิน 20 ตัวอักษร)"}
-                                    className="text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                    className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                                   />
                                   <select
                                     value={btn.type || "postback"}
@@ -765,7 +765,7 @@ export function SocialAutomationSettings({
                                       setStoryAdsCustomButtons(updated);
                                       setIsDirty(true);
                                     }}
-                                    className="text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                    className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                                   >
                                     <option value="web_url">🔗 ลิงก์เว็บไซต์ (Web URL)</option>
                                     <option value="postback">⚡ การกระทำในแชท (Chat Action)</option>
@@ -782,7 +782,7 @@ export function SocialAutomationSettings({
                                         setIsDirty(true);
                                       }}
                                       placeholder="https://yourwebsite.com/properties"
-                                      className="text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                      className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                                     />
                                   ) : (
                                     <select
@@ -793,7 +793,7 @@ export function SocialAutomationSettings({
                                         setStoryAdsCustomButtons(updated);
                                         setIsDirty(true);
                                       }}
-                                      className="text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                      className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                                     >
                                       <option value="ACTION_BOOK_VIEWING">📅 นัดดูห้องจริง (Book Viewing)</option>
                                       <option value="ACTION_BROWSE_ROOMS">🏠 ส่งการ์ดห้องว่าง (Browse Rooms)</option>
@@ -808,7 +808,7 @@ export function SocialAutomationSettings({
                                     const updated = storyAdsCustomButtons.filter((_, i) => i !== idx);
                                     setStoryAdsCustomButtons(updated);
                                     setIsDirty(true);
-                                  }}
+                                    }}
                                   className="text-slate-400 hover:text-red-500 p-1 transition-colors"
                                   title="Remove button"
                                 >
@@ -828,7 +828,7 @@ export function SocialAutomationSettings({
                                 ]);
                                 setIsDirty(true);
                               }}
-                              className="w-full py-2 border border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 text-xs font-semibold text-blue-600 dark:text-blue-400 rounded-lg transition-all"
+                              className="w-full py-2 border border-dashed border-slate-300 hover:border-blue-400 text-xs font-semibold text-blue-600 rounded-lg transition-all"
                             >
                               + {isEn ? "Add Another Button" : "เพิ่มปุ่มอีกรายการ (สูงสุด 3 ปุ่ม)"}
                             </button>
@@ -845,11 +845,11 @@ export function SocialAutomationSettings({
       </div>
 
       {/* Right Column: Live Phone Simulator */}
-      <div className="lg:col-span-4 bg-slate-50/60 dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+      <div className="lg:col-span-4 bg-slate-50/60 p-6 rounded-2xl border border-slate-200">
         <div className="mb-4">
-          <h3 className="text-base font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+          <h3 className="text-base font-bold flex items-center gap-2 text-slate-900">
             <span>Live Phone Preview</span>
-            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full dark:bg-blue-900/30 dark:text-blue-400 uppercase tracking-wider">Real-time</span>
+            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Real-time</span>
           </h3>
           <p className="text-xs text-slate-500 mt-1">
             {isEn 
@@ -874,7 +874,7 @@ export function SocialAutomationSettings({
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md border border-slate-200 shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300 w-11/12 max-w-2xl">
           <div className="flex items-center gap-3">
             <div className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-250">
+            <span className="text-sm font-semibold text-slate-700">
               {isEn ? "Unsaved changes pending" : "มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก"}
             </span>
           </div>
