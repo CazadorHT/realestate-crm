@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SiteAssetUploader } from "@/components/settings/SiteAssetUploader";
-import { uploadPopularAreaImageAction, generateAreaSeoContentAction } from "../popular-areas-actions";
+import { uploadPopularAreaImageAction, generateAreaSeoContentAction, getAllParentPopularAreasAction } from "../popular-areas-actions";
 import {
   Loader2,
   Check,
@@ -53,6 +53,7 @@ export function PopularAreaForm({
   const [isPending, setIsPending] = useState(false);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [activeTab, setActiveTab] = useState("th");
+  const [parentOptions, setParentOptions] = useState<{ id: string; name: any; province: string }[]>([]);
 
   const form = useForm({
     resolver: zodResolver(getPopularAreaSchema(isEn)),
@@ -64,6 +65,7 @@ export function PopularAreaForm({
       slug: initialData?.slug || "",
       province: initialData?.province || "กรุงเทพมหานคร",
       image_url: initialData?.image_url || "",
+      parent_id: initialData?.parent_id || "",
       featured: initialData?.featured || false,
       is_cbd: initialData?.is_cbd || false,
       is_active: initialData?.is_active ?? true,
@@ -73,6 +75,15 @@ export function PopularAreaForm({
       is_ai_generated: initialData?.is_ai_generated || false,
     },
   });
+
+  useEffect(() => {
+    getAllParentPopularAreasAction().then((res) => {
+      if (res.success && res.data) {
+        const filtered = (res.data as any[]).filter((p) => p.id !== initialData?.id);
+        setParentOptions(filtered);
+      }
+    });
+  }, [initialData?.id]);
 
   const watchedNameEn = form.watch("name_en");
   const isEdit = !!initialData;
@@ -218,6 +229,38 @@ export function PopularAreaForm({
                       value={field.value}
                       onChange={field.onChange}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="parent_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-bold flex items-center gap-1.5 text-slate-700 text-xs">
+                    <MapPin className="h-3.5 w-3.5 text-indigo-500" />
+                    {isEn ? "Parent Zone / Core Area (Optional)" : "โซนแม่ / ทำเลหลัก (ไม่ระบุ = เป็นโซนหลัก)"}
+                  </FormLabel>
+                  <FormControl>
+                    <select
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      <option value="">{isEn ? "-- None (Core Parent Zone) --" : "-- ไม่มี (เป็นทำเลหลัก / โซนแม่) --"}</option>
+                      {parentOptions.map((opt) => {
+                        const th = typeof opt.name === "string" ? opt.name : opt.name?.th || opt.name?.en || opt.id;
+                        const en = typeof opt.name === "object" ? opt.name?.en : null;
+                        return (
+                          <option key={opt.id} value={opt.id}>
+                            {th} {en ? `(${en})` : ""} [{opt.province}]
+                          </option>
+                        );
+                      })}
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

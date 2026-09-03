@@ -22,6 +22,7 @@ interface PopularAreaRpcRow {
   name_en: string | null;
   name_cn: string | null;
   name_ru: string | null;
+  parent_id?: string | null;
   slug: string | null;
   image_url: string | null;
   sort_order: number | null;
@@ -38,9 +39,13 @@ interface PopularAreaRpcRow {
 }
 
 type PopularAreaInsert =
-  Database["public"]["Tables"]["popular_areas_v3"]["Insert"];
+  Database["public"]["Tables"]["popular_areas_v3"]["Insert"] & {
+    parent_id?: string | null;
+  };
 type PopularAreaUpdate =
-  Database["public"]["Tables"]["popular_areas_v3"]["Update"];
+  Database["public"]["Tables"]["popular_areas_v3"]["Update"] & {
+    parent_id?: string | null;
+  };
 
 /** Extended Database interface to include dynamic RPC function */
 type ExtendedDatabase = Database & {
@@ -189,6 +194,7 @@ export async function createPopularArea(
       province: parsed.province,
       slug: parsed.slug,
       image_url: parsed.image_url,
+      parent_id: (parsed as any).parent_id || null,
       featured: parsed.featured,
       is_active: parsed.is_active,
       sort_order: nextOrder,
@@ -232,6 +238,26 @@ export async function createPopularArea(
 }
 
 /**
+ * Get all potential parent popular areas (areas with no parent_id)
+ */
+export async function getAllParentPopularAreasAction() {
+  try {
+    const { supabase } = await requireAuthContext();
+    const { data, error } = await supabase
+      .from("popular_areas_v3")
+      .select("id, name, province")
+      .is("parent_id", null)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch (err) {
+    console.error("getAllParentPopularAreasAction error:", err);
+    return { success: false, data: [] };
+  }
+}
+
+/**
  * Update popular area
  */
 export async function updatePopularArea(
@@ -255,6 +281,7 @@ export async function updatePopularArea(
       province: parsed.province,
       slug: parsed.slug,
       image_url: parsed.image_url,
+      parent_id: (parsed as any).parent_id || null,
       featured: parsed.featured,
       is_active: parsed.is_active,
       description: {

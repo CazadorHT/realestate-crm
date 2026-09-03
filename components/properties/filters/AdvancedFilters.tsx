@@ -132,10 +132,11 @@ export function AdvancedFilters({
       if (p.province) {
         provincesMap.set(p.province, (provincesMap.get(p.province) || 0) + 1);
       }
-      if (p.popular_area) {
+      if (p.popular_area && p.popular_area.trim() !== "") {
+        const cleanArea = p.popular_area.trim();
         areasMap.set(
-          p.popular_area,
-          (areasMap.get(p.popular_area) || 0) + 1,
+          cleanArea,
+          (areasMap.get(cleanArea) || 0) + 1,
         );
       }
       if (p.price) {
@@ -176,6 +177,7 @@ export function AdvancedFilters({
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count),
       availableAreas: Array.from(areasMap.entries())
+        .filter(([name]) => Boolean(name && name.trim() !== ""))
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count),
       salePriceCounts,

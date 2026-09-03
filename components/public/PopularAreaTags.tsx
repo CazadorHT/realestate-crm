@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 
 interface AreaItem {
@@ -27,7 +28,22 @@ export function PopularAreaTags({
   themeColor,
   isDark = false,
 }: PopularAreaTagsProps) {
-  if (!popularAreas || popularAreas.length === 0) return null;
+  // Helper to get localized label for an area
+  const getLocalizedArea = (area: AreaItem) => {
+    return language === "en" ? area.name_en || area.name :
+           language === "cn" ? area.name_cn || area.name :
+           language === "ru" ? area.name_ru || area.name :
+           area.name;
+  };
+
+  const sortedAreas = useMemo(() => {
+    return (popularAreas || [])
+      .filter((a) => Boolean(a && a.name && a.name.trim() !== ""))
+      .map((a) => ({ ...a, localizedName: getLocalizedArea(a) }))
+      .sort((a, b) => a.localizedName.localeCompare(b.localizedName, language === "th" ? "th" : language));
+  }, [popularAreas, language]);
+
+  if (!sortedAreas || sortedAreas.length === 0) return null;
 
   // Localized texts
   const labelPopular = 
@@ -41,14 +57,6 @@ export function PopularAreaTags({
     language === "cn" ? "更多地段..." :
     language === "ru" ? "Еще районы..." :
     "ดูทำเลเพิ่ม";
-
-  // Helper to get localized label for an area
-  const getLocalizedArea = (area: AreaItem) => {
-    return language === "en" ? area.name_en || area.name :
-           language === "cn" ? area.name_cn || area.name :
-           language === "ru" ? area.name_ru || area.name :
-           area.name;
-  };
 
   // Scroll to search component function
   const handleScrollToSearch = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -123,11 +131,11 @@ export function PopularAreaTags({
     );
   };
 
-  const showMoreMobile = popularAreas.length > 4;
-  const showMoreDesktop = popularAreas.length > 8;
+  const showMoreMobile = sortedAreas.length > 4;
+  const showMoreDesktop = sortedAreas.length > 8;
 
-  const mobileItems = showMoreMobile ? popularAreas.slice(0, 3) : popularAreas;
-  const desktopItems = showMoreDesktop ? popularAreas.slice(0, 7) : popularAreas;
+  const mobileItems = showMoreMobile ? sortedAreas.slice(0, 3) : sortedAreas;
+  const desktopItems = showMoreDesktop ? sortedAreas.slice(0, 7) : sortedAreas;
 
   return (
     <div className={`flex flex-wrap items-center gap-2 pt-4 text-xs font-bold ${labelColorClass} animate-fade-in-up`}>

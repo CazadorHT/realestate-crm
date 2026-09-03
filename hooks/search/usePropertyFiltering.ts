@@ -3,6 +3,7 @@ import { PropertyCardProps } from "@/components/public/PropertyCard";
 import { PropertyFacets } from "@/features/properties/types/search";
 import { detectSearchIntent } from "@/lib/search-config";
 import { isCbdProperty } from "@/lib/property-utils";
+import { getParentAreaName } from "@/lib/utils/area-hierarchy";
 
 type ApiProperty = PropertyCardProps;
 
@@ -136,7 +137,18 @@ export function usePropertyFiltering(
       }
     }
 
-    if (!excludeFilters.includes("area") && area !== "ALL" && p.popular_area !== area) return false;
+    if (!excludeFilters.includes("area") && area !== "ALL") {
+      const selectedAreas = area.split(",").map((s) => s.trim()).filter(Boolean);
+      if (selectedAreas.length > 0) {
+        const cleanPropArea = (p.popular_area || "").trim();
+        const parentOfProp = getParentAreaName(cleanPropArea);
+        const matchesDirectly = selectedAreas.includes(cleanPropArea);
+        const matchesParent = parentOfProp ? selectedAreas.includes(parentOfProp) : false;
+        if (!matchesDirectly && !matchesParent) {
+          return false;
+        }
+      }
+    }
 
     if (!excludeFilters.includes("listingType") && listingType !== "ALL") {
       if (listingType === "SALE") {
@@ -266,9 +278,10 @@ export function usePropertyFiltering(
         provinceMap.set(p.province, (provinceMap.get(p.province) || 0) + 1);
       }
 
-      if (checkMatch(p, ["area"]) && p.popular_area) {
-        const existing = areaMap.get(p.popular_area) || { count: 0, name_en: null as string | null, name_cn: null as string | null, name_ru: null as string | null };
-        areaMap.set(p.popular_area, { 
+      if (checkMatch(p, ["area"]) && p.popular_area && p.popular_area.trim() !== "") {
+        const cleanArea = p.popular_area.trim();
+        const existing = areaMap.get(cleanArea) || { count: 0, name_en: null as string | null, name_cn: null as string | null, name_ru: null as string | null };
+        areaMap.set(cleanArea, { 
           count: existing.count + 1, 
           name_en: p.popular_area_en || existing.name_en,
           name_cn: p.popular_area_cn || existing.name_cn,
@@ -322,7 +335,9 @@ export function usePropertyFiltering(
     return {
       filtered: filteredList,
       availableProvinces: Array.from(provinceMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
-      availableAreas: Array.from(areaMap.entries()).map(([name, val]) => ({ name, count: val.count, name_en: val.name_en, name_cn: val.name_cn, name_ru: val.name_ru })).sort((a, b) => a.name.localeCompare(b.name)),
+      availableAreas: Array.from(areaMap.entries())
+        .filter(([name]) => Boolean(name && name.trim() !== ""))
+        .map(([name, val]) => ({ name, count: val.count, name_en: val.name_en, name_cn: val.name_cn, name_ru: val.name_ru })),
       availableTypes: typeCounts,
       availableListingTypes: listingTypeCounts,
       availableQuickFilters: quickCounts,
@@ -350,7 +365,9 @@ export function usePropertyFiltering(
   const finalFacets = useMemo(() => {
     if (!serverFacets) return results;
     const serverProvinces = Object.entries(serverFacets.availableProvinces || {}).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
-    const serverAreas = Object.entries(serverFacets.availableAreas || {}).map(([name, val]) => ({ name, count: val.count, name_en: val.name_en, name_cn: val.name_cn, name_ru: val.name_ru })).sort((a, b) => a.name.localeCompare(b.name));
+    const serverAreas = Object.entries(serverFacets.availableAreas || {})
+      .filter(([name]) => Boolean(name && name.trim() !== ""))
+      .map(([name, val]) => ({ name, count: val.count, name_en: val.name_en, name_cn: val.name_cn, name_ru: val.name_ru }));
     const serverStations = Object.entries(serverFacets.availableStations || {}).map(([name, val]) => ({
       name,
       count: val.count,
@@ -363,13 +380,13 @@ export function usePropertyFiltering(
     // If we have active category/quick/landing filters, the local quickCounts accurately reflect this subset.
     // Use serverFacets only when no restrictive filters are applied.
     const hasActiveRestrictions = Boolean(
-      petFriendly || luxuryVilla || cbd || (type && type !== "ALL") || (province && province !== "ALL") || (area && area !== "ALL") || searchIntent
+      petFriendly || luxuryVilla || cbd || (type && type !== "ALL") || (province && province !== "ALL") || searchIntent
     );
 
     return {
       ...results,
-      availableProvinces: serverProvinces.length > 0 && !hasActiveRestrictions ? serverProvinces : results.availableProvinces,
-      availableAreas: serverAreas.length > 0 && !hasActiveRestrictions ? serverAreas : results.availableAreas,
+      availableProvinces: serverProvinces.length > 0 ? serverProvinces : results.availableProvinces,
+      availableAreas: serverAreas.length > 0 ? serverAreas : results.availableAreas,
       availableStations: serverStations.length > 0 && !hasActiveRestrictions ? serverStations : results.availableStations,
       availableTypes: !hasActiveRestrictions && serverFacets.availableTypes ? serverFacets.availableTypes : results.availableTypes,
       availableListingTypes: !hasActiveRestrictions && serverFacets.availableListingTypes ? serverFacets.availableListingTypes : results.availableListingTypes,
@@ -382,7 +399,7 @@ export function usePropertyFiltering(
       availablePrices: serverFacets.availablePrices || undefined,
       availableSizes: serverFacets.availableSizes || undefined,
     };
-  }, [results, serverFacets, petFriendly, luxuryVilla, cbd, type, province, area, searchIntent]);
+  }, [results, serverFacets, petFriendly, luxuryVilla, cbd, type, province, searchIntent]);
 
   return {
     ...finalFacets,

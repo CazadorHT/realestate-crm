@@ -19,6 +19,7 @@ export const getPopularAreaSchema = (isEn: boolean) =>
         ),
       province: z.string().min(1, isEn ? "Province is required" : "กรุณาเลือกจังหวัด"),
       image_url: z.string().optional().nullable(),
+      parent_id: z.string().uuid().optional().nullable().or(z.literal("")),
       featured: z.boolean().default(false),
       is_cbd: z.boolean().default(false),
       is_active: z.boolean().default(true),

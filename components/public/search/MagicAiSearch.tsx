@@ -348,6 +348,9 @@ export function MagicAiSearch({
     if (label === "โครงการ") {
       return "bg-indigo-50 text-indigo-700 group-hover/item:bg-indigo-100";
     }
+    if (label === "ทำเลย่อย") {
+      return "bg-sky-50 text-sky-700 group-hover/item:bg-sky-100";
+    }
     switch (type) {
       case "landmark":
         return "bg-rose-50 text-rose-700 group-hover/item:bg-rose-100";
@@ -369,10 +372,16 @@ export function MagicAiSearch({
       if (lang === "ru") return "Проект";
       return "โครงการ";
     }
+    if (label === "ทำเลย่อย") {
+      if (lang === "en") return "Sub-Zone";
+      if (lang === "cn") return "子区域";
+      if (lang === "ru") return "Подрайон";
+      return "ทำเลย่อย";
+    }
     if (label === "ย่านยอดนิยม") {
-      if (lang === "en") return "Popular Area";
+      if (lang === "en") return "Zone";
       if (lang === "cn") return "热门区域";
-      if (lang === "ru") return "Популярный район";
+      if (lang === "ru") return "Район";
       return "ย่านยอดนิยม";
     }
     if (label === "ทำเลใกล้เคียง" || label === "สถานที่ใกล้เคียง") {

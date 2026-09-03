@@ -14,6 +14,7 @@ import {
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getPopularAreasLookupMap } from "@/features/public/popular-areas";
 import { detectSearchIntent } from "../search-config";
+import { AREA_PARENT_MAP } from "@/lib/utils/area-hierarchy";
 
 // 🚀 Fast Memory Cache for Public Search Facets (1-hour TTL) for zero database egress across search queries
 const facetsMemoryCache = new Map<string, { data: any; timestamp: number }>();
@@ -219,7 +220,31 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         }
         const targetArea = options.area || options.popular_area;
         if (targetArea && targetArea !== "ALL") {
-          query = query.or(`subdistrict.ilike.%${targetArea}%,popular_area.ilike.%${targetArea}%,popular_area_en.ilike.%${targetArea}%,popular_area_cn.ilike.%${targetArea}%,popular_area_ru.ilike.%${targetArea}%`);
+          const rawTokens = targetArea.split(",").map((s: string) => s.trim()).filter(Boolean);
+          const expandedTokens = new Set<string>();
+          rawTokens.forEach((tok: string) => {
+            expandedTokens.add(tok);
+            // If tok is a parent, find any known child areas
+            Object.entries(AREA_PARENT_MAP).forEach(([childName, parentName]) => {
+              if (parentName.toLowerCase() === tok.toLowerCase()) {
+                expandedTokens.add(childName);
+              }
+            });
+          });
+          const areaTokens = Array.from(expandedTokens);
+          if (areaTokens.length === 1) {
+            const single = areaTokens[0];
+            query = query.or(`subdistrict.ilike.%${single}%,popular_area.ilike.%${single}%,popular_area_en.ilike.%${single}%,popular_area_cn.ilike.%${single}%,popular_area_ru.ilike.%${single}%`);
+          } else if (areaTokens.length > 1) {
+            const orConditions = areaTokens.flatMap((t: string) => [
+              `subdistrict.ilike.%${t}%`,
+              `popular_area.ilike.%${t}%`,
+              `popular_area_en.ilike.%${t}%`,
+              `popular_area_cn.ilike.%${t}%`,
+              `popular_area_ru.ilike.%${t}%`
+            ]);
+            query = query.or(orConditions.join(","));
+          }
         }
 
         if (options.propertyType && options.propertyType !== "ALL") {

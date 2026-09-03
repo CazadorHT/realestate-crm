@@ -3,6 +3,7 @@ import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getDistrictName, getSubdistrictName } from "@/lib/utils/provinces";
+import { AREA_PARENT_MAP } from "@/lib/utils/area-hierarchy";
 
 export type PopularAreaItem = {
   key: string;
@@ -476,10 +477,11 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
             (en && activeAreaNames.has(en));
 
           if (hasProperties && th) {
+            const isChild = Boolean(AREA_PARENT_MAP[th] || (rawName && AREA_PARENT_MAP[rawName]));
             itemsSet.set(th.toLowerCase(), {
               text: th,
               type: "area",
-              label: "ย่านยอดนิยม",
+              label: isChild ? "ทำเลย่อย" : "ย่านยอดนิยม",
               translations: { th, en, cn, ru },
             });
             const nearAreaKey = `ใกล้ ${th}`.toLowerCase();

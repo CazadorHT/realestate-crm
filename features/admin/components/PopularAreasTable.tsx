@@ -79,6 +79,7 @@ export type PopularArea = {
   name_en?: string | null;
   name_cn?: string | null;
   name_ru?: string | null;
+  parent_id?: string | null;
   created_at?: string | null;
   property_count?: number | null;
   featured?: boolean | null;
@@ -181,11 +182,22 @@ function SortableRow({
               <ImageIcon className="w-4 h-4 text-slate-300" />
             )}
           </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-slate-900 leading-none truncate max-w-[150px]">
-              {isEn ? (item.name_en || item.name) : item.name}
-            </span>
-            <span className="text-[10px] text-blue-600 font-bold mt-1 uppercase tracking-tight">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-slate-900 leading-none truncate max-w-[150px]">
+                {isEn ? (item.name_en || item.name) : item.name}
+              </span>
+              {item.parent_id ? (
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60 leading-tight">
+                  {isEn ? "Sub-Zone" : "ทำเลย่อย"}
+                </span>
+              ) : (
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60 leading-tight">
+                  {isEn ? "Zone" : "โซนหลัก"}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tight">
               {translateLocation(item.province, isEn ? "en" : "th") || item.province}
             </span>
           </div>

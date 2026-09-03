@@ -37,6 +37,15 @@ import { QuickFeatureFilters } from "./QuickFeatureFilters";
 import { StationSearchSelect } from "./StationSearchSelect";
 import { cn } from "@/lib/utils";
 import { formatStationLabel } from "@/lib/property-utils";
+import { buildAreaHierarchy } from "@/lib/utils/area-hierarchy";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 
 const EXTRA_PANEL_STRINGS: Record<string, Record<string, string>> = {
   hide_extras: {
@@ -311,6 +320,246 @@ export function DesktopFilters({
       clearTimeout(timer);
     };
   }, [availableAreas, showAreaSection, showBottomPanel]);
+
+  const selectedAreaList = useMemo(() => {
+    if (!area || area === "ALL") return [];
+    return area.split(",").map((s) => s.trim()).filter(Boolean);
+  }, [area]);
+
+  const handleToggleArea = (areaName: string) => {
+    if (selectedAreaList.includes(areaName)) {
+      const remaining = selectedAreaList.filter((s) => s !== areaName);
+      setArea(remaining.length > 0 ? remaining.join(",") : "ALL");
+    } else {
+      const next = [...selectedAreaList, areaName];
+      setArea(next.join(","));
+    }
+  };
+
+  const sortedAvailableAreas = useMemo(() => {
+    return buildAreaHierarchy(availableAreas, language, getLocaleValue);
+  }, [availableAreas, language, getLocaleValue]);
+
+  const { row1Areas, row2Areas } = useMemo(() => {
+    const r1: any[] = [];
+    const r2: any[] = [];
+    sortedAvailableAreas.forEach((item: any, idx: number) => {
+      if (idx % 2 === 0) {
+        r1.push(item);
+      } else {
+        r2.push(item);
+      }
+    });
+    return { row1Areas: r1, row2Areas: r2 };
+  }, [sortedAvailableAreas]);
+
+  const renderAreaChip = (a: any) => {
+    const hasChildren = a.children && a.children.length > 0;
+    const isParentSelected = selectedAreaList.includes(a.name);
+    const selectedChildrenCount = hasChildren
+      ? a.children.filter((c: any) => selectedAreaList.includes(c.name)).length
+      : 0;
+    const isAnySelected = isParentSelected || selectedChildrenCount > 0;
+
+    if (!hasChildren) {
+      return (
+        <button
+          key={a.name}
+          disabled={a.totalCount === 0}
+          onClick={() => handleToggleArea(a.name)}
+          className={`h-[30px] text-xs transition-colors flex items-center gap-1.5 px-3 py-1 shrink-0 rounded-lg whitespace-nowrap ${
+            isParentSelected
+              ? "font-bold text-blue-600 bg-blue-50/70"
+              : a.totalCount === 0
+                ? "text-slate-300 cursor-not-allowed opacity-60"
+                : "text-slate-500 hover:text-blue-600 bg-slate-50 hover:bg-blue-50/50"
+          }`}
+        >
+          {isParentSelected && (
+            <svg
+              className="w-3.5 h-3.5 animate-in zoom-in-50"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          )}
+          <span>{a.localizedName}</span>
+          <span
+            className={`text-xs ${a.totalCount === 0 ? "opacity-30" : "opacity-60 text-blue-600"}`}
+          >
+            ({a.totalCount})
+          </span>
+        </button>
+      );
+    }
+
+    // Compound chip with Dropdown for Parent Zone with children
+    return (
+      <div
+        key={a.name}
+        className={`h-[30px] inline-flex items-center rounded-lg border text-xs shrink-0 transition-all whitespace-nowrap ${
+          isAnySelected
+            ? "bg-blue-50/80 border-blue-200 text-blue-700 shadow-xs"
+            : "bg-slate-50 border-slate-100/80 text-slate-600 hover:border-slate-200"
+        }`}
+      >
+        {/* Main button (Select entire zone) */}
+        <button
+          type="button"
+          onClick={() => handleToggleArea(a.name)}
+          className="h-full flex items-center gap-1.5 px-2.5 py-1 hover:text-blue-600 transition-colors whitespace-nowrap"
+          title={
+            language === "en"
+              ? `Select all ${a.localizedName} zone`
+              : `เลือกโซน ${a.localizedName} ทั้งหมด`
+          }
+        >
+          {isParentSelected && (
+            <svg
+              className="w-3.5 h-3.5 text-blue-600 animate-in zoom-in-50"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          )}
+          <span className={isAnySelected ? "font-bold text-blue-700" : "text-slate-600"}>
+            {a.localizedName}
+          </span>
+          {selectedChildrenCount > 0 && !isParentSelected ? (
+            <span
+              className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded-full leading-none shadow-2xs"
+              title={`${selectedChildrenCount} ${language === "en" ? "sub-areas selected" : "ทำเลย่อยที่เลือก"}`}
+            >
+              {selectedChildrenCount}
+            </span>
+          ) : (
+            <span className="text-xs opacity-75 text-blue-600 font-semibold">
+              ({a.totalCount})
+            </span>
+          )}
+        </button>
+
+        {/* Sub-zone Dropdown Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className={`h-full px-1.5 border-l border-slate-200/60 hover:bg-black/5 rounded-r-lg transition-colors flex items-center justify-center ${
+                selectedChildrenCount > 0 ? "text-blue-600 bg-blue-100/50" : "text-slate-400 hover:text-blue-600"
+              }`}
+              title={language === "en" ? "Select sub-areas" : "เลือกทำเลย่อย"}
+            >
+              <ChevronDown className="w-3 h-3" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-60 p-1.5 z-50 shadow-lg">
+            <DropdownMenuLabel className="text-[11px] text-slate-400 font-medium uppercase tracking-wider px-2 py-1 flex items-center justify-between">
+              <span>{language === "en" ? `Zone: ${a.localizedName}` : `โซน: ${a.localizedName}`}</span>
+              {selectedChildrenCount > 0 && (
+                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                  {language === "en" ? `${selectedChildrenCount} selected` : `เลือกแล้ว ${selectedChildrenCount}`}
+                </span>
+              )}
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              onSelect={(e) => e.preventDefault()}
+              onClick={() => handleToggleArea(a.name)}
+              className={`flex items-center justify-between text-xs py-2 px-2 cursor-pointer font-semibold rounded-md transition-colors ${
+                isParentSelected ? "bg-blue-50 text-blue-700" : "hover:bg-slate-100"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <div
+                  className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
+                    isParentSelected ? "bg-blue-600 border-blue-600 text-white" : "border-slate-300 bg-white"
+                  }`}
+                >
+                  {isParentSelected && (
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+                {language === "en" ? `All ${a.localizedName}` : `ทั้งหมดใน ${a.localizedName}`}
+              </span>
+              <span className="text-xs font-semibold text-blue-600">({a.totalCount})</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {a.count > 0 && (
+              <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
+                onClick={() => handleToggleArea(a.name)}
+                className={`flex items-center justify-between text-xs py-1.5 px-2 cursor-pointer rounded-md transition-colors ${
+                  isParentSelected ? "bg-blue-50/50 text-blue-700 font-medium" : "hover:bg-slate-100 text-slate-700"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <div
+                    className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
+                      isParentSelected ? "bg-blue-600 border-blue-600 text-white" : "border-slate-300 bg-white"
+                    }`}
+                  >
+                    {isParentSelected && (
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span>
+                    {a.localizedName} {language === "en" ? "(Original)" : language === "cn" ? "(原区)" : language === "ru" ? "(Основной)" : "(เดิม)"}
+                  </span>
+                </span>
+                <span className="text-slate-400 text-[11px]">({a.count})</span>
+              </DropdownMenuItem>
+            )}
+            {a.children.map((c: any) => {
+              const isChildSelected = selectedAreaList.includes(c.name);
+              return (
+                <DropdownMenuItem
+                  key={c.name}
+                  onSelect={(e) => e.preventDefault()}
+                  onClick={() => handleToggleArea(c.name)}
+                  className={`flex items-center justify-between text-xs py-1.5 px-2 cursor-pointer rounded-md transition-colors ${
+                    isChildSelected ? "bg-blue-50 text-blue-700 font-medium" : "hover:bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <div
+                      className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
+                        isChildSelected ? "bg-blue-600 border-blue-600 text-white" : "border-slate-300 bg-white"
+                      }`}
+                    >
+                      {isChildSelected && (
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <span>{c.localizedName}</span>
+                  </span>
+                  <span className="text-slate-400 text-[11px]">({c.count})</span>
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
 
   const hasActiveFilters = useMemo(() => {
     return (
@@ -687,7 +936,7 @@ export function DesktopFilters({
 
       {/* Animated Bottom Panel (Active Filters & Popular Areas) */}
       <AnimatePresence initial={false}>
-        {showBottomPanel && (hasActiveFilters || availableAreas.length > 0) && (
+        {showBottomPanel && (hasActiveFilters || sortedAvailableAreas.length > 0) && (
           <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -731,24 +980,32 @@ export function DesktopFilters({
                         />
                       )}
                       {area !== "ALL" && (
-                        <Badge
-                          label={(() => {
-                            const found = availableAreas.find((a) => a.name === area);
-                            if (!found) return area.replace("_", " ");
-                            return getLocaleValue(
-                              {
-                                name: found.name,
-                                name_en: found.name_en,
-                                name_cn: found.name_cn,
-                                name_ru: found.name_ru,
-                              },
-                              "name",
-                              language,
-                            );
-                          })()}
-                          onClear={() => setArea("ALL")}
-                          variant="slate"
-                        />
+                        selectedAreaList.map((selectedAreaName) => {
+                          const found = availableAreas.find((a) => a.name === selectedAreaName);
+                          const label = found
+                            ? getLocaleValue(
+                                {
+                                  name: found.name,
+                                  name_en: found.name_en,
+                                  name_cn: found.name_cn,
+                                  name_ru: found.name_ru,
+                                },
+                                "name",
+                                language,
+                              )
+                            : selectedAreaName.replace("_", " ");
+                          return (
+                            <Badge
+                              key={selectedAreaName}
+                              label={label}
+                              onClear={() => {
+                                const remaining = selectedAreaList.filter((s) => s !== selectedAreaName);
+                                setArea(remaining.length > 0 ? remaining.join(",") : "ALL");
+                              }}
+                              variant="slate"
+                            />
+                          );
+                        })
                       )}
                       {transitStation && (
                         <Badge
@@ -925,10 +1182,7 @@ export function DesktopFilters({
               )}
 
               {/* Row 3: Popular Areas */}
-{/* Row 3: Popular Areas */}
-{/* Row 3: Popular Areas */}
-{/* Row 3: Popular Areas */}
-{availableAreas.length > 0 && (
+{sortedAvailableAreas.length > 0 && (
   <div className="flex items-start gap-3 border-t border-slate-100 py-3">
     {/* ปุ่มกดเปิด-ปิด สลับสถานะซ่อน/แสดงทำเลทั้งหมด */}
     <button
@@ -946,63 +1200,33 @@ export function DesktopFilters({
     {/* กล่องบรรจุรายการทำเลทั้งหมด: จะทำงานและแสดงผลก็ต่อเมื่อ showAreaSection เป็น true เท่านั้น */}
     {showAreaSection && (
       <div className="relative flex-1 overflow-hidden px-8 animate-in ease-in-out duration-500">
-        {/* กล่องโครงสร้าง 2 แถว เลื่อนซ้าย-ขวา */}
+        {/* กล่องโครงสร้าง 2 แถว เลื่อนซ้าย-ขวา แบบอิสระ (ความกว้างของใครของมัน ไม่ยืด) */}
         <div
           ref={scrollRef}
-          className="overflow-x-auto flex-wrap flex flex-col content-start gap-3 py-1 h-[76px] scroll-smooth [&::-webkit-scrollbar]:hidden"
+          className="overflow-x-auto flex flex-col gap-1.5 py-1 scroll-smooth [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: "none" }}
         >
-          <button
-            onClick={() => setArea("ALL")}
-            className={`text-xs transition-colors shrink-0 px-3 py-1.5 ${area === "ALL" ? "font-semibold text-blue-600" : "text-slate-400 hover:text-blue-600"}`}
-          >
-            {t("search.all_locations")}
-          </button>
-          {availableAreas.map((a: any) => (
+          {/* แถวที่ 1 */}
+          <div className="flex items-center gap-2 shrink-0">
             <button
-              key={a.name}
-              disabled={a.count === 0}
-              onClick={() => setArea(area === a.name ? "ALL" : a.name)}
-              className={`text-xs transition-colors flex items-center gap-1.5 px-3 py-1.5 shrink-0 ${
-                area === a.name
-                  ? "font-bold text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-lg"
-                  : a.count === 0
-                    ? "text-slate-300 cursor-not-allowed opacity-60"
-                    : "text-slate-500 hover:text-blue-600 bg-slate-50 hover:bg-blue-50/50 rounded-lg"
+              onClick={() => setArea("ALL")}
+              className={`h-[30px] text-xs transition-colors shrink-0 px-3 py-1 flex items-center rounded-lg whitespace-nowrap ${
+                area === "ALL" || selectedAreaList.length === 0
+                  ? "font-semibold text-blue-600 bg-blue-50/70"
+                  : "text-slate-400 hover:text-blue-600 bg-slate-50 hover:bg-blue-50/50"
               }`}
             >
-              {area === a.name && (
-                <svg
-                  className="w-3.5 h-3.5 animate-in zoom-in-50"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={3}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              )}
-              {getLocaleValue(
-                {
-                  name: a.name,
-                  name_en: a.name_en,
-                  name_cn: a.name_cn,
-                  name_ru: a.name_ru,
-                },
-                "name",
-                language,
-              )}
-              <span
-                className={`text-xs ${a.count === 0 ? "opacity-30" : "opacity-60 text-blue-600"}`}
-              >
-                ({a.count})
-              </span>
+              {t("search.all_locations")}
             </button>
-          ))}
+            {row1Areas.map(renderAreaChip)}
+          </div>
+
+          {/* แถวที่ 2 */}
+          {row2Areas.length > 0 && (
+            <div className="flex items-center gap-2 shrink-0">
+              {row2Areas.map(renderAreaChip)}
+            </div>
+          )}
         </div>
 
         {/* แถบ Gradient จางๆ ด้านซ้าย */}

@@ -10,6 +10,7 @@ import { usePropertyFilters, DefaultPropertyFilters } from "@/hooks/search/usePr
 import { usePropertyData } from "@/hooks/search/usePropertyData";
 import { usePropertyFiltering } from "@/hooks/search/usePropertyFiltering";
 import { cn } from "@/lib/utils";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 // Components
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
@@ -116,8 +117,12 @@ export function PropertySearchPage({
     if (filters.isHotDeal && serverFacets?.availableQuickFilters?.isHotDeal !== undefined) {
       return serverFacets.availableQuickFilters.isHotDeal;
     }
-    if (filters.area && serverFacets?.availableAreas?.[filters.area]?.count !== undefined) {
-      return serverFacets.availableAreas[filters.area].count;
+    if (filters.area && filters.area !== "ALL") {
+      const selected = filters.area.split(",").map((s: string) => s.trim()).filter(Boolean);
+      if (selected.length > 0 && serverFacets?.availableAreas) {
+        const sum = selected.reduce((acc: number, a: string) => acc + (serverFacets.availableAreas[a]?.count || 0), 0);
+        if (sum > 0) return sum;
+      }
     }
     if (filters.listingType === "RENT" && serverFacets?.availableListingTypes?.RENT !== undefined) {
       return serverFacets.availableListingTypes.RENT;
@@ -176,6 +181,32 @@ export function PropertySearchPage({
     setDisplayCount(ITEMS_PER_PAGE);
   }, [filterFingerprint]);
 
+  // Localized Area Filter Name for NoResultsView
+  const localizedAreaFilterName = useMemo(() => {
+    if (!filters.area || filters.area === "ALL") return undefined;
+    const tokens = filters.area.split(",").map((s: string) => s.trim()).filter(Boolean);
+    return tokens
+      .map((name: string) => {
+        const facet = serverFacets?.availableAreas?.[name];
+        if (facet) {
+          return (
+            getLocaleValue(
+              {
+                name,
+                name_en: facet.name_en,
+                name_cn: facet.name_cn,
+                name_ru: facet.name_ru,
+              },
+              "name",
+              language
+            ) || name
+          );
+        }
+        return name;
+      })
+      .join(", ");
+  }, [filters.area, serverFacets?.availableAreas, language]);
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <SearchFilterBar
@@ -212,30 +243,37 @@ export function PropertySearchPage({
           />
         )}
 
-        {isLoading ? (
+        {isLoading || isRefetching ? (
           <PropertyGridSkeleton count={8} />
         ) : filtered.length === 0 ? (
           <NoResultsView
             onClearFilters={filters.clearFilters}
             keyword={filters.keyword}
             onClearKeyword={() => filters.setKeyword("")}
-            areaFilterName={filters.area && filters.area !== "ALL" ? filters.area : undefined}
+            areaFilterName={localizedAreaFilterName}
             onSelectSuggestion={(text) => filters.setKeyword(text)}
-            serverAreaTotal={filters.area && filters.area !== "ALL" && serverFacets?.availableAreas?.[filters.area]?.count ? serverFacets.availableAreas[filters.area].count : 0}
+            serverAreaTotal={
+              filters.area && filters.area !== "ALL" && serverFacets?.availableAreas
+                ? filters.area.split(",").reduce((acc: number, a: string) => acc + (serverFacets.availableAreas[a.trim()]?.count || 0), 0)
+                : 0
+            }
             serverGrandTotal={totalAvailableCount}
             onFetchMoreServer={loadMoreProperties}
             isFetchingMore={isFetchingMore}
           />
         ) : (
           <>
-          <div className={cn("transition-opacity duration-200", isRefetching && "opacity-60 pointer-events-none")}>
+          <div>
             <PropertyGrid
               properties={visibleProperties}
               currentPage={1}
               hasMore={hasMore}
               areaRemainingCount={
-                filters.area && serverFacets?.availableAreas?.[filters.area]?.count !== undefined
-                  ? Math.max(0, serverFacets.availableAreas[filters.area].count - visibleProperties.length)
+                filters.area && filters.area !== "ALL" && serverFacets?.availableAreas
+                  ? Math.max(
+                      0,
+                      filters.area.split(",").reduce((acc: number, a: string) => acc + (serverFacets.availableAreas[a.trim()]?.count || 0), 0) - visibleProperties.length
+                    )
                   : Math.max(0, filtered.length - visibleProperties.length)
               }
               totalRemainingCount={Math.max(0, totalAvailableCount - visibleProperties.length)}
