@@ -44,6 +44,16 @@ export function SocialAutomationSettings({
   const [directDmReplyEnabled, setDirectDmReplyEnabled] = useState(
     !!initialSettings?.direct_dm_reply_enabled
   );
+  const [storyAdsWelcomeMessage, setStoryAdsWelcomeMessage] = useState(
+    initialSettings?.story_ads_welcome_message ||
+      "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕"
+  );
+  const [storyAdsButtonsEnabled, setStoryAdsButtonsEnabled] = useState(
+    initialSettings?.story_ads_buttons_enabled !== false
+  );
+  const [autoFeaturedCarouselEnabled, setAutoFeaturedCarouselEnabled] = useState(
+    initialSettings?.auto_featured_carousel_enabled !== false
+  );
   const [followGateEnabled, setFollowGateEnabled] = useState(
     !!initialSettings?.follow_gate_enabled
   );
@@ -129,6 +139,12 @@ export function SocialAutomationSettings({
         setKeywords(settings.social_automation_keywords || []);
         setInstagramStoryReplyEnabled(!!settings.instagram_story_reply_enabled);
         setDirectDmReplyEnabled(!!settings.direct_dm_reply_enabled);
+        setStoryAdsWelcomeMessage(
+          settings.story_ads_welcome_message ||
+            "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕"
+        );
+        setStoryAdsButtonsEnabled(settings.story_ads_buttons_enabled !== false);
+        setAutoFeaturedCarouselEnabled(settings.auto_featured_carousel_enabled !== false);
         setFollowGateEnabled(!!settings.follow_gate_enabled);
         setLeadCaptureGateEnabled(!!settings.lead_capture_gate_enabled);
         setTemplates({
@@ -244,6 +260,9 @@ export function SocialAutomationSettings({
       kw !== savedKw ||
       instagramStoryReplyEnabled !== !!initialData.instagram_story_reply_enabled ||
       directDmReplyEnabled !== !!initialData.direct_dm_reply_enabled ||
+      storyAdsWelcomeMessage.trim() !== (initialData.story_ads_welcome_message || "").trim() ||
+      storyAdsButtonsEnabled !== (initialData.story_ads_buttons_enabled !== false) ||
+      autoFeaturedCarouselEnabled !== (initialData.auto_featured_carousel_enabled !== false) ||
       followGateEnabled !== !!initialData.follow_gate_enabled ||
       leadCaptureGateEnabled !== !!initialData.lead_capture_gate_enabled ||
       checkTemplate(templates.facebook, initialData.facebook_post_template, initialData.facebook_post_template_en, initialData.facebook_post_template_cn, initialData.facebook_post_template_ru) ||
@@ -252,7 +271,7 @@ export function SocialAutomationSettings({
       checkTemplate(templates.line, initialData.line_post_template, initialData.line_post_template_en, initialData.line_post_template_cn, initialData.line_post_template_ru);
 
     setIsDirty(changed);
-  }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, followGateEnabled, leadCaptureGateEnabled, templates, initialData]);
+  }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, storyAdsWelcomeMessage, storyAdsButtonsEnabled, autoFeaturedCarouselEnabled, followGateEnabled, leadCaptureGateEnabled, templates, initialData]);
 
   const hasChanges = isDirty;
 
@@ -268,6 +287,9 @@ export function SocialAutomationSettings({
           updateSiteSetting("social_automation_keywords", keywords as any).then((r) => ({ key: "social_automation_keywords", ...r })),
           updateSiteSetting("instagram_story_reply_enabled", instagramStoryReplyEnabled).then((r) => ({ key: "instagram_story_reply_enabled", ...r })),
           updateSiteSetting("direct_dm_reply_enabled", directDmReplyEnabled).then((r) => ({ key: "direct_dm_reply_enabled", ...r })),
+          updateSiteSetting("story_ads_welcome_message", storyAdsWelcomeMessage).then((r) => ({ key: "story_ads_welcome_message", ...r })),
+          updateSiteSetting("story_ads_buttons_enabled", storyAdsButtonsEnabled).then((r) => ({ key: "story_ads_buttons_enabled", ...r })),
+          updateSiteSetting("auto_featured_carousel_enabled", autoFeaturedCarouselEnabled).then((r) => ({ key: "auto_featured_carousel_enabled", ...r })),
           updateSiteSetting("follow_gate_enabled", followGateEnabled).then((r) => ({ key: "follow_gate_enabled", ...r })),
           updateSiteSetting("lead_capture_gate_enabled", leadCaptureGateEnabled).then((r) => ({ key: "lead_capture_gate_enabled", ...r })),
           updateSiteSetting("facebook_post_template", templates.facebook.th).then((r) => ({ key: "facebook_post_template", ...r })),
@@ -514,6 +536,80 @@ export function SocialAutomationSettings({
                     onCheckedChange={(v) => { setLeadCaptureGateEnabled(v); setIsDirty(true); }}
                     className="data-[state=checked]:bg-blue-600"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Story Ads & Smart Auto-Reply Flow */}
+            <div className="pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  {isEn ? "Story Ads & General Welcome Flow" : "ระบบต้อนรับ Story Ads & ข้อความกว้าง (Story Ads Flow)"}
+                </h4>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full ">
+                  Smart Fallback & Lead Capture
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mb-4">
+                {isEn
+                  ? "When users comment or reply to Story Ads, the CRM sends a welcoming message with interactive action buttons and featured property cards without broken variable brackets."
+                  : "เมื่อลูกค้าตอบกลับหรือทักมาจาก Story Ads ระบบจะส่งข้อความต้อนรับสุภาพ พร้อมปุ่มกดด่วน และการ์ดห้องแนะนำอัตโนมัติ โดยไม่เกิดปัญหาตัวแปรหลุด []"}
+              </p>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-700">
+                        {isEn ? "3 Quick Action Buttons" : "ปุ่มกดด่วน 3 ตัวเลือก"}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {isEn ? "📅 Book Viewing, 🏠 Browse Rooms, 💬 Talk to Admin" : "📅 นัดดูห้องจริง, 🏠 ห้องว่าง/ราคา, 💬 คุยกับแอดมิน"}
+                      </div>
+                    </div>
+                    <Switch
+                      checked={storyAdsButtonsEnabled}
+                      onCheckedChange={(v) => { setStoryAdsButtonsEnabled(v); setIsDirty(true); }}
+                      className="data-[state=checked]:bg-blue-600"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-700">
+                        {isEn ? "Auto Featured Carousel" : "ส่งการ์ดห้องแนะนำอัตโนมัติ"}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {isEn ? "Send top available rooms when no specific property is linked" : "ส่ง Carousel รวมห้องเด่นจากระบบเมื่อไม่มีห้องเฉพาะ"}
+                      </div>
+                    </div>
+                    <Switch
+                      checked={autoFeaturedCarouselEnabled}
+                      onCheckedChange={(v) => { setAutoFeaturedCarouselEnabled(v); setIsDirty(true); }}
+                      className="data-[state=checked]:bg-blue-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                    {isEn ? "Story Ads Welcome Message Template" : "ข้อความต้อนรับสำหรับ Story Ads / แอดกว้าง"}
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={storyAdsWelcomeMessage}
+                    onChange={(e) => {
+                      setStoryAdsWelcomeMessage(e.target.value);
+                      setIsDirty(true);
+                    }}
+                    placeholder="เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨..."
+                    className="w-full text-xs text-slate-800 bg-white border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <span className="text-[11px] text-slate-400 mt-1 block">
+                    {isEn
+                      ? "💡 Tip: Keep it friendly and general. The interactive buttons below the message will guide users effortlessly."
+                      : "💡 เคล็ดลับ: ใช้ข้อความต้อนรับที่เป็นกันเอง ไม่ต้องใส่ตัวแปรเฉพาะเจาะจง แล้วให้ลูกค้ากดปุ่มเลือกตามสะดวก"}
+                  </span>
                 </div>
               </div>
             </div>

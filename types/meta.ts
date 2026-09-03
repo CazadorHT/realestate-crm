@@ -39,10 +39,27 @@ export interface MetaMessagingEvent {
     text?: string;
     is_echo?: boolean;
     attachments?: any[];
+    quick_reply?: {
+      payload: string;
+    };
+    reply_to?: {
+      mid?: string;
+      story?: {
+        url?: string;
+        id?: string;
+      };
+    };
   };
   postback?: {
     title: string;
     payload: string;
+    referral?: any;
+  };
+  referral?: {
+    ref?: string;
+    source?: string;
+    type?: string;
+    ad_id?: string;
   };
 }
 

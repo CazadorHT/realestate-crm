@@ -16,11 +16,33 @@ import {
 import { saveOmniMessage } from "@/lib/line"; // reuse same util since it's generic enough
 import { redis } from "@/lib/redis";
 import { getSiteSettings } from "@/features/site-settings/actions";
-import { SocialKeyword } from "@/features/site-settings/schema";
+import { SocialKeyword, SocialButton } from "@/features/site-settings/schema";
 import { z } from "zod";
 import { MetaPlatform, MetaWebhookBody } from "@/types/meta";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
+import { sendAdminNotification } from "@/lib/telegram";
+
+/**
+ * Default Interactive Quick Action Buttons for Story Ads / Welcome Flows
+ */
+const DEFAULT_STORY_AD_BUTTONS: SocialButton[] = [
+  {
+    title: "📅 นัดดูห้องจริง",
+    type: "postback",
+    payload: "ACTION_BOOK_VIEWING",
+  },
+  {
+    title: "🏠 ห้องว่าง/ราคา",
+    type: "postback",
+    payload: "ACTION_BROWSE_ROOMS",
+  },
+  {
+    title: "💬 คุยกับแอดมิน",
+    type: "postback",
+    payload: "ACTION_TALK_ADMIN",
+  },
+];
 
 /**
  * Zod Schemas for Meta Webhook Validation
@@ -94,7 +116,7 @@ export async function POST(req: NextRequest) {
         // Facebook Messenger events
         if (entry.messaging) {
           for (const messagingEvent of entry.messaging) {
-            if (messagingEvent.message && !messagingEvent.message.is_echo) {
+            if ((messagingEvent.message && !messagingEvent.message.is_echo) || messagingEvent.postback) {
               try {
                 await handleMetaMessage(messagingEvent, "FACEBOOK");
               } catch (err) {
@@ -118,10 +140,10 @@ export async function POST(req: NextRequest) {
     // Instagram subscription
     else if (body.object === "instagram") {
       for (const entry of body.entry) {
-        // Handle direct messages
+        // Handle direct messages & postbacks
         if (entry.messaging) {
           for (const messagingEvent of entry.messaging) {
-            if (messagingEvent.message && !messagingEvent.message.is_echo) {
+            if ((messagingEvent.message && !messagingEvent.message.is_echo) || messagingEvent.postback) {
               try {
                 await handleMetaMessage(messagingEvent, "INSTAGRAM");
               } catch (err) {
@@ -409,50 +431,68 @@ async function handleFacebookChange(change: any, pageId?: string) {
 }
 
 async function handleMetaMessage(event: any, source: MetaPlatform) {
-  const senderId = event.sender.id; // PSID
-  const text = event.message.text || "";
+  const senderId = event.sender?.id; // PSID or IG SID
+  const text = event.message?.text || event.postback?.title || "";
+  const postbackPayload = event.postback?.payload || event.message?.quick_reply?.payload;
+  const isStoryReply = !!event.message?.reply_to?.story || (event.referral?.source === "STORY" || event.referral?.type === "STORY");
+  const referralData = event.referral || event.postback?.referral;
 
-  if (!senderId || !text) return;
+  if (!senderId || (!text && !postbackPayload)) return;
 
   const supabase = createAdminClient() as any;
 
-  // 1. Find or Create Lead
+  // 1. Find or Create Lead with Mutex Lock & Multi-layer Deduplication
   const idField = source === "FACEBOOK" ? "facebook_psid" : "instagram_sid";
   const hashKey = `${idField}_hash`;
   const senderIdHash = generateBlindIndex(senderId);
 
+  // Redis Mutex lock to prevent duplicate leads from concurrent Webhooks
+  if (redis) {
+    const lockKey = `lead_dedup_lock:${senderIdHash}`;
+    const acquired = await redis.set(lockKey, "1", { nx: true, ex: 15 });
+    if (!acquired) {
+      console.log(`[Meta Webhook] Concurrent webhook in flight for ${senderId}. Waiting 300ms...`);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  }
+
   const { data: identity } = await supabase
     .from("identities_v3")
-    .select("id, crm_leads_v3(id)")
+    .select("id, display_name, crm_leads_v3(id)")
     .eq(`social_links->>${hashKey}`, senderIdHash)
     .maybeSingle();
 
-  let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;  if (!lead) {
-    const profile = await getMetaUserProfile(senderId, source);
-    const displayName = profile?.name || `${source} Contact`;
+  let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
 
-    // Check for duplicate lead by name
+  if (!lead) {
+    const profile = await getMetaUserProfile(senderId, source);
+    const rawDisplayName = (profile?.name || profile?.username || `${source} Contact`).trim();
+    const cleanAccountName = rawDisplayName.replace(/^@/, "").trim();
+
+    // Check for duplicate lead by clean display name / username
     let existingLead = null;
-    if (displayName && !PLACEHOLDER_NAMES.includes(displayName)) {
-      const fullNameHash = generateBlindIndex(displayName.toLowerCase().trim());
+    if (cleanAccountName && !PLACEHOLDER_NAMES.includes(cleanAccountName)) {
+      const fullNameHash = generateBlindIndex(cleanAccountName.toLowerCase());
       let { data: existingIdentity } = await supabase
         .from("identities_v3")
-        .select("id, social_links, crm_leads_v3(id)")
+        .select("id, display_name, social_links, crm_leads_v3(id)")
         .eq("social_links->>full_name_hash", fullNameHash)
         .eq("role", "LEAD")
         .maybeSingle();
 
-      // Fallback: If hash search missed, scan identities directly by decrypting display_name
+      // Fallback: scan identities directly by decrypting display_name
       if (!existingIdentity) {
         const { data: allLeadIdentities } = await supabase
           .from("identities_v3")
           .select("id, display_name, social_links, crm_leads_v3(id)")
-          .eq("role", "LEAD");
+          .eq("role", "LEAD")
+          .order("created_at", { ascending: false })
+          .limit(100);
 
         if (allLeadIdentities) {
           const matched = allLeadIdentities.find((i: any) => {
-            const decName = decrypt(i.display_name) || i.display_name;
-            return decName?.toLowerCase().trim() === displayName.toLowerCase().trim();
+            const decName = (decrypt(i.display_name) || i.display_name || "").replace(/^@/, "").trim();
+            return decName.toLowerCase() === cleanAccountName.toLowerCase();
           });
           if (matched) {
             existingIdentity = matched;
@@ -482,7 +522,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
     if (existingLead) {
       lead = existingLead;
     } else {
-      const encryptedDisplayName = encrypt(displayName);
+      const encryptedDisplayName = encrypt(cleanAccountName);
       const encryptedSenderId = encrypt(senderId);
 
       const { data: tenant } = await supabase
@@ -494,7 +534,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
 
       // Create Identity
       const socialLinks: any = {
-        full_name_hash: generateBlindIndex(displayName.toLowerCase().trim()),
+        full_name_hash: generateBlindIndex(cleanAccountName.toLowerCase()),
       };
       socialLinks[hashKey] = senderIdHash;
       socialLinks[idField] = encryptedSenderId;
@@ -524,6 +564,19 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
         updated_at: new Date().toISOString()
       });
 
+      // Prepare Initial UTM Data with Ad Referral details
+      const initialUtmData: Record<string, any> = {
+        preferences: {
+          note: `Auto-captured from ${source}. Profile: ${JSON.stringify(profile)}`
+        },
+        utm_source: source.toLowerCase(),
+        ad_id: referralData?.ad_id || null,
+        campaign_id: referralData?.campaign_id || null,
+        referral_source: referralData?.source || (isStoryReply ? "STORY" : null),
+        referral_type: referralData?.type || null,
+        ref: referralData?.ref || null,
+      };
+
       const { data: newLead, error: createError } = await supabase
         .from("crm_leads_v3")
         .insert({
@@ -532,11 +585,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
           status: "ACTIVE",
           stage: "NEW",
           source: source,
-          utm_data: {
-            preferences: {
-              note: `Auto-captured from ${source}. Profile: ${JSON.stringify(profile)}`
-            }
-          }
+          utm_data: initialUtmData,
         })
         .select("id")
         .single();
@@ -552,18 +601,72 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
     }
   }
 
-  // 2. Log Message to Omni-channel
+  // 2. Process Message & Lead Intelligence
   if (lead && lead.id) {
+    // 2.0 Check Bot Pause (Human Handover Mode - 24 Hours)
+    const { data: leadRow } = await supabase
+      .from("crm_leads_v3")
+      .select("id, utm_data")
+      .eq("id", lead.id)
+      .single();
+
+    const currentUtmData = (leadRow?.utm_data as Record<string, any>) || {};
+    const currentPrefs = (currentUtmData.preferences as Record<string, any>) || {};
+
+    if (currentPrefs.bot_paused === true) {
+      const isUnpauseCmd = text === "/bot on" || text === "/startbot" || text === "เปิดบอท" || text === "resume bot";
+      const pausedAtTime = currentPrefs.bot_paused_at ? new Date(currentPrefs.bot_paused_at).getTime() : 0;
+      const isExpired = Date.now() - pausedAtTime > 24 * 60 * 60 * 1000; // 24 hours expiry
+
+      if (isUnpauseCmd || isExpired) {
+        const updatedPrefs: Record<string, any> = { ...currentPrefs, bot_paused: false };
+        delete updatedPrefs.bot_paused_at;
+        await supabase.from("crm_leads_v3").update({
+          utm_data: { ...currentUtmData, preferences: updatedPrefs }
+        }).eq("id", lead.id);
+
+        if (isUnpauseCmd) {
+          await sendMetaMessage(senderId, "เปิดการทำงานของระบบตอบกลับอัตโนมัติเรียบร้อยค่ะ 🤖✨", source);
+          return;
+        }
+      } else {
+        console.log(`[Meta Webhook] Bot is PAUSED for lead ${lead.id} (Human Handover mode).`);
+        return;
+      }
+    }
+
+    // 2.1 Update Ad Referral data if new details received
+    if (referralData && (referralData.ad_id || referralData.campaign_id || referralData.ref)) {
+      const updatedUtmData = {
+        ...currentUtmData,
+        ad_id: referralData.ad_id || currentUtmData.ad_id,
+        campaign_id: referralData.campaign_id || currentUtmData.campaign_id,
+        referral_source: referralData.source || currentUtmData.referral_source,
+        referral_type: referralData.type || currentUtmData.referral_type,
+        ref: referralData.ref || currentUtmData.ref,
+      };
+      await supabase.from("crm_leads_v3").update({
+        utm_data: updatedUtmData,
+      }).eq("id", lead.id);
+    }
+
+    // 2.2 Log Message to Omni-channel
     await saveOmniMessage({
       lead_id: lead.id,
       source: source as any,
-      external_message_id: event.message.mid,
-      content: text,
+      external_message_id: event.message?.mid || `postback_${Date.now()}`,
+      content: text || (postbackPayload ? `[Clicked Button: ${postbackPayload}]` : ""),
       payload: event,
       direction: "INCOMING",
     });
 
-    // Lead Capture Gate Check
+    // 2.3 Handle Postback / Quick Reply Button Clicks
+    if (postbackPayload) {
+      await handleMetaPostback(postbackPayload, senderId, source, lead.id);
+      return;
+    }
+
+    // 2.4 Lead Capture Gate Check
     if (redis && senderId) {
       const pendingKey = `lead_capture_pending:${senderId}`;
       const pendingDataStr = await redis.get(pendingKey) as string | null;
@@ -607,16 +710,31 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
       }
     }
 
-    // Direct DM Automation Trigger
+    // 2.5 Direct DM / Story Reply Automation Trigger
     const settings = await getSiteSettings();
-    if (settings.direct_dm_reply_enabled) {
-      await handleKeywordAutomation(
+    let handled = false;
+
+    if (settings.direct_dm_reply_enabled || isStoryReply) {
+      handled = await handleKeywordAutomation(
         text,
-        event.message.mid,
+        event.message?.mid || `dm_${Date.now()}`,
         source,
         undefined,
         senderId,
       );
+    }
+
+    // 2.6 Fallback: Story Ads Welcome Flow or Smart AI Property Assistant
+    if (!handled && (isStoryReply || settings.direct_dm_reply_enabled)) {
+      if (isStoryReply || text.length < 6 || text.includes("สนใจ") || text.includes("ว่างไหม") || text.includes("ขอดูห้อง")) {
+        await sendStoryAdWelcomeFlow(senderId, source, lead.id);
+      } else {
+        // Handle conversational inquiries with AI Assistant
+        const aiHandled = await handleAiPropertyAssistant(text, senderId, source, undefined, lead.id);
+        if (!aiHandled) {
+          await sendStoryAdWelcomeFlow(senderId, source, lead.id);
+        }
+      }
     }
   }
 }
@@ -1160,8 +1278,8 @@ async function handleKeywordAutomation(
   platform: MetaPlatform,
   postId?: string,
   senderId?: string,
-) {
-  if (!text || !commentId) return;
+): Promise<boolean> {
+  if (!text || !commentId) return false;
 
   // Deduplicate request using Upstash Redis to prevent double sends from Meta Webhook retries
   if (redis) {
@@ -1169,7 +1287,7 @@ async function handleKeywordAutomation(
     const isLocked = await redis.set(redisKey, "1", { nx: true, ex: 10 }); // Lock for 10 seconds
     if (!isLocked) {
       console.warn(`[Meta Webhook] Duplicate request detected for comment ${commentId}. Ignoring.`);
-      return;
+      return false;
     }
   }
 
@@ -1177,7 +1295,7 @@ async function handleKeywordAutomation(
   const settings = await getSiteSettings();
   const automationKeywords = settings.social_automation_keywords || [];
 
-  if (automationKeywords.length === 0) return;
+  if (automationKeywords.length === 0) return false;
 
   const lowerText = text.toLowerCase();
 
@@ -1190,7 +1308,7 @@ async function handleKeywordAutomation(
       (!k.linked_post_id || k.linked_post_id === postId),
   );
 
-  if (!match) return;
+  if (!match) return false;
 
   console.log(
     `🤖 Dynamic keyword matched in ${platform} comment: "${text}" matches "${match.keyword}"`,
@@ -1213,7 +1331,7 @@ async function handleKeywordAutomation(
         } else {
           await sendPrivateReply(commentId, followPrompt, platform);
         }
-        return;
+        return true;
       }
     }
   }
@@ -1246,7 +1364,7 @@ async function handleKeywordAutomation(
         } else {
           await sendPrivateReply(commentId, promptText, platform);
         }
-        return;
+        return true;
       }
     }
   }
@@ -1258,7 +1376,6 @@ async function handleKeywordAutomation(
   }
 
   // 4. Prepare Message Content
-  // ล้างอักขระซ่อนเร้น BOM/Zero-width space ทันทีที่ดึงมาจาก DB เพื่อป้องกันปัญหาถอดรหัสล้มเหลวกลายเป็นเครื่องหมายคำถาม
   let dmContent = (match.dm_content || "").replace(/[\u200B-\u200D\uFEFF]/g, "");
   let publicReply = (match.public_reply || "").replace(/[\u200B-\u200D\uFEFF]/g, "");
   
@@ -1271,6 +1388,29 @@ async function handleKeywordAutomation(
   }
 
   if (propertyData) {
+    // 3.1 Check if property is sold / rented (Sold/Rented Fallback)
+    const isSoldOrRented =
+      propertyData.status === "SOLD" ||
+      propertyData.status === "RENTED" ||
+      propertyData.is_available === false;
+
+    if (isSoldOrRented) {
+      const soldNotice = lang === "th"
+        ? "ห้องนี้มีผู้ทำสัญญาเช่า/ซื้อเรียบร้อยแล้วค่ะ ✨ แต่เรายังมีห้องว่างตำแหน่งสวยในโครงการเดียวกันหรือทำเลใกล้เคียง แอดมินขอแนะนำห้องด้านล่างนี้นะคะ 👇"
+        : "This property has been rented/sold! ✨ However, we have other available units in the same project/location below for you 👇";
+
+      if (isDirectDM && senderId) {
+        await sendMetaMessage(senderId, soldNotice, platform, DEFAULT_STORY_AD_BUTTONS);
+        await sendAlternativePropertiesCarousel(senderId, platform, propertyData.project_id, propertyData.id);
+      } else {
+        await sendPrivateReply(commentId, soldNotice, platform, undefined, undefined, DEFAULT_STORY_AD_BUTTONS);
+        if (senderId) {
+          await sendAlternativePropertiesCarousel(senderId, platform, propertyData.project_id, propertyData.id);
+        }
+      }
+      return true;
+    }
+
     // Price logic
     const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : lang === "ru" ? "Продажа" : "售价";
     const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "租金";
@@ -1435,10 +1575,12 @@ async function handleKeywordAutomation(
       publicReply = replaceTemplateTags(publicReply, propertyData, dynamicValues, lang);
     }
   } else {
-    // Fallback: Remove tags if no property found
+    // Fallback: Remove tags and sanitize text when no specific property is found
     dmContent = dmContent.replace(/{{[a-z_]+}}/g, "");
+    dmContent = sanitizeTemplateOutput(dmContent);
     if (publicReply) {
       publicReply = publicReply.replace(/{{[a-z_]+}}/g, "");
+      publicReply = sanitizeTemplateOutput(publicReply);
     }
   }
 
@@ -1450,19 +1592,15 @@ async function handleKeywordAutomation(
     });
   };
 
-  // ฟังก์ชันช่วยล้างอักขระพิเศษ/BOM/Zero-Width Space ที่อาจหลงเหลือจากการเข้ารหัสรอบสุดท้าย
+  // Final sanitation for hidden characters / broken question marks
   const finalizeSanitation = (str: string): string => {
     if (!str) return "";
     let cleaned = str.replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, "");
-    // ลบเครื่องหมายคำถาม ? ที่นำหน้าอีโมจิ
     cleaned = cleaned.replace(/\?\s*([💰🔑💵💸🔥🔴🟢🔵🟡🏷️🔄📢🏠🏡✨⚡⭐🌟📌📍👇])/g, "$1");
-    // ลบเครื่องหมายคำถาม ? ทุกตัวที่นำหน้าคีย์เวิร์ดราคา (เช่น ?ขาย:, ?เช่า:, ?Rent:)
     cleaned = cleaned.replace(/\?\s*([a-zA-Z0-9\u0e00-\u0e7f]+)\s*:/g, "$1:");
-    // ลบเครื่องหมายคำถาม ? ที่นำหน้าวงเล็บเหลี่ยม (เช่น ?[ขาย/เช่า])
     cleaned = cleaned.replace(/\?\s*(\[.*?\])/g, "$1");
-    // ลบเครื่องหมายคำถาม ? ที่นำหน้าคำสำคัญราคาอื่นๆ ทั่วไป
     cleaned = cleaned.replace(/\?\s*(เช่า|ขาย|Rent|Sale|เช่า\/ขาย|Rent\/Sale|Price|ราคา)/gi, "$1");
-    return cleaned.trim();
+    return sanitizeTemplateOutput(cleaned);
   };
 
   dmContent = finalizeSanitation(parseSpintax(dmContent));
@@ -1470,11 +1608,21 @@ async function handleKeywordAutomation(
     publicReply = finalizeSanitation(parseSpintax(publicReply));
   }
 
+  // Fallback to default greeting if message became empty after cleaning
+  if (!dmContent.trim()) {
+    dmContent = settings.story_ads_welcome_message || "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕";
+  }
+
+  // Resolve Buttons to attach
+  const buttonsToAttach: SocialButton[] = (match.buttons && match.buttons.length > 0)
+    ? match.buttons
+    : (settings.story_ads_buttons_enabled !== false ? DEFAULT_STORY_AD_BUTTONS : []);
+
   // 5. Send Private Reply (DM)
   let dmRes;
   if (isDirectDM && senderId) {
-    if (match.buttons && match.buttons.length > 0) {
-      dmRes = await sendMetaMessage(senderId, dmContent, platform, match.buttons);
+    if (buttonsToAttach.length > 0) {
+      dmRes = await sendMetaMessage(senderId, dmContent, platform, buttonsToAttach);
     } else if (propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
       const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
       const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
@@ -1484,14 +1632,14 @@ async function handleKeywordAutomation(
       dmRes = await sendMetaMessage(senderId, dmContent, platform);
     }
   } else {
-    if (match.buttons && match.buttons.length > 0) {
-      dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, match.buttons);
+    if (buttonsToAttach.length > 0) {
+      dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, buttonsToAttach);
     } else if (propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
       const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
       const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
       dmRes = await sendPrivateReply(commentId, dmContent, platform, buttonUrl, buttonTitle);
       
-      // Fallback: If button template fails (e.g. Meta restrictions), send as plain text
+      // Fallback: If button template fails, send as plain text
       if (!dmRes.success) {
         console.warn(`[Meta Webhook] Button template failed, falling back to plain text DM:`, dmRes.error);
         const fallbackContent = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
@@ -1501,8 +1649,9 @@ async function handleKeywordAutomation(
       dmRes = await sendPrivateReply(commentId, dmContent, platform);
     }
   }
+
   if (dmRes.success && senderId) {
-    // 6. Media Support (Albums)
+    // 6. Media Support (Albums or Featured Properties Carousel)
     if (propertyData && propertyData.images) {
       const images = Array.isArray(propertyData.images) ? propertyData.images : [];
       if (images.length > 0) {
@@ -1517,12 +1666,15 @@ async function handleKeywordAutomation(
         }));
         await sendMetaCarousel(senderId, carouselElements, platform);
       }
+    } else if (!propertyData && settings.auto_featured_carousel_enabled !== false) {
+      // If no specific property was linked, send Featured Properties Carousel
+      await sendFeaturedPropertiesCarousel(senderId, platform);
     }
   } else {
     console.error(`Failed to send private reply for ${platform}:`, dmRes.error);
   }
 
-  // 6. Public Reply (if configured)
+  // 7. Public Reply (if configured)
   if (publicReply) {
     const commentRes = await replyToMetaComment(commentId, publicReply, platform);
     if (!commentRes.success) {
@@ -1530,6 +1682,423 @@ async function handleKeywordAutomation(
     } else {
       console.log(`[Meta Webhook] Successfully replied to comment ${commentId}`);
     }
+  }
+
+  return true;
+}
+
+/**
+ * Clean up lonely emojis, empty brackets, and multiple blank lines
+ */
+function sanitizeTemplateOutput(text: string): string {
+  if (!text) return "";
+  return text
+    // 1. Remove empty brackets
+    .replace(/\[\s*\]/g, "")
+    .replace(/\(\s*\)/g, "")
+    // 2. Remove lines that only contain emojis or punctuation without text
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return true; // keep paragraph spacing
+      return /[a-zA-Z0-9\u0E00-\u0E7F]/.test(trimmed);
+    })
+    .join("\n")
+    // 3. Collapse multiple blank lines
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/**
+ * Handle Story Ads & Direct Message Welcome Flow
+ */
+async function sendStoryAdWelcomeFlow(
+  senderId: string,
+  platform: MetaPlatform,
+  leadId?: string,
+) {
+  const settings = await getSiteSettings();
+  const welcomeText = settings.story_ads_welcome_message || 
+    "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕";
+
+  const buttons = settings.story_ads_buttons_enabled !== false ? DEFAULT_STORY_AD_BUTTONS : [];
+
+  const res = await sendMetaMessage(senderId, welcomeText, platform, buttons.length > 0 ? buttons : undefined);
+
+  if (res.success && settings.auto_featured_carousel_enabled !== false) {
+    await sendFeaturedPropertiesCarousel(senderId, platform);
+  }
+}
+
+/**
+ * Send Featured Properties Carousel Card to FB / Instagram DM
+ */
+async function sendFeaturedPropertiesCarousel(
+  senderId: string,
+  platform: MetaPlatform,
+) {
+  try {
+    const supabase = createAdminClient() as any;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+
+    const { data: properties, error } = await supabase
+      .from("properties")
+      .select(`
+        id,
+        slug,
+        title,
+        price,
+        rental_price,
+        listing_type,
+        images,
+        bedrooms,
+        bathrooms,
+        size_sqm,
+        address_info,
+        project:projects(name)
+      `)
+      .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
+      .order("is_featured", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (error || !properties || properties.length === 0) {
+      console.warn("[Meta Webhook] No active properties found for featured carousel:", error);
+      return;
+    }
+
+    const carouselElements = properties.map((prop: any) => {
+      const images = Array.isArray(prop.images) ? prop.images : [];
+      const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
+
+      let priceSubtitle = "";
+      if (prop.listing_type === "SALE_AND_RENT") {
+        const parts = [];
+        if (prop.price) parts.push(`ขาย ฿${prop.price.toLocaleString()}`);
+        if (prop.rental_price) parts.push(`เช่า ฿${prop.rental_price.toLocaleString()}/ด.`);
+        priceSubtitle = parts.join(" | ");
+      } else if (prop.listing_type === "RENT") {
+        priceSubtitle = prop.rental_price ? `เช่า ฿${prop.rental_price.toLocaleString()}/ด.` : "เช่า (สอบถามราคา)";
+      } else {
+        priceSubtitle = prop.price ? `ขาย ฿${prop.price.toLocaleString()}` : "ขาย (สอบถามราคา)";
+      }
+
+      const projectName = prop.project?.name || prop.address_info?.th || "";
+      const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ตร.ม.` : "";
+      const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} นอน` : "";
+      const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
+      const propUrl = `${siteUrl}/properties/${prop.slug || prop.id}`;
+
+      return {
+        title: (prop.title || "ห้องว่างแนะนำ").substring(0, 80),
+        subtitle: subtitle.substring(0, 80),
+        image_url: imageUrl,
+        default_action: {
+          type: "web_url",
+          url: propUrl,
+        },
+        buttons: [
+          {
+            type: "web_url",
+            url: propUrl,
+            title: "ดูรายละเอียดห้อง",
+          },
+          {
+            type: "postback",
+            title: "นัดดูห้องนี้",
+            payload: `ACTION_BOOK_PROPERTY_${prop.id}`,
+          }
+        ],
+      };
+    });
+
+    await sendMetaCarousel(senderId, carouselElements, platform);
+  } catch (err) {
+    console.error("[Meta Webhook] Error sending featured properties carousel:", err);
+  }
+}
+
+/**
+ * Handle Postback Actions (Button clicks in Messenger / Instagram DM)
+ */
+async function handleMetaPostback(
+  payload: string,
+  senderId: string,
+  source: MetaPlatform,
+  leadId?: string,
+) {
+  const settings = await getSiteSettings();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+  const contactPhone = settings.contact_phone || "02-xxx-xxxx";
+  const lineId = settings.line_id || "vccasset";
+
+  if (payload === "ACTION_BOOK_VIEWING" || payload.startsWith("ACTION_BOOK_PROPERTY_")) {
+    const propertyId = payload.startsWith("ACTION_BOOK_PROPERTY_") ? payload.replace("ACTION_BOOK_PROPERTY_", "") : null;
+    const bookingUrl = propertyId ? `${siteUrl}/properties/${propertyId}?book=true` : `${siteUrl}/contact?purpose=viewing`;
+
+    const replyText = "ยินดีเลยค่ะ! 📅 สามารถเลือกวันและเวลาที่สะดวกนัดชมห้องจริงได้ผ่านลิงก์ด้านล่างนี้ หรือแจ้งวัน/เวลาที่สะดวกไว้ในแชทนี้ได้เลยนะคะ เดี๋ยวแอดมินประสานงานเตรียมเปิดห้องให้ทันทีค่ะ ✨";
+    
+    await sendMetaMessage(senderId, replyText, source, [
+      {
+        title: "📅 นัดวัน-เวลาดูห้อง",
+        type: "web_url",
+        url: bookingUrl,
+      },
+      {
+        title: "💬 คุยกับแอดมิน",
+        type: "postback",
+        payload: "ACTION_TALK_ADMIN",
+      }
+    ]);
+
+    // Send Telegram Notification to agents
+    try {
+      await sendAdminNotification(
+        `📅 <b>[Lead Alert] ลูกค้าขอนัดดูห้องจริง (${source})</b>\n\n` +
+        `👤 Lead ID: <code>${leadId || "New"}</code>\n` +
+        `📱 แพลตฟอร์ม: ${source}\n` +
+        (propertyId ? `🏠 ทรัพย์ที่สนใจ: <code>${propertyId}</code>\n` : "") +
+        `👉 กรุณาติดตามและติดต่อกลับโดยเร็วที่สุด`
+      );
+    } catch (e) {
+      console.error("[Meta Webhook] Error sending telegram notification:", e);
+    }
+  } else if (payload === "ACTION_BROWSE_ROOMS") {
+    const browseText = "แอดมินรวบรวมรายการห้องว่างและดีลสุดพิเศษมาให้ชมด้านล่างนี้ค่ะ 👇 สนใจห้องไหนคลิกดูรูปและรายละเอียดเพิ่มเติมได้เลยนะคะ ✨";
+    await sendMetaMessage(senderId, browseText, source);
+    await sendFeaturedPropertiesCarousel(senderId, source);
+  } else if (payload === "ACTION_TALK_ADMIN") {
+    const contactText = `รับทราบเลยค่ะ! 😊 แอดมินและเจ้าหน้าที่กำลังเตรียมข้อมูลเพื่อดูแลคุณโดยตรงนะคะ\n\n💬 ช่องทางติดต่อด่วน:\n📱 โทร: ${contactPhone}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nหรือพิมพ์ข้อความทิ้งไว้ในแชทนี้ได้เลยนะคะ ✨`;
+    
+    // Pause bot for 24h so human staff can talk without bot interruptions
+    if (leadId) {
+      const supabase = createAdminClient() as any;
+      const { data: leadRow } = await supabase
+        .from("crm_leads_v3")
+        .select("utm_data")
+        .eq("id", leadId)
+        .single();
+      const currentUtmData = (leadRow?.utm_data as Record<string, any>) || {};
+      const currentPrefs = (currentUtmData.preferences as Record<string, any>) || {};
+      await supabase
+        .from("crm_leads_v3")
+        .update({
+          utm_data: {
+            ...currentUtmData,
+            preferences: {
+              ...currentPrefs,
+              bot_paused: true,
+              bot_paused_at: new Date().toISOString(),
+            },
+          },
+        })
+        .eq("id", leadId);
+    }
+
+    const buttons: SocialButton[] = [];
+    if (settings.line_url || lineId) {
+      buttons.push({
+        title: "🟢 แอด LINE สอบถาม",
+        type: "web_url",
+        url: settings.line_url || `https://line.me/R/ti/p/@${lineId.replace(/^@/, "")}`,
+      });
+    }
+
+    await sendMetaMessage(senderId, contactText, source, buttons.length > 0 ? buttons : undefined);
+
+    // Send Urgent Telegram Notification to agents
+    try {
+      await sendAdminNotification(
+        `🚨 <b>[CRM Urgent] ลูกค้าต้องการคุยกับแอดมิน/เจ้าหน้าที่</b>\n\n` +
+        `👤 Lead ID: <code>${leadId || "New"}</code>\n` +
+        `📱 แพลตฟอร์ม: ${source}\n` +
+        `👉 เข้าตรวจสอบกล่องข้อความ ${source} และดูแลลูกค้าได้ทันที!`
+      );
+    } catch (e) {
+      console.error("[Meta Webhook] Error sending telegram notification:", e);
+    }
+  }
+}
+
+/**
+ * Send Alternative Properties Carousel Card when a unit is Sold/Rented
+ */
+async function sendAlternativePropertiesCarousel(
+  senderId: string,
+  platform: MetaPlatform,
+  projectId?: string,
+  excludePropertyId?: string,
+) {
+  try {
+    const supabase = createAdminClient() as any;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+
+    let query = supabase
+      .from("properties")
+      .select(`
+        id,
+        slug,
+        title,
+        price,
+        rental_price,
+        listing_type,
+        images,
+        bedrooms,
+        bathrooms,
+        size_sqm,
+        address_info,
+        project:projects(name)
+      `)
+      .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"]);
+
+    if (projectId) {
+      query = query.eq("project_id", projectId);
+    }
+    if (excludePropertyId) {
+      query = query.neq("id", excludePropertyId);
+    }
+
+    let { data: properties } = await query
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    // Fallback: If no other units in same project, query top active properties
+    if (!properties || properties.length === 0) {
+      const { data: fallbackProps } = await supabase
+        .from("properties")
+        .select(`
+          id,
+          slug,
+          title,
+          price,
+          rental_price,
+          listing_type,
+          images,
+          bedrooms,
+          bathrooms,
+          size_sqm,
+          address_info,
+          project:projects(name)
+        `)
+        .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
+        .order("is_featured", { ascending: false, nullsFirst: false })
+        .limit(5);
+      properties = fallbackProps;
+    }
+
+    if (!properties || properties.length === 0) return;
+
+    const carouselElements = properties.map((prop: any) => {
+      const images = Array.isArray(prop.images) ? prop.images : [];
+      const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
+
+      let priceSubtitle = "";
+      if (prop.listing_type === "SALE_AND_RENT") {
+        const parts = [];
+        if (prop.price) parts.push(`ขาย ฿${prop.price.toLocaleString()}`);
+        if (prop.rental_price) parts.push(`เช่า ฿${prop.rental_price.toLocaleString()}/ด.`);
+        priceSubtitle = parts.join(" | ");
+      } else if (prop.listing_type === "RENT") {
+        priceSubtitle = prop.rental_price ? `เช่า ฿${prop.rental_price.toLocaleString()}/ด.` : "เช่า (สอบถามราคา)";
+      } else {
+        priceSubtitle = prop.price ? `ขาย ฿${prop.price.toLocaleString()}` : "ขาย (สอบถามราคา)";
+      }
+
+      const projectName = prop.project?.name || prop.address_info?.th || "";
+      const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ตร.ม.` : "";
+      const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} นอน` : "";
+      const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
+      const propUrl = `${siteUrl}/properties/${prop.slug || prop.id}`;
+
+      return {
+        title: (prop.title || "ห้องว่างแนะนำ").substring(0, 80),
+        subtitle: subtitle.substring(0, 80),
+        image_url: imageUrl,
+        default_action: {
+          type: "web_url",
+          url: propUrl,
+        },
+        buttons: [
+          {
+            type: "web_url",
+            url: propUrl,
+            title: "ดูรายละเอียดห้อง",
+          },
+          {
+            type: "postback",
+            title: "นัดดูห้องนี้",
+            payload: `ACTION_BOOK_PROPERTY_${prop.id}`,
+          }
+        ],
+      };
+    });
+
+    await sendMetaCarousel(senderId, carouselElements, platform);
+  } catch (err) {
+    console.error("[Meta Webhook] Error sending alternative carousel:", err);
+  }
+}
+
+/**
+ * Handle AI Smart Real Estate Assistant for conversational questions
+ */
+async function handleAiPropertyAssistant(
+  text: string,
+  senderId: string,
+  platform: MetaPlatform,
+  propertyData?: any,
+  leadId?: string,
+): Promise<boolean> {
+  try {
+    const { generateText } = await import("@/lib/ai/gemini");
+    const settings = await getSiteSettings();
+
+    let contextStr = `Agency: ${settings.company_name || "Real Estate Agency"}\nPhone: ${settings.contact_phone || ""}\nLINE ID: ${settings.line_id || ""}\n`;
+    if (propertyData) {
+      contextStr += `Property: ${propertyData.title}\nPrice: ${propertyData.price || propertyData.rental_price}\nType: ${propertyData.listing_type}\nLocation: ${propertyData.address_info?.th || ""}\nBedrooms: ${propertyData.bedrooms || "-"}\nSize: ${propertyData.size_sqm || "-"} sqm\nStatus: ${propertyData.status}\n`;
+    }
+
+    const systemInstruction = `You are a polite, helpful, and professional Thai real estate AI assistant for Facebook & Instagram chat.
+Answer the customer's question concisely in Thai (within 2-3 friendly sentences). Use warm emojis (✨, 🏡, 😊).
+If the question is about viewing, booking, or price negotiation, invite them to book a viewing or chat with staff.
+Never make up facts not provided in context.`;
+
+    const aiRes = await generateText(
+      `Context Information:\n${contextStr}\n\nCustomer Inquiry: "${text}"\n\nAssistant Response:`,
+      "gemini-1.5-flash",
+      0,
+      { systemInstruction, maxOutputTokens: 250, temperature: 0.3 }
+    );
+
+    if (!aiRes?.text) return false;
+
+    const answer = aiRes.text.trim();
+    const buttons: SocialButton[] = [
+      {
+        title: "📅 นัดดูห้องจริง",
+        type: "postback",
+        payload: propertyData?.id ? `ACTION_BOOK_PROPERTY_${propertyData.id}` : "ACTION_BOOK_VIEWING",
+      },
+      {
+        title: "💬 คุยกับแอดมิน",
+        type: "postback",
+        payload: "ACTION_TALK_ADMIN",
+      }
+    ];
+
+    if (settings.line_url || settings.line_id) {
+      buttons.push({
+        title: "🟢 คุยต่อใน LINE",
+        type: "web_url",
+        url: settings.line_url || `https://line.me/R/ti/p/@${(settings.line_id || "").replace(/^@/, "")}`,
+      });
+    }
+
+    await sendMetaMessage(senderId, answer, platform, buttons);
+    return true;
+  } catch (err) {
+    console.error("[Meta Webhook] AI Assistant error:", err);
+    return false;
   }
 }
 
