@@ -57,7 +57,11 @@ export type SiteSettingKey =
   | "brand_card"
   | "facebook_app_id"
   | "story_ads_welcome_message"
+  | "story_ads_welcome_message_en"
+  | "story_ads_welcome_message_cn"
+  | "story_ads_welcome_message_ru"
   | "story_ads_buttons_enabled"
+  | "story_ads_custom_buttons"
   | "auto_featured_carousel_enabled"
   | "partners_description"
   | "partners_description_en"
@@ -94,7 +98,11 @@ export interface SiteSettings {
   instagram_story_reply_enabled?: boolean;
   direct_dm_reply_enabled?: boolean;
   story_ads_welcome_message?: string;
+  story_ads_welcome_message_en?: string;
+  story_ads_welcome_message_cn?: string;
+  story_ads_welcome_message_ru?: string;
   story_ads_buttons_enabled?: boolean;
+  story_ads_custom_buttons?: SocialButton[];
   auto_featured_carousel_enabled?: boolean;
   follow_gate_enabled?: boolean;
   lead_capture_gate_enabled?: boolean;

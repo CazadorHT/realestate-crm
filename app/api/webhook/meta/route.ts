@@ -24,25 +24,38 @@ import { getProvinceName } from "@/lib/utils/provinces";
 import { sendAdminNotification } from "@/lib/telegram";
 
 /**
- * Default Interactive Quick Action Buttons for Story Ads / Welcome Flows
+ * Interactive Quick Action Buttons for Story Ads / Welcome Flows (Multi-language)
  */
-const DEFAULT_STORY_AD_BUTTONS: SocialButton[] = [
-  {
-    title: "📅 นัดดูห้องจริง",
-    type: "postback",
-    payload: "ACTION_BOOK_VIEWING",
-  },
-  {
-    title: "🏠 ห้องว่าง/ราคา",
-    type: "postback",
-    payload: "ACTION_BROWSE_ROOMS",
-  },
-  {
-    title: "💬 คุยกับแอดมิน",
-    type: "postback",
-    payload: "ACTION_TALK_ADMIN",
-  },
-];
+function getStoryAdButtons(lang: "th" | "en" | "cn" | "ru" = "th"): SocialButton[] {
+  if (lang === "en") {
+    return [
+      { title: "📅 Book Viewing", type: "postback", payload: "ACTION_BOOK_VIEWING" },
+      { title: "🏠 Available Units", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+      { title: "💬 Chat with Staff", type: "postback", payload: "ACTION_TALK_ADMIN" },
+    ];
+  }
+  if (lang === "cn") {
+    return [
+      { title: "📅 预约看房", type: "postback", payload: "ACTION_BOOK_VIEWING" },
+      { title: "🏠 查看房源", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+      { title: "💬 联系客服", type: "postback", payload: "ACTION_TALK_ADMIN" },
+    ];
+  }
+  if (lang === "ru") {
+    return [
+      { title: "📅 На просмотр", type: "postback", payload: "ACTION_BOOK_VIEWING" },
+      { title: "🏠 Все квартиры", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+      { title: "💬 Менеджер", type: "postback", payload: "ACTION_TALK_ADMIN" },
+    ];
+  }
+  return [
+    { title: "📅 นัดดูห้องจริง", type: "postback", payload: "ACTION_BOOK_VIEWING" },
+    { title: "🏠 ห้องว่าง/ราคา", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+    { title: "💬 คุยกับแอดมิน", type: "postback", payload: "ACTION_TALK_ADMIN" },
+  ];
+}
+
+const DEFAULT_STORY_AD_BUTTONS = getStoryAdButtons("th");
 
 /**
  * Zod Schemas for Meta Webhook Validation
@@ -725,14 +738,28 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
     }
 
     // 2.6 Fallback: Story Ads Welcome Flow or Smart AI Property Assistant
+    const detectedLang = detectLanguage(text || "");
     if (!handled && (isStoryReply || settings.direct_dm_reply_enabled)) {
-      if (isStoryReply || text.length < 6 || text.includes("สนใจ") || text.includes("ว่างไหม") || text.includes("ขอดูห้อง")) {
-        await sendStoryAdWelcomeFlow(senderId, source, lead.id);
+      const isGreetingOrAdInquiry =
+        isStoryReply ||
+        text.length < 6 ||
+        text.includes("สนใจ") ||
+        text.includes("ว่างไหม") ||
+        text.includes("ขอดูห้อง") ||
+        text.toLowerCase().includes("available") ||
+        text.toLowerCase().includes("hello") ||
+        text.toLowerCase().includes("hi") ||
+        text.toLowerCase().includes("price") ||
+        text.toLowerCase().includes("rent") ||
+        text.toLowerCase().includes("pm");
+
+      if (isGreetingOrAdInquiry) {
+        await sendStoryAdWelcomeFlow(senderId, source, lead.id, detectedLang);
       } else {
         // Handle conversational inquiries with AI Assistant
-        const aiHandled = await handleAiPropertyAssistant(text, senderId, source, undefined, lead.id);
+        const aiHandled = await handleAiPropertyAssistant(text, senderId, source, undefined, lead.id, detectedLang);
         if (!aiHandled) {
-          await sendStoryAdWelcomeFlow(senderId, source, lead.id);
+          await sendStoryAdWelcomeFlow(senderId, source, lead.id, detectedLang);
         }
       }
     }
@@ -1710,32 +1737,53 @@ function sanitizeTemplateOutput(text: string): string {
 }
 
 /**
- * Handle Story Ads & Direct Message Welcome Flow
+ * Handle Story Ads & Direct Message Welcome Flow (Multi-language)
  */
 async function sendStoryAdWelcomeFlow(
   senderId: string,
   platform: MetaPlatform,
   leadId?: string,
+  lang: "th" | "en" | "cn" | "ru" = "th",
 ) {
   const settings = await getSiteSettings();
-  const welcomeText = settings.story_ads_welcome_message || 
-    "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕";
+  let welcomeText = "";
+  if (lang === "en") {
+    welcomeText = settings.story_ads_welcome_message_en ||
+      "Hello! Thank you for reaching out ✨\nWe're delighted to assist you. Would you like to schedule a viewing, check available units, or chat with our team? Please choose an option below 💕";
+  } else if (lang === "cn") {
+    welcomeText = settings.story_ads_welcome_message_cn ||
+      "您好！感谢您的咨询 ✨\n很高兴为您服务。如果您想预约看房、查看最新房源或与客服交谈，请选择下方选项 💕";
+  } else if (lang === "ru") {
+    welcomeText = settings.story_ads_welcome_message_ru ||
+      "Здравствуйте! Спасибо за обращение ✨\nБудем рады помочь! Выберите нужный пункт ниже: запись на просмотр, свободные варианты или связь с менеджером 💕";
+  } else {
+    welcomeText = settings.story_ads_welcome_message ||
+      "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕";
+  }
 
-  const buttons = settings.story_ads_buttons_enabled !== false ? DEFAULT_STORY_AD_BUTTONS : [];
+  let buttons: SocialButton[] = [];
+  if (settings.story_ads_buttons_enabled !== false) {
+    if (settings.story_ads_custom_buttons && settings.story_ads_custom_buttons.length > 0) {
+      buttons = settings.story_ads_custom_buttons.slice(0, 3);
+    } else {
+      buttons = getStoryAdButtons(lang);
+    }
+  }
 
   const res = await sendMetaMessage(senderId, welcomeText, platform, buttons.length > 0 ? buttons : undefined);
 
   if (res.success && settings.auto_featured_carousel_enabled !== false) {
-    await sendFeaturedPropertiesCarousel(senderId, platform);
+    await sendFeaturedPropertiesCarousel(senderId, platform, lang);
   }
 }
 
 /**
- * Send Featured Properties Carousel Card to FB / Instagram DM
+ * Send Featured Properties Carousel Card to FB / Instagram DM (Multi-language)
  */
 async function sendFeaturedPropertiesCarousel(
   senderId: string,
   platform: MetaPlatform,
+  lang: "th" | "en" | "cn" | "ru" = "th",
 ) {
   try {
     const supabase = createAdminClient() as any;
@@ -1767,6 +1815,13 @@ async function sendFeaturedPropertiesCarousel(
       return;
     }
 
+    const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : lang === "ru" ? "Продажа" : "售";
+    const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "租";
+    const tBed = lang === "th" ? "นอน" : lang === "en" ? "bed" : lang === "ru" ? "спальни" : "卧";
+    const tSqm = lang === "th" ? "ตร.ม." : "sqm";
+    const tViewBtn = lang === "th" ? "ดูรายละเอียดห้อง" : lang === "en" ? "View Details" : lang === "cn" ? "查看详情" : "Подробнее";
+    const tBookBtn = lang === "th" ? "นัดดูห้องนี้" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
+
     const carouselElements = properties.map((prop: any) => {
       const images = Array.isArray(prop.images) ? prop.images : [];
       const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
@@ -1774,23 +1829,23 @@ async function sendFeaturedPropertiesCarousel(
       let priceSubtitle = "";
       if (prop.listing_type === "SALE_AND_RENT") {
         const parts = [];
-        if (prop.price) parts.push(`ขาย ฿${prop.price.toLocaleString()}`);
-        if (prop.rental_price) parts.push(`เช่า ฿${prop.rental_price.toLocaleString()}/ด.`);
+        if (prop.price) parts.push(`${tSale} ฿${prop.price.toLocaleString()}`);
+        if (prop.rental_price) parts.push(`${tRent} ฿${prop.rental_price.toLocaleString()}/mo`);
         priceSubtitle = parts.join(" | ");
       } else if (prop.listing_type === "RENT") {
-        priceSubtitle = prop.rental_price ? `เช่า ฿${prop.rental_price.toLocaleString()}/ด.` : "เช่า (สอบถามราคา)";
+        priceSubtitle = prop.rental_price ? `${tRent} ฿${prop.rental_price.toLocaleString()}/mo` : `${tRent} (Inquire)`;
       } else {
-        priceSubtitle = prop.price ? `ขาย ฿${prop.price.toLocaleString()}` : "ขาย (สอบถามราคา)";
+        priceSubtitle = prop.price ? `${tSale} ฿${prop.price.toLocaleString()}` : `${tSale} (Inquire)`;
       }
 
       const projectName = prop.project?.name || prop.address_info?.th || "";
-      const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ตร.ม.` : "";
-      const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} นอน` : "";
+      const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ${tSqm}` : "";
+      const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} ${tBed}` : "";
       const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
       const propUrl = `${siteUrl}/properties/${prop.slug || prop.id}`;
 
       return {
-        title: (prop.title || "ห้องว่างแนะนำ").substring(0, 80),
+        title: (prop.title || "Featured Unit").substring(0, 80),
         subtitle: subtitle.substring(0, 80),
         image_url: imageUrl,
         default_action: {
@@ -1801,11 +1856,11 @@ async function sendFeaturedPropertiesCarousel(
           {
             type: "web_url",
             url: propUrl,
-            title: "ดูรายละเอียดห้อง",
+            title: tViewBtn,
           },
           {
             type: "postback",
-            title: "นัดดูห้องนี้",
+            title: tBookBtn,
             payload: `ACTION_BOOK_PROPERTY_${prop.id}`,
           }
         ],
@@ -1826,6 +1881,7 @@ async function handleMetaPostback(
   senderId: string,
   source: MetaPlatform,
   leadId?: string,
+  lang: "th" | "en" | "cn" | "ru" = "th",
 ) {
   const settings = await getSiteSettings();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
@@ -1836,16 +1892,28 @@ async function handleMetaPostback(
     const propertyId = payload.startsWith("ACTION_BOOK_PROPERTY_") ? payload.replace("ACTION_BOOK_PROPERTY_", "") : null;
     const bookingUrl = propertyId ? `${siteUrl}/properties/${propertyId}?book=true` : `${siteUrl}/contact?purpose=viewing`;
 
-    const replyText = "ยินดีเลยค่ะ! 📅 สามารถเลือกวันและเวลาที่สะดวกนัดชมห้องจริงได้ผ่านลิงก์ด้านล่างนี้ หรือแจ้งวัน/เวลาที่สะดวกไว้ในแชทนี้ได้เลยนะคะ เดี๋ยวแอดมินประสานงานเตรียมเปิดห้องให้ทันทีค่ะ ✨";
-    
+    let replyText = "ยินดีเลยค่ะ! 📅 สามารถเลือกวันและเวลาที่สะดวกนัดชมห้องจริงได้ผ่านลิงก์ด้านล่างนี้ หรือแจ้งวัน/เวลาที่สะดวกไว้ในแชทนี้ได้เลยนะคะ เดี๋ยวแอดมินประสานงานเตรียมเปิดห้องให้ทันทีค่ะ ✨";
+    let btnBookTitle = "📅 นัดวัน-เวลาดูห้อง";
+    let btnAdminTitle = "💬 คุยกับแอดมิน";
+
+    if (lang === "en") {
+      replyText = "We'd love to show you the property! 📅 Please pick your preferred date and time via the link below, or let us know your availability here in the chat ✨";
+      btnBookTitle = "📅 Pick Date & Time";
+      btnAdminTitle = "💬 Chat with Staff";
+    } else if (lang === "cn") {
+      replyText = "很高兴为您安排看房！📅 您可以通过下方链接选择方便的时间，或直接在聊天中告诉我们您的空闲时间 ✨";
+      btnBookTitle = "📅 选择看房时间";
+      btnAdminTitle = "💬 联系客服";
+    }
+
     await sendMetaMessage(senderId, replyText, source, [
       {
-        title: "📅 นัดวัน-เวลาดูห้อง",
+        title: btnBookTitle,
         type: "web_url",
         url: bookingUrl,
       },
       {
-        title: "💬 คุยกับแอดมิน",
+        title: btnAdminTitle,
         type: "postback",
         payload: "ACTION_TALK_ADMIN",
       }
@@ -1864,11 +1932,25 @@ async function handleMetaPostback(
       console.error("[Meta Webhook] Error sending telegram notification:", e);
     }
   } else if (payload === "ACTION_BROWSE_ROOMS") {
-    const browseText = "แอดมินรวบรวมรายการห้องว่างและดีลสุดพิเศษมาให้ชมด้านล่างนี้ค่ะ 👇 สนใจห้องไหนคลิกดูรูปและรายละเอียดเพิ่มเติมได้เลยนะคะ ✨";
+    let browseText = "แอดมินรวบรวมรายการห้องว่างและดีลสุดพิเศษมาให้ชมด้านล่างนี้ค่ะ 👇 สนใจห้องไหนคลิกดูรูปและรายละเอียดเพิ่มเติมได้เลยนะคะ ✨";
+    if (lang === "en") {
+      browseText = "Here are our featured available properties and special deals 👇 Click to view photos and full details ✨";
+    } else if (lang === "cn") {
+      browseText = "这里是我们的精选房源与最新优惠 👇 点击查看照片与详细信息 ✨";
+    }
     await sendMetaMessage(senderId, browseText, source);
-    await sendFeaturedPropertiesCarousel(senderId, source);
+    await sendFeaturedPropertiesCarousel(senderId, source, lang);
   } else if (payload === "ACTION_TALK_ADMIN") {
-    const contactText = `รับทราบเลยค่ะ! 😊 แอดมินและเจ้าหน้าที่กำลังเตรียมข้อมูลเพื่อดูแลคุณโดยตรงนะคะ\n\n💬 ช่องทางติดต่อด่วน:\n📱 โทร: ${contactPhone}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nหรือพิมพ์ข้อความทิ้งไว้ในแชทนี้ได้เลยนะคะ ✨`;
+    let contactText = `รับทราบเลยค่ะ! 😊 แอดมินและเจ้าหน้าที่กำลังเตรียมข้อมูลเพื่อดูแลคุณโดยตรงนะคะ\n\n💬 ช่องทางติดต่อด่วน:\n📱 โทร: ${contactPhone}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nหรือพิมพ์ข้อความทิ้งไว้ในแชทนี้ได้เลยนะคะ ✨`;
+    let btnLineTitle = "🟢 แอด LINE สอบถาม";
+
+    if (lang === "en") {
+      contactText = `Got it! 😊 Our property consultant is getting ready to assist you.\n\n💬 Direct Contacts:\n📱 Phone: ${contactPhone}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nOr simply leave your message right here! ✨`;
+      btnLineTitle = "🟢 Chat on LINE";
+    } else if (lang === "cn") {
+      contactText = `收到！😊 我们的专业客服正在为您准备资料。\n\n💬 快捷联系方式：\n📱 电话：${contactPhone}\n🟢 LINE：@${lineId.replace(/^@/, "")}\n\n您也可以直接在此留言！✨`;
+      btnLineTitle = "🟢 添加 LINE 咨询";
+    }
     
     // Pause bot for 24h so human staff can talk without bot interruptions
     if (leadId) {
@@ -1898,7 +1980,7 @@ async function handleMetaPostback(
     const buttons: SocialButton[] = [];
     if (settings.line_url || lineId) {
       buttons.push({
-        title: "🟢 แอด LINE สอบถาม",
+        title: btnLineTitle,
         type: "web_url",
         url: settings.line_url || `https://line.me/R/ti/p/@${lineId.replace(/^@/, "")}`,
       });
@@ -1921,13 +2003,14 @@ async function handleMetaPostback(
 }
 
 /**
- * Send Alternative Properties Carousel Card when a unit is Sold/Rented
+ * Send Alternative Properties Carousel Card when a unit is Sold/Rented (Multi-language)
  */
 async function sendAlternativePropertiesCarousel(
   senderId: string,
   platform: MetaPlatform,
   projectId?: string,
   excludePropertyId?: string,
+  lang: "th" | "en" | "cn" | "ru" = "th",
 ) {
   try {
     const supabase = createAdminClient() as any;
@@ -1988,6 +2071,13 @@ async function sendAlternativePropertiesCarousel(
 
     if (!properties || properties.length === 0) return;
 
+    const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : lang === "ru" ? "Продажа" : "售";
+    const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "租";
+    const tBed = lang === "th" ? "นอน" : lang === "en" ? "bed" : lang === "ru" ? "спальни" : "卧";
+    const tSqm = lang === "th" ? "ตร.ม." : "sqm";
+    const tViewBtn = lang === "th" ? "ดูรายละเอียดห้อง" : lang === "en" ? "View Details" : lang === "cn" ? "查看详情" : "Подробнее";
+    const tBookBtn = lang === "th" ? "นัดดูห้องนี้" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
+
     const carouselElements = properties.map((prop: any) => {
       const images = Array.isArray(prop.images) ? prop.images : [];
       const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
@@ -1995,23 +2085,23 @@ async function sendAlternativePropertiesCarousel(
       let priceSubtitle = "";
       if (prop.listing_type === "SALE_AND_RENT") {
         const parts = [];
-        if (prop.price) parts.push(`ขาย ฿${prop.price.toLocaleString()}`);
-        if (prop.rental_price) parts.push(`เช่า ฿${prop.rental_price.toLocaleString()}/ด.`);
+        if (prop.price) parts.push(`${tSale} ฿${prop.price.toLocaleString()}`);
+        if (prop.rental_price) parts.push(`${tRent} ฿${prop.rental_price.toLocaleString()}/mo`);
         priceSubtitle = parts.join(" | ");
       } else if (prop.listing_type === "RENT") {
-        priceSubtitle = prop.rental_price ? `เช่า ฿${prop.rental_price.toLocaleString()}/ด.` : "เช่า (สอบถามราคา)";
+        priceSubtitle = prop.rental_price ? `${tRent} ฿${prop.rental_price.toLocaleString()}/mo` : `${tRent} (Inquire)`;
       } else {
-        priceSubtitle = prop.price ? `ขาย ฿${prop.price.toLocaleString()}` : "ขาย (สอบถามราคา)";
+        priceSubtitle = prop.price ? `${tSale} ฿${prop.price.toLocaleString()}` : `${tSale} (Inquire)`;
       }
 
       const projectName = prop.project?.name || prop.address_info?.th || "";
-      const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ตร.ม.` : "";
-      const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} นอน` : "";
+      const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ${tSqm}` : "";
+      const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} ${tBed}` : "";
       const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
       const propUrl = `${siteUrl}/properties/${prop.slug || prop.id}`;
 
       return {
-        title: (prop.title || "ห้องว่างแนะนำ").substring(0, 80),
+        title: (prop.title || "Alternative Unit").substring(0, 80),
         subtitle: subtitle.substring(0, 80),
         image_url: imageUrl,
         default_action: {
@@ -2022,11 +2112,11 @@ async function sendAlternativePropertiesCarousel(
           {
             type: "web_url",
             url: propUrl,
-            title: "ดูรายละเอียดห้อง",
+            title: tViewBtn,
           },
           {
             type: "postback",
-            title: "นัดดูห้องนี้",
+            title: tBookBtn,
             payload: `ACTION_BOOK_PROPERTY_${prop.id}`,
           }
         ],
@@ -2040,7 +2130,7 @@ async function sendAlternativePropertiesCarousel(
 }
 
 /**
- * Handle AI Smart Real Estate Assistant for conversational questions
+ * Handle AI Smart Real Estate Assistant for conversational questions (Multi-language)
  */
 async function handleAiPropertyAssistant(
   text: string,
@@ -2048,6 +2138,7 @@ async function handleAiPropertyAssistant(
   platform: MetaPlatform,
   propertyData?: any,
   leadId?: string,
+  lang: "th" | "en" | "cn" | "ru" = "th",
 ): Promise<boolean> {
   try {
     const { generateText } = await import("@/lib/ai/gemini");
@@ -2058,8 +2149,14 @@ async function handleAiPropertyAssistant(
       contextStr += `Property: ${propertyData.title}\nPrice: ${propertyData.price || propertyData.rental_price}\nType: ${propertyData.listing_type}\nLocation: ${propertyData.address_info?.th || ""}\nBedrooms: ${propertyData.bedrooms || "-"}\nSize: ${propertyData.size_sqm || "-"} sqm\nStatus: ${propertyData.status}\n`;
     }
 
-    const systemInstruction = `You are a polite, helpful, and professional Thai real estate AI assistant for Facebook & Instagram chat.
-Answer the customer's question concisely in Thai (within 2-3 friendly sentences). Use warm emojis (✨, 🏡, 😊).
+    const languageInstruction =
+      lang === "en" ? "Answer in English." :
+      lang === "cn" ? "Answer in Simplified Chinese." :
+      lang === "ru" ? "Answer in Russian." :
+      "Answer in Thai.";
+
+    const systemInstruction = `You are a polite, helpful, and professional real estate AI assistant for Facebook & Instagram chat.
+${languageInstruction} Answer the customer's question concisely (within 2-3 friendly sentences). Use warm emojis (✨, 🏡, 😊).
 If the question is about viewing, booking, or price negotiation, invite them to book a viewing or chat with staff.
 Never make up facts not provided in context.`;
 
@@ -2073,14 +2170,18 @@ Never make up facts not provided in context.`;
     if (!aiRes?.text) return false;
 
     const answer = aiRes.text.trim();
+    const btnBook = lang === "en" ? "📅 Book Viewing" : lang === "cn" ? "📅 预约看房" : lang === "ru" ? "📅 На просмотр" : "📅 นัดดูห้องจริง";
+    const btnAdmin = lang === "en" ? "💬 Chat with Staff" : lang === "cn" ? "💬 联系客服" : lang === "ru" ? "💬 Менеджер" : "💬 คุยกับแอดมิน";
+    const btnLine = lang === "en" ? "🟢 Chat on LINE" : lang === "cn" ? "🟢 LINE 咨询" : "🟢 คุยต่อใน LINE";
+
     const buttons: SocialButton[] = [
       {
-        title: "📅 นัดดูห้องจริง",
+        title: btnBook,
         type: "postback",
         payload: propertyData?.id ? `ACTION_BOOK_PROPERTY_${propertyData.id}` : "ACTION_BOOK_VIEWING",
       },
       {
-        title: "💬 คุยกับแอดมิน",
+        title: btnAdmin,
         type: "postback",
         payload: "ACTION_TALK_ADMIN",
       }
@@ -2088,7 +2189,7 @@ Never make up facts not provided in context.`;
 
     if (settings.line_url || settings.line_id) {
       buttons.push({
-        title: "🟢 คุยต่อใน LINE",
+        title: btnLine,
         type: "web_url",
         url: settings.line_url || `https://line.me/R/ti/p/@${(settings.line_id || "").replace(/^@/, "")}`,
       });

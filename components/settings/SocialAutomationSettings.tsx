@@ -13,6 +13,7 @@ import {
 } from "@/features/site-settings/actions";
 import {
   SocialKeyword,
+  SocialButton,
   SiteSettings,
 } from "@/features/site-settings/schema";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -44,12 +45,22 @@ export function SocialAutomationSettings({
   const [directDmReplyEnabled, setDirectDmReplyEnabled] = useState(
     !!initialSettings?.direct_dm_reply_enabled
   );
-  const [storyAdsWelcomeMessage, setStoryAdsWelcomeMessage] = useState(
-    initialSettings?.story_ads_welcome_message ||
-      "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕"
-  );
+  const [storyAdsWelcomeMessages, setStoryAdsWelcomeMessages] = useState({
+    th: initialSettings?.story_ads_welcome_message ||
+      "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕",
+    en: initialSettings?.story_ads_welcome_message_en ||
+      "Hello! Thank you for reaching out ✨\nWe're delighted to assist you. Would you like to schedule a viewing, check available units, or chat with our team? Please choose an option below 💕",
+    cn: initialSettings?.story_ads_welcome_message_cn ||
+      "您好！感谢您的咨询 ✨\n很高兴为您服务。如果您想预约看房、查看最新房源或与客服交谈，请选择下方选项 💕",
+    ru: initialSettings?.story_ads_welcome_message_ru ||
+      "Здравствуйте! Спасибо за обращение ✨\nБудем рады помочь! Выберите нужный пункт ниже: запись на просмотр, свободные варианты или связь с менеджером 💕",
+  });
+  const [storyAdsTab, setStoryAdsTab] = useState<"th" | "en" | "cn" | "ru">("th");
   const [storyAdsButtonsEnabled, setStoryAdsButtonsEnabled] = useState(
     initialSettings?.story_ads_buttons_enabled !== false
+  );
+  const [storyAdsCustomButtons, setStoryAdsCustomButtons] = useState<SocialButton[]>(
+    initialSettings?.story_ads_custom_buttons || []
   );
   const [autoFeaturedCarouselEnabled, setAutoFeaturedCarouselEnabled] = useState(
     initialSettings?.auto_featured_carousel_enabled !== false
@@ -139,11 +150,18 @@ export function SocialAutomationSettings({
         setKeywords(settings.social_automation_keywords || []);
         setInstagramStoryReplyEnabled(!!settings.instagram_story_reply_enabled);
         setDirectDmReplyEnabled(!!settings.direct_dm_reply_enabled);
-        setStoryAdsWelcomeMessage(
-          settings.story_ads_welcome_message ||
-            "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕"
-        );
+        setStoryAdsWelcomeMessages({
+          th: settings.story_ads_welcome_message ||
+            "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕",
+          en: settings.story_ads_welcome_message_en ||
+            "Hello! Thank you for reaching out ✨\nWe're delighted to assist you. Would you like to schedule a viewing, check available units, or chat with our team? Please choose an option below 💕",
+          cn: settings.story_ads_welcome_message_cn ||
+            "您好！感谢您的咨询 ✨\n很高兴为您服务。如果您想预约看房、查看最新房源或与客服交谈，请选择下方选项 💕",
+          ru: settings.story_ads_welcome_message_ru ||
+            "Здравствуйте! Спасибо за обращение ✨\nБудем рады помочь! Выберите нужный пункт ниже: запись на просмотр, свободные варианты или связь с менеджером 💕",
+        });
         setStoryAdsButtonsEnabled(settings.story_ads_buttons_enabled !== false);
+        setStoryAdsCustomButtons(settings.story_ads_custom_buttons || []);
         setAutoFeaturedCarouselEnabled(settings.auto_featured_carousel_enabled !== false);
         setFollowGateEnabled(!!settings.follow_gate_enabled);
         setLeadCaptureGateEnabled(!!settings.lead_capture_gate_enabled);
@@ -260,8 +278,9 @@ export function SocialAutomationSettings({
       kw !== savedKw ||
       instagramStoryReplyEnabled !== !!initialData.instagram_story_reply_enabled ||
       directDmReplyEnabled !== !!initialData.direct_dm_reply_enabled ||
-      storyAdsWelcomeMessage.trim() !== (initialData.story_ads_welcome_message || "").trim() ||
+      checkTemplate(storyAdsWelcomeMessages, initialData.story_ads_welcome_message, initialData.story_ads_welcome_message_en, initialData.story_ads_welcome_message_cn, initialData.story_ads_welcome_message_ru) ||
       storyAdsButtonsEnabled !== (initialData.story_ads_buttons_enabled !== false) ||
+      JSON.stringify(storyAdsCustomButtons) !== JSON.stringify(initialData.story_ads_custom_buttons || []) ||
       autoFeaturedCarouselEnabled !== (initialData.auto_featured_carousel_enabled !== false) ||
       followGateEnabled !== !!initialData.follow_gate_enabled ||
       leadCaptureGateEnabled !== !!initialData.lead_capture_gate_enabled ||
@@ -271,7 +290,7 @@ export function SocialAutomationSettings({
       checkTemplate(templates.line, initialData.line_post_template, initialData.line_post_template_en, initialData.line_post_template_cn, initialData.line_post_template_ru);
 
     setIsDirty(changed);
-  }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, storyAdsWelcomeMessage, storyAdsButtonsEnabled, autoFeaturedCarouselEnabled, followGateEnabled, leadCaptureGateEnabled, templates, initialData]);
+  }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, storyAdsWelcomeMessages, storyAdsButtonsEnabled, storyAdsCustomButtons, autoFeaturedCarouselEnabled, followGateEnabled, leadCaptureGateEnabled, templates, initialData]);
 
   const hasChanges = isDirty;
 
@@ -287,8 +306,12 @@ export function SocialAutomationSettings({
           updateSiteSetting("social_automation_keywords", keywords as any).then((r) => ({ key: "social_automation_keywords", ...r })),
           updateSiteSetting("instagram_story_reply_enabled", instagramStoryReplyEnabled).then((r) => ({ key: "instagram_story_reply_enabled", ...r })),
           updateSiteSetting("direct_dm_reply_enabled", directDmReplyEnabled).then((r) => ({ key: "direct_dm_reply_enabled", ...r })),
-          updateSiteSetting("story_ads_welcome_message", storyAdsWelcomeMessage).then((r) => ({ key: "story_ads_welcome_message", ...r })),
+          updateSiteSetting("story_ads_welcome_message", storyAdsWelcomeMessages.th).then((r) => ({ key: "story_ads_welcome_message", ...r })),
+          updateSiteSetting("story_ads_welcome_message_en", storyAdsWelcomeMessages.en).then((r) => ({ key: "story_ads_welcome_message_en", ...r })),
+          updateSiteSetting("story_ads_welcome_message_cn", storyAdsWelcomeMessages.cn).then((r) => ({ key: "story_ads_welcome_message_cn", ...r })),
+          updateSiteSetting("story_ads_welcome_message_ru", storyAdsWelcomeMessages.ru).then((r) => ({ key: "story_ads_welcome_message_ru", ...r })),
           updateSiteSetting("story_ads_buttons_enabled", storyAdsButtonsEnabled).then((r) => ({ key: "story_ads_buttons_enabled", ...r })),
+          updateSiteSetting("story_ads_custom_buttons", storyAdsCustomButtons as any).then((r) => ({ key: "story_ads_custom_buttons", ...r })),
           updateSiteSetting("auto_featured_carousel_enabled", autoFeaturedCarouselEnabled).then((r) => ({ key: "auto_featured_carousel_enabled", ...r })),
           updateSiteSetting("follow_gate_enabled", followGateEnabled).then((r) => ({ key: "follow_gate_enabled", ...r })),
           updateSiteSetting("lead_capture_gate_enabled", leadCaptureGateEnabled).then((r) => ({ key: "lead_capture_gate_enabled", ...r })),
@@ -592,24 +615,228 @@ export function SocialAutomationSettings({
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1.5">
-                    {isEn ? "Story Ads Welcome Message Template" : "ข้อความต้อนรับสำหรับ Story Ads / แอดกว้าง"}
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold text-slate-600 block">
+                      {isEn ? "Story Ads Welcome Message Template" : "ข้อความต้อนรับสำหรับ Story Ads / แอดกว้าง"}
+                    </label>
+                    
+                    {/* Language Tabs */}
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                      {[
+                        { key: "th", label: "🇹🇭 TH" },
+                        { key: "en", label: "🇬🇧 EN" },
+                        { key: "cn", label: "🇨🇳 CN" },
+                        { key: "ru", label: "🇷🇺 RU" },
+                      ].map((tab) => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setStoryAdsTab(tab.key as any)}
+                          className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all ${
+                            storyAdsTab === tab.key
+                              ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                              : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <textarea
                     rows={3}
-                    value={storyAdsWelcomeMessage}
+                    value={storyAdsWelcomeMessages[storyAdsTab]}
                     onChange={(e) => {
-                      setStoryAdsWelcomeMessage(e.target.value);
+                      setStoryAdsWelcomeMessages((prev) => ({
+                        ...prev,
+                        [storyAdsTab]: e.target.value,
+                      }));
                       setIsDirty(true);
                     }}
-                    placeholder="เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨..."
-                    className="w-full text-xs text-slate-800 bg-white border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder={
+                      storyAdsTab === "en"
+                        ? "Hello! Thank you for reaching out ✨..."
+                        : storyAdsTab === "cn"
+                        ? "您好！感谢您的咨询 ✨..."
+                        : storyAdsTab === "ru"
+                        ? "Здравствуйте! Спасибо за обращение ✨..."
+                        : "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨..."
+                    }
+                    className="w-full text-xs text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
-                  <span className="text-[11px] text-slate-400 mt-1 block">
-                    {isEn
-                      ? "💡 Tip: Keep it friendly and general. The interactive buttons below the message will guide users effortlessly."
-                      : "💡 เคล็ดลับ: ใช้ข้อความต้อนรับที่เป็นกันเอง ไม่ต้องใส่ตัวแปรเฉพาะเจาะจง แล้วให้ลูกค้ากดปุ่มเลือกตามสะดวก"}
-                  </span>
+                  <div className="flex items-center justify-between mt-1 mb-4">
+                    <span className="text-[11px] text-slate-400">
+                      {isEn
+                        ? "💡 Tip: Auto-detects user language (TH/EN/CN/RU) and replies in their language seamlessly."
+                        : "💡 ระบบจะตรวจจับภาษาของลูกค้า (ไทย/อังกฤษ/จีน/รัสเซีย) และส่งข้อความตามภาษาที่ลูกค้าพิมพ์มาโดยอัตโนมัติ"}
+                    </span>
+                  </div>
+
+                  {/* Story Ads Custom Buttons Builder */}
+                  {storyAdsButtonsEnabled && (
+                    <div className="p-4 bg-slate-50/70 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <div className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <span>{isEn ? "Interactive Buttons (Max 3)" : "ปุ่มกดของข้อความต้อนรับ (สูงสุด 3 ปุ่ม)"}</span>
+                            <span className="text-[10px] font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                              {storyAdsCustomButtons.length > 0 ? `${storyAdsCustomButtons.length}/3 Custom` : "3 Default"}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {isEn
+                              ? "Add direct links to your website or interactive chatbot actions"
+                              : "ใส่ลิงก์ตรงไปยังเว็บไซต์ หรือเลือกการกระทำในแชท"}
+                          </div>
+                        </div>
+
+                        {storyAdsCustomButtons.length > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStoryAdsCustomButtons([]);
+                              setIsDirty(true);
+                            }}
+                            className="text-[11px] text-slate-500 hover:text-red-600 dark:text-slate-400 font-medium transition-colors"
+                          >
+                            {isEn ? "Reset to Defaults" : "รีเซ็ตเป็นปุ่มมาตรฐาน"}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStoryAdsCustomButtons([
+                                { title: "📅 นัดดูห้องจริง", type: "postback", payload: "ACTION_BOOK_VIEWING" },
+                                { title: "🌐 ชมเว็บไซต์เรา", type: "web_url", url: process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/properties` : "https://vccasset.com/properties" },
+                                { title: "💬 คุยกับแอดมิน", type: "postback", payload: "ACTION_TALK_ADMIN" },
+                              ]);
+                              setIsDirty(true);
+                            }}
+                            className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-lg transition-all"
+                          >
+                            + {isEn ? "Customize Buttons" : "กำหนดปุ่มเอง (เช่น ใส่ลิงก์เว็บ)"}
+                          </button>
+                        )}
+                      </div>
+
+                      {storyAdsCustomButtons.length === 0 ? (
+                        <div className="text-xs text-slate-500 bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-emerald-500">✓</span>
+                            <span>
+                              {isEn
+                                ? "Using 3 Smart Buttons: 📅 Book Viewing, 🏠 Available Units, 💬 Chat with Staff"
+                                : "กำลังใช้ปุ่มด่วนอัตโนมัติ: 📅 นัดดูห้องจริง, 🏠 ห้องว่าง/ราคา, 💬 คุยกับแอดมิน"}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {storyAdsCustomButtons.map((btn, idx) => (
+                            <div
+                              key={idx}
+                              className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-bold text-slate-400">#{idx + 1}</span>
+                                <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                  <input
+                                    type="text"
+                                    maxLength={20}
+                                    value={btn.title}
+                                    onChange={(e) => {
+                                      const updated = [...storyAdsCustomButtons];
+                                      updated[idx].title = e.target.value;
+                                      setStoryAdsCustomButtons(updated);
+                                      setIsDirty(true);
+                                    }}
+                                    placeholder={isEn ? "Button Title (Max 20 chars)" : "ชื่อปุ่ม (ไม่เกิน 20 ตัวอักษร)"}
+                                    className="text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                  />
+                                  <select
+                                    value={btn.type || "postback"}
+                                    onChange={(e) => {
+                                      const updated = [...storyAdsCustomButtons];
+                                      updated[idx].type = e.target.value as any;
+                                      if (e.target.value === "web_url" && !updated[idx].url) {
+                                        updated[idx].url = "https://";
+                                      }
+                                      setStoryAdsCustomButtons(updated);
+                                      setIsDirty(true);
+                                    }}
+                                    className="text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                  >
+                                    <option value="web_url">🔗 ลิงก์เว็บไซต์ (Web URL)</option>
+                                    <option value="postback">⚡ การกระทำในแชท (Chat Action)</option>
+                                  </select>
+
+                                  {btn.type === "web_url" ? (
+                                    <input
+                                      type="url"
+                                      value={btn.url || ""}
+                                      onChange={(e) => {
+                                        const updated = [...storyAdsCustomButtons];
+                                        updated[idx].url = e.target.value;
+                                        setStoryAdsCustomButtons(updated);
+                                        setIsDirty(true);
+                                      }}
+                                      placeholder="https://yourwebsite.com/properties"
+                                      className="text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                    />
+                                  ) : (
+                                    <select
+                                      value={btn.payload || "ACTION_BOOK_VIEWING"}
+                                      onChange={(e) => {
+                                        const updated = [...storyAdsCustomButtons];
+                                        updated[idx].payload = e.target.value;
+                                        setStoryAdsCustomButtons(updated);
+                                        setIsDirty(true);
+                                      }}
+                                      className="text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                    >
+                                      <option value="ACTION_BOOK_VIEWING">📅 นัดดูห้องจริง (Book Viewing)</option>
+                                      <option value="ACTION_BROWSE_ROOMS">🏠 ส่งการ์ดห้องว่าง (Browse Rooms)</option>
+                                      <option value="ACTION_TALK_ADMIN">💬 คุยกับแอดมิน (Talk to Staff)</option>
+                                    </select>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = storyAdsCustomButtons.filter((_, i) => i !== idx);
+                                    setStoryAdsCustomButtons(updated);
+                                    setIsDirty(true);
+                                  }}
+                                  className="text-slate-400 hover:text-red-500 p-1 transition-colors"
+                                  title="Remove button"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+
+                          {storyAdsCustomButtons.length < 3 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setStoryAdsCustomButtons([
+                                  ...storyAdsCustomButtons,
+                                  { title: "🌐 ชมเว็บไซต์เรา", type: "web_url", url: "https://" },
+                                ]);
+                                setIsDirty(true);
+                              }}
+                              className="w-full py-2 border border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 text-xs font-semibold text-blue-600 dark:text-blue-400 rounded-lg transition-all"
+                            >
+                              + {isEn ? "Add Another Button" : "เพิ่มปุ่มอีกรายการ (สูงสุด 3 ปุ่ม)"}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
