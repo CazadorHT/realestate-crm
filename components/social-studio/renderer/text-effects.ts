@@ -295,6 +295,23 @@ export function renderTextEffect(
     });
   }
 
+  // 🌟 SINGLE CARD MODE (รวมทุกข้อความเป็น Single Card ยุบ 3 บรรทัดมาไว้ในการ์ดแผ่นเดียว ลดความหนาลง >30%)
+  if (options.textEffectCardMode === "single_card") {
+    renderSingleCardTextEffect(
+      ctx,
+      options,
+      lineItems,
+      targetCenterX,
+      targetCenterY,
+      defaultTilt,
+      sizeScale,
+      width,
+      outerMarginX
+    );
+    ctx.restore();
+    return;
+  }
+
   const lineSpacing = options.textEffectLineSpacing ?? Math.round(12 * sizeScale);
   const totalCalculatedH = lineItems.reduce((a, b) => a + b.boxH, 0) + (lineItems.length - 1) * lineSpacing;
   let curStackY = -totalCalculatedH / 2;
@@ -1365,3 +1382,165 @@ function renderSingleLineEffect(
     }
   }
 }
+
+/**
+ * 🌟 SINGLE MODERN CARD RENDERER
+ * Unifies all multi-line text into a single elegant card, reducing visual bulk by >30%.
+ */
+export function renderSingleCardTextEffect(
+  ctx: CanvasRenderingContext2D,
+  options: BannerRenderOptions,
+  lineItems: Array<{
+    text: string;
+    template: TextEffectTemplate | "same";
+    scale: number;
+    fontPx: number;
+    boxH: number;
+    xOffset: number;
+    yOffset: number;
+    rotation: number;
+    curve: number;
+    customColors?: {
+      textColor?: string;
+      bgColor?: string;
+      borderColor?: string;
+      shadowColor?: string;
+      bgAlpha?: number;
+      borderWidth?: number;
+    };
+  }>,
+  targetCenterX: number,
+  targetCenterY: number,
+  defaultTilt: number,
+  sizeScale: number,
+  width: number,
+  outerMarginX: number
+): void {
+  if (lineItems.length === 0) return;
+
+  const cardAlign = options.textEffectSingleCardAlign || "center";
+  const cardRadius = Math.round((options.textEffectSingleCardRadius ?? 20) * sizeScale);
+  const cardPadX = Math.round((options.textEffectSingleCardPadding ?? 24) * sizeScale * 1.3);
+  const cardPadY = Math.round((options.textEffectSingleCardPadding ?? 18) * sizeScale);
+  const lineSpacing = options.textEffectLineSpacing !== undefined ? options.textEffectLineSpacing : Math.round(10 * sizeScale);
+
+  // 1. Measure text widths & heights for all lines
+  let maxTextW = 0;
+  const measuredLines = lineItems.map((item, idx) => {
+    const isHeadline = idx === 0;
+    const font = `${isHeadline ? "800" : "600"} ${item.fontPx}px 'Prompt', 'Noto Sans Thai', 'Kanit', sans-serif`;
+    ctx.font = font;
+    const textW = ctx.measureText(item.text).width;
+    if (textW > maxTextW) maxTextW = textW;
+    const lineH = Math.round(item.fontPx * 1.25);
+    return { ...item, isHeadline, font, textW, lineH };
+  });
+
+  const cardW = Math.min(
+    width - outerMarginX * 2,
+    Math.max(Math.round(240 * sizeScale), maxTextW + cardPadX * 2)
+  );
+  const totalContentH = measuredLines.reduce((acc, it) => acc + it.lineH, 0) + (measuredLines.length - 1) * lineSpacing;
+  const cardH = totalContentH + cardPadY * 2;
+
+  const cardCenterX = targetCenterX + (options.textEffectXOffset ?? 0);
+  const cardCenterY = targetCenterY + (options.textEffectYOffset ?? 0);
+  const cardRot = options.textEffectRotation !== undefined && options.textEffectRotation !== 0
+    ? options.textEffectRotation
+    : defaultTilt;
+
+  ctx.save();
+  ctx.translate(cardCenterX, cardCenterY);
+  if (cardRot !== 0) {
+    ctx.rotate((cardRot * Math.PI) / 180);
+  }
+
+  // 2. Card Drop Shadow
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.22)";
+  ctx.shadowBlur = Math.round(18 * sizeScale);
+  ctx.shadowOffsetY = Math.round(7 * sizeScale);
+
+  // 3. Card Background
+  const cardBg = options.textEffectSingleCardBgColor || "#FFFFFF";
+  const cardOpacity = (options.textEffectSingleCardOpacity ?? 98) / 100;
+  roundRect(ctx, -cardW / 2, -cardH / 2, cardW, cardH, cardRadius);
+  ctx.fillStyle = hexToRgbaSafe(cardBg, cardOpacity);
+  ctx.fill();
+  ctx.restore(); // restore shadow to avoid fuzzy borders & text
+
+  // 4. Card Border
+  const borderW = (options.textEffectSingleCardBorderWidth ?? 1) * sizeScale;
+  if (borderW > 0) {
+    roundRect(ctx, -cardW / 2, -cardH / 2, cardW, cardH, cardRadius);
+    ctx.strokeStyle = options.textEffectSingleCardBorderColor || "rgba(226, 232, 240, 0.9)";
+    ctx.lineWidth = borderW;
+    ctx.stroke();
+  }
+
+  // 5. Render Lines inside Card
+  let curY = -cardH / 2 + cardPadY;
+  const isDark = isDarkColor(cardBg);
+  const defaultTextColor = options.textEffectSingleCardTextColor || (isDark ? "#FFFFFF" : "#0F172A");
+
+  measuredLines.forEach((item) => {
+    ctx.save();
+    ctx.font = item.font;
+    ctx.textAlign = cardAlign;
+    ctx.textBaseline = "middle";
+
+    let lineX = 0;
+    if (cardAlign === "left") lineX = -cardW / 2 + cardPadX;
+    else if (cardAlign === "right") lineX = cardW / 2 - cardPadX;
+
+    const lineMidY = curY + item.lineH / 2;
+
+    // Resolve line-specific text color
+    let textColor = item.customColors?.textColor || defaultTextColor;
+    if (!item.customColors?.textColor) {
+      if (item.template === "tiktok_red" || item.template === "urgent_promo") textColor = "#E11D48";
+      else if (item.template === "price_tag") textColor = "#059669";
+      else if (item.template === "illustrator_gold") textColor = "#D97706";
+      else if (item.template === "capcut_neon") textColor = isDark ? "#38BDF8" : "#0284C7";
+      else if (item.template === "korean_cafe") textColor = isDark ? "#FDE68A" : "#B45309";
+      else if (item.template === "tiktok_yellow") textColor = isDark ? "#FACC15" : "#B45309";
+    }
+
+    ctx.fillStyle = textColor;
+    ctx.fillText(item.text, lineX, lineMidY);
+    ctx.restore();
+
+    curY += item.lineH + lineSpacing;
+  });
+
+  ctx.restore();
+}
+
+function hexToRgbaSafe(hex: string, alpha: number = 1): string {
+  if (!hex) return `rgba(255, 255, 255, ${alpha})`;
+  if (hex.startsWith("rgba") || hex.startsWith("hsla") || hex.startsWith("rgb")) return hex;
+  const cleanHex = hex.replace("#", "");
+  let r = 255, g = 255, b = 255;
+  if (cleanHex.length === 3) {
+    r = parseInt(cleanHex[0] + cleanHex[0], 16) || 255;
+    g = parseInt(cleanHex[1] + cleanHex[1], 16) || 255;
+    b = parseInt(cleanHex[2] + cleanHex[2], 16) || 255;
+  } else if (cleanHex.length >= 6) {
+    r = parseInt(cleanHex.substring(0, 2), 16) || 255;
+    g = parseInt(cleanHex.substring(2, 4), 16) || 255;
+    b = parseInt(cleanHex.substring(4, 6), 16) || 255;
+  }
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function isDarkColor(hex: string): boolean {
+  if (!hex) return false;
+  const cleanHex = hex.replace("#", "");
+  if (cleanHex.length < 6) return false;
+  const r = parseInt(cleanHex.substring(0, 2), 16) || 0;
+  const g = parseInt(cleanHex.substring(2, 4), 16) || 0;
+  const b = parseInt(cleanHex.substring(4, 6), 16) || 0;
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness < 128;
+}
+

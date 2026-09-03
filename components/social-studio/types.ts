@@ -62,6 +62,8 @@ export type TextEffectTemplate =
   // Custom
   | "custom";
 
+export type TextEffectCardMode = "stacked_pills" | "single_card";
+
 export type TextEffectPosition =
   // Standard vertical
   | "top"
@@ -253,6 +255,17 @@ export interface BannerRenderOptions {
   textEffectLineSpacing?: number; // gap between pills (default 12)
   textEffectLineConfigs?: TextEffectLineConfig[]; // Multi-line Dynamic Text Layers (Canva / CapCut standard)
 
+  // Single Card Mode (ยุบรวมทุกบรรทัดเป็นการ์ดแผ่นเดียว ลดความหนา >30%)
+  textEffectCardMode?: TextEffectCardMode;
+  textEffectSingleCardBgColor?: string;
+  textEffectSingleCardTextColor?: string;
+  textEffectSingleCardBorderColor?: string;
+  textEffectSingleCardBorderWidth?: number;
+  textEffectSingleCardRadius?: number;
+  textEffectSingleCardPadding?: number;
+  textEffectSingleCardAlign?: "center" | "left" | "right";
+  textEffectSingleCardOpacity?: number;
+
   calloutPointers?: CalloutPointer[];
   bgDimOpacity?: number; // 0 - 100 (% of dark overlay on background image)
   customTexts?: CustomTextItem[];
@@ -387,6 +400,15 @@ export interface SocialStudioPresetConfig {
   textEffectLine2CustomShadowColor?: string;
   textEffectLineSpacing?: number;
   textEffectLineConfigs?: TextEffectLineConfig[];
+  textEffectCardMode?: TextEffectCardMode;
+  textEffectSingleCardBgColor?: string;
+  textEffectSingleCardTextColor?: string;
+  textEffectSingleCardBorderColor?: string;
+  textEffectSingleCardBorderWidth?: number;
+  textEffectSingleCardRadius?: number;
+  textEffectSingleCardPadding?: number;
+  textEffectSingleCardAlign?: "center" | "left" | "right";
+  textEffectSingleCardOpacity?: number;
   calloutPointers?: CalloutPointer[];
   bgDimOpacity?: number;
   customTexts?: CustomTextItem[];

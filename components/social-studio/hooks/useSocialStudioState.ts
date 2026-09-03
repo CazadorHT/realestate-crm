@@ -39,6 +39,7 @@ import type {
   CustomTextItem,
   BannerRenderOptions,
   TextEffectLineConfig,
+  TextEffectCardMode,
 } from "../types";
 
 export interface UseSocialStudioStateProps {
@@ -183,6 +184,17 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const [textEffectLine2CustomBorderColor, setTextEffectLine2CustomBorderColor] = useState<string>("");
   const [textEffectLine2CustomShadowColor, setTextEffectLine2CustomShadowColor] = useState<string>("");
   const [textEffectLineSpacing, setTextEffectLineSpacing] = useState<number>(12);
+
+  // Single Card Mode State (ยุบรวมทุกบรรทัดเป็นการ์ดแผ่นเดียว ลดความหนา >30%)
+  const [textEffectCardMode, setTextEffectCardMode] = useState<TextEffectCardMode>("stacked_pills");
+  const [textEffectSingleCardBgColor, setTextEffectSingleCardBgColor] = useState<string>("#FFFFFF");
+  const [textEffectSingleCardTextColor, setTextEffectSingleCardTextColor] = useState<string>("#0F172A");
+  const [textEffectSingleCardBorderColor, setTextEffectSingleCardBorderColor] = useState<string>("rgba(226, 232, 240, 0.9)");
+  const [textEffectSingleCardBorderWidth, setTextEffectSingleCardBorderWidth] = useState<number>(1);
+  const [textEffectSingleCardRadius, setTextEffectSingleCardRadius] = useState<number>(20);
+  const [textEffectSingleCardPadding, setTextEffectSingleCardPadding] = useState<number>(20);
+  const [textEffectSingleCardAlign, setTextEffectSingleCardAlign] = useState<"center" | "left" | "right">("center");
+  const [textEffectSingleCardOpacity, setTextEffectSingleCardOpacity] = useState<number>(98);
 
   // Dynamic Multi-Line Text Effect Layers (Universal Canva / CapCut standard)
   const [textEffectLineConfigs, setTextEffectLineConfigs] = useState<TextEffectLineConfig[]>([
@@ -420,6 +432,15 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.textEffectLineConfigs && config.textEffectLineConfigs.length > 0) {
       setTextEffectLineConfigs(config.textEffectLineConfigs);
     }
+    if (config.textEffectCardMode) setTextEffectCardMode(config.textEffectCardMode);
+    if (config.textEffectSingleCardBgColor) setTextEffectSingleCardBgColor(config.textEffectSingleCardBgColor);
+    if (config.textEffectSingleCardTextColor) setTextEffectSingleCardTextColor(config.textEffectSingleCardTextColor);
+    if (config.textEffectSingleCardBorderColor) setTextEffectSingleCardBorderColor(config.textEffectSingleCardBorderColor);
+    if (config.textEffectSingleCardBorderWidth !== undefined) setTextEffectSingleCardBorderWidth(config.textEffectSingleCardBorderWidth);
+    if (config.textEffectSingleCardRadius !== undefined) setTextEffectSingleCardRadius(config.textEffectSingleCardRadius);
+    if (config.textEffectSingleCardPadding !== undefined) setTextEffectSingleCardPadding(config.textEffectSingleCardPadding);
+    if (config.textEffectSingleCardAlign) setTextEffectSingleCardAlign(config.textEffectSingleCardAlign);
+    if (config.textEffectSingleCardOpacity !== undefined) setTextEffectSingleCardOpacity(config.textEffectSingleCardOpacity);
     if (config.calloutPointers) setCalloutPointers(config.calloutPointers);
     if (config.bgDimOpacity !== undefined) setBgDimOpacity(config.bgDimOpacity);
     if (config.customTexts) setCustomTexts(config.customTexts);
@@ -439,7 +460,11 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
       headerFontSizeScale, badgeFontSizeScale, headerYOffset, cardRightMargin, showHeadline,
       showCardContent, textEffectTemplate, textEffectPosition, textEffectSize, textEffectXOffset, textEffectYOffset, textEffectRotation,
       textEffectCurve, textEffectCustomTextColor, textEffectCustomBgColor, textEffectCustomBorderColor,
-      textEffectCustomShadowColor, textEffectCustomBgAlpha, textEffectCustomBorderWidth, textEffectLineConfigs, calloutPointers,
+      textEffectCustomShadowColor, textEffectCustomBgAlpha, textEffectCustomBorderWidth, textEffectLineConfigs,
+      textEffectCardMode, textEffectSingleCardBgColor, textEffectSingleCardTextColor, textEffectSingleCardBorderColor,
+      textEffectSingleCardBorderWidth, textEffectSingleCardRadius, textEffectSingleCardPadding,
+      textEffectSingleCardAlign, textEffectSingleCardOpacity,
+      calloutPointers,
       bgDimOpacity, customTexts,
     };
 
@@ -657,6 +682,15 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         textEffectLine2CustomShadowColor,
         textEffectLineSpacing,
         textEffectLineConfigs,
+        textEffectCardMode,
+        textEffectSingleCardBgColor,
+        textEffectSingleCardTextColor,
+        textEffectSingleCardBorderColor,
+        textEffectSingleCardBorderWidth,
+        textEffectSingleCardRadius,
+        textEffectSingleCardPadding,
+        textEffectSingleCardAlign,
+        textEffectSingleCardOpacity,
         calloutPointers,
         bgDimOpacity,
         customTexts,
@@ -806,6 +840,15 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     textEffectCustomBorderWidth,
     textEffectLineSpacing,
     textEffectLineConfigs,
+    textEffectCardMode,
+    textEffectSingleCardBgColor,
+    textEffectSingleCardTextColor,
+    textEffectSingleCardBorderColor,
+    textEffectSingleCardBorderWidth,
+    textEffectSingleCardRadius,
+    textEffectSingleCardPadding,
+    textEffectSingleCardAlign,
+    textEffectSingleCardOpacity,
     brandingTitleColor,
     brandingSubtitleColor,
     customCompanyName,
@@ -931,6 +974,16 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     textEffectLine2CustomBorderColor, setTextEffectLine2CustomBorderColor,
     textEffectLine2CustomShadowColor, setTextEffectLine2CustomShadowColor,
     textEffectLineSpacing, setTextEffectLineSpacing,
+    // Single Card Mode
+    textEffectCardMode, setTextEffectCardMode,
+    textEffectSingleCardBgColor, setTextEffectSingleCardBgColor,
+    textEffectSingleCardTextColor, setTextEffectSingleCardTextColor,
+    textEffectSingleCardBorderColor, setTextEffectSingleCardBorderColor,
+    textEffectSingleCardBorderWidth, setTextEffectSingleCardBorderWidth,
+    textEffectSingleCardRadius, setTextEffectSingleCardRadius,
+    textEffectSingleCardPadding, setTextEffectSingleCardPadding,
+    textEffectSingleCardAlign, setTextEffectSingleCardAlign,
+    textEffectSingleCardOpacity, setTextEffectSingleCardOpacity,
     // Dynamic Multi-Line Text Effect Layers (Universal Canva / CapCut standard)
     textEffectLineConfigs, setTextEffectLineConfigs,
     addTextEffectLine, updateTextEffectLine, removeTextEffectLine,

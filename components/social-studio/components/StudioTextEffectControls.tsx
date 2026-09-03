@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Wand2, Type, Sliders, RotateCw, Compass, Palette, ShieldAlert, Zap, ChevronDown, Move, Maximize2, Layers, Building2, BedDouble, DollarSign, Plus, RotateCcw, Check, Trash2 } from "lucide-react";
-import type { TextEffectTemplate, TextEffectPosition, FontSizeScale, TextEffectLineConfig } from "../types";
+import { Sparkles, Wand2, Type, Sliders, RotateCw, Compass, Palette, ShieldAlert, Zap, ChevronDown, Move, Maximize2, Layers, Building2, BedDouble, DollarSign, Plus, RotateCcw, Check, Trash2, CreditCard } from "lucide-react";
+import type { TextEffectTemplate, TextEffectPosition, FontSizeScale, TextEffectLineConfig, TextEffectCardMode } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { PRESET_VIRAL_HOOKS } from "../viral-hooks";
 
@@ -57,6 +57,25 @@ interface StudioTextEffectControlsProps {
   onAddTextEffectLine?: (text?: string, template?: TextEffectTemplate) => void;
   onUpdateTextEffectLine?: (id: string, updates: Partial<TextEffectLineConfig>) => void;
   onRemoveTextEffectLine?: (id: string) => void;
+  // Single Modern Card Mode (ยุบรวมทุกบรรทัดเป็นการ์ดแผ่นเดียว ลดความหนา >30%)
+  textEffectCardMode?: TextEffectCardMode;
+  setTextEffectCardMode?: (m: TextEffectCardMode) => void;
+  textEffectSingleCardBgColor?: string;
+  setTextEffectSingleCardBgColor?: (c: string) => void;
+  textEffectSingleCardTextColor?: string;
+  setTextEffectSingleCardTextColor?: (c: string) => void;
+  textEffectSingleCardBorderColor?: string;
+  setTextEffectSingleCardBorderColor?: (c: string) => void;
+  textEffectSingleCardBorderWidth?: number;
+  setTextEffectSingleCardBorderWidth?: (w: number) => void;
+  textEffectSingleCardRadius?: number;
+  setTextEffectSingleCardRadius?: (r: number) => void;
+  textEffectSingleCardPadding?: number;
+  setTextEffectSingleCardPadding?: (p: number) => void;
+  textEffectSingleCardAlign?: "center" | "left" | "right";
+  setTextEffectSingleCardAlign?: (a: "center" | "left" | "right") => void;
+  textEffectSingleCardOpacity?: number;
+  setTextEffectSingleCardOpacity?: (o: number) => void;
   // Dynamic Real Estate Property Hooks
   propertyProjectName?: string;
   propertySpecsText?: string;
@@ -476,6 +495,25 @@ export function StudioTextEffectControls({
   onAddTextEffectLine,
   onUpdateTextEffectLine,
   onRemoveTextEffectLine,
+  // Single Modern Card Mode (ยุบรวมทุกบรรทัดเป็นการ์ดแผ่นเดียว ลดความหนา >30%)
+  textEffectCardMode = "stacked_pills",
+  setTextEffectCardMode,
+  textEffectSingleCardBgColor = "#FFFFFF",
+  setTextEffectSingleCardBgColor,
+  textEffectSingleCardTextColor = "#0F172A",
+  setTextEffectSingleCardTextColor,
+  textEffectSingleCardBorderColor = "rgba(226, 232, 240, 0.9)",
+  setTextEffectSingleCardBorderColor,
+  textEffectSingleCardBorderWidth = 1,
+  setTextEffectSingleCardBorderWidth,
+  textEffectSingleCardRadius = 20,
+  setTextEffectSingleCardRadius,
+  textEffectSingleCardPadding = 20,
+  setTextEffectSingleCardPadding,
+  textEffectSingleCardAlign = "center",
+  setTextEffectSingleCardAlign,
+  textEffectSingleCardOpacity = 98,
+  setTextEffectSingleCardOpacity,
   // Dynamic Real Estate Property Hooks
   propertyProjectName = "",
   propertySpecsText = "",
@@ -563,6 +601,221 @@ export function StudioTextEffectControls({
           </button>
         )}
       </div>
+
+      {/* 🌟 Card Structure Mode Switcher (Stacked Badges vs Single Modern Card) */}
+      {setTextEffectCardMode && (
+        <div className="space-y-2 p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+              <Layers className="h-3.5 w-3.5 text-amber-400" />
+              {isEn ? "Card Structure Format" : "รูปแบบโครงสร้างการ์ดข้อความ"}
+            </span>
+            {textEffectCardMode === "single_card" && (
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
+                ✨ รวมการ์ดแผ่นเดียว (ลดความหนา &gt;30%)
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              onClick={() => setTextEffectCardMode("stacked_pills")}
+              className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                textEffectCardMode === "stacked_pills"
+                  ? "bg-amber-500 text-slate-950 shadow-md scale-102"
+                  : "bg-slate-950/60 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>🏷️ แยกกล่อง (Multi-Pills)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTextEffectCardMode("single_card")}
+              className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                textEffectCardMode === "single_card"
+                  ? "bg-amber-500 text-slate-950 shadow-md scale-102"
+                  : "bg-slate-950/60 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              <span>📑 การ์ดแผ่นเดียว (Single Card)</span>
+            </button>
+          </div>
+
+          {/* Single Card Customizer Controls */}
+          {textEffectCardMode === "single_card" && (
+            <div className="pt-2 border-t border-slate-800 space-y-2.5 animate-in fade-in">
+              {/* Quick Presets */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-400 font-medium">สไตล์การ์ดสำเร็จรูป (Quick Presets):</span>
+                <div className="grid grid-cols-4 gap-1">
+                  {[
+                    { label: "⚪ ขาวคลีน", bg: "#FFFFFF", text: "#0F172A", border: "#E2E8F0", opacity: 98 },
+                    { label: "🌑 ดำ Luxury", bg: "#0F172A", text: "#FFFFFF", border: "#334155", opacity: 98 },
+                    { label: "🟡 ครีม Lemon8", bg: "#FFFBEB", text: "#78350F", border: "#FDE68A", opacity: 98 },
+                    { label: "💎 กระจก Glass", bg: "#FFFFFF", text: "#0F172A", border: "#FFFFFF", opacity: 85 },
+                  ].map((p) => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => {
+                        setTextEffectSingleCardBgColor?.(p.bg);
+                        setTextEffectSingleCardTextColor?.(p.text);
+                        setTextEffectSingleCardBorderColor?.(p.border);
+                        setTextEffectSingleCardOpacity?.(p.opacity);
+                      }}
+                      className="px-1.5 py-1 rounded bg-slate-950 border border-slate-800 hover:border-amber-400 text-[10px] font-semibold text-slate-300 hover:text-amber-300 text-center cursor-pointer transition-colors"
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Colors & Customization */}
+              <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-slate-950/80 border border-slate-800/80 text-[10px]">
+                {/* Bg Color */}
+                <div>
+                  <Label className="text-[10px] text-slate-400 block mb-1">สีพื้นหลังการ์ด</Label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      value={textEffectSingleCardBgColor || "#FFFFFF"}
+                      onChange={(e) => setTextEffectSingleCardBgColor?.(e.target.value)}
+                      className="h-5 w-7 rounded border border-slate-700 bg-transparent cursor-pointer"
+                    />
+                    <span className="font-mono text-slate-300 text-[9px] truncate">
+                      {textEffectSingleCardBgColor || "#FFFFFF"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Text Color */}
+                <div>
+                  <Label className="text-[10px] text-slate-400 block mb-1">สีตัวหนังสือหลัก</Label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      value={textEffectSingleCardTextColor || "#0F172A"}
+                      onChange={(e) => setTextEffectSingleCardTextColor?.(e.target.value)}
+                      className="h-5 w-7 rounded border border-slate-700 bg-transparent cursor-pointer"
+                    />
+                    <span className="font-mono text-slate-300 text-[9px] truncate">
+                      {textEffectSingleCardTextColor || "#0F172A"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Border Color */}
+                <div>
+                  <Label className="text-[10px] text-slate-400 block mb-1">สีกรอบการ์ด</Label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      value={textEffectSingleCardBorderColor?.startsWith("#") ? textEffectSingleCardBorderColor : "#E2E8F0"}
+                      onChange={(e) => setTextEffectSingleCardBorderColor?.(e.target.value)}
+                      className="h-5 w-7 rounded border border-slate-700 bg-transparent cursor-pointer"
+                    />
+                    <span className="font-mono text-slate-300 text-[9px] truncate">
+                      {textEffectSingleCardBorderColor || "#E2E8F0"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Align & Corner Radius */}
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                {/* Alignment */}
+                <div className="space-y-1">
+                  <span className="text-slate-400 font-medium">จัดตำแหน่งข้อความ:</span>
+                  <div className="flex gap-1">
+                    {[
+                      { id: "left", label: "⬅️ ซ้าย" },
+                      { id: "center", label: "🎯 กึ่งกลาง" },
+                      { id: "right", label: "➡️ ขวา" },
+                    ].map((al) => (
+                      <button
+                        key={al.id}
+                        type="button"
+                        onClick={() => setTextEffectSingleCardAlign?.(al.id as any)}
+                        className={`flex-1 py-1 rounded text-[10px] font-bold border cursor-pointer transition-all ${
+                          textEffectSingleCardAlign === al.id
+                            ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
+                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {al.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Corner Radius */}
+                <div className="space-y-1">
+                  <span className="text-slate-400 font-medium">ความโค้งมนขอบการ์ด:</span>
+                  <div className="flex gap-1">
+                    {[
+                      { r: 12, label: "12px" },
+                      { r: 20, label: "20px" },
+                      { r: 28, label: "28px" },
+                      { r: 36, label: "36px" },
+                    ].map((cr) => (
+                      <button
+                        key={cr.r}
+                        type="button"
+                        onClick={() => setTextEffectSingleCardRadius?.(cr.r)}
+                        className={`flex-1 py-1 rounded text-[10px] font-bold border cursor-pointer transition-all ${
+                          textEffectSingleCardRadius === cr.r
+                            ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
+                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {cr.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Opacity & Padding Slider */}
+              <div className="grid grid-cols-2 gap-3 text-[10px]">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span>ความทึบแสงการ์ด</span>
+                    <span className="font-mono text-amber-400 font-bold">{textEffectSingleCardOpacity}%</span>
+                  </div>
+                  <Slider
+                    value={[textEffectSingleCardOpacity]}
+                    onValueChange={(val) => setTextEffectSingleCardOpacity?.(val[0])}
+                    min={50}
+                    max={100}
+                    step={1}
+                    className="py-1"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span>ระยะขอบ (Padding)</span>
+                    <span className="font-mono text-amber-400 font-bold">{textEffectSingleCardPadding}px</span>
+                  </div>
+                  <Slider
+                    value={[textEffectSingleCardPadding]}
+                    onValueChange={(val) => setTextEffectSingleCardPadding?.(val[0])}
+                    min={10}
+                    max={36}
+                    step={2}
+                    className="py-1"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Universal Dynamic Text Layers Switcher (Canva / CapCut Standard) */}
       <div className="space-y-2">

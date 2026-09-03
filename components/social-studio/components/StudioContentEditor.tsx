@@ -16,7 +16,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import type { StudioLanguage, PromoPosition, TextEffectTemplate, TextEffectPosition, FontSizeScale, CalloutPointer, CustomTextItem, SocialStudioProperty, TextEffectLineConfig } from "../types";
+import type { StudioLanguage, PromoPosition, TextEffectTemplate, TextEffectPosition, FontSizeScale, CalloutPointer, CustomTextItem, SocialStudioProperty, TextEffectLineConfig, TextEffectCardMode } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { AVAILABLE_BADGES } from "../helpers";
 import { StudioTextEffectControls } from "./StudioTextEffectControls";
@@ -118,6 +118,25 @@ interface StudioContentEditorProps {
   onAddTextEffectLine?: (text?: string, template?: TextEffectTemplate) => void;
   onUpdateTextEffectLine?: (id: string, updates: Partial<TextEffectLineConfig>) => void;
   onRemoveTextEffectLine?: (id: string) => void;
+  // Single Modern Card Mode (ยุบรวมทุกบรรทัดเป็นการ์ดแผ่นเดียว ลดความหนา >30%)
+  textEffectCardMode?: TextEffectCardMode;
+  setTextEffectCardMode?: (m: TextEffectCardMode) => void;
+  textEffectSingleCardBgColor?: string;
+  setTextEffectSingleCardBgColor?: (c: string) => void;
+  textEffectSingleCardTextColor?: string;
+  setTextEffectSingleCardTextColor?: (c: string) => void;
+  textEffectSingleCardBorderColor?: string;
+  setTextEffectSingleCardBorderColor?: (c: string) => void;
+  textEffectSingleCardBorderWidth?: number;
+  setTextEffectSingleCardBorderWidth?: (w: number) => void;
+  textEffectSingleCardRadius?: number;
+  setTextEffectSingleCardRadius?: (r: number) => void;
+  textEffectSingleCardPadding?: number;
+  setTextEffectSingleCardPadding?: (p: number) => void;
+  textEffectSingleCardAlign?: "center" | "left" | "right";
+  setTextEffectSingleCardAlign?: (a: "center" | "left" | "right") => void;
+  textEffectSingleCardOpacity?: number;
+  setTextEffectSingleCardOpacity?: (o: number) => void;
   calloutPointers?: CalloutPointer[];
   onAddCallout?: (pointer: CalloutPointer) => void;
   onUpdateCallout?: (id: string, updates: Partial<CalloutPointer>) => void;
@@ -221,6 +240,24 @@ export function StudioContentEditor({
   onAddTextEffectLine,
   onUpdateTextEffectLine,
   onRemoveTextEffectLine,
+  textEffectCardMode,
+  setTextEffectCardMode,
+  textEffectSingleCardBgColor,
+  setTextEffectSingleCardBgColor,
+  textEffectSingleCardTextColor,
+  setTextEffectSingleCardTextColor,
+  textEffectSingleCardBorderColor,
+  setTextEffectSingleCardBorderColor,
+  textEffectSingleCardBorderWidth,
+  setTextEffectSingleCardBorderWidth,
+  textEffectSingleCardRadius,
+  setTextEffectSingleCardRadius,
+  textEffectSingleCardPadding,
+  setTextEffectSingleCardPadding,
+  textEffectSingleCardAlign,
+  setTextEffectSingleCardAlign,
+  textEffectSingleCardOpacity,
+  setTextEffectSingleCardOpacity,
   calloutPointers = [],
   onAddCallout,
   onUpdateCallout,
@@ -324,6 +361,24 @@ export function StudioContentEditor({
           onAddTextEffectLine={onAddTextEffectLine}
           onUpdateTextEffectLine={onUpdateTextEffectLine}
           onRemoveTextEffectLine={onRemoveTextEffectLine}
+          textEffectCardMode={textEffectCardMode}
+          setTextEffectCardMode={setTextEffectCardMode}
+          textEffectSingleCardBgColor={textEffectSingleCardBgColor}
+          setTextEffectSingleCardBgColor={setTextEffectSingleCardBgColor}
+          textEffectSingleCardTextColor={textEffectSingleCardTextColor}
+          setTextEffectSingleCardTextColor={setTextEffectSingleCardTextColor}
+          textEffectSingleCardBorderColor={textEffectSingleCardBorderColor}
+          setTextEffectSingleCardBorderColor={setTextEffectSingleCardBorderColor}
+          textEffectSingleCardBorderWidth={textEffectSingleCardBorderWidth}
+          setTextEffectSingleCardBorderWidth={setTextEffectSingleCardBorderWidth}
+          textEffectSingleCardRadius={textEffectSingleCardRadius}
+          setTextEffectSingleCardRadius={setTextEffectSingleCardRadius}
+          textEffectSingleCardPadding={textEffectSingleCardPadding}
+          setTextEffectSingleCardPadding={setTextEffectSingleCardPadding}
+          textEffectSingleCardAlign={textEffectSingleCardAlign}
+          setTextEffectSingleCardAlign={setTextEffectSingleCardAlign}
+          textEffectSingleCardOpacity={textEffectSingleCardOpacity}
+          setTextEffectSingleCardOpacity={setTextEffectSingleCardOpacity}
           propertyProjectName={propertyProjectName}
           propertySpecsText={propertySpecsText}
           propertyPriceTag={propertyPriceTag}
