@@ -122,8 +122,9 @@ function buildMetaCatalogXml(propertiesData: any[]) {
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<listings>\n`;
+  const catalogBaseUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com").replace(/\/+$/, "");
   xml += `  <title>${siteConfig.name} Catalog</title>\n`;
-  xml += `  <link>${process.env.NEXT_PUBLIC_APP_URL || "https://your-crm.com"}</link>\n`;
+  xml += `  <link>${catalogBaseUrl}</link>\n`;
 
   for (const p of rows) {
     const details = p.details;
@@ -140,6 +141,7 @@ function buildMetaCatalogXml(propertiesData: any[]) {
     const rawCoverImage = p.media?.find(m => m.is_cover)?.url || p.media?.[0]?.url;
     if (!rawCoverImage) continue;
     const coverImage = getPublicImageUrl(rawCoverImage);
+    if (!coverImage || !coverImage.trim()) continue;
 
     // --- PROJECT RESOLUTION ---
     const project = p.project;
@@ -176,7 +178,7 @@ function buildMetaCatalogXml(propertiesData: any[]) {
       description = `โครงการ: ${projectName}${projectDeveloper ? ` (${projectDeveloper})` : ""}\n\n${description}`;
     }
     const slug = (metaObj.slug as string) || p.id;
-    const propertyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://your-crm.com"}/properties/${slug}`;
+    const propertyUrl = `${catalogBaseUrl}/properties/${slug}`;
 
     const originalSalePrice = (pricingObj.original_price as number) || null;
     const originalRentalPrice =
@@ -304,8 +306,9 @@ function buildMetaCatalogXml(propertiesData: any[]) {
         xml += `    <price>${item.currentPrice} THB</price>\n`;
       }
 
-      // Image — Single high-converting Cover Image via <image_url> (optimal for Real Estate Carousel & Product Sets)
+      // Image — Primary Cover Image via <image><url> (Meta Real Estate Spec) & <image_url> (Fallback)
       // Routed through Cloudflare CDN (cdn.vccasset.com) to eliminate Supabase Storage Cached Egress
+      xml += `    <image>\n      <url><![CDATA[${coverImage}]]></url>\n    </image>\n`;
       xml += `    <image_url><![CDATA[${coverImage}]]></image_url>\n`;
 
       // --- ADDRESS ---
