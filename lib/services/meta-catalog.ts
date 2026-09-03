@@ -288,11 +288,14 @@ function buildMetaCatalogXml(propertiesData: any[]) {
     for (const item of modesToGenerate) {
       xml += `  <listing>\n`;
 
-      // --- REQUIRED FIELDS ---
+      // --- REQUIRED FIELDS (Universal compatibility for Real Estate & Product Feeds) ---
       xml += `    <home_listing_id>${item.id}</home_listing_id>\n`;
+      xml += `    <id>${item.id}</id>\n`;
       xml += `    <name><![CDATA[${item.title}]]></name>\n`;
+      xml += `    <title><![CDATA[${item.title}]]></title>\n`;
       xml += `    <description><![CDATA[${description}]]></description>\n`;
       xml += `    <url>${propertyUrl}${item.mode === "rent" && isBoth ? "?action=rent" : ""}</url>\n`;
+      xml += `    <link>${propertyUrl}${item.mode === "rent" && isBoth ? "?action=rent" : ""}</link>\n`;
 
       xml += `    <listing_type>${item.listingType}</listing_type>\n`;
       xml += `    <availability>${item.availability}</availability>\n`;
@@ -306,10 +309,14 @@ function buildMetaCatalogXml(propertiesData: any[]) {
         xml += `    <price>${item.currentPrice} THB</price>\n`;
       }
 
-      // Image — Primary Cover Image via <image><url> (Meta Real Estate Spec) & <image_url> (Fallback)
-      // Routed through Cloudflare CDN (cdn.vccasset.com) to eliminate Supabase Storage Cached Egress
-      xml += `    <image>\n      <url><![CDATA[${coverImage}]]></url>\n    </image>\n`;
-      xml += `    <image_url><![CDATA[${coverImage}]]></image_url>\n`;
+      // Image — Universal Meta Image Tags (Compatible with both Real Estate & Product/Commerce Catalogs)
+      // 1. Meta Real Estate Schema: <image><url>...</url></image>
+      // 2. Meta Commerce/Google Feed Schema: <image_link>...</image_link>
+      // 3. Fallback Schema: <image_url>...</image_url>
+      // Routed through Cloudflare CDN (cdn.vccasset.com)
+      xml += `    <image>\n      <url>${coverImage}</url>\n    </image>\n`;
+      xml += `    <image_link>${coverImage}</image_link>\n`;
+      xml += `    <image_url>${coverImage}</image_url>\n`;
 
       // --- ADDRESS ---
       const addrLine1 = (addrObj.address_line1 as string)?.trim() || "Bangkok";
