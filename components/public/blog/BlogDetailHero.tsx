@@ -71,7 +71,7 @@ export function BlogDetailHero({
           {post.category && (
             <Badge
               variant="secondary"
-              className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border-transparent text-sm md:text-base px-4 py-1.5"
+              className="bg-white/25 hover:bg-white/35 text-white border-white/20 text-sm md:text-base px-4 py-1.5"
             >
               {t(`blog.categories.${post.category}`) !==
               `blog.categories.${post.category}`

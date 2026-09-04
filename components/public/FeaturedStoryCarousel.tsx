@@ -269,7 +269,7 @@ export function FeaturedStoryCarousel({
               <button
                 key={idx}
                 onClick={() => handleSelect(idx)}
-                className="h-1.5 flex-1 rounded-full bg-white/40 border border-white/20 backdrop-blur-xs overflow-hidden cursor-pointer transition-all hover:h-2 group/bar"
+                className="h-1.5 flex-1 rounded-full bg-white/50 border border-white/30 overflow-hidden cursor-pointer transition-all hover:h-2 group/bar"
                 aria-label={`Go to slide ${idx + 1}`}
               >
                 <div
@@ -331,8 +331,8 @@ export function FeaturedStoryCarousel({
           {/* Top Header Overlay Badges */}
           <div className="absolute top-6 left-4 right-4 z-20 flex justify-between items-center mt-2">
             <div className="flex items-center gap-2 max-w-[75%]">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md text-slate-900 text-xs font-semibold shadow-lg border border-white/90 ring-1 ring-slate-900/5 truncate">
-                <Sparkles className={cn("w-3.5 h-3.5 animate-pulse shrink-0", currentThemeConfig.sparkleColor)} />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 text-slate-900 text-xs font-semibold shadow-md border border-white/90 ring-1 ring-slate-900/5 truncate">
+                <Sparkles className={cn("w-3.5 h-3.5 shrink-0", currentThemeConfig.sparkleColor)} />
                 <span className="truncate">
                   {getProjectName(currentProperty)}
                 </span>
@@ -341,7 +341,7 @@ export function FeaturedStoryCarousel({
 
             <button
               onClick={() => setIsPaused(!isPaused)}
-              className="p-1.5 rounded-full bg-black/30 hover:bg-black/50 text-white/80 backdrop-blur-md border border-white/20 opacity-60 group-hover:opacity-100 transition-all cursor-pointer shrink-0"
+              className="p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white/90 border border-white/20 opacity-80 group-hover:opacity-100 transition-all cursor-pointer shrink-0"
               title={isPaused ? "Play" : "Pause"}
             >
               {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
@@ -351,7 +351,7 @@ export function FeaturedStoryCarousel({
           {/* Manual Left/Right Navigation Arrows (Subtle Translucent Glass Pills) */}
           <button
             onClick={handlePrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 hover:bg-black/60 text-white/90 backdrop-blur-md border border-white/20 shadow-xs opacity-60 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white/90 border border-white/20 shadow-xs opacity-75 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
             aria-label="Previous property"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -359,7 +359,7 @@ export function FeaturedStoryCarousel({
 
           <button
             onClick={handleNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/30 hover:bg-black/60 text-white/90 backdrop-blur-md border border-white/20 shadow-xs opacity-60 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white/90 border border-white/20 shadow-xs opacity-75 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
             aria-label="Next property"
           >
             <ChevronRight className="w-4 h-4" />

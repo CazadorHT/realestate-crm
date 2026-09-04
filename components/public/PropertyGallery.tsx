@@ -283,7 +283,7 @@ export function PropertyGallery({
 
           {/* Verified Badge */}
           {verified && (
-            <div className="flex items-center bg-blue-600/90 backdrop-blur-md text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+            <div className="flex items-center bg-blue-600 text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
               <IoShieldCheckmark className="w-5 h-5" />
               <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2">
                 VERIFIED
@@ -293,7 +293,7 @@ export function PropertyGallery({
 
           {/* Prime CBD Badge */}
           {isCbd && (
-            <div className="flex items-center bg-white/90 backdrop-blur-md text-emerald-700 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+            <div className="flex items-center bg-white/90 text-emerald-700 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
               <FaCity className="w-5 h-5 shrink-0 text-emerald-600" />
               <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 Prime CBD
@@ -303,7 +303,7 @@ export function PropertyGallery({
 
           {/* Pet Friendly Badge */}
           {petFriendly && (
-            <div className="flex items-center bg-white/90 backdrop-blur-md text-orange-600 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+            <div className="flex items-center bg-white/90 text-orange-600 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
               <MdOutlinePets className="w-5 h-5 rotate-25" />
               <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 Pet Friendly
@@ -313,7 +313,7 @@ export function PropertyGallery({
 
           {/* Airbnb Allowed Badge */}
           {allowAirbnb && (
-            <div className="flex items-center bg-[#FF5A5F]/90 backdrop-blur-md text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+            <div className="flex items-center bg-[#FF5A5F] text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
               <FaAirbnb className="w-5 h-5 shrink-0" />
               <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 Airbnb
@@ -323,7 +323,7 @@ export function PropertyGallery({
 
           {/* Company Registered Badge */}
           {isTaxRegistered && (
-            <div className="flex items-center bg-emerald-600/90 backdrop-blur-md text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+            <div className="flex items-center bg-emerald-600 text-white p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
               <HiBuildingOffice2 className="w-5 h-5 shrink-0" />
               <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 {language === "th" ? "จดบริษัทได้" : "Company Reg."}
@@ -350,7 +350,7 @@ export function PropertyGallery({
                   router.push("/properties");
                 }
               }}
-              className="h-7 w-7 rounded-full bg-black/40 hover:bg-black/60 active:scale-95 backdrop-blur-md text-white flex items-center justify-center shadow-md transition-all border border-white/15 cursor-pointer touch-manipulation pointer-events-auto"
+              className="h-7 w-7 rounded-full bg-black/60 hover:bg-black/80 active:scale-95 text-white flex items-center justify-center shadow-md transition-all border border-white/15 cursor-pointer touch-manipulation pointer-events-auto"
               aria-label={t("common.back") || "Back"}
             >
               <ArrowLeft className="w-3.5 h-3.5 text-white" />
@@ -379,7 +379,7 @@ export function PropertyGallery({
             )}
             {verified && (
               <div
-                className={`h-7 flex items-center bg-blue-600/90 backdrop-blur-md text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                className={`h-7 flex items-center bg-blue-600 text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
                   inlineActiveIndex !== 0
                     ? "w-7 justify-center p-0"
                     : "px-2 justify-start"
@@ -399,7 +399,7 @@ export function PropertyGallery({
             )}
             {isCbd && (
               <div
-                className={`h-7 flex items-center bg-white/90 backdrop-blur-md text-emerald-700 rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                className={`h-7 flex items-center bg-white/90 text-emerald-700 rounded-full shadow-lg transition-all duration-300 cursor-default ${
                   inlineActiveIndex !== 0
                     ? "w-7 justify-center p-0"
                     : "px-2 justify-start"
@@ -419,7 +419,7 @@ export function PropertyGallery({
             )}
             {petFriendly && (
               <div
-                className={`h-7 flex items-center bg-white/90 backdrop-blur-md text-orange-600 rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                className={`h-7 flex items-center bg-white/90 text-orange-600 rounded-full shadow-lg transition-all duration-300 cursor-default ${
                   inlineActiveIndex !== 0
                     ? "w-7 justify-center p-0"
                     : "px-2 justify-start"
@@ -439,7 +439,7 @@ export function PropertyGallery({
             )}
             {allowAirbnb && (
               <div
-                className={`h-7 flex items-center bg-[#FF5A5F]/90 backdrop-blur-md text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                className={`h-7 flex items-center bg-[#FF5A5F] text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
                   inlineActiveIndex !== 0
                     ? "w-7 justify-center p-0"
                     : "px-2 justify-start"
@@ -459,7 +459,7 @@ export function PropertyGallery({
             )}
             {isTaxRegistered && (
               <div
-                className={`h-7 flex items-center bg-emerald-600/90 backdrop-blur-md text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                className={`h-7 flex items-center bg-emerald-600 text-white rounded-full shadow-lg transition-all duration-300 cursor-default ${
                   inlineActiveIndex !== 0
                     ? "w-7 justify-center p-0"
                     : "px-2 justify-start"
@@ -480,7 +480,7 @@ export function PropertyGallery({
           </div>
 
           <div className="absolute top-3 right-3 z-35 flex flex-col items-end gap-2">
-            <div className="h-7 px-2.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white flex items-center justify-center shadow-md transition-all border border-white/15 text-[10px] font-medium cursor-default select-none">
+            <div className="h-7 px-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center shadow-md transition-all border border-white/15 text-[10px] font-medium cursor-default select-none">
               <ImageIcon className="w-3 h-3 mr-1 shrink-0" />
               <span>
                 {sortedImages.length} {t("common.images")}
@@ -678,7 +678,7 @@ export function PropertyGallery({
                     />
                     {/* Overlay for the last visible image if more exist */}
                     {idx === 3 && remainingCount > 0 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg backdrop-blur-[2px] hover:bg-black/60 transition-colors">
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-lg hover:bg-black/70 transition-colors">
                         +{remainingCount} {t("common.images")}
                       </div>
                     )}
@@ -692,7 +692,7 @@ export function PropertyGallery({
           <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 z-30">
             <Button
               variant="secondary"
-              className="bg-white/80 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-9 lg:h-10 px-3 lg:px-4 rounded-xl text-sm font-semibold"
+              className="bg-white/80 hover:bg-white text-slate-900 shadow-md h-9 lg:h-10 px-3 lg:px-4 rounded-xl text-sm font-semibold"
               onClick={() => setOpen(true)}
             >
               <ImageIcon className="w-4 h-4 mr-1.5 lg:mr-2" />
@@ -733,12 +733,12 @@ export function PropertyGallery({
             className="absolute top-0 left-0 right-16 z-50 flex flex-col gap-2 p-4 pointer-events-none"
             style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))" }}
           >
-            <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 w-fit max-w-full">
+            <div className="bg-black/75 px-4 py-2 rounded-lg border border-white/10 w-fit max-w-full">
               <span className="text-white font-bold text-sm md:text-base line-clamp-1">
                 {title}
               </span>
             </div>
-            <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 w-fit">
+            <div className="bg-black/75 px-3 py-1 rounded-full border border-white/10 w-fit">
               <span className="text-white/90 text-[10px] md:text-xs font-bold tracking-widest">
                 {currentIndex + 1} / {sortedImages.length}
               </span>
@@ -748,7 +748,7 @@ export function PropertyGallery({
           <button
             onClick={() => setOpen(false)}
             aria-label="Close gallery"
-            className="absolute right-4 p-2.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg cursor-pointer"
+            className="absolute right-4 p-2.5 bg-black/75 border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg cursor-pointer"
             style={{ top: "max(1rem, env(safe-area-inset-top, 1rem))" }}
           >
             <X className="h-6 w-6" />
@@ -821,7 +821,7 @@ export function PropertyGallery({
                   handlePrev();
                 }}
                 aria-label="Previous image"
-                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
+                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-black/50 text-white rounded-full hover:bg-black/70 transition-all z-50"
               >
                 <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
               </button>
@@ -831,7 +831,7 @@ export function PropertyGallery({
                   handleNext();
                 }}
                 aria-label="Next image"
-                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50"
+                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-black/50 text-white rounded-full hover:bg-black/70 transition-all z-50"
               >
                 <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
               </button>
@@ -840,7 +840,7 @@ export function PropertyGallery({
 
           {/* Thumbnails Strip (Bottom Footer) - Elevated above iOS Safari Navigation Bar */}
           <div
-            className="absolute bottom-0 left-0 right-0 z-50 px-2 md:px-4 pt-3 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-auto"
+            className="absolute bottom-0 left-0 right-0 z-50 px-2 md:px-4 pt-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-auto"
             style={{
               paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
             }}

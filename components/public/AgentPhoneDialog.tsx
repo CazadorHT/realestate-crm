@@ -105,7 +105,7 @@ export function AgentPhoneDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md! rounded-3xl p-0 overflow-hidden border border-slate-100/10 shadow-2xl bg-white/95 backdrop-blur-xl transition-all">
+      <DialogContent className="sm:max-w-md! rounded-3xl p-0 overflow-hidden border border-slate-100/10 shadow-2xl bg-white transition-all">
         <DialogHeader className="relative p-8 overflow-hidden text-white bg-gradient-to-tr from-slate-900 via-indigo-950 to-blue-900 border-b border-indigo-950/20">
           {/* Glowing orb/gradients */}
           <div className="absolute -top-16 -right-16 rounded-full w-48 h-48 bg-blue-500/25 blur-3xl" />
@@ -113,7 +113,7 @@ export function AgentPhoneDialog({
 
           <div className="relative z-10 flex flex-col gap-2">
             <DialogTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
-              <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md border border-white/10 shadow-inner">
+              <div className="p-2 bg-white/20 rounded-xl border border-white/10 shadow-inner">
                 <Phone className="w-5 h-5 text-blue-300" />
               </div>
               <span className="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">

@@ -73,7 +73,7 @@ export function CTASection() {
           {STATS.map((stat, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-slate-200"
+              className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/90 rounded-full shadow-xs border border-slate-200"
             >
               <stat.icon
                 className={`w-3.5 h-3.5 md:w-4 md:h-4 ${stat.color}`}

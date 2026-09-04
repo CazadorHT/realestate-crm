@@ -340,7 +340,7 @@ export default function DepositPageClient() {
                 transition={{ duration: 0.6 }}
                 className="text-center max-w-5xl mx-auto space-y-6"
               >
-                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-500/10 text-blue-400 text-sm font-semibold border border-blue-500/20 shadow-sm backdrop-blur-sm">
+                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-500/15 text-blue-300 text-sm font-semibold border border-blue-500/30 shadow-sm">
                   <Sparkles className="h-4 w-4 text-yellow-400" />
                   <span>
                     {t("common.free")} {t("common.no_cost")}
@@ -361,7 +361,7 @@ export default function DepositPageClient() {
                   {MARKETING_CHANNELS.map((ch) => (
                     <div
                       key={ch.name}
-                      className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 shadow-xs hover:bg-white/10 hover:border-white/20 transition-all duration-200 backdrop-blur-sm"
+                      className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white/10 border border-white/15 shadow-xs hover:bg-white/15 hover:border-white/25 transition-all duration-200"
                     >
                       <div className={`p-2 rounded-xl ${ch.bg}`}>
                         <ch.icon className={`h-4 w-4 ${ch.color}`} />
@@ -514,7 +514,7 @@ export default function DepositPageClient() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card className="relative shadow-2xl shadow-indigo-900/10 border-white/80 bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 bg-transparent backdrop-blur-xl overflow-hidden rounded-3xl p-1 md:p-2 border">
+                  <Card className="relative shadow-2xl shadow-indigo-900/10 border-white/80 bg-white overflow-hidden rounded-3xl p-1 md:p-2 border">
                     <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80" />
                     <CardContent className="p-4 sm:p-6 md:p-8">
                       {isSuccess ? (

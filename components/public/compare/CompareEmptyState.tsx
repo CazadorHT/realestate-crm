@@ -8,7 +8,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 export function CompareEmptyState() {
   const { t } = useLanguage();
   return (
-    <div className="flex flex-col items-center justify-center py-16 md:py-24 px-4 bg-white/80 backdrop-blur-sm rounded-2xl md:rounded-3xl border border-slate-200 text-center animate-in fade-in zoom-in duration-500 shadow-sm">
+    <div className="flex flex-col items-center justify-center py-16 md:py-24 px-4 bg-white rounded-2xl md:rounded-3xl border border-slate-200 text-center animate-in fade-in zoom-in duration-500 shadow-xs">
       <div className="h-16 w-16 md:h-24 md:w-24 rounded-full bg-slate-100 flex items-center justify-center mb-4 md:mb-6">
         <AlertCircle className="h-8 w-8 md:h-10 md:w-10 text-slate-400" />
       </div>

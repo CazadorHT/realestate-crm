@@ -56,7 +56,7 @@ export const RecalculateConfirmDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-xl border-none shadow-2xl rounded-4xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-md bg-white/90 backdrop-blur-xl border-none shadow-2xl rounded-4xl p-0 overflow-hidden">
         <div className="bg-indigo-600 p-6 text-white relative">
           <div className="absolute right-0 top-0 p-8 opacity-10">
             <RefreshCw className="w-24 h-24 rotate-12" />

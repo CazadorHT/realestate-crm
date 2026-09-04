@@ -677,7 +677,7 @@ export function PropertiesTable({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="absolute top-1 right-1 h-6 w-6 bg-white/95 backdrop-blur-sm shadow-lg rounded-full flex items-center justify-center border border-amber-200 cursor-help group-hover/image:scale-110 transition-transform duration-300">
+                                <div className="absolute top-1 right-1 h-6 w-6 bg-white/90 backdrop-blur-sm shadow-lg rounded-full flex items-center justify-center border border-amber-200 cursor-help group-hover/image:scale-110 transition-transform duration-300">
                                   <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
                                 </div>
                               </TooltipTrigger>

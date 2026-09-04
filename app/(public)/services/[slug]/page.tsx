@@ -90,7 +90,7 @@ async function ServiceDetail({ params }: PageProps) {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
           <Link
             href="/services"
-            className="absolute top-8 left-4 md:left-8 text-white/80 hover:text-white flex items-center gap-2 transition-all py-2 px-5 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/20 active:scale-95"
+            className="absolute top-8 left-4 md:left-8 text-white/80 hover:text-white flex items-center gap-2 transition-all py-2 px-5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95"
           >
             <ArrowLeft className="h-4 w-4" />{" "}
             {t("services_detail.back_to_services")}
@@ -99,7 +99,7 @@ async function ServiceDetail({ params }: PageProps) {
           <div className="space-y-6 max-w-5xl">
              {/* Popularity Badge: Social Proof 11/10 */}
              {viewCount > 0 && (
-               <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white animate-in fade-in slide-in-from-bottom-4 duration-700 mx-auto">
+               <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/15 border border-white/20 text-white animate-in fade-in slide-in-from-bottom-4 duration-700 mx-auto">
                   <div className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -130,7 +130,7 @@ async function ServiceDetail({ params }: PageProps) {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-10">
             {/* Description Card: Elite Design */}
-            <div className="bg-white/90 backdrop-blur-xl rounded-[40px] p-10 shadow-2xl shadow-slate-200/50 border border-white relative overflow-hidden">
+            <div className="bg-white rounded-[40px] p-10 shadow-2xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-8 text-slate-100 -mr-4 -mt-4">
                  <ShieldAlert className="w-32 h-32 rotate-12 opacity-5 pointer-events-none" />
               </div>

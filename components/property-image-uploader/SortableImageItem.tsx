@@ -207,7 +207,7 @@ export function SortableImageItem({
               type="button"
               size="icon"
               variant="secondary"
-              className="h-8 w-8 sm:h-9 sm:w-9 bg-white/95 hover:bg-white shadow-xl rounded-full"
+              className="h-8 w-8 sm:h-9 sm:w-9 bg-white/90 hover:bg-white shadow-xl rounded-full"
               onClick={(e) => {
                 e.stopPropagation();
                 onSetCover(image.id);

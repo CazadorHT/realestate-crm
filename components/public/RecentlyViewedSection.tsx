@@ -246,7 +246,7 @@ export function RecentlyViewedSection({
   if (items.length === 0) {
     return (
       <section className="py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-blue-50/30 border-y border-blue-100/50 flex flex-col items-center justify-center">
-        <div className="flex flex-col items-center justify-center p-12 text-center bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-100 w-full max-w-7xl mx-auto">
+        <div className="flex flex-col items-center justify-center p-12 text-center bg-white/80 rounded-3xl border border-slate-100 w-full max-w-7xl mx-auto">
           <div className="w-16 h-16 mb-4 rounded-full bg-slate-100 flex items-center justify-center">
             <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

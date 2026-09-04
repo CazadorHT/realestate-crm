@@ -87,7 +87,7 @@ export function ContactInfoCards() {
         >
           <div className={cn(
             "h-full rounded-2xl lg:rounded-3xl p-6 lg:p-8",
-            "bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl",
+            "bg-slate-900/90 border border-white/10 shadow-2xl",
             "transition-all duration-500 group-hover:-translate-y-1 group-hover:bg-white/20",
             
             info.glowBorder

@@ -213,7 +213,7 @@ export function LineTemplateCard({
                             sizes="256px"
                             unoptimized
                           />
-                          <div className="absolute top-2 right-2 bg-white/95 px-2 py-0.5 rounded-lg text-[9px] font-bold text-slate-800 shadow-sm border border-slate-100">
+                          <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded-lg text-[9px] font-bold text-slate-800 shadow-sm border border-slate-100">
                             {template.key === "DEAL_SOLO" ? "🎉 SOLD OUT" : template.key === "DEAL_RENT" ? "📝 RENTED" : "FOR SALE"}
                           </div>
                         </div>

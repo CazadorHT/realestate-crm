@@ -386,7 +386,7 @@ export function MobileNav({
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="w-80 p-0 flex flex-col border-r border-slate-200 bg-white/95 backdrop-blur-xl"
+        className="w-80 p-0 flex flex-col border-r border-slate-200 bg-white/90 backdrop-blur-xl"
       >
         <SheetTitle className="sr-only">เมนูหลัก</SheetTitle>
 

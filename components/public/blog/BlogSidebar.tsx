@@ -135,7 +135,7 @@ export function BlogSidebar({
                     className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all duration-300 hover:shadow-lg hover:scale-105 ${
                       isActive
                         ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white border-transparent shadow-md"
-                        : "bg-white/60 backdrop-blur-sm text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 hover:bg-white"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 hover:bg-slate-50"
                     }`}
                   >
                     #{tag}

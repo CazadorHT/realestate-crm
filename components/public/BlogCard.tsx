@@ -77,7 +77,7 @@ export function BlogCard({ post, className, language, t, priority = false }: Blo
               <Badge
                 variant="secondary"
                 className={cn(
-                  "backdrop-blur-md bg-white/90 border-0 shadow-sm transition-all duration-300 font-bold",
+                  "bg-white/90 border border-slate-100 shadow-xs transition-all duration-300 font-bold",
                   getCategoryColor(post.category),
                 )}
               >

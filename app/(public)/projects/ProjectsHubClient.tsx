@@ -550,7 +550,7 @@ export function ProjectsHubClient({
 
         <div className="relative max-w-screen-2xl mx-auto px-5 md:px-8 z-10">
           <nav aria-label="breadcrumb" className="mb-4 md:mb-8">
-            <ol className="hidden lg:flex items-center gap-2 text-xs text-slate-400 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 w-fit">
+            <ol className="hidden lg:flex items-center gap-2 text-xs text-slate-400 bg-white/10 px-4 py-2 rounded-full border border-white/10 w-fit">
               <li><Link href="/" className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
               <li><ChevronRight className="w-3.5 h-3.5 opacity-60 text-slate-500" /></li>
               <li className="text-slate-200 font-bold">{getPageString("breadcrumb_projects")}</li>
@@ -558,7 +558,7 @@ export function ProjectsHubClient({
             <div className="block lg:hidden">
               <Link
                 href="/"
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md shadow-2xs active:scale-95 transition-all"
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-white/20 hover:bg-white/30 text-white border border-white/20 shadow-2xs active:scale-95 transition-all"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>{getPageString("breadcrumb_home")}</span>
@@ -567,7 +567,7 @@ export function ProjectsHubClient({
           </nav>
 
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
-            <div className="hidden md:flex p-5 rounded-3xl bg-linear-to-tr from-blue-600/30 to-indigo-600/30 backdrop-blur-xl border border-white/10 shrink-0 shadow-2xl shadow-blue-500/5">
+            <div className="hidden md:flex p-5 rounded-3xl bg-linear-to-tr from-blue-600/30 to-indigo-600/30 border border-white/10 shrink-0 shadow-2xl shadow-blue-500/5">
               <Building2 className="w-12 h-12 text-blue-400" />
             </div>
             <div>
@@ -583,7 +583,7 @@ export function ProjectsHubClient({
       </section>
 
       {/* Controls Container - Sticky & Refined */}
-      <section className="sticky top-[62px] z-30 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/85 shadow-xs">
+      <section className="sticky top-[62px] z-30 w-full bg-white/90 border-b border-slate-200/85 shadow-xs">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-2.5">
           
           {/* Row 1: Search Bar + Sort Dropdown */}
@@ -1128,7 +1128,7 @@ export function ProjectsHubClient({
                           </div>
                         )}
                         {/* Property Count Badge */}
-                        <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10">
+                        <div className="absolute top-3 right-3 bg-slate-900/90 text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 shadow-xs">
                           {project.propertyCount > 0 
                             ? getPageString("units_available", { count: project.propertyCount })
                             : getPageString("no_units")

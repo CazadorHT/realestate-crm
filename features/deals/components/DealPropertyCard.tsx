@@ -53,7 +53,7 @@ export function DealPropertyCard({ property, isRent }: DealPropertyCardProps) {
             )}
             {/* Price Badge */}
             <div className="absolute bottom-3 left-3 right-3">
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+              <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
                   {isRent ? (isEn ? "Rental Price" : "ราคาเช่า") : (isEn ? "Sale Price" : "ราคาขาย")}
                 </p>

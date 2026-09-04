@@ -43,7 +43,7 @@ export default function ContactPageClient({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.6 }}
               >
-                <Card className="relative shadow-2xl shadow-black/20 border-white/10 bg-white/[0.07] backdrop-blur-xl overflow-hidden ring-1 ring-white/10 rounded-3xl">
+                <Card className="relative shadow-2xl shadow-black/20 border-white/10 bg-slate-900/90 overflow-hidden ring-1 ring-white/10 rounded-3xl">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-60" />
                   <CardContent className="p-6 sm:p-8">
                     <div className="mb-6 flex items-center gap-4 text-left">

@@ -44,7 +44,7 @@ export function MobilePropertyActions({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.15)] xl:hidden rounded-t-[2.5rem]"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 border-t border-slate-200/80 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.12)] xl:hidden rounded-t-[2.5rem]"
     >
       <div className="flex items-center gap-3 max-w-lg mx-auto ">
         {/* Agent Info (Mini) */}

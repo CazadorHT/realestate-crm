@@ -118,7 +118,7 @@ export function AgentSidebar({
   };
 
   return (
-    <div className="rounded-[2.5rem] border border-slate-100 bg-white/80 p-7 shadow-2xl shadow-slate-200/50 backdrop-blur-xl relative overflow-hidden flex flex-col w-full group">
+    <div className="rounded-[2.5rem] border border-slate-100 bg-white p-7 shadow-xl shadow-slate-200/50 relative overflow-hidden flex flex-col w-full group">
       {/* Decorative Gradient Element */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-blue-500/10 transition-colors" />
       {/* Agent Info */}

@@ -34,7 +34,7 @@ export function BackToTop() {
       variant="outline"
       size="icon"
       className={cn(
-        "fixed bottom-24 right-4 z-50 rounded-full h-12 w-12 bg-white/80 backdrop-blur-md shadow-xl border-slate-200 transition-all duration-500 scale-0 opacity-0 xl:bottom-8 lg:right-8",
+        "fixed bottom-24 right-4 z-50 rounded-full h-12 w-12 bg-white/90 shadow-xl border-slate-200 transition-all duration-500 scale-0 opacity-0 xl:bottom-8 lg:right-8",
         isVisible && "scale-100 opacity-100",
         "hover:bg-blue-600 hover:text-white hover:-translate-y-1 active:scale-95",
       )}

@@ -113,7 +113,7 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
             {displayType && (
               <div className="absolute top-1.5 left-1.5 z-10">
                 <span
-                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-md shadow-xs uppercase tracking-wider ${
+                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-xs uppercase tracking-wider ${
                     getTypeColor(displayType).bg
                   } ${getTypeColor(displayType).text}`}
                 >
@@ -125,7 +125,7 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
 
             {/* Bottom-Left: Match Score Pill on Image */}
             <div className="absolute bottom-1.5 left-1.5 z-10">
-              <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-blue-800 bg-white/95 backdrop-blur-md px-1.5 py-0.5 rounded-md shadow-xs border border-blue-100">
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-blue-800 bg-white/90 px-1.5 py-0.5 rounded-md shadow-xs border border-blue-100">
                 <Sparkles className="h-2.5 w-2.5 text-blue-600 fill-blue-500/20" />
                 {match.match_score}% {t("smart_match.match_score_label")}
               </span>

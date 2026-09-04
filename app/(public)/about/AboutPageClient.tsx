@@ -107,7 +107,7 @@ export default function AboutPageClient() {
       <section className="relative pt-24 pb-20 lg:pt-32 lg:pb-32 px-4 overflow-hidden bg-slate-950 text-white">
         {/* Background Effects */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-linear-to-b from-slate-950/95 via-slate-950/40 to-slate-950" />
+          <div className="absolute inset-0 bg-linear-to-b from-slate-950/90 via-slate-950/40 to-slate-950" />
           <div className="absolute inset-0 bg-linear-to-r from-blue-900/30 via-transparent to-purple-900/30" />
         </div>
 
@@ -131,7 +131,7 @@ export default function AboutPageClient() {
           >
             <m.div
               variants={itemVariants}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-blue-300 text-[10px] lg:text-xs font-bold uppercase tracking-widest shadow-2xl"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 border border-white/30 text-blue-200 text-[10px] lg:text-xs font-bold uppercase tracking-widest shadow-lg"
             >
               <Award className="w-3.5 h-3.5" />
               {siteConfig.name}
@@ -163,7 +163,7 @@ export default function AboutPageClient() {
               {stats.map((stat, idx) => (
                 <div
                   key={idx}
-                  className="bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-2 hover:bg-white/10 transition-colors group"
+                  className="bg-white/10 border border-white/15 p-6 rounded-3xl shadow-xl flex flex-col items-center gap-2 hover:bg-white/15 transition-colors group"
                 >
                   <div className="text-blue-400 p-2 bg-blue-500/10 rounded-xl mb-1 group-hover:scale-110 transition-transform">
                     {stat.icon}

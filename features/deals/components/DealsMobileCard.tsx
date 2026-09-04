@@ -132,7 +132,7 @@ export function DealsMobileCard({
                   {deal.deal_type === "RENT" ? (isEn ? "Rent" : "เช่า") : (isEn ? "Sale" : "ขาย")}
                 </Badge>
               <div className="pointer-events-auto">
-                <div className="bg-white/95 backdrop-blur-sm border border-blue-100 px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2">
+                <div className="bg-white/90 backdrop-blur-sm border border-blue-100 px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2">
                    <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
                    <span className="text-[11px] font-semibold text-blue-700 uppercase tracking-tight leading-none">
                      {currentStatusMap[deal.status] || deal.status}

@@ -49,7 +49,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-44 p-1.5 rounded-2xl shadow-xl border border-slate-100 bg-white/95 backdrop-blur-md z-50 animate-in fade-in-80"
+        className="w-44 p-1.5 rounded-2xl shadow-xl border border-slate-100 bg-white/90 backdrop-blur-md z-50 animate-in fade-in-80"
       >
         <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <Globe className="w-3 h-3 text-slate-400" />

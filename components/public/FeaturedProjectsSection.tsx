@@ -15,7 +15,6 @@ interface FeaturedProjectsSectionProps {
   language?: string;
 }
 
-
 const SECTION_LOCALIZATION: Record<string, Record<string, string>> = {
   badge: {
     th: "โครงการแนะนำ",
@@ -99,6 +98,7 @@ export function FeaturedProjectsSection({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
 
   const getPageString = (key: string, params?: Record<string, string | number>) => {
     let val = SECTION_LOCALIZATION[key]?.[language] || SECTION_LOCALIZATION[key]?.th || "";
@@ -121,9 +121,9 @@ export function FeaturedProjectsSection({
   useEffect(() => {
     const el = scrollRef.current;
     if (el) {
-      el.addEventListener("scroll", checkScrollLimits);
+      el.addEventListener("scroll", checkScrollLimits, { passive: true });
       checkScrollLimits();
-      window.addEventListener("resize", checkScrollLimits);
+      window.addEventListener("resize", checkScrollLimits, { passive: true });
     }
     return () => {
       if (el) el.removeEventListener("scroll", checkScrollLimits);
@@ -155,7 +155,7 @@ export function FeaturedProjectsSection({
             className="max-w-2xl text-left space-y-3"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-blue-50 to-purple-50 border border-blue-100 w-fit">
-              <Sparkles className="w-4 h-4 text-blue-600 animate-pulse" />
+              <Sparkles className="w-4 h-4 text-blue-600" />
               <span className="text-xs font-bold text-blue-700">
                 {getPageString("badge")}
               </span>
@@ -185,7 +185,7 @@ export function FeaturedProjectsSection({
           
           <Link
             href="/projects"
-            className="inline-flex items-center gap-2 px-5 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white text-xs font-bold rounded-xl hover:shadow-xl hover:shadow-blue-550/30 transition-all hover:scale-105"
+            className="inline-flex items-center gap-2 px-5 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white text-xs font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105"
           >
             <span>{getPageString("view_all")}</span>
             <ArrowRight className="w-4 h-4" />
@@ -201,7 +201,7 @@ export function FeaturedProjectsSection({
           {/* Left Arrow Button */}
           <button
             onClick={() => scroll("left")}
-            className={`absolute -left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 hover:text-blue-650 active:scale-95 transition-all duration-300 z-20 cursor-pointer hidden md:flex ${
+            className={`absolute -left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 hover:text-blue-600 active:scale-95 transition-all duration-300 z-20 cursor-pointer hidden md:flex ${
               showLeftArrow ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
             }`}
             aria-label="Scroll left"
@@ -212,7 +212,7 @@ export function FeaturedProjectsSection({
           {/* Right Arrow Button */}
           <button
             onClick={() => scroll("right")}
-            className={`absolute -right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 hover:text-blue-650 active:scale-95 transition-all duration-300 z-20 cursor-pointer hidden md:flex ${
+            className={`absolute -right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 hover:text-blue-600 active:scale-95 transition-all duration-300 z-20 cursor-pointer hidden md:flex ${
               showRightArrow ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
             }`}
             aria-label="Scroll right"
@@ -258,20 +258,26 @@ export function FeaturedProjectsSection({
                   ? (provinceName ? `${districtName}, ${provinceName}` : districtName)
                   : provinceName;
 
+              const isImgLoaded = loadedImages[proj.id];
+
               return (
                 <m.div
                   key={proj.id}
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 22 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  className="shrink-0 snap-start"
+                  viewport={{ once: true, margin: "-30px" }}
+                  transition={{
+                    duration: 0.45,
+                    delay: index * 0.04,
+                    ease: [0.21, 0.47, 0.32, 0.98],
+                  }}
+                  className="shrink-0 snap-start will-change-transform"
                 >
                   <Link
                     href={`/projects/${proj.slug}`}
-                    className="group bg-white rounded-3xl overflow-hidden border border-slate-200/60 hover:border-slate-350 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col w-72 md:w-80 h-full"
+                    className="group bg-white rounded-3xl overflow-hidden border border-slate-200/70 hover:border-slate-300 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col w-72 md:w-80 h-full"
                   >
-                    {/* Project Image */}
+                    {/* Project Image with Progressive Blur-Up */}
                     <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 shrink-0">
                       {proj.imageUrl ? (
                         <Image
@@ -279,15 +285,25 @@ export function FeaturedProjectsSection({
                           alt={nameText}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          className={`object-cover group-hover:scale-105 transition-all duration-600 ease-out ${
+                            isImgLoaded
+                              ? "blur-0 opacity-100 scale-100"
+                              : "blur-xs opacity-0 scale-105"
+                          }`}
+                          onLoad={() =>
+                            setLoadedImages((prev) => ({
+                              ...prev,
+                              [proj.id]: true,
+                            }))
+                          }
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-150 flex items-center justify-center text-slate-300">
                           <Building2 className="w-12 h-12 stroke-[1.5]" />
                         </div>
                       )}
-                      {/* Unit Count Badge */}
-                      <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1.2 rounded-full border border-white/10 shadow-xs">
+                      {/* Unit Count Badge (Solid Alpha, No GPU Backdrop Blur) */}
+                      <div className="absolute top-3 right-3 bg-slate-900/85 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/10 shadow-xs">
                         {proj.propertyCount > 0 
                           ? getPageString("units_available", { count: proj.propertyCount })
                           : getPageString("no_units")
@@ -350,3 +366,4 @@ export function FeaturedProjectsSection({
     </section>
   );
 }
+

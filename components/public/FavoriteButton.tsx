@@ -68,13 +68,13 @@ export function FavoriteButton({
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size={showText ? "default" : "icon"}
       className={cn(
-        "rounded-full transition-all duration-300 border-slate-200 hover:border-rose-200 hover:bg-rose-500 hover:text-white",
+        "rounded-full transition-all duration-300 shadow-sm border cursor-pointer",
         favorited
-          ? "text-rose-500  border-rose-200 bg-rose-200"
-          : "text-slate-400 bg-slate-200",
+          ? "bg-red-500 text-white border-red-500 shadow-md hover:bg-red-600 hover:border-red-600 hover:text-white"
+          : "bg-white/80 text-[#1B263B] border-white/40 hover:bg-red-500 hover:text-white hover:border-red-500",
         className,
       )}
       onClick={handleToggle}
@@ -87,7 +87,7 @@ export function FavoriteButton({
     >
       <Heart
         className={cn(
-          "h-5 w-5 transition-all duration-500",
+          "h-4 w-4 transition-all duration-300",
           favorited ? "fill-current scale-110" : "scale-100",
           isAnimating && "animate-pulse",
         )}
@@ -95,8 +95,8 @@ export function FavoriteButton({
       {showText && (
         <span
           className={cn(
-            "ml-2",
-            favorited ? "text-red-600! font-medium" : "text-slate-600!",
+            "ml-2 font-medium",
+            favorited ? "text-white" : "text-inherit",
           )}
         >
           {favorited

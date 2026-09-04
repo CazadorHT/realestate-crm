@@ -611,7 +611,7 @@ function PropertyListingContent({
                     );
                     if (el) el.scrollBy({ left: -200, behavior: "smooth" });
                   }}
-                  className="absolute left-0 md:-left-4 xl:-left-1 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
+                  className="absolute left-0 md:-left-4 xl:-left-1 top-1/2 -translate-y-1/2 bg-white/90 border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
                   aria-label="Previous filters"
                 >
                   <svg
@@ -637,7 +637,7 @@ function PropertyListingContent({
                     );
                     if (el) el.scrollBy({ left: 200, behavior: "smooth" });
                   }}
-                  className="absolute right-0 md:-right-4 xl:-right-1 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute right-0 md:-right-4 xl:-right-1 top-1/2 -translate-y-1/2 bg-white/90 border border-slate-200 rounded-full p-1.5 md:p-2 text-slate-600 shadow-md hover:bg-white hover:text-slate-900 focus:outline-none z-10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label="Next filters"
                 >
                   <svg
@@ -680,7 +680,7 @@ function PropertyListingContent({
               
               {/* Centered Loading Overlay - Subtle and non-blocking */}
               <div className="absolute inset-0 z-10 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3 bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-xl border border-slate-100">
+                <div className="flex flex-col items-center gap-3 bg-white/80 p-6 rounded-3xl shadow-xl border border-slate-100">
                   <div className="h-10 w-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
                   <span className="text-blue-600 font-bold text-sm tracking-wide">
                     {t("common.loading")}

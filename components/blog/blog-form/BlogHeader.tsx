@@ -60,7 +60,7 @@ export function BlogHeader({
 
   return (
     <div className="sticky top-16 z-50 -mx-6 px-4 md:px-6 mb-6">
-      <div className="bg-white/95 backdrop-blur-md border-b border-slate-200 rounded-xl shadow-sm py-4 px-4 md:px-6">
+      <div className="bg-white/90 backdrop-blur-md border-b border-slate-200 rounded-xl shadow-sm py-4 px-4 md:px-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Left - Back & Title */}
           <div className="flex items-center gap-2 md:gap-4">

@@ -88,7 +88,7 @@ export function DepositDesktopView({
   return (
     <div className="hidden sm:flex sm:flex-row h-full min-h-[580px] overflow-hidden rounded-2xl">
       {/* ── Left Panel: Branding & Steps ── */}
-      <div className="w-[300px] shrink-0 bg-[#0c1e4c]/90 backdrop-blur-md text-white p-8 flex flex-col justify-between relative overflow-hidden">
+      <div className="w-[300px] shrink-0 bg-[#0c1e4c] text-white p-8 flex flex-col justify-between relative overflow-hidden">
         {/* Advanced Mesh Gradient Background */}
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-linear-to-br from-blue-700/20 via-transparent to-indigo-900/40" />
@@ -187,7 +187,7 @@ export function DepositDesktopView({
       </div>
 
       {/* ── Right Panel: Form Wizard ── */}
-      <div className="flex-1 bg-white/90 backdrop-blur-md flex flex-col min-h-0">
+      <div className="flex-1 bg-white flex flex-col min-h-0">
         {/* Horizontal Progress Bar */}
         <div className="h-1.5 w-full bg-slate-50 relative shrink-0">
           <m.div

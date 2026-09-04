@@ -11,7 +11,7 @@ export default function AuthLoading() {
       </div>
 
       {/* Loading Dialog Skeleton */}
-      <div className="relative z-10 w-full max-w-md p-8 mx-4 bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl flex flex-col items-center justify-center space-y-6">
+      <div className="relative z-10 w-full max-w-md p-8 mx-4 bg-white/90 backdrop-blur-2xl rounded-3xl shadow-2xl flex flex-col items-center justify-center space-y-6">
         <div className="h-12 w-12 rounded-full border-2 border-slate-100 border-t-blue-600 animate-spin" />
         <div className="space-y-2 text-center">
           <div className="h-6 w-32 bg-slate-200 rounded-lg animate-pulse mx-auto" />

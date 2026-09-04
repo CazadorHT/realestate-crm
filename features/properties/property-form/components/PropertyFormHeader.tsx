@@ -42,7 +42,7 @@ export function PropertyFormHeader({
       id="tour-property-form-header"
       className={`${
         mode === "edit" && !isKeyboardOpen ? "sticky top-16 sm:top-16 z-30 shadow-sm" : "relative"
-      } bg-white/95 backdrop-blur-md border-b border-slate-200 py-3 sm:py-4 mb-4 sm:mb-6 px-4 sm:px-6 transition-all duration-200 sm:rounded-xl max-w-screen`}
+      } bg-white/90 backdrop-blur-md border-b border-slate-200 py-3 sm:py-4 mb-4 sm:mb-6 px-4 sm:px-6 transition-all duration-200 sm:rounded-xl max-w-screen`}
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mx-auto gap-2 w-full">
         <div className="min-w-0 flex-1 w-full">

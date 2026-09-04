@@ -120,7 +120,7 @@ export function AreaProjectsCarousel({
                   <Building2 className="w-12 h-12 stroke-[1.5]" />
                 </div>
               )}
-              <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full border border-slate-100 text-[10px] font-bold text-indigo-600 shadow-xs">
+              <div className="absolute top-3 right-3 bg-white/90 px-2.5 py-1 rounded-full border border-slate-100 text-[10px] font-bold text-indigo-600 shadow-xs">
                 {proj.propertyCount} {unitsLabel}
               </div>
             </div>

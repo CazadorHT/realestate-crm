@@ -113,7 +113,7 @@ export function ContactSidebar() {
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/5 rounded-full translate-y-1/2 -translate-x-1/2 group-hover:scale-110 transition-transform duration-500" />
 
         <CardContent className="p-6 relative z-10 text-center">
-          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border border-white/30 shadow-inner">
+          <div className="w-12 h-12 bg-white/25 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/30 shadow-inner">
             <FaLine className="h-6 w-6 text-white" />
           </div>
           <h3 className="font-semibold text-xl mb-2">

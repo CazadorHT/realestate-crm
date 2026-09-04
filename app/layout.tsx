@@ -10,7 +10,7 @@ import { AnimationProvider } from "@/components/providers/AnimationProvider";
 import { SiteConfigProvider } from "@/components/providers/SiteConfigProvider";
 import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
 import { DynamicClientProviders } from "@/components/providers/DynamicClientProviders";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, getServerLanguage } from "@/lib/i18n";
 import { AnalyticsTracker } from "@/components/providers/AnalyticsTracker";
 import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
@@ -251,7 +251,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Pure Static RootLayout (0 Dynamic Cookies) to ensure 100% Cloudflare Edge Caching & Zero Fast Origin Egress
+  // Pure Static RootLayout (0 Dynamic Cookies) for 100% Cloudflare Edge Caching & Zero Fast Origin Egress
   const lang = "th";
   const settings = await getSiteSettings();
   const gtmId = settings.google_tag_manager_enabled ? settings.google_tag_manager_id : null;

@@ -138,7 +138,7 @@ export default async function ProjectsHubPage() {
       />
 
       {/* SEO Section */}
-      <section className="bg-white/60 backdrop-blur-sm border-t border-slate-100">
+      <section className="bg-white border-t border-slate-100">
         <div className="max-w-screen-2xl mx-auto px-5 md:px-8 py-12">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
             {getPageString("why_choose")}

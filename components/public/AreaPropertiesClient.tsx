@@ -129,7 +129,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
   return (
     <div className="space-y-6">
       {/* Filters Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/80 backdrop-blur-xs p-4 rounded-2xl border border-slate-200/60 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 p-4 rounded-2xl border border-slate-200/80 shadow-xs">
         {/* Listing Type tabs */}
         <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-fit">
           <button
@@ -333,7 +333,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
           )}
         </div>
       ) : (
-        <div className="text-center py-16 bg-white/50 backdrop-blur-xs rounded-3xl border border-slate-200/50 shadow-sm">
+        <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 shadow-xs">
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Grid3X3 className="w-8 h-8 text-slate-400" />
           </div>

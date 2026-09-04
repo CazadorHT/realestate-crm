@@ -108,7 +108,7 @@ function ServicesContent() {
         <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="container relative z-10 mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-white/90 text-sm mb-8 border border-white/10 backdrop-blur-md animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white/90 text-sm mb-8 border border-white/20 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
             <Sparkles className="h-4 w-4 text-yellow-400" />
             <span className="font-semibold tracking-wide uppercase text-[11px]">
               {t("services.title_badge")}
@@ -143,7 +143,7 @@ function ServicesContent() {
               <Button
                 size="lg"
                 variant="outline"
-                className="rounded-lg h-14 px-8 border-white/20 hover:text-white hover:bg-white/10 backdrop-blur-sm"
+                className="rounded-lg h-14 px-8 border-white/20 hover:text-white hover:bg-white/10"
               >
                 {t("contact.title")}
               </Button>
@@ -232,7 +232,7 @@ function ServicesContent() {
                           : service.title}
                       </h4>
                       { (language === "en" ? service.price_range_en : language === "cn" ? service.price_range_cn : language === "ru" ? service.price_range_ru : service.price_range) && (
-                        <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 backdrop-blur-sm text-yellow-300 border border-white/10 text-xs font-semibold">
+                        <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-yellow-300 border border-white/10 text-xs font-semibold">
                           {language === "en" && service.price_range_en
                             ? service.price_range_en
                             : language === "cn" && service.price_range_cn

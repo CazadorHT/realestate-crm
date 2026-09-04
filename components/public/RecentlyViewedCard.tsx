@@ -65,7 +65,6 @@ export function RecentlyViewedCard({
           <FavoriteButton
             propertyId={item.id}
             propertyTitle={getLocaleValue(item, "title", language)}
-            className="bg-white/70 backdrop-blur-sm rounded-full p-2 hover:bg-white/80"
           />
         </div>
       </div>

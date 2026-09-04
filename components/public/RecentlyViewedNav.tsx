@@ -18,7 +18,7 @@ export function RecentlyViewedNav({
       <button
         onClick={scrollPrev}
         disabled={!canScrollLeft}
-        className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all! duration-300! flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
+        className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/80 border border-slate-200 shadow-md hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors duration-200 flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/80 disabled:hover:text-slate-700 cursor-pointer"
         aria-label="Previous"
       >
         <ChevronLeft className="h-4 w-4 md:h-5 md:w-5 text-slate-700 group-hover:text-white" />
@@ -26,7 +26,7 @@ export function RecentlyViewedNav({
       <button
         onClick={scrollNext}
         disabled={!canScrollRight}
-        className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200 shadow-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all! duration-300! flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/90 disabled:hover:text-slate-700"
+        className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-white/80 border border-slate-200 shadow-md hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors duration-200 flex items-center justify-center group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/80 disabled:hover:text-slate-700 cursor-pointer"
         aria-label="Next"
       >
         <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-slate-700 group-hover:text-white" />

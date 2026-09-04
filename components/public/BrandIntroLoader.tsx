@@ -7,17 +7,7 @@ const STORAGE_KEY = "vcc_brand_intro_seen";
 const INTRO_DURATION_MS = 1750; // Total duration before curtain begins opening
 
 export function BrandIntroLoader() {
-  const [isVisible, setIsVisible] = useState(() => {
-    if (typeof window === "undefined") return true;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const force = params.get("intro") === "1" || params.get("preview_intro") === "1";
-      if (force) return true;
-      return sessionStorage.getItem(STORAGE_KEY) !== "true";
-    } catch {
-      return true;
-    }
-  });
+  const [isVisible, setIsVisible] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleDismiss = useCallback(() => {
@@ -74,6 +64,7 @@ export function BrandIntroLoader() {
           role="dialog"
           aria-label="Welcome to VCC Asset"
           onClick={handleDismiss}
+          suppressHydrationWarning
           initial={{ opacity: 1, y: 0 }}
           exit={{
             y: "-100%",
@@ -134,7 +125,7 @@ export function BrandIntroLoader() {
               }}
               className="absolute text-xs tracking-widest text-slate-400 uppercase transition-opacity duration-300 hover:text-slate-700 font-medium"
             >
-              <span className="inline-flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-full bg-slate-100/80 border border-slate-200/60 backdrop-blur-xs shadow-xs active:scale-95 transition-transform">
+              <span className="inline-flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-full bg-slate-100 border border-slate-200 shadow-xs active:scale-95 transition-transform">
                 Skip <span className="text-[10px] text-slate-400">· ESC</span>
               </span>
             </div>

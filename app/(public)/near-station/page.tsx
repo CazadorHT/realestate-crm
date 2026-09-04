@@ -186,7 +186,7 @@ export default async function NearStationHubPage() {
           </nav>
 
           <div className="flex flex-col md:flex-row md:items-center gap-6">
-            <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shrink-0">
+            <div className="p-4 rounded-2xl bg-white/15 border border-white/20 shrink-0">
               <Train className="w-10 h-10 text-white" />
             </div>
             <div>
@@ -211,7 +211,7 @@ export default async function NearStationHubPage() {
       </section>
 
       {/* SEO Content */}
-      <section className="bg-white/60 backdrop-blur-sm border-t border-slate-100">
+      <section className="bg-white border-t border-slate-100">
         <div className="max-w-screen-2xl mx-auto px-5 md:px-8 py-12">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
             {getPageString("why_choose")}
@@ -264,7 +264,7 @@ export default async function NearStationHubPage() {
 
 function TransitLineSection({ line, language }: { line: TransitLine; language: string }) {
   return (
-    <div className="rounded-2xl bg-white/70 backdrop-blur-sm border border-slate-200/60 shadow-sm overflow-hidden">
+    <div className="rounded-2xl bg-white border border-slate-200/80 shadow-xs overflow-hidden">
       {/* Line Header */}
       <div
         className="px-6 py-4 flex items-center gap-3 border-b border-slate-100"

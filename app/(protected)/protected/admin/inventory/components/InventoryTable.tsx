@@ -409,7 +409,7 @@ export const InventoryTable = React.memo(
                           {getPropertyTypeLabel(item.property_type)}
                         </Badge>
                       </div>
-                      <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full shadow-lg border border-slate-100">
+                      <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-lg border border-slate-100">
                         <span className="text-xs font-bold text-slate-900">
                           {mobilePriceBadge}
                         </span>

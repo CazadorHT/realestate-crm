@@ -337,7 +337,7 @@ export function PropertyCardImage({
                 {shouldRender ? (
                   <>
                     {!loadedImages[index] && (
-                      <div className="absolute inset-0 bg-slate-200 animate-pulse z-10 pointer-events-none" />
+                      <div className="absolute inset-0 bg-slate-200 z-10 pointer-events-none" />
                     )}
                     <Image
                       src={img}
@@ -354,8 +354,8 @@ export function PropertyCardImage({
                       } - Image ${index + 1}`}
                       fill
                       sizes="(max-width: 640px) 95vw, (max-width: 768px) 45vw, (max-width: 1280px) 300px, 320px"
-                      className={`object-cover object-center transition-[filter,opacity] duration-500 ${
-                        loadedImages[index] ? "blur-0 opacity-100" : "blur-sm opacity-90"
+                      className={`object-cover object-center transition-[filter,opacity] duration-300 ${
+                        loadedImages[index] ? "blur-0 opacity-100" : "blur-xs opacity-90"
                       }`}
                       priority={priority && index === 0}
                       {...(!(priority && index === 0) && { loading: "lazy" })}
@@ -363,7 +363,7 @@ export function PropertyCardImage({
                     />
                   </>
                 ) : (
-                  <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+                  <div className="absolute inset-0 bg-slate-100" />
                 )}
               </Link>
             );
@@ -401,14 +401,14 @@ export function PropertyCardImage({
         <>
           <button
             onClick={scrollPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/imgwrap:opacity-100 transition-all duration-300 shadow-sm"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/40 hover:bg-slate-900/70 text-white border border-white/30 opacity-0 group-hover/imgwrap:opacity-100 transition-all duration-300 shadow-md"
             aria-label="Previous image"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={scrollNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/imgwrap:opacity-100 transition-all duration-300 shadow-sm"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/40 hover:bg-slate-900/70 text-white border border-white/30 opacity-0 group-hover/imgwrap:opacity-100 transition-all duration-300 shadow-md"
             aria-label="Next image"
           >
             <ChevronRight className="w-5 h-5" />
@@ -416,13 +416,13 @@ export function PropertyCardImage({
         </>
       )}
 
-      <div className="pointer-events-none absolute inset-0 rounded-t-2xl md:rounded-t-3xl bg-linear-to-t from-black/50 via-transparent to-transparent" />
+      <div className="pointer-events-none absolute inset-0 rounded-t-2xl md:rounded-t-3xl bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
       {/* Badge Overlay Container */}
       <div className="absolute top-3 left-3 flex flex-col items-start gap-2 z-20">
         {/* Hot Deal Badge */}
         {isHotDeal && (
-          <div className="flex items-center gap-1 bg-red-600/95 backdrop-blur-xs text-white px-2.5 py-1 rounded-md shadow-md border border-white/10 select-none cursor-default font-bold text-[10px] md:text-xs">
+          <div className="flex items-center gap-1 bg-red-600 text-white px-2.5 py-1 rounded-md shadow-md border border-white/20 select-none cursor-default font-bold text-[10px] md:text-xs">
             <PiFireFill className="w-3.5 h-3.5 md:w-4 md:h-4 fill-yellow-300 shrink-0" />
             <span>
               {language === "th" ? "ลดแรง" : "Hot Deal"}
@@ -430,10 +430,9 @@ export function PropertyCardImage({
           </div>
         )}
 
-
         {/* Verified Badge */}
         {property.verified && (
-          <div className={`flex items-center bg-blue-600/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+          <div className={`flex items-center bg-blue-600 text-white p-1.5 rounded-full shadow-md border border-white/20 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <IoShieldCheckmark className="w-5 h-5" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               VERIFIED
@@ -443,7 +442,7 @@ export function PropertyCardImage({
 
         {/* Pet Friendly Badge */}
         {property.is_pet_friendly && (
-          <div className={`flex items-center bg-white/90 backdrop-blur-md text-orange-600 p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+          <div className={`flex items-center bg-white/80 text-orange-600 p-1.5 rounded-full shadow-md border border-white/40 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <MdOutlinePets className="w-5 h-5 rotate-25" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               Pet Friendly
@@ -453,7 +452,7 @@ export function PropertyCardImage({
 
         {/* Prime CBD Badge */}
         {isCbdProperty(property) && (
-          <div className={`flex items-center bg-white/90 backdrop-blur-md text-emerald-700 p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+          <div className={`flex items-center bg-white/80 text-emerald-700 p-1.5 rounded-full shadow-md border border-white/40 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <FaCity className="w-5 h-5 shrink-0 text-emerald-600" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               Prime CBD
@@ -463,7 +462,7 @@ export function PropertyCardImage({
 
         {/* Airbnb Allowed Badge */}
         {property.allow_airbnb && (
-          <div className={`flex items-center bg-[#FF5A5F]/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+          <div className={`flex items-center bg-[#FF5A5F] text-white p-1.5 rounded-full shadow-md border border-white/20 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <FaAirbnb className="w-5 h-5 shrink-0" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               Airbnb
@@ -473,7 +472,7 @@ export function PropertyCardImage({
 
         {/* Company Registered Badge */}
         {property.is_tax_registered && (
-          <div className={`flex items-center bg-emerald-600/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+          <div className={`flex items-center bg-emerald-600 text-white p-1.5 rounded-full shadow-md border border-white/20 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <HiBuildingOffice2 className="w-5 h-5 shrink-0" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               {language === "th" ? "จดบริษัทได้" : "Company Reg."}
@@ -487,7 +486,7 @@ export function PropertyCardImage({
           return (
             <div
               key={idx}
-              className={`flex items-center ${b.color} backdrop-blur-md p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover/image:pr-3" : ""}`}
+              className={`flex items-center ${b.color} p-1.5 rounded-full shadow-md border border-white/20 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover/image:pr-3" : ""}`}
             >
               <Icon className="w-5 h-5 shrink-0" />
               <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover/image:max-w-[120px] group-hover/image:opacity-100 group-hover/image:ml-1.5" : ""}`}>
@@ -499,11 +498,10 @@ export function PropertyCardImage({
       </div>
 
       {/* Social Proof Pill (Bottom Left) */}
-      <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/60 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-semibold border border-white/15 shadow-sm pointer-events-none transition-opacity duration-300">
+      <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 text-white text-[10px] sm:text-[11px] font-semibold border border-white/15 shadow-sm pointer-events-none transition-opacity duration-300">
         <FaHeart className="w-3 h-3 text-rose-500 shrink-0" />
         <span>{t("property.social_proof_saved_short", { count: socialStats.savedCount })}</span>
       </div>
-
 
       {/* Top Right Actions (Share, Favorite) Grouped Automatically */}
       <div className="absolute top-3 right-3 flex items-center gap-1.5 sm:gap-2 z-30">
@@ -511,19 +509,16 @@ export function PropertyCardImage({
         <button
           onClick={onFavoriteClick}
           aria-label={isFavorite ? t("common.remove_favorite") || "Remove from favorite" : t("common.add_favorite") || "Add to favorite"}
-          className={`p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
+          className={`p-2 rounded-full transition-all duration-300 cursor-pointer ${
             isFavorite
-              ? "bg-red-500 text-white shadow-lg"
-              : "bg-white/40 text-[#1B263B] hover:bg-red-500 hover:text-white"
+              ? "bg-red-500 text-white shadow-md hover:bg-red-600"
+              : "bg-white/80 text-[#1B263B] shadow-sm border border-white/40 hover:bg-red-500 hover:text-white hover:border-red-500"
           } ${isAnimating ? "scale-115" : "scale-100"}`}
         >
           <Heart
-            className={`h-4 w-4 transition-all duration-500 ${
+            className={`h-4 w-4 transition-all duration-300 ${
               isFavorite ? "fill-current scale-110" : "scale-100"
             } ${isAnimating ? "animate-pulse" : ""}`}
-            style={{
-              transition: "all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            }}
           />
         </button>
 
@@ -537,10 +532,10 @@ export function PropertyCardImage({
                 setShowShareMenu(!showShareMenu);
               }}
               aria-label="Share property"
-              className={`p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
+              className={`p-2 rounded-full transition-all duration-300 ${
                 showShareMenu
-                  ? "bg-[#1B263B] text-white shadow-lg"
-                  : "bg-white/40 text-[#1B263B] hover:bg-[#1B263B] hover:text-white"
+                  ? "bg-[#1B263B] text-white shadow-md"
+                  : "bg-white/80 text-[#1B263B] shadow-sm border border-white/40 hover:bg-[#1B263B] hover:text-white"
               }`}
             >
               <Share2 className="w-4 h-4" />
@@ -553,7 +548,7 @@ export function PropertyCardImage({
                 onClick={(e) => {
                   e.stopPropagation();
                 }}
-                className="absolute top-11 right-0 w-48 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-100 p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-0.5 text-slate-700"
+                className="absolute top-11 right-0 w-48 bg-white/80 rounded-2xl shadow-2xl border border-slate-100 p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-0.5 text-slate-700"
               >
                 {canShare && (
                   <button
@@ -637,7 +632,7 @@ export function PropertyCardImage({
       </div>
       
       {displayBadgeLabel && (
-        <div className="absolute bottom-3 right-3 bg-white/85 backdrop-blur-md border border-white/30 text-[#12213b] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
+        <div className="absolute bottom-3 right-3 bg-white/80 border border-white/40 text-[#12213b] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
           {displayBadgeLabel}
         </div>
       )}

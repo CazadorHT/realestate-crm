@@ -38,21 +38,19 @@ export function PropertyGrid({
   const { language } = useLanguage();
 
   return (
-    <m.div
-      layout
+    <div
       className="grid gap-6 md:gap-y-8 lg:gap-x-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 mb-12"
     >
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence>
         {properties.map((item, i) => (
           <m.div
             key={item.id}
-            layout
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{
-              duration: 0.25,
-              delay: Math.min(i * 0.03, 0.3),
+              duration: 0.2,
+              delay: Math.min(i * 0.02, 0.2),
               ease: [0.25, 0.1, 0.25, 1],
             }}
           >
@@ -66,7 +64,6 @@ export function PropertyGrid({
         {/* Load More Discovery Card for Desktop & Mobile Grid */}
         {hasMore && loadMore && (
           <m.div
-            layout
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -160,6 +157,6 @@ export function PropertyGrid({
           </m.div>
         )}
       </AnimatePresence>
-    </m.div>
+    </div>
   );
 }

@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TransitStationsSectionProps {
   lines: TransitLine[];
+  language?: string;
 }
 
 // ============================================================
@@ -138,17 +139,15 @@ function getStationPriceInfo(
     }
 
     if (minPrice >= 1000000) {
-      const millions = Number((minPrice / 1000000).toFixed(1));
-      value = `฿${millions}M`;
+      const formatted = (minPrice / 1000000).toFixed(1).replace(/\.0$/, "");
+      value = lang === "th" ? `${formatted} ล.` : `${formatted}M`;
     } else {
-      value = `฿${minPrice.toLocaleString()}`;
+      value = new Intl.NumberFormat(lang === "th" ? "th-TH" : "en-US", {
+        maximumFractionDigits: 0,
+      }).format(minPrice);
     }
 
-    if (lang === "cn") {
-      sale = { prefix: "", value: `${value} 起` };
-    } else {
-      sale = { prefix, value };
-    }
+    sale = { prefix, value };
   }
 
   if (minRentalPrice && minRentalPrice > 0) {
@@ -202,8 +201,12 @@ const SkeletonCard = () => (
 // Main Component
 // ============================================================
 
-export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
-  const { language } = useLanguage();
+export function TransitStationsSection({
+  lines,
+  language: propLanguage,
+}: TransitStationsSectionProps) {
+  const { language: contextLanguage } = useLanguage();
+  const language = contextLanguage || propLanguage || "th";
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
 
@@ -278,7 +281,7 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
     setActiveLineType(type);
     setTimeout(() => {
       setIsTransitioning(false);
-    }, 250);
+    }, 200);
   };
 
 
@@ -359,7 +362,7 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
 
         {/* Dynamic Card Selector */}
         <div className="flex gap-2 py-6 overflow-x-auto scrollbar-none snap-x snap-mandatory justify-start xl:justify-center">
-          {sortedLines.map((line) => {
+          {sortedLines.map((line, idx) => {
             const isActive = activeLineType === line.type;
             const displayLabel = LINE_DISPLAY_LABELS[line.type] || line.label;
             const labelText = (displayLabel as Record<string, string>)[language] || displayLabel.th;
@@ -368,9 +371,13 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
               <m.button
                 key={line.type}
                 onClick={() => handleLineChange(line.type)}
-                whileHover={{ scale: 1.05 }}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: idx * 0.03 }}
+                whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex flex-col  items-center shrink-0 w-18 sm:w-22 md:w-26 lg:w-30 snap-start cursor-pointer select-none group focus:outline-hidden"
+                className="flex flex-col items-center shrink-0 w-18 sm:w-22 md:w-26 lg:w-30 snap-start cursor-pointer select-none group focus:outline-hidden"
               >
                 {/* Logo Box */}
                 <div
@@ -386,10 +393,10 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                 >
                   {getLineLogo(line.type, line.color)}
                   
-                  {/* Active Indicator Dot */}
+                  {/* Active Indicator Dot (Solid, Zero GPU pulse) */}
                   {isActive && (
                     <span 
-                      className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ring-2 animate-pulse"
+                      className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ring-2"
                       style={{ 
                         backgroundColor: line.color,
                         // @ts-ignore
@@ -440,12 +447,12 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-8 h-9 text-xs placeholder:text-xs  bg-white border-slate-200 focus-visible:ring-blue-500 focus-visible:ring-1 rounded-xl w-full"
+                className="pl-9 pr-8 h-9 text-xs placeholder:text-xs bg-white border-slate-200 focus-visible:ring-blue-500 focus-visible:ring-1 rounded-xl w-full"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                 >
                   <span className="text-[10px] font-bold">×</span>
                 </button>
@@ -481,78 +488,89 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                   </p>
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="mt-4 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                    className="mt-4 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
                   >
                     {language === "th" ? "ล้างการค้นหา" : "Clear search"}
                   </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2.5 w-full self-start">
-                  {displayStations.map((station) => {
+                  {displayStations.map((station, sIdx) => {
                     const stationName = station.label[language as keyof typeof station.label] || station.label.th;
                     const prices = getStationPriceInfo(station.minPrice, station.minRentalPrice, language);
                     const isPop = isPopularStation(station);
                     
                     return (
-                      <Link
+                      <m.div
                         key={station.code}
-                        href={`/near-station/${station.slug}`}
-                        className="group relative flex items-center justify-between px-2 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs overflow-hidden w-full"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.3,
+                          delay: sIdx * 0.02,
+                          ease: "easeOut",
+                        }}
+                        className="w-full"
                       >
-                        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-                          {/* Station Dot with soft wrapper */}
-                          <div 
-                            className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: `${activeLine.color}15` }}
-                          >
+                        <Link
+                          href={`/near-station/${station.slug}`}
+                          className="group relative flex items-center justify-between px-2 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs overflow-hidden w-full"
+                        >
+                          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+                            {/* Station Dot with soft wrapper */}
                             <div 
-                              className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full border border-white"
-                              style={{ backgroundColor: activeLine.color }}
-                            />
-                          </div>
-                          <div className="min-w-0">
-                            <span className="block text-xs sm:text-sm font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
-                              {stationName}
-                            </span>
-                            {prices.sale && (
-                              <span className="block text-[10px] sm:text-xs mt-0.5 leading-tight">
-                                {prices.sale?.prefix && (
-                                  <span className="text-slate-400 font-normal mr-0.5">
-                                    {prices.sale?.prefix}
-                                  </span>
-                                )}
-                                <span className="text-blue-600 font-extrabold">
-                                  {prices.sale?.value}
-                                </span>
+                              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: `${activeLine.color}15` }}
+                            >
+                              <div 
+                                className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full border border-white"
+                                style={{ backgroundColor: activeLine.color }}
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <span className="block text-xs sm:text-sm font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
+                                {stationName}
                               </span>
-                            )}
-                            {prices.rent && (
-                              <span className="block text-[10px] sm:text-xs mt-0.5 leading-tight">
-                                {prices.rent?.prefix && (
-                                  <span className="text-slate-400 font-normal mr-0.5">
-                                    {prices.rent?.prefix}
+                              {prices.sale && (
+                                <span className="block text-[10px] sm:text-xs mt-0.5 leading-tight">
+                                  {prices.sale?.prefix && (
+                                    <span className="text-slate-400 font-normal mr-0.5">
+                                      {prices.sale?.prefix}
+                                    </span>
+                                  )}
+                                  <span className="text-blue-600 font-extrabold">
+                                    {prices.sale?.value}
                                   </span>
-                                )}
-                                <span className="text-purple-600 font-extrabold">
-                                  {prices.rent?.value}
                                 </span>
-                              </span>
-                            )}
+                              )}
+                              {prices.rent && (
+                                <span className="block text-[10px] sm:text-xs mt-0.5 leading-tight">
+                                  {prices.rent?.prefix && (
+                                    <span className="text-slate-400 font-normal mr-0.5">
+                                      {prices.rent?.prefix}
+                                    </span>
+                                  )}
+                                  <span className="text-purple-600 font-extrabold">
+                                    {prices.rent?.value}
+                                  </span>
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="flex flex-col items-end shrink-0 gap-1 pl-1">
-                          {isPop && (
-                            <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold px-1 py-0.5 rounded-md border border-amber-100">
-                              <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                              {POPULAR_LABEL[language] || POPULAR_LABEL.en}
+                          <div className="flex flex-col items-end shrink-0 gap-1 pl-1">
+                            {isPop && (
+                              <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold px-1 py-0.5 rounded-md border border-amber-100">
+                                <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                                {POPULAR_LABEL[language] || POPULAR_LABEL.en}
+                              </span>
+                            )}
+                            <span className="text-[9px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/70 px-1.5 sm:px-2.5 py-0.5 rounded-full shrink-0">
+                              {station.propertyCount} {station.propertyCount === 1 ? "unit" : "units"}
                             </span>
-                          )}
-                          <span className="text-[9px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/70 px-1.5 sm:px-2.5 py-0.5 rounded-full shrink-0">
-                            {station.propertyCount} {station.propertyCount === 1 ? "unit" : "units"}
-                          </span>
-                        </div>
-                      </Link>
+                          </div>
+                        </Link>
+                      </m.div>
                     );
                   })}
 

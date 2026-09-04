@@ -137,7 +137,7 @@ export function PartnerSection({ partners: dbPartners }: PartnerSectionProps) {
               const content = (
                 <span
                   className={cn(
-                    "group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-base md:text-lg font-bold border transition-all duration-300 cursor-pointer backdrop-blur-xs select-none",
+                    "group inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl text-base md:text-lg font-bold border transition-all duration-300 cursor-pointer select-none",
                     channelStyle.bg,
                     channelStyle.text,
                     channelStyle.border,

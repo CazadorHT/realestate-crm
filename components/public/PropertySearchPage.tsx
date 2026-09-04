@@ -317,7 +317,7 @@ export function PropertySearchPage({
                           : "โหลดทรัพย์เพิ่มเติม"}
                       </span>
                       {totalAvailableCount > visibleProperties.length && (
-                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-xs">
+                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-semibold">
                           +{totalAvailableCount - visibleProperties.length}
                         </span>
                       )}

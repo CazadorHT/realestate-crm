@@ -29,7 +29,7 @@ export function PremiumAuthLayout({
         className={cn(
           "w-full max-w-md relative z-10 animate-in fade-in duration-300",
           isLogin
-            ? "bg-white/95 backdrop-blur-2xl rounded-3xl shadow-[0_20px_80px_-15px_rgba(0,0,0,0.15)] border border-black/5"
+            ? "bg-white/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_80px_-15px_rgba(0,0,0,0.15)] border border-black/5"
             : isSignUp
               ? "bg-slate-950/80 backdrop-blur-3xl rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] border border-white/10"
               : "bg-slate-900/90 backdrop-blur-3xl rounded-3xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] border border-white/10",

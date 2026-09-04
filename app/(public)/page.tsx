@@ -102,7 +102,7 @@ export const revalidate = 31536000; // 1 year long-term cache (ISR with on-deman
  * Dynamically switches locale and canonicals for global-grade SEO.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const { t, language } = await getServerTranslations();
+  const { t, language } = await getServerTranslations("th");
   
   // Dynamic Locale Mapping
   const localeMap: Record<string, string> = {
@@ -140,7 +140,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LandingPage() {
-  const { t, language } = await getServerTranslations();
+  const { t, language } = await getServerTranslations("th");
 
   // ⚡️ Parallel execution for maximum performance (S-Tier Speed)
   const [
@@ -317,7 +317,7 @@ export default async function LandingPage() {
       
       {/* TRANSIT STATION LANDINGS */}
       {transitLines && transitLines.length > 0 && (
-        <TransitStationsSection lines={transitLines} />
+        <TransitStationsSection lines={transitLines} language={language} />
       )}
 
       {/* FEATURED PROJECTS CAROUSEL */}
@@ -333,7 +333,7 @@ export default async function LandingPage() {
             initialFacets={initialPropertiesData.facets}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center p-8 text-center bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-100 mx-4 md:mx-8">
+          <div className="flex flex-col items-center justify-center p-8 text-center bg-white/80 rounded-3xl border border-slate-100 mx-4 md:mx-8">
             <div className="w-16 h-16 mb-4 rounded-full bg-slate-100 flex items-center justify-center">
               <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

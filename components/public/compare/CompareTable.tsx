@@ -20,7 +20,7 @@ export function CompareTable({
   const { t } = useLanguage();
   return (
     <div className="overflow-x-auto pb-4 md:pb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 -mx-4 px-4 md:mx-0 md:px-0">
-      <div className="min-w-[600px] md:min-w-[800px] border border-slate-200 rounded-2xl md:rounded-3xl bg-white/90 backdrop-blur-sm overflow-hidden shadow-sm">
+      <div className="min-w-[600px] md:min-w-[800px] border border-slate-200 rounded-2xl md:rounded-3xl bg-white overflow-hidden shadow-xs">
         {/* Header Row (Images & Titles) */}
         <div
           className="grid divide-x divide-slate-100"

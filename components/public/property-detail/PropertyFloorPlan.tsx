@@ -38,7 +38,7 @@ export function PropertyFloorPlan({ floorPlanUrl }: PropertyFloorPlanProps) {
         
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-900/5 transition-colors flex items-center justify-center">
-          <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-blue-100 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 flex items-center gap-2 text-blue-700 font-medium text-sm">
+          <div className="bg-white/90 px-4 py-2 rounded-full shadow-sm border border-blue-100 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 flex items-center gap-2 text-blue-700 font-medium text-sm">
             <Maximize2 className="w-4 h-4" />
             คลิกเพื่อดูขนาดใหญ่
           </div>
@@ -48,7 +48,7 @@ export function PropertyFloorPlan({ floorPlanUrl }: PropertyFloorPlanProps) {
       {/* Lightbox / Fullscreen Overlay */}
       {isZoomed && (
         <div 
-          className="fixed inset-0 z-100 bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-4 md:p-10 cursor-zoom-out animate-in fade-in duration-300"
+          className="fixed inset-0 z-100 bg-slate-900/90 flex items-center justify-center p-4 md:p-10 cursor-zoom-out animate-in fade-in duration-300"
           onClick={() => setIsZoomed(false)}
         >
           <button 

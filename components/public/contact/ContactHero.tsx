@@ -18,7 +18,7 @@ export function ContactHero({
     <section className="relative min-h-[80vh] lg:min-h-screen pt-24 lg:pt-32 pb-24 lg:pb-40 flex flex-col items-center text-white bg-slate-950">
       {/* Background Image with Premium Overlays */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-linear-to-b from-slate-950/95 via-slate-950/40 to-slate-950" />
+        <div className="absolute inset-0 bg-linear-to-b from-slate-950/90 via-slate-950/40 to-slate-950" />
         <div className="absolute inset-0 bg-linear-to-r from-blue-900/40 via-transparent to-purple-900/40" />
       </div>
 
@@ -54,7 +54,7 @@ export function ContactHero({
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "circOut" }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 bg-white/10 backdrop-blur-md rounded-full mb-4 lg:mb-8 shadow-2xl border border-white/20"
+                className="inline-flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 bg-white/20 rounded-full mb-4 lg:mb-8 shadow-lg border border-white/30"
               >
                 <Sparkles className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-blue-300" />
                 <span className="text-[10px] lg:text-xs font-medium uppercase tracking-widest text-blue-50">

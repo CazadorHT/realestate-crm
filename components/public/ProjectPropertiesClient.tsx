@@ -130,7 +130,7 @@ export function ProjectPropertiesClient({ initialProperties, project }: ProjectP
   return (
     <div className="w-full">
       {/* Filtering and Sorting Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/80 backdrop-blur-xs p-4 rounded-2xl border border-slate-200/60 shadow-xs mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 p-4 rounded-2xl border border-slate-200/80 shadow-xs mb-8">
         {/* Listing Type Tabs */}
         <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-fit">
           <button
@@ -329,7 +329,7 @@ export function ProjectPropertiesClient({ initialProperties, project }: ProjectP
           )}
         </div>
       ) : (
-        <div className="text-center py-16 rounded-3xl bg-white/60 backdrop-blur-xs border border-slate-200/40 shadow-xs">
+        <div className="text-center py-16 rounded-3xl bg-white border border-slate-200/80 shadow-xs">
           <Building className="w-14 h-14 text-slate-300 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-slate-800 mb-2">{t("no_listings_title")}</h3>
           <p className="text-slate-500 max-w-md mx-auto text-sm px-4 leading-relaxed">

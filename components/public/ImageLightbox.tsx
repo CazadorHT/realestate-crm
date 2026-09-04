@@ -86,13 +86,13 @@ export function ImageLightbox({
           style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))" }}
         >
           {title && (
-            <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 w-fit max-w-full">
+            <div className="bg-black/75 px-4 py-2 rounded-lg border border-white/10 w-fit max-w-full">
               <span className="text-white font-bold text-sm md:text-base line-clamp-1">
                 {title}
               </span>
             </div>
           )}
-          <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 w-fit">
+          <div className="bg-black/75 px-3 py-1 rounded-full border border-white/10 w-fit">
             <span className="text-white/90 text-[10px] md:text-xs font-bold tracking-widest">
               {currentIndex + 1} / {images.length}
             </span>
@@ -103,7 +103,7 @@ export function ImageLightbox({
         <button
           onClick={onClose}
           aria-label="Close gallery"
-          className="absolute right-4 p-2.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg cursor-pointer"
+          className="absolute right-4 p-2.5 bg-black/75 border border-white/10 text-white rounded-full hover:bg-white/20 transition-all z-50 shadow-lg cursor-pointer"
           style={{ top: "max(1rem, env(safe-area-inset-top, 1rem))" }}
         >
           <X className="h-6 w-6" />
@@ -176,7 +176,7 @@ export function ImageLightbox({
                 handlePrev();
               }}
               aria-label="Previous image"
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50 cursor-pointer"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-black/50 text-white rounded-full hover:bg-black/70 transition-all z-50 cursor-pointer"
             >
               <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
             </button>
@@ -186,7 +186,7 @@ export function ImageLightbox({
                 handleNext();
               }}
               aria-label="Next image"
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-white/30 text-white rounded-full hover:bg-white/20 transition-all backdrop-blur-sm z-50 cursor-pointer"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-4 bg-black/50 text-white rounded-full hover:bg-black/70 transition-all z-50 cursor-pointer"
             >
               <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
             </button>
@@ -195,7 +195,7 @@ export function ImageLightbox({
 
         {/* Thumbnails (Bottom Footer) */}
         <div
-          className="absolute bottom-0 left-0 right-0 z-50 px-2 md:px-4 pt-3 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-auto"
+          className="absolute bottom-0 left-0 right-0 z-50 px-2 md:px-4 pt-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-auto"
           style={{
             paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
           }}

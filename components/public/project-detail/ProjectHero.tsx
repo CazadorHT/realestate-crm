@@ -41,7 +41,7 @@ export function ProjectHero({
           <div className="block lg:hidden">
             <Link
               href="/projects"
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md shadow-2xs active:scale-95 transition-all"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-white/20 hover:bg-white/30 text-white border border-white/20 shadow-2xs active:scale-95 transition-all"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>{getString("breadcrumb_projects")}</span>
@@ -61,7 +61,7 @@ export function ProjectHero({
           </div>
 
           {/* Quick Summary Specs */}
-          <div className="flex gap-4 md:gap-6 bg-white/5 backdrop-blur-xs border border-white/10 p-4 rounded-3xl shrink-0 flex-wrap sm:flex-nowrap">
+          <div className="flex gap-4 md:gap-6 bg-white/10 border border-white/15 p-4 rounded-3xl shrink-0 flex-wrap sm:flex-nowrap">
             {project.developer && (
               <div className="px-3">
                 <span className="block text-[10px] uppercase font-bold text-slate-400">{getString("developer")}</span>

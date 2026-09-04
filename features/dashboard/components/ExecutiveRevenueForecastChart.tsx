@@ -22,7 +22,7 @@ interface ExecutiveRevenueForecastChartProps {
 const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: any[], label?: string }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white/95 backdrop-blur-md border border-slate-100 p-4 rounded-2xl shadow-xl shadow-blue-900/5 min-w-[200px]">
+      <div className="bg-white/90 backdrop-blur-md border border-slate-100 p-4 rounded-2xl shadow-xl shadow-blue-900/5 min-w-[200px]">
         <p className="text-sm font-bold text-slate-800 mb-2 border-b pb-2">{label}</p>
         <div className="space-y-2">
           {payload.map((entry, index) => (

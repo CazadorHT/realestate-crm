@@ -90,36 +90,36 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
 
       {/* Moving Gradient Blobs */}
       <div
-        className="absolute top-[-10%] left-[-15%] w-[500px] h-[500px] bg-red-600/50 rounded-full mix-blend-screen filter blur-[100px] z-0 md:animate-[blob_2s_ease-in-out_infinite]"
+        className="absolute top-[-10%] left-[-15%] w-[500px] h-[500px] bg-red-600/40 rounded-full mix-blend-screen filter blur-[90px] z-0 will-change-transform md:animate-[blob_6s_ease-in-out_infinite]"
       />
       <div
-        className="absolute left-[70%] top-[50%] w-[500px] h-[500px] bg-orange-600/50 rounded-full mix-blend-screen filter blur-[100px] z-0 md:animate-[blob-horizontal_2s_ease-in-out_infinite]"
+        className="absolute left-[70%] top-[50%] w-[500px] h-[500px] bg-orange-600/40 rounded-full mix-blend-screen filter blur-[90px] z-0 will-change-transform md:animate-[blob-horizontal_6s_ease-in-out_infinite]"
         style={{
           marginLeft: "-250px",
           marginTop: "-250px",
         }}
       />
       <div
-        className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] bg-orange-500/80 rounded-full mix-blend-screen filter blur-[100px] z-0 md:animate-[blob-reverse_2.5s_ease-in-out_infinite]"
+        className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] bg-orange-500/60 rounded-full mix-blend-screen filter blur-[90px] z-0 will-change-transform md:animate-[blob-reverse_7s_ease-in-out_infinite]"
         style={{
           animationDelay: "2s",
         }}
       />
       <div
-        className="absolute bottom-[-10%] left-[5%] w-[600px] h-[600px] bg-fuchsia-600/60 rounded-full mix-blend-screen filter blur-[120px] z-0 md:animate-[blob-horizontal_3s_ease-in-out_infinite]"
+        className="absolute bottom-[-10%] left-[5%] w-[600px] h-[600px] bg-fuchsia-600/40 rounded-full mix-blend-screen filter blur-[100px] z-0 will-change-transform md:animate-[blob-horizontal_8s_ease-in-out_infinite]"
         style={{
           animationDelay: "4s",
         }}
       />
       <div
-        className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-rose-500/50 rounded-full mix-blend-screen filter blur-[100px] z-0 md:animate-[blob-vertical_4s_ease-in-out_infinite]"
+        className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-rose-500/40 rounded-full mix-blend-screen filter blur-[90px] z-0 will-change-transform md:animate-[blob-vertical_8s_ease-in-out_infinite]"
         style={{
           animationDelay: "4s",
         }}
       />
 
       {/* Glassmorphism Overlay Texture */}
-      <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px] z-1"></div>
+      <div className="absolute inset-0 bg-white/5 z-1 pointer-events-none"></div>
 
       {/* Subtle Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-size-[32px_32px] z-2"></div>
@@ -243,12 +243,7 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
                 }}
                 className="w-[78vw] max-w-[310px] sm:max-w-[340px] md:w-auto md:max-w-none snap-start shrink-0 relative group"
               >
-                {/* Card Wrapper with Premium Glow Effect */}
-                <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-0 lg:p-1 lg:bg-linear-to-b from-white/80 to-white/40 lg:shadow-xl lg:shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
-                  <div className="md:group-hover:scale-[1.02] transition-all duration-500 ">
-                    <PropertyCard property={property} hideShare={true} />
-                  </div>
-                </div>
+                <PropertyCard property={property} hideShare={true} />
               </m.div>
             ))}
           </div>

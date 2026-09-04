@@ -122,7 +122,7 @@ export function YearSelectorModal({
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onOpenChange}>
-        <DrawerContent className="bg-white/95 backdrop-blur-xl border-none">
+        <DrawerContent className="bg-white/90 backdrop-blur-xl border-none">
           <DrawerHeader>
             <DrawerTitle className="text-xl font-semibold text-slate-900 flex items-center gap-2 justify-center">
               <Calendar className="w-5 h-5 text-indigo-600" />
@@ -153,7 +153,7 @@ export function YearSelectorModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-none shadow-2xl rounded-[2.5rem]">
+      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-white/90 backdrop-blur-xl border-none shadow-2xl rounded-[2.5rem]">
         <div className="bg-indigo-600 p-8 text-white relative">
            <div className="absolute right-0 top-0 p-10 opacity-10">
               <Calendar className="w-24 h-24 rotate-12" />

@@ -83,7 +83,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <div className="inline-flex items-center rounded-full border border-blue-200/60 bg-white/80 backdrop-blur-sm px-4 py-2 text-[11px] md:text-sm font-bold uppercase tracking-widest shadow-sm">
+          <div className="inline-flex items-center rounded-full border border-blue-200/60 bg-white/90 px-4 py-2 text-[11px] md:text-sm font-bold uppercase tracking-widest shadow-xs">
             <Key className="mr-2 h-3.5 w-3.5 text-blue-600" />
             <span className="text-blue-600">
               {t("deposit.title")}

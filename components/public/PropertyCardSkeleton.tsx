@@ -9,10 +9,10 @@ export function PropertyCardSkeleton() {
       {/* Image Section Skeleton - Sync aspect with PropertyCardImage */}
       <div className="relative aspect-square sm:aspect-4/3 md:aspect-square h-auto w-full animate-pulse bg-slate-200">
         {/* Favorite Button Placeholder */}
-        <div className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/30 backdrop-blur-md" />
+        <div className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/60 shadow-xs" />
         
         {/* Area/Province Badge Placeholder */}
-        <div className="absolute bottom-3 left-3 h-6 w-32 rounded-full bg-white/30 backdrop-blur-md" />
+        <div className="absolute bottom-3 left-3 h-6 w-32 rounded-full bg-white/60 shadow-xs" />
       </div>
 
       {/* Content Section Skeleton */}

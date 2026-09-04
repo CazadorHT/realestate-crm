@@ -123,7 +123,7 @@ export function StationQuickSelector({
   }, [sortedLines, searchQuery]);
 
   return (
-    <div className="bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-3xl shadow-xs overflow-hidden transition-all duration-300">
+    <div className="bg-white border border-slate-200/80 rounded-3xl shadow-xs overflow-hidden transition-all duration-300">
       <div
         role="button"
         tabIndex={0}

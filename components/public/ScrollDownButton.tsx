@@ -82,7 +82,7 @@ export function ScrollDownButton() {
               }}
               className="absolute inset-[-12px] rounded-full bg-white/10 blur-md"
             />
-            <div className="relative bg-white/10 backdrop-blur-md rounded-full p-3 border border-white/20 shadow-lg group-hover:bg-white/20 transition-colors">
+            <div className="relative bg-white/15 rounded-full p-3 border border-white/25 shadow-lg group-hover:bg-white/25 transition-colors">
               <Mouse className="h-6 w-6 text-white" />
             </div>
           </div>

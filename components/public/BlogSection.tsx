@@ -229,7 +229,7 @@ export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }
                           </div>
                         )}
                         {post.category && (
-                          <Badge className="absolute top-4 left-4 bg-white/90 text-slate-900 backdrop-blur-sm hover:bg-white border border-white/50">
+                          <Badge className="absolute top-4 left-4 bg-white/90 text-slate-900 hover:bg-white border border-slate-200/60 shadow-xs">
                             {t(`blog.categories.${getCategoryKey(post.category)}`) !==
                             `blog.categories.${getCategoryKey(post.category)}`
                               ? t(`blog.categories.${getCategoryKey(post.category)}`)
@@ -313,7 +313,7 @@ export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }
               })}
           </div>
         ) : (
-          <div className="w-full flex flex-col items-center justify-center text-center py-12 px-4 bg-white/50 backdrop-blur-xs rounded-3xl border border-slate-100/80 shadow-xs min-h-[350px] md:min-h-[400px]">
+          <div className="w-full flex flex-col items-center justify-center text-center py-12 px-4 bg-white/80 rounded-3xl border border-slate-100/80 shadow-xs min-h-[350px] md:min-h-[400px]">
             <div className="w-14 h-14 mb-4 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 shadow-2xs">
               <BookOpen className="w-6 h-6 text-slate-400" />
             </div>

@@ -187,7 +187,7 @@ export function PublicNav() {
 
       {/* Mobile Menu Backdrop (Focus effect) */}
       <div
-        className={`xl:hidden fixed inset-0 bg-black/30 backdrop-blur-lg z-90 transition-opacity duration-300 ease-in-out ${
+        className={`xl:hidden fixed inset-0 bg-black/50 z-90 transition-opacity duration-300 ease-in-out ${
           mobileMenuOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -202,9 +202,8 @@ export function PublicNav() {
       >
         <nav
           className={`border-b border-b-slate-200 transition-all duration-300 ${
-            scrolled ? "bg-white/95 backdrop-blur-md shadow-lg" : "bg-white"
+            scrolled ? "bg-white/90 shadow-sm" : "bg-white"
           }`}
-          style={scrolled ? { WebkitBackdropFilter: "blur(12px)" } : undefined}
         >
           <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8">
             <div className="flex justify-between items-center h-16">

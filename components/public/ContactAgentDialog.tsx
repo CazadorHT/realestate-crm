@@ -751,7 +751,7 @@ export function ContactAgentDialog({
 
             <div className="relative z-10 space-y-6">
               {/* Logo / Icon */}
-              <div className="w-14 h-14 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center border border-white/20">
                 <MdRealEstateAgent className="w-8 h-8 text-white" />
               </div>
 
@@ -776,7 +776,7 @@ export function ContactAgentDialog({
                     <FaClock className="w-3.5 h-3.5 text-blue-200" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white/95">
+                    <p className="text-sm font-semibold text-white/90">
                       {t("property.contact_dialog.trust_response")}
                     </p>
                     <p className="text-xs text-blue-200/70 leading-snug">
@@ -789,7 +789,7 @@ export function ContactAgentDialog({
                     <FaShieldAlt className="w-3.5 h-3.5 text-blue-200" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white/95">
+                    <p className="text-sm font-semibold text-white/90">
                       {t("property.contact_dialog.trust_safe")}
                     </p>
                     <p className="text-xs text-blue-200/70 leading-snug">
@@ -802,7 +802,7 @@ export function ContactAgentDialog({
                     <FaHeadset className="w-3.5 h-3.5 text-blue-200" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white/95">
+                    <p className="text-sm font-semibold text-white/90">
                       {t("property.contact_dialog.trust_free")}
                     </p>
                     <p className="text-xs text-blue-200/70 leading-snug">
@@ -978,7 +978,7 @@ export function ContactAgentDialog({
             </div>
 
             {/* Mobile Footer */}
-            <div className="mt-auto sticky bottom-0 -mx-6 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+20px)] bg-white/95 backdrop-blur-md z-10 border-t border-slate-100/80">
+            <div className="mt-auto sticky bottom-0 -mx-6 px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,24px)+20px)] bg-white/90 z-10 border-t border-slate-100/80">
               <p className="text-[10px] text-slate-400 text-center mb-3 font-medium tracking-wide">
                 {t("property.contact_dialog.step_of")
                   .replace("{current}", String(step))

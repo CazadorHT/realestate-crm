@@ -104,7 +104,7 @@ export function SocialIntegrationsTab({
                   {lineBotInfo?.displayName && (
                     <Badge
                       variant="outline"
-                      className="bg-white/95 border-emerald-200 text-emerald-700 font-bold px-3 py-1 text-[10px]"
+                      className="bg-white/90 border-emerald-200 text-emerald-700 font-bold px-3 py-1 text-[10px]"
                     >
                       {lineBotInfo.displayName}
                     </Badge>

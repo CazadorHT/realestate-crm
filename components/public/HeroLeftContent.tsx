@@ -28,7 +28,7 @@ export function HeroLeftContent({
     >
       {/* Premium Glass Badge */}
       <div
-        className={`inline-flex items-center gap-2 sm:gap-2.5 bg-white/10 backdrop-blur-md text-white/80 px-3 sm:px-5 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm md:text-base font-semibold border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-200 hover:text-white hover:bg-white/20 ${
+        className={`inline-flex items-center gap-2 sm:gap-2.5 bg-white/15 text-white/80 px-3 sm:px-5 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm md:text-base font-semibold border border-white/25 shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-200 hover:text-white hover:bg-white/20 ${
           !showSmartMatch ? "mx-auto" : "md:mx-0"
         }`}
       >

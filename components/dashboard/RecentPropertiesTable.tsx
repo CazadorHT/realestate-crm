@@ -233,7 +233,7 @@ export function RecentPropertiesTable({
                         {property.requires_ai_review && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <div className="absolute top-1 right-1 z-20 p-1 bg-white/95 backdrop-blur-sm shadow-sm rounded-full flex items-center justify-center border border-amber-200 cursor-help">
+                              <div className="absolute top-1 right-1 z-20 p-1 bg-white/90 backdrop-blur-sm shadow-sm rounded-full flex items-center justify-center border border-amber-200 cursor-help">
                                 <Sparkles className="h-3 w-3 text-amber-500" />
                               </div>
                             </TooltipTrigger>
@@ -574,7 +574,7 @@ export function RecentPropertiesTable({
                     </div>
                   )}
                   {property.requires_ai_review && (
-                    <div className="absolute top-3 left-3 z-30 p-1.5 bg-white/95 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center border border-amber-200">
+                    <div className="absolute top-3 left-3 z-30 p-1.5 bg-white/90 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center border border-amber-200">
                       <Sparkles className="h-4 w-4 text-amber-500" />
                     </div>
                   )}
@@ -604,7 +604,7 @@ export function RecentPropertiesTable({
                     <div className="flex items-center gap-2">
                       <PropertyTypeBadge
                         type={property.property_type}
-                        className="h-6 text-[11px] px-2.5 bg-white/95 backdrop-blur-md shadow-sm border-none font-bold"
+                        className="h-6 text-[11px] px-2.5 bg-white/90 backdrop-blur-md shadow-sm border-none font-bold"
                       />
                     </div>
                     <PropertyStatusBadge
