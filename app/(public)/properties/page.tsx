@@ -100,12 +100,39 @@ const AREA_SEO_MAP: Record<string, Record<string, string>> = {
   "พญาไท": { en: "Phaya Thai", cn: "Phaya Thai 区域", ru: "Пхаятхай" },
 };
 
+import { getPopularAreasLookupMap } from "@/features/public/popular-areas";
+
 function getStationDisplay(station: string, lang: string): string {
   return STATION_SEO_MAP[station]?.[lang] || station;
 }
 
-function getAreaDisplay(area: string, lang: string): string {
-  return AREA_SEO_MAP[area]?.[lang] || area;
+async function getAreaDisplay(areaString: string, lang: string): Promise<string> {
+  if (!areaString) return "";
+  const tokens = areaString.split(",").map((s) => s.trim()).filter(Boolean);
+  if (tokens.length === 0) return "";
+
+  let lookupMap: Record<string, any> = {};
+  try {
+    lookupMap = await getPopularAreasLookupMap();
+  } catch (err) {
+    console.warn("getAreaDisplay: failed to load popular areas lookup map", err);
+  }
+
+  const translated = tokens.map((token) => {
+    const matched = lookupMap[token.toLowerCase()];
+    if (matched) {
+      if (lang === "en" && matched.en) return matched.en;
+      if (lang === "cn" && matched.cn) return matched.cn;
+      if (lang === "ru" && matched.ru) return matched.ru;
+      if (lang === "th" && matched.th) return matched.th;
+    }
+    if (AREA_SEO_MAP[token]?.[lang]) {
+      return AREA_SEO_MAP[token][lang];
+    }
+    return token;
+  });
+
+  return translated.join(", ");
 }
 
 export async function generateMetadata(props: { searchParams: Promise<any> }): Promise<Metadata> {

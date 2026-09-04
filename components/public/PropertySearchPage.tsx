@@ -12,6 +12,8 @@ import { usePropertyFiltering } from "@/hooks/search/usePropertyFiltering";
 import { cn } from "@/lib/utils";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 
+import { buildAreaHierarchy, expandAreaTokens } from "@/lib/utils/area-hierarchy";
+
 // Components
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
 import { PropertyGrid } from "./search/PropertyGrid";
@@ -79,26 +81,49 @@ export function PropertySearchPage({
     return filtered.slice(0, displayCount);
   }, [filtered, displayCount]);
 
+  // Area hierarchy tree with parent-child cluster aggregation
+  const areaHierarchy = useMemo(() => {
+    return buildAreaHierarchy(availableAreas, language, getLocaleValue);
+  }, [availableAreas, language]);
+
+  // Facet count total for selected areas (expanding parent zones into sub-zones e.g. กรุงเทพกรีฑา 8 + กรุงเทพกรีฑาตัดใหม่ 2 = 10)
+  const selectedAreaFacetTotal = useMemo(() => {
+    if (!filters.area || filters.area === "ALL") return 0;
+    const selected = filters.area.split(",").map((s: string) => s.trim()).filter(Boolean);
+    if (selected.length === 0) return 0;
+    const expandedTokens = expandAreaTokens(selected, areaHierarchy);
+    const uniqueTokens = Array.from(new Set(expandedTokens));
+    return uniqueTokens.reduce((acc: number, a: string) => {
+      const facetCount = serverFacets?.availableAreas?.[a]?.count 
+        ?? availableAreas.find((item: any) => item.name === a || item.name_en === a)?.count 
+        ?? 0;
+      return acc + facetCount;
+    }, 0);
+  }, [filters.area, areaHierarchy, serverFacets?.availableAreas, availableAreas]);
+
   // Total count for current active filter state
   const totalAvailableCount = useMemo(() => {
-    // 1. If we have multiple compound filters or active quick filters combined with landing filters,
-    // filtered.length represents the exact matching count in memory
-    const hasMultipleFilters = Boolean(
+    // 1. If we have narrowing compound filters (e.g. specific keyword, bedrooms, price range, property type),
+    // then local filtered.length reflects the exact intersection of these granular filters in memory
+    const hasNarrowingFilters = Boolean(
       (filters.type && filters.type !== "ALL") ||
-      (filters.province && filters.province !== "ALL") ||
-      (filters.area && filters.area !== "ALL") ||
       (filters.bedrooms && filters.bedrooms !== "ALL") ||
       filters.minPrice || filters.maxPrice ||
       filters.debouncedKeyword ||
-      (filters.petFriendly && (filters.companyRegistered || filters.nearTrain || filters.isForeigner || filters.fullyFurnished || filters.isHotDeal || filters.listingType !== "ALL")) ||
-      filters.luxuryVilla ||
-      filters.cbd
+      filters.transitStation ||
+      (filters.petFriendly && (filters.companyRegistered || filters.nearTrain || filters.isForeigner || filters.fullyFurnished || filters.isHotDeal))
     );
 
-    if (hasMultipleFilters) {
+    if (hasNarrowingFilters) {
       return filtered.length;
     }
 
+    // 2. Area filters (e.g. Bang Na (29) + Krungthep Kreetha (10) = 39)
+    if (filters.area && filters.area !== "ALL" && selectedAreaFacetTotal > 0) {
+      return selectedAreaFacetTotal;
+    }
+
+    // 3. Quick filters
     if (filters.petFriendly && serverFacets?.availableQuickFilters?.petFriendly !== undefined) {
       return serverFacets.availableQuickFilters.petFriendly;
     }
@@ -117,21 +142,17 @@ export function PropertySearchPage({
     if (filters.isHotDeal && serverFacets?.availableQuickFilters?.isHotDeal !== undefined) {
       return serverFacets.availableQuickFilters.isHotDeal;
     }
-    if (filters.area && filters.area !== "ALL") {
-      const selected = filters.area.split(",").map((s: string) => s.trim()).filter(Boolean);
-      if (selected.length > 0 && serverFacets?.availableAreas) {
-        const sum = selected.reduce((acc: number, a: string) => acc + (serverFacets.availableAreas[a]?.count || 0), 0);
-        if (sum > 0) return sum;
-      }
-    }
+
+    // 4. Listing types
     if (filters.listingType === "RENT" && serverFacets?.availableListingTypes?.RENT !== undefined) {
       return serverFacets.availableListingTypes.RENT;
     }
     if (filters.listingType === "SALE" && serverFacets?.availableListingTypes?.SALE !== undefined) {
       return serverFacets.availableListingTypes.SALE;
     }
+
     return serverFacets?.availableListingTypes?.ALL || filtered.length;
-  }, [filters, serverFacets, filtered.length]);
+  }, [filters, serverFacets, filtered.length, selectedAreaFacetTotal]);
 
   // Can load more if we haven't displayed all local filtered properties OR if server has more properties
   const hasMore = visibleProperties.length < filtered.length || (properties.length < totalAvailableCount && filtered.length < totalAvailableCount);
@@ -181,18 +202,18 @@ export function PropertySearchPage({
     setDisplayCount(ITEMS_PER_PAGE);
   }, [filterFingerprint]);
 
-  // Localized Area Filter Name for NoResultsView
+  // Localized Area Filter Name for NoResultsView and PropertyGrid
   const localizedAreaFilterName = useMemo(() => {
     if (!filters.area || filters.area === "ALL") return undefined;
     const tokens = filters.area.split(",").map((s: string) => s.trim()).filter(Boolean);
     return tokens
       .map((name: string) => {
-        const facet = serverFacets?.availableAreas?.[name];
+        const facet = serverFacets?.availableAreas?.[name] || availableAreas.find((a: any) => a.name === name || a.name_en === name);
         if (facet) {
           return (
             getLocaleValue(
               {
-                name,
+                name: (facet as any).name || name,
                 name_en: facet.name_en,
                 name_cn: facet.name_cn,
                 name_ru: facet.name_ru,
@@ -205,7 +226,24 @@ export function PropertySearchPage({
         return name;
       })
       .join(", ");
-  }, [filters.area, serverFacets?.availableAreas, language]);
+  }, [filters.area, serverFacets?.availableAreas, availableAreas, language]);
+
+  // Synchronize dynamic client browser tab document.title when area filter or language changes
+  useEffect(() => {
+    if (typeof window === "undefined" || !document) return;
+    const siteName = "VC Connect Asset";
+    if (localizedAreaFilterName) {
+      if (language === "en") {
+        document.title = `Properties in ${localizedAreaFilterName} for Sale & Rent | ${siteName}`;
+      } else if (language === "cn") {
+        document.title = `${localizedAreaFilterName} 房源出售与出租 | ${siteName}`;
+      } else if (language === "ru") {
+        document.title = `Недвижимость в ${localizedAreaFilterName} | ${siteName}`;
+      } else {
+        document.title = `อสังหาฯ ย่าน${localizedAreaFilterName} ซื้อ-เช่า | ${siteName}`;
+      }
+    }
+  }, [localizedAreaFilterName, language]);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -234,6 +272,7 @@ export function PropertySearchPage({
           startIndex={0}
           endIndex={visibleProperties.length}
           totalAvailableCount={totalAvailableCount}
+          isLoading={isLoading || isRefetching}
         />
 
         {filters.aiInsight && (
@@ -252,11 +291,7 @@ export function PropertySearchPage({
             onClearKeyword={() => filters.setKeyword("")}
             areaFilterName={localizedAreaFilterName}
             onSelectSuggestion={(text) => filters.setKeyword(text)}
-            serverAreaTotal={
-              filters.area && filters.area !== "ALL" && serverFacets?.availableAreas
-                ? filters.area.split(",").reduce((acc: number, a: string) => acc + (serverFacets.availableAreas[a.trim()]?.count || 0), 0)
-                : 0
-            }
+            serverAreaTotal={selectedAreaFacetTotal}
             serverGrandTotal={totalAvailableCount}
             onFetchMoreServer={loadMoreProperties}
             isFetchingMore={isFetchingMore}
@@ -269,17 +304,14 @@ export function PropertySearchPage({
               currentPage={1}
               hasMore={hasMore}
               areaRemainingCount={
-                filters.area && filters.area !== "ALL" && serverFacets?.availableAreas
-                  ? Math.max(
-                      0,
-                      filters.area.split(",").reduce((acc: number, a: string) => acc + (serverFacets.availableAreas[a.trim()]?.count || 0), 0) - visibleProperties.length
-                    )
+                filters.area && filters.area !== "ALL" && selectedAreaFacetTotal > 0
+                  ? Math.max(0, selectedAreaFacetTotal - visibleProperties.length)
                   : Math.max(0, filtered.length - visibleProperties.length)
               }
               totalRemainingCount={Math.max(0, totalAvailableCount - visibleProperties.length)}
               isFetchingMore={isFetchingMore}
               loadMore={loadMore}
-              areaFilterName={filters.area || undefined}
+              areaFilterName={localizedAreaFilterName}
               filterLabel={
                 filters.petFriendly
                   ? language === "en" ? "Pet-Friendly properties" : language === "cn" ? "允许养宠物的房源" : language === "ru" ? "объектов, разрешенных для животных" : "คอนโดเลี้ยงสัตว์ได้"
