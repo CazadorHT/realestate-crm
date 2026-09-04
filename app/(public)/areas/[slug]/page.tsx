@@ -340,52 +340,55 @@ export default async function AreaDetailPage(
               )}
             </section>
 
-            {/* 2. Lifestyle Guide Section (SEO Text) */}
-            <section className="bg-white/90 p-6 rounded-3xl border border-slate-200/50 shadow-xs space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                <Compass className="w-4.5 h-4.5 text-indigo-500" />
-                <h3 className="text-sm font-bold text-slate-800 tracking-tight uppercase">
-                  {t("lifestyle_title")}
-                </h3>
-              </div>
-              <div className="prose prose-slate max-w-none text-xs md:text-sm text-slate-600 leading-relaxed font-medium">
-                {localizedDesc ? (
-                  <div dangerouslySetInnerHTML={{ __html: localizedDesc }} />
-                ) : (
-                  <p>{genericDescriptionFallback}</p>
-                )}
-              </div>
-            </section>
-
-            {/* 3. Transportation Connections (Stations) */}
-            {connections.stations.length > 0 && (
-              <div className="space-y-4 bg-white/90 p-6 rounded-3xl border border-slate-200/50 shadow-xs">
+            {/* Sticky Container for Lifestyle Guide & Transportation */}
+            <div className="lg:sticky lg:top-24 space-y-8 self-start">
+              {/* 2. Lifestyle Guide Section (SEO Text) */}
+              <section className="bg-white/90 p-6 rounded-3xl border border-slate-200/50 shadow-xs space-y-4">
                 <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <Train className="w-4.5 h-4.5 text-indigo-500" />
-                  <h3 className="text-sm font-bold text-slate-800 tracking-tight uppercase">{t("transit_in_area")}</h3>
+                  <Compass className="w-4.5 h-4.5 text-indigo-500" />
+                  <h3 className="text-sm font-bold text-slate-800 tracking-tight uppercase">
+                    {t("lifestyle_title")}
+                  </h3>
                 </div>
-                <div className="grid grid-cols-1 gap-2.5 max-h-60 overflow-y-auto pr-1">
-                  {connections.stations.map(station => (
-                    <Link
-                      key={station.code}
-                      href={`/near-station/${station.slug}`}
-                      className="group flex items-center justify-between p-3 rounded-xl bg-slate-50/80 hover:bg-slate-100/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className="w-2 h-2 rounded-full shrink-0 ring-2"
-                          style={{ backgroundColor: station.color, boxShadow: `0 0 0 2px ${station.color}25` }}
-                        />
-                        <span className="block text-xs font-bold text-slate-700 truncate">
-                          {station.label[language as keyof typeof station.label] || station.label.en || station.label.th}
-                        </span>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-350 shrink-0" />
-                    </Link>
-                  ))}
+                <div className="prose prose-slate max-w-none text-xs md:text-sm text-slate-600 leading-relaxed font-medium">
+                  {localizedDesc ? (
+                    <div dangerouslySetInnerHTML={{ __html: localizedDesc }} />
+                  ) : (
+                    <p>{genericDescriptionFallback}</p>
+                  )}
                 </div>
-              </div>
-            )}
+              </section>
+
+              {/* 3. Transportation Connections (Stations) */}
+              {connections.stations.length > 0 && (
+                <div className="space-y-4 bg-white/90 p-6 rounded-3xl border border-slate-200/50 shadow-xs">
+                  <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <Train className="w-4.5 h-4.5 text-indigo-500" />
+                    <h3 className="text-sm font-bold text-slate-800 tracking-tight uppercase">{t("transit_in_area")}</h3>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2.5 max-h-60 overflow-y-auto pr-1">
+                    {connections.stations.map(station => (
+                      <Link
+                        key={station.code}
+                        href={`/near-station/${station.slug}`}
+                        className="group flex items-center justify-between p-3 rounded-xl bg-slate-50/80 hover:bg-slate-100/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className="w-2 h-2 rounded-full shrink-0 ring-2"
+                            style={{ backgroundColor: station.color, boxShadow: `0 0 0 2px ${station.color}25` }}
+                          />
+                          <span className="block text-xs font-bold text-slate-700 truncate">
+                            {station.label[language as keyof typeof station.label] || station.label.en || station.label.th}
+                          </span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-350 shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
           </div>
 

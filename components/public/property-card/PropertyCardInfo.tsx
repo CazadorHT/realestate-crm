@@ -1,21 +1,21 @@
 import Link from "next/link";
 import { CheckSquare, Square, ChevronRight } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { 
-  HiMapPin, 
-  HiHome, 
-  HiBriefcase, 
+import {
+  HiMapPin,
+  HiHome,
+  HiBriefcase,
   HiBuildingStorefront,
   HiCircleStack,
-  HiBuildingOffice2
+  HiBuildingOffice2,
 } from "react-icons/hi2";
-import { 
-  MdWarehouse, 
-  MdLandscape, 
-  MdFactory, 
+import {
+  MdWarehouse,
+  MdLandscape,
+  MdFactory,
   MdVilla,
   MdPool,
-  MdApartment
+  MdApartment,
 } from "react-icons/md";
 import { getTypeColor, getSafeText } from "@/lib/property-utils";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
@@ -23,6 +23,11 @@ import { getProvinceName } from "@/lib/utils/provinces";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { FaTrainSubway } from "react-icons/fa6";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const PROPERTY_TYPE_ICONS: Record<string, any> = {
   house: HiHome,
@@ -57,24 +62,30 @@ export function PropertyCardInfo({
 }: PropertyCardInfoProps) {
   const { language, t } = useLanguage();
   const searchParams = useSearchParams();
-  const selectedStationFilter = searchParams ? (searchParams.get("transit_station") || "") : "";
+  const selectedStationFilter = searchParams
+    ? searchParams.get("transit_station") || ""
+    : "";
   const typeColor = getTypeColor(property.property_type);
 
   // Property type localization
   const typeKey = property.property_type?.toLowerCase() || "other";
   const typeLabel = t(`property_types.${typeKey}`);
   const IconComponent = PROPERTY_TYPE_ICONS[typeKey] || HiCircleStack;
-  const ProjectIconComponent = PROPERTY_TYPE_ICONS[typeKey] || HiBuildingOffice2;
+  const ProjectIconComponent =
+    PROPERTY_TYPE_ICONS[typeKey] || HiBuildingOffice2;
 
   const localizedTitle = getLocaleValue(property, "title", language);
 
   const projectsObj = (property as any).projects;
   const projectName = projectsObj
-    ? (language !== "th"
-        ? getLocaleValue(projectsObj, "name", language) || projectsObj.name_en || projectsObj.name_th
-        : projectsObj.name_th || projectsObj.name_en)
+    ? language !== "th"
+      ? getLocaleValue(projectsObj, "name", language) ||
+        projectsObj.name_en ||
+        projectsObj.name_th
+      : projectsObj.name_th || projectsObj.name_en
     : (property as any).project_name || null;
-  const projectSlug = projectsObj?.slug || (property as any).project_slug || null;
+  const projectSlug =
+    projectsObj?.slug || (property as any).project_slug || null;
 
   return (
     <div className="space-y-2 mb-1">
@@ -95,8 +106,8 @@ export function PropertyCardInfo({
             if (onCompareClick) onCompareClick(e);
           }}
           className={`flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-lg border transition-all duration-200 cursor-pointer touch-manipulation min-h-[30px]! ${
-            isInCompare 
-              ? "bg-blue-50 border-blue-200/60 text-blue-600 font-bold" 
+            isInCompare
+              ? "bg-blue-50 border-blue-200/60 text-blue-600 font-bold"
               : "bg-transparent border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
@@ -110,7 +121,7 @@ export function PropertyCardInfo({
       </div>
 
       {/* Title block link */}
-      <Link 
+      <Link
         href={`/properties/${property.slug || property.id}`}
         prefetch={false}
         className="block group-hover:text-blue-600 transition-colors"
@@ -119,46 +130,122 @@ export function PropertyCardInfo({
         <h3 className="text-sm sm:text-base md:text-base font-semibold tracking-wide text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-800 transition-all duration-300 ease-in-out">
           {localizedTitle}
         </h3>
-      </Link>      
+      </Link>
 
       {/* Location block link below the title */}
       <div className="flex flex-col gap-1 pt-1">
         {/* Row 1: Project Link (ถ้ามี) */}
-         {projectName && (
-          <div className="flex items-center min-w-0">
+        {projectName &&
+          (() => {
+            const projectTooltip =
+              language === "en"
+                ? `View Project ${projectName}`
+                : language === "cn"
+                  ? `查看项目 ${projectName}`
+                  : language === "ru"
+                    ? `Посмотреть проект ${projectName}`
+                    : `ดูโครงการ ${projectName}`;
+
+            return (
+              <div className="flex items-center min-w-0">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={
+                        projectSlug
+                          ? `/projects/${projectSlug}`
+                          : `/properties/${property.slug || property.id}`
+                      }
+                      prefetch={false}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (handleCardClick) handleCardClick();
+                      }}
+                      className="group/proj inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors duration-300 min-w-0 max-w-full"
+                    >
+                      <ProjectIconComponent className="w-3.5 h-3.5 text-blue-500 group-hover/proj:text-blue-700 transition-colors duration-300 shrink-0" />
+                      <span className="truncate hover:underline transition-colors duration-300">
+                        {projectName}
+                      </span>
+                      <ChevronRight className="w-3 h-3 text-blue-400 group-hover/proj:text-blue-600 group-hover/proj:translate-x-1 shrink-0 transition-all duration-300 ease-out" />
+                    </Link>
+                  </TooltipTrigger>
+                              <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="bg-slate-800 text-white border border-slate-700 text-xs font-medium px-2.5 py-1 rounded-lg shadow-md z-50 pointer-events-none"
+                  >
+                    {projectTooltip}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            );
+          })()}
+        {/* row2 location */}
+        {(() => {
+          const areaSlug = property.popular_area_slug;
+          const targetArea = property.popular_area;
+          const localizedAreaName =
+            getLocaleValue(property, "popular_area", language) || targetArea;
+          const locationHref = areaSlug
+            ? `/areas/${encodeURIComponent(areaSlug)}`
+            : targetArea
+              ? `/properties?popular_area=${encodeURIComponent(targetArea)}`
+              : property.province
+                ? `/properties?province=${encodeURIComponent(property.province)}`
+                : `/properties/${property.slug || property.id}`;
+
+          const areaTooltip = localizedAreaName
+            ? language === "en"
+              ? `Properties in ${localizedAreaName}`
+              : language === "cn"
+                ? `查看 ${localizedAreaName} 的房源`
+                : language === "ru"
+                  ? `Недвижимость в ${localizedAreaName}`
+                  : `ดูทรัพย์สินย่าน ${localizedAreaName}`
+            : undefined;
+
+          const locationLink = (
             <Link
-              href={projectSlug ? `/projects/${projectSlug}` : `/properties/${property.slug || property.id}`}
+              href={locationHref}
               prefetch={false}
+              className="group/loc inline-flex items-center gap-1.5 text-stone-600 hover:text-blue-600 transition-colors duration-300 min-w-0 max-w-full w-fit"
               onClick={(e) => {
                 e.stopPropagation();
                 if (handleCardClick) handleCardClick();
               }}
-              className="group/proj inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors min-w-0 max-w-full"
-              title={`ดูโครงการ ${projectName}`}
             >
-              <ProjectIconComponent className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-              <span className="truncate hover:underline">
-                {projectName}
+              <HiMapPin className="h-3.5 w-3.5 text-slate-500 group-hover/loc:text-blue-600 transition-colors duration-300 shrink-0" />
+              <span className="text-xs truncate whitespace-nowrap text-stone-600 group-hover/loc:text-blue-600 group-hover/loc:underline transition-colors duration-300">
+                {getSafeText(
+                  areaProvince,
+                  getProvinceName("กรุงเทพมหานคร", language),
+                )}
               </span>
-              <ChevronRight className="w-3 h-3 text-blue-400 group-hover/proj:translate-x-0.5 shrink-0 transition-transform" />
             </Link>
-          </div>
-        )}
-        {/* row2 location */}
-        <Link
-          href={`/properties/${property.slug || property.id}`}
-          prefetch={false}
-          className="flex items-center gap-1.5 text-stone-600 min-w-0"
-          onClick={handleCardClick}
-        >
-          <HiMapPin className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-          <span className="text-xs truncate whitespace-nowrap hover:text-blue-600 transition-colors">
-            {getSafeText(
-              areaProvince,
-              getProvinceName("กรุงเทพมหานคร", language),
-            )}
-          </span>
-        </Link>
+          );
+
+          return (
+            <div className="flex items-center min-w-0">
+              {areaTooltip ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    {locationLink}
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="bg-slate-800 text-white border border-slate-700 text-xs font-medium px-2.5 py-1 rounded-lg shadow-md z-50 pointer-events-none"
+                  >
+                    {areaTooltip}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                locationLink
+              )}
+            </div>
+          );
+        })()}
 
         {(() => {
           interface TransitCandidate {
@@ -171,8 +258,17 @@ export function PropertyCardInfo({
           const candidates: TransitCandidate[] = [];
 
           // 1. Root level transit
-          const rootStationName = getLocaleValue(property, "transit_station_name", language);
-          if (rootStationName && property.transit_type && property.transit_type !== "EXPRESSWAY" && property.transit_type !== "MAIN_ROAD") {
+          const rootStationName = getLocaleValue(
+            property,
+            "transit_station_name",
+            language,
+          );
+          if (
+            rootStationName &&
+            property.transit_type &&
+            property.transit_type !== "EXPRESSWAY" &&
+            property.transit_type !== "MAIN_ROAD"
+          ) {
             candidates.push({
               name: rootStationName,
               dbName: property.transit_station_name || "",
@@ -239,13 +335,19 @@ export function PropertyCardInfo({
           // Prioritize selected station filter if matches any candidate
           let chosen = candidates[0];
           if (selectedStationFilter) {
-            const [filterName, filterType] = selectedStationFilter.toLowerCase().split("|");
-            const match = candidates.find(c => {
-              const matchesName = c.name.toLowerCase() === filterName ||
+            const [filterName, filterType] = selectedStationFilter
+              .toLowerCase()
+              .split("|");
+            const match = candidates.find((c) => {
+              const matchesName =
+                c.name.toLowerCase() === filterName ||
                 c.dbName.toLowerCase() === filterName;
               if (!matchesName) return false;
               if (filterType) {
-                return c.type.toLowerCase() === filterType || getNormalizedType(c.type).toLowerCase() === filterType;
+                return (
+                  c.type.toLowerCase() === filterType ||
+                  getNormalizedType(c.type).toLowerCase() === filterType
+                );
               }
               return true;
             });
@@ -266,22 +368,24 @@ export function PropertyCardInfo({
           const formatDistance = (meters: number): string => {
             if (meters >= 1000) {
               const km = (meters / 1000).toFixed(1).replace(/\.0$/, "");
-              const unit = language === "en" 
-                ? "km" 
-                : language === "cn" 
-                  ? "公里" 
-                  : language === "ru" 
-                    ? "км" 
-                    : "กม.";
+              const unit =
+                language === "en"
+                  ? "km"
+                  : language === "cn"
+                    ? "公里"
+                    : language === "ru"
+                      ? "км"
+                      : "กม.";
               return `${km} ${unit}`;
             }
-            const unit = language === "en" 
-              ? "m" 
-              : language === "cn" 
-                ? "米" 
-                : language === "ru" 
-                  ? "м" 
-                  : "ม.";
+            const unit =
+              language === "en"
+                ? "m"
+                : language === "cn"
+                  ? "米"
+                  : language === "ru"
+                    ? "м"
+                    : "ม.";
             return `${meters} ${unit}`;
           };
 
@@ -289,7 +393,9 @@ export function PropertyCardInfo({
             <div className="flex items-center gap-1 text-stone-500 min-w-0 mt-0.5 ml-0.5">
               {/* <FaTrainSubway className="h-3 w-3 text-blue-500 shrink-0" /> */}
               <span className="text-[11px] flex items-center gap-1.5 truncate">
-                <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0 ${badgeClass}`}>
+                <span
+                  className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0 ${badgeClass}`}
+                >
                   {transitType}
                 </span>
                 <span className="truncate font-medium text-stone-600 text-xs">

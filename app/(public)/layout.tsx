@@ -6,12 +6,14 @@ import { PublicFooter } from "@/components/public/PublicFooter";
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <>
+    <div className="min-h-screen flex flex-col justify-between">
       <PublicNav />
-      {children}
+      <div className="flex-1 w-full min-h-[100dvh]">
+        {children}
+      </div>
       <FloatingGroupWrapper />
       <CompareBar />
       <PublicFooter />
-    </>
+    </div>
   );
 }

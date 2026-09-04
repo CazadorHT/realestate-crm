@@ -442,7 +442,7 @@ export function PropertyCardImage({
 
         {/* Pet Friendly Badge */}
         {property.is_pet_friendly && (
-          <div className={`flex items-center bg-white/80 text-orange-600 p-1.5 rounded-full shadow-md border border-white/40 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+          <div className={`flex items-center bg-white text-orange-600 p-1.5 rounded-full shadow-md border border-white/40 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <MdOutlinePets className="w-5 h-5 rotate-25" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               Pet Friendly
@@ -452,7 +452,7 @@ export function PropertyCardImage({
 
         {/* Prime CBD Badge */}
         {isCbdProperty(property) && (
-          <div className={`flex items-center bg-white/80 text-emerald-700 p-1.5 rounded-full shadow-md border border-white/40 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+          <div className={`flex items-center bg-white text-emerald-700 p-1.5 rounded-full shadow-md border border-white/40 transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <FaCity className="w-5 h-5 shrink-0 text-emerald-600" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               Prime CBD
@@ -632,7 +632,7 @@ export function PropertyCardImage({
       </div>
       
       {displayBadgeLabel && (
-        <div className="absolute bottom-3 right-3 bg-white/80 border border-white/40 text-[#12213b] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+        <div className="absolute bottom-3 right-3 bg-white/90 border border-white/40 text-[#12213b] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
           {displayBadgeLabel}
         </div>
       )}

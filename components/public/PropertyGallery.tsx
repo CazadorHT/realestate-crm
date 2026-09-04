@@ -293,7 +293,7 @@ export function PropertyGallery({
 
           {/* Prime CBD Badge */}
           {isCbd && (
-            <div className="flex items-center bg-white/90 text-emerald-700 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+            <div className="flex items-center bg-white text-emerald-700 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
               <FaCity className="w-5 h-5 shrink-0 text-emerald-600" />
               <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 Prime CBD
@@ -303,7 +303,7 @@ export function PropertyGallery({
 
           {/* Pet Friendly Badge */}
           {petFriendly && (
-            <div className="flex items-center bg-white/90 text-orange-600 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
+            <div className="flex items-center bg-white text-orange-600 p-2 rounded-full shadow-lg transition-all duration-300 pr-1.5 xl:group-hover/gallery:pr-4 cursor-default">
               <MdOutlinePets className="w-5 h-5 rotate-25" />
               <span className="opacity-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase">
                 Pet Friendly
@@ -399,7 +399,7 @@ export function PropertyGallery({
             )}
             {isCbd && (
               <div
-                className={`h-7 flex items-center bg-white/90 text-emerald-700 rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                className={`h-7 flex items-center bg-white text-emerald-700 rounded-full shadow-lg transition-all duration-300 cursor-default ${
                   inlineActiveIndex !== 0
                     ? "w-7 justify-center p-0"
                     : "px-2 justify-start"
@@ -419,7 +419,7 @@ export function PropertyGallery({
             )}
             {petFriendly && (
               <div
-                className={`h-7 flex items-center bg-white/90 text-orange-600 rounded-full shadow-lg transition-all duration-300 cursor-default ${
+                className={`h-7 flex items-center bg-white text-orange-600 rounded-full shadow-lg transition-all duration-300 cursor-default ${
                   inlineActiveIndex !== 0
                     ? "w-7 justify-center p-0"
                     : "px-2 justify-start"

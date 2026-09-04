@@ -2,6 +2,7 @@
 import { unstable_cache } from "next/cache";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { getPopularAreasLookupMap } from "./popular-areas";
 
 // ============================================================
 // Types
@@ -69,6 +70,15 @@ export interface PublicPropertyNearStation {
   popular_area_en?: string | null;
   popular_area_cn?: string | null;
   popular_area_ru?: string | null;
+  popular_area_slug?: string | null;
+  project_id?: string | null;
+  project_name?: string | null;
+  project_slug?: string | null;
+  projects?: {
+    name_th?: string | null;
+    name_en?: string | null;
+    slug?: string | null;
+  } | null;
   near_transit: boolean | null;
   transit_station_name: string | null;
   transit_station_name_en: string | null;
@@ -416,7 +426,7 @@ export async function getPropertiesNearStation(
       let query = supabase
         .from("properties")
         .select(
-          `id, slug, title, title_en, title_cn, title_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`,
+          `id, slug, title, title_en, title_cn, title_ru, project_id, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`,
           { count: "exact" }
         )
         .eq("status", "ACTIVE")
@@ -450,10 +460,54 @@ export async function getPropertiesNearStation(
         return { properties: [], total: 0 };
       }
 
+      const projectIds = Array.from(
+        new Set(
+          (data || [])
+            .map((row: any) => row.project_id)
+            .filter((id: string | null): id is string => !!id),
+        ),
+      );
+      const projectMap = new Map<string, { name_th: string | null; name_en: string | null; slug: string | null }>();
+
+      if (projectIds.length > 0) {
+        const { data: projectsData } = await supabase
+          .from("projects")
+          .select("id, name, slug")
+          .in("id", projectIds);
+        (projectsData || []).forEach((p: any) => {
+          if (p.id) {
+            const nameObj = p.name;
+            const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
+            const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
+            projectMap.set(p.id, { name_th: nameTh, name_en: nameEn, slug: p.slug || null });
+          }
+        });
+      }
+
+      let areaLookup: Record<string, any> = {};
+      try {
+        areaLookup = await getPopularAreasLookupMap();
+      } catch (err) {
+        console.warn("Error loading popular areas lookup map in getPropertiesNearStation:", err);
+      }
+
       const mapped = (data || []).map((row: any) => {
         const { property_features, ...rest } = row;
+        const projectInfo = row.project_id ? projectMap.get(row.project_id) : null;
+        const projectsObj = projectInfo
+          ? { name_th: projectInfo.name_th, name_en: projectInfo.name_en, slug: projectInfo.slug }
+          : null;
+        const finalProjectName = projectsObj?.name_th || projectsObj?.name_en || null;
+        const finalProjectSlug = projectInfo?.slug || null;
+
+        const areaRecord = row.popular_area ? areaLookup[row.popular_area.trim().toLowerCase()] : null;
+
         return {
           ...rest,
+          project_name: finalProjectName,
+          project_slug: finalProjectSlug,
+          projects: projectsObj,
+          popular_area_slug: areaRecord?.slug || null,
           main_image: getPublicImageUrl(row.main_image) || null,
           features: (property_features || []).map((pf: any) => pf.features).filter((f: any) => !!f),
         };
@@ -464,7 +518,7 @@ export async function getPropertiesNearStation(
         total: count || 0,
       };
     },
-    ["public-properties-near-station", stationNameTh, stationNameEn, JSON.stringify(filters || {})],
+    ["public-properties-near-station-v2", stationNameTh, stationNameEn, JSON.stringify(filters || {})],
     { revalidate: 604800, tags: ["properties", "stations", "public-data"] }
   )();
 }

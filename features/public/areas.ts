@@ -2,6 +2,7 @@
 import { unstable_cache } from "next/cache";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { getPopularAreasLookupMap } from "./popular-areas";
 import type { PublicPropertyNearStation } from "./stations";
 
 // ============================================================
@@ -548,7 +549,7 @@ export async function getPropertiesInArea(
       let query = supabase
         .from("properties")
         .select(
-          `id, slug, title, title_en, title_cn, title_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`,
+          `id, slug, title, title_en, title_cn, title_ru, project_id, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`,
           { count: "exact" }
         )
         .eq("status", "ACTIVE")
@@ -575,10 +576,54 @@ export async function getPropertiesInArea(
         return { properties: [], total: 0 };
       }
 
+      const projectIds = Array.from(
+        new Set(
+          (data || [])
+            .map((row: any) => row.project_id)
+            .filter((id: string | null): id is string => !!id),
+        ),
+      );
+      const projectMap = new Map<string, { name_th: string | null; name_en: string | null; slug: string | null }>();
+
+      if (projectIds.length > 0) {
+        const { data: projectsData } = await supabase
+          .from("projects")
+          .select("id, name, slug")
+          .in("id", projectIds);
+        (projectsData || []).forEach((p: any) => {
+          if (p.id) {
+            const nameObj = p.name;
+            const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
+            const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
+            projectMap.set(p.id, { name_th: nameTh, name_en: nameEn, slug: p.slug || null });
+          }
+        });
+      }
+
+      let areaSlug: string | null = null;
+      try {
+        const lookupMap = await getPopularAreasLookupMap();
+        const matched = lookupMap[areaNameTh.trim().toLowerCase()];
+        if (matched?.slug) areaSlug = matched.slug;
+      } catch (err) {
+        console.warn("Error getting area lookup map in getPropertiesInArea:", err);
+      }
+
       const properties = (data || []).map((row: any) => {
         const { property_features, ...rest } = row;
+        const projectInfo = row.project_id ? projectMap.get(row.project_id) : null;
+        const projectsObj = projectInfo
+          ? { name_th: projectInfo.name_th, name_en: projectInfo.name_en, slug: projectInfo.slug }
+          : null;
+        const finalProjectName = projectsObj?.name_th || projectsObj?.name_en || null;
+        const finalProjectSlug = projectInfo?.slug || null;
+
         return {
           ...rest,
+          project_name: finalProjectName,
+          project_slug: finalProjectSlug,
+          projects: projectsObj,
+          popular_area_slug: areaSlug,
           features: (property_features || []).map((pf: any) => pf.features).filter((f: any) => !!f),
         };
       }) as PublicPropertyNearStation[];
@@ -588,7 +633,7 @@ export async function getPropertiesInArea(
         total: count || 0,
       };
     },
-    ["public-properties-in-area-v2", areaNameTh, JSON.stringify(filters || {})],
+    ["public-properties-in-area-v3", areaNameTh, JSON.stringify(filters || {})],
     { revalidate: 604800, tags: ["properties", "public-data"] }
   )();
 }

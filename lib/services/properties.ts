@@ -566,7 +566,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         );
         const areaTranslationsMap = new Map<
           string,
-          { en: string | null; cn: string | null; ru: string | null }
+          { en: string | null; cn: string | null; ru: string | null; slug: string | null }
         >();
 
         if (popularAreaNames.length > 0) {
@@ -575,7 +575,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             popularAreaNames.forEach((name) => {
               const matched = lookupMap[name.trim().toLowerCase()];
               if (matched) {
-                areaTranslationsMap.set(name, { en: matched.en, cn: matched.cn, ru: matched.ru });
+                areaTranslationsMap.set(name, { en: matched.en, cn: matched.cn, ru: matched.ru, slug: matched.slug });
               }
             });
           } catch (err) {
@@ -590,12 +590,12 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
               .filter((id: string | null): id is string => !!id),
           ),
         );
-        const projectMap = new Map<string, { name_th: string | null; name_en: string | null }>();
+        const projectMap = new Map<string, { name_th: string | null; name_en: string | null; slug: string | null }>();
 
         if (projectIds.length > 0) {
           const { data: projectsData } = await supabase
             .from("projects")
-            .select("id, name")
+            .select("id, name, slug")
             .in("id", projectIds);
           (projectsData || []).forEach((p: any) => {
             if (p.id) {
@@ -603,7 +603,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
               const nameObj = p.name;
               const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
               const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
-              projectMap.set(p.id, { name_th: nameTh, name_en: nameEn });
+              projectMap.set(p.id, { name_th: nameTh, name_en: nameEn, slug: p.slug || null });
             }
           });
         }
@@ -612,9 +612,10 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           const trans = areaTranslationsMap.get(row.popular_area || "");
           const projectInfo = row.project_id ? projectMap.get(row.project_id) : null;
           const projectsObj = projectInfo
-            ? { name_th: projectInfo.name_th, name_en: projectInfo.name_en }
+            ? { name_th: projectInfo.name_th, name_en: projectInfo.name_en, slug: projectInfo.slug }
             : row.projects || null;
           const finalProjectName = projectsObj?.name_th || projectsObj?.name_en || row.project_name || null;
+          const finalProjectSlug = projectInfo?.slug || (row as any).project_slug || null;
 
           const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
           
@@ -645,7 +646,9 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             ...cardBase,
             bumped_at: bumpedAt,
             project_name: finalProjectName,
+            project_slug: finalProjectSlug,
             projects: projectsObj,
+            popular_area_slug: trans?.slug ?? null,
             popular_area_en: trans?.en ?? null,
             popular_area_cn: trans?.cn ?? null,
             popular_area_ru: trans?.ru ?? null,

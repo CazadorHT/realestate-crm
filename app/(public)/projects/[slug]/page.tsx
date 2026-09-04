@@ -103,6 +103,28 @@ export async function generateMetadata(
   };
 }
 
+async function resolveGoogleMapsLink(url: string | null) {
+  if (!url) return null;
+  if (
+    url.includes("goo.gl") ||
+    url.includes("maps.app.goo.gl") ||
+    url.includes("share.google")
+  ) {
+    try {
+      const res = await fetch(url, {
+        method: "HEAD",
+        redirect: "follow",
+        next: { revalidate: 86400 },
+      });
+      return res.url;
+    } catch (e) {
+      console.warn("Could not resolve shortened Google Maps link:", url);
+      return url;
+    }
+  }
+  return url;
+}
+
 export default async function ProjectDetailPage(
   props: { params: Promise<{ slug: string }> }
 ) {
@@ -116,6 +138,7 @@ export default async function ProjectDetailPage(
   const { language } = await getServerTranslations();
   const nameText = project.name[language as keyof typeof project.name] || project.name.en || project.name.th;
   
+  const resolvedGoogleMapsUrl = await resolveGoogleMapsLink(project.googleMapsUrl || null);
   const { properties, total } = await getPropertiesInProject(project.id, { limit: 12 });
   const relatedProjects = await getRelatedProjects(project.id, project.district, project.province);
   const nearbyAreas = await getPopularAreas(50);
@@ -206,8 +229,10 @@ export default async function ProjectDetailPage(
           />
 
           <ProjectLocationMapCard
+            googleMapsUrl={resolvedGoogleMapsUrl || project.googleMapsUrl}
             latitude={project.latitude}
             longitude={project.longitude}
+            projectName={nameText}
             language={language}
           />
         </div>

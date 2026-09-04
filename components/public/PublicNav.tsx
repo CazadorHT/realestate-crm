@@ -202,7 +202,7 @@ export function PublicNav() {
       >
         <nav
           className={`border-b border-b-slate-200 transition-all duration-300 ${
-            scrolled ? "bg-white/90 shadow-sm" : "bg-white"
+            scrolled ? "bg-white shadow-sm" : "bg-white"
           }`}
         >
           <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8">

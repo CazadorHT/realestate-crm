@@ -34,6 +34,7 @@ export interface PublicProject {
   priceMax: number | null;
   rentalMin: number | null;
   rentalMax: number | null;
+  googleMapsUrl?: string | null;
   popularArea?: string | null;
   popularAreaEn?: string | null;
   popularAreaCn?: string | null;
@@ -188,7 +189,7 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
           id, name, slug, developer, property_type, province, district, subdistrict, 
           latitude, longitude, year_completed, total_units, description, image_url, 
           gallery_urls, facilities, nearest_station_code, nearest_station_distance, 
-          seo_title, seo_description, sort_order
+          seo_title, seo_description, sort_order, google_maps_url
         `)
         .eq("slug", slug)
         .eq("is_active", true)
@@ -254,6 +255,7 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         subdistrict: p.subdistrict,
         latitude: p.latitude,
         longitude: p.longitude,
+        googleMapsUrl: p.google_maps_url || null,
         yearCompleted: p.year_completed,
         totalUnits: p.total_units,
         description: p.description as PublicProject["description"],
