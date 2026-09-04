@@ -206,7 +206,7 @@ export default async function StationDetailPage(
   const { properties, total } = await getPropertiesNearStation(
     station.label.th,
     station.label.en,
-    { limit: 60 }
+    { limit: 12 }
   );
 
   const lines = await getTransitLinesWithStations();

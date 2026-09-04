@@ -131,8 +131,8 @@ export default async function AreaDetailPage(
   const nameText = area.name[language as keyof typeof area.name] || area.name.en || area.name.th;
   const breadcrumbHome = language === "en" ? "Home" : language === "cn" ? "首页" : language === "ru" ? "Главная" : "หน้าแรก";
 
-  // Retrieve matching properties, market median stats, transit links and related projects
-  const properties = await getPropertiesInArea(area.name.th);
+  // Retrieve matching properties (initial 12 items for fast load), market median stats, transit links and related projects
+  const { properties, total } = await getPropertiesInArea(area.name.th, { limit: 12 });
   const insights = await getAreaMarketInsights(area.name.th);
   const connections = await getTransitAndProjectsInArea(area.name.th);
   const relatedAreas = await getRelatedAreas(area.id);
@@ -273,10 +273,15 @@ export default async function AreaDetailPage(
                   </h2>
                 </div>
                 <span className="self-start sm:self-auto text-[10px] sm:text-xs font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full shrink-0 ml-[30px] sm:ml-0">
-                  {properties.length} {t("listings_count")}
+                  {total} {t("listings_count")}
                 </span>
               </div>
-              <AreaPropertiesClient initialProperties={properties} areaName={nameText} />
+              <AreaPropertiesClient 
+                initialProperties={properties} 
+                initialTotal={total}
+                areaNameTh={area.name.th}
+                areaName={nameText} 
+              />
             </section>
           </div>
 

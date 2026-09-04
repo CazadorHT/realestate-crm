@@ -3,7 +3,7 @@ import { PropertyCardProps } from "@/components/public/PropertyCard";
 import { PropertyFacets } from "@/features/properties/types/search";
 import { detectSearchIntent } from "@/lib/search-config";
 import { isCbdProperty } from "@/lib/property-utils";
-import { getParentAreaName } from "@/lib/utils/area-hierarchy";
+import { getParentAreaName, AREA_PARENT_MAP } from "@/lib/utils/area-hierarchy";
 
 type ApiProperty = PropertyCardProps;
 
@@ -55,6 +55,57 @@ export function usePropertyFiltering(
     "หลังสวน - ลุมพินี", "หลังสวน", "ลุมพินี", "ราชดำริ", "นานา",
     "ช่องนนทรี", "ศาลาแดง", "สุรศักดิ์", "รัชดา", "รัชดาภิเษก"
   ], []);
+
+  // --- ⚡ Expanded Selected Area Tokens (Multilingual & Parent-Child Zone Clustering) ---
+  const expandedSelectedAreaSet = useMemo(() => {
+    if (!area || area === "ALL") return null;
+    const rawTokens = area.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (rawTokens.length === 0) return null;
+    const set = new Set<string>();
+
+    rawTokens.forEach((token) => {
+      set.add(token);
+      // Bidirectional parent-child relationship
+      Object.entries(AREA_PARENT_MAP).forEach(([child, parent]) => {
+        if (parent.toLowerCase() === token) {
+          set.add(child.toLowerCase());
+        }
+        if (child.toLowerCase() === token) {
+          set.add(parent.toLowerCase());
+        }
+      });
+    });
+
+    // Cross-link multilingual translations from properties in memory
+    properties.forEach((p) => {
+      const th = (p.popular_area || "").trim().toLowerCase();
+      const en = (p.popular_area_en || "").trim().toLowerCase();
+      const cn = (p.popular_area_cn || "").trim().toLowerCase();
+      const ru = (p.popular_area_ru || "").trim().toLowerCase();
+
+      const thSubParts = th.split(/\s*[-–—/]\s*/).filter(Boolean);
+      const enSubParts = en.split(/\s*[-–—/]\s*/).filter(Boolean);
+
+      const isMatching = rawTokens.some((t) =>
+        t === th || t === en || t === cn || t === ru ||
+        thSubParts.includes(t) || enSubParts.includes(t) ||
+        (t.length >= 3 && (th.includes(t) || en.includes(t)))
+      );
+
+      if (isMatching) {
+        if (th) set.add(th);
+        if (en) set.add(en);
+        if (cn) set.add(cn);
+        if (ru) set.add(ru);
+        thSubParts.forEach((sub) => set.add(sub));
+        enSubParts.forEach((sub) => set.add(sub));
+        const parentTh = getParentAreaName(p.popular_area || "")?.toLowerCase();
+        if (parentTh) set.add(parentTh);
+      }
+    });
+
+    return set;
+  }, [area, properties]);
 
   // --- ⚡ Centralized Search Intent (Diamond Optimization) ---
   const searchIntent = useMemo(() => {
@@ -137,17 +188,25 @@ export function usePropertyFiltering(
       }
     }
 
-    if (!excludeFilters.includes("area") && area !== "ALL") {
-      const selectedAreas = area.split(",").map((s) => s.trim()).filter(Boolean);
-      if (selectedAreas.length > 0) {
-        const cleanPropArea = (p.popular_area || "").trim();
-        const parentOfProp = getParentAreaName(cleanPropArea);
-        const matchesDirectly = selectedAreas.includes(cleanPropArea);
-        const matchesParent = parentOfProp ? selectedAreas.includes(parentOfProp) : false;
-        if (!matchesDirectly && !matchesParent) {
-          return false;
-        }
-      }
+    if (!excludeFilters.includes("area") && expandedSelectedAreaSet) {
+      const th = (p.popular_area || "").trim().toLowerCase();
+      const en = (p.popular_area_en || "").trim().toLowerCase();
+      const parentTh = getParentAreaName(p.popular_area || "")?.toLowerCase();
+      const parentEn = getParentAreaName(p.popular_area_en || "")?.toLowerCase();
+
+      const thSubParts = th.split(/\s*[-–—/]\s*/).filter(Boolean);
+      const enSubParts = en.split(/\s*[-–—/]\s*/).filter(Boolean);
+
+      const match = (th && expandedSelectedAreaSet.has(th)) ||
+                    (en && expandedSelectedAreaSet.has(en)) ||
+                    (parentTh && expandedSelectedAreaSet.has(parentTh)) ||
+                    (parentEn && expandedSelectedAreaSet.has(parentEn)) ||
+                    thSubParts.some((sub) => expandedSelectedAreaSet.has(sub)) ||
+                    enSubParts.some((sub) => expandedSelectedAreaSet.has(sub)) ||
+                    Array.from(expandedSelectedAreaSet).some(
+                      (token) => token.length >= 3 && (th.includes(token) || en.includes(token))
+                    );
+      if (!match) return false;
     }
 
     if (!excludeFilters.includes("listingType") && listingType !== "ALL") {
@@ -224,7 +283,7 @@ export function usePropertyFiltering(
     }
 
     return true;
-  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, cbd, CBD_AREAS, minPrice, maxPrice, minSize, maxSize, transitStation]);
+  }, [searchIntent, province, type, listingType, priceType, area, expandedSelectedAreaSet, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, cbd, CBD_AREAS, minPrice, maxPrice, minSize, maxSize, transitStation]);
 
   // Single-Pass Engine (O(N))
   const results = useMemo(() => {
@@ -377,10 +436,19 @@ export function usePropertyFiltering(
       name_ru: val.name_ru
     })).sort((a, b) => b.count - a.count);
 
-    // If we have active category/quick/landing filters, the local quickCounts accurately reflect this subset.
+    // If we have active category/area/quick/landing filters, the local counts accurately reflect this subset.
     // Use serverFacets only when no restrictive filters are applied.
     const hasActiveRestrictions = Boolean(
-      petFriendly || luxuryVilla || cbd || (type && type !== "ALL") || (province && province !== "ALL") || searchIntent
+      (area && area !== "ALL") ||
+      (province && province !== "ALL") ||
+      (type && type !== "ALL") ||
+      (listingType && listingType !== "ALL") ||
+      (bedrooms && bedrooms !== "ALL") ||
+      minPrice || maxPrice || minSize || maxSize ||
+      keyword || searchIntent || transitStation ||
+      petFriendly || luxuryVilla || cbd || nearTrain ||
+      fullyFurnished || isForeigner || companyRegistered ||
+      isHotDeal || allowAirbnb
     );
 
     return {
@@ -388,18 +456,39 @@ export function usePropertyFiltering(
       availableProvinces: serverProvinces.length > 0 ? serverProvinces : results.availableProvinces,
       availableAreas: serverAreas.length > 0 ? serverAreas : results.availableAreas,
       availableStations: serverStations.length > 0 && !hasActiveRestrictions ? serverStations : results.availableStations,
-      availableTypes: !hasActiveRestrictions && serverFacets.availableTypes ? serverFacets.availableTypes : results.availableTypes,
-      availableListingTypes: !hasActiveRestrictions && serverFacets.availableListingTypes ? serverFacets.availableListingTypes : results.availableListingTypes,
-      availableQuickFilters: !hasActiveRestrictions && serverFacets.availableQuickFilters
-        ? {
-            ...results.availableQuickFilters,
-            ...serverFacets.availableQuickFilters,
-          }
+      availableTypes: serverFacets.availableTypes ? serverFacets.availableTypes : results.availableTypes,
+      availableListingTypes: serverFacets.availableListingTypes ? serverFacets.availableListingTypes : results.availableListingTypes,
+      availableQuickFilters: serverFacets.availableQuickFilters
+        ? serverFacets.availableQuickFilters
         : results.availableQuickFilters,
       availablePrices: serverFacets.availablePrices || undefined,
       availableSizes: serverFacets.availableSizes || undefined,
     };
-  }, [results, serverFacets, petFriendly, luxuryVilla, cbd, type, province, searchIntent]);
+  }, [
+    results,
+    serverFacets,
+    area,
+    province,
+    type,
+    listingType,
+    bedrooms,
+    minPrice,
+    maxPrice,
+    minSize,
+    maxSize,
+    keyword,
+    searchIntent,
+    transitStation,
+    petFriendly,
+    luxuryVilla,
+    cbd,
+    nearTrain,
+    fullyFurnished,
+    isForeigner,
+    companyRegistered,
+    isHotDeal,
+    allowAirbnb,
+  ]);
 
   return {
     ...finalFacets,

@@ -113,45 +113,62 @@ export function PropertyGrid({
               </h4>
 
               <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3">
-                {areaFilterName && areaFilterName.toLowerCase() !== "all" && areaRemainingCount > 0 ? (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white shadow-xs">
-                    {language === "en"
-                      ? `+${areaRemainingCount} in "${areaFilterName}"`
-                      : language === "cn"
-                      ? `"${areaFilterName}" 还有 +${areaRemainingCount} 套`
-                      : language === "ru"
-                      ? `+${areaRemainingCount} в "${areaFilterName}"`
-                      : `+${areaRemainingCount} รายการใน "${areaFilterName}"`}
-                  </span>
-                ) : totalRemainingCount > 0 ? (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white shadow-xs">
-                    {language === "en"
-                      ? `+${totalRemainingCount} properties`
-                      : language === "cn"
-                      ? `+${totalRemainingCount} 套房源`
-                      : language === "ru"
-                      ? `+${totalRemainingCount} объектов`
-                      : `+${totalRemainingCount} รายการ`}
-                  </span>
-                ) : null}
+                {(() => {
+                  const remaining = areaFilterName && areaFilterName.toLowerCase() !== "all" && areaRemainingCount > 0
+                    ? areaRemainingCount
+                    : totalRemainingCount;
+                  const nextBatch = Math.min(12, remaining);
+                  if (remaining <= 0) return null;
+
+                  return (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white shadow-xs">
+                      {language === "en"
+                        ? `+${nextBatch} Properties`
+                        : language === "cn"
+                        ? `+${nextBatch} 套房源`
+                        : language === "ru"
+                        ? `+${nextBatch} объектов`
+                        : `+${nextBatch} รายการ`}
+                    </span>
+                  );
+                })()}
               </div>
 
               <p className="text-xs sm:text-sm text-slate-500 group-hover:text-slate-700 transition-colors font-medium">
-                {isFetchingMore
-                  ? language === "en"
-                    ? "Loading more properties..."
+                {(() => {
+                  const remaining = areaFilterName && areaFilterName.toLowerCase() !== "all" && areaRemainingCount > 0
+                    ? areaRemainingCount
+                    : totalRemainingCount;
+                  const nextBatch = Math.min(12, remaining);
+
+                  if (isFetchingMore) {
+                    return language === "en"
+                      ? "Loading more properties..."
+                      : language === "cn"
+                      ? "正在加载更多房源..."
+                      : language === "ru"
+                      ? "Загрузка объектов..."
+                      : "กำลังดึงข้อมูลเพิ่มเติม...";
+                  }
+
+                  if (remaining > nextBatch) {
+                    return language === "en"
+                      ? `Click to load +${nextBatch} more (${remaining} remaining)`
+                      : language === "cn"
+                      ? `点击加载 +${nextBatch} 套 (还剩 ${remaining} 套)`
+                      : language === "ru"
+                      ? `Загрузить +${nextBatch} (осталось ${remaining})`
+                      : `กดโหลดเพิ่มอีก ${nextBatch} รายการ (คงเหลืออีก ${remaining} รายการ)`;
+                  }
+
+                  return language === "en"
+                    ? `Click to load remaining ${nextBatch} properties`
                     : language === "cn"
-                    ? "正在加载更多房源..."
+                    ? `点击加载剩余 ${nextBatch} 套房源`
                     : language === "ru"
-                    ? "Загрузка объектов..."
-                    : "กำลังดึงข้อมูลเพิ่มเติม..."
-                  : language === "en"
-                  ? "Click here to load all properties"
-                  : language === "cn"
-                  ? "点击此处加载所有房源"
-                  : language === "ru"
-                  ? "Нажмите здесь, чтобы загрузить все объекты"
-                  : "กดที่นี่เพื่อโหลดดูทรัพย์ทั้งหมด"}
+                    ? `Загрузить оставшиеся ${nextBatch} объектов`
+                    : `กดโหลด ${nextBatch} รายการที่เหลือ`;
+                })()}
               </p>
             </button>
           </m.div>

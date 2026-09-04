@@ -62,7 +62,7 @@ export const publicPropertyFilterSchema = z.object({
   bathrooms: z.coerce.number().optional(),
   ids: z.array(z.string()).optional(),
   filter: z.enum(["hot_deals", "all"]).default("all").optional(),
-  limit: z.coerce.number().default(36).optional(),
+  limit: z.coerce.number().default(12).optional(),
   // Boolean filters
   nearTrain: z.coerce.boolean().optional(),
   petFriendly: z.coerce.boolean().optional(),

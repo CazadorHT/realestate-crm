@@ -528,41 +528,67 @@ export const getAllAreaSlugs = unstable_cache(
 );
 
 /**
- * Fetch all active properties in this area
+ * Fetch active properties in this area with pagination & count
  */
 export async function getPropertiesInArea(
-  areaNameTh: string
-): Promise<PublicPropertyNearStation[]> {
+  areaNameTh: string,
+  filters?: {
+    listing_type?: string;
+    property_type?: string;
+    limit?: number;
+    offset?: number;
+  }
+): Promise<{ properties: PublicPropertyNearStation[]; total: number }> {
   return unstable_cache(
     async () => {
       const supabase = createPublicClient();
+      const limit = filters?.limit || 12;
+      const offset = filters?.offset || 0;
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("properties")
         .select(
-          `id, slug, title, title_en, title_cn, title_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`
+          `id, slug, title, title_en, title_cn, title_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`,
+          { count: "exact" }
         )
         .eq("status", "ACTIVE")
         .is("deleted_at", null)
-        .eq("popular_area", areaNameTh)
+        .eq("popular_area", areaNameTh);
+
+      if (filters?.listing_type && filters.listing_type !== "ALL") {
+        query = query.eq("listing_type", filters.listing_type);
+      }
+      if (filters?.property_type && filters.property_type !== "ALL") {
+        query = query.eq("property_type", filters.property_type);
+      }
+
+      query = query
         .order("is_featured", { ascending: false })
         .order("is_hot_deal", { ascending: false })
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      const { data, error, count } = await query;
 
       if (error || !data) {
         console.error("Error fetching properties in area:", error?.message);
-        return [];
+        return { properties: [], total: 0 };
       }
 
-      return (data || []).map((row: any) => {
+      const properties = (data || []).map((row: any) => {
         const { property_features, ...rest } = row;
         return {
           ...rest,
           features: (property_features || []).map((pf: any) => pf.features).filter((f: any) => !!f),
         };
       }) as PublicPropertyNearStation[];
+
+      return {
+        properties,
+        total: count || 0,
+      };
     },
-    ["public-properties-in-area", areaNameTh],
+    ["public-properties-in-area-v2", areaNameTh, JSON.stringify(filters || {})],
     { revalidate: 604800, tags: ["properties", "public-data"] }
   )();
 }

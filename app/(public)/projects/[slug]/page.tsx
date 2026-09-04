@@ -116,7 +116,7 @@ export default async function ProjectDetailPage(
   const { language } = await getServerTranslations();
   const nameText = project.name[language as keyof typeof project.name] || project.name.en || project.name.th;
   
-  const { properties } = await getPropertiesInProject(project.id, { limit: 100 });
+  const { properties, total } = await getPropertiesInProject(project.id, { limit: 12 });
   const relatedProjects = await getRelatedProjects(project.id, project.district, project.province);
   const nearbyAreas = await getPopularAreas(50);
 
@@ -183,7 +183,11 @@ export default async function ProjectDetailPage(
         
         {/* Left column (2 cols) - Listings */}
         <div className="lg:flex-1 w-full space-y-10 ">
-          <ProjectPropertiesClient initialProperties={properties} project={project} />
+          <ProjectPropertiesClient 
+            initialProperties={properties} 
+            initialTotal={total}
+            project={project} 
+          />
         </div>
 
         {/* Right column (1 col) - Project Info Card */}

@@ -234,11 +234,12 @@ export const getPopularAreasAction = unstable_cache(
 
       if (top16Areas.length === 0) return [];
 
-      // 4. [S-Tier Optimization] ดึงรูปภาพภาพหน้าปก (main_image) จากทรัพย์สินล่าสุดในแต่ละย่าน (เฉพาะปากช่องย่านท็อป 16 เท่านั้น)
-      // การดึงเจาะจงเฉพาะกลุ่ม 16 ย่านนี้ ช่วยเซฟปริมาณดาวน์โหลด Egress เป็นศูนย์และค้นหาเสร็จ in เสี้ยววินาทีครับ
+      // 4. [S-Tier Optimization] ดึงรูปภาพภาพหน้าปก (main_image) จากทรัพย์สินล่าสุดในแต่ละย่าน (เฉพาะท็อป 16 ย่านเท่านั้น)
       const targetProvincesForCover = (province && provinceMap[province])
         ? provinceMap[province]
         : (province ? [province] : bkkVicinity);
+
+      const targetAreaNames = top16Areas.map((a: any) => a.nameTh).filter(Boolean);
 
       let propsCoverQuery = client
         .from("properties")
@@ -250,6 +251,13 @@ export const getPopularAreasAction = unstable_cache(
 
       if (targetProvincesForCover.length > 0) {
         propsCoverQuery = propsCoverQuery.in("province", targetProvincesForCover);
+      }
+
+      if (targetAreaNames.length > 0) {
+        const formattedNames = targetAreaNames.map((n: string) => `"${n}"`).join(",");
+        propsCoverQuery = propsCoverQuery.or(
+          `popular_area.in.(${formattedNames}),subdistrict.in.(${formattedNames}),district.in.(${formattedNames})`
+        );
       }
 
       const { data: recentProps } = await propsCoverQuery;

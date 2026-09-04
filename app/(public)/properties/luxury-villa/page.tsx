@@ -156,13 +156,12 @@ export default async function LuxuryVillaPage(props: {
   // Prefetch initial data
   const initialData = await getPublicProperties({
     ...options,
-    limit: 24,
+    limit: 12,
     includeFacets: true,
   }).catch(() => ({ properties: [], facets: null }));
 
-  const totalCount = initialData.properties.length < 60
-    ? initialData.properties.length
-    : (initialData.facets?.availableListingTypes?.ALL || 60);
+  const totalCount =
+    initialData.facets?.availableListingTypes?.ALL || initialData.properties.length;
 
   const areaCounts: Record<string, { count: number; name_en: string | null; name_cn: string | null; name_ru: string | null }> = {};
   initialData.properties.forEach(p => {
@@ -178,16 +177,28 @@ export default async function LuxuryVillaPage(props: {
     areaCounts[p.popular_area].count++;
   });
 
-  const popularAreas = Object.entries(areaCounts)
-    .map(([name, info]) => ({
-      name,
-      count: info.count,
-      name_en: info.name_en,
-      name_cn: info.name_cn,
-      name_ru: info.name_ru,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
+  const popularAreas = initialData.facets?.availableAreas
+    ? Object.entries(initialData.facets.availableAreas)
+        .map(([name, info]: [string, any]) => ({
+          name,
+          count: info.count || 0,
+          name_en: info.name_en || name,
+          name_cn: info.name_cn || name,
+          name_ru: info.name_ru || name,
+        }))
+        .filter((a) => a.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
+    : Object.entries(areaCounts)
+        .map(([name, info]) => ({
+          name,
+          count: info.count,
+          name_en: info.name_en,
+          name_cn: info.name_cn,
+          name_ru: info.name_ru,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
 
   const canonicalUrl = `${siteConfig.url}/properties/luxury-villa`;
   const schemaJsonLd = {

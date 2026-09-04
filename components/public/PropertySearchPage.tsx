@@ -118,12 +118,25 @@ export function PropertySearchPage({
       return filtered.length;
     }
 
-    // 2. Area filters (e.g. Bang Na (29) + Krungthep Kreetha (10) = 39)
+    // 2. Listing types
+    if (filters.listingType === "RENT" && serverFacets?.availableListingTypes?.RENT !== undefined) {
+      return serverFacets.availableListingTypes.RENT;
+    }
+    if (filters.listingType === "SALE" && serverFacets?.availableListingTypes?.SALE !== undefined) {
+      return serverFacets.availableListingTypes.SALE;
+    }
+
+    // 3. Server facets total count for active query (includes area, quick filters, etc.)
+    if (serverFacets?.availableListingTypes?.ALL !== undefined && serverFacets.availableListingTypes.ALL > 0) {
+      return serverFacets.availableListingTypes.ALL;
+    }
+
+    // 4. Area filters fallback
     if (filters.area && filters.area !== "ALL" && selectedAreaFacetTotal > 0) {
       return selectedAreaFacetTotal;
     }
 
-    // 3. Quick filters
+    // 5. Quick filters
     if (filters.petFriendly && serverFacets?.availableQuickFilters?.petFriendly !== undefined) {
       return serverFacets.availableQuickFilters.petFriendly;
     }
@@ -141,14 +154,6 @@ export function PropertySearchPage({
     }
     if (filters.isHotDeal && serverFacets?.availableQuickFilters?.isHotDeal !== undefined) {
       return serverFacets.availableQuickFilters.isHotDeal;
-    }
-
-    // 4. Listing types
-    if (filters.listingType === "RENT" && serverFacets?.availableListingTypes?.RENT !== undefined) {
-      return serverFacets.availableListingTypes.RENT;
-    }
-    if (filters.listingType === "SALE" && serverFacets?.availableListingTypes?.SALE !== undefined) {
-      return serverFacets.availableListingTypes.SALE;
     }
 
     return serverFacets?.availableListingTypes?.ALL || filtered.length;
@@ -350,20 +355,20 @@ export function PropertySearchPage({
                       </span>
                       {totalAvailableCount > visibleProperties.length && (
                         <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-semibold">
-                          +{totalAvailableCount - visibleProperties.length}
+                          +{Math.min(ITEMS_PER_PAGE, totalAvailableCount - visibleProperties.length)}
                         </span>
                       )}
                     </>
                   )}
                 </button>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 font-medium">
                   {language === "en"
-                    ? `Showing ${visibleProperties.length} of ${totalAvailableCount} properties`
+                    ? `Showing ${visibleProperties.length} of ${totalAvailableCount} properties (${totalAvailableCount - visibleProperties.length} remaining)`
                     : language === "cn"
-                    ? `已显示 ${totalAvailableCount} 个房源中的 ${visibleProperties.length} 个`
+                    ? `已显示 ${totalAvailableCount} 个房源中的 ${visibleProperties.length} 个 (还剩 ${totalAvailableCount - visibleProperties.length} 个)`
                     : language === "ru"
-                    ? `Показано ${visibleProperties.length} из ${totalAvailableCount} объектов`
-                    : `กำลังแสดง ${visibleProperties.length} จากทั้งหมด ${totalAvailableCount} ประกาศ`}
+                    ? `Показано ${visibleProperties.length} из ${totalAvailableCount} объектов (осталось ${totalAvailableCount - visibleProperties.length})`
+                    : `กำลังแสดง ${visibleProperties.length} จากทั้งหมด ${totalAvailableCount} รายการ (คงเหลืออีก ${totalAvailableCount - visibleProperties.length} รายการ)`}
                 </p>
               </div>
             )}

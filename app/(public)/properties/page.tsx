@@ -140,7 +140,7 @@ export async function generateMetadata(props: { searchParams: Promise<any> }): P
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
   
-  const initialData = await getPublicProperties({ limit: 36, ...options, includeFacets: true });
+  const initialData = await getPublicProperties({ limit: 1, ...options, includeFacets: true });
   const hasNoResults = initialData.properties.length === 0;
 
   let title = t("metadata.search_title");
@@ -256,7 +256,7 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
   const options = parseSearchParamsToOptions(searchParams);
   
   // ⚡ Prefetch initial data on the server
-  const initialData = await getPublicProperties({ limit: 36, ...options, includeFacets: true });
+  const initialData = await getPublicProperties({ limit: 12, ...options, includeFacets: true });
   
   const totalCount = initialData.facets?.availableListingTypes?.ALL || 0;
 

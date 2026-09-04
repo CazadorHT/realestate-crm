@@ -26,23 +26,39 @@ export const AREA_PARENT_MAP: Record<string, string> = {
   // กรุงเทพกรีฑา zone
   "กรุงเทพกรีฑาตัดใหม่": "กรุงเทพกรีฑา",
   "Krungthep Kreetha New Road": "กรุงเทพกรีฑา",
+  "Krungthep Kreetha": "กรุงเทพกรีฑา",
+
+  // ศรีนครินทร์ - บางนา zone
+  "ศรีนครินทร์ - บางนา": "บางนา",
+  "Srinakarin - Bangna": "บางนา",
+  "ศรีนครินทร์": "ศรีนครินทร์",
+  "Srinakarin": "ศรีนครินทร์",
 
   // พระราม 4 zone
+  "พระราม 4 – คลองเตย": "พระราม 4",
   "พระราม 4 - คลองเตย": "พระราม 4",
   "พระราม 4 - กล้วยน้ำไท": "พระราม 4",
+  "Rama 4 – Khlong Toei": "พระราม 4",
   "Rama 4 - Khlong Toei": "พระราม 4",
   "Rama IV - Khlong Toei": "พระราม 4",
+  "Rama 4": "พระราม 4",
+  "Rama IV": "พระราม 4",
 
   // ชิดลม - เพลินจิต zone
   "ชิดลม": "ชิดลม - เพลินจิต",
   "เพลินจิต": "ชิดลม - เพลินจิต",
   "Chidlom": "ชิดลม - เพลินจิต",
   "Ploenchit": "ชิดลม - เพลินจิต",
+  "Chidlom - Ploenchit": "ชิดลม - เพลินจิต",
+  "ราชประสงค์ - ชิดลม": "ชิดลม - เพลินจิต",
+  "หลังสวน - ลุมพินี": "หลังสวน",
 
   // บางนา zone
   "บางนา - ตราด": "บางนา",
   "บางนาตราด": "บางนา",
   "Bang Na - Trat": "บางนา",
+  "Bang Na": "บางนา",
+  "Bangna": "บางนา",
   "ลาซาล - แบริ่ง": "บางนา",
   "Lasalle - Bearing": "บางนา",
 
@@ -50,6 +66,36 @@ export const AREA_PARENT_MAP: Record<string, string> = {
   "รัชดา": "รัชดาภิเษก",
   "รัชดาภิเษก": "รัชดาภิเษก",
   "Ratchada": "รัชดาภิเษก",
+  "Ratchadaphisek": "รัชดาภิเษก",
+  "Rama 9": "พระราม 9",
+
+  // สุขุมวิท zone
+  "สุขุมวิท - อ่อนนุช": "สุขุมวิท",
+  "Sukhumvit - On Nut": "สุขุมวิท",
+  "Sukhumvit": "สุขุมวิท",
+  "Thong Lo": "ทองหล่อ",
+  "Thonglor": "ทองหล่อ",
+  "Ekkamai": "เอกมัย",
+  "Phrom Phong": "พร้อมพงษ์",
+  "Asoke": "อโศก",
+  "Asok": "อโศก",
+  "On Nut": "อ่อนนุช",
+  "อ่อนนุช – วงแหวน": "อ่อนนุช",
+  "อ่อนนุช - วงแหวน": "อ่อนนุช",
+  "Udom Suk": "อุดมสุข",
+  "Phaya Thai": "พญาไท",
+  "Ari": "อารีย์",
+  "Sathon": "สาทร",
+  "Sathorn": "สาทร",
+  "Silom": "สีลม",
+
+  // รามอินทรา / ลาดพร้าว / ลาดกระบัง
+  "เอกมัย - รามอินทรา": "รามอินทรา",
+  "เลียบด่วนรามอินทรา": "รามอินทรา",
+  "เสรีไทย - นิด้า": "เสรีไทย",
+  "ห้าแยกลาดพร้าว": "ลาดพร้าว",
+  "ลาดกระบัง – สุวรรณภูมิ": "ลาดกระบัง",
+  "ลาดกระบัง - สุวรรณภูมิ": "ลาดกระบัง",
 };
 
 /**
@@ -62,11 +108,12 @@ export function getParentAreaName(areaName: string): string | null {
     return AREA_PARENT_MAP[trimmed];
   }
 
-  // Prefix matching heuristics for common sub-zones (e.g. "พระราม 4 - xxx" -> "พระราม 4")
-  if (trimmed.includes(" - ")) {
-    const [prefix] = trimmed.split(" - ");
-    if (prefix && prefix.trim() !== trimmed) {
-      return prefix.trim();
+  // Prefix matching heuristics for common sub-zones (e.g. "พระราม 4 - xxx" or "พระราม 4 – xxx" -> "พระราม 4")
+  const splitMatch = trimmed.split(/\s*[-–—]\s*/);
+  if (splitMatch.length > 1) {
+    const prefix = splitMatch[0]?.trim();
+    if (prefix && prefix !== trimmed) {
+      return prefix;
     }
   }
 

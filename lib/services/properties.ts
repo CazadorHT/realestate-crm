@@ -15,6 +15,7 @@ import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getPopularAreasLookupMap } from "@/features/public/popular-areas";
 import { detectSearchIntent } from "../search-config";
 import { AREA_PARENT_MAP } from "@/lib/utils/area-hierarchy";
+import { isCbdProperty } from "@/lib/property-utils";
 
 // 🚀 Fast Memory Cache for Public Search Facets (1-hour TTL) for zero database egress across search queries
 const facetsMemoryCache = new Map<string, { data: any; timestamp: number }>();
@@ -397,7 +398,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           query = query.or(textConditions.join(","));
         }
 
-        const itemsPerPage = Math.min(options.limit || 24, 36);
+        const itemsPerPage = Math.min(options.limit || 12, 100);
 
         const effectiveSort = options.sort || "NEWEST";
 
@@ -474,6 +475,83 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             const facetData = await getCachedFacets();
             facets = (facetData as unknown) as PropertyFacets | null;
             facetsMemoryCache.set(cacheKey, { data: facets, timestamp: now });
+          }
+
+          // ⚡ Lightweight Server-Side Area Facet Count (Zero extra egress for property cards)
+          if (targetArea && targetArea !== "ALL" && facets) {
+            try {
+              const rawTokens = targetArea.split(",").map((s: string) => s.trim()).filter(Boolean);
+              const expandedTokens = new Set<string>();
+              rawTokens.forEach((tok: string) => {
+                expandedTokens.add(tok);
+                Object.entries(AREA_PARENT_MAP).forEach(([childName, parentName]) => {
+                  if (parentName.toLowerCase() === tok.toLowerCase()) expandedTokens.add(childName);
+                  if (childName.toLowerCase() === tok.toLowerCase()) expandedTokens.add(parentName);
+                });
+              });
+              const areaTokens = Array.from(expandedTokens);
+              const orConditions = areaTokens.flatMap((t: string) => [
+                `popular_area.ilike.%${t}%`,
+                `popular_area_en.ilike.%${t}%`
+              ]);
+
+              let areaCountQuery = supabase
+                .from("properties")
+                .select("id, popular_area, near_transit, is_pet_friendly, is_fully_furnished, is_foreigner_quota, is_tax_registered, is_hot_deal, listing_type, property_type, amenities")
+                .eq("status", "ACTIVE")
+                .is("deleted_at", null);
+
+              if (options.province && options.province !== "ALL") {
+                areaCountQuery = areaCountQuery.eq("province", options.province);
+              }
+              if (options.propertyType && options.propertyType !== "ALL") {
+                if (options.propertyType.includes(",")) {
+                  areaCountQuery = areaCountQuery.in("property_type", options.propertyType.split(","));
+                } else {
+                  areaCountQuery = areaCountQuery.eq("property_type", options.propertyType);
+                }
+              }
+              if (options.listingType && options.listingType !== "ALL") {
+                if (options.listingType === "SALE")
+                  areaCountQuery = areaCountQuery.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+                else if (options.listingType === "RENT")
+                  areaCountQuery = areaCountQuery.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+                else if (options.listingType === "SALE_AND_RENT")
+                  areaCountQuery = areaCountQuery.eq("listing_type", "SALE_AND_RENT");
+              }
+              if (orConditions.length > 0) {
+                areaCountQuery = areaCountQuery.or(orConditions.join(","));
+              }
+
+              const { data: areaCountRows } = await areaCountQuery;
+              if (areaCountRows) {
+                const areaQuickCounts = {
+                  nearTrain: areaCountRows.filter(p => p.near_transit).length,
+                  petFriendly: areaCountRows.filter(p => p.is_pet_friendly).length,
+                  fullyFurnished: areaCountRows.filter(p => p.is_fully_furnished).length,
+                  isForeigner: areaCountRows.filter(p => p.is_foreigner_quota).length,
+                  companyRegistered: areaCountRows.filter(p => p.is_tax_registered).length,
+                  isHotDeal: areaCountRows.filter(p => p.is_hot_deal).length,
+                  allowAirbnb: areaCountRows.filter(p => (p.amenities as any)?.allow_airbnb).length,
+                  cbd: areaCountRows.filter(p => isCbdProperty(p as any)).length,
+                };
+
+                const areaListingTypeCounts = {
+                  ALL: areaCountRows.length,
+                  SALE: areaCountRows.filter(p => p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT").length,
+                  RENT: areaCountRows.filter(p => p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT").length,
+                  SALE_AND_RENT: areaCountRows.filter(p => p.listing_type === "SALE_AND_RENT").length,
+                };
+
+                facets = {
+                  ...facets,
+                  availableQuickFilters: areaQuickCounts,
+                  availableListingTypes: areaListingTypeCounts,
+                };
+              }
+            } catch (err) {
+              console.warn("Failed to compute area-specific facets:", err);
+            }
           }
         }
 
@@ -592,7 +670,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         return { properties: finalProperties, facets };
       },
-      [`public-properties-v3-${JSON.stringify(options)}`],
+      [`public-properties-v4-${JSON.stringify(options)}`],
       {
         revalidate: 31536000, // 1 year long-term cache (tag-invalidated)
         tags: ["properties", "public-data"],

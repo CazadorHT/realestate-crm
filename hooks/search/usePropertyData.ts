@@ -25,7 +25,7 @@ export function usePropertyData(
   const [facets, setFacets] = useState<PropertyFacets | null>(initialFacets || null);
   const [isLoading, setIsLoading] = useState(properties.length === 0);
   const [isRefetching, setIsRefetching] = useState(false);
-  const [limit, setLimit] = useState<number>(36);
+  const [limit, setLimit] = useState<number>(12);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -36,11 +36,11 @@ export function usePropertyData(
 
   // Reset limit when query changes
   useEffect(() => {
-    setLimit(36);
+    setLimit(12);
   }, [effectiveQuery]);
 
   useEffect(() => {
-    if (isFirstLoadRef.current && initialProperties && initialProperties.length > 0 && limit === 36) {
+    if (isFirstLoadRef.current && initialProperties && initialProperties.length > 0 && limit === 12) {
       isFirstLoadRef.current = false;
       return;
     }
@@ -60,7 +60,7 @@ export function usePropertyData(
       try {
         if (isFirstLoadRef.current && properties.length === 0) {
           setIsLoading(true);
-        } else if (limit > 36 && properties.length > 0) {
+        } else if (limit > 12 && properties.length > 0) {
           setIsFetchingMore(true);
         } else {
           setIsRefetching(true);
@@ -143,7 +143,7 @@ export function usePropertyData(
   }, [effectiveQuery, limit, t]);
 
   const loadMoreProperties = () => {
-    setLimit((prev) => prev + 36);
+    setLimit((prev) => prev + 12);
   };
 
   return { properties, facets, isLoading, isRefetching, isFetchingMore, loadMoreProperties };

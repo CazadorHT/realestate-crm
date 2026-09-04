@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { ChevronDown, Grid3X3, SlidersHorizontal, Building2, Check } from "lucide-react";
+import { ChevronDown, Grid3X3, SlidersHorizontal, Building2, Check, Loader2 } from "lucide-react";
 import { PropertyCard } from "@/components/public/PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
@@ -9,6 +9,8 @@ import type { PublicPropertyNearStation } from "@/features/public/stations";
 
 interface AreaPropertiesClientProps {
   initialProperties: PublicPropertyNearStation[];
+  initialTotal?: number;
+  areaNameTh: string;
   areaName: string;
 }
 
@@ -33,12 +35,17 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
   sort_by: { th: "จัดเรียงตาม", en: "Sort By", cn: "排序方式", ru: "Сортировка" },
 };
 
-export function AreaPropertiesClient({ initialProperties, areaName }: AreaPropertiesClientProps) {
+export function AreaPropertiesClient({ initialProperties, initialTotal, areaNameTh, areaName }: AreaPropertiesClientProps) {
   const { language, t: globalT } = useLanguage();
+  const [properties, setProperties] = useState<PublicPropertyNearStation[]>(initialProperties || []);
+  const [totalCount, setTotalCount] = useState<number>(
+    initialTotal !== undefined ? initialTotal : (initialProperties || []).length
+  );
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>("ALL");
   const [sort, setSort] = useState<SortType>("newest");
-  const [visibleCount, setVisibleCount] = useState(12);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isRefetching, setIsRefetching] = useState(false);
 
   const [propertyTypeDialogOpen, setPropertyTypeDialogOpen] = useState(false);
   const [sortDialogOpen, setSortDialogOpen] = useState(false);
@@ -55,31 +62,83 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
 
   const availablePropertyTypes = useMemo(() => {
     const types = new Set<string>();
-    initialProperties.forEach(p => {
-      if (p.property_type) {
+    properties.forEach(p => {
+      if (p.property_type && typeof p.property_type === "string") {
         types.add(p.property_type.toUpperCase());
       }
     });
     return Array.from(types);
-  }, [initialProperties]);
+  }, [properties]);
 
-  // Filter and sort properties
-  const filteredAndSorted = useMemo(() => {
-    let result = [...initialProperties];
+  // Fetch updated properties from API when filters change
+  const fetchFilteredProperties = useCallback(async (newFilter: FilterType, newPropType: string) => {
+    setIsRefetching(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("limit", "12");
+      params.set("offset", "0");
+      if (newFilter !== "ALL") params.set("listing_type", newFilter);
+      if (newPropType !== "ALL") params.set("property_type", newPropType);
 
-    // 1. Filter by listing type
-    if (filter === "SALE") {
-      result = result.filter(p => p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT");
-    } else if (filter === "RENT") {
-      result = result.filter(p => p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT");
+      const res = await fetch(`/api/public/areas/${encodeURIComponent(areaNameTh)}/properties?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProperties(data.properties || []);
+        setTotalCount(data.total ?? (data.properties || []).length);
+      }
+    } catch (err) {
+      console.error("Failed to fetch filtered properties in area:", err);
+    } finally {
+      setIsRefetching(false);
     }
+  }, [areaNameTh]);
 
-    // 2. Filter by property type
-    if (propertyTypeFilter !== "ALL") {
-      result = result.filter(p => (p.property_type || "").toUpperCase() === propertyTypeFilter);
+  // Filter change handlers
+  const handleFilterChange = (newFilter: FilterType) => {
+    setFilter(newFilter);
+    fetchFilteredProperties(newFilter, propertyTypeFilter);
+  };
+
+  const handlePropertyTypeChange = (newPropType: string) => {
+    setPropertyTypeFilter(newPropType);
+    fetchFilteredProperties(filter, newPropType);
+  };
+
+  // Load more properties (+12)
+  const handleLoadMore = async () => {
+    if (isLoadingMore || properties.length >= totalCount) return;
+    setIsLoadingMore(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("limit", "12");
+      params.set("offset", String(properties.length));
+      if (filter !== "ALL") params.set("listing_type", filter);
+      if (propertyTypeFilter !== "ALL") params.set("property_type", propertyTypeFilter);
+
+      const res = await fetch(`/api/public/areas/${encodeURIComponent(areaNameTh)}/properties?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        const nextBatch: PublicPropertyNearStation[] = data.properties || [];
+        setProperties(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const fresh = nextBatch.filter(p => !existingIds.has(p.id));
+          return [...prev, ...fresh];
+        });
+        if (data.total !== undefined) {
+          setTotalCount(data.total);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load more properties in area:", err);
+    } finally {
+      setIsLoadingMore(false);
     }
+  };
 
-    // 3. Sort
+  // Sort loaded properties
+  const sortedProperties = useMemo(() => {
+    const result = [...properties];
+
     result.sort((a, b) => {
       if (sort === "price-asc") {
         const priceA = a.price || a.rental_price || 0;
@@ -101,7 +160,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
         const sizeB = b.size_sqm || 0;
         return sizeB - sizeA;
       }
-      // default: newest (featured first, then is_hot_deal, then by created_at or id)
+      // default: newest (featured first, then is_hot_deal, then created_at)
       const featuredA = a.is_featured ? 1 : 0;
       const featuredB = b.is_featured ? 1 : 0;
       if (featuredA !== featuredB) return featuredB - featuredA;
@@ -110,21 +169,13 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
       const hotB = b.is_hot_deal ? 1 : 0;
       if (hotA !== hotB) return hotB - hotA;
 
-      return b.id.localeCompare(a.id);
+      return (b.created_at || "").localeCompare(a.created_at || "") || b.id.localeCompare(a.id);
     });
 
     return result;
-  }, [initialProperties, filter, propertyTypeFilter, sort]);
+  }, [properties, sort]);
 
-  const visibleProperties = useMemo(() => {
-    return filteredAndSorted.slice(0, visibleCount);
-  }, [filteredAndSorted, visibleCount]);
-
-  const hasMore = visibleCount < filteredAndSorted.length;
-
-  const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 12);
-  };
+  const hasMore = properties.length < totalCount;
 
   return (
     <div className="space-y-6">
@@ -133,7 +184,8 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
         {/* Listing Type tabs */}
         <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-fit">
           <button
-            onClick={() => { setFilter("ALL"); setVisibleCount(12); }}
+            onClick={() => handleFilterChange("ALL")}
+            disabled={isRefetching}
             className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
               filter === "ALL"
                 ? "bg-white text-slate-900 shadow-xs"
@@ -143,7 +195,8 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
             {t("tab_all")}
           </button>
           <button
-            onClick={() => { setFilter("SALE"); setVisibleCount(12); }}
+            onClick={() => handleFilterChange("SALE")}
+            disabled={isRefetching}
             className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
               filter === "SALE"
                 ? "bg-white text-slate-900 shadow-xs"
@@ -153,7 +206,8 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
             {t("tab_sale")}
           </button>
           <button
-            onClick={() => { setFilter("RENT"); setVisibleCount(12); }}
+            onClick={() => handleFilterChange("RENT")}
+            disabled={isRefetching}
             className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
               filter === "RENT"
                 ? "bg-white text-slate-900 shadow-xs"
@@ -167,7 +221,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
         {/* Sort Select & Info */}
         <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
           <span className="text-xs text-slate-400 font-medium hidden md:inline">
-            {t("showing_count", { count: visibleProperties.length, total: filteredAndSorted.length })}
+            {t("showing_count", { count: sortedProperties.length, total: totalCount })}
           </span>
 
           {/* Property Type Filter */}
@@ -178,7 +232,8 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
                 <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <select
                   value={propertyTypeFilter}
-                  onChange={(e) => { setPropertyTypeFilter(e.target.value); setVisibleCount(12); }}
+                  disabled={isRefetching}
+                  onChange={(e) => handlePropertyTypeChange(e.target.value)}
                   className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none cursor-pointer min-w-[140px]"
                 >
                   <option value="ALL">{t("filter_all_types")}</option>
@@ -195,6 +250,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
               <div className="relative flex-1 sm:hidden">
                 <button
                   type="button"
+                  disabled={isRefetching}
                   onClick={() => setPropertyTypeDialogOpen(true)}
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-750 transition-all appearance-none cursor-pointer flex items-center justify-between shadow-2xs h-[38px]"
                 >
@@ -218,8 +274,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
                   <div className="flex flex-col bg-white">
                     <button
                       onClick={() => {
-                        setPropertyTypeFilter("ALL");
-                        setVisibleCount(12);
+                        handlePropertyTypeChange("ALL");
                         setPropertyTypeDialogOpen(false);
                       }}
                       className={`w-full flex items-center justify-between px-6 py-4.5 text-sm font-bold border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${
@@ -233,8 +288,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
                       <button
                         key={type}
                         onClick={() => {
-                          setPropertyTypeFilter(type);
-                          setVisibleCount(12);
+                          handlePropertyTypeChange(type);
                           setPropertyTypeDialogOpen(false);
                         }}
                         className={`w-full flex items-center justify-between px-6 py-4.5 text-sm font-bold border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${
@@ -256,7 +310,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
             <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             <select
               value={sort}
-              onChange={(e) => { setSort(e.target.value as SortType); setVisibleCount(12); }}
+              onChange={(e) => setSort(e.target.value as SortType)}
               className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none cursor-pointer min-w-[140px]"
             >
               <option value="newest">{t("sort_newest")}</option>
@@ -294,7 +348,6 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
                     key={opt}
                     onClick={() => {
                       setSort(opt);
-                      setVisibleCount(12);
                       setSortDialogOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-6 py-4.5 text-sm font-bold border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${
@@ -311,36 +364,54 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
         </div>
       </div>
 
-      {/* Grid of properties */}
-      {visibleProperties.length > 0 ? (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
-            {visibleProperties.map((property) => (
-              <PropertyCard key={property.id} property={property as any} />
-            ))}
-          </div>
-
-          {/* Load More Button */}
-          {hasMore && (
-            <div className="flex justify-center pt-4">
-              <button
-                onClick={handleLoadMore}
-                className="bg-white hover:bg-slate-50 text-slate-700 font-bold px-8 py-3 rounded-2xl border border-slate-200 shadow-xs transition-all cursor-pointer text-xs md:text-sm"
-              >
-                {t("view_more")}
-              </button>
+      {/* Grid of properties with Loading Transition */}
+      <div className={`transition-opacity duration-200 ${isRefetching ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
+        {sortedProperties.length > 0 ? (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
+              {sortedProperties.map((property) => (
+                <PropertyCard key={property.id} property={property as any} />
+              ))}
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 shadow-xs">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Grid3X3 className="w-8 h-8 text-slate-400" />
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore || isRefetching}
+                  className="bg-white hover:bg-slate-50 text-slate-700 font-bold px-8 py-3.5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all cursor-pointer text-xs md:text-sm inline-flex items-center gap-2.5 active:scale-95 disabled:opacity-60"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                      <span>{t("view_more")}...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{t("view_more")}</span>
+                      {totalCount > sortedProperties.length && (
+                        <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                          +{Math.min(12, totalCount - sortedProperties.length)}
+                        </span>
+                      )}
+                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
-          <h3 className="text-lg font-bold text-slate-800 mb-2">{t("no_listings_title")}</h3>
-          <p className="text-slate-500 text-sm max-w-sm mx-auto">{t("no_listings_desc")}</p>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 shadow-xs">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Grid3X3 className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">{t("no_listings_title")}</h3>
+            <p className="text-slate-500 text-sm max-w-sm mx-auto">{t("no_listings_desc")}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
