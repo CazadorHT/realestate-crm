@@ -376,6 +376,7 @@ export function ContactForm() {
                       id={`name-${idSuffix}`}
                       name="name"
                       required
+                      autoComplete="off"
                       autoFocus
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -415,6 +416,7 @@ export function ContactForm() {
                       name="phone"
                       type="tel"
                       required
+                      autoComplete="off"
                       value={phone}
                       onFocus={handleFormStart}
                       onChange={handlePhoneChange}
@@ -492,6 +494,7 @@ export function ContactForm() {
                       id={`email-${idSuffix}`}
                       name="email"
                       type="email"
+                      autoComplete="off"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       onFocus={handleFormStart}
@@ -528,6 +531,7 @@ export function ContactForm() {
                     <Input
                       id={`lineId-${idSuffix}`}
                       name="lineId"
+                      autoComplete="off"
                       value={lineId}
                       onChange={(e) => setLineId(e.target.value)}
                       onFocus={handleFormStart}
@@ -564,6 +568,7 @@ export function ContactForm() {
                     <Input
                       id={`wechatId-${idSuffix}`}
                       name="wechatId"
+                      autoComplete="off"
                       value={wechatId}
                       onChange={(e) => setWechatId(e.target.value)}
                       onFocus={handleFormStart}
@@ -600,6 +605,7 @@ export function ContactForm() {
                     <Input
                       id={`whatsapp-${idSuffix}`}
                       name="whatsapp"
+                      autoComplete="off"
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
                       onFocus={handleFormStart}
@@ -637,6 +643,7 @@ export function ContactForm() {
                   <Textarea
                     id={`message-${idSuffix}`}
                     name="message"
+                    autoComplete="off"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onFocus={handleFormStart}
@@ -690,7 +697,13 @@ export function ContactForm() {
   };
 
   const renderFormContent = (idSuffix: string) => (
-    <form ref={idSuffix === "desktop" ? formElementRef : undefined} id={`contact-form-${idSuffix}`} action={clientAction} className="relative min-h-[280px]">
+    <form
+      ref={idSuffix === "desktop" ? formElementRef : undefined}
+      id={`contact-form-${idSuffix}`}
+      action={clientAction}
+      autoComplete="off"
+      className="relative min-h-[280px]"
+    >
       <input type="hidden" name="subject" value={selectedSubject} />
       <input type="hidden" name="locale" value={language} />
       {(() => {

@@ -202,6 +202,7 @@ export function DepositDesktopView({
           <form
             onSubmit={form.handleSubmit(onSubmitAction, onInvalidAction)}
             onKeyDown={handleKeyDown}
+            autoComplete="off"
             className="h-full flex flex-col"
           >
             <div className="flex-1 min-h-[350px]">

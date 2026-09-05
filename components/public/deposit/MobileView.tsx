@@ -94,6 +94,7 @@ export function DepositMobileView({
       <div className="sm:hidden flex-1 flex flex-col min-h-0 bg-white overflow-hidden max-h-full">
         <form
           onSubmit={form.handleSubmit(onSubmitAction, onInvalidAction)}
+          autoComplete="off"
           className="flex flex-col h-full overflow-hidden"
         >
           <m.div

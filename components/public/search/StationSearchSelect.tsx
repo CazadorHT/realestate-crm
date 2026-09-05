@@ -270,6 +270,7 @@ export function StationSearchSelect({
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              autoComplete="off"
               placeholder="ค้นหาชื่อสถานี..."
               className="h-8 w-full border-0 bg-transparent p-2 placeholder:text-xs text-xs focus-visible:ring-0 focus-visible:ring-offset-0"
               autoFocus

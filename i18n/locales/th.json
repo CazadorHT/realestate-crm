@@ -962,7 +962,7 @@
     "share_property": "แชร์ทรัพย์นี้",
     "view_area_properties": "ดูทรัพย์ทั้งหมดในย่าน {area}",
     "view_project": "ดูโครงการ {project}",
-    "book_viewing": "นัดชม",
+    "book_viewing": "ติดต่อตัวแทน",
     "inquiry": "สอบถาม",
     "social_proof_saved": "บันทึกแล้ว {count} ครั้ง",
     "social_proof_saved_short": "{count} คนบันทึก",
@@ -971,7 +971,7 @@
     "urgency_combined": "ย่านยอดนิยม • มีผู้เข้าชม {count} คนใน 24 ชม. ที่ผ่านมา",
     "trust_avg_response_time": "ตอบกลับเฉลี่ยไวใน 15 นาที",
     "cta_book_viewing_free": "นัดชมห้อง Exclusive ฟรี",
-    "cta_line_viewing": "นัดชมห้อง (LINE)",
+    "cta_line_viewing": "แชท LINE",
     "cta_call_agent": "โทรนัดหมายด่วน",
     "contact_dialog": {
       "step1_label": "ข้อมูลผู้ติดต่อ",

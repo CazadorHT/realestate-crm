@@ -611,6 +611,7 @@ function NewsletterSection() {
                 id="footer-line-id"
                 name="lineId"
                 type="text"
+                autoComplete="off"
                 value={lineId}
                 onChange={(e) => setLineId(e.target.value)}
                 disabled={isPending}

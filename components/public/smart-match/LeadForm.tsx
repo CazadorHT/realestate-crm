@@ -246,7 +246,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
           </div>
         </div>
 
-        <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
+        <form ref={formRef} onSubmit={onSubmit} autoComplete="off" className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-slate-700">
               {t("smart_match.lead_name_label")}{" "}
@@ -257,6 +257,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 id="match-fullname"
                 name="fullName"
                 required
+                autoComplete="off"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 onFocus={handleFormStart}
@@ -289,6 +290,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 id="match-phone"
                 name="phone"
                 required
+                autoComplete="off"
                 value={phone}
                 onChange={handlePhoneChange}
                 onFocus={handleFormStart}
@@ -320,6 +322,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 id="match-email"
                 name="email"
                 type="email"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@example.com"
@@ -349,6 +352,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
               <Input
                 id="match-lineid"
                 name="lineId"
+                autoComplete="off"
                 value={lineId}
                 onChange={(e) => setLineId(e.target.value)}
                 onFocus={handleFormStart}
@@ -381,6 +385,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 <Input
                   id="match-wechatid"
                   name="wechatId"
+                  autoComplete="off"
                   value={wechatId}
                   onChange={(e) => setWechatId(e.target.value)}
                   onFocus={handleFormStart}
@@ -411,6 +416,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 <Input
                   id="match-whatsapp"
                   name="whatsapp"
+                  autoComplete="off"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   onFocus={handleFormStart}

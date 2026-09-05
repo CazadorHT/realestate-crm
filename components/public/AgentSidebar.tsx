@@ -213,19 +213,20 @@ export function AgentSidebar({
             }
           />
 
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="grid grid-cols-2 gap-2.5 pt-1">
             <ContactAgentDialog
               propertyId={propertyId}
               propertyTitle={propertyTitle}
               property={property}
+              initialIntent="viewing"
               defaultMessage={t("property.viewing_msg")}
               language={language}
               trigger={
                 <Button
                   variant="outline"
-                  className="w-full rounded-xl border-blue-200 hover:text-blue-600 text-blue-700 hover:bg-blue-50 h-12 text-sm md:text-xs xl:text-sm font-semibold px-2 md:px-1 xl:px-2"
+                  className="w-full rounded-2xl border-blue-200/80 bg-blue-50/60 hover:bg-blue-100/80 text-blue-700 hover:text-blue-800 h-12 text-xs xl:text-sm font-bold shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all gap-1.5 px-2 cursor-pointer"
                 >
-                  <CalendarSearch className="w-3.5 h-3.5 md:w-3 md:h-3 xl:w-3.5 xl:h-3.5 mr-1.5 shrink-0" />
+                  <CalendarSearch className="w-4 h-4 text-blue-600 shrink-0" />
                   <span className="truncate">{t("property.book_viewing")}</span>
                 </Button>
               }
@@ -234,6 +235,7 @@ export function AgentSidebar({
               propertyId={propertyId}
               propertyTitle={propertyTitle}
               property={property}
+              initialIntent="general"
               defaultMessage={t("property.inquiry_msg")}
               open={contactDialogOpen}
               onOpenChange={setContactDialogOpen}
@@ -241,9 +243,9 @@ export function AgentSidebar({
               trigger={
                 <Button
                   variant="outline"
-                  className="w-full rounded-xl border-slate-200 hover:text-slate-600 text-slate-700 hover:bg-slate-100 h-12 text-sm md:text-xs xl:text-sm font-semibold px-2 md:px-1 xl:px-2"
+                  className="w-full rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 h-12 text-xs xl:text-sm font-bold shadow-2xs hover:shadow-sm hover:-translate-y-0.5 active:scale-95 transition-all gap-1.5 px-2 cursor-pointer"
                 >
-                  <MessageCircleQuestion className="w-3.5 h-3.5 md:w-3 md:h-3 xl:w-3.5 xl:h-3.5 mr-1.5 shrink-0" />
+                  <MessageCircleQuestion className="w-4 h-4 text-slate-500 shrink-0" />
                   <span className="truncate">{t("property.inquiry")}</span>
                 </Button>
               }

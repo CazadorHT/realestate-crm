@@ -461,6 +461,7 @@ export function MagicAiSearch({
         <Input
           id={searchId}
           name="keyword"
+          autoComplete="off"
           placeholder={
             language === "th" 
               ? "ค้นหาทำเล, โครงการ, ใกล้เซ็นทรัลบางนา, BTS อารีย์..." 

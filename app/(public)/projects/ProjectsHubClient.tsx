@@ -593,6 +593,7 @@ export function ProjectsHubClient({
               <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-450 group-focus-within:text-blue-600 transition-colors" />
               <input
                 type="text"
+                autoComplete="off"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={getPageString("search_placeholder")}

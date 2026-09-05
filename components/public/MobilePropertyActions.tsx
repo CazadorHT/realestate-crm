@@ -44,7 +44,7 @@ export function MobilePropertyActions({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 border-t border-slate-200/80 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.12)] xl:hidden rounded-t-[2.5rem]"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200/80 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.12)] xl:hidden rounded-t-[1.5rem]"
     >
       <div className="flex items-center gap-3 max-w-lg mx-auto ">
         {/* Agent Info (Mini) */}
@@ -82,7 +82,7 @@ export function MobilePropertyActions({
             language={language}
             trigger={
               <Button
-                className="h-12 bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 font-bold text-xs sm:text-sm px-2.5 sm:px-3 rounded-2xl transition-all active:scale-95 shrink-0"
+                className="h-12 bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 font-bold text-xs sm:text-sm px-2.5 sm:px-3 rounded-2xl transition-all active:scale-95 shrink-0 cursor-pointer"
                 variant="outline"
               >
                 <Phone className="w-4 h-4 mr-1 sm:mr-1.5 shrink-0 text-slate-600" />
@@ -92,7 +92,7 @@ export function MobilePropertyActions({
           />
 
           <Button
-            className="flex-1 h-12 bg-linear-to-r from-[#06C755] to-[#05b34c] hover:opacity-90 text-white font-bold text-xs sm:text-sm px-2 sm:px-3 border-none rounded-2xl shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center"
+            className="flex-1 h-12 bg-linear-to-r from-[#06C755] to-[#05b34c] hover:opacity-90 text-white font-bold text-xs sm:text-sm px-2 sm:px-3 border-none rounded-2xl shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center cursor-pointer"
             onClick={() => {
               try {
                 pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
@@ -124,9 +124,10 @@ export function MobilePropertyActions({
             propertyId={propertyId}
             propertyTitle={propertyTitle}
             property={property}
+            initialIntent="viewing"
             trigger={
               <Button 
-                className="h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:opacity-90 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-500/20 px-3 sm:px-4 rounded-2xl transition-all active:scale-95 shrink-0"
+                className="flex-1 h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:opacity-90 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-500/20 px-2 sm:px-3 rounded-2xl transition-all active:scale-95 flex items-center justify-center cursor-pointer"
                 onClick={() => {
                   try {
                     pushToDataLayer(GTM_EVENTS.VIEW_ITEM, {
@@ -137,8 +138,8 @@ export function MobilePropertyActions({
                   } catch (e) {}
                 }}
               >
-                <SiGooglemessages className="w-4 h-4  sm:mr-1.5 shrink-0" />
-                <span className="truncate sm:block hidden">{t("property.book_viewing")}</span>
+                <SiGooglemessages className="w-4 h-4 mr-1 sm:mr-1.5 shrink-0" />
+                <span className="truncate">{t("property.book_viewing")}</span>
               </Button>
             }
           />

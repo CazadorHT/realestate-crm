@@ -142,6 +142,7 @@ export function NameField({ isMobile, t, onFocus }: FieldProps) {
               </div>
               <FormControl>
                 <Input
+                  autoComplete="off"
                   placeholder={t("deposit.form.name_placeholder")}
                   className={cn(
                     "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
@@ -205,6 +206,7 @@ export function PhoneField({ isMobile, t, onFocus }: FieldProps) {
               <FormControl>
                 <Input
                   type="tel"
+                  autoComplete="off"
                   placeholder="0XX-XXX-XXXX"
                   className={cn(
                     "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
@@ -271,6 +273,7 @@ export function EmailField({ isMobile, t, onFocus }: FieldProps) {
               <FormControl>
                 <Input
                   type="email"
+                  autoComplete="off"
                   placeholder={t("deposit.form.email_placeholder")}
                   className={cn(
                     "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
@@ -333,6 +336,7 @@ export function LineField({ isMobile, t, onFocus }: FieldProps) {
               </div>
               <FormControl>
                 <Input
+                  autoComplete="off"
                   placeholder={t("deposit.form.line_placeholder")}
                   className={cn(
                     "border-slate-200 hover:border-slate-300 focus:border-[#00B900] focus:ring-4 focus:ring-[#00B900]/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
@@ -395,6 +399,7 @@ export function WeChatField({ isMobile, t, onFocus }: FieldProps) {
               </div>
               <FormControl>
                 <Input
+                  autoComplete="off"
                   placeholder={t("deposit.form.wechat_placeholder")}
                   className={cn(
                     "border-slate-200 hover:border-slate-300 focus:border-[#07C160] focus:ring-4 focus:ring-[#07C160]/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
@@ -486,6 +491,7 @@ export function WhatsAppField({ isMobile, t, onFocus }: FieldProps) {
               </div>
               <FormControl>
                 <Input
+                  autoComplete="off"
                   placeholder={t("deposit.form.whatsapp_placeholder")}
                   className={cn(
                     "border-slate-200 hover:border-slate-300 focus:border-[#25D366] focus:ring-4 focus:ring-[#25D366]/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
@@ -682,6 +688,7 @@ export function MessageField({ isMobile, t }: Pick<FieldProps, "isMobile" | "t">
             <div className="relative">
               <FormControl>
                 <Textarea
+                  autoComplete="off"
                   placeholder={t("deposit.form.details_more_placeholder")}
                   className={cn(
                     "border-slate-100 rounded-2xl transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 pr-10 placeholder:text-sm placeholder:font-medium",

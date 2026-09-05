@@ -969,7 +969,7 @@
     "urgency_combined": "热门地段 • 过去 24 小时内有 {count} 人浏览",
     "trust_avg_response_time": "平均回复时间：15 分钟内",
     "cta_book_viewing_free": "免费预约专属看房",
-    "cta_line_viewing": "通过 LINE 预约看房",
+    "cta_line_viewing": "LINE 咨询",
     "cta_call_agent": "立即拨打电话",
     "contact_dialog": {
       "trigger": "感兴趣 / 预约看房",

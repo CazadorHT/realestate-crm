@@ -963,7 +963,7 @@
     "share_property": "Share Property",
     "view_area_properties": "View all properties in {area}",
     "view_project": "View project {project}",
-    "book_viewing": "Book Viewing",
+    "book_viewing": "Contact Agent",
     "inquiry": "Inquiry",
     "social_proof_saved": "Saved {count} times",
     "social_proof_saved_short": "{count} saves",
@@ -972,7 +972,7 @@
     "urgency_combined": "Popular Area • {count} people viewed in 24h",
     "trust_avg_response_time": "Avg. response time: 15 mins",
     "cta_book_viewing_free": "Book Free Exclusive Viewing",
-    "cta_line_viewing": "Book Viewing",
+    "cta_line_viewing": "LINE Chat",
     "cta_call_agent": "Call Agent Now",
     "contact_dialog": {
       "trigger": "Interested / Book Viewing",
