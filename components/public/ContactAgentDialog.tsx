@@ -186,7 +186,7 @@ const INTENT_OPTIONS: IntentConfig[] = [
       ru: "Интересует покупка, хочу проконсультироваться по поводу оформления ипотеки.",
     },
     activeBg: "bg-purple-50/80",
-    activeBorder: "border-purple-500 ring-2 ring-purple-500/15",
+    activeBorder: "border-purple-600 ring-2 ring-purple-500/15",
     activeText: "text-purple-900 font-medium",
     iconBg: "bg-purple-100/70 text-purple-600",
     selectedIconBg: "bg-purple-600 text-white shadow-xs shadow-purple-500/30",
@@ -263,13 +263,15 @@ const CONTACT_CHANNELS: ChannelConfig[] = [
   },
 ];
 
-// ── Submit Button ──
+// ── Submit Button with Rich Interaction Animation ──
 function SubmitButton({
   language: customLanguage,
   contactMethods,
+  isSuccess = false,
 }: {
   language?: Language;
   contactMethods: ContactMethod[];
+  isSuccess?: boolean;
 }) {
   const { pending } = useFormStatus();
   const { language: globalLanguage, t: globalT } = useLanguage();
@@ -283,6 +285,12 @@ function SubmitButton({
   };
 
   const getButtonText = () => {
+    if (isSuccess) {
+      if (language === "th") return "ส่งข้อมูลเรียบร้อยแล้ว!";
+      if (language === "cn") return "提交成功！";
+      if (language === "ru") return "Успешно отправлено!";
+      return "Sent Successfully!";
+    }
     if (pending) return t("property.contact_dialog.sending") || "กำลังส่งข้อมูล...";
     if (language === "th") {
       if (contactMethods.includes("line") && !contactMethods.includes("phone")) {
@@ -298,20 +306,65 @@ function SubmitButton({
   return (
     <Button
       type="submit"
-      disabled={pending}
-      className="w-full h-11 sm:h-12 rounded-xl bg-linear-to-r from-blue-600 via-blue-700 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] transition-all font-semibold text-sm cursor-pointer"
+      disabled={pending || isSuccess}
+      className={`relative overflow-hidden w-full h-11 sm:h-12 rounded-xl text-white shadow-md active:scale-[0.98] transition-all duration-300 font-semibold text-sm cursor-pointer ${
+        isSuccess
+          ? "bg-linear-to-r from-emerald-600 via-emerald-600 to-teal-600 shadow-emerald-500/25"
+          : "bg-linear-to-r from-blue-600 via-blue-700 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30"
+      }`}
     >
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          {getButtonText()}
-        </>
-      ) : (
-        <>
-          <FaPaperPlane className="mr-2 h-3.5 w-3.5" />
-          {getButtonText()}
-        </>
-      )}
+      {/* Light Shimmer Beam animation during pending or hover */}
+      <div className="absolute inset-0 -translate-x-full hover:translate-x-full transition-transform duration-1000 bg-linear-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+
+      <AnimatePresence mode="wait">
+        {isSuccess ? (
+          <m.div
+            key="success"
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.6, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="flex items-center justify-center gap-2"
+          >
+            <m.div
+              initial={{ rotate: -45, scale: 0 }}
+              animate={{ rotate: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 350, delay: 0.1 }}
+              className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shadow-xs"
+            >
+              <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+            </m.div>
+            <span className="font-semibold">{getButtonText()}</span>
+          </m.div>
+        ) : pending ? (
+          <m.div
+            key="pending"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="flex items-center justify-center gap-2"
+          >
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
+            <span>{getButtonText()}</span>
+          </m.div>
+        ) : (
+          <m.div
+            key="idle"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center justify-center gap-2"
+          >
+            <m.div
+              whileHover={{ x: 2, y: -2 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <FaPaperPlane className="h-3.5 w-3.5 text-blue-100" />
+            </m.div>
+            <span>{getButtonText()}</span>
+          </m.div>
+        )}
+      </AnimatePresence>
     </Button>
   );
 }
@@ -342,6 +395,7 @@ export function ContactAgentDialog({
   
   // Wizard Step: 1 = Choose Intent & Channel, 2 = Contact Info & Submit
   const [step, setStep] = useState<1 | 2>(1);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Interactive Decision States (Multi-select channels supported)
   const [selectedIntent, setSelectedIntent] = useState<IntentKey>(initialIntent || "viewing");
@@ -411,6 +465,7 @@ export function ContactAgentDialog({
     if (!value) {
       setTimeout(() => {
         setStep(1);
+        setIsSuccess(false);
         setSelectedIntent(initialIntent || "viewing");
         setContactMethods(["phone"]);
         setShowCustomNote(false);
@@ -463,9 +518,13 @@ export function ContactAgentDialog({
 
   async function clientAction(formData: FormData) {
     if (propertyId === "preview-id") {
+      setIsSuccess(true);
       await new Promise((resolve) => setTimeout(resolve, 800));
       toast.success(`${t("property.contact_dialog.success")} (Preview Mode)`);
-      setOpen(false);
+      setTimeout(() => {
+        setOpen(false);
+        setIsSuccess(false);
+      }, 900);
       return;
     }
 
@@ -538,10 +597,16 @@ export function ContactAgentDialog({
         console.error("GTM Push Error:", e);
       }
 
+      setIsSuccess(true);
       toast.success(t("property.contact_dialog.success") || "ส่งข้อมูลเรียบร้อยแล้ว เจ้าหน้าที่จะรีบติดต่อกลับครับ");
-      setOpen(false);
-      setState({});
-      setPhone("");
+
+      // Smooth delay to enjoy the success animation before closing
+      setTimeout(() => {
+        setOpen(false);
+        setIsSuccess(false);
+        setState({});
+        setPhone("");
+      }, 900);
     } else {
       toast.error(result.error || t("property.contact_dialog.error") || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
       try {
@@ -726,8 +791,6 @@ export function ContactAgentDialog({
                 <h3 className="text-sm sm:text-base font-semibold text-slate-800 leading-tight">
                   {step === 1 ? getSection1Title() : (language === "th" ? "กรอกข้อมูลสำหรับติดต่อกลับ" : "Your Contact Details")}
                 </h3>
-
-                
               </div>
 
               {/* FORM WRAPPER */}
@@ -1138,7 +1201,7 @@ export function ContactAgentDialog({
                         </Button>
 
                         <div className="flex-1">
-                          <SubmitButton language={language} contactMethods={contactMethods} />
+                          <SubmitButton language={language} contactMethods={contactMethods} isSuccess={isSuccess} />
                         </div>
                       </div>
                     </m.div>
