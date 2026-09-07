@@ -713,9 +713,12 @@ function PropertyTypesTab({
                   <SelectItem value="HOUSE">HOUSE</SelectItem>
                   <SelectItem value="CONDO">CONDO</SelectItem>
                   <SelectItem value="TOWNHOME">TOWNHOME</SelectItem>
+                  <SelectItem value="VILLA">VILLA</SelectItem>
+                  <SelectItem value="POOL_VILLA">POOL_VILLA</SelectItem>
                   <SelectItem value="OFFICE_BUILDING">
                     OFFICE_BUILDING
                   </SelectItem>
+                  <SelectItem value="HOME_OFFICE">HOME_OFFICE</SelectItem>
                   <SelectItem value="LAND">LAND</SelectItem>
                   <SelectItem value="WAREHOUSE">WAREHOUSE</SelectItem>
                   <SelectItem value="COMMERCIAL_BUILDING">

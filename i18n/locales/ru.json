@@ -922,7 +922,8 @@
     "other": "Другое",
     "warehouse": "Склад",
     "factory": "Фабрика",
-    "commercial_building": "Коммерческое здание"
+    "commercial_building": "Коммерческое здание",
+    "home_office": "Домашний офис"
   },
   "property": {
     "amenity_groups": {

@@ -38,6 +38,7 @@ const getTypeConfigMap = (isEn: boolean): Record<string, { label: string; color:
   VILLA: { label: isEn ? "Villa" : "วิลล่า", color: "#f43f5e" },
   POOL_VILLA: { label: isEn ? "Pool Villa" : "พูลวิลล่า", color: "#06b6d4" },
   OFFICE_BUILDING: { label: isEn ? "Office" : "สำนักงานออฟฟิศ", color: "#0ea5e9" },
+  HOME_OFFICE: { label: isEn ? "Home Office" : "โฮมออฟฟิศ", color: "#4f46e5" },
   LAND: { label: isEn ? "Land" : "ที่ดิน", color: "#8b5cf6" },
   COMMERCIAL_BUILDING: { label: isEn ? "Commercial" : "อาคารพาณิชย์", color: "#6366f1" },
   WAREHOUSE: { label: isEn ? "Warehouse" : "โกดัง", color: "#f97316" },

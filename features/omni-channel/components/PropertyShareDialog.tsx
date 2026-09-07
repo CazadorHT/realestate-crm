@@ -661,6 +661,7 @@ export function PropertyShareDialog({
                 { id: "POOL_VILLA", label: isEn ? "Pool Villa" : "พูลวิลล่า", count: counts?.property_type?.["POOL_VILLA"] || 0, badgeClass: "bg-cyan-50 text-cyan-600 border-cyan-100" },
                 { id: "LAND", label: isEn ? "Land" : "ที่ดิน", count: counts?.property_type?.["LAND"] || 0, badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
                 { id: "OFFICE_BUILDING", label: isEn ? "Office" : "ออฟฟิศ", count: counts?.property_type?.["OFFICE_BUILDING"] || 0, badgeClass: "bg-blue-50 text-blue-600 border-blue-100" },
+                { id: "HOME_OFFICE", label: isEn ? "Home Office" : "โฮมออฟฟิศ", count: counts?.property_type?.["HOME_OFFICE"] || 0, badgeClass: "bg-indigo-50 text-indigo-600 border-indigo-100" },
                 { id: "COMMERCIAL_BUILDING", label: isEn ? "Commercial" : "อาคารพาณิชย์", count: counts?.property_type?.["COMMERCIAL_BUILDING"] || 0, badgeClass: "bg-rose-50 text-rose-600 border-rose-100" },
                 { id: "WAREHOUSE", label: isEn ? "Warehouse" : "โกดัง", count: counts?.property_type?.["WAREHOUSE"] || 0, badgeClass: "bg-slate-100 text-slate-700 border-slate-200" },
               ].filter((pt) => pt.count > 0)}
@@ -1049,6 +1050,7 @@ export function PropertyShareDialog({
                     POOL_VILLA: "🏊",
                     LAND: "🏞️",
                     OFFICE_BUILDING: "🏬",
+                    HOME_OFFICE: "🏢",
                     COMMERCIAL_BUILDING: "🏪",
                     WAREHOUSE: "🏭",
                   };
@@ -1096,6 +1098,7 @@ export function PropertyShareDialog({
                     POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅", ru: "Вилла с бассейном" },
                     LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
                     OFFICE_BUILDING: { th: "ออฟฟิศ", en: "Office", cn: "写字楼", ru: "Офис" },
+                    HOME_OFFICE: { th: "โฮมออฟฟิศ", en: "Home Office", cn: "家庭办公室", ru: "Домашний офис" },
                     COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商铺", ru: "Коммерческая недвижимость" },
                     WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
                   };

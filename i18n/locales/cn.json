@@ -923,7 +923,8 @@
     "other": "其他",
     "warehouse": "仓库",
     "factory": "工厂",
-    "commercial_building": "商业建筑"
+    "commercial_building": "商业建筑",
+    "home_office": "家庭办公室"
   },
   "property": {
     "amenity_groups": {

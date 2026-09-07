@@ -926,7 +926,8 @@
     "other": "Other",
     "warehouse": "Warehouse",
     "factory": "Factory",
-    "commercial_building": "Commercial Building"
+    "commercial_building": "Commercial Building",
+    "home_office": "Home Office"
   },
   "property": {
     "amenity_groups": {

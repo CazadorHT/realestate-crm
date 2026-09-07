@@ -125,6 +125,7 @@ function generateExtremeSlug(property: PropertyForSlug): string {
     TOWNHOME: "townhome",
     LAND: "land",
     OFFICE_BUILDING: "office-building",
+    HOME_OFFICE: "home-office",
     COMMERCIAL_BUILDING: "commercial-building",
     VILLA: "villa",
     POOL_VILLA: "pool-villa",

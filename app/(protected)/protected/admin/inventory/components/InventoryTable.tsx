@@ -42,6 +42,7 @@ const PROPERTY_TYPE_MAP: Record<string, { th: string; en: string }> = {
   POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa" },
   COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial" },
   OFFICE_BUILDING: { th: "ออฟฟิศ", en: "Office" },
+  HOME_OFFICE: { th: "โฮมออฟฟิศ", en: "Home Office" },
   WAREHOUSE: { th: "โกดัง", en: "Warehouse" },
   OTHER: { th: "อื่นๆ", en: "Other" },
 };

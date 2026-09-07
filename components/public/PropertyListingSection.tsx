@@ -32,6 +32,7 @@ type FilterType =
   | "TOWNHOME"
   | "LAND"
   | "OFFICE"
+  | "HOME_OFFICE"
   | "WAREHOUSE"
   | "COMMERCIAL"
   | "OTHER";
@@ -132,6 +133,7 @@ function PropertyListingContent({
     VILLA: t("home.property_types.villa"),
     POOL_VILLA: t("home.property_types.pool_villa"),
     OFFICE: t("property_types.office_building"),
+    HOME_OFFICE: t("home.property_types.home_office"),
     TOWNHOME: t("home.property_types.townhome"),
     WAREHOUSE: t("home.property_types.warehouse"),
     COMMERCIAL: t("property_types.commercial_building"),
@@ -320,6 +322,7 @@ function PropertyListingContent({
       TOWNHOME: 0,
       LAND: 0,
       OFFICE: 0,
+      HOME_OFFICE: 0,
       WAREHOUSE: 0,
       COMMERCIAL: 0,
       OTHER: 0,
@@ -335,6 +338,7 @@ function PropertyListingContent({
       counts.TOWNHOME = types["TOWNHOME"] || 0;
       counts.LAND = types["LAND"] || 0;
       counts.WAREHOUSE = types["WAREHOUSE"] || 0;
+      counts.HOME_OFFICE = types["HOME_OFFICE"] || 0;
       counts.OFFICE = (types["OFFICE_BUILDING"] || 0) + (types["OFFICE"] || 0);
       counts.COMMERCIAL = (types["COMMERCIAL_BUILDING"] || 0) + (types["COMMERCIAL"] || 0);
       counts.OTHER = types["OTHER"] || 0;

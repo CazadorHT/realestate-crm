@@ -917,7 +917,7 @@
     "condo": "คอนโด",
     "townhome": "ทาวน์โฮม",
     "land": "ที่ดิน",
-    "commercial": "อาคารพาณิชย์",
+    "commercial": "เชิงพาณิชย์",
     "office_building": "ออฟฟิศ",
     "office": "ออฟฟิศ",
     "villa": "บ้านวิลล่า",
@@ -925,7 +925,8 @@
     "other": "อื่นๆ",
     "warehouse": "โกดัง",
     "factory": "โรงงาน",
-    "commercial_building": "อาคารพาณิชย์"
+    "commercial_building": "อาคารพาณิชย์",
+    "home_office": "โฮมออฟฟิศ"
   },
   "property": {
     "amenity_groups": {

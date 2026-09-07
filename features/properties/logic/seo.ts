@@ -2,7 +2,7 @@ import { PropertyFormValues } from "../schema";
 import { generatePropertySEO, PropertyDataForSEO } from "@/lib/seo-utils";
 import { Database } from "@/lib/database.types.generated";
 
-type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "OTHER";
+type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "HOME_OFFICE" | "OTHER";
 type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
 
 export function generateKeywords(

@@ -346,6 +346,7 @@ const propertyTypeLabel_I18N: Record<string, Record<BotLang, string>> = {
   LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
   WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
   COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商业楼", ru: "Коммерция" },
+  HOME_OFFICE: { th: "โฮมออฟฟิศ", en: "Home Office", cn: "家庭办公室", ru: "Домашний офис" },
   OTHER: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" },
 };
 
@@ -382,6 +383,7 @@ const PROPERTY_TYPE_EMOJI: Record<string, string> = {
   COMMERCIAL_BUILDING: "🏪",
   VILLA: "🌴",
   POOL_VILLA: "🏊",
+  HOME_OFFICE: "🏢",
   OTHER: "📦",
 };
 
@@ -1725,6 +1727,7 @@ export function buildSocialPostFlex(
     OFFICE_BUILDING: { th: "สำนักงานออฟฟิศ", en: "Office Space", cn: "办公楼", ru: "Офисное здание" },
     WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
     COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial Building", cn: "商用建筑", ru: "Коммерческое здание" },
+    HOME_OFFICE: { th: "โฮมออฟฟิศ", en: "Home Office", cn: "家庭办公室", ru: "Домашний офис" },
     VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅", ru: "Вилла" },
     POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅", ru: "Пул Вилла" },
     OTHER: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" },
@@ -2221,9 +2224,11 @@ export function buildPropertyCardFlexMessage(
     LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
     OFFICE_BUILDING: { th: "ออฟฟิศ", en: "Office", cn: "办公楼", ru: "Офис" },
     COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商用建筑", ru: "Коммерция" },
+    HOME_OFFICE: { th: "โฮมออฟฟิศ", en: "Home Office", cn: "家庭办公室", ru: "Домашний офис" },
     VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅", ru: "Вилла" },
     POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅", ru: "Пул вилла" },
     WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
+    OTHER: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" },
   };
 
   const ptKey = (prop.property_type || "").toUpperCase();
@@ -2237,6 +2242,7 @@ export function buildPropertyCardFlexMessage(
     POOL_VILLA: "🏊",
     LAND: "🏞️",
     OFFICE_BUILDING: "🏬",
+    HOME_OFFICE: "🏢",
     COMMERCIAL_BUILDING: "🏪",
     WAREHOUSE: "🏭",
   };

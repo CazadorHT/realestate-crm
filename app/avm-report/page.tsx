@@ -99,9 +99,11 @@ function AvmReportContent() {
       LAND: "ที่ดินว่างเปล่า",
       COMMERCIAL_BUILDING: "อาคารพาณิชย์",
       OFFICE_BUILDING: "อาคารสำนักงาน",
+      HOME_OFFICE: "โฮมออฟฟิศ",
       WAREHOUSE: "โกดัง / โรงงาน",
       VILLA: "วิลล่า",
       POOL_VILLA: "พูลวิลล่า",
+      OTHER: "อื่นๆ",
     };
     return types[type] || type;
   };

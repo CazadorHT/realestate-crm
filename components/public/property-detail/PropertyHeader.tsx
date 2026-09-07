@@ -31,6 +31,7 @@ const PROPERTY_TYPE_ICONS: Record<string, any> = {
   pool_villa: MdPool,
   commercial: Store,
   commercial_building: Store,
+  home_office: Building2,
 };
 import {
   getOfficePrice,

@@ -364,6 +364,7 @@ export function MobileFilters({
           />
         );
       case "OFFICE_BUILDING":
+      case "HOME_OFFICE":
         return (
           <HiOutlineBuildingOffice2
             className={cn(

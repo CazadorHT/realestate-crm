@@ -527,6 +527,7 @@ export function PropertyCombobox({
                     icon: Store,
                   },
                   { id: "OFFICE_BUILDING", label: isEn ? "Office Building" : "ออฟฟิศ", icon: Briefcase },
+                  { id: "HOME_OFFICE", label: isEn ? "Home Office" : "โฮมออฟฟิศ", icon: Building2 },
                   { id: "WAREHOUSE", label: isEn ? "Warehouse" : "โกดัง", icon: Box },
                   { id: "OTHER", label: isEn ? "Other" : "อื่นๆ", icon: CircleEllipsis },
                 ]}

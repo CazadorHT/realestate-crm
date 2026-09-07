@@ -42,6 +42,7 @@ const PROPERTY_TYPE_ICONS: Record<string, any> = {
   pool_villa: MdPool,
   commercial: HiBuildingStorefront,
   commercial_building: HiBuildingStorefront,
+  home_office: HiBuildingOffice2,
   other: HiCircleStack,
 };
 

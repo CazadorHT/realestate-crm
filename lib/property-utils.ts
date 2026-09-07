@@ -156,6 +156,11 @@ export function getTypeColor(propertyType: string | null): {
       bg: "bg-cyan-50",
       gradient: "from-cyan-500 to-blue-600",
     },
+    HOME_OFFICE: {
+      text: "text-indigo-700",
+      bg: "bg-indigo-50",
+      gradient: "from-blue-600 to-indigo-600",
+    },
   };
 
   return (

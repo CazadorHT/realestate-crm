@@ -982,8 +982,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
 
                         {/* Card Details Body */}
                         {(() => {
-                          const cardLang = msg.payload?.language || (isEn ? "en" : "th");
-                          const isCardEn = cardLang === "en";
+                          const cardLang = (msg.payload?.language || (isEn ? "en" : "th")) as "th" | "en" | "cn" | "ru";
                           const propTypeEmojiMap: Record<string, string> = {
                             HOUSE: "🏡",
                             CONDO: "🏢",
@@ -992,24 +991,44 @@ export function MessageThread({ lead }: { lead: Conversation }) {
                             POOL_VILLA: "🏊",
                             LAND: "🏞️",
                             OFFICE_BUILDING: "🏬",
+                            HOME_OFFICE: "🏢",
                             COMMERCIAL_BUILDING: "🏪",
                             WAREHOUSE: "🏭",
                           };
                           const propEmoji = propTypeEmojiMap[msg.payload?.property_type] || "🏠";
 
+                          const propTypeMap: Record<string, Record<string, string>> = {
+                            HOUSE: { th: "บ้านเดี่ยว", en: "Single House", cn: "独栋别墅", ru: "Дом" },
+                            CONDO: { th: "คอนโด", en: "Condo", cn: "公寓", ru: "Кондо" },
+                            TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅", ru: "Таунхаус" },
+                            VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅", ru: "Вилла" },
+                            POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅", ru: "Вилла с бассейном" },
+                            LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
+                            OFFICE_BUILDING: { th: "ออฟฟิศ", en: "Office", cn: "写字楼", ru: "Офис" },
+                            HOME_OFFICE: { th: "โฮมออฟฟิศ", en: "Home Office", cn: "家庭办公室", ru: "Домашний офис" },
+                            COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商铺", ru: "Коммерческая недвижимость" },
+                            WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
+                            OTHER: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" },
+                          };
+
+                          const listingTypeBadgeMap: Record<string, Record<string, string>> = {
+                            RENT: { th: "[ให้เช่า]", en: "[For Rent]", cn: "[出租]", ru: "[В аренду]" },
+                            SALE: { th: "[ขาย]", en: "[For Sale]", cn: "[出售]", ru: "[На продажу]" },
+                            SALE_AND_RENT: { th: "[ขาย/เช่า]", en: "[Sale/Rent]", cn: "[租售]", ru: "[Продажа/Аренда]" },
+                          };
+
+                          const listingBadge = msg.payload?.listing_type ? (listingTypeBadgeMap[msg.payload.listing_type]?.[cardLang] || `[${msg.payload.listing_type}]`) : "";
+                          const propTypeLabel = msg.payload?.property_type ? (propTypeMap[msg.payload.property_type]?.[cardLang] || propTypeMap[msg.payload.property_type]?.th || msg.payload.property_type) : "";
+
+                          const detailsText = { th: "ดูรายละเอียด", en: "Details", cn: "详情", ru: "Подробнее" }[cardLang] || "Details";
+                          const contactText = { th: "ติดต่อ", en: "Contact", cn: "联系", ru: "Контакт" }[cardLang] || "Contact";
+
                           return (
                             <div className="p-3.5 space-y-2">
                               {/* Subtitle Badges */}
-                              {(msg.payload?.listing_type || msg.payload?.property_type) && (
+                              {(listingBadge || propTypeLabel) && (
                                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                                  {[
-                                    isCardEn
-                                      ? (msg.payload.listing_type === "RENT" ? "[For Rent]" : msg.payload.listing_type === "SALE" ? "[For Sale]" : "[Sale/Rent]")
-                                      : (msg.payload.listing_type === "RENT" ? "[ให้เช่า]" : msg.payload.listing_type === "SALE" ? "[ขาย]" : "[ขาย/เช่า]"),
-                                    isCardEn
-                                      ? (msg.payload.property_type === "HOUSE" ? "Single House" : msg.payload.property_type === "CONDO" ? "Condo" : msg.payload.property_type === "TOWNHOME" ? "Townhome" : msg.payload.property_type)
-                                      : (msg.payload.property_type === "HOUSE" ? "บ้านเดี่ยว" : msg.payload.property_type === "CONDO" ? "คอนโด" : msg.payload.property_type === "TOWNHOME" ? "ทาวน์โฮม" : msg.payload.property_type),
-                                  ].filter(Boolean).join(" • ")}
+                                  {[listingBadge, propTypeLabel].filter(Boolean).join(" • ")}
                                 </p>
                               )}
 
@@ -1047,14 +1066,14 @@ export function MessageThread({ lead }: { lead: Conversation }) {
                                     className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all shadow-xs"
                                   >
                                     <ExternalLink className="w-3.5 h-3.5" />
-                                    <span>{isCardEn ? "Details" : "ดูรายละเอียด"}</span>
+                                    <span>{detailsText}</span>
                                   </Link>
                                 )}
                                 <Link
                                   href={`/protected/leads/${lead.id}`}
                                   className="flex items-center justify-center gap-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
                                 >
-                                  <span>{isCardEn ? "Contact" : "ติดต่อ"}</span>
+                                  <span>{contactText}</span>
                                 </Link>
                               </div>
                             </div>
