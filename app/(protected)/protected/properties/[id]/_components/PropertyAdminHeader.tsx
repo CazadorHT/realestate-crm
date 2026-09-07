@@ -65,8 +65,9 @@ export function PropertyAdminHeader({
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [appliedCoverUrl, setAppliedCoverUrl] = useState<string | null>(null);
 
+  const primaryAgent = (property.agents as any)?.[0]?.identity;
+
   const studioProperty = useMemo(() => {
-    const primaryAgent = (property.agents as any)?.[0]?.identity;
     return {
       id: property.id,
       slug: property.slug,
@@ -122,7 +123,7 @@ export function PropertyAdminHeader({
           }
         : null,
     };
-  }, [property, images]);
+  }, [property, images, primaryAgent]);
 
   return (
     <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-xs">
@@ -250,6 +251,16 @@ export function PropertyAdminHeader({
               images={images}
               propertyId={property.id}
               propertyTitle={property.title || undefined}
+              propertyCode={(property as any).reference_code ?? (property as any).property_code ?? undefined}
+              agentInfo={
+                primaryAgent
+                  ? {
+                      name: primaryAgent.display_name,
+                      phone: primaryAgent.phone,
+                      line_id: primaryAgent.line_id,
+                    }
+                  : undefined
+              }
               className="h-9 px-4 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-200 shadow-xs font-bold text-xs cursor-pointer"
             />
             <div className="w-px h-4 bg-slate-200 mx-1 hidden sm:block" />
