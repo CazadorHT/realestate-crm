@@ -16,13 +16,22 @@ export async function refreshProjectStatsView(supabase: SupabaseClient) {
   try {
     revalidatePath("/properties");
     revalidatePath("/projects");
+    revalidatePath("/");
     revalidatePath("/", "layout");
-    revalidateTag("projects", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("properties", "seconds");
+    
+    try {
+      revalidateTag("projects", "seconds");
+      revalidateTag("public-data", "seconds");
+      revalidateTag("properties", "seconds");
+    } catch {
+      // Fallback for single-arg revalidateTag signatures
+      (revalidateTag as any)("projects");
+      (revalidateTag as any)("public-data");
+      (revalidateTag as any)("properties");
+    }
   } catch (error) {
     console.error("[Revalidate] Error revalidating paths/tags:", error);
   }
 
-  purgeCloudflareCache().catch((e) => console.error("[Cloudflare] Auto-purge failed:", e));
+  purgeCloudflareCache(["/", "/projects", "/properties"]).catch((e) => console.error("[Cloudflare] Auto-purge failed:", e));
 }

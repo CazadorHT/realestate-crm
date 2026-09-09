@@ -500,7 +500,12 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     const hasCn = isNonEmptyString(currentCn);
     const hasRu = isNonEmptyString(currentRu);
 
-    if (!force && hasEn && hasCn && hasRu) {
+    const targets: ("en" | "cn" | "ru")[] = [];
+    if (force || !hasEn) targets.push("en");
+    if (force || !hasCn) targets.push("cn");
+    if (force || !hasRu) targets.push("ru");
+
+    if (targets.length === 0) {
       if (!silent) toast.success(isEn ? "Address translated completely ✨" : "ที่อยู่แปลครบถ้วนแล้ว ✨");
       return;
     }
@@ -509,20 +514,20 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     const processId = !silent ? startProcess(isEn ? "Translating address" : "แปลที่อยู่ทรัพย์", { type: "PROPERTY_TRANSLATION" }) : null;
 
     try {
-      const result = await translateTextAction(address, "plain");
-      if (force || !hasEn) {
+      const result = await translateTextAction(address, "plain", targets);
+      if (targets.includes("en")) {
         form.setValue("address_line1_en", result.en, {
           shouldDirty: true,
           shouldTouch: true,
         });
       }
-      if (force || !hasCn) {
+      if (targets.includes("cn")) {
         form.setValue("address_line1_cn", result.cn, {
           shouldDirty: true,
           shouldTouch: true,
         });
       }
-      if (force || !hasRu) {
+      if (targets.includes("ru")) {
         form.setValue("address_line1_ru", result.ru, {
           shouldDirty: true,
           shouldTouch: true,
@@ -553,14 +558,19 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     const hasCn = isNonEmptyString(currentCn);
     const hasRu = isNonEmptyString(currentRu);
 
-    if (!force && hasEn && hasCn && hasRu) return;
+    const targets: ("en" | "cn" | "ru")[] = [];
+    if (force || !hasEn) targets.push("en");
+    if (force || !hasCn) targets.push("cn");
+    if (force || !hasRu) targets.push("ru");
+
+    if (targets.length === 0) return;
 
     setIsTranslating(true);
     try {
-      const result = await translateTextAction(area, "plain");
-      if (force || !hasEn) form.setValue("popular_area_en", result.en, { shouldDirty: true });
-      if (force || !hasCn) form.setValue("popular_area_cn", result.cn, { shouldDirty: true });
-      if (force || !hasRu) form.setValue("popular_area_ru", result.ru, { shouldDirty: true });
+      const result = await translateTextAction(area, "plain", targets);
+      if (targets.includes("en")) form.setValue("popular_area_en", result.en, { shouldDirty: true });
+      if (targets.includes("cn")) form.setValue("popular_area_cn", result.cn, { shouldDirty: true });
+      if (targets.includes("ru")) form.setValue("popular_area_ru", result.ru, { shouldDirty: true });
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error) {

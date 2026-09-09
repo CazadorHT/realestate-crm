@@ -3,6 +3,7 @@
 import { requireAuthContext, assertAdminOrManager, assertStaff } from "@/lib/authz";
 import { type Database, type Json } from "@/lib/database.types.generated";
 import { mapDbError } from "@/lib/db-error";
+import { refreshProjectStatsView } from "./refresh-stats";
 
 export interface ProjectAdminItem {
   id?: string;
@@ -191,14 +192,12 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/protected/admin/projects");
     revalidatePath("/projects");
+    revalidatePath("/");
     if (input.slug) {
       revalidatePath(`/projects/${input.slug}`);
     }
 
-    const { purgeCloudflareCache } = await import("@/lib/cloudflare");
-    purgeCloudflareCache(input.slug ? [`/projects/${input.slug}`, "/projects", "/"] : ["/projects", "/"]).catch((e) =>
-      console.error("[Cloudflare] Project purge failed:", e)
-    );
+    await refreshProjectStatsView(ctx.supabase);
 
     return { success: true, message: "บันทึกข้อมูลโครงการสำเร็จ ✨", id: data.id };
   } catch (err: any) {
@@ -237,11 +236,9 @@ export async function deleteProjectAction(id: string) {
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/protected/admin/projects");
     revalidatePath("/projects");
+    revalidatePath("/");
 
-    const { purgeCloudflareCache } = await import("@/lib/cloudflare");
-    purgeCloudflareCache(["/projects", "/"]).catch((e) =>
-      console.error("[Cloudflare] Project delete purge failed:", e)
-    );
+    await refreshProjectStatsView(ctx.supabase);
 
     return { success: true, message: "ลบข้อมูลโครงการสำเร็จ 🗑️" };
   } catch (err: any) {
@@ -381,6 +378,11 @@ export async function reorderProjectsAction(ids: string[], offset: number = 0) {
     if (error) throw error;
 
     revalidatePath("/protected/admin/projects");
+    revalidatePath("/projects");
+    revalidatePath("/");
+
+    await refreshProjectStatsView(ctx.supabase);
+
     return { success: true, message: "ปรับลำดับโครงการสำเร็จ 🔄" };
   } catch (error: any) {
     console.error("reorderProjectsAction error:", error);

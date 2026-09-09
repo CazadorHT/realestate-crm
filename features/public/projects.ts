@@ -171,9 +171,9 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
           popularAreaRu: propData?.popular_area_ru || popAreaI18n?.ru || null,
           sortOrder: p.sort_order ?? 0,
         };
-      }).filter((p: any) => p.propertyCount > 0); // กรองเอาเฉพาะโครงการที่มีอสังหาฯ พร้อมขายจริง
+      });
     },
-    ["public-projects-list-v2"],
+    ["public-projects-list-v3"],
     { revalidate: 31536000, tags: ["projects", "properties", "public-data"] }
   )();
 }

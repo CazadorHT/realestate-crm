@@ -210,6 +210,13 @@ export const PROVINCES: Record<string, { en: string; cn: string; ru: string }> =
   "ป่าคลอก": { en: "Pa Klok", cn: "帕克洛克", ru: "Па Клок" },
   "เกาะแก้ว": { en: "Koh Kaew", cn: "阁胶", ru: "Ко Кео" },
   "กะหลิม": { en: "Kalim", cn: "卡利姆", ru: "Калим" },
+  "แหลมยามู": { en: "Cape Yamu", cn: "亚木角", ru: "Мыс Яму" },
+  "แหลมพันวา": { en: "Cape Panwa", cn: "攀瓦角", ru: "Мыс Панва" },
+  "อ่าวยน": { en: "Ao Yon", cn: "雍湾", ru: "Ао Йон" },
+  "อ่าวปอ": { en: "Ao Po", cn: "奥波", ru: "Ао По" },
+  "ไม้ขาว": { en: "Mai Khao", cn: "迈考", ru: "Май Кхао" },
+  "วิชิต": { en: "Wichit", cn: "威集", ru: "Вичит" },
+  "เจ้าฟ้า": { en: "Chao Fah", cn: "昭法", ru: "Чао Фа" },
   "แหลมพรหมเทพ": { en: "Promthep Cape", cn: "神仙半岛", ru: "Промтхеп" },
 
   // Chiang Mai
