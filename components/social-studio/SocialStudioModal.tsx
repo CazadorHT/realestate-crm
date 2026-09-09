@@ -259,6 +259,7 @@ export function SocialStudioModal({
                       availablePresets={state.presets}
                       isLoading={state.isLoadingPresets}
                       onApplyPreset={state.handleApplyPreset}
+                      onApplyCuratedPreset={state.handleApplyCuratedPreset}
                       onSavePreset={state.handleSavePreset}
                     />
 
@@ -270,6 +271,8 @@ export function SocialStudioModal({
                     <StudioLayoutControls
                       layout={state.layout}
                       setLayout={handleSelectLayout}
+                      fitWithBlurredBackdrop={state.fitWithBlurredBackdrop}
+                      setFitWithBlurredBackdrop={state.setFitWithBlurredBackdrop}
                       imageUrls={state.imageUrls}
                       activeSlot={state.activeSlot}
                       setActiveSlot={state.setActiveSlot}
@@ -322,6 +325,12 @@ export function SocialStudioModal({
                       setCardBackground={state.setCardBackground}
                       showBrandingHeader={state.showBrandingHeader}
                       setShowBrandingHeader={state.setShowBrandingHeader}
+                      brandingHeaderStyle={state.brandingHeaderStyle}
+                      setBrandingHeaderStyle={state.setBrandingHeaderStyle}
+                      brandingHeaderAlign={state.brandingHeaderAlign}
+                      setBrandingHeaderAlign={state.setBrandingHeaderAlign}
+                      brandingBgColor={state.brandingBgColor}
+                      setBrandingBgColor={state.setBrandingBgColor}
                       brandingTitleColor={state.brandingTitleColor}
                       setBrandingTitleColor={state.setBrandingTitleColor}
                       brandingSubtitleColor={state.brandingSubtitleColor}
@@ -335,6 +344,10 @@ export function SocialStudioModal({
                       setShowTopListingBadge={state.setShowTopListingBadge}
                       headerFontSizeScale={state.headerFontSizeScale}
                       setHeaderFontSizeScale={state.setHeaderFontSizeScale}
+                      brandingTitleFontSizeScale={state.brandingTitleFontSizeScale}
+                      setBrandingTitleFontSizeScale={state.setBrandingTitleFontSizeScale}
+                      brandingSubtitleFontSizeScale={state.brandingSubtitleFontSizeScale}
+                      setBrandingSubtitleFontSizeScale={state.setBrandingSubtitleFontSizeScale}
                       badgeFontSizeScale={state.badgeFontSizeScale}
                       setBadgeFontSizeScale={state.setBadgeFontSizeScale}
                       headerYOffset={state.headerYOffset}
@@ -358,6 +371,18 @@ export function SocialStudioModal({
                       setCustomListingBadgeTextColor={state.setCustomListingBadgeTextColor}
                       showCardContent={state.showCardContent}
                       setShowCardContent={state.setShowCardContent}
+                      cardBorderGlow={state.cardBorderGlow}
+                      setCardBorderGlow={state.setCardBorderGlow}
+                      glowBorderWidth={state.glowBorderWidth}
+                      setGlowBorderWidth={state.setGlowBorderWidth}
+                      centerGlow={state.centerGlow}
+                      setCenterGlow={state.setCenterGlow}
+                      centerGlowBlur={state.centerGlowBlur}
+                      setCenterGlowBlur={state.setCenterGlowBlur}
+                      centerGlowColor={state.centerGlowColor}
+                      setCenterGlowColor={state.setCenterGlowColor}
+                      glassBlur={state.glassBlur}
+                      setGlassBlur={state.setGlassBlur}
                     />
                   </div>
                 )}
@@ -517,6 +542,8 @@ export function SocialStudioModal({
                       setPriceFormatStyle={state.setPriceFormatStyle}
                       showOriginalPrice={state.showOriginalPrice}
                       setShowOriginalPrice={state.setShowOriginalPrice}
+                      showUsdApprox={state.showUsdApprox}
+                      setShowUsdApprox={state.setShowUsdApprox}
                       showHeadline={state.showHeadline}
                       setShowHeadline={state.setShowHeadline}
                       showContact={state.showContact}

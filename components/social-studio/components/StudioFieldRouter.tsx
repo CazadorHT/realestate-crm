@@ -25,6 +25,8 @@ interface StudioFieldRouterProps {
   setSpecFontSizeScale?: (f: SpecFontSizeScale) => void;
   showPrice: boolean;
   setShowPrice: (s: boolean) => void;
+  showUsdApprox?: boolean;
+  setShowUsdApprox?: (s: boolean) => void;
   priceFormatStyle?: StudioPriceFormatStyle;
   setPriceFormatStyle?: (s: StudioPriceFormatStyle) => void;
   showOriginalPrice: boolean;
@@ -58,6 +60,8 @@ export function StudioFieldRouter({
   setSpecFontSizeScale,
   showPrice,
   setShowPrice,
+  showUsdApprox = false,
+  setShowUsdApprox,
   priceFormatStyle = "default",
   setPriceFormatStyle,
   showOriginalPrice,
@@ -275,19 +279,51 @@ export function StudioFieldRouter({
         </div>
       )}
 
-      {/* Price Format Style Selector */}
-      {showPrice && setPriceFormatStyle && (
-        <div className="pt-2.5 border-t border-slate-800/80 space-y-1.5">
-          <Label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-            <span>{isEn ? "🏷️ Price Format Styles" : "🏷️ รูปแบบการแสดงราคา (Price Format Styles)"}</span>
-            <span className="text-[10px] text-amber-400 font-mono">
-              {isEn ? "Global & Local" : "สากล & ท้องถิ่น"}
-            </span>
-          </Label>
+      {/* Price Format Style Selector & USD Toggle */}
+      {showPrice && (
+        <div className="pt-2.5 border-t border-slate-800/80 space-y-2">
+          {/* USD Toggle Switch */}
+          {setShowUsdApprox && (
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">💵</span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white">
+                      {isEn ? "USD Price Approximation (~$ USD)" : "แสดงราคาดอลลาร์สหรัฐ (~$ USD)"}
+                    </span>
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                        showUsdApprox
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
+                          : "bg-slate-800 text-slate-400 border border-slate-700"
+                      }`}
+                    >
+                      {showUsdApprox ? (isEn ? "ON" : "เปิด") : (isEn ? "OFF" : "ปิด")}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400">
+                    {isEn ? "Toggle USD (~$ USD) on/off next to Thai Baht" : "เปิด/ปิด การแสดงราคาดอลลาร์สหรัฐข้างราคาบาท"}
+                  </p>
+                </div>
+              </div>
+              <Switch checked={showUsdApprox} onCheckedChange={setShowUsdApprox} />
+            </div>
+          )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          {setPriceFormatStyle && (
+            <>
+              <Label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between pt-1">
+                <span>{isEn ? "🏷️ Price Format Styles" : "🏷️ รูปแบบการแสดงราคา (Price Format Styles)"}</span>
+                <span className="text-[10px] text-amber-400 font-mono">
+                  {isEn ? "Global & Local" : "สากล & ท้องถิ่น"}
+                </span>
+              </Label>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             {[
               { id: "default", label: "฿ 38,000,000", sub: isEn ? "Standard ฿" : "มาตรฐาน ฿" },
+              { id: "thb_with_usd", label: "฿ 38.5M (~$1.08M)", sub: isEn ? "THB + USD (Ref Image)" : "บาท + ดอลลาร์ (ตามภาพ)" },
               { id: "symbol_short", label: "฿ 38M", sub: isEn ? "Short Symbol" : "ย่อสัญลักษณ์" },
               { id: "code_short_prefix", label: "THB 38M", sub: isEn ? "Global Prefix" : "สากล Prefix" },
               { id: "code_short_suffix", label: "38M THB", sub: isEn ? "Global Suffix" : "สากล Suffix" },
@@ -310,8 +346,10 @@ export function StudioFieldRouter({
               </button>
             ))}
           </div>
-        </div>
+        </>
       )}
+      </div>
+    )}
       </div>
     </div>
   );

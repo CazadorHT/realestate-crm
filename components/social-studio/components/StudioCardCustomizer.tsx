@@ -30,6 +30,10 @@ interface StudioCardCustomizerProps {
   setShowTopListingBadge: (s: boolean) => void;
   headerFontSizeScale: FontSizeScale;
   setHeaderFontSizeScale: (f: FontSizeScale) => void;
+  brandingTitleFontSizeScale?: FontSizeScale;
+  setBrandingTitleFontSizeScale?: (f: FontSizeScale) => void;
+  brandingSubtitleFontSizeScale?: FontSizeScale;
+  setBrandingSubtitleFontSizeScale?: (f: FontSizeScale) => void;
   badgeFontSizeScale: FontSizeScale;
   setBadgeFontSizeScale: (f: FontSizeScale) => void;
   headerYOffset: number;
@@ -53,6 +57,24 @@ interface StudioCardCustomizerProps {
   setCustomListingBadgeTextColor?: (c: string) => void;
   showCardContent?: boolean;
   setShowCardContent?: (s: boolean) => void;
+  cardBorderGlow?: boolean;
+  setCardBorderGlow?: (v: boolean) => void;
+  glowBorderWidth?: number;
+  setGlowBorderWidth?: (v: number) => void;
+  centerGlow?: number;
+  setCenterGlow?: (v: number) => void;
+  centerGlowBlur?: number;
+  setCenterGlowBlur?: (v: number) => void;
+  centerGlowColor?: string;
+  setCenterGlowColor?: (c: string) => void;
+  glassBlur?: number;
+  setGlassBlur?: (v: number) => void;
+  brandingHeaderStyle?: "classic_left" | "frosted_capsule";
+  setBrandingHeaderStyle?: (style: "classic_left" | "frosted_capsule") => void;
+  brandingHeaderAlign?: "center" | "left";
+  setBrandingHeaderAlign?: (align: "center" | "left") => void;
+  brandingBgColor?: string;
+  setBrandingBgColor?: (c: string) => void;
   brandingTitleColor?: string;
   setBrandingTitleColor?: (c: string) => void;
   brandingSubtitleColor?: string;
@@ -87,6 +109,10 @@ export function StudioCardCustomizer({
   setShowTopListingBadge,
   headerFontSizeScale,
   setHeaderFontSizeScale,
+  brandingTitleFontSizeScale,
+  setBrandingTitleFontSizeScale,
+  brandingSubtitleFontSizeScale,
+  setBrandingSubtitleFontSizeScale,
   badgeFontSizeScale,
   setBadgeFontSizeScale,
   headerYOffset,
@@ -110,6 +136,24 @@ export function StudioCardCustomizer({
   setCustomListingBadgeTextColor,
   showCardContent = true,
   setShowCardContent,
+  cardBorderGlow = true,
+  setCardBorderGlow,
+  glowBorderWidth = 55,
+  setGlowBorderWidth,
+  centerGlow = 100,
+  setCenterGlow,
+  centerGlowBlur = 5,
+  setCenterGlowBlur,
+  centerGlowColor = "#FFFFFF",
+  setCenterGlowColor,
+  glassBlur = 24,
+  setGlassBlur,
+  brandingHeaderStyle = "frosted_capsule",
+  setBrandingHeaderStyle,
+  brandingHeaderAlign = "center",
+  setBrandingHeaderAlign,
+  brandingBgColor = "",
+  setBrandingBgColor,
   brandingTitleColor,
   setBrandingTitleColor,
   brandingSubtitleColor,
@@ -174,8 +218,433 @@ export function StudioCardCustomizer({
       </div>
 
       {/* 1. Card Height & Background */}
-      <div className={`p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5 transition-opacity ${!showCardContent ? "opacity-60" : ""}`}>
-        <div className="flex items-center justify-between">
+      <div className={`p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-3 transition-opacity ${!showCardContent ? "opacity-60" : ""}`}>
+        {/* Card Surface Style Selector */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <Layers className="h-3.5 w-3.5 text-amber-400" />
+              {isEn ? "Glass Skin Styles & Surface" : "สไตล์กระจกสำเร็จรูป (Glass Skin Styles)"}
+            </Label>
+            <span className="text-[10px] text-amber-400 font-mono">
+              {cardBackground === "frosted_luxury" ? "💎 Ultra Frosted"
+                : cardBackground === "crystal_glass" ? "🧊 Crystal Ice"
+                : cardBackground === "obsidian_glass" ? "🌌 Midnight Obsidian"
+                : cardBackground === "champagne_glass" ? "✨ Champagne Gold"
+                : cardBackground === "smoked_glass" ? "🌫️ Smoked Charcoal"
+                : cardBackground === "solid" ? "⬛ Deep Solid"
+                : cardBackground === "minimal_gradient" ? "🎯 Clear View"
+                : "🪟 Modern Clean"}
+            </span>
+          </div>
+
+          {/* 1-Click Glass Skin Quick Styles */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-semibold text-slate-400">
+              {isEn ? "⚡ 1-Click Glass Styles:" : "⚡ สไตล์กระจกสำเร็จรูป (1-Click Presets):"}
+            </span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {[
+                {
+                  id: "frosted_luxury",
+                  name: "💎 Phuket Frosted",
+                  sub: isEn ? "Botanica Glow" : "ฝ้าหรู + ขอบเงาวาว",
+                  opacity: 78,
+                  glow: true,
+                },
+                {
+                  id: "crystal_glass",
+                  name: "🧊 Crystal Ice",
+                  sub: isEn ? "Ice Pure White" : "คริสตัลใสประกายขาว",
+                  opacity: 65,
+                  glow: true,
+                },
+                {
+                  id: "champagne_glass",
+                  name: "✨ Champagne Gold",
+                  sub: isEn ? "Luxury Villa Gold" : "ทองหรูแชมเปญ",
+                  opacity: 80,
+                  glow: true,
+                },
+                {
+                  id: "obsidian_glass",
+                  name: "🌌 Midnight Obsidian",
+                  sub: isEn ? "Moody Penthouse" : "ออบซิเดียนดาร์กหรู",
+                  opacity: 86,
+                  glow: true,
+                },
+              ].map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => {
+                    setCardBackground(preset.id as CardBackground);
+                    setCardOpacity(preset.opacity);
+                    if (setCardBorderGlow) setCardBorderGlow(preset.glow);
+                    if (setCustomCardBgColor && customCardBgColor === "#0F172A") {
+                      setCustomCardBgColor("");
+                    }
+                  }}
+                  className={`p-2 rounded-xl border text-left flex flex-col justify-center transition-all cursor-pointer relative overflow-hidden ${
+                    cardBackground === preset.id
+                      ? "bg-amber-500/25 border-amber-400 text-amber-200 font-bold shadow-xs scale-102"
+                      : "bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:border-slate-700"
+                  }`}
+                >
+                  <span className="text-[11px] font-bold truncate">{preset.name}</span>
+                  <span className="text-[9px] opacity-75 truncate">{preset.sub}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* All 8 Available Glass Skins */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+            {[
+              {
+                id: "frosted_luxury",
+                label: "💎 Frosted Luxury",
+                sub: isEn ? "Botanica Center Glow" : "กระจกฝ้าหรู + ขอบสว่างตรงกลาง",
+                popular: true,
+              },
+              {
+                id: "crystal_glass",
+                label: "🧊 Crystal Ice",
+                sub: isEn ? "Ice Crystalline Glass" : "กระจกคริสตัลใสประกายขาว",
+              },
+              {
+                id: "obsidian_glass",
+                label: "🌌 Midnight Obsidian",
+                sub: isEn ? "Deep Moody Dark Glass" : "กระจกดำออบซิเดียนหรู",
+              },
+              {
+                id: "champagne_glass",
+                label: "✨ Champagne Gold",
+                sub: isEn ? "Warm Amber Gold Rim" : "กระจกทองแชมเปญเรืองรอง",
+              },
+              {
+                id: "smoked_glass",
+                label: "🌫️ Smoked Charcoal",
+                sub: isEn ? "Matte Smoked Rim" : "กระจกรมควันมินิมอล",
+              },
+              {
+                id: "glass",
+                label: "🪟 Modern Clean",
+                sub: isEn ? "Standard Glass" : "กระจกใสมาตรฐาน",
+              },
+              {
+                id: "solid",
+                label: "⬛ Deep Solid",
+                sub: isEn ? "Dark Opaque 95%" : "การ์ดมืดทึบคมชัดสูง",
+              },
+              {
+                id: "minimal_gradient",
+                label: "🎯 Clear View",
+                sub: isEn ? "Borderless Floating" : "โปร่งใสไร้ขอบลอยตัว",
+              },
+            ].map((style) => (
+              <button
+                key={style.id}
+                type="button"
+                onClick={() => {
+                  setCardBackground(style.id as CardBackground);
+                  if (setCustomCardBgColor && customCardBgColor === "#0F172A") {
+                    setCustomCardBgColor("");
+                  }
+                }}
+                className={`p-2 rounded-xl border text-left flex flex-col justify-center transition-all cursor-pointer relative overflow-hidden ${
+                  cardBackground === style.id
+                    ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold shadow-xs scale-101"
+                    : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
+                }`}
+              >
+                {style.popular && (
+                  <span className="absolute top-1 right-1 text-[8px] bg-amber-500 text-slate-950 px-1 rounded-sm font-black">
+                    HOT
+                  </span>
+                )}
+                <span className="text-[11px] font-bold">{style.label}</span>
+                <span className="text-[9px] opacity-75 leading-tight mt-0.5">{style.sub}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Center Rim Glow Controls (Glow Border Width, Center Glow, Glass Blur) */}
+          {setCardBorderGlow && cardBackground !== "solid" && cardBackground !== "minimal_gradient" && (
+            <div className="space-y-2.5 p-3 rounded-2xl bg-slate-900/70 border border-slate-800">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">✨</span>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-white">
+                        {isEn ? "Specular Center Glow Rim" : "ขอบสว่างฟุ้งตรงกลาง (Center Glow)"}
+                      </span>
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                          cardBorderGlow
+                            ? "bg-amber-500/20 text-amber-300 border border-amber-400/30"
+                            : "bg-slate-800 text-slate-400 border border-slate-700"
+                        }`}
+                      >
+                        {cardBorderGlow ? (isEn ? "ON" : "เปิด") : (isEn ? "OFF" : "ปิด")}
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-slate-400">
+                      {isEn
+                        ? "Top & bottom specular highlights glow bright in center"
+                        : "ขอบบนและล่างเรืองแสงฟุ้งตรงกลาง ค่อยๆ จางกลายเป็นเส้นปกติ"}
+                    </p>
+                  </div>
+                </div>
+                <Switch checked={cardBorderGlow} onCheckedChange={setCardBorderGlow} className="scale-85" />
+              </div>
+
+              {cardBorderGlow && (
+                <div className="pt-2 border-t border-slate-800/80 space-y-3">
+                  {/* 1. Glow Border Width */}
+                  {setGlowBorderWidth && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                          <span>↔️</span>
+                          <span>{isEn ? "Glow Border Width" : "ความกว้างสันเรืองแสง (Glow Width)"}</span>
+                        </Label>
+                        <span className="text-[10px] text-amber-400 font-mono font-bold">{glowBorderWidth}%</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1">
+                        {[
+                          { val: 30, label: isEn ? "30% Narrow" : "30% แคบ" },
+                          { val: 55, label: isEn ? "55% Bal. ⭐" : "55% ปกติ ⭐" },
+                          { val: 75, label: isEn ? "75% Wide" : "75% กว้าง" },
+                          { val: 100, label: isEn ? "100% Full" : "100% เต็ม" },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => setGlowBorderWidth(item.val)}
+                            className={`py-1 px-1 rounded-lg text-[9px] font-medium border transition-all cursor-pointer text-center ${
+                              glowBorderWidth === item.val
+                                ? "bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-xs"
+                                : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="range"
+                        min="20"
+                        max="100"
+                        step="5"
+                        value={glowBorderWidth}
+                        onChange={(e) => setGlowBorderWidth(Number(e.target.value))}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      />
+                    </div>
+                  )}
+
+                  {/* 2. Center Glow Intensity */}
+                  {setCenterGlow && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                          <span>🔆</span>
+                          <span>{isEn ? "Center Glow Intensity" : "ความสว่างฟุ้งตรงกลาง (Center Glow)"}</span>
+                        </Label>
+                        <span className="text-[10px] text-amber-400 font-mono font-bold">{centerGlow}%</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1">
+                        {[
+                          { val: 50, label: isEn ? "50% Soft" : "50% นุ่มนวล" },
+                          { val: 100, label: isEn ? "100% Crisp ⭐" : "100% สมจริง ⭐" },
+                          { val: 125, label: isEn ? "125% Bright" : "125% สว่างจ้า" },
+                          { val: 150, label: isEn ? "150% Neon" : "150% นีออน" },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => setCenterGlow(item.val)}
+                            className={`py-1 px-1 rounded-lg text-[9px] font-medium border transition-all cursor-pointer text-center ${
+                              centerGlow === item.val
+                                ? "bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-xs"
+                                : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="150"
+                        step="5"
+                        value={centerGlow}
+                        onChange={(e) => setCenterGlow(Number(e.target.value))}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      />
+                    </div>
+                  )}
+
+                  {/* 2.1 Center Glow Blur / Spread */}
+                  {setCenterGlowBlur && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                          <span>✨</span>
+                          <span>{isEn ? "Center Glow Blur / Spread" : "ความฟุ้งของแสง (Glow Blur)"}</span>
+                        </Label>
+                        <span className="text-[10px] text-amber-400 font-mono font-bold">{centerGlowBlur} px</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1">
+                        {[
+                          { val: 0, label: isEn ? "0px Sharp" : "0px คมชัด" },
+                          { val: 4, label: isEn ? "4px Subtle ⭐" : "4px ฟุ้งน้อย ⭐" },
+                          { val: 8, label: isEn ? "8px Soft" : "8px ฟุ้งนุ่ม" },
+                          { val: 15, label: isEn ? "15px Wide" : "15px ฟุ้งกว้าง" },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => setCenterGlowBlur(item.val)}
+                            className={`py-1 px-1 rounded-lg text-[9px] font-medium border transition-all cursor-pointer text-center ${
+                              centerGlowBlur === item.val
+                                ? "bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-xs"
+                                : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="25"
+                        step="1"
+                        value={centerGlowBlur}
+                        onChange={(e) => setCenterGlowBlur(Number(e.target.value))}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      />
+                    </div>
+                  )}
+
+                  {/* 2.1 Center Glow Color */}
+                  {setCenterGlowColor && (
+                    <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-semibold text-slate-300 flex items-center gap-1">
+                          <span>🎨</span>
+                          <span>{isEn ? "Center Glow Color" : "สีเรืองแสงฟุ้งตรงกลาง (Glow Color)"}</span>
+                        </Label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="color"
+                            value={centerGlowColor || "#FFFFFF"}
+                            onChange={(e) => setCenterGlowColor(e.target.value)}
+                            className="h-5 w-7 rounded border border-slate-700 bg-transparent cursor-pointer"
+                            title={isEn ? "Pick Center Glow color" : "เลือกสีความสว่างฟุ้งตรงกลาง"}
+                          />
+                          <span className="text-[9px] font-mono text-slate-400">
+                            {centerGlowColor && centerGlowColor !== "#FFFFFF" ? centerGlowColor : (isEn ? "White" : "ขาวสว่าง")}
+                          </span>
+                          {centerGlowColor && centerGlowColor !== "#FFFFFF" && (
+                            <button
+                              type="button"
+                              onClick={() => setCenterGlowColor("#FFFFFF")}
+                              className="text-[9px] text-amber-400 hover:text-amber-300 underline cursor-pointer"
+                              title={isEn ? "Reset to white" : "รีเซ็ตเป็นสีขาว"}
+                            >
+                              {isEn ? "Reset" : "รีเซ็ต"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Swatches */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {[
+                          { name: isEn ? "White" : "ขาวสว่าง", hex: "#FFFFFF" },
+                          { name: isEn ? "Ice Blue" : "ฟ้าไอซ์บลู", hex: "#B4F0FF" },
+                          { name: isEn ? "Gold" : "ทองหรู", hex: "#F59E0B" },
+                          { name: isEn ? "Amber" : "ส้มอำพัน", hex: "#FB923C" },
+                          { name: isEn ? "Emerald" : "มรกต", hex: "#10B981" },
+                          { name: isEn ? "Violet" : "ม่วงนีออน", hex: "#A855F7" },
+                          { name: isEn ? "Rose" : "ชมพูกุหลาบ", hex: "#F43F5E" },
+                        ].map((swatch) => (
+                          <button
+                            key={swatch.hex}
+                            type="button"
+                            onClick={() => setCenterGlowColor(swatch.hex)}
+                            className={`h-5.5 px-2 rounded-lg border text-[9px] font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                              centerGlowColor === swatch.hex
+                                ? "border-amber-400 ring-1 ring-amber-400 text-white font-bold scale-102"
+                                : "border-slate-700 text-slate-300 hover:border-slate-500 bg-slate-900/60"
+                            }`}
+                            title={swatch.name}
+                          >
+                            <span
+                              className="w-2 h-2 rounded-full border border-white/40 shadow-xs"
+                              style={{ backgroundColor: swatch.hex }}
+                            />
+                            <span>{swatch.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. Glass Blur (Backdrop Blur) */}
+                  {setGlassBlur && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                          <span>🌫️</span>
+                          <span>{isEn ? "Glass Blur (Backdrop Filter)" : "ความเบลอกระจก (Glass Blur)"}</span>
+                        </Label>
+                        <span className="text-[10px] text-amber-400 font-mono font-bold">{glassBlur} px</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1">
+                        {[
+                          { val: 0, label: isEn ? "0px Clear" : "0px ไม่เบลอ" },
+                          { val: 14, label: isEn ? "14px Light" : "14px บางเบา" },
+                          { val: 24, label: isEn ? "24px True ⭐" : "24px สมจริง ⭐" },
+                          { val: 36, label: isEn ? "36px Deep" : "36px ฝ้านุ่ม" },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => setGlassBlur(item.val)}
+                            className={`py-1 px-1 rounded-lg text-[9px] font-medium border transition-all cursor-pointer text-center ${
+                              glassBlur === item.val
+                                ? "bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-xs"
+                                : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="40"
+                        step="2"
+                        value={glassBlur}
+                        onChange={(e) => setGlassBlur(Number(e.target.value))}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
           <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Sliders className="h-3.5 w-3.5 text-amber-400" />
             {isEn ? "Card Height" : "ความสูงกรอบข้อมูล (Card Height)"}
@@ -558,10 +1027,87 @@ export function StudioCardCustomizer({
 
           {showBrandingHeader && (
             <div className="space-y-2.5 pt-2 border-t border-slate-800/60">
-              {/* Size scaling */}
+              {/* Header Style Selector */}
+              {setBrandingHeaderStyle && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-slate-300">
+                      {isEn ? "Header Badge Style:" : "สไตล์ Header / โลโก้แบรนด์:"}
+                    </span>
+                    <span className="text-[9px] text-amber-400 font-mono">
+                      {brandingHeaderStyle === "frosted_capsule" ? "Luxury Glass" : "Classic"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setBrandingHeaderStyle("frosted_capsule")}
+                      className={`p-2 rounded-xl border text-[11px] font-medium transition-all text-left flex flex-col cursor-pointer ${
+                        brandingHeaderStyle === "frosted_capsule"
+                          ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold shadow-xs"
+                          : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      <span>💊 {isEn ? "Frosted Capsule" : "แคปซูลกระจกเงา"}</span>
+                      <span className="text-[9px] opacity-70 font-mono">
+                        {isEn ? "Botanica Luxury Glass" : "สไตล์หรูหราตามภาพ"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBrandingHeaderStyle("classic_left")}
+                      className={`p-2 rounded-xl border text-[11px] font-medium transition-all text-left flex flex-col cursor-pointer ${
+                        brandingHeaderStyle === "classic_left"
+                          ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold shadow-xs"
+                          : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      <span>🏷️ {isEn ? "Classic Left" : "ข้อความเรียบชิดซ้าย"}</span>
+                      <span className="text-[9px] opacity-70 font-mono">
+                        {isEn ? "Standard Header" : "มาตรฐานมุมซ้ายบน"}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Header Placement (if capsule) */}
+              {setBrandingHeaderAlign && brandingHeaderStyle === "frosted_capsule" && (
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-slate-400">
+                    {isEn ? "Capsule Placement:" : "ตำแหน่งแคปซูล:"}
+                  </span>
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setBrandingHeaderAlign("center")}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all cursor-pointer ${
+                        brandingHeaderAlign === "center"
+                          ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
+                          : "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      {isEn ? "Center" : "ตรงกลาง"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBrandingHeaderAlign("left")}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all cursor-pointer ${
+                        brandingHeaderAlign === "left"
+                          ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
+                          : "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      {isEn ? "Left" : "ชิดซ้าย"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Master Overall Branding Size scaling */}
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-slate-400">
-                  {isEn ? "Branding Font Size:" : "ขนาดฟอนต์ Branding:"}
+                  {isEn ? "Branding Overall Size:" : "ขนาดภาพรวม Branding:"}
                 </span>
                 <div className="flex gap-1">
                   {[
@@ -573,7 +1119,11 @@ export function StudioCardCustomizer({
                     <button
                       key={f.id}
                       type="button"
-                      onClick={() => setHeaderFontSizeScale(f.id as FontSizeScale)}
+                      onClick={() => {
+                        setHeaderFontSizeScale(f.id as FontSizeScale);
+                        setBrandingTitleFontSizeScale?.(f.id as FontSizeScale);
+                        setBrandingSubtitleFontSizeScale?.(f.id as FontSizeScale);
+                      }}
                       className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all cursor-pointer ${
                         headerFontSizeScale === f.id
                           ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
@@ -586,11 +1136,74 @@ export function StudioCardCustomizer({
                 </div>
               </div>
 
+              {/* Capsule Background Color (สีพื้นหลังแคปซูลแบรนด์) */}
+              {brandingHeaderStyle === "frosted_capsule" && setBrandingBgColor && (
+                <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-slate-300 flex items-center gap-1.5">
+                      <span>🎨</span>
+                      <span>{isEn ? "Capsule Background Color" : "สีพื้นหลังแคปซูลแบรนด์ (Capsule BG Color)"}</span>
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="color"
+                        value={brandingBgColor || "#0F141C"}
+                        onChange={(e) => setBrandingBgColor(e.target.value)}
+                        className="h-5 w-7 rounded border border-slate-700 bg-transparent cursor-pointer"
+                        title={isEn ? "Pick capsule background color" : "เลือกสีพื้นหลังแคปซูล"}
+                      />
+                      <span className="text-[9px] font-mono text-slate-400">
+                        {brandingBgColor ? brandingBgColor : (isEn ? "Default" : "ค่าเริ่มต้น")}
+                      </span>
+                      {brandingBgColor && (
+                        <button
+                          type="button"
+                          onClick={() => setBrandingBgColor("")}
+                          className="text-[9px] text-amber-400 hover:text-amber-300 underline cursor-pointer"
+                          title={isEn ? "Reset to default" : "รีเซ็ตค่าเริ่มต้น"}
+                        >
+                          {isEn ? "Reset" : "รีเซ็ต"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Preset Swatches */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[
+                      { name: isEn ? "Obsidian" : "ดำนิล", hex: "#0F141C" },
+                      { name: isEn ? "Bronze" : "บรอนซ์", hex: "#2D1F17" },
+                      { name: isEn ? "Navy" : "กรมท่า", hex: "#0F1E36" },
+                      { name: isEn ? "Emerald" : "เขียวเข้ม", hex: "#0A261D" },
+                      { name: isEn ? "Wine" : "ไวน์แดง", hex: "#330C16" },
+                      { name: isEn ? "Charcoal" : "เทาชาร์โคล", hex: "#1E293B" },
+                      { name: isEn ? "Pure Black" : "ดำสนิท", hex: "#000000" },
+                    ].map((swatch) => (
+                      <button
+                        key={swatch.hex}
+                        type="button"
+                        onClick={() => setBrandingBgColor(swatch.hex)}
+                        className={`h-6 px-2 rounded-lg border text-[9px] font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                          brandingBgColor === swatch.hex
+                            ? "border-amber-400 ring-1 ring-amber-400 text-white font-bold scale-102"
+                            : "border-slate-700 text-slate-300 hover:border-slate-500"
+                        }`}
+                        style={{ backgroundColor: swatch.hex }}
+                        title={swatch.name}
+                      >
+                        <span className="w-2 h-2 rounded-full border border-white/40" style={{ backgroundColor: swatch.hex }} />
+                        <span className="drop-shadow-xs">{swatch.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Line 1: Company / Brand Name */}
-              <div className="p-2 rounded-lg bg-slate-950/70 border border-slate-800 space-y-1.5">
+              <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-semibold text-slate-300">
-                    🏢 บรรทัดที่ 1 (ชื่อบริษัท / แบรนด์)
+                    🏢 {isEn ? "Line 1 (Company / Brand Name)" : "บรรทัดที่ 1 (ชื่อบริษัท / แบรนด์)"}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <input
@@ -598,7 +1211,7 @@ export function StudioCardCustomizer({
                       value={brandingTitleColor || "#FFFFFF"}
                       onChange={(e) => setBrandingTitleColor?.(e.target.value)}
                       className="h-5 w-7 rounded border border-slate-700 bg-transparent cursor-pointer"
-                      title="เลือกสีชื่อบริษัท"
+                      title={isEn ? "Choose company title color" : "เลือกสีชื่อบริษัท"}
                     />
                     <span className="text-[9px] font-mono text-slate-400">
                       {brandingTitleColor || "#FFFFFF"}
@@ -634,13 +1247,44 @@ export function StudioCardCustomizer({
                     ))}
                   </div>
                 </div>
+
+                {/* Line 1 Individual Font Size */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
+                  <span className="text-[9px] text-slate-400 font-medium">
+                    {isEn ? "Line 1 Font Size:" : "ขนาดอักษรบรรทัดที่ 1:"}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {[
+                      { id: "sm", label: isEn ? "Small" : "เล็ก" },
+                      { id: "md", label: isEn ? "Medium" : "ปกติ" },
+                      { id: "lg", label: isEn ? "Large" : "ใหญ่" },
+                      { id: "xl", label: isEn ? "XL" : "ยักษ์" },
+                    ].map((f) => {
+                      const active = (brandingTitleFontSizeScale || headerFontSizeScale) === f.id;
+                      return (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setBrandingTitleFontSizeScale?.(f.id as FontSizeScale)}
+                          className={`px-2 py-0.5 rounded text-[9px] font-bold border transition-all cursor-pointer ${
+                            active
+                              ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
+                              : "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200"
+                          }`}
+                        >
+                          {f.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               {/* Line 2: Subtitle / Tagline */}
-              <div className="p-2 rounded-lg bg-slate-950/70 border border-slate-800 space-y-1.5">
+              <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-semibold text-slate-300">
-                    ✨ บรรทัดที่ 2 (สโลแกน / สับไตเติ้ล)
+                    ✨ {isEn ? "Line 2 (Tagline / Subtitle)" : "บรรทัดที่ 2 (สโลแกน / สับไตเติ้ล)"}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <input
@@ -648,10 +1292,10 @@ export function StudioCardCustomizer({
                       value={brandingSubtitleColor || "#F59E0B"}
                       onChange={(e) => setBrandingSubtitleColor?.(e.target.value)}
                       className="h-5 w-7 rounded border border-slate-700 bg-transparent cursor-pointer"
-                      title="เลือกสีสโลแกน"
+                      title={isEn ? "Choose subtitle color" : "เลือกสีสโลแกน"}
                     />
                     <span className="text-[9px] font-mono text-slate-400">
-                      {brandingSubtitleColor || "สีธีม"}
+                      {brandingSubtitleColor || (isEn ? "Theme" : "สีธีม")}
                     </span>
                   </div>
                 </div>
@@ -684,10 +1328,46 @@ export function StudioCardCustomizer({
                     ))}
                   </div>
                 </div>
+
+                {/* Line 2 Individual Font Size */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
+                  <span className="text-[9px] text-slate-400 font-medium">
+                    {isEn ? "Line 2 Font Size:" : "ขนาดอักษรบรรทัดที่ 2:"}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {[
+                      { id: "sm", label: isEn ? "Small" : "เล็ก" },
+                      { id: "md", label: isEn ? "Medium" : "ปกติ" },
+                      { id: "lg", label: isEn ? "Large" : "ใหญ่" },
+                      { id: "xl", label: isEn ? "XL" : "ยักษ์" },
+                    ].map((f) => {
+                      const active = (brandingSubtitleFontSizeScale || headerFontSizeScale) === f.id;
+                      return (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setBrandingSubtitleFontSizeScale?.(f.id as FontSizeScale)}
+                          className={`px-2 py-0.5 rounded text-[9px] font-bold border transition-all cursor-pointer ${
+                            active
+                              ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
+                              : "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200"
+                          }`}
+                        >
+                          {f.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
-              {/* Reset Branding Colors */}
-              {(brandingTitleColor || brandingSubtitleColor || customCompanyName || customCompanySubtitle) && (
+              {/* Reset Branding Colors & Sizes */}
+              {(brandingTitleColor ||
+                brandingSubtitleColor ||
+                customCompanyName ||
+                customCompanySubtitle ||
+                (brandingTitleFontSizeScale && brandingTitleFontSizeScale !== "md") ||
+                (brandingSubtitleFontSizeScale && brandingSubtitleFontSizeScale !== "md")) && (
                 <div className="flex justify-end pt-1">
                   <button
                     type="button"
@@ -696,10 +1376,12 @@ export function StudioCardCustomizer({
                       setBrandingSubtitleColor?.("");
                       setCustomCompanyName?.("");
                       setCustomCompanySubtitle?.("");
+                      setBrandingTitleFontSizeScale?.("md");
+                      setBrandingSubtitleFontSizeScale?.("md");
                     }}
                     className="text-[10px] text-rose-400 hover:text-rose-300 hover:underline cursor-pointer"
                   >
-                    ↺ รีเซ็ตข้อความและสี Branding
+                    {isEn ? "↺ Reset Branding Text & Styles" : "↺ รีเซ็ตข้อความและสไตล์ Branding"}
                   </button>
                 </div>
               )}

@@ -183,6 +183,29 @@ export function PropertyFilters({
     }).length;
   }, [filters]);
 
+  const { statusCounts, typeCounts } = useMemo(() => {
+    const statusCounts: Record<string, number> = {};
+    const typeCounts: Record<string, number> = {};
+
+    filterMetadata.forEach((p: any) => {
+      const pType = (p.property_type || p.type) as string;
+      if (pType) {
+        typeCounts[pType] = (typeCounts[pType] || 0) + 1;
+      }
+
+      if (p.status) {
+        statusCounts[p.status] = (statusCounts[p.status] || 0) + 1;
+      }
+    });
+
+    return { statusCounts, typeCounts };
+  }, [filterMetadata]);
+
+  const resolvedTotalCount =
+    filterMetadata && filterMetadata.length > 0
+      ? filterMetadata.length
+      : totalCount;
+
   useEffect(() => {
     const table = document.getElementById("table");
     if (table) {
@@ -221,6 +244,7 @@ export function PropertyFilters({
       bathrooms: searchParams.get("bathrooms") || "",
       province: searchParams.get("province") || "",
       district: searchParams.get("district") || "",
+      popular_area: searchParams.get("popular_area") || "",
       minPrice: searchParams.get("minPrice") || "",
       maxPrice: searchParams.get("maxPrice") || "",
       sortBy: searchParams.get("sortBy") || DEFAULT_FILTERS.sortBy,
@@ -487,6 +511,8 @@ export function PropertyFilters({
 
           <QuickStatus
             value={filters.status}
+            counts={statusCounts}
+            totalCount={resolvedTotalCount}
             onValueChange={(status) => {
               setFilters({ ...filters, status });
               const params = new URLSearchParams(searchParams.toString());
@@ -506,6 +532,8 @@ export function PropertyFilters({
 
           <QuickType
             value={filters.type}
+            counts={typeCounts}
+            totalCount={resolvedTotalCount}
             onValueChange={(type) => {
               setFilters({ ...filters, type });
               const params = new URLSearchParams(searchParams.toString());

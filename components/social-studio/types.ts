@@ -1,7 +1,15 @@
 export type AspectRatio = "9:16" | "1:1" | "4:5";
 export type StudioTheme = "luxury" | "modern" | "hotdeal" | "emerald" | "purple" | "orange" | "custom";
 export type StudioLayout = "single" | "split_two" | "hero_plus_two" | "four_grid" | "five_grid" | "six_grid";
-export type CardBackground = "glass" | "solid" | "minimal_gradient";
+export type CardBackground =
+  | "frosted_luxury"
+  | "crystal_glass"
+  | "obsidian_glass"
+  | "champagne_glass"
+  | "smoked_glass"
+  | "glass"
+  | "solid"
+  | "minimal_gradient";
 export type ContentPosition = "bottom" | "center" | "top" | "split_hero";
 export type FontSizeScale = "sm" | "md" | "lg" | "xl";
 export type SpecFontSizeScale = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
@@ -14,7 +22,8 @@ export type StudioPriceFormatStyle =
   | "code_short_suffix"
   | "code_full_suffix"
   | "thai_lakh"
-  | "usd_approx";
+  | "usd_approx"
+  | "thb_with_usd";
 
 // Feature 3: Background Photo Filters
 export type PhotoFilter = "none" | "bright" | "dark_moody" | "warm_gold" | "high_contrast" | "bw";
@@ -163,6 +172,10 @@ export interface SocialStudioProperty {
   bathrooms?: number | null;
   size_sqm?: number | null;
   floor?: number | null;
+  parking?: number | null;
+  parking_slots?: number | null;
+  is_foreigner_quota?: boolean | null;
+  ownership_type?: string | null;
   transit_type?: string | null;
   transit_station_name?: string | null;
   transit_station_name_en?: string | null;
@@ -268,19 +281,31 @@ export interface BannerRenderOptions {
 
   calloutPointers?: CalloutPointer[];
   bgDimOpacity?: number; // 0 - 100 (% of dark overlay on background image)
+  cardBorderGlow?: boolean; // Highlight rim bright in center, normal elsewhere
+  glowBorderWidth?: number; // 20 - 100 (% of card width for specular highlight streak, default 55)
+  centerGlow?: number; // 0 - 150 (% intensity of center specular glow & radial highlight, default 100)
+  centerGlowBlur?: number; // 0 - 30 (px blur spread of center specular glow, default 5)
+  centerGlowColor?: string; // Hex color for center specular highlight rim, default #FFFFFF or #B4F0FF
+  glassBlur?: number; // 0 - 40 (backdrop blur px under glass card, default 24)
   customTexts?: CustomTextItem[];
 
   // Modular Field Toggles
   showBrandingHeader?: boolean;
   showTopListingBadge?: boolean;
+  brandingHeaderStyle?: "classic_left" | "frosted_capsule";
+  brandingHeaderAlign?: "center" | "left";
+  brandingBgColor?: string;
   brandingTitleColor?: string;
   brandingSubtitleColor?: string;
   customCompanyName?: string;
   customCompanySubtitle?: string;
   headerYOffset?: number;
   headerFontSizeScale?: FontSizeScale;
+  brandingTitleFontSizeScale?: FontSizeScale;
+  brandingSubtitleFontSizeScale?: FontSizeScale;
   badgeFontSizeScale?: FontSizeScale;
   specFontSizeScale?: SpecFontSizeScale;
+  fitWithBlurredBackdrop?: boolean;
   customListingBadgeText?: string;
   customListingBadgeBgColor?: string;
   customListingBadgeTextColor?: string;
@@ -292,6 +317,7 @@ export interface BannerRenderOptions {
   showSpecs?: boolean;
   showPrice?: boolean;
   showOriginalPrice?: boolean;
+  showUsdApprox?: boolean;
   showQrCode?: boolean;
   showContact?: boolean;
   showAgentAvatar?: boolean;
@@ -313,7 +339,9 @@ export interface BannerRenderOptions {
     bathrooms?: number | null;
     sizeSqm?: number | null;
     floor?: number | null;
+    parking?: number | null;
   };
+  ownershipBadge?: string;
   badges?: string[];
   qrCodeUrl?: string;
   companyName?: string;
@@ -369,16 +397,29 @@ export interface SocialStudioPresetConfig {
   customListingBadgeTextColor: string;
   showBrandingHeader: boolean;
   showTopListingBadge: boolean;
+  brandingHeaderStyle?: "classic_left" | "frosted_capsule";
+  brandingHeaderAlign?: "center" | "left";
+  brandingBgColor?: string;
   brandingTitleColor?: string;
   brandingSubtitleColor?: string;
   customCompanyName?: string;
   customCompanySubtitle?: string;
   headerFontSizeScale: FontSizeScale;
+  brandingTitleFontSizeScale?: FontSizeScale;
+  brandingSubtitleFontSizeScale?: FontSizeScale;
   badgeFontSizeScale: FontSizeScale;
   headerYOffset: number;
   cardRightMargin: number;
   showHeadline: boolean;
   showCardContent?: boolean;
+  showUsdApprox?: boolean;
+  cardBorderGlow?: boolean;
+  glowBorderWidth?: number;
+  centerGlow?: number;
+  centerGlowBlur?: number;
+  centerGlowColor?: string;
+  glassBlur?: number;
+  fitWithBlurredBackdrop?: boolean;
   textEffectTemplate?: TextEffectTemplate;
   textEffectPosition?: TextEffectPosition;
   textEffectSize?: FontSizeScale | "2xl";

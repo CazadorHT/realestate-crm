@@ -25,6 +25,8 @@ import { useLanguage } from "@/lib/i18n/language-context";
 export interface StudioLayoutControlsProps {
   layout: StudioLayout;
   setLayout: (l: StudioLayout) => void;
+  fitWithBlurredBackdrop?: boolean;
+  setFitWithBlurredBackdrop?: (val: boolean) => void;
   imageUrls: string[];
   activeSlot: number;
   setActiveSlot: (s: number) => void;
@@ -56,6 +58,8 @@ export interface StudioLayoutControlsProps {
 export function StudioLayoutControls({
   layout,
   setLayout,
+  fitWithBlurredBackdrop = false,
+  setFitWithBlurredBackdrop,
   imageUrls,
   activeSlot,
   setActiveSlot,
@@ -130,7 +134,7 @@ export function StudioLayoutControls({
             { id: "split_two", label: isEn ? "2 Split" : "2 รูปคู่", sub: "Split 2" },
             { id: "hero_plus_two", label: isEn ? "3 Photos" : "3 รูปฮิต", sub: "1 Hero+2" },
             { id: "four_grid", label: isEn ? "4 Grid" : "4 รูปกริด", sub: "2x2 Grid" },
-            { id: "five_grid", label: isEn ? "5 Grid" : "5 รูปกริด", sub: "1 Hero+4" },
+            { id: "five_grid", label: isEn ? "5 Grid" : "5 รูปกริด", sub: isEn ? "1 Hero+2x2" : "1 ใหญ่+4 กริด" },
             { id: "six_grid", label: isEn ? "6 Grid" : "6 รูปกริด", sub: isEn ? "2x3 (3 rows)" : "2x3 (3 แถว)" },
           ].map((item) => (
             <button
@@ -293,6 +297,41 @@ export function StudioLayoutControls({
           )}
         </div>
       </div>
+
+      {/* 3.5 Fit Full Image (No Crop with Blurred Background) */}
+      {setFitWithBlurredBackdrop && (
+        <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 flex items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <Label
+              className="text-xs font-semibold text-slate-200 flex items-center gap-1.5 cursor-pointer"
+              onClick={() => setFitWithBlurredBackdrop(!fitWithBlurredBackdrop)}
+            >
+              <span>🖼️</span>
+              <span>{isEn ? "Fit Full Photo (No Crop + Blurred Margins)" : "แสดงภาพเต็มใบ ไม่โดนตัดขอบ (Fit + เบลอขอบข้าง)"}</span>
+            </Label>
+            <p className="text-[10px] text-slate-400 leading-relaxed">
+              {isEn
+                ? "Auto-generates blurred matching backdrop to fit frame without cutting off text or graphics."
+                : "สร้างขอบพื้นหลังเบลอเติมเต็มส่วนที่ขาด ไม่ให้ตัวหนังสือหรือขอบภาพถูกครอบตัด"}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={fitWithBlurredBackdrop}
+            onClick={() => setFitWithBlurredBackdrop(!fitWithBlurredBackdrop)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+              fitWithBlurredBackdrop ? "bg-amber-500" : "bg-slate-800"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                fitWithBlurredBackdrop ? "translate-x-5" : "translate-y-0 translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+      )}
 
       {/* 4. Font Size Scale & Content Position */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

@@ -66,7 +66,8 @@ export function drawCoverImage(
   y: number,
   w: number,
   h: number,
-  radius: number = 0
+  radius: number = 0,
+  fitWithBlurredBackdrop: boolean = false
 ): void {
   ctx.save();
   ctx.beginPath();
@@ -77,23 +78,70 @@ export function drawCoverImage(
   }
   ctx.clip();
 
-  const hRatio = w / img.width;
-  const vRatio = h / img.height;
-  const ratio = Math.max(hRatio, vRatio);
-  const centerShiftX = x + (w - img.width * ratio) / 2;
-  const centerShiftY = y + (h - img.height * ratio) / 2;
+  if (fitWithBlurredBackdrop) {
+    // 1. Draw blurred, expanded background to fill missing margins/sides seamlessly
+    ctx.save();
+    const hRatio = w / img.width;
+    const vRatio = h / img.height;
+    const coverRatio = Math.max(hRatio, vRatio) * 1.18; // slight zoom to prevent blur edge bleeding
+    const bgShiftX = x + (w - img.width * coverRatio) / 2;
+    const bgShiftY = y + (h - img.height * coverRatio) / 2;
 
-  ctx.drawImage(
-    img,
-    0,
-    0,
-    img.width,
-    img.height,
-    centerShiftX,
-    centerShiftY,
-    img.width * ratio,
-    img.height * ratio
-  );
+    try {
+      ctx.filter = "blur(32px) brightness(0.68) saturate(1.25)";
+    } catch {
+      // fallback if filter is not supported
+    }
+    ctx.drawImage(
+      img,
+      0, 0, img.width, img.height,
+      bgShiftX, bgShiftY, img.width * coverRatio, img.height * coverRatio
+    );
+    try {
+      ctx.filter = "none";
+    } catch {}
+    ctx.restore();
+
+    // Dark ambient overlay on blurred background for elegant contrast
+    ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+    ctx.fillRect(x, y, w, h);
+
+    // 2. Draw foreground full uncropped image (contain) in the center
+    const containRatio = Math.min(w / img.width, h / img.height);
+    const fitW = Math.round(img.width * containRatio);
+    const fitH = Math.round(img.height * containRatio);
+    const fitX = Math.round(x + (w - fitW) / 2);
+    const fitY = Math.round(y + (h - fitH) / 2);
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.50)";
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 4;
+    ctx.drawImage(
+      img,
+      0, 0, img.width, img.height,
+      fitX, fitY, fitW, fitH
+    );
+    ctx.restore();
+  } else {
+    const hRatio = w / img.width;
+    const vRatio = h / img.height;
+    const ratio = Math.max(hRatio, vRatio);
+    const centerShiftX = x + (w - img.width * ratio) / 2;
+    const centerShiftY = y + (h - img.height * ratio) / 2;
+
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      img.width,
+      img.height,
+      centerShiftX,
+      centerShiftY,
+      img.width * ratio,
+      img.height * ratio
+    );
+  }
   ctx.restore();
 }
 

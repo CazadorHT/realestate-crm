@@ -11,7 +11,8 @@ export async function drawBackgroundLayout(
   width: number,
   height: number,
   gridLineWidth?: number,
-  gridLineColor?: string
+  gridLineColor?: string,
+  fitWithBlurredBackdrop?: boolean
 ): Promise<void> {
   const gap = gridLineWidth !== undefined ? gridLineWidth : 8;
   const bgColor = gridLineColor || "#000000";
@@ -26,15 +27,17 @@ export async function drawBackgroundLayout(
 
   if (validImages.length === 0) return;
 
+  const isFit = !!fitWithBlurredBackdrop;
+
   if (layout === "single" || validImages.length === 1) {
-    drawCoverImage(ctx, validImages[0], 0, 0, width, height);
+    drawCoverImage(ctx, validImages[0], 0, 0, width, height, 0, isFit);
   } else if (layout === "split_two") {
     const img1 = validImages[0];
     const img2 = validImages[1] || validImages[0];
     const splitH = (height - gap) / 2;
 
-    drawCoverImage(ctx, img1, 0, 0, width, splitH);
-    drawCoverImage(ctx, img2, 0, splitH + gap, width, splitH);
+    drawCoverImage(ctx, img1, 0, 0, width, splitH, 0, isFit);
+    drawCoverImage(ctx, img2, 0, splitH + gap, width, splitH, 0, isFit);
   } else if (layout === "hero_plus_two") {
     const img1 = validImages[0];
     const img2 = validImages[1] || validImages[0];
@@ -44,9 +47,9 @@ export async function drawBackgroundLayout(
     const subH = height - heroH - gap;
     const subW = (width - gap) / 2;
 
-    drawCoverImage(ctx, img1, 0, 0, width, heroH);
-    drawCoverImage(ctx, img2, 0, heroH + gap, subW, subH);
-    drawCoverImage(ctx, img3, subW + gap, heroH + gap, subW, subH);
+    drawCoverImage(ctx, img1, 0, 0, width, heroH, 0, isFit);
+    drawCoverImage(ctx, img2, 0, heroH + gap, subW, subH, 0, isFit);
+    drawCoverImage(ctx, img3, subW + gap, heroH + gap, subW, subH, 0, isFit);
   } else if (layout === "four_grid") {
     const img1 = validImages[0];
     const img2 = validImages[1] || validImages[0];
@@ -56,10 +59,10 @@ export async function drawBackgroundLayout(
     const rowH = (height - gap) / 2;
     const colW = (width - gap) / 2;
 
-    drawCoverImage(ctx, img1, 0, 0, colW, rowH);
-    drawCoverImage(ctx, img2, colW + gap, 0, colW, rowH);
-    drawCoverImage(ctx, img3, 0, rowH + gap, colW, rowH);
-    drawCoverImage(ctx, img4, colW + gap, rowH + gap, colW, rowH);
+    drawCoverImage(ctx, img1, 0, 0, colW, rowH, 0, isFit);
+    drawCoverImage(ctx, img2, colW + gap, 0, colW, rowH, 0, isFit);
+    drawCoverImage(ctx, img3, 0, rowH + gap, colW, rowH, 0, isFit);
+    drawCoverImage(ctx, img4, colW + gap, rowH + gap, colW, rowH, 0, isFit);
   } else if (layout === "five_grid") {
     const img1 = validImages[0];
     const img2 = validImages[1] || validImages[0];
@@ -67,15 +70,22 @@ export async function drawBackgroundLayout(
     const img4 = validImages[3] || validImages[1] || validImages[0];
     const img5 = validImages[4] || validImages[2] || validImages[0];
 
-    const heroH = Math.round(height * 0.65);
-    const subH = height - heroH - gap;
-    const subW = (width - gap * 3) / 4;
+    // 1 Big Hero on top + 4 photos in 2x2 grid below (as in reference image)
+    const heroH = Math.round(height * 0.50);
+    const bottomH = height - heroH - gap;
+    const subH = (bottomH - gap) / 2;
+    const subW = (width - gap) / 2;
 
-    drawCoverImage(ctx, img1, 0, 0, width, heroH);
-    drawCoverImage(ctx, img2, 0, heroH + gap, subW, subH);
-    drawCoverImage(ctx, img3, subW + gap, heroH + gap, subW, subH);
-    drawCoverImage(ctx, img4, (subW + gap) * 2, heroH + gap, subW, subH);
-    drawCoverImage(ctx, img5, (subW + gap) * 3, heroH + gap, subW, subH);
+    // Top Hero (Full Width)
+    drawCoverImage(ctx, img1, 0, 0, width, heroH, 0, isFit);
+
+    // Row 1 of 2x2 grid
+    drawCoverImage(ctx, img2, 0, heroH + gap, subW, subH, 0, isFit);
+    drawCoverImage(ctx, img3, subW + gap, heroH + gap, subW, subH, 0, isFit);
+
+    // Row 2 of 2x2 grid
+    drawCoverImage(ctx, img4, 0, heroH + gap + subH + gap, subW, subH, 0, isFit);
+    drawCoverImage(ctx, img5, subW + gap, heroH + gap + subH + gap, subW, subH, 0, isFit);
   } else if (layout === "six_grid") {
     const img1 = validImages[0];
     const img2 = validImages[1] || validImages[0];
@@ -88,14 +98,14 @@ export async function drawBackgroundLayout(
     const rowH = (height - gap * 2) / 3;
 
     // Row 1
-    drawCoverImage(ctx, img1, 0, 0, colW, rowH);
-    drawCoverImage(ctx, img2, colW + gap, 0, colW, rowH);
+    drawCoverImage(ctx, img1, 0, 0, colW, rowH, 0, isFit);
+    drawCoverImage(ctx, img2, colW + gap, 0, colW, rowH, 0, isFit);
     // Row 2
-    drawCoverImage(ctx, img3, 0, rowH + gap, colW, rowH);
-    drawCoverImage(ctx, img4, colW + gap, rowH + gap, colW, rowH);
+    drawCoverImage(ctx, img3, 0, rowH + gap, colW, rowH, 0, isFit);
+    drawCoverImage(ctx, img4, colW + gap, rowH + gap, colW, rowH, 0, isFit);
     // Row 3
-    drawCoverImage(ctx, img5, 0, (rowH + gap) * 2, colW, rowH);
-    drawCoverImage(ctx, img6, colW + gap, (rowH + gap) * 2, colW, rowH);
+    drawCoverImage(ctx, img5, 0, (rowH + gap) * 2, colW, rowH, 0, isFit);
+    drawCoverImage(ctx, img6, colW + gap, (rowH + gap) * 2, colW, rowH, 0, isFit);
   }
 }
 

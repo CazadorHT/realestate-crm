@@ -56,6 +56,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const [theme, setTheme] = useState<StudioTheme>("luxury");
   const [layout, setLayout] = useState<StudioLayout>("single");
+  const [fitWithBlurredBackdrop, setFitWithBlurredBackdrop] = useState<boolean>(false);
   const [slotIndices, setSlotIndices] = useState<number[]>([0, 1, 2, 3, 4, 5]);
   const [activeSlot, setActiveSlot] = useState<number>(0);
 
@@ -104,7 +105,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const [customPriceColor, setCustomPriceColor] = useState<string>("#FFFFFF");
   const [customHeadlineColor, setCustomHeadlineColor] = useState<string>("#F59E0B");
   const [customProjectNameColor, setCustomProjectNameColor] = useState<string>("#FFFFFF");
-  const [customCardBgColor, setCustomCardBgColor] = useState<string>("#0F172A");
+  const [customCardBgColor, setCustomCardBgColor] = useState<string>("");
   const [customCanvasBgColor, setCustomCanvasBgColor] = useState<string>("#000000");
   const [customListingBadgeBgColor, setCustomListingBadgeBgColor] = useState<string>("#F59E0B");
   const [customListingBadgeTextColor, setCustomListingBadgeTextColor] = useState<string>("#000000");
@@ -141,13 +142,24 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
 
   // Modular Field Visibility Toggles
   const [showCardContent, setShowCardContent] = useState<boolean>(true);
+  const [cardBorderGlow, setCardBorderGlow] = useState<boolean>(true);
+  const [glowBorderWidth, setGlowBorderWidth] = useState<number>(55);
+  const [centerGlow, setCenterGlow] = useState<number>(100);
+  const [centerGlowBlur, setCenterGlowBlur] = useState<number>(5);
+  const [centerGlowColor, setCenterGlowColor] = useState<string>("#FFFFFF");
+  const [glassBlur, setGlassBlur] = useState<number>(24);
   const [showBrandingHeader, setShowBrandingHeader] = useState<boolean>(true);
+  const [brandingHeaderStyle, setBrandingHeaderStyle] = useState<"classic_left" | "frosted_capsule">("frosted_capsule");
+  const [brandingHeaderAlign, setBrandingHeaderAlign] = useState<"center" | "left">("center");
+  const [brandingBgColor, setBrandingBgColor] = useState<string>("");
   const [brandingTitleColor, setBrandingTitleColor] = useState<string>("");
   const [brandingSubtitleColor, setBrandingSubtitleColor] = useState<string>("");
   const [customCompanyName, setCustomCompanyName] = useState<string>("");
   const [customCompanySubtitle, setCustomCompanySubtitle] = useState<string>("");
   const [showTopListingBadge, setShowTopListingBadge] = useState<boolean>(true);
   const [headerFontSizeScale, setHeaderFontSizeScale] = useState<FontSizeScale>("md");
+  const [brandingTitleFontSizeScale, setBrandingTitleFontSizeScale] = useState<FontSizeScale>("md");
+  const [brandingSubtitleFontSizeScale, setBrandingSubtitleFontSizeScale] = useState<FontSizeScale>("md");
   const [badgeFontSizeScale, setBadgeFontSizeScale] = useState<FontSizeScale>("md");
   const [specFontSizeScale, setSpecFontSizeScale] = useState<SpecFontSizeScale>("xl");
   const [headerYOffset, setHeaderYOffset] = useState<number>(0);
@@ -159,6 +171,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const [showPrice, setShowPrice] = useState<boolean>(true);
   const [showOriginalPrice, setShowOriginalPrice] = useState<boolean>(true);
   const [showHeadline, setShowHeadline] = useState<boolean>(true);
+  const [showUsdApprox, setShowUsdApprox] = useState<boolean>(false);
 
   // Viral Text Effect State
   const [textEffectTemplate, setTextEffectTemplate] = useState<TextEffectTemplate>("none");
@@ -292,7 +305,12 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   };
 
   // Badges, QR & Contact
-  const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
+  const [selectedBadges, setSelectedBadges] = useState<string[]>(() => {
+    if (property?.is_foreigner_quota) {
+      return ["Foreign Freehold"];
+    }
+    return [];
+  });
   const [showQrCode, setShowQrCode] = useState<boolean>(false);
   const [showContact, setShowContact] = useState<boolean>(false);
   const [showAgentAvatar, setShowAgentAvatar] = useState<boolean>(false);
@@ -405,17 +423,24 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.customListingBadgeBgColor) setCustomListingBadgeBgColor(config.customListingBadgeBgColor);
     if (config.customListingBadgeTextColor) setCustomListingBadgeTextColor(config.customListingBadgeTextColor);
     if (config.showBrandingHeader !== undefined) setShowBrandingHeader(config.showBrandingHeader);
+    if (config.brandingHeaderStyle) setBrandingHeaderStyle(config.brandingHeaderStyle);
+    if (config.brandingHeaderAlign) setBrandingHeaderAlign(config.brandingHeaderAlign);
+    if (config.brandingBgColor !== undefined) setBrandingBgColor(config.brandingBgColor);
     if (config.brandingTitleColor !== undefined) setBrandingTitleColor(config.brandingTitleColor);
     if (config.brandingSubtitleColor !== undefined) setBrandingSubtitleColor(config.brandingSubtitleColor);
     if (config.customCompanyName !== undefined) setCustomCompanyName(config.customCompanyName);
     if (config.customCompanySubtitle !== undefined) setCustomCompanySubtitle(config.customCompanySubtitle);
     if (config.showTopListingBadge !== undefined) setShowTopListingBadge(config.showTopListingBadge);
     if (config.headerFontSizeScale) setHeaderFontSizeScale(config.headerFontSizeScale);
+    if (config.brandingTitleFontSizeScale) setBrandingTitleFontSizeScale(config.brandingTitleFontSizeScale);
+    if (config.brandingSubtitleFontSizeScale) setBrandingSubtitleFontSizeScale(config.brandingSubtitleFontSizeScale);
     if (config.badgeFontSizeScale) setBadgeFontSizeScale(config.badgeFontSizeScale);
     if (config.headerYOffset !== undefined) setHeaderYOffset(config.headerYOffset);
     if (config.cardRightMargin !== undefined) setCardRightMargin(config.cardRightMargin);
     if (config.showHeadline !== undefined) setShowHeadline(config.showHeadline);
+    if (config.showUsdApprox !== undefined) setShowUsdApprox(config.showUsdApprox);
     if (config.showCardContent !== undefined) setShowCardContent(config.showCardContent);
+    if (config.cardBorderGlow !== undefined) setCardBorderGlow(config.cardBorderGlow);
     if (config.textEffectTemplate) setTextEffectTemplate(config.textEffectTemplate);
     if (config.textEffectPosition) setTextEffectPosition(config.textEffectPosition);
     if (config.textEffectSize) setTextEffectSize(config.textEffectSize);
@@ -444,21 +469,88 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.calloutPointers) setCalloutPointers(config.calloutPointers);
     if (config.bgDimOpacity !== undefined) setBgDimOpacity(config.bgDimOpacity);
     if (config.customTexts) setCustomTexts(config.customTexts);
+    if (config.fitWithBlurredBackdrop !== undefined) setFitWithBlurredBackdrop(config.fitWithBlurredBackdrop);
+    if (config.glowBorderWidth !== undefined) setGlowBorderWidth(config.glowBorderWidth);
+    if (config.centerGlow !== undefined) setCenterGlow(config.centerGlow);
+    if (config.centerGlowBlur !== undefined) setCenterGlowBlur(config.centerGlowBlur);
+    if (config.centerGlowColor !== undefined) setCenterGlowColor(config.centerGlowColor);
+    if (config.glassBlur !== undefined) setGlassBlur(config.glassBlur);
 
     toast.success(`Applied Custom ${key.split("_")[1]} preset!`);
   };
 
+  const handleApplyCuratedPreset = (presetId: string) => {
+    if (presetId === "phuket_frosted_luxury") {
+      setAspectRatio("4:5");
+      setCardBackground("frosted_luxury");
+      setTheme("luxury");
+      setPriceFormatStyle("thb_with_usd");
+      setShowUsdApprox(true);
+      setCustomPriceColor("#E5B869");
+      setCustomAccentColor("#F59E0B");
+      setShowSpecs(true);
+      setShowPrice(true);
+      setSpecFontSizeScale("md");
+      setPriceFontSizeScale("md");
+      setContentPosition("bottom");
+      setCardOpacity(78);
+      setCardHeightPercent(0);
+      setCardWidthPercent(0);
+      setShowCardContent(true);
+      setShowBrandingHeader(true);
+      setBrandingHeaderStyle("frosted_capsule");
+      setBrandingHeaderAlign("center");
+      if (!customCompanyName) {
+        setCustomCompanyName(property.project_name || "VCC Asset");
+      }
+      if (!customCompanySubtitle) {
+        const area = property.popular_area || property.province || "CHERNGTALAY, PHUKET";
+        setCustomCompanySubtitle(`LUXURY VILLAS • ${area.toUpperCase()}`);
+      }
+      setSelectedBadges((prev) => {
+        if (prev.some((b) => b.includes("Freehold") || b.includes("Quota"))) return prev;
+        return ["Foreign Freehold", ...prev].slice(0, 2);
+      });
+      toast.success("Applied 💎 Phuket Frosted Spec Card preset! ✨");
+    } else if (presetId === "editorial_luxury") {
+      setCardBackground("glass");
+      setTheme("luxury");
+      setPriceFormatStyle("symbol_short");
+      setCustomPriceColor("#F59E0B");
+      setContentPosition("bottom");
+      setCardOpacity(62);
+      toast.success("Applied 🏛️ Editorial Luxury preset!");
+    } else if (presetId === "hot_deal") {
+      setCardBackground("solid");
+      setTheme("hotdeal");
+      setPriceFormatStyle("default");
+      setCustomPriceColor("#EF4444");
+      setCustomCardBgColor("#0F172A");
+      setCardOpacity(95);
+      toast.success("Applied 🔥 Hot Deal preset!");
+    }
+  };
+
   const handleSavePreset = async (key: string) => {
     const config: SocialStudioPresetConfig = {
-      aspectRatio, theme, layout, contentPosition, fontSizeScale, priceFontSizeScale, specFontSizeScale, zoneMapping,
+      aspectRatio, theme, layout, fitWithBlurredBackdrop, contentPosition, fontSizeScale, priceFontSizeScale, specFontSizeScale, zoneMapping,
       card1YOffset, card2YOffset, cardHeightPercent, cardWidthPercent, cardTextAlign, cardOpacity, scrimOpacity,
       topScrimOpacity, bottomScrimOpacity, priceFormatStyle, cardBackground, cardYOffset, customAccentColor,
       promoPosition, promoColor, promoTextColor, photoFilter, gridLineWidth, gridLineColor, customTitleColor,
       customPriceColor, customHeadlineColor, customProjectNameColor, customCardBgColor, customCanvasBgColor,
       customListingBadgeBgColor, customListingBadgeTextColor, showBrandingHeader, showTopListingBadge,
+      brandingHeaderStyle, brandingHeaderAlign, brandingBgColor,
       brandingTitleColor, brandingSubtitleColor, customCompanyName, customCompanySubtitle,
-      headerFontSizeScale, badgeFontSizeScale, headerYOffset, cardRightMargin, showHeadline,
-      showCardContent, textEffectTemplate, textEffectPosition, textEffectSize, textEffectXOffset, textEffectYOffset, textEffectRotation,
+      headerFontSizeScale, brandingTitleFontSizeScale, brandingSubtitleFontSizeScale, badgeFontSizeScale, headerYOffset, cardRightMargin, showHeadline,
+      showUsdApprox,
+      showCardContent,
+      cardBorderGlow,
+      glowBorderWidth,
+      centerGlow,
+      centerGlowBlur,
+      centerGlowColor,
+      glassBlur,
+      textEffectTemplate, textEffectPosition, textEffectSize, textEffectXOffset, textEffectYOffset, textEffectRotation,
       textEffectCurve, textEffectCustomTextColor, textEffectCustomBgColor, textEffectCustomBorderColor,
       textEffectCustomShadowColor, textEffectCustomBgAlpha, textEffectCustomBorderWidth, textEffectLineConfigs,
       textEffectCardMode, textEffectSingleCardBgColor, textEffectSingleCardTextColor, textEffectSingleCardBorderColor,
@@ -484,14 +576,20 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
 
   // Formatted Displays
   const priceDisplay = useMemo(() => {
+    let effectiveStyle = priceFormatStyle;
+    if (showUsdApprox && (effectiveStyle === "default" || effectiveStyle === "thb_with_usd")) {
+      effectiveStyle = "thb_with_usd";
+    } else if (!showUsdApprox && effectiveStyle === "thb_with_usd") {
+      effectiveStyle = "default";
+    }
     return formatStudioPrice(
       property.listing_type,
       property.price,
       property.rental_price,
       language,
-      priceFormatStyle
+      effectiveStyle
     );
-  }, [property.listing_type, property.price, property.rental_price, language, priceFormatStyle]);
+  }, [property.listing_type, property.price, property.rental_price, language, priceFormatStyle, showUsdApprox]);
 
   const originalPriceDisplay = useMemo(() => {
     const isRent = property.listing_type === "RENT";
@@ -693,14 +791,25 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         textEffectSingleCardOpacity,
         calloutPointers,
         bgDimOpacity,
+        cardBorderGlow,
+        glowBorderWidth,
+        centerGlow,
+        centerGlowBlur,
+        centerGlowColor,
+        glassBlur,
         customTexts,
         showBrandingHeader,
+        brandingHeaderStyle,
+        brandingHeaderAlign,
+        brandingBgColor,
         brandingTitleColor,
         brandingSubtitleColor,
         customCompanyName,
         customCompanySubtitle,
         showTopListingBadge,
         headerFontSizeScale,
+        brandingTitleFontSizeScale,
+        brandingSubtitleFontSizeScale,
         badgeFontSizeScale,
         specFontSizeScale,
         headerYOffset,
@@ -712,6 +821,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         showSpecs,
         showPrice,
         showOriginalPrice,
+        showUsdApprox,
         showQrCode,
         showContact,
         showAgentAvatar,
@@ -743,8 +853,13 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
           bathrooms: property.bathrooms,
           sizeSqm: property.size_sqm,
           floor: property.floor,
+          parking: property.parking_slots ?? property.parking ?? null,
         },
+        ownershipBadge: selectedBadges.find(
+          (b) => b.includes("Freehold") || b.includes("Quota") || b.includes("Leasehold")
+        ),
         badges: selectedBadges,
+        fitWithBlurredBackdrop,
         qrCodeUrl: qrCodeImageUrl,
         companyName: siteConfig.name || "VCC ASSET",
         contactPhone: property.assigned_agent?.phone || siteConfig.contact.phone || "02-xxx-xxxx",
@@ -807,8 +922,12 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     card1YOffset,
     card2YOffset,
     showBrandingHeader,
+    brandingHeaderStyle,
+    brandingHeaderAlign,
     showTopListingBadge,
     headerFontSizeScale,
+    brandingTitleFontSizeScale,
+    brandingSubtitleFontSizeScale,
     badgeFontSizeScale,
     specFontSizeScale,
     headerYOffset,
@@ -820,10 +939,12 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     showSpecs,
     showPrice,
     showOriginalPrice,
+    showUsdApprox,
     showQrCode,
     showContact,
     showAgentAvatar,
     showCardContent,
+    cardBorderGlow,
     textEffectTemplate,
     textEffectText,
     textEffectPosition,
@@ -849,15 +970,23 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     textEffectSingleCardPadding,
     textEffectSingleCardAlign,
     textEffectSingleCardOpacity,
+    brandingBgColor,
     brandingTitleColor,
     brandingSubtitleColor,
     customCompanyName,
     customCompanySubtitle,
     calloutPointers,
     bgDimOpacity,
+    cardBorderGlow,
+    glowBorderWidth,
+    centerGlow,
+    centerGlowBlur,
+    centerGlowColor,
+    glassBlur,
     customTexts,
     currentSlotImageUrls,
     selectedBadges,
+    fitWithBlurredBackdrop,
     customProjectName,
     customTitle,
     customTransitText,
@@ -888,6 +1017,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     aspectRatio, setAspectRatio,
     theme, setTheme,
     layout, setLayout,
+    fitWithBlurredBackdrop, setFitWithBlurredBackdrop,
     slotIndices, setSlotIndices,
     activeSlot, setActiveSlot,
     imageUrls, currentSlotImageUrls,
@@ -933,13 +1063,24 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     card2YOffset, setCard2YOffset,
     // Field toggles
     showCardContent, setShowCardContent,
+    cardBorderGlow, setCardBorderGlow,
+    glowBorderWidth, setGlowBorderWidth,
+    centerGlow, setCenterGlow,
+    centerGlowBlur, setCenterGlowBlur,
+    centerGlowColor, setCenterGlowColor,
+    glassBlur, setGlassBlur,
     showBrandingHeader, setShowBrandingHeader,
+    brandingHeaderStyle, setBrandingHeaderStyle,
+    brandingHeaderAlign, setBrandingHeaderAlign,
+    brandingBgColor, setBrandingBgColor,
     brandingTitleColor, setBrandingTitleColor,
     brandingSubtitleColor, setBrandingSubtitleColor,
     customCompanyName, setCustomCompanyName,
     customCompanySubtitle, setCustomCompanySubtitle,
     showTopListingBadge, setShowTopListingBadge,
     headerFontSizeScale, setHeaderFontSizeScale,
+    brandingTitleFontSizeScale, setBrandingTitleFontSizeScale,
+    brandingSubtitleFontSizeScale, setBrandingSubtitleFontSizeScale,
     badgeFontSizeScale, setBadgeFontSizeScale,
     specFontSizeScale, setSpecFontSizeScale,
     headerYOffset, setHeaderYOffset,
@@ -950,6 +1091,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     showSpecs, setShowSpecs,
     showPrice, setShowPrice,
     showOriginalPrice, setShowOriginalPrice,
+    showUsdApprox, setShowUsdApprox,
     showHeadline, setShowHeadline,
     // Text Effects
     textEffectTemplate, setTextEffectTemplate,
@@ -1012,7 +1154,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     // Formatted texts
     priceDisplay, originalPriceDisplay, locationDisplay,
     // Presets
-    presets, isLoadingPresets, handleApplyPreset, handleSavePreset,
+    presets, isLoadingPresets, handleApplyPreset, handleApplyCuratedPreset, handleSavePreset,
     siteConfig,
   };
 }

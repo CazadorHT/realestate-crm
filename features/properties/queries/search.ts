@@ -103,7 +103,6 @@ export async function getAllPropertyIdsQuery(params: {
     const isHexFragment = /^[0-9a-fA-F-]+$/.test(q);
     const conditions = [
       `title.ilike.%${q}%`,
-      `description.ilike.%${q}%`,
       `address_line1.ilike.%${q}%`,
     ];
     if (isHexFragment) {
@@ -128,10 +127,18 @@ export async function getAllPropertyIdsQuery(params: {
     }
   }
   if (bedrooms) {
-    query = query.eq("bedrooms", Number(bedrooms));
+    if (bedrooms === "4+" || bedrooms === "4") {
+      query = query.gte("bedrooms", 4);
+    } else {
+      query = query.eq("bedrooms", Number(bedrooms));
+    }
   }
   if (bathrooms) {
-    query = query.eq("bathrooms", Number(bathrooms));
+    if (bathrooms === "4+" || bathrooms === "4") {
+      query = query.gte("bathrooms", 4);
+    } else {
+      query = query.eq("bathrooms", Number(bathrooms));
+    }
   }
   if (province) {
     query = query.ilike("province", `%${province}%`);

@@ -2,8 +2,11 @@ import type { StudioLanguage, StudioPriceFormatStyle, AvailableBadgeItem } from 
 import { formatPrice } from "@/lib/property-utils";
 
 export const AVAILABLE_BADGES: AvailableBadgeItem[] = [
-  { id: "pet_friendly", label: "🐾 เลี้ยงสัตว์ได้", labelEn: "🐾 Pet Friendly" },
+  { id: "foreign_freehold", label: "Foreign Freehold", labelEn: "Foreign Freehold" },
   { id: "foreigner_quota", label: "🌍 Foreigner Quota", labelEn: "🌍 Foreigner Quota" },
+  { id: "thai_freehold", label: "Thai Freehold", labelEn: "Thai Freehold" },
+  { id: "leasehold", label: "Leasehold", labelEn: "Leasehold" },
+  { id: "pet_friendly", label: "🐾 เลี้ยงสัตว์ได้", labelEn: "🐾 Pet Friendly" },
   { id: "hot_deal", label: "🔥 Hot Deal", labelEn: "🔥 Hot Deal" },
   { id: "near_transit", label: "🚆 ใกล้รถไฟฟ้า", labelEn: "🚆 Near Transit" },
   { id: "furnished", label: "🛋️ แต่งครบพร้อมอยู่", labelEn: "🛋️ Fully Furnished" },
@@ -252,6 +255,15 @@ function formatSinglePriceValue(
       return isRent ? `$ ${val}k / mo` : `$ ${val}k USD`;
     }
     return isRent ? `$ ${Math.round(usdVal).toLocaleString()} / mo` : `$ ${Math.round(usdVal).toLocaleString()} USD`;
+  }
+
+  if (style === "thb_with_usd") {
+    const usdVal = Math.round(amount / 35.5);
+    const usdStr = isRent
+      ? `(~$${usdVal.toLocaleString()} USD/mo)`
+      : `(~$${usdVal.toLocaleString()} USD)`;
+    const thbStr = isRent ? `฿${amount.toLocaleString()} ${rentSuffix}` : `฿${amount.toLocaleString()}`;
+    return `${thbStr} ${usdStr}`;
   }
 
   const numStr = amount.toLocaleString();

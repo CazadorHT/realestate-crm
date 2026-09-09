@@ -42,6 +42,79 @@ interface TableQueryResult {
   tenants: { name: string } | null;
   projects: { name: { th?: string; en?: string } | string | null } | null;
   requires_ai_review: boolean | null;
+  near_transit?: boolean | null;
+  is_pet_friendly?: boolean | null;
+  is_fully_furnished?: boolean | null;
+}
+
+// ⚡ High-speed in-memory project & profile catalog cache (5 min TTL)
+// Avoids repeated network roundtrips to Supabase on every search keystroke
+let cachedProjects: { id: string; th: string; en: string; raw: string; slug: string }[] | null = null;
+let projectsCacheTime = 0;
+let cachedProfiles: { id: string; name: string }[] | null = null;
+let profilesCacheTime = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+async function getCachedProjects(supabase: any): Promise<{ id: string; th: string; en: string; raw: string; slug: string }[]> {
+  const now = Date.now();
+  if (cachedProjects && now - projectsCacheTime < CACHE_TTL_MS) {
+    return cachedProjects;
+  }
+  try {
+    const { data } = await supabase
+      .from("projects")
+      .select("id, name, slug");
+    const mapped = (data || []).map((p: any) => {
+      let th = "";
+      let en = "";
+      let raw = "";
+      if (typeof p.name === "string") {
+        th = p.name.toLowerCase();
+        en = p.name.toLowerCase();
+        raw = p.name.toLowerCase();
+      } else if (p.name && typeof p.name === "object") {
+        th = (p.name.th || "").toLowerCase();
+        en = (p.name.en || "").toLowerCase();
+        raw = Object.values(p.name)
+          .filter((v) => typeof v === "string")
+          .join(" ")
+          .toLowerCase();
+      }
+      return {
+        id: p.id,
+        th,
+        en,
+        raw,
+        slug: (p.slug || "").toLowerCase(),
+      };
+    });
+    cachedProjects = mapped;
+    projectsCacheTime = now;
+    return mapped;
+  } catch {
+    return cachedProjects || [];
+  }
+}
+
+async function getCachedProfiles(supabase: any): Promise<{ id: string; name: string }[]> {
+  const now = Date.now();
+  if (cachedProfiles && now - profilesCacheTime < CACHE_TTL_MS) {
+    return cachedProfiles;
+  }
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name");
+    const mapped = (data || []).map((p: any) => ({
+      id: p.id,
+      name: (p.full_name || "").toLowerCase(),
+    }));
+    cachedProfiles = mapped;
+    profilesCacheTime = now;
+    return mapped;
+  } catch {
+    return cachedProfiles || [];
+  }
 }
 
 export const getPropertiesTableData = cache(async (params: {
@@ -142,36 +215,72 @@ export const getPropertiesTableData = cache(async (params: {
       .replace(/\s+/g, "%");
     const isHexFragment = /^[0-9a-fA-F-]{4,}$/.test(searchTerm);
 
-    // [AGENT & PROJECT LOOKUP] - Pre-fetch matching agent IDs and project IDs for precise filtering
-    const [matchingAgentsResult, matchingProjectsResult] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id")
-        .ilike("full_name", `%${fuzzyQuery}%`),
-      supabase
-        .from("projects")
-        .select("id")
-        .or(`name->>th.ilike.%${fuzzyQuery}%,name->>en.ilike.%${fuzzyQuery}%,slug.ilike.%${fuzzyQuery}%`),
+    // [LIGHTNING FAST PROJECT & AGENT LOOKUP]
+    // In-memory matching eliminates ~1.3s network waterfall to projects/profiles tables
+    const [allProjects, allProfiles] = await Promise.all([
+      getCachedProjects(supabase),
+      getCachedProfiles(supabase),
     ]);
 
-    const agentIds = matchingAgentsResult.data?.map((a) => a.id) || [];
-    const projectIds = matchingProjectsResult.data?.map((p) => p.id) || [];
+    const termLower = searchTerm.toLowerCase();
+    const termNoSpace = termLower.replace(/\s+/g, "");
+    const cleanTokens = tokens.map((t) => t.toLowerCase());
+
+    const matchingProjectIds = allProjects
+      .filter((p) => {
+        const thNoSpace = p.th.replace(/\s+/g, "");
+        const enNoSpace = p.en.replace(/\s+/g, "");
+        const rawNoSpace = p.raw.replace(/\s+/g, "");
+
+        if (
+          p.th.includes(termLower) ||
+          p.en.includes(termLower) ||
+          p.raw.includes(termLower) ||
+          p.slug.includes(termLower) ||
+          (termNoSpace.length >= 2 &&
+            (thNoSpace.includes(termNoSpace) ||
+              enNoSpace.includes(termNoSpace) ||
+              rawNoSpace.includes(termNoSpace)))
+        ) {
+          return true;
+        }
+        if (
+          cleanTokens.length > 1 &&
+          cleanTokens.every(
+            (tok) =>
+              p.th.includes(tok) ||
+              p.en.includes(tok) ||
+              p.raw.includes(tok) ||
+              p.slug.includes(tok),
+          )
+        ) {
+          return true;
+        }
+        return false;
+      })
+      .slice(0, 50)
+      .map((p) => p.id);
+
+    const matchingAgentIds = allProfiles
+      .filter((a) => a.name.includes(termLower))
+      .slice(0, 20)
+      .map((a) => a.id);
     
     // 1. Text Search Conditions (Base OR)
+    // Removed description.ilike (causes heavy TOAST uncompression full scan on PostgreSQL)
     const textConditions = [
       `title.ilike.%${fuzzyQuery}%`,
-      `description.ilike.%${fuzzyQuery}%`,
       `address_line1.ilike.%${fuzzyQuery}%`,
-      `province.ilike.%${fuzzyQuery}%`,
-      `district.ilike.%${fuzzyQuery}%`,
       `popular_area.ilike.%${fuzzyQuery}%`,
+      `district.ilike.%${fuzzyQuery}%`,
+      `province.ilike.%${fuzzyQuery}%`,
     ];
     if (isHexFragment) textConditions.unshift(`id.ilike.%${searchTerm}%`);
-    if (agentIds.length > 0) {
-      textConditions.push(`assigned_to.in.(${agentIds.map((id) => `"${id}"`).join(",")})`);
+    if (matchingAgentIds.length > 0) {
+      textConditions.push(`assigned_to.in.(${matchingAgentIds.map((id) => `"${id}"`).join(",")})`);
     }
-    if (projectIds.length > 0) {
-      textConditions.push(`project_id.in.(${projectIds.map((id) => `"${id}"`).join(",")})`);
+    if (matchingProjectIds.length > 0) {
+      textConditions.push(`project_id.in.(${matchingProjectIds.map((id) => `"${id}"`).join(",")})`);
     }
 
     // 2. Intelligent Mapping Conditions
@@ -252,10 +361,18 @@ export const getPropertiesTableData = cache(async (params: {
     }
   }
   if (bedrooms) {
-    query = query.eq("bedrooms", Number(bedrooms));
+    if (bedrooms === "4+" || bedrooms === "4") {
+      query = query.gte("bedrooms", 4);
+    } else {
+      query = query.eq("bedrooms", Number(bedrooms));
+    }
   }
   if (bathrooms) {
-    query = query.eq("bathrooms", Number(bathrooms));
+    if (bathrooms === "4+" || bathrooms === "4") {
+      query = query.gte("bathrooms", 4);
+    } else {
+      query = query.eq("bathrooms", Number(bathrooms));
+    }
   }
   if (province) {
     query = query.ilike("province", `%${province}%`);
@@ -371,7 +488,7 @@ export const getPropertiesTableData = cache(async (params: {
         // This restores the UI logic while keeping the payload as small as possible.
         let q = supabase
           .from("properties")
-          .select("status, property_type, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, province, popular_area, near_transit, is_fully_furnished, requires_ai_review, assigned_to")
+          .select("status, property_type, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, province, district, popular_area, near_transit, is_pet_friendly, is_fully_furnished, requires_ai_review, assigned_to")
           .is("deleted_at", null);
 
         if (isMultiTenant) {
