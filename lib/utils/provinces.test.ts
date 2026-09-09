@@ -55,6 +55,10 @@ describe("Provinces & Districts Localization (lib/utils/provinces)", () => {
     it("should translate Phuket & Chiang Mai districts", () => {
       expect(getDistrictName("กะทู้", "en")).toBe("Kathu");
       expect(getDistrictName("ถลาง", "en")).toBe("Thalang");
+      expect(getDistrictName("บางเทา", "en")).toBe("Bang Tao");
+      expect(getDistrictName("ลายัน", "en")).toBe("Layan");
+      expect(getDistrictName("ในหาน", "ru")).toBe("Най Харн");
+      expect(getDistrictName("ฉลอง", "ru")).toBe("Чалонг");
       expect(getDistrictName("นิมมาน", "en")).toBe("Nimman");
       expect(getDistrictName("หางดง", "en")).toBe("Hang Dong");
     });
