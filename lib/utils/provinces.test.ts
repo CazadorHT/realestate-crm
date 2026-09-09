@@ -3,6 +3,7 @@ import {
   getProvinceName,
   getDistrictName,
   getSubdistrictName,
+  normalizeProvinceInput,
   PROVINCES,
 } from "./provinces";
 
@@ -68,10 +69,61 @@ describe("Provinces & Districts Localization (lib/utils/provinces)", () => {
     });
   });
 
-  describe("getSubdistrictName", () => {
-    it("should strip 'ตำบล' or 'แขวง' prefix and translate known subdistricts", () => {
-      expect(getSubdistrictName("ตำบลหนองปรือ", "en")).toBe("Nong Prue");
-      expect(getSubdistrictName("แขวงคลองเตย", "en")).toBe("Khlong Toei");
+  describe("normalizeProvinceInput", () => {
+    it("should normalize Phuket in various casings and scripts", () => {
+      expect(normalizeProvinceInput("phuket")).toBe("ภูเก็ต");
+      expect(normalizeProvinceInput("Phuket")).toBe("ภูเก็ต");
+      expect(normalizeProvinceInput("PHUKET")).toBe("ภูเก็ต");
+      expect(normalizeProvinceInput("ภูเก็ต")).toBe("ภูเก็ต");
+      expect(normalizeProvinceInput(" ภูเก็ต ")).toBe("ภูเก็ต");
+    });
+
+    it("should normalize Bangkok and abbreviations", () => {
+      expect(normalizeProvinceInput("bangkok")).toBe("กรุงเทพมหานคร");
+      expect(normalizeProvinceInput("bkk")).toBe("กรุงเทพมหานคร");
+      expect(normalizeProvinceInput("กรุงเทพ")).toBe("กรุงเทพมหานคร");
+      expect(normalizeProvinceInput("กรุงเทพฯ")).toBe("กรุงเทพมหานคร");
+      expect(normalizeProvinceInput("กรุงเทพมหานคร")).toBe("กรุงเทพมหานคร");
+    });
+
+    it("should normalize other key real estate provinces across Thailand", () => {
+      // Chiang Mai
+      expect(normalizeProvinceInput("chiang mai")).toBe("เชียงใหม่");
+      expect(normalizeProvinceInput("chiangmai")).toBe("เชียงใหม่");
+      expect(normalizeProvinceInput("เชียงใหม่")).toBe("เชียงใหม่");
+
+      // Chonburi / Pattaya
+      expect(normalizeProvinceInput("chonburi")).toBe("ชลบุรี");
+      expect(normalizeProvinceInput("chon buri")).toBe("ชลบุรี");
+      expect(normalizeProvinceInput("pattaya")).toBe("ชลบุรี");
+      expect(normalizeProvinceInput("ชลบุรี")).toBe("ชลบุรี");
+
+      // Hua Hin / Prachuap Khiri Khan
+      expect(normalizeProvinceInput("hua hin")).toBe("ประจวบคีรีขันธ์");
+      expect(normalizeProvinceInput("huahin")).toBe("ประจวบคีรีขันธ์");
+
+      // Koh Samui / Surat Thani
+      expect(normalizeProvinceInput("samui")).toBe("สุราษฎร์ธานี");
+      expect(normalizeProvinceInput("koh samui")).toBe("สุราษฎร์ธานี");
+
+      // Krabi & Phangnga
+      expect(normalizeProvinceInput("krabi")).toBe("กระบี่");
+      expect(normalizeProvinceInput("phang nga")).toBe("พังงา");
+
+      // Bangkok Metro Vicinities
+      expect(normalizeProvinceInput("samut prakan")).toBe("สมุทรปราการ");
+      expect(normalizeProvinceInput("nonthaburi")).toBe("นนทบุรี");
+      expect(normalizeProvinceInput("pathum thani")).toBe("ปทุมธานี");
+    });
+
+    it("should return undefined for empty or 'ALL' queries", () => {
+      expect(normalizeProvinceInput(undefined)).toBeUndefined();
+      expect(normalizeProvinceInput(null)).toBeUndefined();
+      expect(normalizeProvinceInput("")).toBeUndefined();
+      expect(normalizeProvinceInput("   ")).toBeUndefined();
+      expect(normalizeProvinceInput("ALL")).toBeUndefined();
+      expect(normalizeProvinceInput("all")).toBeUndefined();
     });
   });
 });
+

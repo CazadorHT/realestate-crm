@@ -352,11 +352,17 @@ export function getSubdistrictName(thaiName: string, lang: string): string {
  * Reverse lookup map from EN/CN/RU names back to Thai
  */
 const REVERSE_LOOKUP: Record<string, string> = {
+  "bkk": "กรุงเทพมหานคร",
+  "bangkok": "กรุงเทพมหานคร",
+  "krabi": "กระบี่",
+  "hua hin": "ประจวบคีรีขันธ์",
+  "huahin": "ประจวบคีรีขันธ์",
+  "koh samui": "สุราษฎร์ธานี",
+  "samui": "สุราษฎร์ธานี",
   "bang na": "บางนา",
   "bangna": "บางนา",
   "samut prakan": "สมุทรปราการ",
   "samutprakan": "สมุทรปราการ",
-  "bangkok": "กรุงเทพมหานคร",
   "phra khanong": "พระโขนง",
   "phrakhanong": "พระโขนง",
   "nonthaburi": "นนทบุรี",
@@ -461,3 +467,56 @@ export function translateLocation(name: string | null | undefined, lang: string)
 
   return trimmed;
 }
+
+/**
+ * Normalizes any province query input (English, Thai, alias, abbreviation, slug) 
+ * to the standard Thai province name as stored in the database.
+ * Supports all 77 Thai provinces.
+ *
+ * e.g.:
+ *  - "phuket" / "Phuket" -> "ภูเก็ต"
+ *  - "bangkok" / "bkk" / "กรุงเทพฯ" -> "กรุงเทพมหานคร"
+ *  - "chiang mai" / "chiangmai" -> "เชียงใหม่"
+ *  - "chonburi" / "pattaya" -> "ชลบุรี"
+ *  - "hua hin" / "huahin" -> "ประจวบคีรีขันธ์"
+ *  - "samui" / "koh samui" -> "สุราษฎร์ธานี"
+ */
+export function normalizeProvinceInput(input: string | null | undefined): string | undefined {
+  if (!input) return undefined;
+  const trimmed = input.trim();
+  if (!trimmed || trimmed === "ALL" || trimmed === "all") return undefined;
+
+  const lower = trimmed.toLowerCase();
+  
+  // 1. Common aliases / major property regions
+  if (lower === "bkk" || lower === "bangkok" || lower === "กรุงเทพ" || lower === "กรุงเทพฯ" || lower === "กรุงเทพมหานคร") {
+    return "กรุงเทพมหานคร";
+  }
+  if (lower === "phuket" || lower === "ภูเก็ต") {
+    return "ภูเก็ต";
+  }
+  if (lower === "chiang mai" || lower === "chiangmai" || lower === "เชียงใหม่") {
+    return "เชียงใหม่";
+  }
+  if (lower === "chon buri" || lower === "chonburi" || lower === "pattaya" || lower === "ชลบุรี" || lower === "พัทยา") {
+    return "ชลบุรี";
+  }
+  if (lower === "hua hin" || lower === "huahin" || lower === "prachuap" || lower === "prachuap khiri khan" || lower === "ประจวบคีรีขันธ์") {
+    return "ประจวบคีรีขันธ์";
+  }
+  if (lower === "samui" || lower === "koh samui" || lower === "koh-samui" || lower === "surat thani" || lower === "สุราษฎร์ธานี") {
+    return "สุราษฎร์ธานี";
+  }
+  if (lower === "samut prakan" || lower === "samutprakan") return "สมุทรปราการ";
+  if (lower === "nonthaburi") return "นนทบุรี";
+  if (lower === "pathum thani" || lower === "pathumthani") return "ปทุมธานี";
+  if (lower === "krabi") return "กระบี่";
+  if (lower === "phang nga" || lower === "phangnga") return "พังงา";
+
+  // 2. Reverse lookup via PROVINCES dictionary (covers all 77 provinces in Thailand)
+  const resolved = translateLocation(trimmed, "th");
+  if (resolved) return resolved;
+
+  return trimmed;
+}
+

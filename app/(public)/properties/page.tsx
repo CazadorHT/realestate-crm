@@ -15,6 +15,7 @@ import { FaBuilding } from "react-icons/fa6";
 import { CategoryNavigationCards } from "@/components/public/CategoryNavigationCards";
 import { FeaturedStoryCarousel } from "@/components/public/FeaturedStoryCarousel";
 import { PropertiesHeroBanner } from "@/components/public/PropertiesHeroBanner";
+import { normalizeProvinceInput } from "@/lib/utils/provinces";
 
 
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
@@ -57,7 +58,7 @@ function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
     } else if (key === "popular_area") {
       rawParams["popular_area"] = value === "ALL" ? undefined : value;
     } else if (key === "province") {
-      rawParams["province"] = value === "ALL" ? undefined : value;
+      rawParams["province"] = normalizeProvinceInput(value);
     } else if (key === "transit_station") {
       rawParams["transitStation"] = value;
     } else if (key === "keyword") {
