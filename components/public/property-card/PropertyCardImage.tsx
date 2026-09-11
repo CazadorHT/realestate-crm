@@ -16,7 +16,7 @@ import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { getPublicImageUrl, getThumbnailUrl } from "@/features/properties/image-utils";
 
 interface PropertyCardImageProps {
   property: PropertyCardProps;
@@ -50,6 +50,7 @@ export function PropertyCardImage({
   const INITIAL_BATCH_SIZE = 5;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
+  const [failedThumbnails, setFailedThumbnails] = useState<Record<number, boolean>>({});
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
   const scrollRef = useRef<HTMLDivElement>(null);
   
@@ -327,6 +328,9 @@ export function PropertyCardImage({
               index === activeImageIndex + 1 ||
               index === activeImageIndex - 1;
 
+            const isThumbFailed = failedThumbnails[index];
+            const currentSrc = isThumbFailed ? img : getThumbnailUrl(img);
+
             return (
               <Link
                 key={index}
@@ -340,7 +344,7 @@ export function PropertyCardImage({
                       <div className="absolute inset-0 bg-slate-200 z-10 pointer-events-none" />
                     )}
                     <Image
-                      src={img}
+                      src={currentSrc}
                       alt={`${
                         property.listing_type === "RENT"
                           ? t("common.rent")
@@ -360,6 +364,11 @@ export function PropertyCardImage({
                       priority={priority && index === 0}
                       {...(!(priority && index === 0) && { loading: "lazy" })}
                       onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
+                      onError={() => {
+                        if (!isThumbFailed) {
+                          setFailedThumbnails(prev => ({ ...prev, [index]: true }));
+                        }
+                      }}
                     />
                   </>
                 ) : (

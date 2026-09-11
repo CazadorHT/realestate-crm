@@ -109,3 +109,28 @@ export function getCoverImageUrl(
   const sortedImages = [...images].sort((a, b) => a.sort_order - b.sort_order);
   return sortedImages[0]?.image_url || null;
 }
+
+/**
+ * Generate thumbnail URL (600px) from a property image URL or storage path.
+ * For WebP images, returns the '-thumb.webp' variant.
+ * If not WebP or already a thumbnail, returns the standard public URL.
+ */
+export function getThumbnailUrl(
+  pathOrUrl?: string | null,
+  bucket: string = BUCKET_NAME,
+): string {
+  if (!pathOrUrl || typeof pathOrUrl !== "string" || !pathOrUrl.trim()) return "";
+  const publicUrl = getPublicImageUrl(pathOrUrl, bucket);
+  if (!publicUrl) return "";
+
+  // If already a thumbnail, return as-is
+  if (publicUrl.includes("-thumb.webp")) return publicUrl;
+
+  // If webp format, append -thumb
+  if (publicUrl.includes(".webp")) {
+    return publicUrl.replace(/\.webp($|\?)/i, "-thumb.webp$1");
+  }
+
+  return publicUrl;
+}
+

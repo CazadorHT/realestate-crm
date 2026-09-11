@@ -135,12 +135,13 @@ describe('Property Image Actions - Security & Validation', () => {
 
     it('should allow deletion of own property images', async () => {
       const validPath = `t1/properties/${mockUserId}/${mockSessionId}/img.webp`;
+      const validThumbPath = `t1/properties/${mockUserId}/${mockSessionId}/img-thumb.webp`;
       mockSupabase.then.mockImplementation((resolve: any) => resolve({ error: null }));
 
       const result = await deletePropertyImageFromStorage(validPath);
 
       expect(result.success).toBe(true);
-      expect(mockStorage.remove).toHaveBeenCalledWith([validPath]);
+      expect(mockStorage.remove).toHaveBeenCalledWith([validPath, validThumbPath]);
     });
   });
 });

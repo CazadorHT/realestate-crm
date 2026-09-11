@@ -189,6 +189,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
 
     // --- Server-side Optimization with Sharp ---
     let processedBuffer: Buffer;
+    let thumbBuffer: Buffer | null = null;
     let fileName: string;
     let finalFileType = "image/webp";
 
@@ -272,6 +273,20 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
         .toBuffer();
 
       fileName = `${randomUUID()}.webp`;
+
+      // Generate 600px thumbnail for card & list views (Zero-overhead thumbnail pipeline)
+      try {
+        thumbBuffer = await sharp(inputBuffer)
+          .resize({
+            width: 600,
+            withoutEnlargement: true,
+            fit: "inside",
+          })
+          .webp({ quality: 80, effort: 4 })
+          .toBuffer();
+      } catch (thumbErr) {
+        console.warn("Sharp thumbnail generation failed:", thumbErr);
+      }
     } catch (sharpError) {
       console.error(
         "Sharp optimization failed, falling back to original:",
@@ -326,8 +341,26 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
 
     if (trackErr) {
       // ถ้า track ไม่ได้ -> ลบไฟล์ทิ้งกัน orphan
-      await adminSupabase.storage.from(PROPERTY_IMAGES_BUCKET).remove([path]);
+      const rollbackPaths = [path];
+      if (thumbBuffer && fileName.endsWith(".webp")) {
+        rollbackPaths.push(path.replace(/\.webp$/i, "-thumb.webp"));
+      }
+      await adminSupabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(rollbackPaths);
       throw trackErr;
+    }
+
+    // Upload thumbnail if generated (Non-blocking auxiliary asset)
+    if (thumbBuffer && fileName.endsWith(".webp")) {
+      const thumbFileName = fileName.replace(/\.webp$/i, "-thumb.webp");
+      const thumbPath = `${tenantId}/properties/${user.id}/${sessionId}/${thumbFileName}`;
+      adminSupabase.storage
+        .from(PROPERTY_IMAGES_BUCKET)
+        .upload(thumbPath, thumbBuffer, {
+          cacheControl: "31536000",
+          upsert: false,
+          contentType: "image/webp",
+        })
+        .catch((err) => console.warn("Thumbnail upload non-fatal warning:", err));
     }
 
     // Construct CDN-ready public URL via getPublicImageUrl
@@ -388,9 +421,14 @@ export async function deletePropertyImageFromStorage(storagePath: string) {
 
   const adminSupabase = createAdminClient();
 
+  const pathsToRemove = [storagePath];
+  if (storagePath.endsWith(".webp") && !storagePath.endsWith("-thumb.webp")) {
+    pathsToRemove.push(storagePath.replace(/\.webp$/i, "-thumb.webp"));
+  }
+
   const { error: storageErr } = await adminSupabase.storage
     .from(PROPERTY_IMAGES_BUCKET)
-    .remove([storagePath]);
+    .remove(pathsToRemove);
 
   if (storageErr) {
     console.error(
@@ -445,7 +483,12 @@ export async function cleanupUploadSessionAction(sessionId: string) {
     .filter((p): p is string => !!p);
 
   if (paths.length > 0) {
-    await adminSupabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(paths);
+    const allPaths = paths.flatMap((p) =>
+      p.endsWith(".webp") && !p.endsWith("-thumb.webp")
+        ? [p, p.replace(/\.webp$/i, "-thumb.webp")]
+        : [p],
+    );
+    await adminSupabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(allPaths);
 
     await adminSupabase
       .from("property_image_uploads")
