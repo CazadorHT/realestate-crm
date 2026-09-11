@@ -21,11 +21,11 @@ export interface CompressionResult {
 }
 
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxSizeMB: 0.35, // 350KB target cap (saves up to 80% bandwidth & storage)
-  maxWidthOrHeight: 1600, // Optimal resolution for Retina screens and mobile displays
+  maxSizeMB: 1.5, // Generous cap prevents browser-image-compression from aggressively cutting resolution
+  maxWidthOrHeight: 1920, // Full HD resolution for crisp details on retina & desktop displays
   useWebWorker: true,
   fileType: "image/webp",
-  quality: 0.82, // S-Tier WebP quality with invisible compression artifacts
+  quality: 0.85, // High quality WebP
 };
 
 /**

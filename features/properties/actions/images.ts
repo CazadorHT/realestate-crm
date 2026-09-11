@@ -197,9 +197,9 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       const arrayBuffer = await file.arrayBuffer();
       const inputBuffer = Buffer.from(arrayBuffer);
 
-      // Resize to HD (max width 1400px) and compress to WebP (82% quality)
+      // Resize to Full HD (max width 1920px) and compress to WebP (82% quality)
       let sharpImg = sharp(inputBuffer).resize({
-        width: 1400,
+        width: 1920,
         withoutEnlargement: true,
         fit: "inside",
       });
@@ -268,7 +268,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       }
 
       processedBuffer = await sharpImg
-        .webp({ quality: 82, effort: 6 })
+        .webp({ quality: 82, effort: 4 })
         .toBuffer();
 
       fileName = `${randomUUID()}.webp`;
