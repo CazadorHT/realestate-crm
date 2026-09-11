@@ -375,11 +375,17 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   // Load Presets
   useEffect(() => {
     if (isOpen) {
-      setIsLoadingPresets(true);
-      getSocialStudioPresets().then((data) => {
-        setPresets(data || {});
-        setIsLoadingPresets(false);
-      });
+      if (Object.keys(presets).length === 0) {
+        setIsLoadingPresets(true);
+      }
+      getSocialStudioPresets()
+        .then((data) => {
+          setPresets(data || {});
+          setIsLoadingPresets(false);
+        })
+        .catch(() => {
+          setIsLoadingPresets(false);
+        });
     }
   }, [isOpen]);
 
@@ -679,7 +685,12 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
       setCustomTitle(property.title || "");
     }
 
-    if (property.project?.name && typeof property.project.name === "object") {
+    const enProj = (property as any).project_name_en || (property.project?.name as any)?.en;
+    if (newLang === "en" && enProj) {
+      setCustomProjectName(enProj);
+    } else if (newLang === "th") {
+      setCustomProjectName(property.project_name || (property.project?.name as any)?.th || initialProjectName);
+    } else if (property.project?.name && typeof property.project.name === "object") {
       const pNameInLang =
         newLang === "en"
           ? property.project.name.en || property.project.name.th

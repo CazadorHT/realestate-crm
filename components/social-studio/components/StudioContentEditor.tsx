@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import type { StudioLanguage, PromoPosition, TextEffectTemplate, TextEffectPosition, FontSizeScale, CalloutPointer, CustomTextItem, SocialStudioProperty, TextEffectLineConfig, TextEffectCardMode } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
-import { AVAILABLE_BADGES } from "../helpers";
+import { AVAILABLE_BADGES, formatStudioPrice } from "../helpers";
 import { StudioTextEffectControls } from "./StudioTextEffectControls";
 import { StudioCalloutControls } from "./StudioCalloutControls";
 import { StudioCustomTextControls } from "./StudioCustomTextControls";
@@ -269,47 +269,111 @@ export function StudioContentEditor({
   priceText,
   showCardContent = true,
   property,
+  language: studioLanguage = "th",
 }: StudioContentEditorProps) {
-  const { language } = useLanguage();
-  const isEn = language === "en";
+  const { language: uiLang } = useLanguage();
+  const effectiveLang: StudioLanguage = studioLanguage || (uiLang as StudioLanguage) || "th";
+  const isEn = effectiveLang === "en";
 
-  // Compute smart real estate hook texts from property data
-  const propertyProjectName =
-    customProjectName?.trim() ||
-    property?.project_name?.trim() ||
-    (typeof property?.project?.name === "string" ? property.project.name.trim() : "") ||
-    property?.title?.trim() ||
-    "";
-
-  const specParts: string[] = [];
-  if (property?.bedrooms) specParts.push(`${property.bedrooms} นอน`);
-  if (property?.bathrooms) specParts.push(`${property.bathrooms} น้ำ`);
-  if (property?.size_sqm) specParts.push(`${property.size_sqm} ตร.ม.`);
-  const propertySpecsText = specParts.join(" ");
-
-  const formatSalePrice = (p: number) => {
-    if (p >= 1_000_000) {
-      const inMillion = p / 1_000_000;
-      const rounded = Number(inMillion.toFixed(2));
-      return `${rounded} ล้านบาท`;
+  // Compute smart real estate hook texts from property data according to Studio Language
+  const propertyProjectName = useMemo(() => {
+    if (effectiveLang === "en") {
+      const enProj = (property as any)?.project_name_en?.trim() || (property?.project?.name as any)?.en?.trim();
+      if (enProj) return enProj;
+      if (property?.title_en?.trim()) return property.title_en.trim();
+      if (customProjectName?.trim()) return customProjectName.trim();
+      return (
+        property?.project_name?.trim() ||
+        (typeof property?.project?.name === "string" ? property.project.name.trim() : "") ||
+        property?.title?.trim() ||
+        ""
+      );
     }
-    return `${p.toLocaleString("th-TH")} บาท`;
-  };
+    if (effectiveLang === "zh") {
+      const zhProj =
+        (property as any)?.project_name_cn?.trim() ||
+        (property?.project?.name as any)?.cn?.trim() ||
+        (property?.project?.name as any)?.zh?.trim() ||
+        (property as any)?.project_name_en?.trim();
+      if (zhProj) return zhProj;
+      if (customProjectName?.trim()) return customProjectName.trim();
+      return (
+        property?.project_name?.trim() ||
+        (typeof property?.project?.name === "string" ? property.project.name.trim() : "") ||
+        property?.title?.trim() ||
+        ""
+      );
+    }
+    if (effectiveLang === "ru") {
+      const ruProj =
+        (property as any)?.project_name_ru?.trim() ||
+        (property?.project?.name as any)?.ru?.trim() ||
+        (property as any)?.project_name_en?.trim();
+      if (ruProj) return ruProj;
+      if (customProjectName?.trim()) return customProjectName.trim();
+      return (
+        property?.project_name?.trim() ||
+        (typeof property?.project?.name === "string" ? property.project.name.trim() : "") ||
+        property?.title?.trim() ||
+        ""
+      );
+    }
+    // Default Thai
+    return (
+      customProjectName?.trim() ||
+      property?.project_name?.trim() ||
+      (typeof property?.project?.name === "string"
+        ? property.project.name.trim()
+        : (property?.project?.name as any)?.th?.trim()) ||
+      property?.title?.trim() ||
+      ""
+    );
+  }, [property, customProjectName, effectiveLang]);
 
-  const formatRentPrice = (r: number) => `${r.toLocaleString("th-TH")} บาท/ด.`;
+  const propertySpecsText = useMemo(() => {
+    const parts: string[] = [];
+    if (property?.bedrooms) {
+      if (effectiveLang === "en") parts.push(`${property.bedrooms} ${property.bedrooms === 1 ? "Bed" : "Beds"}`);
+      else if (effectiveLang === "zh") parts.push(`${property.bedrooms} 卧`);
+      else if (effectiveLang === "ru") parts.push(`${property.bedrooms} спальн.`);
+      else parts.push(`${property.bedrooms} นอน`);
+    }
+    if (property?.bathrooms) {
+      if (effectiveLang === "en") parts.push(`${property.bathrooms} ${property.bathrooms === 1 ? "Bath" : "Baths"}`);
+      else if (effectiveLang === "zh") parts.push(`${property.bathrooms} 卫`);
+      else if (effectiveLang === "ru") parts.push(`${property.bathrooms} сануз.`);
+      else parts.push(`${property.bathrooms} น้ำ`);
+    }
+    if (property?.size_sqm) {
+      if (effectiveLang === "en") parts.push(`${property.size_sqm} Sq.m.`);
+      else if (effectiveLang === "zh") parts.push(`${property.size_sqm} 平米`);
+      else if (effectiveLang === "ru") parts.push(`${property.size_sqm} кв.м`);
+      else parts.push(`${property.size_sqm} ตร.ม.`);
+    }
+    return parts.join(" ");
+  }, [property?.bedrooms, property?.bathrooms, property?.size_sqm, effectiveLang]);
 
-  let propertyPriceTag = "";
-  if (property?.listing_type === "SALE_AND_RENT" && property?.price && property?.rental_price) {
-    propertyPriceTag = `${formatSalePrice(property.price)} | ${formatRentPrice(property.rental_price)}`;
-  } else if (property?.listing_type === "RENT" && property?.rental_price) {
-    propertyPriceTag = formatRentPrice(property.rental_price);
-  } else if (property?.price) {
-    propertyPriceTag = formatSalePrice(property.price);
-  } else if (property?.rental_price) {
-    propertyPriceTag = formatRentPrice(property.rental_price);
-  } else if (priceText) {
-    propertyPriceTag = priceText;
-  }
+  const propertyPriceTag = useMemo(() => {
+    if (!property?.price && !property?.rental_price) {
+      return (
+        priceText ||
+        (effectiveLang === "en"
+          ? "Contact for Price"
+          : effectiveLang === "zh"
+            ? "咨询价格"
+            : effectiveLang === "ru"
+              ? "Цена по запросу"
+              : "ติดต่อสอบถาม")
+      );
+    }
+    return formatStudioPrice(
+      property.listing_type,
+      property.price,
+      property.rental_price,
+      effectiveLang,
+      "default"
+    );
+  }, [property?.listing_type, property?.price, property?.rental_price, priceText, effectiveLang]);
 
   return (
     <div className="space-y-4">
@@ -379,6 +443,7 @@ export function StudioContentEditor({
           setTextEffectSingleCardAlign={setTextEffectSingleCardAlign}
           textEffectSingleCardOpacity={textEffectSingleCardOpacity}
           setTextEffectSingleCardOpacity={setTextEffectSingleCardOpacity}
+          language={effectiveLang}
           propertyProjectName={propertyProjectName}
           propertySpecsText={propertySpecsText}
           propertyPriceTag={propertyPriceTag}
@@ -403,7 +468,7 @@ export function StudioContentEditor({
       {/* 0.6. Additional Custom Text Badges & Stickers */}
       {onAddCustomText && onUpdateCustomText && onRemoveCustomText && (
         <StudioCustomTextControls
-          language={_studioLang || (language === "cn" ? "zh" : language as StudioLanguage)}
+          language={effectiveLang}
           customTexts={customTexts}
           onAddCustomText={onAddCustomText}
           onUpdateCustomText={onUpdateCustomText}
@@ -453,7 +518,7 @@ export function StudioContentEditor({
             className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 disabled:opacity-50 transition-colors cursor-pointer"
           >
             <RefreshCw className={`h-3 w-3 ${isGeneratingAI ? "animate-spin" : ""}`} />
-            {isEn ? `Regenerate AI (${language.toUpperCase()})` : `ให้ AI คิดใหม่ (${language.toUpperCase()})`}
+            {isEn ? `Regenerate AI (${effectiveLang.toUpperCase()})` : `ให้ AI คิดใหม่ (${effectiveLang.toUpperCase()})`}
           </button>
         </div>
 

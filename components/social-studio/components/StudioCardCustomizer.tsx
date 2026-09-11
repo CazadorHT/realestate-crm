@@ -843,17 +843,32 @@ export function StudioCardCustomizer({
 
         {/* Custom Card & Canvas Background Color Chooser */}
         <div className="pt-2.5 border-t border-slate-800/80 space-y-2">
-          <Label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-            <span>{isEn ? "🎨 Custom Card Background Color" : "🎨 ปรับเปลี่ยนสีพื้นหลังการ์ดข้อมูล (Custom Card Color)"}</span>
-          </Label>
-
           <div className="flex items-center justify-between">
+            <Label className="text-[11px] font-semibold text-slate-300">
+              {isEn ? "🎨 Custom Card Color & Brightness" : "🎨 ปรับเปลี่ยนสีและความสว่างการ์ด (Card Color)"}
+            </Label>
+            {customCardBgColor && (
+              <button
+                type="button"
+                onClick={() => setCustomCardBgColor && setCustomCardBgColor("")}
+                className="text-[10px] text-amber-400 hover:text-amber-300 underline cursor-pointer"
+                title={isEn ? "Reset to style default" : "รีเซ็ตเป็นสีดั้งเดิมของสไตล์"}
+              >
+                {isEn ? "↺ Reset" : "↺ รีเซ็ตค่าเดิม"}
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-[11px] text-slate-400 font-medium">
               {isEn ? "Card Color:" : "สีการ์ด:"}
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {[
-                { name: isEn ? "Deep Blue" : "น้ำเงินเข้ม", hex: "#0F172A" },
+                { name: isEn ? "Frosted White" : "⚪ ขาวใสฝ้า", hex: "#FFFFFF" },
+                { name: isEn ? "Crystal Ice" : "🧊 คริสตัลใส", hex: "#F0F9FF" },
+                { name: isEn ? "Warm Cream" : "🧈 ครีมบัตเตอร์", hex: "#FFFBEB" },
+                { name: isEn ? "Deep Slate" : "สเลทน้ำเงิน", hex: "#0F172A" },
                 { name: isEn ? "Pure Black" : "ดำสนิท", hex: "#000000" },
                 { name: isEn ? "Navy Blue" : "กรมท่า", hex: "#0B1329" },
                 { name: isEn ? "Emerald" : "เขียวมรกต", hex: "#064E3B" },
@@ -867,8 +882,8 @@ export function StudioCardCustomizer({
                   title={c.name}
                   className={`w-5 h-5 rounded-full border transition-all cursor-pointer ${
                     customCardBgColor === c.hex
-                      ? "ring-2 ring-amber-400 scale-110 border-white"
-                      : "border-slate-700 opacity-70 hover:opacity-100"
+                      ? "ring-2 ring-amber-400 scale-110 border-white shadow-sm"
+                      : "border-slate-600/80 opacity-80 hover:opacity-100 hover:scale-105"
                   }`}
                   style={{ backgroundColor: c.hex }}
                 />

@@ -1430,10 +1430,33 @@ export function renderSingleCardTextEffect(
     const isHeadline = idx === 0;
     const font = `${isHeadline ? "800" : "600"} ${item.fontPx}px 'Prompt', 'Noto Sans Thai', 'Kanit', sans-serif`;
     ctx.font = font;
-    const textW = ctx.measureText(item.text).width;
-    if (textW > maxTextW) maxTextW = textW;
-    const lineH = Math.round(item.fontPx * 1.25);
-    return { ...item, isHeadline, font, textW, lineH };
+
+    const tId = (!item.template || item.template === "same") ? (options.textEffectTemplate || "none") : item.template;
+
+    let displayText = item.text;
+    if (tId === "minimal_clean") displayText = `✦ ${item.text} ✦`;
+    else if (tId === "luxury_editorial") displayText = `— ${item.text.toUpperCase()} —`;
+    else if (tId === "illustrator_stamp") displayText = `★ ${item.text.toUpperCase()} ★`;
+
+    const rawTextW = ctx.measureText(displayText).width;
+
+    const isBadgeTemplate = [
+      "tiktok_yellow", "tiktok_red", "tiktok_dark", "price_tag", "lemon8_magazine",
+      "lemon8_bubble", "lemon8_tag", "korean_cafe", "minimal_clean", "minimal_glass",
+      "minimal_monochrome", "real_estate_badge", "luxury_editorial", "urgent_promo",
+      "illustrator_stamp", "illustrator_dashed", "illustrator_gold", "illustrator_curve", "custom"
+    ].includes(tId);
+
+    const extraPad = isBadgeTemplate
+      ? Math.round(36 * sizeScale)
+      : (["yt_bold_stroke", "capcut_outline", "illustrator_pop", "capcut_neon", "sticker_border"].includes(tId)
+          ? Math.round(20 * sizeScale)
+          : 0);
+
+    const totalItemW = rawTextW + extraPad;
+    if (totalItemW > maxTextW) maxTextW = totalItemW;
+    const lineH = Math.round(item.fontPx * (isBadgeTemplate ? 1.4 : 1.25));
+    return { ...item, resolvedTemplate: tId, isHeadline, font, textW: rawTextW, displayText, isBadgeTemplate, lineH };
   });
 
   const cardW = Math.min(
@@ -1478,42 +1501,736 @@ export function renderSingleCardTextEffect(
     ctx.stroke();
   }
 
-  // 5. Render Lines inside Card
+  // 5. Render Lines inside Card (With Full Template Effects Support)
   let curY = -cardH / 2 + cardPadY;
   const isDark = isDarkColor(cardBg);
   const defaultTextColor = options.textEffectSingleCardTextColor || (isDark ? "#FFFFFF" : "#0F172A");
 
   measuredLines.forEach((item) => {
-    ctx.save();
-    ctx.font = item.font;
-    ctx.textAlign = cardAlign;
-    ctx.textBaseline = "middle";
-
     let lineX = 0;
     if (cardAlign === "left") lineX = -cardW / 2 + cardPadX;
     else if (cardAlign === "right") lineX = cardW / 2 - cardPadX;
 
     const lineMidY = curY + item.lineH / 2;
 
-    // Resolve line-specific text color
-    let textColor = item.customColors?.textColor || defaultTextColor;
-    if (!item.customColors?.textColor) {
-      if (item.template === "tiktok_red" || item.template === "urgent_promo") textColor = "#E11D48";
-      else if (item.template === "price_tag") textColor = "#059669";
-      else if (item.template === "illustrator_gold") textColor = "#D97706";
-      else if (item.template === "capcut_neon") textColor = isDark ? "#38BDF8" : "#0284C7";
-      else if (item.template === "korean_cafe") textColor = isDark ? "#FDE68A" : "#B45309";
-      else if (item.template === "tiktok_yellow") textColor = isDark ? "#FACC15" : "#B45309";
-    }
-
-    ctx.fillStyle = textColor;
-    ctx.fillText(item.text, lineX, lineMidY);
-    ctx.restore();
+    renderLineInsideSingleCard(
+      ctx,
+      item.resolvedTemplate as TextEffectTemplate,
+      item,
+      lineX,
+      lineMidY,
+      cardAlign,
+      cardBg,
+      defaultTextColor,
+      sizeScale
+    );
 
     curY += item.lineH + lineSpacing;
   });
 
   ctx.restore();
+}
+
+/**
+ * Render individual text line effects inside Single Card
+ */
+function renderLineInsideSingleCard(
+  ctx: CanvasRenderingContext2D,
+  template: TextEffectTemplate,
+  item: {
+    text: string;
+    displayText: string;
+    isHeadline: boolean;
+    font: string;
+    fontPx: number;
+    textW: number;
+    lineH: number;
+    isBadgeTemplate: boolean;
+    customColors?: {
+      textColor?: string;
+      bgColor?: string;
+      borderColor?: string;
+      shadowColor?: string;
+      bgAlpha?: number;
+      borderWidth?: number;
+    };
+  },
+  lineX: number,
+  lineMidY: number,
+  cardAlign: "left" | "center" | "right",
+  cardBg: string,
+  defaultTextColor: string,
+  scale: number
+): void {
+  const isDark = isDarkColor(cardBg);
+  const rawText = item.displayText || item.text;
+
+  // Helper for Badge Box dimensions
+  const getBadgeBox = (padXScale = 16, padYScale = 5) => {
+    const padX = Math.round(padXScale * scale);
+    const padY = Math.round(padYScale * scale);
+    const boxW = Math.round(item.textW + padX * 2);
+    const boxH = Math.round(item.fontPx * 1.16 + padY * 2);
+    let boxX = lineX - boxW / 2;
+    let textDrawX = lineX;
+    if (cardAlign === "left") {
+      boxX = lineX;
+      textDrawX = lineX + boxW / 2;
+    } else if (cardAlign === "right") {
+      boxX = lineX - boxW;
+      textDrawX = lineX - boxW / 2;
+    }
+    const boxY = Math.round(lineMidY - boxH / 2);
+    return { boxX, boxY, boxW, boxH, textDrawX };
+  };
+
+  switch (template) {
+    // ⚡ 1. CapCut Neon Glow
+    case "capcut_neon": {
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = cardAlign;
+      ctx.textBaseline = "middle";
+
+      const neonColor = item.customColors?.borderColor || (isDark ? "#38BDF8" : "#0284C7");
+
+      // Pass 1: Neon Drop Glow
+      ctx.save();
+      ctx.shadowColor = item.customColors?.shadowColor || neonColor;
+      ctx.shadowBlur = Math.round(22 * scale);
+      ctx.fillStyle = neonColor;
+      ctx.fillText(rawText, lineX, lineMidY);
+      ctx.restore();
+
+      // Pass 2: Neon Stroke
+      ctx.save();
+      ctx.shadowColor = neonColor;
+      ctx.shadowBlur = Math.round(10 * scale);
+      ctx.lineWidth = Math.max(2, Math.round((item.customColors?.borderWidth || 3.5) * scale));
+      ctx.strokeStyle = neonColor;
+      ctx.strokeText(rawText, lineX, lineMidY);
+      ctx.restore();
+
+      // Pass 3: White Core Text
+      ctx.fillStyle = item.customColors?.textColor || "#FFFFFF";
+      ctx.fillText(rawText, lineX, lineMidY);
+      break;
+    }
+
+    // 🎬 2. CapCut Bold Outline
+    case "capcut_outline": {
+      ctx.font = `900 ${Math.round(item.fontPx * 1.02)}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = cardAlign;
+      ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+
+      ctx.save();
+      ctx.shadowColor = item.customColors?.shadowColor || "rgba(0, 0, 0, 0.75)";
+      ctx.shadowBlur = Math.round(8 * scale);
+      ctx.lineWidth = Math.round((item.customColors?.borderWidth || 7) * scale);
+      ctx.strokeStyle = item.customColors?.borderColor || (isDark ? "#000000" : "#0F172A");
+      ctx.strokeText(rawText, lineX, lineMidY);
+      ctx.restore();
+
+      ctx.fillStyle = item.customColors?.textColor || "#FFFFFF";
+      ctx.fillText(rawText, lineX, lineMidY);
+      break;
+    }
+
+    // 📺 3. YouTube Bold Stroke
+    case "yt_bold_stroke": {
+      ctx.font = `900 ${Math.round(item.fontPx * 1.05)}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = cardAlign;
+      ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+
+      ctx.save();
+      ctx.shadowColor = item.customColors?.shadowColor || "rgba(0, 0, 0, 0.85)";
+      ctx.shadowBlur = Math.round(10 * scale);
+      ctx.shadowOffsetY = Math.round(3 * scale);
+      ctx.lineWidth = Math.round((item.customColors?.borderWidth || 9) * scale);
+      ctx.strokeStyle = item.customColors?.borderColor || "#000000";
+      ctx.strokeText(rawText, lineX, lineMidY);
+      ctx.restore();
+
+      ctx.fillStyle = item.customColors?.textColor || "#FFFC00";
+      ctx.fillText(rawText, lineX, lineMidY);
+      break;
+    }
+
+    // 💥 4. CapCut Fire Gradient
+    case "capcut_gradient": {
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = cardAlign;
+      ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+
+      ctx.save();
+      ctx.shadowColor = item.customColors?.shadowColor || "rgba(255, 65, 108, 0.5)";
+      ctx.shadowBlur = Math.round(10 * scale);
+      ctx.lineWidth = Math.round((item.customColors?.borderWidth || 6) * scale);
+      ctx.strokeStyle = item.customColors?.borderColor || "#111827";
+      ctx.strokeText(rawText, lineX, lineMidY);
+      ctx.restore();
+
+      if (item.customColors?.textColor) {
+        ctx.fillStyle = item.customColors.textColor;
+      } else {
+        const grad = ctx.createLinearGradient(0, lineMidY - item.fontPx / 2, 0, lineMidY + item.fontPx / 2);
+        grad.addColorStop(0, "#FFF275");
+        grad.addColorStop(0.5, "#FF8C00");
+        grad.addColorStop(1, "#FF0055");
+        ctx.fillStyle = grad;
+      }
+      ctx.fillText(rawText, lineX, lineMidY);
+      break;
+    }
+
+    // 🎨 5. 3D Pop (Illustrator Pop)
+    case "illustrator_pop": {
+      ctx.font = `900 ${Math.round(item.fontPx * 1.04)}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = cardAlign;
+      ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+
+      const offsetShift = Math.max(3, Math.round(5 * scale));
+      ctx.fillStyle = item.customColors?.shadowColor || (isDark ? "rgba(0,0,0,0.9)" : "#000000");
+      ctx.fillText(rawText, lineX + offsetShift, lineMidY + offsetShift);
+
+      ctx.lineWidth = Math.round((item.customColors?.borderWidth || 6) * scale);
+      ctx.strokeStyle = item.customColors?.borderColor || "#000000";
+      ctx.strokeText(rawText, lineX, lineMidY);
+
+      ctx.fillStyle = item.customColors?.textColor || "#FFE600";
+      ctx.fillText(rawText, lineX, lineMidY);
+      break;
+    }
+
+    // 🖍️ 6. Lemon8 Pastel Highlighter
+    case "lemon8_highlighter": {
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      const hlW = item.textW + Math.round(16 * scale);
+      const hlH = Math.round(item.fontPx * 0.52);
+      let hlX = lineX - hlW / 2;
+      if (cardAlign === "left") hlX = lineX - Math.round(4 * scale);
+      else if (cardAlign === "right") hlX = lineX - hlW + Math.round(4 * scale);
+      const hlY = lineMidY - Math.round(item.fontPx * 0.05);
+
+      ctx.save();
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(253, 230, 138, 0.45)" : "rgba(254, 240, 138, 0.92)");
+      roundRect(ctx, hlX, hlY, hlW, hlH, Math.round(4 * scale));
+      ctx.fill();
+      ctx.restore();
+
+      ctx.textAlign = cardAlign;
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#FFFFFF" : "#0F172A");
+      ctx.fillText(rawText, lineX, lineMidY);
+      break;
+    }
+
+    // ➖ 7. Minimal Underline Accent
+    case "minimal_underline": {
+      ctx.font = `800 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = cardAlign;
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || defaultTextColor;
+      ctx.fillText(rawText, lineX, lineMidY);
+
+      const barW = Math.round(item.textW * 0.9);
+      const barH = Math.max(2, Math.round((item.customColors?.borderWidth || 3) * scale));
+      const barY = lineMidY + Math.round(item.fontPx * 0.55);
+      let barX = lineX - barW / 2;
+      if (cardAlign === "left") barX = lineX;
+      else if (cardAlign === "right") barX = lineX - barW;
+
+      ctx.fillStyle = item.customColors?.borderColor || item.customColors?.bgColor || "#F59E0B";
+      ctx.fillRect(barX, barY, barW, barH);
+      break;
+    }
+
+    // 🏷️ 8. Sticker Peel Border
+    case "sticker_border": {
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = cardAlign;
+      ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+
+      ctx.save();
+      ctx.shadowColor = item.customColors?.shadowColor || "rgba(0, 0, 0, 0.35)";
+      ctx.shadowBlur = Math.round(8 * scale);
+      ctx.lineWidth = Math.round((item.customColors?.borderWidth || 8) * scale);
+      ctx.strokeStyle = item.customColors?.borderColor || (isDark ? "#FFFFFF" : "#0F172A");
+      ctx.strokeText(rawText, lineX, lineMidY);
+      ctx.restore();
+
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#0F172A" : "#FFFFFF");
+      ctx.fillText(rawText, lineX, lineMidY);
+      break;
+    }
+
+    // 🟡 9. TikTok Yellow Box (Inner Badge)
+    case "tiktok_yellow": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      ctx.shadowColor = item.customColors?.shadowColor || "rgba(0, 0, 0, 0.15)";
+      ctx.shadowBlur = Math.round(8 * scale);
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || "#FFE600";
+      ctx.fill();
+      if (item.customColors?.borderColor) {
+        ctx.lineWidth = Math.max(1, Math.round((item.customColors.borderWidth || 1.5) * scale));
+        ctx.strokeStyle = item.customColors.borderColor;
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || "#000000";
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🔴 10. TikTok Hot Red Tag (Inner Badge)
+    case "tiktok_red": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      ctx.shadowColor = item.customColors?.shadowColor || "rgba(254, 44, 85, 0.35)";
+      ctx.shadowBlur = Math.round(10 * scale);
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      if (item.customColors?.bgColor) {
+        ctx.fillStyle = item.customColors.bgColor;
+      } else {
+        const grad = ctx.createLinearGradient(boxX, boxY, boxX + boxW, boxY);
+        grad.addColorStop(0, "#FF0050");
+        grad.addColorStop(1, "#FE2C55");
+        ctx.fillStyle = grad;
+      }
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1.5) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#FFFFFF";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || "#FFFFFF";
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // ⚫ 11. TikTok Dark Contrast (Inner Badge)
+    case "tiktok_dark": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(255, 255, 255, 0.15)" : "#0F172A");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || (isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(255, 255, 255, 0.2)");
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `800 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || "#FFE600";
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🏷️ 12. Price Tag (Emerald Green Inner Badge)
+    case "price_tag": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(18, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      ctx.shadowColor = item.customColors?.shadowColor || "rgba(5, 150, 105, 0.35)";
+      ctx.shadowBlur = Math.round(8 * scale);
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || "#059669";
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1.5) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#A7F3D0";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || "#FFFFFF";
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🔥 13. Urgent Promo (Inner Badge)
+    case "urgent_promo": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      if (item.customColors?.bgColor) {
+        ctx.fillStyle = item.customColors.bgColor;
+      } else {
+        const grad = ctx.createLinearGradient(boxX, boxY, boxX + boxW, boxY);
+        grad.addColorStop(0, "#EF4444");
+        grad.addColorStop(1, "#F97316");
+        ctx.fillStyle = grad;
+      }
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1.5) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#FFFFFF";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || "#FFFFFF";
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🍋 14. Lemon8 Magazine Chic (Inner Badge)
+    case "lemon8_magazine": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(12 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(254, 243, 199, 0.2)" : "#FFFBEB");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1.5) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#FDE68A";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `800 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#FDE68A" : "#1C1917");
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🌸 15. Lemon8 Cute Bubble (Inner Badge)
+    case "lemon8_bubble": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(18, 5);
+      const boxR = Math.round(14 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(255, 240, 245, 0.18)" : "#FFF0F5");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1.5) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#FDA4AF";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `800 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#FDA4AF" : "#881337");
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🏷️ 16. Lemon8 Clean Muji Label (Inner Badge)
+    case "lemon8_tag": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(8 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(241, 245, 249, 0.95)");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || (isDark ? "rgba(255, 255, 255, 0.25)" : "#CBD5E1");
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `700 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#FFFFFF" : "#1E293B");
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // ☕ 17. Korean Cafe Aesthetic (Inner Badge)
+    case "korean_cafe": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(244, 235, 217, 0.2)" : "#F4EBD9");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#D4C3B3";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `700 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#FDE68A" : "#433422");
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // ✨ 18. Minimal Clean (✦ Text ✦)
+    case "minimal_clean": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(15, 23, 42, 0.06)");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || (isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(15, 23, 42, 0.15)");
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `700 ${Math.round(item.fontPx * 0.92)}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#FFFFFF" : "#0F172A");
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🪟 19. Minimal Frosted Glass (Inner Badge)
+    case "minimal_glass": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(18, 5);
+      const boxR = Math.round(12 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(255, 255, 255, 0.16)" : "rgba(0, 0, 0, 0.05)");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1.5) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || (isDark ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.12)");
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `800 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#FFFFFF" : "#0F172A");
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🕶️ 20. Minimal Monochrome Vogue (Inner Badge)
+    case "minimal_monochrome": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(6 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "#FFFFFF" : "#000000");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1.5) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || (isDark ? "#000000" : "#FFFFFF");
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#000000" : "#FFFFFF");
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🏢 21. Real Estate Badge (Navy with Gold Accent)
+    case "real_estate_badge": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(18, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || "#0A192F";
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1.5) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#D4AF37";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `800 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || "#FDE68A";
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 👑 22. Luxury Editorial (— Text —)
+    case "luxury_editorial": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(6 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(18, 24, 38, 0.06)");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || (isDark ? "rgba(255, 255, 255, 0.25)" : "#E2D9C8");
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `700 ${Math.round(item.fontPx * 0.95)}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || (isDark ? "#FFFFFF" : "#1E293B");
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🔴 23. Illustrator Vintage Stamp (★ Text ★)
+    case "illustrator_stamp": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(6 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || (isDark ? "rgba(220, 38, 38, 0.25)" : "rgba(220, 38, 38, 0.12)");
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 2) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#DC2626";
+      ctx.stroke();
+
+      roundRect(ctx, boxX + 3, boxY + 3, boxW - 6, boxH - 6, Math.max(2, boxR - 2));
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = item.customColors?.borderColor || "#DC2626";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || "#DC2626";
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // ✂️ 24. Illustrator Dashed Border
+    case "illustrator_dashed": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      ctx.fillStyle = item.customColors?.bgColor || "#FF6B6B";
+      ctx.fill();
+      ctx.lineWidth = Math.max(1.5, Math.round((item.customColors?.borderWidth || 2) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#FFFFFF";
+      ctx.setLineDash([6, 4]);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || "#FFFFFF";
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🥇 25. Illustrator Metallic Gold
+    case "illustrator_gold":
+    case "illustrator_curve": {
+      const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(18, 5);
+      const boxR = Math.round(10 * scale);
+
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+      if (item.customColors?.bgColor) {
+        ctx.fillStyle = item.customColors.bgColor;
+      } else {
+        const goldGrad = ctx.createLinearGradient(boxX, boxY, boxX + boxW, boxY + boxH);
+        goldGrad.addColorStop(0, "#F59E0B");
+        goldGrad.addColorStop(0.5, "#FDE68A");
+        goldGrad.addColorStop(1, "#D97706");
+        ctx.fillStyle = goldGrad;
+      }
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, Math.round((item.customColors?.borderWidth || 1.5) * scale));
+      ctx.strokeStyle = item.customColors?.borderColor || "#78350F";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || "#451A03";
+      ctx.fillText(rawText, textDrawX, lineMidY);
+      break;
+    }
+
+    // 🛠️ 26. Custom Studio Text Effect
+    case "custom": {
+      const customBgAlpha = (item.customColors?.bgAlpha ?? 85) / 100;
+      const customBgHex = item.customColors?.bgColor || "#0F172A";
+      const customTextCol = item.customColors?.textColor || (isDark ? "#FFFFFF" : "#0F172A");
+
+      if (customBgAlpha > 0) {
+        const { boxX, boxY, boxW, boxH, textDrawX } = getBadgeBox(16, 5);
+        const boxR = Math.round(10 * scale);
+
+        const h = customBgHex.replace("#", "");
+        const r = parseInt(h.substring(0, 2), 16) || 15;
+        const g = parseInt(h.substring(2, 4), 16) || 23;
+        const b = parseInt(h.substring(4, 6), 16) || 42;
+
+        ctx.save();
+        roundRect(ctx, boxX, boxY, boxW, boxH, boxR);
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${customBgAlpha})`;
+        ctx.fill();
+        if ((item.customColors?.borderWidth ?? 1) > 0) {
+          ctx.lineWidth = (item.customColors?.borderWidth ?? 1) * scale;
+          ctx.strokeStyle = item.customColors?.borderColor || "#F59E0B";
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.font = `900 ${item.fontPx}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = customTextCol;
+        ctx.fillText(rawText, textDrawX, lineMidY);
+      } else {
+        ctx.font = item.font;
+        ctx.textAlign = cardAlign;
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = customTextCol;
+        ctx.fillText(rawText, lineX, lineMidY);
+      }
+      break;
+    }
+
+    // 🚫 27. None / Default Fallback
+    case "none":
+    default: {
+      ctx.font = item.font;
+      ctx.textAlign = cardAlign;
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = item.customColors?.textColor || defaultTextColor;
+      ctx.fillText(rawText, lineX, lineMidY);
+      break;
+    }
+  }
 }
 
 function hexToRgbaSafe(hex: string, alpha: number = 1): string {

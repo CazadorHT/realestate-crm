@@ -913,7 +913,7 @@ export async function renderBannerToCanvas(
       ctx.shadowOffsetY = shadowOffsetY;
       roundRect(ctx, cardX, cardYPos, cardW, cardH, 28);
 
-      const hasCustomTint = Boolean(options.customCardBgColor && options.customCardBgColor !== "#0F172A" && options.customCardBgColor !== "");
+      const hasCustomTint = Boolean(options.customCardBgColor && options.customCardBgColor.trim() !== "");
 
       if (hasCustomTint) {
         const hex = options.customCardBgColor!.replace("#", "");
@@ -924,33 +924,98 @@ export async function renderBannerToCanvas(
         tintGrad.addColorStop(0, `rgba(${Math.min(255, r + 20)}, ${Math.min(255, g + 20)}, ${Math.min(255, b + 25)}, ${cardAlpha})`);
         tintGrad.addColorStop(1, `rgba(${Math.max(0, r - 8)}, ${Math.max(0, g - 8)}, ${Math.max(0, b - 8)}, ${Math.min(1.0, cardAlpha * 1.15)})`);
         ctx.fillStyle = tintGrad;
+        ctx.fill();
+
+        if (bgStyle !== "solid") {
+          const isLightTint = (r * 0.299 + g * 0.587 + b * 0.114) > 160;
+          const frostSheen = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
+          if (isLightTint) {
+            frostSheen.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.55, cardAlpha * 0.50)})`);
+            frostSheen.addColorStop(0.3, `rgba(255, 255, 255, ${Math.min(0.30, cardAlpha * 0.25)})`);
+            frostSheen.addColorStop(0.7, `rgba(255, 255, 255, ${Math.min(0.15, cardAlpha * 0.15)})`);
+            frostSheen.addColorStop(1, `rgba(255, 255, 255, ${Math.min(0.35, cardAlpha * 0.30)})`);
+          } else {
+            frostSheen.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.35, cardAlpha * 0.35)})`);
+            frostSheen.addColorStop(0.25, `rgba(255, 255, 255, ${Math.min(0.18, cardAlpha * 0.20)})`);
+            frostSheen.addColorStop(0.70, `rgba(255, 255, 255, ${Math.min(0.08, cardAlpha * 0.10)})`);
+            frostSheen.addColorStop(1, `rgba(255, 255, 255, ${Math.min(0.16, cardAlpha * 0.18)})`);
+          }
+          ctx.fillStyle = frostSheen;
+          ctx.fill();
+        }
       } else if (bgStyle === "solid") {
         ctx.fillStyle = options.customCardBgColor || `rgba(15, 23, 42, ${cardAlpha})`;
+        ctx.fill();
       } else if (bgStyle === "crystal_glass") {
         const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-        grad.addColorStop(0, `rgba(32, 48, 76, ${cardAlpha * 0.75})`);
-        grad.addColorStop(0.55, `rgba(18, 28, 48, ${cardAlpha * 0.88})`);
-        grad.addColorStop(1, `rgba(10, 16, 30, ${cardAlpha * 1.05})`);
+        grad.addColorStop(0, `rgba(240, 246, 255, ${Math.min(0.65, cardAlpha * 0.50)})`);
+        grad.addColorStop(0.55, `rgba(215, 230, 252, ${Math.min(0.50, cardAlpha * 0.38)})`);
+        grad.addColorStop(1, `rgba(185, 210, 240, ${Math.min(0.60, cardAlpha * 0.48)})`);
         ctx.fillStyle = grad;
+        ctx.fill();
+
+        const iceFrost = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
+        iceFrost.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.55, cardAlpha * 0.50)})`);
+        iceFrost.addColorStop(0.3, `rgba(255, 255, 255, ${Math.min(0.30, cardAlpha * 0.25)})`);
+        iceFrost.addColorStop(0.7, `rgba(255, 255, 255, ${Math.min(0.15, cardAlpha * 0.12)})`);
+        iceFrost.addColorStop(1, `rgba(255, 255, 255, ${Math.min(0.35, cardAlpha * 0.30)})`);
+        ctx.fillStyle = iceFrost;
+        ctx.fill();
       } else if (bgStyle === "obsidian_glass") {
         const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
         grad.addColorStop(0, `rgba(8, 12, 22, ${cardAlpha * 1.05})`);
         grad.addColorStop(0.6, `rgba(4, 7, 15, ${cardAlpha * 1.15})`);
         grad.addColorStop(1, `rgba(2, 3, 8, ${cardAlpha * 1.25})`);
         ctx.fillStyle = grad;
+        ctx.fill();
+
+        const frostSheen = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
+        frostSheen.addColorStop(0, `rgba(147, 197, 253, ${Math.min(0.25, cardAlpha * 0.22)})`);
+        frostSheen.addColorStop(0.5, `rgba(255, 255, 255, 0.0)`);
+        frostSheen.addColorStop(1, `rgba(147, 197, 253, ${Math.min(0.12, cardAlpha * 0.12)})`);
+        ctx.fillStyle = frostSheen;
+        ctx.fill();
       } else if (bgStyle === "champagne_glass") {
         const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
         grad.addColorStop(0, `rgba(38, 28, 16, ${cardAlpha * 0.95})`);
         grad.addColorStop(0.55, `rgba(22, 16, 9, ${cardAlpha * 1.10})`);
         grad.addColorStop(1, `rgba(12, 8, 4, ${cardAlpha * 1.20})`);
         ctx.fillStyle = grad;
+        ctx.fill();
+
+        const goldFrost = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
+        goldFrost.addColorStop(0, `rgba(254, 240, 138, ${Math.min(0.35, cardAlpha * 0.30)})`);
+        goldFrost.addColorStop(0.5, `rgba(251, 191, 36, ${Math.min(0.12, cardAlpha * 0.12)})`);
+        goldFrost.addColorStop(1, `rgba(245, 158, 11, ${Math.min(0.20, cardAlpha * 0.18)})`);
+        ctx.fillStyle = goldFrost;
+        ctx.fill();
       } else if (bgStyle === "smoked_glass") {
         const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
         grad.addColorStop(0, `rgba(28, 30, 36, ${cardAlpha * 0.88})`);
         grad.addColorStop(1, `rgba(14, 16, 20, ${cardAlpha * 1.05})`);
         ctx.fillStyle = grad;
+        ctx.fill();
+
+        const smokeSheen = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
+        smokeSheen.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.22, cardAlpha * 0.20)})`);
+        smokeSheen.addColorStop(1, `rgba(255, 255, 255, ${Math.min(0.08, cardAlpha * 0.08)})`);
+        ctx.fillStyle = smokeSheen;
+        ctx.fill();
       } else if (bgStyle === "glass") {
-        ctx.fillStyle = `rgba(15, 23, 42, ${cardAlpha})`;
+        const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
+        grad.addColorStop(0, `rgba(30, 41, 59, ${cardAlpha * 0.72})`);
+        grad.addColorStop(0.55, `rgba(15, 23, 42, ${cardAlpha * 0.82})`);
+        grad.addColorStop(1, `rgba(10, 15, 30, ${cardAlpha * 0.90})`);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        const glassSheen = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
+        glassSheen.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.32, cardAlpha * 0.32)})`);
+        glassSheen.addColorStop(0.25, `rgba(255, 255, 255, ${Math.min(0.16, cardAlpha * 0.16)})`);
+        glassSheen.addColorStop(0.70, `rgba(255, 255, 255, ${Math.min(0.06, cardAlpha * 0.06)})`);
+        glassSheen.addColorStop(1, `rgba(255, 255, 255, ${Math.min(0.14, cardAlpha * 0.14)})`);
+        ctx.fillStyle = glassSheen;
+        ctx.fill();
       } else {
         // Default frosted_luxury: Signature Frosted White Glass ("พื้นหลังขาวใสเบลอ")
         // Layer 1: Base dark translucent foundation (rgba(20, 30, 42, 0.45))
@@ -986,6 +1051,7 @@ export async function renderBannerToCanvas(
       }
 
       // Base Rim Stroke: Clean translucent white rim (1px solid rgba(255, 255, 255, 0.25))
+      roundRect(ctx, cardX, cardYPos, cardW, cardH, 28);
       ctx.lineWidth = isMiddleHero ? 2 : 1.2;
       let rimStroke = `rgba(255, 255, 255, ${Math.min(0.45, cardAlpha * 0.38)})`;
       if (bgStyle === "champagne_glass") {

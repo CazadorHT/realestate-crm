@@ -15,23 +15,40 @@ export function getDimensions(ratio: AspectRatio): { width: number; height: numb
   }
 }
 
+const imageCache = new Map<string, Promise<HTMLImageElement>>();
+
 /**
- * Helper to load an image safely with CORS handling
+ * Clear cached images
+ */
+export function clearImageCache(): void {
+  imageCache.clear();
+}
+
+/**
+ * Helper to load an image safely with CORS handling and in-memory caching
  */
 export function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    if (!src) return reject(new Error("Empty image src"));
+  if (!src) return Promise.reject(new Error("Empty image src"));
+  if (imageCache.has(src)) {
+    return imageCache.get(src)!;
+  }
+  const promise = new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = () => {
       const fallbackImg = new Image();
       fallbackImg.onload = () => resolve(fallbackImg);
-      fallbackImg.onerror = (e) => reject(e);
+      fallbackImg.onerror = (e) => {
+        imageCache.delete(src);
+        reject(e);
+      };
       fallbackImg.src = src;
     };
     img.src = src;
   });
+  imageCache.set(src, promise);
+  return promise;
 }
 
 /**

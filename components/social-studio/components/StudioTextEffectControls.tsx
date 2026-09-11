@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Sparkles, Wand2, Type, Sliders, RotateCw, Compass, Palette, ShieldAlert, Zap, ChevronDown, Move, Maximize2, Layers, Building2, BedDouble, DollarSign, Plus, RotateCcw, Check, Trash2, CreditCard } from "lucide-react";
-import type { TextEffectTemplate, TextEffectPosition, FontSizeScale, TextEffectLineConfig, TextEffectCardMode } from "../types";
+import type { StudioLanguage, TextEffectTemplate, TextEffectPosition, FontSizeScale, TextEffectLineConfig, TextEffectCardMode } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { PRESET_VIRAL_HOOKS } from "../viral-hooks";
 
@@ -84,6 +84,7 @@ interface StudioTextEffectControlsProps {
   title?: string;
   priceText?: string;
   showCardContent?: boolean;
+  language?: StudioLanguage;
 }
 
 type TemplateCategory = "all" | "viral" | "lemon8" | "minimal" | "realestate" | "illustrator" | "custom";
@@ -522,9 +523,13 @@ export function StudioTextEffectControls({
   title,
   priceText,
   showCardContent = true,
+  language: studioLanguage,
 }: StudioTextEffectControlsProps) {
-  const { language } = useLanguage();
-  const isEn = language === "en";
+  const { language: uiLang } = useLanguage();
+  const effectiveLang: StudioLanguage = studioLanguage || (uiLang as StudioLanguage) || "th";
+  const isEn = effectiveLang === "en";
+  const isZh = effectiveLang === "zh";
+  const isRu = effectiveLang === "ru";
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>("all");
   const [showHooksDrawer, setShowHooksDrawer] = useState<boolean>(false);
   const [hookCategory, setHookCategory] = useState<"all" | "urgency" | "location" | "space" | "finance">("all");
@@ -538,7 +543,10 @@ export function StudioTextEffectControls({
       : [
           {
             id: "line-1",
-            text: textEffectText || propertyProjectName || "ดีลเด็ด คอนโดพร้อมอยู่!",
+            text:
+              textEffectText ||
+              propertyProjectName ||
+              (isEn ? "Hot Deal Ready to Move-in!" : isZh ? "优质精选 随时入住！" : isRu ? "Горячее предложение!" : "ดีลเด็ด คอนโดพร้อมอยู่!"),
             template: "same",
             sizeScale: 1.0,
           },
@@ -548,7 +556,7 @@ export function StudioTextEffectControls({
   const activeLine = linesList[currentActiveIdx] || linesList[0];
 
   const handleRandomizeHook = () => {
-    const list = PRESET_VIRAL_HOOKS[language === "en" ? "en" : "th"] || PRESET_VIRAL_HOOKS.th;
+    const list = (PRESET_VIRAL_HOOKS as Record<string, any[]>)[effectiveLang] || PRESET_VIRAL_HOOKS.th;
     const item = list[Math.floor(Math.random() * list.length)];
     if (item) {
       if (onUpdateTextEffectLine) {
@@ -917,8 +925,14 @@ export function StudioTextEffectControls({
             }}
             placeholder={
               currentActiveIdx === 0
-                ? (propertyProjectName || "เช่น ไอดีโอ โมบิ สุขุมวิท 40")
-                : (isEn ? "Type text here..." : "เช่น 2 นอน 2 น้ำ 65 ตร.ม. หรือ ราคา 4.5 ล้านบาท")
+                ? (propertyProjectName || (isEn ? "e.g. Ideo Mobi Sukhumvit 40" : isZh ? "例如 Ideo Mobi Sukhumvit 40" : isRu ? "напр. Ideo Mobi Sukhumvit 40" : "เช่น ไอดีโอ โมบิ สุขุมวิท 40"))
+                : (isEn
+                    ? "e.g. 2 Beds 2 Baths 65 Sq.m. or ฿ 4.5M"
+                    : isZh
+                      ? "例如 2 卧 2 卫 65 平米 或 ฿ 4.5M"
+                      : isRu
+                        ? "напр. 2 спальн. 2 сануз. 65 кв.м или ฿ 4.5M"
+                        : "เช่น 2 นอน 2 น้ำ 65 ตร.ม. หรือ ราคา 4.5 ล้านบาท")
             }
             className="w-full bg-slate-950/90 border border-slate-700/80 text-white text-xs font-semibold focus:border-amber-400 p-2 rounded-xl"
           />
@@ -930,7 +944,18 @@ export function StudioTextEffectControls({
             <div className="flex items-center justify-between text-[10px]">
               <span className="font-bold text-amber-300 flex items-center gap-1">
                 <Sparkles className="h-3 w-3 text-amber-400" />
-                <span>ดึงข้อมูลทรัพย์ลงข้อความนี้ (1-Click)</span>
+                <span>
+                  {isEn
+                    ? "1-Click Property Data"
+                    : isZh
+                      ? "一键填入房源信息 (1-Click)"
+                      : isRu
+                        ? "Данные объекта (1-Click)"
+                        : "ดึงข้อมูลทรัพย์ลงข้อความนี้ (1-Click)"}
+                </span>
+              </span>
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                {effectiveLang}
               </span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
@@ -943,6 +968,7 @@ export function StudioTextEffectControls({
                     setTextEffectText(updated.join("\n"));
                   }}
                   className="px-2 py-0.5 rounded-lg bg-slate-800/90 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-400/50 text-slate-200 hover:text-amber-300 font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                  title={isEn ? "Insert Project Name" : "ดึงชื่อโครงการ"}
                 >
                   <Building2 className="h-3 w-3 text-amber-400" />
                   <span>🏢 {propertyProjectName}</span>
@@ -957,6 +983,7 @@ export function StudioTextEffectControls({
                     setTextEffectText(updated.join("\n"));
                   }}
                   className="px-2 py-0.5 rounded-lg bg-slate-800/90 hover:bg-sky-500/20 border border-slate-700 hover:border-sky-400/50 text-slate-200 hover:text-sky-300 font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                  title={isEn ? "Insert Room Specs" : "ดึงสเปกห้อง"}
                 >
                   <BedDouble className="h-3 w-3 text-sky-400" />
                   <span>🛏️ {propertySpecsText}</span>
@@ -971,6 +998,7 @@ export function StudioTextEffectControls({
                     setTextEffectText(updated.join("\n"));
                   }}
                   className="px-2 py-0.5 rounded-lg bg-slate-800/90 hover:bg-emerald-500/20 border border-slate-700 hover:border-emerald-400/50 text-slate-200 hover:text-emerald-300 font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                  title={isEn ? "Insert Price Tag" : "ดึงป้ายราคา"}
                 >
                   <DollarSign className="h-3 w-3 text-emerald-400" />
                   <span>🏷️ {propertyPriceTag}</span>
@@ -981,7 +1009,15 @@ export function StudioTextEffectControls({
             {/* Quick Add Line with Property Data */}
             {onAddTextEffectLine && linesList.length < 6 && (
               <div className="pt-1.5 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[9px]">
-                <span className="text-slate-400 shrink-0 font-medium">✨ เพิ่มเป็นอีกข้อความ:</span>
+                <span className="text-slate-400 shrink-0 font-medium">
+                  {isEn
+                    ? "✨ Add as new layer:"
+                    : isZh
+                      ? "✨ 添加为新图层:"
+                      : isRu
+                        ? "✨ Добавить слоем:"
+                        : "✨ เพิ่มเป็นอีกข้อความ:"}
+                </span>
                 {propertySpecsText && (
                   <button
                     type="button"
@@ -991,7 +1027,13 @@ export function StudioTextEffectControls({
                     }}
                     className="px-2 py-0.5 rounded-md bg-sky-500/15 hover:bg-sky-500/30 border border-sky-500/40 text-sky-200 shrink-0 cursor-pointer font-medium"
                   >
-                    + เพิ่มสเปกห้อง
+                    {isEn
+                      ? "+ Add Specs"
+                      : isZh
+                        ? "+ 添加户型规格"
+                        : isRu
+                          ? "+ Добавить хар-ки"
+                          : "+ เพิ่มสเปกห้อง"}
                   </button>
                 )}
                 {propertyPriceTag && (
@@ -1003,7 +1045,13 @@ export function StudioTextEffectControls({
                     }}
                     className="px-2 py-0.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-200 shrink-0 cursor-pointer font-medium"
                   >
-                    + เพิ่มราคา
+                    {isEn
+                      ? "+ Add Price"
+                      : isZh
+                        ? "+ 添加价格"
+                        : isRu
+                          ? "+ Добавить цену"
+                          : "+ เพิ่มราคา"}
                   </button>
                 )}
               </div>
@@ -1014,10 +1062,17 @@ export function StudioTextEffectControls({
         {/* Template Selector for this line */}
         <div className="space-y-1.5 pt-2 border-t border-slate-800">
           <div className="flex items-center justify-between text-xs">
-            <Label className="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3 text-amber-400" />
-              {isEn ? "Effect Template for this line" : "เลือกแม่แบบเอฟเฟกต์เฉพาะข้อความนี้"}
-            </Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-amber-400" />
+                {isEn ? "Effect Template for this line" : "เลือกแม่แบบเอฟเฟกต์เฉพาะข้อความนี้"}
+              </Label>
+              {textEffectCardMode === "single_card" && (
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  {isEn ? "Single Card Supported" : "รองรับใน Single Card"}
+                </span>
+              )}
+            </div>
             {currentActiveIdx > 0 && activeLine.template !== "same" && (
               <button
                 type="button"
