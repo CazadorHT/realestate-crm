@@ -73,7 +73,12 @@ export async function finalizeUploadSession(params: {
     .filter((p: string | null): p is string => !!p && !used.includes(p));
 
   if (toRemove.length > 0) {
-    await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(toRemove);
+    const allToRemove = toRemove.flatMap((p: string) =>
+      p.endsWith(".webp") && !p.endsWith("-thumb.webp")
+        ? [p, p.replace(/\.webp$/i, "-thumb.webp")]
+        : [p],
+    );
+    await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(allToRemove);
 
     await supabase
       .from("property_image_uploads")
