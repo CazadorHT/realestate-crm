@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -66,8 +66,15 @@ export function SocialStudioModal({
   const state = useSocialStudioState({
     isOpen,
     property,
-    initialLanguage: "th",
+    initialLanguage: (uiLang as StudioLanguage) || "en",
   });
+
+  // Sync studio language if CRM language changes while open
+  useEffect(() => {
+    if (isOpen && uiLang && state.language !== uiLang) {
+      state.setLanguage(uiLang as StudioLanguage);
+    }
+  }, [isOpen, uiLang, state.language, state.setLanguage]);
 
   // Export & Share Engine
   const exp = useStudioExport({
@@ -264,6 +271,7 @@ export function SocialStudioModal({
                       onApplyPreset={state.handleApplyPreset}
                       onApplyCuratedPreset={state.handleApplyCuratedPreset}
                       onSavePreset={state.handleSavePreset}
+                      currentAspectRatio={state.aspectRatio}
                     />
 
                     <StudioLanguageBar
@@ -307,6 +315,7 @@ export function SocialStudioModal({
                       slotCropOffsets={state.slotCropOffsets}
                       onUpdateSlotCropOffset={state.updateSlotCropOffset}
                       onResetSlotCropOffset={state.resetSlotCropOffset}
+                      onApplyCuratedPreset={state.handleApplyCuratedPreset}
                     />
                   </div>
                 )}

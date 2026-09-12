@@ -620,7 +620,7 @@ export function StudioTextEffectControls({
             </span>
             {textEffectCardMode === "single_card" && (
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
-                ✨ รวมการ์ดแผ่นเดียว (ลดความหนา &gt;30%)
+                {isEn ? "✨ Single Card (Slim & Compact)" : "✨ รวมการ์ดแผ่นเดียว (ลดความหนา >30%)"}
               </span>
             )}
           </div>
@@ -636,7 +636,7 @@ export function StudioTextEffectControls({
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
-              <span>🏷️ แยกกล่อง (Multi-Pills)</span>
+              <span>{isEn ? "🏷️ Multi-Pills" : "🏷️ แยกกล่อง (Multi-Pills)"}</span>
             </button>
 
             <button
@@ -649,7 +649,7 @@ export function StudioTextEffectControls({
               }`}
             >
               <CreditCard className="h-3.5 w-3.5" />
-              <span>📑 การ์ดแผ่นเดียว (Single Card)</span>
+              <span>{isEn ? "📑 Single Card" : "📑 การ์ดแผ่นเดียว (Single Card)"}</span>
             </button>
           </div>
 
@@ -658,13 +658,15 @@ export function StudioTextEffectControls({
             <div className="pt-2 border-t border-slate-800 space-y-2.5 animate-in fade-in">
               {/* Quick Presets */}
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-400 font-medium">สไตล์การ์ดสำเร็จรูป (Quick Presets):</span>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  {isEn ? "Card Presets (Quick Presets):" : "สไตล์การ์ดสำเร็จรูป (Quick Presets):"}
+                </span>
                 <div className="grid grid-cols-4 gap-1">
                   {[
-                    { label: "⚪ ขาวคลีน", bg: "#FFFFFF", text: "#0F172A", border: "#E2E8F0", opacity: 98 },
-                    { label: "🌑 ดำ Luxury", bg: "#0F172A", text: "#FFFFFF", border: "#334155", opacity: 98 },
-                    { label: "🟡 ครีม Lemon8", bg: "#FFFBEB", text: "#78350F", border: "#FDE68A", opacity: 98 },
-                    { label: "💎 กระจก Glass", bg: "#FFFFFF", text: "#0F172A", border: "#FFFFFF", opacity: 85 },
+                    { label: isEn ? "⚪ Clean White" : "⚪ ขาวคลีน", bg: "#FFFFFF", text: "#0F172A", border: "#E2E8F0", opacity: 98 },
+                    { label: isEn ? "🌑 Luxury Dark" : "🌑 ดำ Luxury", bg: "#0F172A", text: "#FFFFFF", border: "#334155", opacity: 98 },
+                    { label: isEn ? "🟡 Lemon8 Cream" : "🟡 ครีม Lemon8", bg: "#FFFBEB", text: "#78350F", border: "#FDE68A", opacity: 98 },
+                    { label: isEn ? "💎 Frosted Glass" : "💎 กระจก Glass", bg: "#FFFFFF", text: "#0F172A", border: "#FFFFFF", opacity: 85 },
                   ].map((p) => (
                     <button
                       key={p.label}
@@ -687,7 +689,9 @@ export function StudioTextEffectControls({
               <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-slate-950/80 border border-slate-800/80 text-[10px]">
                 {/* Bg Color */}
                 <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">สีพื้นหลังการ์ด</Label>
+                  <Label className="text-[10px] text-slate-400 block mb-1">
+                    {isEn ? "Card Background Color" : "สีพื้นหลังการ์ด"}
+                  </Label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -703,7 +707,9 @@ export function StudioTextEffectControls({
 
                 {/* Text Color */}
                 <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">สีตัวหนังสือหลัก</Label>
+                  <Label className="text-[10px] text-slate-400 block mb-1">
+                    {isEn ? "Main Text Color" : "สีตัวหนังสือหลัก"}
+                  </Label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -719,7 +725,9 @@ export function StudioTextEffectControls({
 
                 {/* Border Color */}
                 <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">สีกรอบการ์ด</Label>
+                  <Label className="text-[10px] text-slate-400 block mb-1">
+                    {isEn ? "Card Border Color" : "สีกรอบการ์ด"}
+                  </Label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -738,12 +746,14 @@ export function StudioTextEffectControls({
               <div className="grid grid-cols-2 gap-2 text-[10px]">
                 {/* Alignment */}
                 <div className="space-y-1">
-                  <span className="text-slate-400 font-medium">จัดตำแหน่งข้อความ:</span>
+                  <span className="text-slate-400 font-medium">
+                    {isEn ? "Text Alignment:" : "จัดตำแหน่งข้อความ:"}
+                  </span>
                   <div className="flex gap-1">
                     {[
-                      { id: "left", label: "⬅️ ซ้าย" },
-                      { id: "center", label: "🎯 กึ่งกลาง" },
-                      { id: "right", label: "➡️ ขวา" },
+                      { id: "left", label: isEn ? "⬅️ Left" : "⬅️ ซ้าย" },
+                      { id: "center", label: isEn ? "🎯 Center" : "🎯 กึ่งกลาง" },
+                      { id: "right", label: isEn ? "➡️ Right" : "➡️ ขวา" },
                     ].map((al) => (
                       <button
                         key={al.id}
@@ -763,7 +773,9 @@ export function StudioTextEffectControls({
 
                 {/* Corner Radius */}
                 <div className="space-y-1">
-                  <span className="text-slate-400 font-medium">ความโค้งมนขอบการ์ด:</span>
+                  <span className="text-slate-400 font-medium">
+                    {isEn ? "Corner Radius:" : "ความโค้งมนขอบการ์ด:"}
+                  </span>
                   <div className="flex gap-1">
                     {[
                       { r: 12, label: "12px" },
@@ -792,7 +804,7 @@ export function StudioTextEffectControls({
               <div className="grid grid-cols-2 gap-3 text-[10px]">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-slate-400">
-                    <span>ความทึบแสงการ์ด</span>
+                    <span>{isEn ? "Card Opacity" : "ความทึบแสงการ์ด"}</span>
                     <span className="font-mono text-amber-400 font-bold">{textEffectSingleCardOpacity}%</span>
                   </div>
                   <Slider
@@ -807,7 +819,7 @@ export function StudioTextEffectControls({
 
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-slate-400">
-                    <span>ระยะขอบ (Padding)</span>
+                    <span>{isEn ? "Card Padding" : "ระยะขอบ (Padding)"}</span>
                     <span className="font-mono text-amber-400 font-bold">{textEffectSingleCardPadding}px</span>
                   </div>
                   <Slider
@@ -830,10 +842,10 @@ export function StudioTextEffectControls({
         <div className="flex items-center justify-between">
           <Label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
             <Layers className="h-3.5 w-3.5 text-amber-400" />
-            <span>{isEn ? "Text Layers (1, 2, 3...)" : "เลเยอร์ข้อความ (แยกบรรทัดอิสระ)"}</span>
+            <span>{isEn ? "Text Layers (Multi-line)" : "เลเยอร์ข้อความ (แยกบรรทัดอิสระ)"}</span>
           </Label>
           <span className="text-[10px] text-slate-400">
-            {linesList.length} ข้อความ
+            {isEn ? `${linesList.length} layer${linesList.length > 1 ? "s" : ""}` : `${linesList.length} ข้อความ`}
           </span>
         </div>
 
@@ -853,7 +865,7 @@ export function StudioTextEffectControls({
                 }`}
               >
                 <span>{idx + 1}️⃣</span>
-                <span className="max-w-[120px] truncate">{lineItem.text.trim() || `ข้อความ ${idx + 1}`}</span>
+                <span className="max-w-[120px] truncate">{lineItem.text.trim() || (isEn ? `Line ${idx + 1}` : `ข้อความ ${idx + 1}`)}</span>
               </button>
             );
           })}
@@ -867,10 +879,10 @@ export function StudioTextEffectControls({
                 setActiveLineIdx(linesList.length);
               }}
               className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 transition-all flex items-center gap-1 cursor-pointer shrink-0"
-              title="เพิ่มข้อความอีกบรรทัด"
+              title={isEn ? "Add another text line" : "เพิ่มข้อความอีกบรรทัด"}
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>เพิ่มข้อความ</span>
+              <span>{isEn ? "+ Add Line" : "+ เพิ่มข้อความ"}</span>
             </button>
           )}
         </div>
@@ -888,7 +900,9 @@ export function StudioTextEffectControls({
               {isEn ? `Text Layer ${currentActiveIdx + 1}` : `ปรับแต่งข้อความที่ ${currentActiveIdx + 1}`}
             </span>
             <span className="text-[10px] text-slate-400 font-mono">
-              ({activeLine.template === "same" || !activeLine.template ? "✨ ตามข้อความแรก" : `แม่แบบ: ${activeLine.template}`})
+              ({activeLine.template === "same" || !activeLine.template
+                ? (isEn ? "✨ Follows first line" : "✨ ตามข้อความแรก")
+                : `${isEn ? "Template" : "แม่แบบ"}: ${activeLine.template}`})
             </span>
           </div>
 
@@ -902,7 +916,7 @@ export function StudioTextEffectControls({
               className="text-[10px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2 py-1 rounded-lg border border-rose-500/30 flex items-center gap-1 cursor-pointer transition-all"
             >
               <Trash2 className="h-3 w-3" />
-              <span>ลบข้อความนี้</span>
+              <span>{isEn ? "Delete Line" : "ลบข้อความนี้"}</span>
             </button>
           )}
         </div>
@@ -1079,7 +1093,7 @@ export function StudioTextEffectControls({
                 onClick={() => onUpdateTextEffectLine?.(activeLine.id, { template: "same" })}
                 className="text-[10px] text-amber-400 hover:underline cursor-pointer"
               >
-                ↺ ใช้ตามข้อความแรก
+                {isEn ? "↺ Follow first line" : "↺ ใช้ตามข้อความแรก"}
               </button>
             )}
           </div>
@@ -1094,14 +1108,14 @@ export function StudioTextEffectControls({
                   : "bg-slate-950/80 border-slate-800 text-slate-300 hover:bg-slate-800"
               }`}
             >
-              <span>✨ ใช้แม่แบบเหมือนข้อความแรก (ตามต้นฉบับ)</span>
+              <span>{isEn ? "✨ Match Template with First Line" : "✨ ใช้แม่แบบเหมือนข้อความแรก (ตามต้นฉบับ)"}</span>
             </button>
           )}
 
           {/* Category Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[10px]">
             {[
-              { id: "all", label: "ทั้งหมด (22)" },
+              { id: "all", label: isEn ? "All (22)" : "ทั้งหมด (22)" },
               { id: "viral", label: "🎵 TikTok" },
               { id: "lemon8", label: "🍋 Lemon8" },
               { id: "minimal", label: "⚪ Minimal" },
@@ -1151,7 +1165,7 @@ export function StudioTextEffectControls({
                 >
                   <div className="h-7 rounded-lg flex items-center justify-center px-1.5 mb-1 overflow-hidden shadow-inner" style={{ background: t.badgeBg, border: t.badgeBorder }}>
                     <span className="font-black text-[9px] tracking-tight truncate" style={{ color: t.badgeTextColor }}>
-                      {t.sampleText}
+                      {t.id === "none" && isEn ? "🚫 OFF" : t.sampleText}
                     </span>
                   </div>
                   <div className="text-[10px] font-bold text-slate-200 truncate group-hover:text-amber-300">
@@ -1188,10 +1202,10 @@ export function StudioTextEffectControls({
             />
             <div className="flex items-center gap-1 shrink-0">
               {[
-                { ratio: 0.65, label: "65% เล็ก" },
-                { ratio: 0.85, label: "85% แนะนำ" },
-                { ratio: 1.0, label: "100% ปกติ" },
-                { ratio: 1.25, label: "125% ใหญ่" },
+                { ratio: 0.65, label: isEn ? "65% Small" : "65% เล็ก" },
+                { ratio: 0.85, label: isEn ? "85% Rec." : "85% แนะนำ" },
+                { ratio: 1.0, label: isEn ? "100% Normal" : "100% ปกติ" },
+                { ratio: 1.25, label: isEn ? "125% Large" : "125% ใหญ่" },
               ].map((btn) => (
                 <button
                   key={btn.ratio}
@@ -1219,10 +1233,10 @@ export function StudioTextEffectControls({
             </span>
             <span className="font-mono font-bold text-amber-400 text-[11px]">
               {(activeLine.curve ?? 0) > 0
-                ? `+${activeLine.curve}° (หงาย ⌒)`
+                ? `+${activeLine.curve}° ${isEn ? "(Convex ⌒)" : "(หงาย ⌒)"}`
                 : (activeLine.curve ?? 0) < 0
-                ? `${activeLine.curve}° (คว่ำ ⌣)`
-                : "0° (ตรง)"}
+                ? `${activeLine.curve}° ${isEn ? "(Concave ⌣)" : "(คว่ำ ⌣)"}`
+                : `0° ${isEn ? "(Flat)" : "(ตรง)"}`}
             </span>
           </div>
 
@@ -1244,9 +1258,9 @@ export function StudioTextEffectControls({
             {/* Quick curve presets */}
             <div className="flex items-center gap-1 shrink-0">
               {[
-                { deg: -30, label: "⌣ คว่ำ" },
-                { deg: 0, label: "ตรง" },
-                { deg: 30, label: "⌒ หงาย" },
+                { deg: -30, label: isEn ? "⌣ Concave" : "⌣ คว่ำ" },
+                { deg: 0, label: isEn ? "Flat" : "ตรง" },
+                { deg: 30, label: isEn ? "⌒ Convex" : "⌒ หงาย" },
               ].map((btn) => (
                 <button
                   key={btn.deg}
@@ -1285,7 +1299,7 @@ export function StudioTextEffectControls({
                 }}
                 className="text-[10px] text-amber-400 hover:underline cursor-pointer"
               >
-                ↺ รีเซ็ตตำแหน่งข้อความนี้
+                {isEn ? "↺ Reset Line Position" : "↺ รีเซ็ตตำแหน่งข้อความนี้"}
               </button>
             )}
           </div>
@@ -1293,7 +1307,7 @@ export function StudioTextEffectControls({
           {/* Y Offset */}
           <div className="space-y-1">
             <div className="flex items-center justify-between text-[10px] text-slate-400">
-              <span>เลื่อนแกน Y (ขึ้น-ลง เฉพาะข้อความนี้)</span>
+              <span>{isEn ? "Y Offset (Vertical)" : "เลื่อนแกน Y (ขึ้น-ลง เฉพาะข้อความนี้)"}</span>
               <span className="font-mono text-slate-300">{activeLine.yOffset ?? 0} px</span>
             </div>
             <Slider
@@ -1314,7 +1328,7 @@ export function StudioTextEffectControls({
           {/* X Offset */}
           <div className="space-y-1">
             <div className="flex items-center justify-between text-[10px] text-slate-400">
-              <span>เลื่อนแกน X (ซ้าย-ขวา เฉพาะข้อความนี้)</span>
+              <span>{isEn ? "X Offset (Horizontal)" : "เลื่อนแกน X (ซ้าย-ขวา เฉพาะข้อความนี้)"}</span>
               <span className="font-mono text-slate-300">{activeLine.xOffset ?? 0} px</span>
             </div>
             <Slider
@@ -1337,7 +1351,7 @@ export function StudioTextEffectControls({
             <div className="flex items-center justify-between text-[10px] text-slate-400">
               <span className="flex items-center gap-1">
                 <RotateCw className="h-3 w-3" />
-                <span>หมุนเอียงเฉพาะข้อความนี้</span>
+                <span>{isEn ? "Rotation Angle" : "หมุนเอียงเฉพาะข้อความนี้"}</span>
               </span>
               <span className="font-mono text-slate-300">{activeLine.rotation ?? 0}°</span>
             </div>
@@ -1366,7 +1380,7 @@ export function StudioTextEffectControls({
               className="text-xs font-bold text-amber-300 flex items-center gap-1.5 hover:text-amber-200 cursor-pointer"
             >
               <Palette className="h-3.5 w-3.5 text-amber-400" />
-              <span>🎨 ปรับแต่งสีเฉพาะข้อความนี้ (ไม่กระทบข้อความอื่น)</span>
+              <span>{isEn ? "🎨 Custom Colors for this Line" : "🎨 ปรับแต่งสีเฉพาะข้อความนี้ (ไม่กระทบข้อความอื่น)"}</span>
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${lineCustomColorsOpen ? "rotate-180" : ""}`} />
             </button>
 
@@ -1382,7 +1396,7 @@ export function StudioTextEffectControls({
                 }}
                 className="text-[10px] text-rose-400 hover:underline cursor-pointer"
               >
-                รีเซ็ตสีข้อความนี้
+                {isEn ? "Reset Line Colors" : "รีเซ็ตสีข้อความนี้"}
               </button>
             )}
           </div>
@@ -1391,7 +1405,9 @@ export function StudioTextEffectControls({
             <div className="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-2 animate-in fade-in">
               <div className="grid grid-cols-3 gap-2 text-[10px]">
                 <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">สีตัวหนังสือ</Label>
+                  <Label className="text-[10px] text-slate-400 block mb-1">
+                    {isEn ? "Text Color" : "สีตัวหนังสือ"}
+                  </Label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -1400,13 +1416,15 @@ export function StudioTextEffectControls({
                       className="h-6 w-8 rounded border border-slate-700 bg-transparent cursor-pointer"
                     />
                     <span className="font-mono text-slate-300 text-[9px] truncate">
-                      {activeLine.customTextColor || "แม่แบบ"}
+                      {activeLine.customTextColor || (isEn ? "Default" : "แม่แบบ")}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">สีพื้นหลัง</Label>
+                  <Label className="text-[10px] text-slate-400 block mb-1">
+                    {isEn ? "Background Color" : "สีพื้นหลัง"}
+                  </Label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -1415,13 +1433,15 @@ export function StudioTextEffectControls({
                       className="h-6 w-8 rounded border border-slate-700 bg-transparent cursor-pointer"
                     />
                     <span className="font-mono text-slate-300 text-[9px] truncate">
-                      {activeLine.customBgColor || "แม่แบบ"}
+                      {activeLine.customBgColor || (isEn ? "Default" : "แม่แบบ")}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-[10px] text-slate-400 block mb-1">สีกรอบ</Label>
+                  <Label className="text-[10px] text-slate-400 block mb-1">
+                    {isEn ? "Border Color" : "สีกรอบ"}
+                  </Label>
                   <div className="flex items-center gap-1.5">
                     <input
                       type="color"
@@ -1430,7 +1450,7 @@ export function StudioTextEffectControls({
                       className="h-6 w-8 rounded border border-slate-700 bg-transparent cursor-pointer"
                     />
                     <span className="font-mono text-slate-300 text-[9px] truncate">
-                      {activeLine.customBorderColor || "แม่แบบ"}
+                      {activeLine.customBorderColor || (isEn ? "Default" : "แม่แบบ")}
                     </span>
                   </div>
                 </div>
@@ -1463,10 +1483,10 @@ export function StudioTextEffectControls({
             />
             <div className="flex items-center gap-1 shrink-0">
               {[
-                { px: 4, label: "ชิด 4px" },
-                { px: 16, label: "ปกติ 16px" },
-                { px: 36, label: "ห่าง 36px" },
-                { px: 64, label: "กว้าง 64px" },
+                { px: 4, label: isEn ? "Tight 4px" : "ชิด 4px" },
+                { px: 16, label: isEn ? "Normal 16px" : "ปกติ 16px" },
+                { px: 36, label: isEn ? "Wide 36px" : "ห่าง 36px" },
+                { px: 64, label: isEn ? "Spacious 64px" : "กว้าง 64px" },
               ].map((btn) => (
                 <button
                   key={btn.px}
@@ -1496,11 +1516,11 @@ export function StudioTextEffectControls({
         {/* Standard & Safe Zones */}
         <div className="grid grid-cols-5 gap-1 text-[10px]">
           {[
-            { id: "top", label: "Top (บน)" },
+            { id: "top", label: isEn ? "Top" : "Top (บน)" },
             { id: "safe_top", label: "🛡️ Safe Top" },
-            { id: "center", label: "🎯 Center (กลาง)" },
+            { id: "center", label: isEn ? "🎯 Center" : "🎯 Center (กลาง)" },
             { id: "safe_bottom", label: "🛡️ Safe Bot" },
-            { id: "bottom", label: "Bottom (ล่าง)" },
+            { id: "bottom", label: isEn ? "Bottom" : "Bottom (ล่าง)" },
           ].map((p) => (
             <button
               key={p.id}
@@ -1550,7 +1570,7 @@ export function StudioTextEffectControls({
                 : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
             }`}
           >
-            ↖️ บนซ้าย
+            {isEn ? "↖️ Top-Left" : "↖️ บนซ้าย"}
           </button>
           <button
             type="button"
@@ -1561,7 +1581,7 @@ export function StudioTextEffectControls({
                 : "bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800"
             }`}
           >
-            ↗️ บนขวา
+            {isEn ? "↗️ Top-Right" : "↗️ บนขวา"}
           </button>
         </div>
       </div>

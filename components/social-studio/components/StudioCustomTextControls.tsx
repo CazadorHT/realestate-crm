@@ -18,6 +18,14 @@ const QUICK_TEXT_PRESETS = [
   { text: "👑 ห้องมุม วิวแม่น้ำ ชั้นสูง", color: "#FDE68A", bg: "#0A192F", border: "#D4AF37" },
 ];
 
+const QUICK_TEXT_PRESETS_EN = [
+  { text: "★ Book Today Free Transfer ★", color: "#FDE68A", bg: "#0F172A", border: "#F59E0B" },
+  { text: "🔥 Flash Sale ฿500K Off", color: "#FFFFFF", bg: "#EF4444", border: "#FFFFFF" },
+  { text: "✨ Fully Furnished Ready to Move", color: "#1E293B", bg: "#FFFFFF", border: "#CBD5E1" },
+  { text: "🐾 Pet-Friendly Residence", color: "#FFFFFF", bg: "#059669", border: "#A7F3D0" },
+  { text: "👑 Corner Unit River View High Floor", color: "#FDE68A", bg: "#0A192F", border: "#D4AF37" },
+];
+
 export const StudioCustomTextControls: React.FC<StudioCustomTextControlsProps> = ({
   language,
   customTexts,
@@ -26,6 +34,7 @@ export const StudioCustomTextControls: React.FC<StudioCustomTextControlsProps> =
   onRemoveCustomText,
 }) => {
   const isEn = language === "en";
+  const activePresets = isEn ? QUICK_TEXT_PRESETS_EN : QUICK_TEXT_PRESETS;
 
   const handleAddNew = (preset?: typeof QUICK_TEXT_PRESETS[0]) => {
     const newId = `custom-text-${Date.now()}`;
@@ -81,7 +90,7 @@ export const StudioCustomTextControls: React.FC<StudioCustomTextControlsProps> =
               : "ยังไม่มีข้อความเพิ่มเติม คลิกเพิ่มข้อความอิสระ หรือเลือกแม่แบบด่วนด้านล่าง"}
           </p>
           <div className="flex flex-wrap gap-1.5 justify-center pt-1">
-            {QUICK_TEXT_PRESETS.map((p, idx) => (
+            {activePresets.map((p, idx) => (
               <button
                 key={idx}
                 type="button"
@@ -214,7 +223,7 @@ export const StudioCustomTextControls: React.FC<StudioCustomTextControlsProps> =
             <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800/60">
               <div>
                 <div className="flex justify-between text-[10px] text-slate-400 mb-0.5">
-                  <span>ตำแหน่ง X</span>
+                  <span>{isEn ? "Position X" : "ตำแหน่ง X"}</span>
                   <span className="font-mono text-emerald-400">{item.x}%</span>
                 </div>
                 <input
@@ -228,7 +237,7 @@ export const StudioCustomTextControls: React.FC<StudioCustomTextControlsProps> =
               </div>
               <div>
                 <div className="flex justify-between text-[10px] text-slate-400 mb-0.5">
-                  <span>ตำแหน่ง Y</span>
+                  <span>{isEn ? "Position Y" : "ตำแหน่ง Y"}</span>
                   <span className="font-mono text-emerald-400">{item.y}%</span>
                 </div>
                 <input
@@ -245,7 +254,9 @@ export const StudioCustomTextControls: React.FC<StudioCustomTextControlsProps> =
             <div className="flex items-center justify-between text-[9px] text-slate-500 pt-0.5">
               <span className="flex items-center gap-1">
                 <Move className="h-2.5 w-2.5 text-emerald-400" />
-                หรือใช้เมาส์คลิกลากป้ายข้อความบนภาพพรีวิวได้โดยตรง
+                {isEn
+                  ? "Or drag the text badge directly on the canvas preview"
+                  : "หรือใช้เมาส์คลิกลากป้ายข้อความบนภาพพรีวิวได้โดยตรง"}
               </span>
             </div>
           </div>

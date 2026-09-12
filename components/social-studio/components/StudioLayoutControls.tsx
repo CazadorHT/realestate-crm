@@ -24,6 +24,7 @@ import type {
   PhotoFilter,
 } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { STARTER_TEMPLATES } from "../constants/starter-templates";
 
 export interface StudioLayoutControlsProps {
   layout: StudioLayout;
@@ -61,6 +62,7 @@ export interface StudioLayoutControlsProps {
   slotCropOffsets?: Record<number, { x: number; y: number }>;
   onUpdateSlotCropOffset?: (slotIdx: number, offset: { x?: number; y?: number }) => void;
   onResetSlotCropOffset?: (slotIdx: number) => void;
+  onApplyCuratedPreset?: (presetId: string) => void;
 }
 
 export function StudioLayoutControls({
@@ -99,6 +101,7 @@ export function StudioLayoutControls({
   slotCropOffsets = {},
   onUpdateSlotCropOffset,
   onResetSlotCropOffset,
+  onApplyCuratedPreset,
 }: StudioLayoutControlsProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
@@ -386,6 +389,28 @@ export function StudioLayoutControls({
               </button>
             ))}
           </div>
+
+          {/* Quick Starter Templates for Active Aspect Ratio */}
+          {onApplyCuratedPreset && (
+            <div className="pt-1 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              <span className="text-[9.5px] text-amber-400/90 font-bold shrink-0 flex items-center gap-0.5">
+                <Sparkles className="w-2.5 h-2.5" />
+                {isEn ? "Suggested:" : "แนะนำ:"}
+              </span>
+              {STARTER_TEMPLATES.filter((t) => t.ratio === aspectRatio).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => onApplyCuratedPreset(t.id)}
+                  className="shrink-0 px-2 py-0.5 rounded-md text-[9.5px] bg-slate-900/90 hover:bg-amber-500/20 text-slate-300 hover:text-amber-200 border border-slate-700 hover:border-amber-400/80 transition-all flex items-center gap-1 cursor-pointer"
+                  title={isEn ? t.description.en : t.description.th}
+                >
+                  <span>{t.icon}</span>
+                  <span className="font-semibold">{isEn ? t.name.en : t.name.th}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-1.5">

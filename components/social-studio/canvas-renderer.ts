@@ -245,7 +245,8 @@ function drawFrostedCapsuleHeader(
   width: number,
   topY: number,
   outerMarginX: number,
-  hScale: number
+  hScale: number,
+  backdropCanvas?: HTMLCanvasElement | null
 ): { bottomY: number; pillX: number; pillW: number; pillY: number; pillH: number; centerY: number } {
   const companyTitle = options.customCompanyName || options.companyName || "Vcc Asset";
   const companySubtitle = options.customCompanySubtitle || "LUXURY VILLAS • CHERNGTALAY, PHUKET";
@@ -314,6 +315,12 @@ function drawFrostedCapsuleHeader(
   ctx.save();
   roundRect(ctx, pillX, pillY, pillW, pillH, radius);
   ctx.clip();
+
+  if (backdropCanvas) {
+    ctx.filter = "blur(18px)";
+    ctx.drawImage(backdropCanvas, 0, 0);
+    ctx.filter = "none";
+  }
 
   // Base glass fill
   ctx.fillStyle = baseFill;
@@ -749,6 +756,20 @@ export async function renderBannerToCanvas(
     ctx.restore();
   }
 
+  // Snapshot pristine backdrop photo for genuine frosted glass cards (backdrop-filter)
+  let backdropCanvas: HTMLCanvasElement | null = null;
+  try {
+    backdropCanvas = document.createElement("canvas");
+    backdropCanvas.width = width;
+    backdropCanvas.height = height;
+    const bCtx = backdropCanvas.getContext("2d");
+    if (bCtx) {
+      bCtx.drawImage(canvas, 0, 0);
+    }
+  } catch (err) {
+    console.warn("Backdrop snapshot failed:", err);
+  }
+
   // Scrim Gradients
   const defaultScrim = options.scrimOpacity !== undefined ? options.scrimOpacity : 40;
   const topSFactor = (options.topScrimOpacity !== undefined ? options.topScrimOpacity : defaultScrim) / 100;
@@ -763,12 +784,17 @@ export async function renderBannerToCanvas(
   }
 
   if (bottomSFactor > 0) {
+    const bgStyle: CardBackground = options.cardBackground || "frosted_luxury";
+    const isGlass = bgStyle !== "solid" && bgStyle !== "minimal_gradient";
+
     if (showCardContent) {
       const bottomBaseY = hasZoneBItems ? card2Y : card1Y;
+      // When glass card is used, attenuate bottom scrim so the photo is not blacked out and can be blurred by the glass
+      const scrimScale = isGlass ? 0.35 : 1.0;
       const bottomGradient = ctx.createLinearGradient(0, Math.max(0, bottomBaseY - 40), 0, height);
       bottomGradient.addColorStop(0, "rgba(10, 15, 29, 0.0)");
-      bottomGradient.addColorStop(0.35, `rgba(10, 15, 29, ${0.65 * bottomSFactor})`);
-      bottomGradient.addColorStop(1, `rgba(5, 8, 16, ${0.90 * bottomSFactor})`);
+      bottomGradient.addColorStop(0.35, `rgba(10, 15, 29, ${0.65 * bottomSFactor * scrimScale})`);
+      bottomGradient.addColorStop(1, `rgba(5, 8, 16, ${0.90 * bottomSFactor * scrimScale})`);
       ctx.fillStyle = bottomGradient;
       ctx.fillRect(0, Math.max(0, bottomBaseY - 40), width, height - Math.max(0, bottomBaseY - 40));
     } else {
@@ -791,7 +817,7 @@ export async function renderBannerToCanvas(
 
   if (showHeader) {
     if (options.brandingHeaderStyle === "frosted_capsule") {
-      const capsule = drawFrostedCapsuleHeader(ctx, options, width, topY, outerMarginX, hScale);
+      const capsule = drawFrostedCapsuleHeader(ctx, options, width, topY, outerMarginX, hScale, backdropCanvas);
       badgeBottomY = Math.max(badgeBottomY, capsule.bottomY);
       headerCenterY = capsule.centerY;
     } else {
@@ -900,13 +926,13 @@ export async function renderBannerToCanvas(
     }
 
     if (cardAlpha > 0) {
-      // 0. Backdrop Glass Blur (Actual backdrop-filter: blur(24px) via canvas snapshot clipping)
-      if (glassBlur > 0 && bgStyle !== "solid" && bgStyle !== "minimal_gradient") {
+      // 0. Backdrop Glass Blur (Actual backdrop-filter: blur(24px) via separate pristine backdrop snapshot)
+      if (backdropCanvas && glassBlur > 0 && bgStyle !== "solid" && bgStyle !== "minimal_gradient") {
         ctx.save();
         roundRect(ctx, cardX, cardYPos, cardW, cardH, 28);
         ctx.clip();
         ctx.filter = `blur(${glassBlur}px)`;
-        ctx.drawImage(ctx.canvas, 0, 0);
+        ctx.drawImage(backdropCanvas, 0, 0);
         ctx.restore();
       }
 
@@ -926,8 +952,8 @@ export async function renderBannerToCanvas(
         const g = parseInt(hex.substring(2, 4), 16) || 23;
         const b = parseInt(hex.substring(4, 6), 16) || 42;
         const tintGrad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-        tintGrad.addColorStop(0, `rgba(${Math.min(255, r + 20)}, ${Math.min(255, g + 20)}, ${Math.min(255, b + 25)}, ${cardAlpha})`);
-        tintGrad.addColorStop(1, `rgba(${Math.max(0, r - 8)}, ${Math.max(0, g - 8)}, ${Math.max(0, b - 8)}, ${Math.min(1.0, cardAlpha * 1.15)})`);
+        tintGrad.addColorStop(0, `rgba(${Math.min(255, r + 20)}, ${Math.min(255, g + 20)}, ${Math.min(255, b + 25)}, ${cardAlpha * 0.70})`);
+        tintGrad.addColorStop(1, `rgba(${Math.max(0, r - 8)}, ${Math.max(0, g - 8)}, ${Math.max(0, b - 8)}, ${Math.min(1.0, cardAlpha * 0.85)})`);
         ctx.fillStyle = tintGrad;
         ctx.fill();
 
@@ -953,9 +979,9 @@ export async function renderBannerToCanvas(
         ctx.fill();
       } else if (bgStyle === "crystal_glass") {
         const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-        grad.addColorStop(0, `rgba(240, 246, 255, ${Math.min(0.65, cardAlpha * 0.50)})`);
-        grad.addColorStop(0.55, `rgba(215, 230, 252, ${Math.min(0.50, cardAlpha * 0.38)})`);
-        grad.addColorStop(1, `rgba(185, 210, 240, ${Math.min(0.60, cardAlpha * 0.48)})`);
+        grad.addColorStop(0, `rgba(240, 246, 255, ${Math.min(0.55, cardAlpha * 0.40)})`);
+        grad.addColorStop(0.55, `rgba(215, 230, 252, ${Math.min(0.40, cardAlpha * 0.30)})`);
+        grad.addColorStop(1, `rgba(185, 210, 240, ${Math.min(0.50, cardAlpha * 0.40)})`);
         ctx.fillStyle = grad;
         ctx.fill();
 
@@ -968,9 +994,9 @@ export async function renderBannerToCanvas(
         ctx.fill();
       } else if (bgStyle === "obsidian_glass") {
         const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-        grad.addColorStop(0, `rgba(8, 12, 22, ${cardAlpha * 1.05})`);
-        grad.addColorStop(0.6, `rgba(4, 7, 15, ${cardAlpha * 1.15})`);
-        grad.addColorStop(1, `rgba(2, 3, 8, ${cardAlpha * 1.25})`);
+        grad.addColorStop(0, `rgba(8, 12, 22, ${cardAlpha * 0.78})`);
+        grad.addColorStop(0.6, `rgba(4, 7, 15, ${cardAlpha * 0.88})`);
+        grad.addColorStop(1, `rgba(2, 3, 8, ${cardAlpha * 0.94})`);
         ctx.fillStyle = grad;
         ctx.fill();
 
@@ -982,9 +1008,9 @@ export async function renderBannerToCanvas(
         ctx.fill();
       } else if (bgStyle === "champagne_glass") {
         const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-        grad.addColorStop(0, `rgba(38, 28, 16, ${cardAlpha * 0.95})`);
-        grad.addColorStop(0.55, `rgba(22, 16, 9, ${cardAlpha * 1.10})`);
-        grad.addColorStop(1, `rgba(12, 8, 4, ${cardAlpha * 1.20})`);
+        grad.addColorStop(0, `rgba(38, 28, 16, ${cardAlpha * 0.70})`);
+        grad.addColorStop(0.55, `rgba(22, 16, 9, ${cardAlpha * 0.80})`);
+        grad.addColorStop(1, `rgba(12, 8, 4, ${cardAlpha * 0.88})`);
         ctx.fillStyle = grad;
         ctx.fill();
 
@@ -996,8 +1022,8 @@ export async function renderBannerToCanvas(
         ctx.fill();
       } else if (bgStyle === "smoked_glass") {
         const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-        grad.addColorStop(0, `rgba(28, 30, 36, ${cardAlpha * 0.88})`);
-        grad.addColorStop(1, `rgba(14, 16, 20, ${cardAlpha * 1.05})`);
+        grad.addColorStop(0, `rgba(28, 30, 36, ${cardAlpha * 0.65})`);
+        grad.addColorStop(1, `rgba(14, 16, 20, ${cardAlpha * 0.78})`);
         ctx.fillStyle = grad;
         ctx.fill();
 
@@ -1008,26 +1034,26 @@ export async function renderBannerToCanvas(
         ctx.fill();
       } else if (bgStyle === "glass") {
         const grad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-        grad.addColorStop(0, `rgba(30, 41, 59, ${cardAlpha * 0.72})`);
-        grad.addColorStop(0.55, `rgba(15, 23, 42, ${cardAlpha * 0.82})`);
-        grad.addColorStop(1, `rgba(10, 15, 30, ${cardAlpha * 0.90})`);
+        grad.addColorStop(0, `rgba(30, 41, 59, ${cardAlpha * 0.50})`);
+        grad.addColorStop(0.55, `rgba(15, 23, 42, ${cardAlpha * 0.62})`);
+        grad.addColorStop(1, `rgba(10, 15, 30, ${cardAlpha * 0.72})`);
         ctx.fillStyle = grad;
         ctx.fill();
 
         const glassSheen = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-        glassSheen.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.32, cardAlpha * 0.32)})`);
-        glassSheen.addColorStop(0.25, `rgba(255, 255, 255, ${Math.min(0.16, cardAlpha * 0.16)})`);
+        glassSheen.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.38, cardAlpha * 0.35)})`);
+        glassSheen.addColorStop(0.25, `rgba(255, 255, 255, ${Math.min(0.18, cardAlpha * 0.18)})`);
         glassSheen.addColorStop(0.70, `rgba(255, 255, 255, ${Math.min(0.06, cardAlpha * 0.06)})`);
-        glassSheen.addColorStop(1, `rgba(255, 255, 255, ${Math.min(0.14, cardAlpha * 0.14)})`);
+        glassSheen.addColorStop(1, `rgba(255, 255, 255, ${Math.min(0.15, cardAlpha * 0.15)})`);
         ctx.fillStyle = glassSheen;
         ctx.fill();
       } else {
         // Default frosted_luxury: Signature Frosted White Glass ("พื้นหลังขาวใสเบลอ")
-        // Layer 1: Base dark translucent foundation (rgba(20, 30, 42, 0.45))
+        // Layer 1: Base dark translucent foundation (rgba(20, 30, 42, 0.35))
         const baseBackdrop = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-        baseBackdrop.addColorStop(0, `rgba(20, 30, 42, ${cardAlpha * 0.45})`);
-        baseBackdrop.addColorStop(0.55, `rgba(16, 24, 36, ${cardAlpha * 0.58})`);
-        baseBackdrop.addColorStop(1, `rgba(12, 18, 28, ${cardAlpha * 0.68})`);
+        baseBackdrop.addColorStop(0, `rgba(20, 30, 42, ${cardAlpha * 0.35})`);
+        baseBackdrop.addColorStop(0.55, `rgba(16, 24, 36, ${cardAlpha * 0.45})`);
+        baseBackdrop.addColorStop(1, `rgba(12, 18, 28, ${cardAlpha * 0.55})`);
         ctx.fillStyle = baseBackdrop;
         ctx.fill();
 
@@ -1036,9 +1062,9 @@ export async function renderBannerToCanvas(
           cardX + cardW * 0.5, cardYPos + cardH * 0.30, 4,
           cardX + cardW * 0.5, cardYPos + cardH * 0.35, cardW * 0.55
         );
-        const radCenterWhite = Math.min(0.60, 0.22 * centerGlowFactor * (cardAlpha / 0.78));
-        const radMidWhite = Math.min(0.25, 0.05 * centerGlowFactor * (cardAlpha / 0.78));
-        const radEdgeDark = Math.min(0.85, 0.55 * (cardAlpha / 0.78));
+        const radCenterWhite = Math.min(0.55, 0.22 * centerGlowFactor * (cardAlpha / 0.78));
+        const radMidWhite = Math.min(0.20, 0.05 * centerGlowFactor * (cardAlpha / 0.78));
+        const radEdgeDark = Math.min(0.50, 0.32 * (cardAlpha / 0.78));
         radialFrost.addColorStop(0, `rgba(${glowR}, ${glowG}, ${glowB}, ${radCenterWhite})`);
         radialFrost.addColorStop(0.5, `rgba(${glowR}, ${glowG}, ${glowB}, ${radMidWhite})`);
         radialFrost.addColorStop(1, `rgba(15, 23, 30, ${radEdgeDark})`);

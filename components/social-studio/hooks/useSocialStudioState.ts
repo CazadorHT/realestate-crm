@@ -41,6 +41,7 @@ import type {
   TextEffectLineConfig,
   TextEffectCardMode,
 } from "../types";
+import { STARTER_TEMPLATES } from "../constants/starter-templates";
 
 export interface UseSocialStudioStateProps {
   isOpen: boolean;
@@ -81,26 +82,224 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
 
   // Extract Project Name reliably
   const initialProjectName = useMemo(() => {
+    if (initialLanguage === "en") {
+      const en = (property as any)?.project_name_en?.trim() || (property?.project?.name as any)?.en?.trim();
+      if (en) return en;
+      if (property?.title_en?.trim()) return property.title_en.trim();
+    }
     if (property.project_name && property.project_name.trim()) return property.project_name.trim();
     if (property.project?.name) {
       if (typeof property.project.name === "object") {
-        return property.project.name.th || property.project.name.en || property.project.name.cn || property.project.name.ru || "";
+        return initialLanguage === "en"
+          ? property.project.name.en || property.project.name.th || ""
+          : property.project.name.th || property.project.name.en || property.project.name.cn || property.project.name.ru || "";
       }
       if (typeof property.project.name === "string") return property.project.name;
     }
     return "";
-  }, [property.project_name, property.project]);
+  }, [property.project_name, property.project, property.title_en, initialLanguage]);
 
   // Editable Text Customization
   const [customProjectName, setCustomProjectName] = useState<string>(initialProjectName);
-  const [customTitle, setCustomTitle] = useState<string>(property.title || "");
+  const [customTitle, setCustomTitle] = useState<string>(
+    initialLanguage === "en" && property.title_en ? property.title_en : (property.title || "")
+  );
   const [customTransitText, setCustomTransitText] = useState<string>("");
 
-  useEffect(() => {
-    if (initialProjectName) {
-      setCustomProjectName(initialProjectName);
+  // Helper: Reliable Clean Project Name across 4 languages
+  const getCleanPropertyProjectName = useCallback(() => {
+    if (language === "en") {
+      const enProj = (property as any)?.project_name_en?.trim() || (property?.project?.name as any)?.en?.trim();
+      if (enProj) return enProj;
+      if (property?.title_en?.trim()) return property.title_en.trim();
+      if (customProjectName?.trim()) return customProjectName.trim();
+      return (
+        property?.project_name?.trim() ||
+        (typeof property?.project?.name === "string" ? property.project.name.trim() : "") ||
+        property?.title?.trim() ||
+        ""
+      );
     }
-  }, [initialProjectName]);
+    if (language === "zh") {
+      const zhProj =
+        (property as any)?.project_name_cn?.trim() ||
+        (property?.project?.name as any)?.cn?.trim() ||
+        (property?.project?.name as any)?.zh?.trim() ||
+        (property as any)?.project_name_en?.trim();
+      if (zhProj) return zhProj;
+      if (customProjectName?.trim()) return customProjectName.trim();
+      return (
+        property?.project_name?.trim() ||
+        (typeof property?.project?.name === "string" ? property.project.name.trim() : "") ||
+        property?.title?.trim() ||
+        ""
+      );
+    }
+    if (language === "ru") {
+      const ruProj =
+        (property as any)?.project_name_ru?.trim() ||
+        (property?.project?.name as any)?.ru?.trim() ||
+        (property as any)?.project_name_en?.trim();
+      if (ruProj) return ruProj;
+      if (customProjectName?.trim()) return customProjectName.trim();
+      return (
+        property?.project_name?.trim() ||
+        (typeof property?.project?.name === "string" ? property.project.name.trim() : "") ||
+        property?.title?.trim() ||
+        ""
+      );
+    }
+    // Default Thai
+    return (
+      customProjectName?.trim() ||
+      initialProjectName?.trim() ||
+      property?.project_name?.trim() ||
+      (typeof property?.project?.name === "string"
+        ? property.project.name.trim()
+        : (property?.project?.name as any)?.th?.trim()) ||
+      property?.title?.trim() ||
+      "ดีลเด็ด คอนโดพร้อมอยู่!"
+    );
+  }, [property, initialProjectName, customProjectName, language]);
+
+  // Helper: Reliable Clean Specs Text (Beds / Baths / Sqm) across 4 languages
+  const getCleanPropertySpecsText = useCallback(() => {
+    const parts: string[] = [];
+    if (property?.bedrooms) {
+      if (language === "en") parts.push(`${property.bedrooms} ${property.bedrooms === 1 ? "Bed" : "Beds"}`);
+      else if (language === "zh") parts.push(`${property.bedrooms} 卧`);
+      else if (language === "ru") parts.push(`${property.bedrooms} спальн.`);
+      else parts.push(`${property.bedrooms} นอน`);
+    }
+    if (property?.bathrooms) {
+      if (language === "en") parts.push(`${property.bathrooms} ${property.bathrooms === 1 ? "Bath" : "Baths"}`);
+      else if (language === "zh") parts.push(`${property.bathrooms} 卫`);
+      else if (language === "ru") parts.push(`${property.bathrooms} сануз.`);
+      else parts.push(`${property.bathrooms} น้ำ`);
+    }
+    if (property?.size_sqm) {
+      if (language === "en") parts.push(`${property.size_sqm} Sq.m.`);
+      else if (language === "zh") parts.push(`${property.size_sqm} 平米`);
+      else if (language === "ru") parts.push(`${property.size_sqm} кв.м`);
+      else parts.push(`${property.size_sqm} ตร.ม.`);
+    }
+    return parts.join(" ");
+  }, [property?.bedrooms, property?.bathrooms, property?.size_sqm, language]);
+
+  // Helper: Reliable Clean Price Text across 4 languages & styles
+  const getCleanPropertyPriceText = useCallback((priceStyle?: StudioPriceFormatStyle) => {
+    if (!property?.price && !property?.rental_price) {
+      return (
+        language === "en"
+          ? "Contact for Price"
+          : language === "zh"
+            ? "咨询价格"
+            : language === "ru"
+              ? "Цена по запросу"
+              : "ติดต่อสอบถาม"
+      );
+    }
+    return formatStudioPrice(
+      property.listing_type,
+      property.price,
+      property.rental_price,
+      language,
+      priceStyle || "default"
+    );
+  }, [property?.listing_type, property?.price, property?.rental_price, language]);
+
+  // Helper: Smart Multi-line Text Effect Layer Adapter for Current Property
+  const updateLineConfigsForCurrentProperty = useCallback((
+    presetLines: TextEffectLineConfig[],
+    formatStyle?: StudioPriceFormatStyle
+  ): TextEffectLineConfig[] => {
+    if (!presetLines || presetLines.length === 0) return presetLines;
+
+    const propProject = getCleanPropertyProjectName();
+    const propSpecs = getCleanPropertySpecsText();
+    const propPrice = getCleanPropertyPriceText(formatStyle);
+
+    // Regex to match Specs keywords (Thai, English, Chinese, Russian)
+    const isSpecsLine = (txt: string) =>
+      /(นอน|น้ำ|ตร\.?ม|ตร\.?ว|sq\.?m|sqm|sqft|bed|bath|studio|สตูดิโอ|floor|ชั้น|ห้องนอน|ห้องน้ำ|卧|卫|平米|спальн|сануз|кв\.м)/i.test(txt);
+
+    // Regex to match Price keywords & currency
+    const isPriceLine = (txt: string) =>
+      /(฿|บาท|thb|\$|usd|¥|€|₽|\/ด|\/เดือน|\/mo|\/month|\/night|\/คืน|\/ปี|\/yr|ล้าน|price|rental|咨询价格|Цена)/i.test(txt);
+
+    const hasExplicitSpecs = presetLines.some((l) => isSpecsLine(l.text));
+    const hasExplicitPrice = presetLines.some((l) => isPriceLine(l.text));
+
+    return presetLines.map((line, idx) => {
+      // 1. Explicit Price match
+      if (isPriceLine(line.text)) {
+        return { ...line, text: propPrice };
+      }
+
+      // 2. Explicit Specs match
+      if (isSpecsLine(line.text)) {
+        return { ...line, text: propSpecs || line.text };
+      }
+
+      // 3. Fallback matching when lines don't have explicit keywords:
+      if (!hasExplicitSpecs && !hasExplicitPrice) {
+        if (idx === 0) return { ...line, text: propProject };
+        if (idx === 1 && presetLines.length >= 2) return { ...line, text: propSpecs || propPrice };
+        if (idx === 2 && presetLines.length >= 3) return { ...line, text: propPrice };
+      } else {
+        // Line 0 is project name if it didn't match price or specs
+        if (idx === 0 && !isPriceLine(line.text) && !isSpecsLine(line.text)) {
+          return { ...line, text: propProject };
+        }
+        // If price wasn't found in any line, assign it to the last line
+        if (!hasExplicitPrice && idx === presetLines.length - 1 && presetLines.length >= 2) {
+          return { ...line, text: propPrice };
+        }
+        // If specs wasn't found in any line, assign it to line 1 in 3+ line layouts
+        if (!hasExplicitSpecs && idx === 1 && presetLines.length >= 3) {
+          return { ...line, text: propSpecs || line.text };
+        }
+      }
+
+      return line;
+    });
+  }, [getCleanPropertyProjectName, getCleanPropertySpecsText, getCleanPropertyPriceText]);
+
+  useEffect(() => {
+    // When property changes (e.g. user opens modal for Property B after Property A)
+    // always sync current property data
+    const projName = initialProjectName;
+    const currentPropTitle = language === "en" && property.title_en ? property.title_en : property.title || "";
+    setCustomProjectName(projName);
+    setCustomTitle(currentPropTitle);
+    setCustomTransitText("");
+    hasFetchedInitialAI.current = false;
+    fetchAIContent(language);
+
+    // Sync Text Effect lines to current property
+    setTextEffectLineConfigs((prev) => {
+      const propProject = getCleanPropertyProjectName();
+      if (!prev || prev.length === 0) {
+        return [{
+          id: "line-1",
+          text: propProject,
+          template: "same",
+          sizeScale: 1.0,
+          xOffset: 0,
+          yOffset: 0,
+          rotation: 0,
+          curve: 0,
+        }];
+      }
+      return updateLineConfigsForCurrentProperty(prev);
+    });
+
+    if (property?.is_foreigner_quota) {
+      setSelectedBadges(["Foreign Freehold"]);
+    } else {
+      setSelectedBadges([]);
+    }
+  }, [property.id, initialProjectName, getCleanPropertyProjectName, updateLineConfigsForCurrentProperty]);
 
   // Card Geometry & Style State
   const [cardBackground, setCardBackground] = useState<CardBackground>("glass");
@@ -232,7 +431,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const [textEffectLineConfigs, setTextEffectLineConfigs] = useState<TextEffectLineConfig[]>([
     {
       id: "line-1",
-      text: property.project_name || property.title || "ดีลเด็ด คอนโดพร้อมอยู่!",
+      text: initialProjectName || (initialLanguage === "en" ? (property.title_en || property.title || "Exclusive Deal Ready to Move In!") : (property.project_name || property.title || "ดีลเด็ด คอนโดพร้อมอยู่!")),
       template: "same",
       sizeScale: 1.0,
       xOffset: 0,
@@ -245,7 +444,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const addTextEffectLine = useCallback((text?: string, template?: TextEffectTemplate) => {
     setTextEffectLineConfigs((prev) => {
       if (prev.length >= 6) {
-        toast.info("จำกัดข้อความสูงสุด 6 บรรทัดครับ");
+        toast.info(language === "en" ? "Maximum 6 text lines allowed" : "จำกัดข้อความสูงสุด 6 บรรทัดครับ");
         return prev;
       }
       const newLine: TextEffectLineConfig = {
@@ -454,8 +653,24 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.brandingBgColor !== undefined) setBrandingBgColor(config.brandingBgColor);
     if (config.brandingTitleColor !== undefined) setBrandingTitleColor(config.brandingTitleColor);
     if (config.brandingSubtitleColor !== undefined) setBrandingSubtitleColor(config.brandingSubtitleColor);
-    if (config.customCompanyName !== undefined) setCustomCompanyName(config.customCompanyName);
-    if (config.customCompanySubtitle !== undefined) setCustomCompanySubtitle(config.customCompanySubtitle);
+
+    // Keep branding company name aligned with current property unless custom company name was explicitly customized
+    const currentPropProject = getCleanPropertyProjectName();
+    if (config.customCompanyName && !config.customCompanyName.includes("VCC") && !config.customCompanyName.toLowerCase().includes("agency") && !config.customCompanyName.toLowerCase().includes("realty") && !config.customCompanyName.toLowerCase().includes("asset")) {
+      setCustomCompanyName(currentPropProject);
+    } else if (config.customCompanyName) {
+      setCustomCompanyName(config.customCompanyName);
+    } else {
+      setCustomCompanyName(currentPropProject || "VCC Asset");
+    }
+
+    const area = property.popular_area || property.province || "";
+    if (config.customCompanySubtitle && !config.customCompanySubtitle.includes("•")) {
+      setCustomCompanySubtitle(config.customCompanySubtitle);
+    } else {
+      setCustomCompanySubtitle(area ? `LUXURY PROPERTIES • ${area.toUpperCase()}` : "PREMIUM REAL ESTATE");
+    }
+
     if (config.showTopListingBadge !== undefined) setShowTopListingBadge(config.showTopListingBadge);
     if (config.headerFontSizeScale) setHeaderFontSizeScale(config.headerFontSizeScale);
     if (config.brandingTitleFontSizeScale) setBrandingTitleFontSizeScale(config.brandingTitleFontSizeScale);
@@ -480,8 +695,15 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.textEffectCustomShadowColor) setTextEffectCustomShadowColor(config.textEffectCustomShadowColor);
     if (config.textEffectCustomBgAlpha !== undefined) setTextEffectCustomBgAlpha(config.textEffectCustomBgAlpha);
     if (config.textEffectCustomBorderWidth !== undefined) setTextEffectCustomBorderWidth(config.textEffectCustomBorderWidth);
+    
+    // Apply Text Effect styles while adapting all line texts to current property (Project, Specs, Price)
     if (config.textEffectLineConfigs && config.textEffectLineConfigs.length > 0) {
-      setTextEffectLineConfigs(config.textEffectLineConfigs);
+      const updatedLines = updateLineConfigsForCurrentProperty(
+        config.textEffectLineConfigs,
+        config.priceFormatStyle
+      );
+      setTextEffectLineConfigs(updatedLines);
+      setTextEffectText(updatedLines.map((l) => l.text).join("\n"));
     }
     if (config.textEffectCardMode) setTextEffectCardMode(config.textEffectCardMode);
     if (config.textEffectSingleCardBgColor) setTextEffectSingleCardBgColor(config.textEffectSingleCardBgColor);
@@ -508,39 +730,108 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   };
 
   const handleApplyCuratedPreset = (presetId: string) => {
-    if (presetId === "phuket_frosted_luxury") {
-      setAspectRatio("4:5");
-      setCardBackground("frosted_luxury");
-      setTheme("luxury");
-      setPriceFormatStyle("thb_with_usd");
-      setShowUsdApprox(true);
-      setCustomPriceColor("#E5B869");
-      setCustomAccentColor("#F59E0B");
-      setShowSpecs(true);
-      setShowPrice(true);
-      setSpecFontSizeScale("md");
-      setPriceFontSizeScale("md");
-      setContentPosition("bottom");
-      setCardOpacity(78);
-      setCardHeightPercent(0);
-      setCardWidthPercent(0);
-      setShowCardContent(true);
-      setShowBrandingHeader(true);
-      setBrandingHeaderStyle("frosted_capsule");
-      setBrandingHeaderAlign("center");
-      if (!customCompanyName) {
-        setCustomCompanyName(property.project_name || "VCC Asset");
+    const template = STARTER_TEMPLATES.find((t) => t.id === presetId);
+    if (template) {
+      const cfg = template.config;
+      setAspectRatio(cfg.aspectRatio);
+      setLayout(cfg.layout);
+      setTheme(cfg.theme);
+      setCardBackground(cfg.cardBackground);
+      setCardOpacity(cfg.cardOpacity);
+      setContentPosition(cfg.contentPosition);
+      setFontSizeScale(cfg.fontSizeScale);
+      setPriceFontSizeScale(cfg.priceFontSizeScale);
+      if (cfg.specFontSizeScale) setSpecFontSizeScale(cfg.specFontSizeScale);
+      setPriceFormatStyle(cfg.priceFormatStyle);
+      setPhotoFilter(cfg.photoFilter);
+      setBgBlur(cfg.bgBlur || 0);
+      setBgDimOpacity(cfg.bgDimOpacity || 0);
+      if (cfg.fitWithBlurredBackdrop !== undefined) setFitWithBlurredBackdrop(cfg.fitWithBlurredBackdrop);
+      if (cfg.gridLineWidth !== undefined) setGridLineWidth(cfg.gridLineWidth);
+      if (cfg.gridLineColor !== undefined) setGridLineColor(cfg.gridLineColor);
+      if (cfg.customPriceColor !== undefined) setCustomPriceColor(cfg.customPriceColor);
+      if (cfg.customAccentColor !== undefined) setCustomAccentColor(cfg.customAccentColor);
+      if (cfg.customCardBgColor !== undefined) setCustomCardBgColor(cfg.customCardBgColor);
+      if (cfg.showCardContent !== undefined) setShowCardContent(cfg.showCardContent);
+      if (cfg.showSpecs !== undefined) setShowSpecs(cfg.showSpecs);
+      if (cfg.showPrice !== undefined) setShowPrice(cfg.showPrice);
+      if (cfg.showHeadline !== undefined) setShowHeadline(cfg.showHeadline);
+      if (cfg.showBrandingHeader !== undefined) setShowBrandingHeader(cfg.showBrandingHeader);
+      if (cfg.brandingHeaderStyle) setBrandingHeaderStyle(cfg.brandingHeaderStyle);
+      if (cfg.brandingHeaderAlign) setBrandingHeaderAlign(cfg.brandingHeaderAlign);
+      if (cfg.showUsdApprox !== undefined) setShowUsdApprox(cfg.showUsdApprox);
+      if (cfg.textEffectTemplate) setTextEffectTemplate(cfg.textEffectTemplate);
+      if (cfg.textEffectPosition) setTextEffectPosition(cfg.textEffectPosition);
+
+      if (cfg.showBrandingHeader) {
+        setCustomCompanyName(getCleanPropertyProjectName() || "VCC Asset");
+        const area = property.popular_area || property.province || "";
+        setCustomCompanySubtitle(area ? `LUXURY PROPERTIES • ${area.toUpperCase()}` : "PREMIUM REAL ESTATE");
       }
-      if (!customCompanySubtitle) {
-        const area = property.popular_area || property.province || "CHERNGTALAY, PHUKET";
-        setCustomCompanySubtitle(`LUXURY VILLAS • ${area.toUpperCase()}`);
+
+      // Sync Text Effect lines to current property if template has text effect
+      if (cfg.textEffectTemplate && cfg.textEffectTemplate !== "none") {
+        setTextEffectLineConfigs((prev) => {
+          const propProject = getCleanPropertyProjectName();
+          const propSpecs = getCleanPropertySpecsText();
+          const propPrice = getCleanPropertyPriceText(cfg.priceFormatStyle);
+
+          let baseLines: TextEffectLineConfig[] = prev && prev.length > 0 ? prev : [
+            {
+              id: "line-1",
+              text: propProject,
+              template: "same",
+              sizeScale: 1.0,
+              xOffset: 0,
+              yOffset: 0,
+              rotation: 0,
+              curve: 0,
+            },
+            {
+              id: "line-2",
+              text: propSpecs,
+              template: "same",
+              sizeScale: 0.85,
+              xOffset: 0,
+              yOffset: 0,
+              rotation: 0,
+              curve: 0,
+            },
+            {
+              id: "line-3",
+              text: propPrice,
+              template: "same",
+              sizeScale: 0.95,
+              xOffset: 0,
+              yOffset: 0,
+              rotation: 0,
+              curve: 0,
+            },
+          ];
+
+          const updated = updateLineConfigsForCurrentProperty(baseLines, cfg.priceFormatStyle);
+          setTextEffectText(updated.map((l) => l.text).join("\n"));
+          return updated;
+        });
       }
-      setSelectedBadges((prev) => {
-        if (prev.some((b) => b.includes("Freehold") || b.includes("Quota"))) return prev;
-        return ["Foreign Freehold", ...prev].slice(0, 2);
-      });
-      toast.success("Applied 💎 Phuket Frosted Spec Card preset! ✨");
-    } else if (presetId === "editorial_luxury") {
+
+      if (cfg.badges && cfg.badges.length > 0) {
+        setSelectedBadges((prev) => {
+          const combined = [...cfg.badges!, ...prev.filter((b) => !cfg.badges!.includes(b))];
+          return combined.slice(0, 3);
+        });
+      }
+
+      toast.success(
+        language === "en"
+          ? `Applied ${template.icon} ${template.name.en} template!`
+          : `ใช้แม่แบบ ${template.icon} ${template.name.th} เรียบร้อย! ✨`
+      );
+      return;
+    }
+
+    // Fallback legacy IDs
+    if (presetId === "editorial_luxury") {
       setCardBackground("glass");
       setTheme("luxury");
       setPriceFormatStyle("symbol_short");
@@ -548,14 +839,6 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
       setContentPosition("bottom");
       setCardOpacity(62);
       toast.success("Applied 🏛️ Editorial Luxury preset!");
-    } else if (presetId === "hot_deal") {
-      setCardBackground("solid");
-      setTheme("hotdeal");
-      setPriceFormatStyle("default");
-      setCustomPriceColor("#EF4444");
-      setCustomCardBgColor("#0F172A");
-      setCardOpacity(95);
-      toast.success("Applied 🔥 Hot Deal preset!");
     }
   };
 
@@ -725,6 +1008,14 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
       if (pNameInLang) setCustomProjectName(pNameInLang);
     }
 
+    setTextEffectLineConfigs((prev) => {
+      if (!prev || prev.length === 0) return prev;
+      const targetProj = newLang === "en"
+        ? ((property as any).project_name_en || (property.project?.name as any)?.en || property.title_en || "Exclusive Deal Ready to Move In!")
+        : (property.project_name || (property.project?.name as any)?.th || property.title || "ดีลเด็ด คอนโดพร้อมอยู่!");
+      return prev.map((line, idx) => idx === 0 ? { ...line, text: targetProj } : line);
+    });
+
     fetchAIContent(newLang);
     const langName =
       newLang === "en"
@@ -734,7 +1025,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
           : newLang === "ru"
             ? "Русский (RU)"
             : "ภาษาไทย (TH)";
-    toast.success(`เปลี่ยนภาษาเป็น ${langName} แล้ว!`);
+    toast.success(newLang === "en" ? `Switched language to ${langName}!` : `เปลี่ยนภาษาเป็น ${langName} แล้ว!`);
   };
 
   const hasFetchedInitialAI = useRef(false);
