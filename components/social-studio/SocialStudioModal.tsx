@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -69,12 +69,16 @@ export function SocialStudioModal({
     initialLanguage: (uiLang as StudioLanguage) || "en",
   });
 
-  // Sync studio language if CRM language changes while open
+  // Sync studio language ONLY when CRM language specifically changes while open
+  const prevUiLangRef = useRef(uiLang);
   useEffect(() => {
-    if (isOpen && uiLang && state.language !== uiLang) {
-      state.setLanguage(uiLang as StudioLanguage);
+    if (isOpen && uiLang && prevUiLangRef.current !== uiLang) {
+      prevUiLangRef.current = uiLang;
+      state.handleLanguageChange(uiLang as StudioLanguage);
+    } else {
+      prevUiLangRef.current = uiLang;
     }
-  }, [isOpen, uiLang, state.language, state.setLanguage]);
+  }, [isOpen, uiLang, state.handleLanguageChange]);
 
   // Export & Share Engine
   const exp = useStudioExport({
