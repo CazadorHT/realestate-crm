@@ -103,9 +103,9 @@ export function renderTextEffect(
     : 1.0;
 
   const baseFontPx = Math.round(38 * sizeScale);
-  const isStory = options.aspectRatio === "9:16";
+  const isStory = options.aspectRatio === "9:16" || options.aspectRatio === "2:3";
   // Optimal line wrap width: comfortably fits on canvas without stretching wall-to-wall
-  const maxTextW = isStory ? Math.min(width * 0.78, 720) : Math.min(width * 0.82, 800);
+  const maxTextW = isStory ? Math.min(width * 0.78, 720) : Math.min(width * 0.82, options.aspectRatio === "3:2" ? 1100 : 800);
 
   // Measure and wrap lines:
   // 1. First split by explicit line breaks (\n) to honor user manual returns

@@ -106,6 +106,34 @@ export function StudioAlbumPackager({
           })}
         </div>
       </div>
+
+      {/* Facebook Album Layout Tip Card */}
+      <div className="p-2.5 rounded-xl bg-blue-950/40 border border-blue-800/40 text-[11px] text-slate-300 space-y-1">
+        <p className="font-bold text-blue-300 flex items-center gap-1.5">
+          <span>📘</span>
+          <span>{isEn ? "Facebook Album Pro Tips:" : "เทคนิคจัดหน้าปก Facebook Album (4+ รูป):"}</span>
+        </p>
+        <ul className="text-[10px] text-slate-300 space-y-0.5 pl-4 list-disc marker:text-blue-400">
+          <li>
+            <strong className="text-amber-300">3:2 (แนวนอน):</strong>{" "}
+            {isEn
+              ? "Facebook arranges as 1 large top photo + 3 small bottom photos"
+              : "Facebook จะแสดงเป็น 1 รูปใหญ่ด้านบน + 3 รูปเล็กเรียงด้านล่าง"}
+          </li>
+          <li>
+            <strong className="text-amber-300">2:3 (แนวตั้ง):</strong>{" "}
+            {isEn
+              ? "Facebook arranges as 1 large left photo + 3 small right photos"
+              : "Facebook จะแสดงเป็น 1 รูปใหญ่ด้านซ้าย + 3 รูปเล็กเรียงด้านขวา"}
+          </li>
+          <li>
+            <strong className="text-amber-300">1:1 (จัตุรัส):</strong>{" "}
+            {isEn
+              ? "Facebook arranges as 4 equal square grid (2x2)"
+              : "Facebook จะแสดงเป็น 4 ช่องจัตุรัสเท่ากัน (กริด 2x2)"}
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

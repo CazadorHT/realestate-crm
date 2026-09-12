@@ -1,4 +1,4 @@
-export type AspectRatio = "9:16" | "1:1" | "4:5";
+export type AspectRatio = "9:16" | "1:1" | "4:5" | "2:3" | "3:2";
 export type StudioTheme = "luxury" | "modern" | "hotdeal" | "emerald" | "purple" | "orange" | "custom";
 export type StudioLayout = "single" | "split_two" | "hero_plus_two" | "four_grid" | "five_grid" | "six_grid";
 export type CardBackground =
@@ -225,6 +225,9 @@ export interface BannerRenderOptions {
   gridLineWidth?: number;
   gridLineColor?: string;
 
+  // Image Crop & Pan Offsets (per slot, range -100 to 100 for x and y)
+  slotCropOffsets?: Record<number, { x: number; y: number }>;
+
   // Feature 2: Promotional Overlay
   promoText?: string;
   promoPosition?: PromoPosition;
@@ -281,6 +284,7 @@ export interface BannerRenderOptions {
 
   calloutPointers?: CalloutPointer[];
   bgDimOpacity?: number; // 0 - 100 (% of dark overlay on background image)
+  bgBlur?: number; // 0 - 30 (px blur radius for background photos)
   cardBorderGlow?: boolean; // Highlight rim bright in center, normal elsewhere
   glowBorderWidth?: number; // 20 - 100 (% of card width for specular highlight streak, default 55)
   centerGlow?: number; // 0 - 150 (% intensity of center specular glow & radial highlight, default 100)
@@ -452,5 +456,7 @@ export interface SocialStudioPresetConfig {
   textEffectSingleCardOpacity?: number;
   calloutPointers?: CalloutPointer[];
   bgDimOpacity?: number;
+  bgBlur?: number;
   customTexts?: CustomTextItem[];
+  slotCropOffsets?: Record<number, { x: number; y: number }>;
 }

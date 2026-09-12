@@ -32,6 +32,10 @@ interface StudioPreviewPanelProps {
   onUpdateCallout?: (id: string, updates: Partial<CalloutPointer>) => void;
   customTexts?: CustomTextItem[];
   onUpdateCustomText?: (id: string, updates: Partial<CustomTextItem>) => void;
+  // Crop Pan Props
+  activeSlot?: number;
+  slotCropOffsets?: Record<number, { x: number; y: number }>;
+  onUpdateSlotCropOffset?: (slotIdx: number, offset: { x?: number; y?: number }) => void;
 }
 
 export function StudioPreviewPanel({
@@ -58,9 +62,13 @@ export function StudioPreviewPanel({
   onUpdateCallout,
   customTexts = [],
   onUpdateCustomText,
+  activeSlot = 0,
+  slotCropOffsets = {},
+  onUpdateSlotCropOffset,
 }: StudioPreviewPanelProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
+  const [interactionMode, setInteractionMode] = useState<"elements" | "pan_photo">("elements");
 
   // Drag-to-Position State
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,6 +83,16 @@ export function StudioPreviewPanel({
     const rect = containerRef.current.getBoundingClientRect();
     const relX = clientX - rect.left;
     const relY = clientY - rect.top;
+
+    if (interactionMode === "pan_photo") {
+      const current = slotCropOffsets[activeSlot] || { x: 0, y: 0 };
+      setDragTarget(`pan_slot:${activeSlot}`);
+      setDragStartPos({ clientX, clientY });
+      setInitialOffsets({ x: current.x, y: current.y });
+      setIsDragging(true);
+      setDragFeedbackText(`🖼️ ${isEn ? `Slot ${activeSlot + 1}` : `ช่อง ${activeSlot + 1}`}: X ${current.x}%, Y ${current.y}%`);
+      return;
+    }
 
     // Check if clicked near any custom text badge (within 48px distance)
     let foundCustomText: CustomTextItem | null = null;
@@ -131,9 +149,23 @@ export function StudioPreviewPanel({
     const dx = clientX - dragStartPos.clientX;
     const dy = clientY - dragStartPos.clientY;
 
+    if (typeof dragTarget === "string" && dragTarget.startsWith("pan_slot:")) {
+      const sensitivity = 220;
+      const deltaXPercent = -(dx / rect.width) * sensitivity;
+      const deltaYPercent = -(dy / rect.height) * sensitivity;
+
+      const newX = Math.round(Math.max(-100, Math.min(100, initialOffsets.x + deltaXPercent)));
+      const newY = Math.round(Math.max(-100, Math.min(100, initialOffsets.y + deltaYPercent)));
+
+      onUpdateSlotCropOffset?.(activeSlot, { x: newX, y: newY });
+      setDragFeedbackText(`🖼️ ${isEn ? `Slot ${activeSlot + 1}` : `ช่อง ${activeSlot + 1}`}: X ${newX > 0 ? `+${newX}` : newX}% | Y ${newY > 0 ? `+${newY}` : newY}%`);
+      return;
+    }
+
     if (dragTarget === "text_effect") {
-      // Map screen delta to canvas scale (1080p base)
-      const scale = 1080 / rect.width;
+      // Map screen delta to canvas scale
+      const canvasBaseWidth = aspectRatio === "3:2" ? 1620 : 1080;
+      const scale = canvasBaseWidth / rect.width;
       const newX = Math.round(initialOffsets.x + dx * scale);
       const newY = Math.round(initialOffsets.y + dy * scale);
 
@@ -165,7 +197,7 @@ export function StudioPreviewPanel({
       onUpdateCallout(dragTarget, { x: newPercentX, y: newPercentY });
       setDragFeedbackText(`🎯 Pointer (X: ${newPercentX}%, Y: ${newPercentY}%)`);
     }
-  }, [isDragging, dragTarget, dragStartPos, initialOffsets, setTextEffectXOffset, setTextEffectYOffset, onUpdateCallout, onUpdateCustomText]);
+  }, [isDragging, dragTarget, dragStartPos, initialOffsets, setTextEffectXOffset, setTextEffectYOffset, onUpdateCallout, onUpdateCustomText, onUpdateSlotCropOffset, activeSlot, isEn, aspectRatio]);
 
   const handleEndDrag = () => {
     if (isDragging) {
@@ -189,31 +221,63 @@ export function StudioPreviewPanel({
         </div>
       )}
 
-      {/* Platform UI Safe Zone Simulator Bar */}
-      <div className="flex items-center gap-1 mb-2.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800 shrink-0">
-        <span className="text-[10px] text-slate-400 font-bold px-2">
-          {isEn ? "Preview on:" : "จำลองหน้าจอ:"}
-        </span>
-        {[
-          { id: "none", label: isEn ? "🚫 Clean" : "🚫 คลีน" },
-          { id: "tiktok", label: "🎵 TikTok" },
-          { id: "instagram_story", label: "📸 IG Story" },
-          { id: "instagram_reel", label: "🎥 Reel" },
-          { id: "facebook", label: "📘 Facebook" },
-        ].map((sim) => (
+      {/* Interaction Mode & Platform UI Simulator Bar */}
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-2.5 shrink-0">
+        {/* Drag Mode Switcher */}
+        <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 shrink-0 shadow-sm">
           <button
-            key={sim.id}
             type="button"
-            onClick={() => setPlatformOverlay(sim.id as PlatformOverlayType)}
-            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-              platformOverlay === sim.id
+            onClick={() => setInteractionMode("elements")}
+            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              interactionMode === "elements"
                 ? "bg-amber-500 text-slate-950 shadow-xs scale-102"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
             }`}
           >
-            {sim.label}
+            <Hand className="h-3 w-3" />
+            <span>{isEn ? "Text & Badges" : "ข้อความ/หมุด"}</span>
           </button>
-        ))}
+          <button
+            type="button"
+            onClick={() => setInteractionMode("pan_photo")}
+            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              interactionMode === "pan_photo"
+                ? "bg-amber-500 text-slate-950 shadow-xs scale-102"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+            }`}
+            title={isEn ? `Pan crop position for slot ${activeSlot + 1}` : `เลื่อนรูปภาพสำหรับช่องที่ ${activeSlot + 1}`}
+          >
+            <Move className="h-3 w-3" />
+            <span>{isEn ? `Pan Photo (${activeSlot + 1})` : `เลื่อนรูป (ช่อง ${activeSlot + 1})`}</span>
+          </button>
+        </div>
+
+        {/* Platform UI Safe Zone Simulator Bar */}
+        <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 shrink-0 shadow-sm">
+          <span className="text-[10px] text-slate-400 font-bold px-1.5">
+            {isEn ? "Preview:" : "จำลอง:"}
+          </span>
+          {[
+            { id: "none", label: isEn ? "Clean" : "คลีน" },
+            { id: "tiktok", label: "🎵 TikTok" },
+            { id: "instagram_story", label: "📸 Story" },
+            { id: "instagram_reel", label: "🎥 Reel" },
+            { id: "facebook", label: "📘 FB" },
+          ].map((sim) => (
+            <button
+              key={sim.id}
+              type="button"
+              onClick={() => setPlatformOverlay(sim.id as PlatformOverlayType)}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                platformOverlay === sim.id
+                  ? "bg-amber-500 text-slate-950 shadow-xs scale-102"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+              }`}
+            >
+              {sim.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Canvas Container with Interactive Drag-to-Position Surface */}
@@ -225,12 +289,32 @@ export function StudioPreviewPanel({
           isDragging ? "cursor-grabbing ring-2 ring-amber-400/80 shadow-amber-500/20" : "cursor-grab hover:border-amber-500/50"
         }`}
         style={{
-          width: aspectRatio === "9:16" ? "340px" : aspectRatio === "4:5" ? "420px" : "460px",
-          height: aspectRatio === "9:16" ? "604px" : aspectRatio === "4:5" ? "525px" : "460px",
+          aspectRatio:
+            aspectRatio === "9:16" ? "9 / 16"
+            : aspectRatio === "2:3" ? "2 / 3"
+            : aspectRatio === "4:5" ? "4 / 5"
+            : aspectRatio === "3:2" ? "3 / 2"
+            : "1 / 1",
+          width:
+            aspectRatio === "9:16" ? "330px"
+            : aspectRatio === "2:3" ? "360px"
+            : aspectRatio === "4:5" ? "410px"
+            : aspectRatio === "3:2" ? "520px"
+            : "450px",
+          height:
+            aspectRatio === "9:16" ? "586px"
+            : aspectRatio === "2:3" ? "540px"
+            : aspectRatio === "4:5" ? "512px"
+            : aspectRatio === "3:2" ? "346px"
+            : "450px",
           maxHeight: "calc(94vh - 180px)",
           maxWidth: "100%",
         }}
-        title={isEn ? "Click and drag to position text and callouts" : "คลิกค้างแล้วลากเพื่อย้ายตำแหน่งข้อความและลูกศร"}
+        title={
+          interactionMode === "pan_photo"
+            ? (isEn ? "Click and drag to pan cropped photo" : "คลิกค้างแล้วลากเพื่อเลื่อนรูปภาพที่โดน Crop")
+            : (isEn ? "Click and drag to position text and callouts" : "คลิกค้างแล้วลากเพื่อย้ายตำแหน่งข้อความและลูกศร")
+        }
       >
         <canvas
           ref={canvasRef}
@@ -254,9 +338,18 @@ export function StudioPreviewPanel({
 
         {/* Hover Drag Hint (Visible on hover when not dragging) */}
         {!isDragging && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 px-2.5 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-slate-800 text-slate-300 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-1.5 shadow-md">
-            <Hand className="h-3 w-3 text-amber-400 animate-pulse" />
-            <span>{isEn ? "Drag to Reposition Text / Pointers" : "คลิกลากย้ายตำแหน่งข้อความ / ลูกศร"}</span>
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 px-2.5 py-1 rounded-full bg-slate-950/85 backdrop-blur-md border border-slate-800 text-slate-300 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-1.5 shadow-md">
+            {interactionMode === "pan_photo" ? (
+              <>
+                <Move className="h-3 w-3 text-amber-400 animate-pulse" />
+                <span>{isEn ? `Drag to pan photo (Slot ${activeSlot + 1})` : `คลิกลากเพื่อเลื่อนรูป (ช่องที่ ${activeSlot + 1})`}</span>
+              </>
+            ) : (
+              <>
+                <Hand className="h-3 w-3 text-amber-400 animate-pulse" />
+                <span>{isEn ? "Drag to Reposition Text / Pointers" : "คลิกลากย้ายตำแหน่งข้อความ / ลูกศร"}</span>
+              </>
+            )}
           </div>
         )}
       </div>

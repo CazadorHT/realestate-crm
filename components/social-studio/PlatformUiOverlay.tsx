@@ -3,12 +3,13 @@
 import React from "react";
 import { Heart, MessageCircle, Bookmark, Share2, Music, MoreHorizontal, Send, Plus, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
+import type { AspectRatio } from "./types";
 
 export type PlatformOverlayType = "none" | "tiktok" | "instagram_story" | "instagram_reel" | "facebook";
 
 interface PlatformUiOverlayProps {
   type: PlatformOverlayType;
-  aspectRatio: "9:16" | "1:1" | "4:5";
+  aspectRatio: AspectRatio;
   accountName?: string;
 }
 

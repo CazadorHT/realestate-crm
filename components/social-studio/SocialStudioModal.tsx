@@ -221,6 +221,9 @@ export function SocialStudioModal({
                 onUpdateCallout={state.updateCalloutPointer}
                 customTexts={state.customTexts}
                 onUpdateCustomText={state.updateCustomText}
+                activeSlot={state.activeSlot}
+                slotCropOffsets={state.slotCropOffsets}
+                onUpdateSlotCropOffset={state.updateSlotCropOffset}
               />
 
               {/* Right Column: Modular Studio Controls */}
@@ -295,10 +298,15 @@ export function SocialStudioModal({
                       setPhotoFilter={state.setPhotoFilter}
                       bgDimOpacity={state.bgDimOpacity}
                       setBgDimOpacity={state.setBgDimOpacity}
+                      bgBlur={state.bgBlur}
+                      setBgBlur={state.setBgBlur}
                       gridLineWidth={state.gridLineWidth}
                       setGridLineWidth={state.setGridLineWidth}
                       gridLineColor={state.gridLineColor}
                       setGridLineColor={state.setGridLineColor}
+                      slotCropOffsets={state.slotCropOffsets}
+                      onUpdateSlotCropOffset={state.updateSlotCropOffset}
+                      onResetSlotCropOffset={state.resetSlotCropOffset}
                     />
                   </div>
                 )}

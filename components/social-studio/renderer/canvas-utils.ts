@@ -7,8 +7,12 @@ export function getDimensions(ratio: AspectRatio): { width: number; height: numb
   switch (ratio) {
     case "9:16":
       return { width: 1080, height: 1920 };
+    case "2:3":
+      return { width: 1080, height: 1620 };
     case "4:5":
       return { width: 1080, height: 1350 };
+    case "3:2":
+      return { width: 1620, height: 1080 };
     case "1:1":
     default:
       return { width: 1080, height: 1080 };
@@ -74,7 +78,7 @@ export function roundRect(
 }
 
 /**
- * Draw an image fitted into a bounding box with object-fit: cover
+ * Draw an image fitted into a bounding box with object-fit: cover and optional crop pan offsets (-100 to 100)
  */
 export function drawCoverImage(
   ctx: CanvasRenderingContext2D,
@@ -84,7 +88,10 @@ export function drawCoverImage(
   w: number,
   h: number,
   radius: number = 0,
-  fitWithBlurredBackdrop: boolean = false
+  fitWithBlurredBackdrop: boolean = false,
+  cropOffsetX: number = 0,
+  cropOffsetY: number = 0,
+  blurRadius: number = 0
 ): void {
   ctx.save();
   ctx.beginPath();
@@ -95,17 +102,28 @@ export function drawCoverImage(
   }
   ctx.clip();
 
+  // Normalized factors: -100 = 0 (left/top), 0 = 0.5 (center), +100 = 1.0 (right/bottom)
+  const factorX = (Math.max(-100, Math.min(100, cropOffsetX || 0)) + 100) / 200;
+  const factorY = (Math.max(-100, Math.min(100, cropOffsetY || 0)) + 100) / 200;
+
+  const hasBlur = blurRadius > 0;
+  if (hasBlur) {
+    try {
+      ctx.filter = `blur(${blurRadius}px)`;
+    } catch {}
+  }
+
   if (fitWithBlurredBackdrop) {
     // 1. Draw blurred, expanded background to fill missing margins/sides seamlessly
     ctx.save();
     const hRatio = w / img.width;
     const vRatio = h / img.height;
     const coverRatio = Math.max(hRatio, vRatio) * 1.18; // slight zoom to prevent blur edge bleeding
-    const bgShiftX = x + (w - img.width * coverRatio) / 2;
-    const bgShiftY = y + (h - img.height * coverRatio) / 2;
+    const bgShiftX = x + (w - img.width * coverRatio) * factorX;
+    const bgShiftY = y + (h - img.height * coverRatio) * factorY;
 
     try {
-      ctx.filter = "blur(32px) brightness(0.68) saturate(1.25)";
+      ctx.filter = `blur(${Math.max(32, blurRadius)}px) brightness(0.68) saturate(1.25)`;
     } catch {
       // fallback if filter is not supported
     }
@@ -115,7 +133,7 @@ export function drawCoverImage(
       bgShiftX, bgShiftY, img.width * coverRatio, img.height * coverRatio
     );
     try {
-      ctx.filter = "none";
+      ctx.filter = hasBlur ? `blur(${blurRadius}px)` : "none";
     } catch {}
     ctx.restore();
 
@@ -123,12 +141,12 @@ export function drawCoverImage(
     ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
     ctx.fillRect(x, y, w, h);
 
-    // 2. Draw foreground full uncropped image (contain) in the center
+    // 2. Draw foreground full uncropped image (contain) in the center with pan support
     const containRatio = Math.min(w / img.width, h / img.height);
     const fitW = Math.round(img.width * containRatio);
     const fitH = Math.round(img.height * containRatio);
-    const fitX = Math.round(x + (w - fitW) / 2);
-    const fitY = Math.round(y + (h - fitH) / 2);
+    const fitX = Math.round(x + (w - fitW) * factorX);
+    const fitY = Math.round(y + (h - fitH) * factorY);
 
     ctx.save();
     ctx.shadowColor = "rgba(0, 0, 0, 0.50)";
@@ -141,11 +159,19 @@ export function drawCoverImage(
     );
     ctx.restore();
   } else {
-    const hRatio = w / img.width;
-    const vRatio = h / img.height;
+    // Bleed expansion to prevent transparent edge-bleeding caused by canvas blur filter
+    const bleed = hasBlur ? Math.round(blurRadius * 2.4) : 0;
+    const effectiveW = w + bleed * 2;
+    const effectiveH = h + bleed * 2;
+
+    const hRatio = effectiveW / img.width;
+    const vRatio = effectiveH / img.height;
     const ratio = Math.max(hRatio, vRatio);
-    const centerShiftX = x + (w - img.width * ratio) / 2;
-    const centerShiftY = y + (h - img.height * ratio) / 2;
+    const renderedW = img.width * ratio;
+    const renderedH = img.height * ratio;
+
+    const shiftX = (x - bleed) + (effectiveW - renderedW) * factorX;
+    const shiftY = (y - bleed) + (effectiveH - renderedH) * factorY;
 
     ctx.drawImage(
       img,
@@ -153,12 +179,15 @@ export function drawCoverImage(
       0,
       img.width,
       img.height,
-      centerShiftX,
-      centerShiftY,
-      img.width * ratio,
-      img.height * ratio
+      shiftX,
+      shiftY,
+      renderedW,
+      renderedH
     );
   }
+  try {
+    ctx.filter = "none";
+  } catch {}
   ctx.restore();
 }
 

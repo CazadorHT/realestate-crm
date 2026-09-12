@@ -59,6 +59,25 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const [fitWithBlurredBackdrop, setFitWithBlurredBackdrop] = useState<boolean>(false);
   const [slotIndices, setSlotIndices] = useState<number[]>([0, 1, 2, 3, 4, 5]);
   const [activeSlot, setActiveSlot] = useState<number>(0);
+  const [slotCropOffsets, setSlotCropOffsets] = useState<Record<number, { x: number; y: number }>>({});
+
+  const updateSlotCropOffset = (slotIdx: number, offset: { x?: number; y?: number }) => {
+    setSlotCropOffsets((prev) => ({
+      ...prev,
+      [slotIdx]: {
+        x: offset.x !== undefined ? Math.max(-100, Math.min(100, offset.x)) : (prev[slotIdx]?.x ?? 0),
+        y: offset.y !== undefined ? Math.max(-100, Math.min(100, offset.y)) : (prev[slotIdx]?.y ?? 0),
+      },
+    }));
+  };
+
+  const resetSlotCropOffset = (slotIdx: number) => {
+    setSlotCropOffsets((prev) => {
+      const next = { ...prev };
+      delete next[slotIdx];
+      return next;
+    });
+  };
 
   // Extract Project Name reliably
   const initialProjectName = useMemo(() => {
@@ -280,8 +299,9 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     setCalloutPointers((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // Background Dark Tint / Dimming Overlay (0 - 100%)
+  // Background Dark Tint / Dimming Overlay (0 - 100%) & Blur (0 - 30px)
   const [bgDimOpacity, setBgDimOpacity] = useState<number>(0);
+  const [bgBlur, setBgBlur] = useState<number>(0);
 
   // Additional Custom Text Badges & Stickers
   const [customTexts, setCustomTexts] = useState<CustomTextItem[]>([]);
@@ -481,6 +501,8 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.centerGlowBlur !== undefined) setCenterGlowBlur(config.centerGlowBlur);
     if (config.centerGlowColor !== undefined) setCenterGlowColor(config.centerGlowColor);
     if (config.glassBlur !== undefined) setGlassBlur(config.glassBlur);
+    if (config.bgBlur !== undefined) setBgBlur(config.bgBlur);
+    if (config.slotCropOffsets) setSlotCropOffsets(config.slotCropOffsets);
 
     toast.success(`Applied Custom ${key.split("_")[1]} preset!`);
   };
@@ -563,7 +585,8 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
       textEffectSingleCardBorderWidth, textEffectSingleCardRadius, textEffectSingleCardPadding,
       textEffectSingleCardAlign, textEffectSingleCardOpacity,
       calloutPointers,
-      bgDimOpacity, customTexts,
+      bgDimOpacity, bgBlur, customTexts,
+      slotCropOffsets,
     };
 
     const res = await saveSocialStudioPreset(key, config);
@@ -802,6 +825,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         textEffectSingleCardOpacity,
         calloutPointers,
         bgDimOpacity,
+        bgBlur,
         cardBorderGlow,
         glowBorderWidth,
         centerGlow,
@@ -871,6 +895,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         ),
         badges: selectedBadges,
         fitWithBlurredBackdrop,
+        slotCropOffsets,
         qrCodeUrl: qrCodeImageUrl,
         companyName: siteConfig.name || "VCC ASSET",
         contactPhone: property.assigned_agent?.phone || siteConfig.contact.phone || "02-xxx-xxxx",
@@ -988,6 +1013,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     customCompanySubtitle,
     calloutPointers,
     bgDimOpacity,
+    bgBlur,
     cardBorderGlow,
     glowBorderWidth,
     centerGlow,
@@ -998,6 +1024,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     currentSlotImageUrls,
     selectedBadges,
     fitWithBlurredBackdrop,
+    slotCropOffsets,
     customProjectName,
     customTitle,
     customTransitText,
@@ -1031,6 +1058,8 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     fitWithBlurredBackdrop, setFitWithBlurredBackdrop,
     slotIndices, setSlotIndices,
     activeSlot, setActiveSlot,
+    slotCropOffsets, setSlotCropOffsets,
+    updateSlotCropOffset, resetSlotCropOffset,
     imageUrls, currentSlotImageUrls,
     // Card configs
     cardBackground, setCardBackground,
@@ -1066,6 +1095,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     promoTextColor, setPromoTextColor,
     photoFilter, setPhotoFilter,
     bgDimOpacity, setBgDimOpacity,
+    bgBlur, setBgBlur,
     // Carousel & zones
     activeCarouselPage, setActiveCarouselPage,
     carouselPages, setCarouselPages,

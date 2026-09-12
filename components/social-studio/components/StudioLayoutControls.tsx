@@ -11,6 +11,9 @@ import {
   Palette,
   Sliders,
   Moon,
+  Move,
+  RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import type {
   AspectRatio,
@@ -49,10 +52,15 @@ export interface StudioLayoutControlsProps {
   setPhotoFilter: (f: PhotoFilter) => void;
   bgDimOpacity?: number;
   setBgDimOpacity?: (val: number) => void;
+  bgBlur?: number;
+  setBgBlur?: (val: number) => void;
   gridLineWidth: number;
   setGridLineWidth: (w: number) => void;
   gridLineColor: string;
   setGridLineColor: (c: string) => void;
+  slotCropOffsets?: Record<number, { x: number; y: number }>;
+  onUpdateSlotCropOffset?: (slotIdx: number, offset: { x?: number; y?: number }) => void;
+  onResetSlotCropOffset?: (slotIdx: number) => void;
 }
 
 export function StudioLayoutControls({
@@ -82,13 +90,19 @@ export function StudioLayoutControls({
   setPhotoFilter,
   bgDimOpacity = 0,
   setBgDimOpacity,
+  bgBlur = 0,
+  setBgBlur,
   gridLineWidth,
   setGridLineWidth,
   gridLineColor,
   setGridLineColor,
+  slotCropOffsets = {},
+  onUpdateSlotCropOffset,
+  onResetSlotCropOffset,
 }: StudioLayoutControlsProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
+  const currentCropOffset = slotCropOffsets[activeSlot] || { x: 0, y: 0 };
   const getSlotCount = () => {
     switch (layout) {
       case "split_two":
@@ -227,6 +241,112 @@ export function StudioLayoutControls({
             );
           })}
         </div>
+
+        {/* 2.1 Crop & Pan Offset Slider for Active Slot */}
+        <div className="mt-2.5 pt-2.5 border-t border-slate-800/80 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Move className="h-3.5 w-3.5 text-amber-400" />
+              <Label className="text-[11px] font-semibold text-slate-300">
+                {isEn
+                  ? `Pan / Crop Position (Slot ${activeSlot + 1})`
+                  : `เลื่อนปรับตำแหน่งรูปที่โดนตัด (ช่องที่ ${activeSlot + 1})`}
+              </Label>
+            </div>
+            {(currentCropOffset.x !== 0 || currentCropOffset.y !== 0) && (
+              <button
+                type="button"
+                onClick={() => onResetSlotCropOffset?.(activeSlot)}
+                className="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer"
+                title={isEn ? "Reset crop position to center" : "รีเซ็ตตำแหน่งกลับสู่กึ่งกลาง"}
+              >
+                <RotateCcw className="h-2.5 w-2.5" />
+                {isEn ? "Reset Center" : "รีเซ็ตกึ่งกลาง"}
+              </button>
+            )}
+          </div>
+
+          {/* Quick Presets Buttons */}
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="text-[10px] text-slate-400 font-medium mr-1">
+              {isEn ? "Focus:" : "เน้น:"}
+            </span>
+            {[
+              { label: isEn ? "Center" : "🎯 กลาง", x: 0, y: 0 },
+              { label: isEn ? "Top" : "⬆️ ด้านบน", x: 0, y: -100 },
+              { label: isEn ? "Bottom" : "⬇️ ด้านล่าง", x: 0, y: 100 },
+              { label: isEn ? "Left" : "⬅️ ด้านซ้าย", x: -100, y: 0 },
+              { label: isEn ? "Right" : "➡️ ด้านขวา", x: 100, y: 0 },
+            ].map((p, pIdx) => {
+              const isActive = currentCropOffset.x === p.x && currentCropOffset.y === p.y;
+              return (
+                <button
+                  key={pIdx}
+                  type="button"
+                  onClick={() => onUpdateSlotCropOffset?.(activeSlot, { x: p.x, y: p.y })}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-medium border transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-xs"
+                      : "bg-slate-900 border-slate-700/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Dual Sliders: Horizontal X & Vertical Y */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            {/* Horizontal (X) */}
+            <div className="space-y-1 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-slate-400">{isEn ? "Horizontal (X)" : "แนวนอน (ซ้าย-ขวา)"}</span>
+                <span className="font-mono text-amber-300 font-bold">
+                  {currentCropOffset.x > 0 ? `+${currentCropOffset.x}%` : `${currentCropOffset.x}%`}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                step="5"
+                value={currentCropOffset.x}
+                onChange={(e) => onUpdateSlotCropOffset?.(activeSlot, { x: parseInt(e.target.value, 10) })}
+                className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+              />
+              <div className="flex justify-between text-[8px] text-slate-500 font-mono">
+                <span>{isEn ? "Left" : "ซ้าย"}</span>
+                <span>{isEn ? "Center" : "กลาง"}</span>
+                <span>{isEn ? "Right" : "ขวา"}</span>
+              </div>
+            </div>
+
+            {/* Vertical (Y) */}
+            <div className="space-y-1 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-slate-400">{isEn ? "Vertical (Y)" : "แนวตั้ง (บน-ล่าง)"}</span>
+                <span className="font-mono text-amber-300 font-bold">
+                  {currentCropOffset.y > 0 ? `+${currentCropOffset.y}%` : `${currentCropOffset.y}%`}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                step="5"
+                value={currentCropOffset.y}
+                onChange={(e) => onUpdateSlotCropOffset?.(activeSlot, { y: parseInt(e.target.value, 10) })}
+                className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+              />
+              <div className="flex justify-between text-[8px] text-slate-500 font-mono">
+                <span>{isEn ? "Top" : "บน"}</span>
+                <span>{isEn ? "Center" : "กลาง"}</span>
+                <span>{isEn ? "Bottom" : "ล่าง"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 3. Aspect Ratio & Theme */}
@@ -236,19 +356,33 @@ export function StudioLayoutControls({
             <Smartphone className="h-3.5 w-3.5 text-amber-400" />
             {isEn ? "Aspect Ratio" : "สัดส่วนภาพ"}
           </Label>
-          <div className="grid grid-cols-3 gap-1">
-            {(["9:16", "1:1", "4:5"] as AspectRatio[]).map((r) => (
+          <div className="grid grid-cols-5 gap-1">
+            {[
+              { id: "9:16", label: "9:16", sub: isEn ? "Story" : "Story/Reel" },
+              { id: "2:3", label: "2:3", sub: isEn ? "FB Vertical" : "FB ปกตั้ง" },
+              { id: "4:5", label: "4:5", sub: isEn ? "IG Feed" : "IG ฟีด" },
+              { id: "1:1", label: "1:1", sub: isEn ? "Square" : "จัตุรัส" },
+              { id: "3:2", label: "3:2", sub: isEn ? "FB Horizontal" : "FB ปกนอน" },
+            ].map((item) => (
               <button
-                key={r}
+                key={item.id}
                 type="button"
-                onClick={() => setAspectRatio(r)}
-                className={`py-1.5 rounded-lg border text-xs font-medium transition-all text-center cursor-pointer ${
-                  aspectRatio === r
-                    ? "bg-amber-500/20 border-amber-500 text-amber-300 font-bold"
+                onClick={() => setAspectRatio(item.id as AspectRatio)}
+                className={`py-1.5 px-0.5 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                  aspectRatio === item.id
+                    ? "bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-xs scale-102"
                     : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800"
                 }`}
+                title={
+                  item.id === "2:3"
+                    ? (isEn ? "Facebook Vertical Album (1 large left + 3 right)" : "อัลบั้ม Facebook แนวตั้ง (1 รูปใหญ่ซ้าย + 3 รูปขวา)")
+                    : item.id === "3:2"
+                      ? (isEn ? "Facebook Horizontal Album (1 large top + 3 bottom)" : "อัลบั้ม Facebook แนวนอน (1 รูปใหญ่บน + 3 รูปล่าง)")
+                      : undefined
+                }
               >
-                {r}
+                <span className="text-[11px] font-semibold">{item.label}</span>
+                <span className="text-[8px] opacity-70 leading-none">{item.sub}</span>
               </button>
             ))}
           </div>
@@ -527,6 +661,57 @@ export function StudioLayoutControls({
               value={bgDimOpacity}
               onChange={(e) => setBgDimOpacity(parseInt(e.target.value, 10))}
               className="w-full accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 5.2 Background Blur Effect */}
+      {setBgBlur && (
+        <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+              {isEn ? "Background Blur Effect" : "เอฟเฟกต์เบลอภาพพื้นหลัง (Background Blur)"}
+            </Label>
+            <span className="text-[10px] text-cyan-400 font-mono font-bold">
+              {bgBlur === 0 ? (isEn ? "0px (Sharp)" : "0px (ชัดปกติ)") : `${bgBlur}px ${isEn ? "Blur" : "เบลอละมุน"}`}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {/* Quick Blur Presets */}
+            <div className="grid grid-cols-5 gap-1">
+              {[
+                { label: isEn ? "Off" : "ปิด", value: 0 },
+                { label: isEn ? "4px Light" : "4px เบาๆ", value: 4 },
+                { label: isEn ? "8px Mid" : "8px พอดี", value: 8 },
+                { label: isEn ? "16px Soft" : "16px ละมุน", value: 16 },
+                { label: isEn ? "24px Deep" : "24px จัดเต็ม", value: 24 },
+              ].map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setBgBlur(p.value)}
+                  className={`py-1 rounded-lg text-[10px] font-medium border transition-all cursor-pointer ${
+                    bgBlur === p.value
+                      ? "bg-cyan-600 text-white border-cyan-500 font-bold shadow-xs scale-102"
+                      : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="range"
+              min="0"
+              max="30"
+              step="2"
+              value={bgBlur}
+              onChange={(e) => setBgBlur(parseInt(e.target.value, 10))}
+              className="w-full accent-cyan-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
             />
           </div>
         </div>

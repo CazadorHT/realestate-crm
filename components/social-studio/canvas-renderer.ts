@@ -450,8 +450,9 @@ export async function renderBannerToCanvas(
 
   const isSplitMode = options.contentPosition === "split_hero";
   const isStory = options.aspectRatio === "9:16";
-  const outerMarginX = isStory ? 48 : 36;
-  const baseTopY = isStory ? 86 : 40;
+  const isPortraitTall = options.aspectRatio === "2:3";
+  const outerMarginX = isStory ? 48 : isPortraitTall ? 44 : options.aspectRatio === "3:2" ? 48 : 36;
+  const baseTopY = isStory ? 86 : isPortraitTall ? 60 : 40;
   const headerYOffset = options.headerYOffset || 0;
   const topY = baseTopY + headerYOffset;
 
@@ -698,20 +699,22 @@ export async function renderBannerToCanvas(
 
   if (hasZoneAItems && hasZoneBItems) {
     card1Y = Math.round(height * 0.36) + card1YOffset;
-    const bottomMargin = isStory ? 116 : 24;
+    const bottomMargin = isStory ? 116 : isPortraitTall ? 60 : 24;
     card2Y = height - card2H - bottomMargin + card2YOffset;
   } else if (hasZoneAItems && !hasZoneBItems) {
+    const bottomMargin = isStory ? 116 : isPortraitTall ? 60 : 24;
     card1Y = options.contentPosition === "center"
       ? Math.round((height - card1H) / 2) + card1YOffset
       : options.contentPosition === "top"
         ? (options.showBrandingHeader !== false ? topY + 70 : baseTopY) + card1YOffset
-        : height - card1H - (isStory ? 116 : 24) + card1YOffset;
+        : height - card1H - bottomMargin + card1YOffset;
   } else {
+    const bottomMargin = isStory ? 116 : isPortraitTall ? 60 : 24;
     card2Y = options.contentPosition === "center"
       ? Math.round((height - card2H) / 2) + card2YOffset
       : options.contentPosition === "top"
         ? (options.showBrandingHeader !== false ? topY + 70 : baseTopY) + card2YOffset
-        : height - card2H - (isStory ? 116 : 24) + card2YOffset;
+        : height - card2H - bottomMargin + card2YOffset;
   }
 
   // Draw Background Image Layout
@@ -725,7 +728,9 @@ export async function renderBannerToCanvas(
       height,
       options.gridLineWidth,
       options.gridLineColor || options.customCanvasBgColor,
-      options.fitWithBlurredBackdrop || false
+      options.fitWithBlurredBackdrop || false,
+      options.slotCropOffsets,
+      options.bgBlur || 0
     );
   } catch {
     ctx.fillStyle = options.customCanvasBgColor || "#0F172A";
