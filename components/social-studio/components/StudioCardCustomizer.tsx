@@ -81,6 +81,9 @@ interface StudioCardCustomizerProps {
   setBrandingSubtitleColor?: (c: string) => void;
   customCompanyName?: string;
   setCustomCompanyName?: (name: string) => void;
+  brandingTitleFontWeight?: string;
+  setBrandingTitleFontWeight?: (w: string) => void;
+  projectName?: string;
   customCompanySubtitle?: string;
   setCustomCompanySubtitle?: (sub: string) => void;
   companyNameDefault?: string;
@@ -160,6 +163,9 @@ export function StudioCardCustomizer({
   setBrandingSubtitleColor,
   customCompanyName,
   setCustomCompanyName,
+  brandingTitleFontWeight,
+  setBrandingTitleFontWeight,
+  projectName,
   customCompanySubtitle,
   setCustomCompanySubtitle,
   companyNameDefault,
@@ -1217,8 +1223,9 @@ export function StudioCardCustomizer({
               {/* Line 1: Company / Brand Name */}
               <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-slate-300">
-                    🏢 {isEn ? "Line 1 (Company / Brand Name)" : "บรรทัดที่ 1 (ชื่อบริษัท / แบรนด์)"}
+                  <span className="text-[10px] font-semibold text-slate-300 flex items-center gap-1">
+                    <span>🏢</span>
+                    <span>{isEn ? "Line 1 (Company / Brand Name)" : "บรรทัดที่ 1 (ชื่อบริษัท / แบรนด์)"}</span>
                   </span>
                   <div className="flex items-center gap-1.5">
                     <input
@@ -1233,6 +1240,24 @@ export function StudioCardCustomizer({
                     </span>
                   </div>
                 </div>
+
+                {/* Shortcut to use Property Project Name */}
+                {projectName && (
+                  <div className="flex items-center justify-between bg-amber-950/30 border border-amber-500/30 px-2 py-1 rounded-lg">
+                    <span className="text-[10px] text-amber-300 font-medium truncate max-w-[200px]" title={projectName}>
+                      🏢 {projectName}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCustomCompanyName?.(projectName)}
+                      className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-xs shrink-0"
+                      title={isEn ? "Click to use project name as Line 1" : "คลิกเพื่อนำชื่อโครงการนี้มาแสดงในบรรทัดที่ 1"}
+                    >
+                      {isEn ? "⚡ Use Project Name" : "⚡ ดึงชื่อโครงการมาแสดง"}
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-1.5">
                   <input
                     type="text"
@@ -1268,12 +1293,14 @@ export function StudioCardCustomizer({
                   <span className="text-[9px] text-slate-400 font-medium">
                     {isEn ? "Line 1 Font Size:" : "ขนาดอักษรบรรทัดที่ 1:"}
                   </span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap">
                     {[
                       { id: "sm", label: isEn ? "Small" : "เล็ก" },
                       { id: "md", label: isEn ? "Medium" : "ปกติ" },
                       { id: "lg", label: isEn ? "Large" : "ใหญ่" },
                       { id: "xl", label: isEn ? "XL" : "ยักษ์" },
+                      { id: "2xl", label: isEn ? "2XL" : "จัมโบ้" },
+                      { id: "3xl", label: isEn ? "3XL" : "ใหญ่สุด" },
                     ].map((f) => {
                       const active = (brandingTitleFontSizeScale || headerFontSizeScale) === f.id;
                       return (
@@ -1281,13 +1308,45 @@ export function StudioCardCustomizer({
                           key={f.id}
                           type="button"
                           onClick={() => setBrandingTitleFontSizeScale?.(f.id as FontSizeScale)}
-                          className={`px-2 py-0.5 rounded text-[9px] font-bold border transition-all cursor-pointer ${
+                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all cursor-pointer ${
                             active
-                              ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
+                              ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs scale-105"
                               : "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200"
                           }`}
                         >
                           {f.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Line 1 Font Weight (หนา หรือ บาง) */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
+                  <span className="text-[9px] text-slate-400 font-medium">
+                    {isEn ? "Font Weight:" : "ความหนา / บางตัวอักษร:"}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {[
+                      { id: "300", label: isEn ? "Light" : "บาง" },
+                      { id: "400", label: isEn ? "Normal" : "ปกติ" },
+                      { id: "500", label: isEn ? "Medium" : "กลาง" },
+                      { id: "700", label: isEn ? "Bold" : "หนา" },
+                      { id: "900", label: isEn ? "Black" : "หนาสุด" },
+                    ].map((w) => {
+                      const active = (brandingTitleFontWeight || "700") === w.id;
+                      return (
+                        <button
+                          key={w.id}
+                          type="button"
+                          onClick={() => setBrandingTitleFontWeight?.(w.id)}
+                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all cursor-pointer ${
+                            active
+                              ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs scale-105"
+                              : "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200"
+                          }`}
+                        >
+                          {w.label}
                         </button>
                       );
                     })}
@@ -1382,6 +1441,7 @@ export function StudioCardCustomizer({
                 customCompanyName ||
                 customCompanySubtitle ||
                 (brandingTitleFontSizeScale && brandingTitleFontSizeScale !== "md") ||
+                (brandingTitleFontWeight && brandingTitleFontWeight !== "700") ||
                 (brandingSubtitleFontSizeScale && brandingSubtitleFontSizeScale !== "md")) && (
                 <div className="flex justify-end pt-1">
                   <button
@@ -1392,6 +1452,7 @@ export function StudioCardCustomizer({
                       setCustomCompanyName?.("");
                       setCustomCompanySubtitle?.("");
                       setBrandingTitleFontSizeScale?.("md");
+                      setBrandingTitleFontWeight?.("700");
                       setBrandingSubtitleFontSizeScale?.("md");
                     }}
                     className="text-[10px] text-rose-400 hover:text-rose-300 hover:underline cursor-pointer"

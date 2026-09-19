@@ -536,15 +536,16 @@ export function StudioLayoutControls({
               {isEn ? "Price Font Size" : "ขนาดฟอนต์ราคา"}
             </Label>
             <span className="text-[10px] text-emerald-400 font-mono">
-              {priceFontSizeScale === "sm" ? "85%" : priceFontSizeScale === "lg" ? "116%" : priceFontSizeScale === "xl" ? "130%" : "100%"}
+              {priceFontSizeScale === "sm" ? "85%" : priceFontSizeScale === "lg" ? "116%" : priceFontSizeScale === "xl" ? "130%" : priceFontSizeScale === "2xl" ? "160%" : "100%"}
             </span>
           </div>
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-5 gap-1">
             {[
               { id: "sm", label: isEn ? "Small" : "เล็ก", sub: "85%" },
               { id: "md", label: isEn ? "Normal" : "ปกติ", sub: "100%" },
               { id: "lg", label: isEn ? "Large" : "ใหญ่", sub: "116%" },
               { id: "xl", label: isEn ? "XL" : "ยักษ์", sub: "130%" },
+              { id: "2xl", label: isEn ? "2XL" : "จัมโบ้", sub: "160%" },
             ].map((f) => (
               <button
                 key={`price-${f.id}`}

@@ -23,6 +23,8 @@ import type {
   TextEffectTemplate,
   TextEffectPosition,
 } from "./types";
+import { getDynamicPropertyBadges, resolveBadgeForLanguage } from "./helpers";
+
 
 // Re-export types for backward compatibility
 export type {
@@ -91,17 +93,17 @@ import { renderCalloutPointers } from "./renderer/callout-pointers";
 import { renderCustomTexts } from "./renderer/custom-texts";
 
 interface SpecPillItem {
-  icon?: "bed" | "bath" | "parking" | "sqm" | "floor";
+  icon?: "bed" | "bath" | "parking" | "sqm" | "land" | "floor";
   text: string;
 }
 
 /**
- * Draw crisp vector line icon for Specs (Bed, Bath, Parking, SQ.M., Floor)
+ * Draw crisp vector line icon for Specs (Bed, Bath, Parking, SQ.M., Land Sq.wah, Floor)
  * Matching the luxury real estate glass card style (no emojis!)
  */
 function drawSpecVectorIcon(
   ctx: CanvasRenderingContext2D,
-  type: "bed" | "bath" | "parking" | "sqm" | "floor",
+  type: "bed" | "bath" | "parking" | "sqm" | "land" | "floor",
   x: number,
   y: number,
   size: number,
@@ -214,6 +216,21 @@ function drawSpecVectorIcon(
     ctx.lineTo(x + size * 0.74, y + size * 0.74);
     ctx.lineTo(x + size * 0.54, y + size * 0.74);
     ctx.stroke();
+  } else if (type === "land") {
+    // Drafting set-square / surveyor plot triangle icon (📐)
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.14, y + size * 0.86);
+    ctx.lineTo(x + size * 0.14, y + size * 0.14);
+    ctx.lineTo(x + size * 0.86, y + size * 0.86);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.32, y + size * 0.72);
+    ctx.lineTo(x + size * 0.32, y + size * 0.44);
+    ctx.lineTo(x + size * 0.60, y + size * 0.72);
+    ctx.closePath();
+    ctx.stroke();
   } else if (type === "floor") {
     // High-rise building with windows
     ctx.beginPath();
@@ -254,13 +271,20 @@ function drawFrostedCapsuleHeader(
   // Calculate separate scales for Title and Subtitle
   const tScaleOpt = options.brandingTitleFontSizeScale;
   const sScaleOpt = options.brandingSubtitleFontSizeScale;
-  const tScale = tScaleOpt === "sm" ? 0.8 : tScaleOpt === "lg" ? 1.2 : tScaleOpt === "xl" ? 1.4 : (tScaleOpt === "md" ? 1.0 : hScale);
+  const tScale =
+    tScaleOpt === "sm" ? 0.8
+    : tScaleOpt === "lg" ? 1.25
+    : tScaleOpt === "xl" ? 1.55
+    : tScaleOpt === "2xl" ? 1.95
+    : tScaleOpt === "3xl" ? 2.45
+    : (tScaleOpt === "md" ? 1.0 : hScale);
   const sScale = sScaleOpt === "sm" ? 0.8 : sScaleOpt === "lg" ? 1.2 : sScaleOpt === "xl" ? 1.4 : (sScaleOpt === "md" ? 1.0 : hScale);
 
-  // Fonts setup: Regal serif for Title, crisp clean sans-serif for Subtitle
+  // Fonts setup: Customizable weight & scale for Title, crisp clean sans-serif for Subtitle
   const titleFontSize = Math.round(40 * tScale);
   const subtitleFontSize = Math.round(14 * sScale);
-  const titleFont = `700 ${titleFontSize}px 'Cinzel', 'Playfair Display', 'Cormorant Garamond', 'Georgia', serif`;
+  const titleWeight = options.brandingTitleFontWeight || "700";
+  const titleFont = `${titleWeight} ${titleFontSize}px 'Cinzel', 'Playfair Display', 'Cormorant Garamond', 'Prompt', 'Noto Sans Thai', 'Georgia', serif`;
   const subtitleFont = `600 ${subtitleFontSize}px 'Prompt', 'Inter', sans-serif`;
 
   ctx.save();
@@ -453,6 +477,7 @@ export async function renderBannerToCanvas(
     options.priceFontSizeScale === "sm" ? 0.85
     : options.priceFontSizeScale === "lg" ? 1.16
     : options.priceFontSizeScale === "xl" ? 1.30
+    : options.priceFontSizeScale === "2xl" ? 1.60
     : (options.priceFontSizeScale ? 1.0 : fScale);
 
   const isSplitMode = options.contentPosition === "split_hero";
@@ -463,8 +488,9 @@ export async function renderBannerToCanvas(
   const headerYOffset = options.headerYOffset || 0;
   const topY = baseTopY + headerYOffset;
 
-  // Symmetrical Equal Card Padding (px === py = 36px)
-  const pad = Math.round(36 * (fScale > 1.1 ? 1.05 : 1.0));
+  // Symmetrical Equal Card Padding (px === py = 36px, customizable via cardPaddingTop)
+  const defaultPad = Math.round(36 * (fScale > 1.1 ? 1.05 : 1.0));
+  const pad = options.cardPaddingTop !== undefined ? options.cardPaddingTop : defaultPad;
   const cardRightMargin = options.cardRightMargin || 0;
   const maxCardW = width - outerMarginX * 2 - cardRightMargin;
   const customW = options.cardWidthPercent && options.cardWidthPercent > 0
@@ -522,7 +548,12 @@ export async function renderBannerToCanvas(
   // Localized Spec Pills with Vector Line Icons
   const pills: SpecPillItem[] = [];
   if (showSpecs) {
-    if (options.specs.bedrooms) {
+    const isSpecEnabled = (key: string) => {
+      if (!options.enabledSpecs) return true;
+      return (options.enabledSpecs as any)[key] !== false;
+    };
+
+    if (options.specs.bedrooms && isSpecEnabled("bedrooms")) {
       const bedsLabel =
         lang === "en" ? `${options.specs.bedrooms} ${options.specs.bedrooms > 1 ? "Beds" : "Bed"}`
         : lang === "zh" ? `${options.specs.bedrooms} 房`
@@ -530,7 +561,7 @@ export async function renderBannerToCanvas(
         : `${options.specs.bedrooms} นอน`;
       pills.push({ icon: "bed", text: bedsLabel });
     }
-    if (options.specs.bathrooms) {
+    if (options.specs.bathrooms && isSpecEnabled("bathrooms")) {
       const bathsLabel =
         lang === "en" ? `${options.specs.bathrooms} ${options.specs.bathrooms > 1 ? "Baths" : "Bath"}`
         : lang === "zh" ? `${options.specs.bathrooms} 卫`
@@ -538,15 +569,15 @@ export async function renderBannerToCanvas(
         : `${options.specs.bathrooms} น้ำ`;
       pills.push({ icon: "bath", text: bathsLabel });
     }
-    if (options.specs.parking) {
+    if (options.specs.parking && isSpecEnabled("parking")) {
       const parkingLabel =
-        lang === "en" ? `${options.specs.parking} Parking`
+        lang === "en" ? `${options.specs.parking} ${options.specs.parking > 1 ? "Parkings" : "Parking"}`
         : lang === "zh" ? `${options.specs.parking} 车位`
         : lang === "ru" ? `${options.specs.parking} паркинг`
         : `${options.specs.parking} ที่จอด`;
       pills.push({ icon: "parking", text: parkingLabel });
     }
-    if (options.specs.sizeSqm) {
+    if (options.specs.sizeSqm && isSpecEnabled("sizeSqm")) {
       const sqmLabel =
         lang === "en" ? `${options.specs.sizeSqm} SQ.M.`
         : lang === "zh" ? `${options.specs.sizeSqm} 平米`
@@ -554,7 +585,15 @@ export async function renderBannerToCanvas(
         : `${options.specs.sizeSqm} ตร.ม.`;
       pills.push({ icon: "sqm", text: sqmLabel });
     }
-    if (options.specs.floor) {
+    if (options.specs.landSizeSqwah && isSpecEnabled("landSizeSqwah")) {
+      const landLabel =
+        lang === "en" ? `${options.specs.landSizeSqwah} Sq.wah`
+        : lang === "zh" ? `${options.specs.landSizeSqwah} 瓦`
+        : lang === "ru" ? `${options.specs.landSizeSqwah} ва`
+        : `${options.specs.landSizeSqwah} ตร.วา`;
+      pills.push({ icon: "land", text: landLabel });
+    }
+    if (options.specs.floor && isSpecEnabled("floor")) {
       const floorLabel =
         lang === "en" ? `Fl. ${options.specs.floor}`
         : lang === "zh" ? `${options.specs.floor} 层`
@@ -573,9 +612,44 @@ export async function renderBannerToCanvas(
 
   const ownershipBadge = options.ownershipBadge;
 
-  // Add highlight sticker badges (excluding dedicated ownership badge) to pills
+  // Generate real dynamic badges from property specs & overrides
+  const dynamicBadges = getDynamicPropertyBadges(
+    options.property,
+    {
+      customSizeSqm: options.specs?.sizeSqm,
+      customLandSizeSqwah: options.specs?.landSizeSqwah,
+      customParking: options.specs?.parking,
+      customBedrooms: options.specs?.bedrooms,
+      customBathrooms: options.specs?.bathrooms,
+      customFloor: options.specs?.floor,
+    },
+    lang
+  );
+
+  // Add highlight sticker badges (excluding dedicated ownership badge) to pills (up to 5 badges)
+  // Smartly maps badges into the active banner language and draws crisp vector line icons
   const highlightBadges = (options.badges || []).filter((b) => b !== ownershipBadge);
-  highlightBadges.slice(0, 2).forEach((b) => pills.push({ text: b }));
+  highlightBadges.slice(0, 5).forEach((b) => {
+    const resolved = resolveBadgeForLanguage(b, lang, dynamicBadges);
+    let cleanText = resolved.text;
+    const icon = resolved.icon;
+
+    // Deduplicate against already rendered pills (e.g. if specs already has parking/sqm)
+    const textWithoutEmoji = cleanText.replace(/^[\p{Emoji}\s]+/u, "").trim().toLowerCase();
+    const isDuplicate = pills.some((p) => {
+      if (icon && p.icon === icon) return true;
+      const existingWithoutEmoji = p.text.replace(/^[\p{Emoji}\s]+/u, "").trim().toLowerCase();
+      return existingWithoutEmoji === textWithoutEmoji;
+    });
+
+    if (!isDuplicate && cleanText) {
+      if (icon) {
+        // Strip emojis if this item has a vector line icon
+        cleanText = cleanText.replace(/^[🚗📐⤢🛏️🚿🏢\s]+/, "").trim();
+      }
+      pills.push({ icon, text: cleanText });
+    }
+  });
 
   // If ownership badge is selected, but not drawn in frosted luxury price section (e.g. no price or non-frosted card), show in pills
   if (ownershipBadge && (!isFrostedLuxury || options.showPrice === false || !options.priceText)) {
@@ -648,13 +722,15 @@ export async function renderBannerToCanvas(
   const inB = (field: keyof ElementZoneMapping) => zMap[field] === "zone_b";
 
   const specScale =
-    options.specFontSizeScale === "xs" ? 0.75
-    : options.specFontSizeScale === "sm" ? 0.88
-    : options.specFontSizeScale === "lg" ? 1.18
-    : options.specFontSizeScale === "xl" ? 1.4
-    : options.specFontSizeScale === "2xl" ? 1.7
-    : options.specFontSizeScale === "3xl" ? 2.05
-    : 1.0;
+    typeof options.specFontSizeCustom === "number" && options.specFontSizeCustom > 0
+      ? options.specFontSizeCustom / 100
+      : options.specFontSizeScale === "xs" ? 0.75
+      : options.specFontSizeScale === "sm" ? 0.88
+      : options.specFontSizeScale === "lg" ? 1.18
+      : options.specFontSizeScale === "xl" ? 1.4
+      : options.specFontSizeScale === "2xl" ? 1.7
+      : options.specFontSizeScale === "3xl" ? 2.05
+      : 1.0;
 
   // Measure Zone A Elements
   let zoneAContentH = 0;
@@ -823,7 +899,13 @@ export async function renderBannerToCanvas(
     } else {
       const tScaleOpt = options.brandingTitleFontSizeScale;
       const sScaleOpt = options.brandingSubtitleFontSizeScale;
-      const tScale = tScaleOpt === "sm" ? 0.8 : tScaleOpt === "lg" ? 1.2 : tScaleOpt === "xl" ? 1.4 : (tScaleOpt === "md" ? 1.0 : hScale);
+      const tScale =
+        tScaleOpt === "sm" ? 0.8
+        : tScaleOpt === "lg" ? 1.25
+        : tScaleOpt === "xl" ? 1.55
+        : tScaleOpt === "2xl" ? 1.95
+        : tScaleOpt === "3xl" ? 2.45
+        : (tScaleOpt === "md" ? 1.0 : hScale);
       const sScale = sScaleOpt === "sm" ? 0.8 : sScaleOpt === "lg" ? 1.2 : sScaleOpt === "xl" ? 1.4 : (sScaleOpt === "md" ? 1.0 : hScale);
 
       const titleFontSize = Math.round(30 * tScale);
@@ -832,8 +914,9 @@ export async function renderBannerToCanvas(
       const contentH = titleFontSize + Math.round(8 * tScale) + subtitleFontSize;
       headerCenterY = headerEffectiveY + contentH / 2;
 
+      const titleWeight = options.brandingTitleFontWeight || "bold";
       ctx.textBaseline = "top";
-      ctx.font = `bold ${titleFontSize}px 'Prompt', 'Noto Sans Thai', sans-serif`;
+      ctx.font = `${titleWeight} ${titleFontSize}px 'Prompt', 'Noto Sans Thai', sans-serif`;
       ctx.fillStyle = options.brandingTitleColor || "#FFFFFF";
       ctx.textAlign = "left";
       ctx.fillText(options.customCompanyName || options.companyName || "VCC ASSET", outerMarginX, headerEffectiveY);
@@ -1278,6 +1361,9 @@ export async function renderBannerToCanvas(
 
     // 6. Price & Dual Price
     if (showPrice && matchZ("price")) {
+      if (options.pricePaddingTop) {
+        curY += options.pricePaddingTop;
+      }
       ctx.textAlign = align;
       ctx.textBaseline = "top";
       let priceFontSize = Math.round((isFrostedLuxury ? 40 : 44) * priceFScale);
@@ -1289,6 +1375,133 @@ export async function renderBannerToCanvas(
         effectivePriceText = effectivePriceText.split(" (~")[0].trim();
       }
       const isDualCurrency = Boolean(options.showUsdApprox) && effectivePriceText.includes(" (~");
+
+      const isGoldColor =
+        options.customPriceColor === "gold" ||
+        options.customPriceColor === "gold_gradient" ||
+        options.customPriceColor === "#GOLD" ||
+        options.customPriceColor?.toLowerCase() === "gold";
+
+      const priceEffect =
+        options.priceEffect !== undefined
+          ? options.priceEffect
+          : (isGoldColor ? "gold_metallic" : "none");
+
+      const applyPriceStyle = (gradX: number, gradY: number, gradH: number) => {
+        const yTop = gradY;
+        const yBot = gradY + gradH * 0.95;
+
+        if (priceEffect === "gold_metallic" || isGoldColor) {
+          const goldGrad = ctx.createLinearGradient(gradX, yTop, gradX, yBot);
+          goldGrad.addColorStop(0.00, "#FFFFFF");
+          goldGrad.addColorStop(0.18, "#FEF9C3");
+          goldGrad.addColorStop(0.45, "#FDE047");
+          goldGrad.addColorStop(0.75, "#F59E0B");
+          goldGrad.addColorStop(1.00, "#D97706");
+          ctx.fillStyle = goldGrad;
+          ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetY = 2;
+          ctx.shadowOffsetX = 0;
+        } else if (priceEffect === "rose_gold") {
+          const rgGrad = ctx.createLinearGradient(gradX, yTop, gradX, yBot);
+          rgGrad.addColorStop(0.00, "#FFFFFF");
+          rgGrad.addColorStop(0.20, "#FFE4E6");
+          rgGrad.addColorStop(0.50, "#FDA4AF");
+          rgGrad.addColorStop(0.80, "#F43F5E");
+          rgGrad.addColorStop(1.00, "#BE123C");
+          ctx.fillStyle = rgGrad;
+          ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetY = 2;
+          ctx.shadowOffsetX = 0;
+        } else if (priceEffect === "platinum_chrome") {
+          const platGrad = ctx.createLinearGradient(gradX, yTop, gradX, yBot);
+          platGrad.addColorStop(0.00, "#FFFFFF");
+          platGrad.addColorStop(0.25, "#F8FAFC");
+          platGrad.addColorStop(0.55, "#CBD5E1");
+          platGrad.addColorStop(0.80, "#94A3B8");
+          platGrad.addColorStop(1.00, "#64748B");
+          ctx.fillStyle = platGrad;
+          ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetY = 2;
+          ctx.shadowOffsetX = 0;
+        } else if (priceEffect === "neon_amber") {
+          const neonGrad = ctx.createLinearGradient(gradX, yTop, gradX, yBot);
+          neonGrad.addColorStop(0.00, "#FFFFFF");
+          neonGrad.addColorStop(0.20, "#FEF08A");
+          neonGrad.addColorStop(0.60, "#FBBF24");
+          neonGrad.addColorStop(1.00, "#F97316");
+          ctx.fillStyle = neonGrad;
+          ctx.shadowColor = "rgba(245, 158, 11, 0.65)";
+          ctx.shadowBlur = 10;
+          ctx.shadowOffsetY = 0;
+          ctx.shadowOffsetX = 0;
+        } else if (priceEffect === "emerald_glow") {
+          const emGrad = ctx.createLinearGradient(gradX, yTop, gradX, yBot);
+          emGrad.addColorStop(0.00, "#FFFFFF");
+          emGrad.addColorStop(0.20, "#A7F3D0");
+          emGrad.addColorStop(0.60, "#34D399");
+          emGrad.addColorStop(1.00, "#059669");
+          ctx.fillStyle = emGrad;
+          ctx.shadowColor = "rgba(16, 185, 129, 0.65)";
+          ctx.shadowBlur = 10;
+          ctx.shadowOffsetY = 0;
+          ctx.shadowOffsetX = 0;
+        } else if (priceEffect === "sunset_fire") {
+          const fireGrad = ctx.createLinearGradient(gradX, yTop, gradX, yBot);
+          fireGrad.addColorStop(0.00, "#FFFFFF");
+          fireGrad.addColorStop(0.20, "#FED7AA");
+          fireGrad.addColorStop(0.55, "#FB923C");
+          fireGrad.addColorStop(1.00, "#EF4444");
+          ctx.fillStyle = fireGrad;
+          ctx.shadowColor = "rgba(239, 68, 68, 0.55)";
+          ctx.shadowBlur = 8;
+          ctx.shadowOffsetY = 1;
+          ctx.shadowOffsetX = 0;
+        } else if (priceEffect === "ice_diamond") {
+          const iceGrad = ctx.createLinearGradient(gradX, yTop, gradX, yBot);
+          iceGrad.addColorStop(0.00, "#FFFFFF");
+          iceGrad.addColorStop(0.25, "#E0F2FE");
+          iceGrad.addColorStop(0.65, "#38BDF8");
+          iceGrad.addColorStop(1.00, "#0284C7");
+          ctx.fillStyle = iceGrad;
+          ctx.shadowColor = "rgba(56, 189, 248, 0.6)";
+          ctx.shadowBlur = 10;
+          ctx.shadowOffsetY = 0;
+          ctx.shadowOffsetX = 0;
+        } else if (priceEffect === "glow_sparkle") {
+          const sparkGrad = ctx.createLinearGradient(gradX, yTop, gradX, yBot);
+          sparkGrad.addColorStop(0.00, "#FFFFFF");
+          sparkGrad.addColorStop(0.25, "#FEF9C3");
+          sparkGrad.addColorStop(0.60, "#FDE047");
+          sparkGrad.addColorStop(1.00, "#F59E0B");
+          ctx.fillStyle = sparkGrad;
+          ctx.shadowColor = "rgba(251, 191, 36, 0.6)";
+          ctx.shadowBlur = 10;
+          ctx.shadowOffsetY = 0;
+          ctx.shadowOffsetX = 0;
+        } else if (priceEffect === "shadow_3d") {
+          ctx.fillStyle = options.customPriceColor && options.customPriceColor !== "gold" ? options.customPriceColor : "#FFFFFF";
+          ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+          ctx.shadowBlur = 3;
+          ctx.shadowOffsetX = 2;
+          ctx.shadowOffsetY = 2;
+        } else if (priceEffect === "pill_capsule") {
+          ctx.fillStyle = options.customPriceColor && options.customPriceColor !== "gold" ? options.customPriceColor : "#FDE047";
+          ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetY = 1;
+          ctx.shadowOffsetX = 0;
+        } else {
+          ctx.fillStyle = options.customPriceColor || "#FFFFFF";
+          ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetY = 1;
+          ctx.shadowOffsetX = 0;
+        }
+      };
 
       // Right-aligned Ownership Badge for Frosted Luxury mode (e.g. "Foreign Freehold")
       let ownershipBadgeW = 0;
@@ -1330,6 +1543,28 @@ export async function renderBannerToCanvas(
         ? Math.round(innerX + availablePriceW / 2)
         : alignX;
 
+      // Draw VIP Capsule backdrop if pill_capsule effect is active
+      if (priceEffect === "pill_capsule") {
+        ctx.save();
+        const capPadX = Math.round(18 * fScale);
+        const capPadY = Math.round(8 * fScale);
+        const capW = Math.round(pWidth + capPadX * 2);
+        const capH = Math.round(priceFontSize * 1.35);
+        const capX = align === "center" ? Math.round(priceCenterX - capW / 2) : align === "right" ? Math.round(priceCenterX - capW) : innerX;
+        const capY = Math.round(curY - priceFontSize * 0.96);
+        roundRect(ctx, capX, capY, capW, capH, Math.round(capH / 2));
+        ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        const borderGrad = ctx.createLinearGradient(capX, capY, capX + capW, capY + capH);
+        borderGrad.addColorStop(0, "#FDE68A");
+        borderGrad.addColorStop(0.5, "#F59E0B");
+        borderGrad.addColorStop(1, "#92400E");
+        ctx.strokeStyle = borderGrad;
+        ctx.stroke();
+        ctx.restore();
+      }
+
       if (isDualCurrency) {
         const [thbPart, ...usdParts] = effectivePriceText.split(" (~");
         const usdPart = "(~" + usdParts.join(" (~");
@@ -1345,20 +1580,21 @@ export async function renderBannerToCanvas(
         const totalPairW = thbWidth + usdWidth;
         const startX = align === "center" ? priceCenterX - totalPairW / 2 : align === "right" ? priceCenterX - totalPairW : innerX;
 
+        // Draw 3D shadow layers if shadow_3d
+        if (priceEffect === "shadow_3d") {
+          ctx.save();
+          ctx.font = `bold ${priceFontSize}px 'Prompt', sans-serif`;
+          ctx.textAlign = "left";
+          ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+          for (let s = 3; s >= 1; s--) {
+            ctx.fillText(thbPart, startX + s, curY + s);
+          }
+          ctx.restore();
+        }
+
         ctx.save();
         ctx.textAlign = "left";
-        if (isFrostedLuxury && !options.customPriceColor) {
-          const goldGrad = ctx.createLinearGradient(startX, curY, startX, curY + priceFontSize);
-          goldGrad.addColorStop(0, "#FEF3C7");
-          goldGrad.addColorStop(0.40, "#FBBF24");
-          goldGrad.addColorStop(1, "#D97706");
-          ctx.fillStyle = goldGrad;
-          ctx.shadowColor = "rgba(0, 0, 0, 0.70)";
-          ctx.shadowBlur = 6;
-          ctx.shadowOffsetY = 2;
-        } else {
-          ctx.fillStyle = options.customPriceColor || "#FFFFFF";
-        }
+        applyPriceStyle(startX, curY, priceFontSize);
         ctx.fillText(thbPart, startX, curY);
 
         ctx.font = `500 ${usdFontPx}px 'Prompt', sans-serif`;
@@ -1368,21 +1604,36 @@ export async function renderBannerToCanvas(
         ctx.fillText(" " + usdPart, startX + thbWidth, curY + Math.round(priceFontSize * 0.26));
         ctx.restore();
       } else {
+        // Draw 3D shadow layers if shadow_3d
+        if (priceEffect === "shadow_3d") {
+          ctx.save();
+          ctx.textAlign = ownershipBadgeW > 0 && align === "center" ? "center" : align;
+          ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+          for (let s = 3; s >= 1; s--) {
+            ctx.fillText(effectivePriceText, priceCenterX + s, curY + s);
+          }
+          ctx.restore();
+        }
+
         ctx.save();
         ctx.textAlign = ownershipBadgeW > 0 && align === "center" ? "center" : align;
-        if (isFrostedLuxury && !options.customPriceColor) {
-          const goldGrad = ctx.createLinearGradient(priceCenterX, curY, priceCenterX, curY + priceFontSize);
-          goldGrad.addColorStop(0, "#FEF3C7");
-          goldGrad.addColorStop(0.40, "#FBBF24");
-          goldGrad.addColorStop(1, "#D97706");
-          ctx.fillStyle = goldGrad;
-          ctx.shadowColor = "rgba(0, 0, 0, 0.70)";
-          ctx.shadowBlur = 6;
-          ctx.shadowOffsetY = 2;
-        } else {
-          ctx.fillStyle = options.customPriceColor || "#FFFFFF";
-        }
+        applyPriceStyle(priceCenterX, curY, priceFontSize);
         ctx.fillText(effectivePriceText, priceCenterX, curY);
+        ctx.restore();
+      }
+
+      // Draw sparkle stars if glow_sparkle effect
+      if (priceEffect === "glow_sparkle") {
+        ctx.save();
+        ctx.fillStyle = "#FFFBEB";
+        ctx.shadowColor = "#FBBF24";
+        ctx.shadowBlur = 10;
+        ctx.font = `bold ${Math.max(12, Math.round(priceFontSize * 0.42))}px sans-serif`;
+        const starX1 = align === "center" ? priceCenterX + pWidth / 2 + 8 : align === "right" ? priceCenterX + 8 : innerX + pWidth + 8;
+        const starX2 = align === "center" ? priceCenterX - pWidth / 2 - 16 : align === "right" ? priceCenterX - pWidth - 16 : innerX - 16;
+        ctx.fillText("✦", starX1, curY - priceFontSize * 0.35);
+        ctx.font = `bold ${Math.max(10, Math.round(priceFontSize * 0.28))}px sans-serif`;
+        ctx.fillText("✦", starX2, curY + priceFontSize * 0.1);
         ctx.restore();
       }
 

@@ -38,8 +38,10 @@ import type {
   CalloutPointer,
   CustomTextItem,
   BannerRenderOptions,
+  EnabledSpecsConfig,
   TextEffectLineConfig,
   TextEffectCardMode,
+  StudioPriceEffect,
 } from "../types";
 import { STARTER_TEMPLATES } from "../constants/starter-templates";
 
@@ -105,6 +107,20 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     initialLanguage === "en" && property.title_en ? property.title_en : (property.title || "")
   );
   const [customTransitText, setCustomTransitText] = useState<string>("");
+  const [customBedrooms, setCustomBedrooms] = useState<number | string | null>(property.bedrooms ?? "");
+  const [customBathrooms, setCustomBathrooms] = useState<number | string | null>(property.bathrooms ?? "");
+  const [customSizeSqm, setCustomSizeSqm] = useState<number | string | null>(property.size_sqm ?? "");
+  const [customLandSizeSqwah, setCustomLandSizeSqwah] = useState<number | string | null>(property.land_size_sqwah ?? (property as any).land_area ?? "");
+  const [customParking, setCustomParking] = useState<number | string | null>(property.parking_slots ?? property.parking ?? "");
+  const [customFloor, setCustomFloor] = useState<number | string | null>(property.floor ?? "");
+  const [enabledSpecs, setEnabledSpecs] = useState<EnabledSpecsConfig>(() => ({
+    bedrooms: Boolean(property.bedrooms),
+    bathrooms: Boolean(property.bathrooms),
+    parking: Boolean(property.parking_slots ?? property.parking),
+    sizeSqm: Boolean(property.size_sqm ?? (property as any).floor_area),
+    landSizeSqwah: Boolean(property.land_size_sqwah ?? (property as any).land_area),
+    floor: Boolean(property.floor),
+  }));
 
   // Helper: Reliable Clean Project Name across 4 languages
   const getCleanPropertyProjectName = useCallback(() => {
@@ -265,14 +281,35 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     });
   }, [getCleanPropertyProjectName, getCleanPropertySpecsText, getCleanPropertyPriceText]);
 
+  const loadedPropertyIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     // When property changes (e.g. user opens modal for Property B after Property A)
-    // always sync current property data
+    // only sync when property.id is different to avoid overwriting user edits/toggles
+    if (!property?.id || property.id === loadedPropertyIdRef.current) {
+      return;
+    }
+    loadedPropertyIdRef.current = property.id;
+
     const projName = initialProjectName;
     const currentPropTitle = language === "en" && property.title_en ? property.title_en : property.title || "";
     setCustomProjectName(projName);
     setCustomTitle(currentPropTitle);
     setCustomTransitText("");
+    setCustomBedrooms(property.bedrooms ?? "");
+    setCustomBathrooms(property.bathrooms ?? "");
+    setCustomSizeSqm(property.size_sqm ?? "");
+    setCustomLandSizeSqwah(property.land_size_sqwah ?? (property as any).land_area ?? "");
+    setCustomParking(property.parking_slots ?? property.parking ?? "");
+    setCustomFloor(property.floor ?? "");
+    setEnabledSpecs({
+      bedrooms: Boolean(property.bedrooms),
+      bathrooms: Boolean(property.bathrooms),
+      parking: Boolean(property.parking_slots ?? property.parking),
+      sizeSqm: Boolean(property.size_sqm ?? (property as any).floor_area),
+      landSizeSqwah: Boolean(property.land_size_sqwah ?? (property as any).land_area),
+      floor: Boolean(property.floor),
+    });
     hasFetchedInitialAI.current = false;
     fetchAIContent(language);
 
@@ -316,11 +353,14 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const [contentPosition, setContentPosition] = useState<ContentPosition>("bottom");
   const [fontSizeScale, setFontSizeScale] = useState<FontSizeScale>("md");
   const [priceFontSizeScale, setPriceFontSizeScale] = useState<FontSizeScale>("md");
+  const [cardPaddingTop, setCardPaddingTop] = useState<number>(36);
+  const [pricePaddingTop, setPricePaddingTop] = useState<number>(0);
 
   // Custom Colors
   const [customAccentColor, setCustomAccentColor] = useState<string>("#F59E0B");
   const [customTitleColor, setCustomTitleColor] = useState<string>("#FFFFFF");
   const [customPriceColor, setCustomPriceColor] = useState<string>("#FFFFFF");
+  const [priceEffect, setPriceEffect] = useState<StudioPriceEffect>("none");
   const [customHeadlineColor, setCustomHeadlineColor] = useState<string>("#F59E0B");
   const [customProjectNameColor, setCustomProjectNameColor] = useState<string>("#FFFFFF");
   const [customCardBgColor, setCustomCardBgColor] = useState<string>("");
@@ -377,9 +417,11 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
   const [showTopListingBadge, setShowTopListingBadge] = useState<boolean>(true);
   const [headerFontSizeScale, setHeaderFontSizeScale] = useState<FontSizeScale>("md");
   const [brandingTitleFontSizeScale, setBrandingTitleFontSizeScale] = useState<FontSizeScale>("md");
+  const [brandingTitleFontWeight, setBrandingTitleFontWeight] = useState<string>("700");
   const [brandingSubtitleFontSizeScale, setBrandingSubtitleFontSizeScale] = useState<FontSizeScale>("md");
   const [badgeFontSizeScale, setBadgeFontSizeScale] = useState<FontSizeScale>("md");
   const [specFontSizeScale, setSpecFontSizeScale] = useState<SpecFontSizeScale>("xl");
+  const [specFontSizeCustom, setSpecFontSizeCustom] = useState<number>(140);
   const [headerYOffset, setHeaderYOffset] = useState<number>(0);
   const [showLocation, setShowLocation] = useState<boolean>(true);
   const [showProjectName, setShowProjectName] = useState<boolean>(true);
@@ -632,6 +674,8 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.priceFormatStyle) setPriceFormatStyle(config.priceFormatStyle);
     if (config.cardBackground) setCardBackground(config.cardBackground);
     if (config.cardYOffset !== undefined) setCardYOffset(config.cardYOffset);
+    if (config.cardPaddingTop !== undefined) setCardPaddingTop(config.cardPaddingTop);
+    if (config.pricePaddingTop !== undefined) setPricePaddingTop(config.pricePaddingTop);
     if (config.customAccentColor) setCustomAccentColor(config.customAccentColor);
     if (config.promoPosition) setPromoPosition(config.promoPosition);
     if (config.promoColor) setPromoColor(config.promoColor);
@@ -674,6 +718,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     if (config.showTopListingBadge !== undefined) setShowTopListingBadge(config.showTopListingBadge);
     if (config.headerFontSizeScale) setHeaderFontSizeScale(config.headerFontSizeScale);
     if (config.brandingTitleFontSizeScale) setBrandingTitleFontSizeScale(config.brandingTitleFontSizeScale);
+    if (config.brandingTitleFontWeight) setBrandingTitleFontWeight(config.brandingTitleFontWeight);
     if (config.brandingSubtitleFontSizeScale) setBrandingSubtitleFontSizeScale(config.brandingSubtitleFontSizeScale);
     if (config.badgeFontSizeScale) setBadgeFontSizeScale(config.badgeFontSizeScale);
     if (config.headerYOffset !== undefined) setHeaderYOffset(config.headerYOffset);
@@ -741,7 +786,12 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
       setContentPosition(cfg.contentPosition);
       setFontSizeScale(cfg.fontSizeScale);
       setPriceFontSizeScale(cfg.priceFontSizeScale);
-      if (cfg.specFontSizeScale) setSpecFontSizeScale(cfg.specFontSizeScale);
+      if (cfg.specFontSizeScale) {
+        setSpecFontSizeScale(cfg.specFontSizeScale);
+        const scaleMap: Record<string, number> = { xs: 75, sm: 88, md: 100, lg: 118, xl: 140, "2xl": 170, "3xl": 205 };
+        setSpecFontSizeCustom(scaleMap[cfg.specFontSizeScale] || 140);
+      }
+      if ((cfg as any).specFontSizeCustom !== undefined) setSpecFontSizeCustom((cfg as any).specFontSizeCustom);
       setPriceFormatStyle(cfg.priceFormatStyle);
       setPhotoFilter(cfg.photoFilter);
       setBgBlur(cfg.bgBlur || 0);
@@ -750,10 +800,18 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
       if (cfg.gridLineWidth !== undefined) setGridLineWidth(cfg.gridLineWidth);
       if (cfg.gridLineColor !== undefined) setGridLineColor(cfg.gridLineColor);
       if (cfg.customPriceColor !== undefined) setCustomPriceColor(cfg.customPriceColor);
+      if (cfg.priceEffect !== undefined) {
+        setPriceEffect(cfg.priceEffect);
+      } else if (cfg.customPriceColor === "gold") {
+        setPriceEffect("gold_metallic");
+      } else {
+        setPriceEffect("none");
+      }
       if (cfg.customAccentColor !== undefined) setCustomAccentColor(cfg.customAccentColor);
       if (cfg.customCardBgColor !== undefined) setCustomCardBgColor(cfg.customCardBgColor);
       if (cfg.showCardContent !== undefined) setShowCardContent(cfg.showCardContent);
       if (cfg.showSpecs !== undefined) setShowSpecs(cfg.showSpecs);
+      if ((cfg as any).enabledSpecs) setEnabledSpecs((prev) => ({ ...prev, ...(cfg as any).enabledSpecs }));
       if (cfg.showPrice !== undefined) setShowPrice(cfg.showPrice);
       if (cfg.showHeadline !== undefined) setShowHeadline(cfg.showHeadline);
       if (cfg.showBrandingHeader !== undefined) setShowBrandingHeader(cfg.showBrandingHeader);
@@ -844,15 +902,15 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
 
   const handleSavePreset = async (key: string) => {
     const config: SocialStudioPresetConfig = {
-      aspectRatio, theme, layout, fitWithBlurredBackdrop, contentPosition, fontSizeScale, priceFontSizeScale, specFontSizeScale, zoneMapping,
+      aspectRatio, theme, layout, fitWithBlurredBackdrop, contentPosition, fontSizeScale, priceFontSizeScale, specFontSizeScale, specFontSizeCustom, enabledSpecs, zoneMapping,
       card1YOffset, card2YOffset, cardHeightPercent, cardWidthPercent, cardTextAlign, cardOpacity, scrimOpacity,
-      topScrimOpacity, bottomScrimOpacity, priceFormatStyle, cardBackground, cardYOffset, customAccentColor,
+      topScrimOpacity, bottomScrimOpacity, priceFormatStyle, cardBackground, cardYOffset, cardPaddingTop, pricePaddingTop, customAccentColor,
       promoPosition, promoColor, promoTextColor, photoFilter, gridLineWidth, gridLineColor, customTitleColor,
-      customPriceColor, customHeadlineColor, customProjectNameColor, customCardBgColor, customCanvasBgColor,
+      customPriceColor, priceEffect, customHeadlineColor, customProjectNameColor, customCardBgColor, customCanvasBgColor,
       customListingBadgeBgColor, customListingBadgeTextColor, showBrandingHeader, showTopListingBadge,
       brandingHeaderStyle, brandingHeaderAlign, brandingBgColor,
       brandingTitleColor, brandingSubtitleColor, customCompanyName, customCompanySubtitle,
-      headerFontSizeScale, brandingTitleFontSizeScale, brandingSubtitleFontSizeScale, badgeFontSizeScale, headerYOffset, cardRightMargin, showHeadline,
+      headerFontSizeScale, brandingTitleFontSizeScale, brandingTitleFontWeight, brandingSubtitleFontSizeScale, badgeFontSizeScale, headerYOffset, cardRightMargin, showHeadline,
       showUsdApprox,
       showCardContent,
       cardBorderGlow,
@@ -983,50 +1041,53 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     [property, language, customTitle, customProjectName, initialProjectName]
   );
 
-  const handleLanguageChange = (newLang: StudioLanguage) => {
-    setLanguage(newLang);
-    if (newLang === "en" && property.title_en) {
-      setCustomTitle(property.title_en);
-    } else if (newLang === "th") {
-      setCustomTitle(property.title || "");
-    }
+  const handleLanguageChange = useCallback(
+    (newLang: StudioLanguage) => {
+      setLanguage(newLang);
+      if (newLang === "en" && property.title_en) {
+        setCustomTitle(property.title_en);
+      } else if (newLang === "th") {
+        setCustomTitle(property.title || "");
+      }
 
-    const enProj = (property as any).project_name_en || (property.project?.name as any)?.en;
-    if (newLang === "en" && enProj) {
-      setCustomProjectName(enProj);
-    } else if (newLang === "th") {
-      setCustomProjectName(property.project_name || (property.project?.name as any)?.th || initialProjectName);
-    } else if (property.project?.name && typeof property.project.name === "object") {
-      const pNameInLang =
+      const enProj = (property as any).project_name_en || (property.project?.name as any)?.en;
+      if (newLang === "en" && enProj) {
+        setCustomProjectName(enProj);
+      } else if (newLang === "th") {
+        setCustomProjectName(property.project_name || (property.project?.name as any)?.th || initialProjectName);
+      } else if (property.project?.name && typeof property.project.name === "object") {
+        const pNameInLang =
+          newLang === "en"
+            ? property.project.name.en || property.project.name.th
+            : newLang === "zh"
+              ? property.project.name.cn || property.project.name.zh || property.project.name.en || property.project.name.th
+              : newLang === "ru"
+                ? property.project.name.ru || property.project.name.en || property.project.name.th
+                : property.project.name.th || property.project.name.en;
+        if (pNameInLang) setCustomProjectName(pNameInLang);
+      }
+
+      setTextEffectLineConfigs((prev) => {
+        if (!prev || prev.length === 0) return prev;
+        const targetProj = newLang === "en"
+          ? ((property as any).project_name_en || (property.project?.name as any)?.en || property.title_en || "Exclusive Deal Ready to Move In!")
+          : (property.project_name || (property.project?.name as any)?.th || property.title || "ดีลเด็ด คอนโดพร้อมอยู่!");
+        return prev.map((line, idx) => idx === 0 ? { ...line, text: targetProj } : line);
+      });
+
+      fetchAIContent(newLang);
+      const langName =
         newLang === "en"
-          ? property.project.name.en || property.project.name.th
+          ? "English (EN)"
           : newLang === "zh"
-            ? property.project.name.cn || property.project.name.zh || property.project.name.en || property.project.name.th
+            ? "中文 (CN)"
             : newLang === "ru"
-              ? property.project.name.ru || property.project.name.en || property.project.name.th
-              : property.project.name.th || property.project.name.en;
-      if (pNameInLang) setCustomProjectName(pNameInLang);
-    }
-
-    setTextEffectLineConfigs((prev) => {
-      if (!prev || prev.length === 0) return prev;
-      const targetProj = newLang === "en"
-        ? ((property as any).project_name_en || (property.project?.name as any)?.en || property.title_en || "Exclusive Deal Ready to Move In!")
-        : (property.project_name || (property.project?.name as any)?.th || property.title || "ดีลเด็ด คอนโดพร้อมอยู่!");
-      return prev.map((line, idx) => idx === 0 ? { ...line, text: targetProj } : line);
-    });
-
-    fetchAIContent(newLang);
-    const langName =
-      newLang === "en"
-        ? "English (EN)"
-        : newLang === "zh"
-          ? "中文 (CN)"
-          : newLang === "ru"
-            ? "Русский (RU)"
-            : "ภาษาไทย (TH)";
-    toast.success(newLang === "en" ? `Switched language to ${langName}!` : `เปลี่ยนภาษาเป็น ${langName} แล้ว!`);
-  };
+              ? "Русский (RU)"
+              : "ภาษาไทย (TH)";
+      toast.success(newLang === "en" ? `Switched language to ${langName}!` : `เปลี่ยนภาษาเป็น ${langName} แล้ว!`);
+    },
+    [property, initialProjectName, fetchAIContent]
+  );
 
   const hasFetchedInitialAI = useRef(false);
 
@@ -1060,12 +1121,15 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         priceFormatStyle,
         cardYOffset,
         cardRightMargin,
+        cardPaddingTop,
+        pricePaddingTop,
         contentPosition,
         fontSizeScale,
         priceFontSizeScale,
         customAccentColor,
         customTitleColor,
         customPriceColor,
+        priceEffect,
         customHeadlineColor,
         customProjectNameColor,
         customCardBgColor,
@@ -1135,9 +1199,11 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         showTopListingBadge,
         headerFontSizeScale,
         brandingTitleFontSizeScale,
+        brandingTitleFontWeight,
         brandingSubtitleFontSizeScale,
         badgeFontSizeScale,
         specFontSizeScale,
+        specFontSizeCustom,
         headerYOffset,
         showLocation,
         showProjectName,
@@ -1151,6 +1217,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         showQrCode,
         showContact,
         showAgentAvatar,
+        property,
         imageUrls: currentSlotImageUrls,
         title: customTitle,
         projectName: customProjectName,
@@ -1175,15 +1242,18 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
             }
           ),
         specs: {
-          bedrooms: property.bedrooms,
-          bathrooms: property.bathrooms,
-          sizeSqm: property.size_sqm,
-          floor: property.floor,
-          parking: property.parking_slots ?? property.parking ?? null,
+          bedrooms: customBedrooms !== "" && customBedrooms !== null ? Number(customBedrooms) : (property.bedrooms ?? null),
+          bathrooms: customBathrooms !== "" && customBathrooms !== null ? Number(customBathrooms) : (property.bathrooms ?? null),
+          sizeSqm: customSizeSqm !== "" && customSizeSqm !== null ? Number(customSizeSqm) : (property.size_sqm ?? null),
+          landSizeSqwah: customLandSizeSqwah !== "" && customLandSizeSqwah !== null ? Number(customLandSizeSqwah) : (property.land_size_sqwah ?? (property as any).land_area ?? null),
+          floor: customFloor !== "" && customFloor !== null ? Number(customFloor) : (property.floor ?? null),
+          parking: customParking !== "" && customParking !== null ? Number(customParking) : (property.parking_slots ?? property.parking ?? null),
         },
-        ownershipBadge: selectedBadges.find(
-          (b) => b.includes("Freehold") || b.includes("Quota") || b.includes("Leasehold")
-        ),
+        enabledSpecs,
+        ownershipBadge: selectedBadges.find((b) => {
+          const l = b.toLowerCase();
+          return l.includes("freehold") || l.includes("quota") || l.includes("leasehold");
+        }),
         badges: selectedBadges,
         fitWithBlurredBackdrop,
         slotCropOffsets,
@@ -1225,12 +1295,15 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     priceFormatStyle,
     cardYOffset,
     cardRightMargin,
+    cardPaddingTop,
+    pricePaddingTop,
     contentPosition,
     fontSizeScale,
     priceFontSizeScale,
     customAccentColor,
     customTitleColor,
     customPriceColor,
+    priceEffect,
     customHeadlineColor,
     customProjectNameColor,
     customCardBgColor,
@@ -1254,9 +1327,11 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     showTopListingBadge,
     headerFontSizeScale,
     brandingTitleFontSizeScale,
+    brandingTitleFontWeight,
     brandingSubtitleFontSizeScale,
     badgeFontSizeScale,
     specFontSizeScale,
+    specFontSizeCustom,
     headerYOffset,
     showLocation,
     showProjectName,
@@ -1319,6 +1394,13 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     customProjectName,
     customTitle,
     customTransitText,
+    customBedrooms,
+    customBathrooms,
+    customSizeSqm,
+    customLandSizeSqwah,
+    customParking,
+    customFloor,
+    enabledSpecs,
     property,
     priceDisplay,
     originalPriceDisplay,
@@ -1364,6 +1446,8 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     priceFormatStyle, setPriceFormatStyle,
     cardYOffset, setCardYOffset,
     cardRightMargin, setCardRightMargin,
+    cardPaddingTop, setCardPaddingTop,
+    pricePaddingTop, setPricePaddingTop,
     contentPosition, setContentPosition,
     fontSizeScale, setFontSizeScale,
     priceFontSizeScale, setPriceFontSizeScale,
@@ -1371,6 +1455,7 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     customAccentColor, setCustomAccentColor,
     customTitleColor, setCustomTitleColor,
     customPriceColor, setCustomPriceColor,
+    priceEffect, setPriceEffect,
     customHeadlineColor, setCustomHeadlineColor,
     customProjectNameColor, setCustomProjectNameColor,
     customCardBgColor, setCustomCardBgColor,
@@ -1412,9 +1497,11 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     showTopListingBadge, setShowTopListingBadge,
     headerFontSizeScale, setHeaderFontSizeScale,
     brandingTitleFontSizeScale, setBrandingTitleFontSizeScale,
+    brandingTitleFontWeight, setBrandingTitleFontWeight,
     brandingSubtitleFontSizeScale, setBrandingSubtitleFontSizeScale,
     badgeFontSizeScale, setBadgeFontSizeScale,
     specFontSizeScale, setSpecFontSizeScale,
+    specFontSizeCustom, setSpecFontSizeCustom,
     headerYOffset, setHeaderYOffset,
     showLocation, setShowLocation,
     showProjectName, setShowProjectName,
@@ -1483,6 +1570,13 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     customProjectName, setCustomProjectName,
     customTitle, setCustomTitle,
     customTransitText, setCustomTransitText,
+    customBedrooms, setCustomBedrooms,
+    customBathrooms, setCustomBathrooms,
+    customSizeSqm, setCustomSizeSqm,
+    customLandSizeSqwah, setCustomLandSizeSqwah,
+    customParking, setCustomParking,
+    customFloor, setCustomFloor,
+    enabledSpecs, setEnabledSpecs,
     // Formatted texts
     priceDisplay, originalPriceDisplay, locationDisplay,
     // Presets

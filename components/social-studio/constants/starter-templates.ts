@@ -10,6 +10,7 @@ import type {
   PhotoFilter,
   TextEffectTemplate,
   TextEffectPosition,
+  StudioPriceEffect,
 } from "../types";
 
 export interface StarterTemplateConfig {
@@ -17,6 +18,12 @@ export interface StarterTemplateConfig {
   layout: StudioLayout;
   theme: StudioTheme;
   cardBackground: CardBackground;
+  cardHeightPercent?: number;
+  cardWidthPercent?: number;
+  cardYOffset?: number;
+  cardPaddingTop?: number;
+  pricePaddingTop?: number;
+  cardTextAlign?: "left" | "center" | "right";
   cardOpacity: number;
   contentPosition: ContentPosition;
   fontSizeScale: FontSizeScale;
@@ -30,6 +37,7 @@ export interface StarterTemplateConfig {
   gridLineWidth?: number;
   gridLineColor?: string;
   customPriceColor?: string;
+  priceEffect?: StudioPriceEffect;
   customAccentColor?: string;
   customCardBgColor?: string;
   showCardContent?: boolean;

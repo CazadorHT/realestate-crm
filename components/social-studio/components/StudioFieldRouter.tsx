@@ -3,7 +3,8 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Tag, Layers } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Tag, Layers, Sliders } from "lucide-react";
 import type { ElementZoneMapping, ContentPosition, FontSizeScale, SpecFontSizeScale, StudioPriceFormatStyle } from "../types";
 import { useLanguage } from "@/lib/i18n/language-context";
 
@@ -23,6 +24,8 @@ interface StudioFieldRouterProps {
   setShowSpecs: (s: boolean) => void;
   specFontSizeScale?: SpecFontSizeScale;
   setSpecFontSizeScale?: (f: SpecFontSizeScale) => void;
+  specFontSizeCustom?: number;
+  setSpecFontSizeCustom?: (val: number) => void;
   showPrice: boolean;
   setShowPrice: (s: boolean) => void;
   showUsdApprox?: boolean;
@@ -58,6 +61,8 @@ export function StudioFieldRouter({
   setShowSpecs,
   specFontSizeScale = "md",
   setSpecFontSizeScale,
+  specFontSizeCustom = 140,
+  setSpecFontSizeCustom,
   showPrice,
   setShowPrice,
   showUsdApprox = false,
@@ -247,27 +252,69 @@ export function StudioFieldRouter({
         </div>
       )}
 
-      {showSpecs && setSpecFontSizeScale && (
-        <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-          <span className="text-[11px] text-slate-300 font-medium flex items-center gap-1">
-            {isEn ? "📏 Specs Font Size:" : "📏 ขนาดฟอนต์สเปก (นอน/น้ำ/ตร.ม.):"}
-          </span>
-          <div className="flex flex-wrap gap-1">
+      {showSpecs && (
+        <div className="pt-2 border-t border-slate-800/80 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-slate-300 font-medium flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5 text-amber-400" />
+              {isEn ? "📏 Specs Font Size (Continuous):" : "📏 ขนาดฟอนต์สเปก (เลื่อนปรับอิสระ):"}
+            </span>
+            <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">
+              {specFontSizeCustom || 140}% ({((specFontSizeCustom || 140) / 100).toFixed(2)}x)
+            </span>
+          </div>
+
+          {/* Slider with -5% and +5% stepper buttons */}
+          {setSpecFontSizeCustom && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSpecFontSizeCustom(Math.max(50, (specFontSizeCustom || 140) - 5))}
+                className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center border border-slate-700 cursor-pointer transition-colors"
+                title="-5%"
+              >
+                -
+              </button>
+              <Slider
+                value={[specFontSizeCustom || 140]}
+                min={50}
+                max={250}
+                step={2}
+                onValueChange={([val]) => setSpecFontSizeCustom(val)}
+                className="flex-1 py-1"
+              />
+              <button
+                type="button"
+                onClick={() => setSpecFontSizeCustom(Math.min(250, (specFontSizeCustom || 140) + 5))}
+                className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center border border-slate-700 cursor-pointer transition-colors"
+                title="+5%"
+              >
+                +
+              </button>
+            </div>
+          )}
+
+          {/* Quick presets */}
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-[10px] text-slate-500 mr-1">{isEn ? "Presets:" : "ระดับด่วน:"}</span>
             {[
-              { id: "xs", label: isEn ? "XS" : "จิ๋ว" },
-              { id: "sm", label: isEn ? "Small" : "เล็ก" },
-              { id: "md", label: isEn ? "Normal" : "ปกติ" },
-              { id: "lg", label: isEn ? "Large" : "ใหญ่" },
-              { id: "xl", label: isEn ? "XL ⭐" : "ยักษ์ ⭐" },
-              { id: "2xl", label: isEn ? "2XL" : "มหายักษ์" },
-              { id: "3xl", label: isEn ? "3XL" : "ยักษ์ใหญ่" },
+              { id: "xs", val: 75, label: "XS (75%)" },
+              { id: "sm", val: 90, label: "S (90%)" },
+              { id: "md", val: 105, label: "M (105%)" },
+              { id: "lg", val: 125, label: "L (125%)" },
+              { id: "xl", val: 145, label: "XL (145%) ⭐" },
+              { id: "2xl", val: 175, label: "2XL (175%)" },
+              { id: "3xl", val: 210, label: "3XL (210%)" },
             ].map((f) => (
               <button
                 key={f.id}
                 type="button"
-                onClick={() => setSpecFontSizeScale(f.id as any)}
-                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all cursor-pointer ${
-                  specFontSizeScale === f.id
+                onClick={() => {
+                  if (setSpecFontSizeCustom) setSpecFontSizeCustom(f.val);
+                  if (setSpecFontSizeScale) setSpecFontSizeScale(f.id as any);
+                }}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all cursor-pointer ${
+                  specFontSizeCustom === f.val
                     ? "bg-amber-500 text-slate-950 border-amber-400 shadow-xs"
                     : "bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200"
                 }`}

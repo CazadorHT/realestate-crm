@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import { Sparkles } from "lucide-react";
 
 import type { PlatformOverlayType } from "./PlatformUiOverlay";
 import type { StudioLayout, StudioLanguage, SocialStudioProperty } from "./types";
-import { formatTransitDisplay } from "./helpers";
+import { formatTransitDisplay, AVAILABLE_BADGES } from "./helpers";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 // Custom Hooks
@@ -68,17 +68,6 @@ export function SocialStudioModal({
     property,
     initialLanguage: (uiLang as StudioLanguage) || "en",
   });
-
-  // Sync studio language ONLY when CRM language specifically changes while open
-  const prevUiLangRef = useRef(uiLang);
-  useEffect(() => {
-    if (isOpen && uiLang && prevUiLangRef.current !== uiLang) {
-      prevUiLangRef.current = uiLang;
-      state.handleLanguageChange(uiLang as StudioLanguage);
-    } else {
-      prevUiLangRef.current = uiLang;
-    }
-  }, [isOpen, uiLang, state.handleLanguageChange]);
 
   // Export & Share Engine
   const exp = useStudioExport({
@@ -136,16 +125,109 @@ export function SocialStudioModal({
     toast.success(isEn ? "Images randomized across layout! 🔀" : "สลับรูปภาพใน Layout แล้ว! 🔀");
   };
 
-  const handleToggleBadge = (badgeLabel: string) => {
+  const handleToggleBadge = (badgeIdOrLabel: string) => {
     state.setSelectedBadges((prev) => {
-      if (prev.includes(badgeLabel)) {
-        return prev.filter((b) => b !== badgeLabel);
+      const isBadgeMatch = (b: string, target: string) => {
+        if (!b || !target) return false;
+        if (b === target) return true;
+
+        const cleanNorm = (str: string) =>
+          str.replace(/[\s\-_]/g, "").replace(/^[\p{Emoji}\s]+/u, "").toLowerCase();
+        const normB = cleanNorm(b);
+        const normTarget = cleanNorm(target);
+        if (normB === normTarget) return true;
+
+        // Foreign Freehold / Quota / Leasehold matching
+        if (
+          (normB.includes("foreignfreehold") || normB === "foreignfreehold") &&
+          (normTarget.includes("foreignfreehold") || normTarget === "foreignfreehold")
+        ) {
+          return true;
+        }
+        if (
+          (normB.includes("foreignerquota") || normB === "foreignerquota") &&
+          (normTarget.includes("foreignerquota") || normTarget === "foreignerquota")
+        ) {
+          return true;
+        }
+        if (
+          (normB.includes("thaifreehold") || normB === "thaifreehold") &&
+          (normTarget.includes("thaifreehold") || normTarget === "thaifreehold")
+        ) {
+          return true;
+        }
+        if (
+          (normB.includes("leasehold") || normB === "leasehold") &&
+          (normTarget.includes("leasehold") || normTarget === "leasehold")
+        ) {
+          return true;
+        }
+
+        // Dynamic spec pills matching
+        if (
+          (normTarget === "propsqm" || normTarget.includes("ตรม") || normTarget.includes("sqm")) &&
+          (normB === "propsqm" || normB.includes("ตรม") || normB.includes("sqm"))
+        ) return true;
+
+        if (
+          (normTarget === "proplandsqwah" || normTarget.includes("ตรวา") || normTarget.includes("sqwah")) &&
+          (normB === "proplandsqwah" || normB.includes("ตรวา") || normB.includes("sqwah"))
+        ) return true;
+
+        if (
+          (normTarget === "propparking" || normTarget.includes("ที่จอด") || normTarget.includes("parking")) &&
+          (normB === "propparking" || normB.includes("ที่จอด") || normB.includes("parking"))
+        ) return true;
+
+        if (
+          (normTarget === "propbedrooms" || normTarget.includes("ห้องนอน") || normTarget.includes("bed")) &&
+          (normB === "propbedrooms" || normB.includes("ห้องนอน") || normB.includes("bed"))
+        ) return true;
+
+        if (
+          (normTarget === "propbathrooms" || normTarget.includes("ห้องน้ำ") || normTarget.includes("bath")) &&
+          (normB === "propbathrooms" || normB.includes("ห้องน้ำ") || normB.includes("bath"))
+        ) return true;
+
+        if (
+          (normTarget === "propfloor" || normTarget.includes("ชั้น") || normTarget.includes("floor") || normTarget.includes("fl")) &&
+          (normB === "propfloor" || normB.includes("ชั้น") || normB.includes("floor") || normB.includes("fl"))
+        ) return true;
+
+        // Check against AVAILABLE_BADGES dictionary
+        const matchObj = AVAILABLE_BADGES.find(
+          (item) =>
+            item.id === b ||
+            item.label === b ||
+            item.labelEn === b ||
+            item.id === target ||
+            item.label === target ||
+            item.labelEn === target
+        );
+        if (matchObj) {
+          const validKeys = [matchObj.id, matchObj.label, matchObj.labelEn]
+            .filter(Boolean)
+            .map((s) => s!.replace(/[_-\s]/g, "").toLowerCase());
+          return validKeys.includes(normB) && validKeys.includes(normTarget);
+        }
+
+        return false;
+      };
+
+      const isCurrentlySelected = prev.some((b) => isBadgeMatch(b, badgeIdOrLabel));
+
+      if (isCurrentlySelected) {
+        // Toggle OFF: remove all matches cleanly!
+        return prev.filter((b) => !isBadgeMatch(b, badgeIdOrLabel));
       }
-      if (prev.length >= 2) {
-        toast.info(isEn ? "Maximum 2 stickers allowed." : "เลือกสติกเกอร์ได้สูงสุด 2 รายการครับ");
+
+      // Toggle ON: check max 5 limit
+      if (prev.length >= 5) {
+        toast.info(isEn ? "Maximum 5 stickers allowed." : "เลือกสติกเกอร์ได้สูงสุด 5 รายการครับ");
         return prev;
       }
-      return [...prev, badgeLabel];
+
+      return [...prev, badgeIdOrLabel];
     });
   };
 
@@ -367,6 +449,9 @@ export function SocialStudioModal({
                       setHeaderFontSizeScale={state.setHeaderFontSizeScale}
                       brandingTitleFontSizeScale={state.brandingTitleFontSizeScale}
                       setBrandingTitleFontSizeScale={state.setBrandingTitleFontSizeScale}
+                      brandingTitleFontWeight={state.brandingTitleFontWeight}
+                      setBrandingTitleFontWeight={state.setBrandingTitleFontWeight}
+                      projectName={state.customProjectName || property.project_name || property.title}
                       brandingSubtitleFontSizeScale={state.brandingSubtitleFontSizeScale}
                       setBrandingSubtitleFontSizeScale={state.setBrandingSubtitleFontSizeScale}
                       badgeFontSizeScale={state.badgeFontSizeScale}
@@ -413,8 +498,13 @@ export function SocialStudioModal({
                   <div className="space-y-4 animate-in fade-in duration-200">
                     <StudioContentEditor
                       language={state.language}
+                      onLanguageChange={state.handleLanguageChange}
                       selectedBadges={state.selectedBadges}
                       onToggleBadge={handleToggleBadge}
+                      specFontSizeScale={state.specFontSizeScale}
+                      setSpecFontSizeScale={state.setSpecFontSizeScale}
+                      specFontSizeCustom={state.specFontSizeCustom}
+                      setSpecFontSizeCustom={state.setSpecFontSizeCustom}
                       customProjectName={state.customProjectName}
                       setCustomProjectName={state.setCustomProjectName}
                       customTitle={state.customTitle}
@@ -461,6 +551,8 @@ export function SocialStudioModal({
                       setCustomTitleColor={state.setCustomTitleColor}
                       customPriceColor={state.customPriceColor}
                       setCustomPriceColor={state.setCustomPriceColor}
+                      priceEffect={state.priceEffect}
+                      setPriceEffect={state.setPriceEffect}
                       customHeadlineColor={state.customHeadlineColor}
                       setCustomHeadlineColor={state.setCustomHeadlineColor}
                       customProjectNameColor={state.customProjectNameColor}
@@ -537,6 +629,26 @@ export function SocialStudioModal({
                       onUpdateCustomText={state.updateCustomText}
                       onRemoveCustomText={state.removeCustomText}
                       priceText={state.priceDisplay}
+                      priceFontSizeScale={state.priceFontSizeScale}
+                      setPriceFontSizeScale={state.setPriceFontSizeScale}
+                      cardPaddingTop={state.cardPaddingTop}
+                      setCardPaddingTop={state.setCardPaddingTop}
+                      pricePaddingTop={state.pricePaddingTop}
+                      setPricePaddingTop={state.setPricePaddingTop}
+                      customBedrooms={state.customBedrooms}
+                      setCustomBedrooms={state.setCustomBedrooms}
+                      customBathrooms={state.customBathrooms}
+                      setCustomBathrooms={state.setCustomBathrooms}
+                      customSizeSqm={state.customSizeSqm}
+                      setCustomSizeSqm={state.setCustomSizeSqm}
+                      customLandSizeSqwah={state.customLandSizeSqwah}
+                      setCustomLandSizeSqwah={state.setCustomLandSizeSqwah}
+                      customParking={state.customParking}
+                      setCustomParking={state.setCustomParking}
+                      customFloor={state.customFloor}
+                      setCustomFloor={state.setCustomFloor}
+                      enabledSpecs={state.enabledSpecs}
+                      setEnabledSpecs={state.setEnabledSpecs}
                       showCardContent={state.showCardContent}
                       property={property}
                     />
@@ -557,6 +669,8 @@ export function SocialStudioModal({
                       setShowSpecs={state.setShowSpecs}
                       specFontSizeScale={state.specFontSizeScale}
                       setSpecFontSizeScale={state.setSpecFontSizeScale}
+                      specFontSizeCustom={state.specFontSizeCustom}
+                      setSpecFontSizeCustom={state.setSpecFontSizeCustom}
                       showPrice={state.showPrice}
                       setShowPrice={state.setShowPrice}
                       priceFormatStyle={state.priceFormatStyle}

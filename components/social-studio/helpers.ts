@@ -1,4 +1,4 @@
-import type { StudioLanguage, StudioPriceFormatStyle, AvailableBadgeItem } from "./types";
+import type { StudioLanguage, StudioPriceFormatStyle, AvailableBadgeItem, SocialStudioProperty } from "./types";
 import { formatPrice } from "@/lib/property-utils";
 
 export const AVAILABLE_BADGES: AvailableBadgeItem[] = [
@@ -6,12 +6,325 @@ export const AVAILABLE_BADGES: AvailableBadgeItem[] = [
   { id: "foreigner_quota", label: "🌍 Foreigner Quota", labelEn: "🌍 Foreigner Quota" },
   { id: "thai_freehold", label: "Thai Freehold", labelEn: "Thai Freehold" },
   { id: "leasehold", label: "Leasehold", labelEn: "Leasehold" },
-  { id: "pet_friendly", label: "🐾 เลี้ยงสัตว์ได้", labelEn: "🐾 Pet Friendly" },
   { id: "hot_deal", label: "🔥 Hot Deal", labelEn: "🔥 Hot Deal" },
+  { id: "pet_friendly", label: "🐾 เลี้ยงสัตว์ได้", labelEn: "🐾 Pet Friendly" },
   { id: "near_transit", label: "🚆 ใกล้รถไฟฟ้า", labelEn: "🚆 Near Transit" },
   { id: "furnished", label: "🛋️ แต่งครบพร้อมอยู่", labelEn: "🛋️ Fully Furnished" },
   { id: "high_yield", label: "💰 High Yield 6%+", labelEn: "💰 High Yield 6%+" },
+  { id: "land_private", label: "📐 มีเนื้อที่ดิน", labelEn: "📐 Private Land", icon: "land" },
+  { id: "parking_private", label: "🚗 มีที่จอดรถส่วนตัว", labelEn: "🚗 Private Parking", icon: "parking" },
+  { id: "sea_view", label: "🌊 วิวทะเล", labelEn: "🌊 Sea View" },
+  { id: "private_pool", label: "🏊 สระว่ายน้ำส่วนตัว", labelEn: "🏊 Private Pool" },
+  { id: "corner_unit", label: "🏙️ ห้องมุม วิวโล่ง", labelEn: "🏙️ Corner Unit" },
+  { id: "corner_house", label: "🏡 บ้านเดี่ยวหลังมุม", labelEn: "🏡 Corner House" },
+  { id: "main_road", label: "✨ ติดถนนใหญ่", labelEn: "✨ Main Road Access" },
+  { id: "ready_transfer", label: "🔑 พร้อมโอนกรรมสิทธิ์", labelEn: "🔑 Ready to Transfer" },
+  { id: "urgent_sale", label: "⚡ ลดด่วนต่ำกว่าทุน", labelEn: "⚡ Urgent Below Market" },
 ];
+
+/**
+ * Generate real-data dynamic property badges based on the property and manual spec inputs
+ */
+export function getDynamicPropertyBadges(
+  property?: SocialStudioProperty,
+  customSpecs?: {
+    customSizeSqm?: number | string | null;
+    customLandSizeSqwah?: number | string | null;
+    customParking?: number | string | null;
+    customBedrooms?: number | string | null;
+    customBathrooms?: number | string | null;
+    customFloor?: number | string | null;
+  },
+  _lang?: StudioLanguage
+): AvailableBadgeItem[] {
+  const badges: AvailableBadgeItem[] = [];
+  if (!property && !customSpecs) return badges;
+
+  // 1. Usable Area (SQM / ตร.ม.) - Real Property Data
+  const rawSqm =
+    customSpecs?.customSizeSqm !== "" &&
+    customSpecs?.customSizeSqm !== null &&
+    customSpecs?.customSizeSqm !== undefined
+      ? Number(customSpecs.customSizeSqm)
+      : (property?.size_sqm ?? (property as any)?.floor_area ?? null);
+  if (rawSqm && Number(rawSqm) > 0) {
+    badges.push({
+      id: "prop_sqm",
+      label: `⤢ ${rawSqm} ตร.ม.`,
+      labelEn: `⤢ ${rawSqm} SQ.M.`,
+      labelZh: `⤢ ${rawSqm} 平米`,
+      labelRu: `⤢ ${rawSqm} м²`,
+      icon: "sqm",
+      isProp: true,
+    });
+  }
+
+  // 2. Land Size (ตร.วา / Sq.wah) - Real Property Data
+  const rawLand =
+    customSpecs?.customLandSizeSqwah !== "" &&
+    customSpecs?.customLandSizeSqwah !== null &&
+    customSpecs?.customLandSizeSqwah !== undefined
+      ? Number(customSpecs.customLandSizeSqwah)
+      : (property?.land_size_sqwah ?? (property as any)?.land_area ?? null);
+  if (rawLand && Number(rawLand) > 0) {
+    badges.push({
+      id: "prop_land_sqwah",
+      label: `📐 ${rawLand} ตร.วา`,
+      labelEn: `📐 ${rawLand} Sq.wah`,
+      labelZh: `📐 ${rawLand} 瓦`,
+      labelRu: `📐 ${rawLand} ва`,
+      icon: "land",
+      isProp: true,
+    });
+  }
+
+  // 3. Parking (ที่จอดรถ / Parking) - Real Property Data
+  const rawParking =
+    customSpecs?.customParking !== "" &&
+    customSpecs?.customParking !== null &&
+    customSpecs?.customParking !== undefined
+      ? Number(customSpecs.customParking)
+      : (property?.parking_slots ?? property?.parking ?? null);
+  if (rawParking && Number(rawParking) > 0) {
+    badges.push({
+      id: "prop_parking",
+      label: `🚗 ที่จอดรถ ${rawParking} คัน`,
+      labelEn: `🚗 ${rawParking} Parking`,
+      labelZh: `🚗 ${rawParking} 车位`,
+      labelRu: `🚗 ${rawParking} паркинг`,
+      icon: "parking",
+      isProp: true,
+    });
+  }
+
+  // 4. Bedrooms - Real Property Data
+  const rawBeds =
+    customSpecs?.customBedrooms !== "" &&
+    customSpecs?.customBedrooms !== null &&
+    customSpecs?.customBedrooms !== undefined
+      ? Number(customSpecs.customBedrooms)
+      : (property?.bedrooms ?? null);
+  if (rawBeds !== null && rawBeds !== undefined) {
+    badges.push({
+      id: "prop_bedrooms",
+      label: rawBeds === 0 ? "🛏️ สตูดิโอ" : `🛏️ ${rawBeds} ห้องนอน`,
+      labelEn: rawBeds === 0 ? "🛏️ Studio" : `🛏️ ${rawBeds} ${rawBeds > 1 ? "Beds" : "Bed"}`,
+      labelZh: rawBeds === 0 ? "🛏️ 开间" : `🛏️ ${rawBeds} 房`,
+      labelRu: rawBeds === 0 ? "🛏️ Студия" : `🛏️ ${rawBeds} спальни`,
+      icon: "bed",
+      isProp: true,
+    });
+  }
+
+  // 5. Bathrooms - Real Property Data
+  const rawBaths =
+    customSpecs?.customBathrooms !== "" &&
+    customSpecs?.customBathrooms !== null &&
+    customSpecs?.customBathrooms !== undefined
+      ? Number(customSpecs.customBathrooms)
+      : (property?.bathrooms ?? null);
+  if (rawBaths && Number(rawBaths) > 0) {
+    badges.push({
+      id: "prop_bathrooms",
+      label: `🚿 ${rawBaths} ห้องน้ำ`,
+      labelEn: `🚿 ${rawBaths} ${rawBaths > 1 ? "Baths" : "Bath"}`,
+      labelZh: `🚿 ${rawBaths} 卫`,
+      labelRu: `🚿 ${rawBaths} санузла`,
+      icon: "bath",
+      isProp: true,
+    });
+  }
+
+  // 6. Floor - Real Property Data
+  const rawFloor =
+    customSpecs?.customFloor !== "" &&
+    customSpecs?.customFloor !== null &&
+    customSpecs?.customFloor !== undefined
+      ? Number(customSpecs.customFloor)
+      : (property?.floor ?? null);
+  if (rawFloor && Number(rawFloor) > 0) {
+    badges.push({
+      id: "prop_floor",
+      label: `🏢 ชั้น ${rawFloor}`,
+      labelEn: `🏢 Fl. ${rawFloor}`,
+      labelZh: `🏢 ${rawFloor} 层`,
+      labelRu: `🏢 ${rawFloor} этаж`,
+      icon: "floor",
+      isProp: true,
+    });
+  }
+
+  // 7. Property-specific feature flags
+  if ((property as any)?.is_pet_friendly) {
+    badges.push({
+      id: "prop_pet",
+      label: "🐾 เลี้ยงสัตว์ได้",
+      labelEn: "🐾 Pet Friendly",
+      labelZh: "🐾 可养宠物",
+      labelRu: "🐾 Можно с животными",
+      isProp: true,
+    });
+  }
+  if ((property as any)?.is_foreigner_quota) {
+    badges.push({
+      id: "prop_quota",
+      label: "🌍 Foreigner Quota",
+      labelEn: "🌍 Foreigner Quota",
+      labelZh: "🌍 外国人配额",
+      labelRu: "🌍 Иностранная квота",
+      isProp: true,
+    });
+  }
+  if ((property as any)?.is_fully_furnished) {
+    badges.push({
+      id: "prop_furnished",
+      label: "🛋️ แต่งครบพร้อมอยู่",
+      labelEn: "🛋️ Fully Furnished",
+      labelZh: "🛋️ 精装全配",
+      labelRu: "🛋️ С мебелью",
+      isProp: true,
+    });
+  }
+  if ((property as any)?.has_private_pool) {
+    badges.push({
+      id: "prop_pool",
+      label: "🏊 สระว่ายน้ำส่วนตัว",
+      labelEn: "🏊 Private Pool",
+      labelZh: "🏊 私人泳池",
+      labelRu: "🏊 Личный бассейн",
+      isProp: true,
+    });
+  }
+  if ((property as any)?.is_corner_unit) {
+    badges.push({
+      id: "prop_corner",
+      label: "🏙️ ห้องมุม วิวโล่ง",
+      labelEn: "🏙️ Corner Unit",
+      labelZh: "🏙️ 边套采光佳",
+      labelRu: "🏙️ Угловая квартира",
+      isProp: true,
+    });
+  }
+  if ((property as any)?.is_hot_deal) {
+    badges.push({
+      id: "prop_hot",
+      label: "🔥 Hot Deal",
+      labelEn: "🔥 Hot Deal",
+      labelZh: "🔥 特惠好房",
+      labelRu: "🔥 Горячее предложение",
+      isProp: true,
+    });
+  }
+
+  return badges;
+}
+
+/**
+ * Resolve any badge identifier or label into the active Studio Language and map to vector icon
+ */
+export function resolveBadgeForLanguage(
+  badgeIdOrText: string,
+  lang: StudioLanguage,
+  propertyBadges: AvailableBadgeItem[] = []
+): { text: string; icon?: "sqm" | "land" | "parking" | "bed" | "bath" | "floor" } {
+  if (!badgeIdOrText) return { text: "" };
+
+  const trimmed = badgeIdOrText.trim();
+
+  // 1. Search in dynamic property badges
+  const propMatch = propertyBadges.find(
+    (b) =>
+      b.id === trimmed ||
+      b.label.trim() === trimmed ||
+      (b.labelEn && b.labelEn.trim() === trimmed) ||
+      (b.id === "prop_sqm" && (trimmed.includes("ตร.ม.") || trimmed.toLowerCase().includes("sq.m") || trimmed.toLowerCase().includes("sqm"))) ||
+      (b.id === "prop_land_sqwah" && (trimmed.includes("ตร.วา") || trimmed.toLowerCase().includes("sq.wah"))) ||
+      (b.id === "prop_parking" && (trimmed.includes("ที่จอด") || trimmed.toLowerCase().includes("parking"))) ||
+      (b.id === "prop_bedrooms" && (trimmed.includes("ห้องนอน") || trimmed.toLowerCase().includes("bed"))) ||
+      (b.id === "prop_bathrooms" && (trimmed.includes("ห้องน้ำ") || trimmed.toLowerCase().includes("bath"))) ||
+      (b.id === "prop_floor" && (trimmed.includes("ชั้น") || trimmed.toLowerCase().includes("floor") || trimmed.toLowerCase().includes("fl.")))
+  );
+  if (propMatch) {
+    const text =
+      lang === "en"
+        ? propMatch.labelEn || propMatch.label
+        : lang === "zh" && propMatch.labelZh
+        ? propMatch.labelZh
+        : lang === "ru" && propMatch.labelRu
+        ? propMatch.labelRu
+        : propMatch.label;
+    return { text, icon: propMatch.icon };
+  }
+
+  // 2. Search in AVAILABLE_BADGES
+  const staticMatch = AVAILABLE_BADGES.find(
+    (b) =>
+      b.id === trimmed ||
+      b.label.trim() === trimmed ||
+      (b.labelEn && b.labelEn.trim() === trimmed)
+  );
+  if (staticMatch) {
+    const text =
+      lang === "en"
+        ? staticMatch.labelEn || staticMatch.label
+        : lang === "zh" && staticMatch.labelZh
+        ? staticMatch.labelZh
+        : lang === "ru" && staticMatch.labelRu
+        ? staticMatch.labelRu
+        : staticMatch.label;
+    return { text, icon: staticMatch.icon };
+  }
+
+  // 3. Fallback smart regex resolver
+  let cleanText = trimmed;
+  let icon: "sqm" | "land" | "parking" | "bed" | "bath" | "floor" | undefined = undefined;
+
+  if (trimmed.includes("🚗") || trimmed.toLowerCase().includes("parking") || trimmed.includes("ที่จอด")) {
+    icon = "parking";
+    const num = trimmed.match(/\d+/)?.[0];
+    cleanText =
+      lang === "en"
+        ? (num ? `${num} Parking` : "Parking Space")
+        : (num ? `ที่จอดรถ ${num} คัน` : "มีที่จอดรถส่วนตัว");
+  } else if (trimmed.includes("📐") || trimmed.toLowerCase().includes("sq.wah") || trimmed.includes("ตร.วา") || trimmed.includes("เนื้อที่ดิน")) {
+    icon = "land";
+    const num = trimmed.match(/\d+(\.\d+)?/)?.[0];
+    cleanText =
+      lang === "en"
+        ? (num ? `${num} Sq.wah` : "Land Area")
+        : (num ? `${num} ตร.วา` : "มีเนื้อที่ดิน");
+  } else if (trimmed.includes("⤢") || trimmed.toLowerCase().includes("sq.m") || trimmed.includes("ตร.ม.") || trimmed.toLowerCase().includes("sqm")) {
+    icon = "sqm";
+    const num = trimmed.match(/\d+(\.\d+)?/)?.[0];
+    cleanText =
+      lang === "en"
+        ? (num ? `${num} SQ.M.` : "Area")
+        : (num ? `${num} ตร.ม.` : "พื้นที่ใช้สอย");
+  } else if (trimmed.includes("🐾") || trimmed.includes("สัตว์")) {
+    cleanText = lang === "en" ? "🐾 Pet Friendly" : "🐾 เลี้ยงสัตว์ได้";
+  } else if (trimmed.includes("🛋️") || trimmed.includes("แต่งครบ")) {
+    cleanText = lang === "en" ? "🛋️ Fully Furnished" : "🛋️ แต่งครบพร้อมอยู่";
+  } else if (trimmed.includes("🔑") || trimmed.includes("พร้อมโอน")) {
+    cleanText = lang === "en" ? "🔑 Ready to Transfer" : "🔑 พร้อมโอนกรรมสิทธิ์";
+  } else if (trimmed.includes("⚡") || trimmed.includes("ลดด่วน") || trimmed.includes("ต่ำกว่า")) {
+    cleanText = lang === "en" ? "⚡ Urgent Below Market" : "⚡ ลดด่วนต่ำกว่าทุน";
+  } else if (trimmed.includes("🌊") || trimmed.includes("วิวทะเล")) {
+    cleanText = lang === "en" ? "🌊 Sea View" : "🌊 วิวทะเล";
+  } else if (trimmed.includes("🏊") || trimmed.includes("สระว่ายน้ำ")) {
+    cleanText = lang === "en" ? "🏊 Private Pool" : "🏊 สระว่ายน้ำส่วนตัว";
+  } else if (trimmed.includes("🏙️") || trimmed.includes("ห้องมุม")) {
+    cleanText = lang === "en" ? "🏙️ Corner Unit" : "🏙️ ห้องมุม วิวโล่ง";
+  } else if (trimmed.includes("🏡") || trimmed.includes("หลังมุม")) {
+    cleanText = lang === "en" ? "🏡 Corner House" : "🏡 บ้านเดี่ยวหลังมุม";
+  } else if (trimmed.includes("✨") || trimmed.includes("ติดถนน")) {
+    cleanText = lang === "en" ? "✨ Main Road Access" : "✨ ติดถนนใหญ่";
+  } else if (trimmed.includes("🚆") || trimmed.includes("รถไฟฟ้า")) {
+    cleanText = lang === "en" ? "🚆 Near Transit" : "🚆 ใกล้รถไฟฟ้า";
+  }
+
+  return { text: cleanText, icon };
+}
+
 
 // Multilingual Dictionary for Transit Stations
 const STATION_DICTIONARY: Record<string, { en: string; zh: string; ru: string }> = {

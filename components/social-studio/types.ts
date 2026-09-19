@@ -11,7 +11,7 @@ export type CardBackground =
   | "solid"
   | "minimal_gradient";
 export type ContentPosition = "bottom" | "center" | "top" | "split_hero";
-export type FontSizeScale = "sm" | "md" | "lg" | "xl";
+export type FontSizeScale = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 export type SpecFontSizeScale = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 export type ElementZone = "zone_a" | "zone_b"; // zone_a = การ์ดบน/กลาง, zone_b = การ์ดล่าง
 export type StudioLanguage = "th" | "en" | "zh" | "ru";
@@ -24,6 +24,19 @@ export type StudioPriceFormatStyle =
   | "thai_lakh"
   | "usd_approx"
   | "thb_with_usd";
+
+export type StudioPriceEffect =
+  | "none"
+  | "gold_metallic"
+  | "rose_gold"
+  | "platinum_chrome"
+  | "neon_amber"
+  | "emerald_glow"
+  | "sunset_fire"
+  | "ice_diamond"
+  | "pill_capsule"
+  | "shadow_3d"
+  | "glow_sparkle";
 
 // Feature 3: Background Photo Filters
 export type PhotoFilter = "none" | "bright" | "dark_moody" | "warm_gold" | "high_contrast" | "bw";
@@ -174,6 +187,8 @@ export interface SocialStudioProperty {
   floor?: number | null;
   parking?: number | null;
   parking_slots?: number | null;
+  land_size_sqwah?: number | null;
+  land_area?: number | null;
   is_foreigner_quota?: boolean | null;
   ownership_type?: string | null;
   transit_type?: string | null;
@@ -204,6 +219,8 @@ export interface BannerRenderOptions {
   cardRightMargin?: number;
   cardTextAlign?: "left" | "center" | "right";
   cardOpacity?: number;
+  cardPaddingTop?: number;
+  pricePaddingTop?: number;
   scrimOpacity?: number;
   topScrimOpacity?: number;
   bottomScrimOpacity?: number;
@@ -216,6 +233,7 @@ export interface BannerRenderOptions {
   customAccentColor?: string;
   customTitleColor?: string;
   customPriceColor?: string;
+  priceEffect?: StudioPriceEffect;
   customHeadlineColor?: string;
   customProjectNameColor?: string;
   customCardBgColor?: string;
@@ -306,9 +324,11 @@ export interface BannerRenderOptions {
   headerYOffset?: number;
   headerFontSizeScale?: FontSizeScale;
   brandingTitleFontSizeScale?: FontSizeScale;
+  brandingTitleFontWeight?: string;
   brandingSubtitleFontSizeScale?: FontSizeScale;
   badgeFontSizeScale?: FontSizeScale;
   specFontSizeScale?: SpecFontSizeScale;
+  specFontSizeCustom?: number;
   fitWithBlurredBackdrop?: boolean;
   customListingBadgeText?: string;
   customListingBadgeBgColor?: string;
@@ -327,6 +347,7 @@ export interface BannerRenderOptions {
   showAgentAvatar?: boolean;
 
   // Data Payload
+  property?: SocialStudioProperty;
   imageUrls: string[];
   title: string;
   projectName?: string | null;
@@ -342,9 +363,11 @@ export interface BannerRenderOptions {
     bedrooms?: number | null;
     bathrooms?: number | null;
     sizeSqm?: number | null;
+    landSizeSqwah?: number | null;
     floor?: number | null;
     parking?: number | null;
   };
+  enabledSpecs?: Partial<EnabledSpecsConfig>;
   ownershipBadge?: string;
   badges?: string[];
   qrCodeUrl?: string;
@@ -355,11 +378,25 @@ export interface BannerRenderOptions {
   agentName?: string;
 }
 
+export interface EnabledSpecsConfig {
+  bedrooms: boolean;
+  bathrooms: boolean;
+  parking: boolean;
+  sizeSqm: boolean;
+  landSizeSqwah: boolean;
+  floor: boolean;
+}
+
 export interface AvailableBadgeItem {
   id: string;
   label: string;
   labelEn?: string;
+  labelZh?: string;
+  labelRu?: string;
+  icon?: "sqm" | "land" | "parking" | "bed" | "bath" | "floor";
+  isProp?: boolean;
 }
+
 
 
 // Preset Settings (Everything except content/text)
@@ -371,6 +408,8 @@ export interface SocialStudioPresetConfig {
   fontSizeScale: FontSizeScale;
   priceFontSizeScale: FontSizeScale;
   specFontSizeScale: SpecFontSizeScale;
+  specFontSizeCustom?: number;
+  enabledSpecs?: Partial<EnabledSpecsConfig>;
   zoneMapping: ElementZoneMapping;
   card1YOffset: number;
   card2YOffset: number;
@@ -384,6 +423,8 @@ export interface SocialStudioPresetConfig {
   priceFormatStyle: StudioPriceFormatStyle;
   cardBackground: CardBackground;
   cardYOffset: number;
+  cardPaddingTop?: number;
+  pricePaddingTop?: number;
   customAccentColor: string;
   promoPosition: PromoPosition;
   promoColor: string;
@@ -393,6 +434,7 @@ export interface SocialStudioPresetConfig {
   gridLineColor: string;
   customTitleColor: string;
   customPriceColor: string;
+  priceEffect?: StudioPriceEffect;
   customHeadlineColor: string;
   customProjectNameColor: string;
   customCardBgColor: string;
@@ -410,6 +452,7 @@ export interface SocialStudioPresetConfig {
   customCompanySubtitle?: string;
   headerFontSizeScale: FontSizeScale;
   brandingTitleFontSizeScale?: FontSizeScale;
+  brandingTitleFontWeight?: string;
   brandingSubtitleFontSizeScale?: FontSizeScale;
   badgeFontSizeScale: FontSizeScale;
   headerYOffset: number;
