@@ -63,10 +63,23 @@ export type SiteSettingKey =
   | "story_ads_buttons_enabled"
   | "story_ads_custom_buttons"
   | "auto_featured_carousel_enabled"
+  | "questionnaire_budget_options"
+  | "questionnaire_zone_options"
   | "partners_description"
   | "partners_description_en"
   | "partners_description_cn"
   | "partners_description_ru";
+
+export interface QuestionnaireBudgetOption {
+  label: string; // e.g. "< ฿100k/mo"
+  min_price?: number;
+  max_price?: number;
+}
+
+export interface QuestionnaireZoneOption {
+  label: string; // e.g. "Chalong / Rawai"
+  keywords: string[]; // e.g. ["Chalong", "Rawai", "ฉลอง", "ราไวย์"]
+}
 
 export interface SocialButton {
   title: string;
@@ -104,6 +117,8 @@ export interface SiteSettings {
   story_ads_buttons_enabled?: boolean;
   story_ads_custom_buttons?: SocialButton[];
   auto_featured_carousel_enabled?: boolean;
+  questionnaire_budget_options?: QuestionnaireBudgetOption[];
+  questionnaire_zone_options?: QuestionnaireZoneOption[];
   follow_gate_enabled?: boolean;
   lead_capture_gate_enabled?: boolean;
   facebook_post_template?: string;

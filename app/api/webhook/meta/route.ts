@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { metaConfig } from "@/lib/meta-config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encrypt, decrypt, generateBlindIndex } from "@/lib/crypto";
@@ -12,6 +13,7 @@ import {
   replyToMetaComment,
   sendMetaCarousel,
   sendMetaMessage,
+  sendMetaQuickReplies,
 } from "@/lib/meta";
 import { saveOmniMessage } from "@/lib/line"; // reuse same util since it's generic enough
 import { redis } from "@/lib/redis";
@@ -22,6 +24,146 @@ import { MetaPlatform, MetaWebhookBody } from "@/types/meta";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { sendAdminNotification } from "@/lib/telegram";
+
+// ==========================================
+// RESILIENCE & CACHE HELPERS
+// ==========================================
+
+// In-Memory Feature Flag Cache (TTL 60 seconds)
+let cachedAdReferralBotEnabled: boolean | null = null;
+let cachedAdReferralBotExpiry = 0;
+
+async function isAdReferralBotEnabled(): Promise<boolean> {
+  const now = Date.now();
+  if (cachedAdReferralBotEnabled !== null && now < cachedAdReferralBotExpiry) {
+    return cachedAdReferralBotEnabled;
+  }
+  try {
+    const settings = await getSiteSettings();
+    // Default to true unless explicitly disabled in settings or env
+    const envVal = process.env.ENABLE_AD_REFERRAL_BOT;
+    const enabled = envVal !== undefined ? envVal !== "false" : (settings as any).ad_referral_bot_enabled !== false;
+    cachedAdReferralBotEnabled = enabled;
+    cachedAdReferralBotExpiry = now + 60000; // 60s cache
+    return enabled;
+  } catch (err) {
+    console.warn("[Meta Webhook] Failed to fetch feature flag, falling back to true:", err);
+    return true;
+  }
+}
+
+// In-Memory Rate Limiter Fallback (Used when Redis is down or unavailable)
+const inMemoryRateLimits = new Map<string, { count: number; resetAt: number }>();
+
+function checkInMemoryRateLimit(key: string, limit = 10, windowMs = 60000): boolean {
+  const now = Date.now();
+  const entry = inMemoryRateLimits.get(key);
+  if (!entry || now > entry.resetAt) {
+    inMemoryRateLimits.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  if (entry.count >= limit) {
+    return false;
+  }
+  entry.count += 1;
+  return true;
+}
+
+// Clean up stale in-memory entries every 5 minutes
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, val] of inMemoryRateLimits.entries()) {
+      if (now > val.resetAt) inMemoryRateLimits.delete(key);
+    }
+  }, 300000);
+}
+
+// Safe Redis Wrappers (Fail-Open Strategy)
+async function safeRedisGet(key: string): Promise<string | null> {
+  if (!redis) return null;
+  try {
+    return (await redis.get(key)) as string | null;
+  } catch (err) {
+    console.warn(`[Redis Fail-Open] GET error for key ${key}:`, err);
+    return null;
+  }
+}
+
+async function safeRedisSet(key: string, value: string, exSeconds?: number): Promise<boolean> {
+  if (!redis) return false;
+  try {
+    if (exSeconds) {
+      await redis.set(key, value, { ex: exSeconds });
+    } else {
+      await redis.set(key, value);
+    }
+    return true;
+  } catch (err) {
+    console.warn(`[Redis Fail-Open] SET error for key ${key}:`, err);
+    return false;
+  }
+}
+
+async function safeRedisIncr(key: string, exSeconds = 60): Promise<number | null> {
+  if (!redis) return null;
+  try {
+    const count = await redis.incr(key);
+    if (count === 1) {
+      await redis.expire(key, exSeconds);
+    }
+    return count;
+  } catch (err) {
+    console.warn(`[Redis Fail-Open] INCR error for key ${key}:`, err);
+    return null;
+  }
+}
+
+// Debounced Telegram Alerts for Admin Notice (Throttled to max 1 alert per 5 minutes per sender)
+async function sendDebouncedTelegramAlert(text: string, dedupeKey: string, cooldownSec = 300) {
+  const alertKey = `tg_alert_cooldown:${dedupeKey}`;
+  const isCooldown = await safeRedisGet(alertKey);
+  if (isCooldown) return;
+  await safeRedisSet(alertKey, "1", cooldownSec);
+  try {
+    await sendAdminNotification(text);
+  } catch (e) {
+    console.error("[Meta Webhook] Error sending debounced Telegram notification:", e);
+  }
+}
+
+// HMAC SHA-256 Signature Verification
+function verifyMetaSignature(rawBody: string, signatureHeader: string | null): boolean {
+  const secret = (metaConfig.appSecret || process.env.META_APP_SECRET || "").trim();
+  // If no secret configured in development, allow request but warn
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("[Meta Webhook Security] META_APP_SECRET is not configured in production! Rejecting request.");
+      return false;
+    }
+    console.warn("[Meta Webhook Security] META_APP_SECRET is not configured. Skipping HMAC verification in non-production.");
+    return true;
+  }
+
+  if (!signatureHeader || !signatureHeader.startsWith("sha256=")) {
+    console.error("[Meta Webhook Security] Missing or malformed x-hub-signature-256 header.");
+    return false;
+  }
+
+  const expectedSignature = signatureHeader.substring(7); // remove 'sha256='
+  const hmac = crypto.createHmac("sha256", secret);
+  hmac.update(rawBody);
+  const calculatedSignature = hmac.digest("hex");
+
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(expectedSignature, "utf8"),
+      Buffer.from(calculatedSignature, "utf8"),
+    );
+  } catch (err) {
+    return false;
+  }
+}
 
 /**
  * Interactive Quick Action Buttons for Story Ads / Welcome Flows (Multi-language)
@@ -108,32 +250,95 @@ export async function GET(req: NextRequest) {
  * POST handler for Meta Webhook Events
  */
 export async function POST(req: NextRequest) {
+  const traceId = crypto.randomUUID().slice(0, 8);
+  let rawBodyText = "";
+
   try {
-    const rawBody = await req.json();
+    rawBodyText = await req.text();
+  } catch (err) {
+    console.error(`[Meta Webhook] [${traceId}] Failed to read request body:`, err);
+    return NextResponse.json({ error: "Cannot read body" }, { status: 400 });
+  }
 
-    // 1. Validate Payload Structure
-    const validation = MetaWebhookSchema.safeParse(rawBody);
-    if (!validation.success) {
-      console.error(
-        "[Meta Webhook] Validation Failed:",
-        validation.error.format(),
-      );
-      return NextResponse.json({ error: "Invalid Payload" }, { status: 400 });
-    }
+  // 1. Verify HMAC SHA-256 Signature
+  const signatureHeader = req.headers.get("x-hub-signature-256");
+  const isValidSig = verifyMetaSignature(rawBodyText, signatureHeader);
+  if (!isValidSig) {
+    console.warn(`[Meta Webhook Security] [${traceId}] Signature check failed. Rejecting.`);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+  }
 
-    const body = validation.data as MetaWebhookBody;
+  // 2. Parse and Validate Payload Structure
+  let rawBody: any;
+  try {
+    rawBody = JSON.parse(rawBodyText);
+  } catch (err) {
+    console.error(`[Meta Webhook] [${traceId}] JSON Parse failed:`, err);
+    return NextResponse.json({ error: "Malformed JSON" }, { status: 400 });
+  }
 
-    // 2. Route by Object Type
+  const validation = MetaWebhookSchema.safeParse(rawBody);
+  if (!validation.success) {
+    console.error(
+      `[Meta Webhook] [${traceId}] Validation Failed:`,
+      validation.error.format(),
+    );
+    return NextResponse.json({ error: "Invalid Payload" }, { status: 400 });
+  }
+
+  const body = validation.data as MetaWebhookBody;
+
+  // 3. Process events asynchronously without blocking Fast 200 OK
+  // In Next.js, processing before returning is safe if operations are lean,
+  // but we ensure all internal sub-tasks handle their own errors.
+  try {
     if (body.object === "page") {
       for (const entry of body.entry) {
         // Facebook Messenger events
         if (entry.messaging) {
           for (const messagingEvent of entry.messaging) {
-            if ((messagingEvent.message && !messagingEvent.message.is_echo) || messagingEvent.postback) {
+            const senderId = messagingEvent.sender?.id;
+            const eventTime = messagingEvent.timestamp || entry.time || Date.now();
+            const messageMid = messagingEvent.message?.mid;
+            const postbackPayload = messagingEvent.postback?.payload || messagingEvent.message?.quick_reply?.payload;
+            const referralRef = messagingEvent.referral?.ref || messagingEvent.postback?.referral?.ref;
+
+            // Generate Composite Idempotency Key
+            let dedupKey = "";
+            if (messageMid) {
+              dedupKey = `meta_dedup:msg:${messageMid}`;
+            } else if (referralRef && senderId) {
+              dedupKey = `meta_dedup:ref:${senderId}:${referralRef}:${eventTime}`;
+            } else if (postbackPayload && senderId) {
+              dedupKey = `meta_dedup:pb:${senderId}:${postbackPayload}:${eventTime}`;
+            }
+
+            // Deduplication Check (TTL 24 hours = 86400s)
+            if (dedupKey) {
+              const alreadyProcessed = await safeRedisGet(dedupKey);
+              if (alreadyProcessed) {
+                console.log(`[Meta Webhook] [${traceId}] Skipping duplicate event: ${dedupKey}`);
+                continue;
+              }
+              await safeRedisSet(dedupKey, "1", 86400);
+            }
+
+            // Rate Limiting Check (10 req/min per senderId)
+            if (senderId) {
+              const rateKey = `meta_rate:${senderId}`;
+              const count = await safeRedisIncr(rateKey, 60);
+              const allowed = count !== null ? count <= 10 : checkInMemoryRateLimit(rateKey, 10, 60000);
+              if (!allowed) {
+                console.warn(`[Meta Webhook] [${traceId}] Rate limit exceeded for sender: ${senderId}`);
+                continue;
+              }
+            }
+
+            if ((messagingEvent.message && !messagingEvent.message.is_echo) || messagingEvent.postback || messagingEvent.referral) {
               try {
-                await handleMetaMessage(messagingEvent, "FACEBOOK");
+                await handleMetaMessage(messagingEvent, "FACEBOOK", traceId);
               } catch (err) {
-                console.error("[Meta Webhook] Error handling Facebook message:", err);
+                console.error(`[Meta Webhook] [${traceId}] Error handling Facebook message:`, err);
               }
             }
           }
@@ -144,7 +349,7 @@ export async function POST(req: NextRequest) {
             try {
               await handleFacebookChange(change, entry.id);
             } catch (err) {
-              console.error("[Meta Webhook] Error handling Facebook change:", err);
+              console.error(`[Meta Webhook] [${traceId}] Error handling Facebook change:`, err);
             }
           }
         }
@@ -153,25 +358,23 @@ export async function POST(req: NextRequest) {
     // Instagram subscription
     else if (body.object === "instagram") {
       for (const entry of body.entry) {
-        // Handle direct messages & postbacks
         if (entry.messaging) {
           for (const messagingEvent of entry.messaging) {
-            if ((messagingEvent.message && !messagingEvent.message.is_echo) || messagingEvent.postback) {
+            if ((messagingEvent.message && !messagingEvent.message.is_echo) || messagingEvent.postback || messagingEvent.referral) {
               try {
-                await handleMetaMessage(messagingEvent, "INSTAGRAM");
+                await handleMetaMessage(messagingEvent, "INSTAGRAM", traceId);
               } catch (err) {
-                console.error("[Meta Webhook] Error handling Instagram message:", err);
+                console.error(`[Meta Webhook] [${traceId}] Error handling Instagram message:`, err);
               }
             }
           }
         }
-        // Handle comments and mentions
         if (entry.changes) {
           for (const change of entry.changes) {
             try {
               await handleInstagramChange(change);
             } catch (err) {
-              console.error("[Meta Webhook] Error handling Instagram change:", err);
+              console.error(`[Meta Webhook] [${traceId}] Error handling Instagram change:`, err);
             }
           }
         }
@@ -190,7 +393,7 @@ export async function POST(req: NextRequest) {
                     change.value.contacts?.[0],
                   );
                 } catch (err) {
-                  console.error("[Meta Webhook] Error handling WhatsApp change:", err);
+                  console.error(`[Meta Webhook] [${traceId}] Error handling WhatsApp change:`, err);
                 }
               }
             }
@@ -201,8 +404,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ status: "ok" });
   } catch (err) {
-    console.error("Meta Webhook Error:", err);
-    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+    console.error(`[Meta Webhook] [${traceId}] Unhandled internal error:`, err);
+    return NextResponse.json({ status: "ok" }); // Return 200 to prevent infinite Meta retry loops
   }
 }
 
@@ -443,7 +646,7 @@ async function handleFacebookChange(change: any, pageId?: string) {
   }
 }
 
-async function handleMetaMessage(event: any, source: MetaPlatform) {
+async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: string) {
   const senderId = event.sender?.id; // PSID or IG SID
   const text = event.message?.text || event.postback?.title || "";
   const postbackPayload = event.postback?.payload || event.message?.quick_reply?.payload;
@@ -644,8 +847,42 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
         }
       } else {
         console.log(`[Meta Webhook] Bot is PAUSED for lead ${lead.id} (Human Handover mode).`);
+        // Debounced notification to Telegram if customer is waiting
+        await sendDebouncedTelegramAlert(
+          `💬 <b>[CRM Reminder] ลูกค้าทักข้อความเข้ามาขณะโหมดพักบอท</b>\n\n` +
+          `👤 Lead ID: <code>${lead.id}</code>\n` +
+          `📱 แพลตฟอร์ม: ${source}\n` +
+          `💬 ข้อความ: <i>${(text || "คลิกปุ่ม/แอด").substring(0, 100)}</i>\n` +
+          `👉 เจ้าหน้าที่กรุณาเข้าดูแลลูกค้า`,
+          `bot_paused_notice_${lead.id}`,
+          300
+        );
         return;
       }
+    }
+
+    // 2.0.1 Race Condition Guard: If admin sent an outgoing message within the last 3 minutes, pause bot temporarily
+    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    const { data: recentAdminMessage } = await supabase
+      .from("omni_messages")
+      .select("id")
+      .eq("lead_id", lead.id)
+      .eq("direction", "OUTGOING")
+      .gte("created_at", threeMinutesAgo)
+      .limit(1)
+      .maybeSingle();
+
+    if (recentAdminMessage) {
+      console.log(`[Meta Webhook] [${traceId}] Admin was active within last 3 minutes for lead ${lead.id}. Pausing bot to prevent race condition.`);
+      await sendDebouncedTelegramAlert(
+        `💬 <b>[CRM Active Admin] ลูกค้าตอบกลับในแชทที่แอดมินเพิ่งสนทนา</b>\n\n` +
+        `👤 Lead ID: <code>${lead.id}</code>\n` +
+        `📱 แพลตฟอร์ม: ${source}\n` +
+        `💬 ข้อความลูกค้า: <i>${(text || "").substring(0, 100)}</i>`,
+        `admin_active_guard_${lead.id}`,
+        180
+      );
+      return;
     }
 
     // 2.1 Update Ad Referral data if new details received
@@ -672,6 +909,21 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
       payload: event,
       direction: "INCOMING",
     });
+
+    // 2.2.1 Handle Ad Carousel Property Referral Flow (m.me/?ref=...)
+    const isBotEnabled = await isAdReferralBotEnabled();
+    if (isBotEnabled && referralData?.ref) {
+      console.log(`[Meta Webhook] [${traceId}] Detected Ad Referral ref "${referralData.ref}" for sender ${senderId}. Triggering Property Flow.`);
+      await handlePropertyReferralFlow(
+        senderId,
+        source,
+        lead.id,
+        referralData.ref,
+        referralData.ad_id,
+        traceId,
+      );
+      return;
+    }
 
     // 2.3 Handle Postback / Quick Reply Button Clicks
     if (postbackPayload) {
@@ -1999,7 +2251,936 @@ async function handleMetaPostback(
     } catch (e) {
       console.error("[Meta Webhook] Error sending telegram notification:", e);
     }
+  } else if (payload.startsWith("PROP_LANG_")) {
+    // Handling language selection for Ad Referral Card: PROP_LANG_<LANG>_<PROPERTY_REF>
+    // Example: PROP_LANG_en_prop-1 or PROP_LANG_th_chalong-villa
+    const parts = payload.replace("PROP_LANG_", "").split("_");
+    const selectedLang = (parts[0] || "th") as "th" | "en" | "cn" | "ru";
+    const propertyRef = parts.slice(1).join("_"); // handle refs that may contain underscores
+    await handlePropertyLanguageSelection(senderId, source, leadId, selectedLang, propertyRef);
+  } else if (payload.startsWith("START_QUESTIONNAIRE_") || payload.startsWith("Q_ANS_")) {
+    await handleSmartMatchQuestionnaire(senderId, source, leadId, payload);
   }
+}
+
+/**
+ * Smart Match Questionnaire: Interactive 3-step requirement intake
+ * State stored in Redis with 15-minute TTL.
+ * Budget answers stored separately in client_budget_range (never overwriting ad click price).
+ * HOT Lead Alert bypasses any previous sender cooldowns.
+ * Relaxed search fallback ensures carousel is never empty.
+ */
+async function handleSmartMatchQuestionnaire(
+  senderId: string,
+  source: MetaPlatform,
+  leadId: string | undefined,
+  payload: string,
+) {
+  const stateKey = `questionnaire_state:${senderId}`;
+
+  // Parse action from payload
+  if (payload.startsWith("START_QUESTIONNAIRE_")) {
+    const lang = (payload.replace("START_QUESTIONNAIRE_", "") || "th") as "th" | "en" | "cn" | "ru";
+    // Initialize state (15 min TTL)
+    await safeRedisSet(
+      stateKey,
+      JSON.stringify({ step: "budget", lang, answers: {} }),
+      900 // 15 mins
+    );
+
+    // Question 1: Budget
+    const settings = await getSiteSettings();
+    const q1Text =
+      lang === "en"
+        ? "To help us find your ideal home, what is your preferred monthly budget? 💰"
+        : lang === "cn"
+        ? "为了帮您找到最合适的房源，请问您的月预算大概是多少？💰"
+        : lang === "ru"
+        ? "Чтобы подобрать идеальный вариант, укажите ваш примерный бюджет в месяц: 💰"
+        : "เพื่อให้ทีมงานคัดสรรวิลล่าที่ตรงใจที่สุด รบกวนแจ้งงบประมาณต่อเดือนที่ต้องการค่ะ 💰";
+
+    // Dynamic budget options from Site Settings (or safe defaults)
+    const customBudgetOpts = settings.questionnaire_budget_options;
+    const defaultBudgetReplies = [
+      { content_type: "text" as const, title: "< ฿100k/mo", payload: `Q_ANS_BUDGET_idx_0` },
+      { content_type: "text" as const, title: "฿100k - ฿200k", payload: `Q_ANS_BUDGET_idx_1` },
+      { content_type: "text" as const, title: "฿200k - ฿350k", payload: `Q_ANS_BUDGET_idx_2` },
+      { content_type: "text" as const, title: "> ฿350k/mo", payload: `Q_ANS_BUDGET_idx_3` },
+    ];
+
+    const budgetReplies = customBudgetOpts && customBudgetOpts.length > 0
+      ? customBudgetOpts.slice(0, 8).map((opt, idx) => ({
+          content_type: "text" as const,
+          title: opt.label.substring(0, 20),
+          payload: `Q_ANS_BUDGET_idx_${idx}`,
+        }))
+      : defaultBudgetReplies;
+
+    await sendMetaQuickReplies(senderId, q1Text, budgetReplies, source);
+    return;
+  }
+
+  // Retrieve existing state
+  const rawState = await safeRedisGet(stateKey);
+  let state: { step: string; lang: "th" | "en" | "cn" | "ru"; answers: Record<string, string> } = {
+    step: "budget",
+    lang: "th",
+    answers: {},
+  };
+
+  if (rawState) {
+    try {
+      state = JSON.parse(rawState);
+    } catch (e) {
+      // fallback
+    }
+  }
+
+  const lang = state.lang || "th";
+  const settings = await getSiteSettings();
+
+  // Answer 1 -> Proceed to Question 2 (Location / Zone)
+  if (payload.startsWith("Q_ANS_BUDGET_")) {
+    const budgetVal = payload.replace("Q_ANS_BUDGET_", "");
+    state.answers.budget = budgetVal;
+    state.step = "zone";
+    await safeRedisSet(stateKey, JSON.stringify(state), 900);
+
+    const q2Text =
+      lang === "en"
+        ? "Great! Which location in Phuket do you prefer? 📍"
+        : lang === "cn"
+        ? "很好！请问您喜欢普吉岛的哪个区域呢？📍"
+        : lang === "ru"
+        ? "Отлично! В каком районе Пхукета вы предпочитаете жить? 📍"
+        : "รับทราบค่ะ! ชอบทำเลโซนไหนในภูเก็ตเป็นพิเศษคะ? 📍";
+
+    // Dynamic zone options from Site Settings (or safe defaults)
+    const customZoneOpts = settings.questionnaire_zone_options;
+    const defaultZoneReplies = [
+      { content_type: "text" as const, title: "ฉลอง / ราไวย์ (Chalong)", payload: `Q_ANS_ZONE_idx_0` },
+      { content_type: "text" as const, title: "บางเทา (Bangtao)", payload: `Q_ANS_ZONE_idx_1` },
+      { content_type: "text" as const, title: "กะทู้ (Kathu)", payload: `Q_ANS_ZONE_idx_2` },
+      { content_type: "text" as const, title: "โซนไหนก็ได้ (Any)", payload: `Q_ANS_ZONE_idx_any` },
+    ];
+
+    const zoneReplies = customZoneOpts && customZoneOpts.length > 0
+      ? [
+          ...customZoneOpts.slice(0, 7).map((z, idx) => ({
+            content_type: "text" as const,
+            title: z.label.substring(0, 20),
+            payload: `Q_ANS_ZONE_idx_${idx}`,
+          })),
+          { content_type: "text" as const, title: "ทุกโซน (Any Zone)", payload: `Q_ANS_ZONE_idx_any` },
+        ]
+      : defaultZoneReplies;
+
+    await sendMetaQuickReplies(senderId, q2Text, zoneReplies, source);
+    return;
+  }
+
+  // Answer 2 -> Proceed to Question 3 (Bedrooms)
+  if (payload.startsWith("Q_ANS_ZONE_")) {
+    const zoneVal = payload.replace("Q_ANS_ZONE_", "");
+    state.answers.zone = zoneVal;
+    state.step = "bedrooms";
+    await safeRedisSet(stateKey, JSON.stringify(state), 900);
+
+    const q3Text =
+      lang === "en"
+        ? "Almost done! How many bedrooms are you looking for? 🛏️"
+        : lang === "cn"
+        ? "最后一步！请问您需要几间卧室？🛏️"
+        : lang === "ru"
+        ? "И последнее! Сколько спален вам необходимо? 🛏️"
+        : "ข้อสุดท้ายค่ะ ต้องการวิลล่าขนาดกี่ห้องนอนดีคะ? 🛏️";
+
+    const bedReplies = [
+      { content_type: "text" as const, title: "1 - 2 ห้องนอน (Beds)", payload: `Q_ANS_BEDS_1-2` },
+      { content_type: "text" as const, title: "3 ห้องนอน (Beds)", payload: `Q_ANS_BEDS_3` },
+      { content_type: "text" as const, title: "4+ ห้องนอน (Beds)", payload: `Q_ANS_BEDS_4+` },
+    ];
+
+    await sendMetaQuickReplies(senderId, q3Text, bedReplies, source);
+    return;
+  }
+
+  // Answer 3 -> Finish questionnaire & Deliver results + HOT Alert
+  if (payload.startsWith("Q_ANS_BEDS_")) {
+    const bedsVal = payload.replace("Q_ANS_BEDS_", "");
+    state.answers.bedrooms = bedsVal;
+
+    // Resolve labels and min/max values from Site Settings or defaults
+    const customBudgetOpts = settings.questionnaire_budget_options || [];
+    const customZoneOpts = settings.questionnaire_zone_options || [];
+
+    let displayBudgetLabel = state.answers.budget || "N/A";
+    let minBudget: number | null = null;
+    let maxBudget: number | null = null;
+
+    if (state.answers.budget && state.answers.budget.startsWith("idx_")) {
+      const bIdx = parseInt(state.answers.budget.replace("idx_", ""), 10);
+      if (customBudgetOpts[bIdx]) {
+        displayBudgetLabel = customBudgetOpts[bIdx].label;
+        minBudget = customBudgetOpts[bIdx].min_price ?? null;
+        maxBudget = customBudgetOpts[bIdx].max_price ?? null;
+      } else {
+        // Fallback default mapping
+        const defaultMap = [
+          { label: "< ฿100k/mo", max: 100000 },
+          { label: "฿100k - ฿200k", min: 100000, max: 200000 },
+          { label: "฿200k - ฿350k", min: 200000, max: 350000 },
+          { label: "> ฿350k/mo", min: 350000 },
+        ];
+        if (defaultMap[bIdx]) {
+          displayBudgetLabel = defaultMap[bIdx].label;
+          minBudget = (defaultMap[bIdx] as any).min ?? null;
+          maxBudget = (defaultMap[bIdx] as any).max ?? null;
+        }
+      }
+    }
+
+    let displayZoneLabel = "Any Zone";
+    let targetZoneKeywords: string[] = [];
+
+    if (!state.answers.zone || state.answers.zone === "idx_any" || state.answers.zone === "Any") {
+      displayZoneLabel = "Any Zone (ทุกโซน)";
+      targetZoneKeywords = [];
+    } else if (state.answers.zone.startsWith("idx_")) {
+      const zIdx = parseInt(state.answers.zone.replace("idx_", ""), 10);
+      if (customZoneOpts[zIdx]) {
+        displayZoneLabel = customZoneOpts[zIdx].label;
+        targetZoneKeywords = customZoneOpts[zIdx].keywords || [customZoneOpts[zIdx].label];
+      } else {
+        // Fallback default zones
+        const defaultZones = [
+          { label: "ฉลอง / ราไวย์ (Chalong)", kws: ["Chalong", "Rawai", "ฉลอง", "ราไวย์"] },
+          { label: "บางเทา (Bangtao)", kws: ["Bangtao", "Cherngtalay", "บางเทา", "เชิงทะเล"] },
+          { label: "กะทู้ (Kathu)", kws: ["Kathu", "Phuket Town", "กะทู้", "เมืองภูเก็ต"] },
+        ];
+        if (defaultZones[zIdx]) {
+          displayZoneLabel = defaultZones[zIdx].label;
+          targetZoneKeywords = defaultZones[zIdx].kws;
+        }
+      }
+    }
+
+    // 1. Data Separation: Save actual client requirements in Lead profile
+    const supabase = createAdminClient() as any;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+
+    if (leadId) {
+      try {
+        const { data: leadRow } = await supabase
+          .from("crm_leads_v3")
+          .select("utm_data")
+          .eq("id", leadId)
+          .single();
+
+        const currentUtm = (leadRow?.utm_data as Record<string, any>) || {};
+        const currentPrefs = (currentUtm.preferences as Record<string, any>) || {};
+
+        await supabase
+          .from("crm_leads_v3")
+          .update({
+            utm_data: {
+              ...currentUtm,
+              preferences: {
+                ...currentPrefs,
+                client_budget_range: displayBudgetLabel,
+                preferred_zone: displayZoneLabel,
+                preferred_bedrooms: state.answers.bedrooms,
+                requirements_captured_at: new Date().toISOString(),
+                requirements_source: "Smart Match Questionnaire",
+              },
+            },
+          })
+          .eq("id", leadId);
+      } catch (err) {
+        console.warn("[Meta Webhook] Error updating questionnaire preferences in Lead:", err);
+      }
+    }
+
+    // 2. Clear questionnaire state
+    if (redis) {
+      try {
+        await redis.del(stateKey);
+      } catch (e) {
+        // fail-open
+      }
+    }
+
+    // 3. HOT Lead Alert (BYPASS per-sender cooldown! Sent immediately to Telegram)
+    const leadCrmUrl = `${siteUrl}/protected/admin/leads`;
+    try {
+      await sendAdminNotification(
+        `🔥 <b>[HOT LEAD ALERT] ลูกค้าตอบ Requirement ครบแล้ว!</b>\n\n` +
+        `👤 Lead ID: <code>${leadId || "New"}</code>\n` +
+        `📱 แพลตฟอร์ม: ${source}\n` +
+        `🌐 ภาษา: <b>${lang.toUpperCase()}</b>\n` +
+        `💰 <b>งบประมาณที่ลูกค้าแจ้งจริง:</b> <code>${displayBudgetLabel}</code>\n` +
+        `📍 <b>โซนที่สนใจ:</b> <code>${displayZoneLabel}</code>\n` +
+        `🛏️ <b>จำนวนห้องนอน:</b> <code>${state.answers.bedrooms}</code>\n\n` +
+        `👉 <a href="${leadCrmUrl}">กดเปิดจัดการ Lead ในระบบ CRM ทันที</a>`
+      );
+    } catch (e) {
+      console.error("[Meta Webhook] Error sending HOT Lead Telegram Alert:", e);
+    }
+
+    // 4. Multi-tier Query with Budget preservation (Never send mismatched budget or empty carousel)
+    // Tier 1 Query: Filter by Status + Budget Range + Specific Zone
+    let tier1Query = supabase
+      .from("properties")
+      .select(`
+        id,
+        slug,
+        title,
+        title_en,
+        title_cn,
+        title_ru,
+        price,
+        original_price,
+        rental_price,
+        original_rental_price,
+        listing_type,
+        images,
+        bedrooms,
+        bathrooms,
+        size_sqm,
+        status,
+        address_info,
+        project:projects(name)
+      `)
+      .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"]);
+
+    // Budget filter: check rental_price -> original_rental_price (rent) and price -> original_price (sale)
+    // Uses AND-grouped ranges inside OR to prevent cross-column false matches
+    // Pattern matches the proven export-action.ts price filter
+    const budgetOrParts: string[] = [];
+    if (minBudget !== null || maxBudget !== null) {
+      const min = minBudget ?? 0;
+      // Rental price columns
+      if (maxBudget !== null) {
+        budgetOrParts.push(`and(rental_price.gte.${min},rental_price.lte.${maxBudget})`);
+        budgetOrParts.push(`and(rental_price.is.null,original_rental_price.gte.${min},original_rental_price.lte.${maxBudget})`);
+        // Sale price columns
+        budgetOrParts.push(`and(price.gte.${min},price.lte.${maxBudget})`);
+        budgetOrParts.push(`and(price.is.null,original_price.gte.${min},original_price.lte.${maxBudget})`);
+      } else {
+        // No max — open-ended
+        budgetOrParts.push(`rental_price.gte.${min}`);
+        budgetOrParts.push(`and(rental_price.is.null,original_rental_price.gte.${min})`);
+        budgetOrParts.push(`price.gte.${min}`);
+        budgetOrParts.push(`and(price.is.null,original_price.gte.${min})`);
+      }
+    }
+
+    // Bedrooms filter: map questionnaire answer to query condition
+    const bedsAnswer = state.answers.bedrooms;
+    if (bedsAnswer === "1-2") {
+      tier1Query = tier1Query.gte("bedrooms", 1).lte("bedrooms", 2);
+    } else if (bedsAnswer === "3") {
+      tier1Query = tier1Query.eq("bedrooms", 3);
+    } else if (bedsAnswer === "4+") {
+      tier1Query = tier1Query.gte("bedrooms", 4);
+    }
+
+    // Zone keyword filter for address_info JSONB
+    const zoneOrParts: string[] = [];
+    if (targetZoneKeywords.length > 0) {
+      targetZoneKeywords.forEach((kw) => {
+        // Sanitize: strip PostgREST reserved chars that break .or() syntax
+        const safeKw = kw.replace(/[(),."\\]/g, "").trim();
+        if (safeKw) {
+          zoneOrParts.push(`address_info->>th.ilike.%${safeKw}%`);
+          zoneOrParts.push(`address_info->>en.ilike.%${safeKw}%`);
+        }
+      });
+    }
+
+    // Apply budget + zone as a single .or() call to avoid Supabase double-.or() overwrite
+    // Logic: (any budget match) AND (any zone match) — combined via nested and()
+    if (budgetOrParts.length > 0 && zoneOrParts.length > 0) {
+      // Wrap each group: and(or(budget_conditions),or(zone_conditions))
+      tier1Query = tier1Query.or(
+        `and(or(${budgetOrParts.join(",")}),or(${zoneOrParts.join(",")}))`
+      );
+    } else if (budgetOrParts.length > 0) {
+      tier1Query = tier1Query.or(budgetOrParts.join(","));
+    } else if (zoneOrParts.length > 0) {
+      tier1Query = tier1Query.or(zoneOrParts.join(","));
+    }
+
+    let { data: matchedProps } = await tier1Query.limit(5);
+    let matchType: "exact" | "relaxed_zone" | "featured_fallback" = "exact";
+
+    // Tier 2 Fallback: If no units in selected zone, relax zone but KEEP THE BUDGET FILTER!
+    if (!matchedProps || matchedProps.length === 0) {
+      if (targetZoneKeywords.length > 0) {
+        console.log(`[Meta Webhook] No units found in selected zone ${state.answers.zone} within budget. Relaxing zone while preserving budget.`);
+        let tier2Query = supabase
+          .from("properties")
+          .select(`
+            id,
+            slug,
+            title,
+            title_en,
+            title_cn,
+            title_ru,
+            price,
+            original_price,
+            rental_price,
+            original_rental_price,
+            listing_type,
+            images,
+            bedrooms,
+            bathrooms,
+            size_sqm,
+            status,
+            address_info,
+            project:projects(name)
+          `)
+          .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"]);
+
+        if (budgetOrParts.length > 0) {
+          tier2Query = tier2Query.or(budgetOrParts.join(","));
+        }
+
+        // Keep bedrooms filter in Tier 2 (only zone is relaxed)
+        if (bedsAnswer === "1-2") {
+          tier2Query = tier2Query.gte("bedrooms", 1).lte("bedrooms", 2);
+        } else if (bedsAnswer === "3") {
+          tier2Query = tier2Query.eq("bedrooms", 3);
+        } else if (bedsAnswer === "4+") {
+          tier2Query = tier2Query.gte("bedrooms", 4);
+        }
+
+        const { data: budgetProps } = await tier2Query.limit(5);
+        if (budgetProps && budgetProps.length > 0) {
+          matchedProps = budgetProps;
+          matchType = "relaxed_zone";
+        }
+      }
+    }
+
+    // Tier 3 Ultimate Fallback: If still no units within budget, fallback to Top Featured units
+    // (Be 100% honest with customer that these are top featured recommendations)
+    if (!matchedProps || matchedProps.length === 0) {
+      console.log(`[Meta Webhook] No units matched budget or zone. Falling back to Featured properties.`);
+      const { data: featuredProps } = await supabase
+        .from("properties")
+        .select(`
+          id,
+          slug,
+          title,
+          title_en,
+          title_cn,
+          title_ru,
+          price,
+          original_price,
+          rental_price,
+          original_rental_price,
+          listing_type,
+          images,
+          bedrooms,
+          bathrooms,
+          size_sqm,
+          status,
+          address_info,
+          project:projects(name)
+        `)
+        .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
+        .order("is_featured", { ascending: false, nullsFirst: false })
+        .limit(5);
+
+      matchedProps = featuredProps || [];
+      matchType = "featured_fallback";
+    }
+
+    // Send context-aware completion message reflecting the ACTUAL result
+    let completionMsg = "";
+    if (matchType === "exact") {
+      completionMsg =
+        lang === "en"
+          ? `Thank you! 😊 We found properties matching your budget and location preferences (${state.answers.budget}, ${state.answers.bedrooms} beds). Take a look below:`
+          : lang === "cn"
+          ? `非常感谢！😊 我们为您找到了符合预算与地段要求的精选房源（${state.answers.budget}，${state.answers.bedrooms}卧）。请查看下方推荐：`
+          : lang === "ru"
+          ? `Спасибо! 😊 Мы подобрали виллы по вашему бюджету и району (${state.answers.budget}, ${state.answers.bedrooms} сп.). Посмотрите варианты ниже:`
+          : `ขอบคุณสำหรับข้อมูลค่ะ! 😊 ระบบคัดสรรวิลล่าที่ตรงกับงบประมาณและทำเลที่คุณเลือกมาให้ชมด้านล่างนี้นะคะ 👇`;
+    } else if (matchType === "relaxed_zone") {
+      completionMsg =
+        lang === "en"
+          ? `Thank you! 😊 Currently there are no available units in your chosen zone within ${state.answers.budget}. However, here are great options in other prime areas fitting your budget:`
+          : lang === "cn"
+          ? `非常感谢！😊 您所选区域当前在 ${state.answers.budget} 预算内暂无空房。为您推荐其他优质地段、符合该预算的房源：`
+          : lang === "ru"
+          ? `Спасибо! 😊 В выбранном районе сейчас нет свободных вилл в бюджете ${state.answers.budget}. Предлагаем отличные варианты в других популярных районах в вашем бюджете:`
+          : `ขอบคุณค่ะ! 😊 ในโซนที่คุณเลือกขณะนี้ยังไม่มีห้องว่างในช่วงงบ ${state.answers.budget} พอดี แอดมินจึงคัดสรรวิลล่าในทำเลเด่นอื่นที่อยู่ในงบของคุณมาให้ชมแทนนะคะ 👇`;
+    } else {
+      completionMsg =
+        lang === "en"
+          ? `Thank you! 😊 Our property consultant has received your specific requirements (${state.answers.budget}, ${state.answers.zone}) and will search our offline network for you shortly.\n\nMeanwhile, here are our most popular featured villas in Phuket:`
+          : lang === "cn"
+          ? `非常感谢！😊 我们的专业顾问已收到您的定制找房要求（${state.answers.budget}，${state.answers.zone}），并将尽快为您跟进。\n\n在此期间，为您推荐普吉岛目前最受欢迎的精选房源：`
+          : lang === "ru"
+          ? `Спасибо! 😊 Наш консультант получил ваши параметры (${state.answers.budget}, ${state.answers.zone}) и скоро свяжется с вами.\n\nА пока предлагаем взглянуть на самые популярные виллы на Пхукете:`
+          : `ขอบคุณสำหรับข้อมูลค่ะ! 😊 ทีมงานได้รับเงื่อนไขเฉพาะของคุณลูกค้าเรียบร้อยแล้วค่ะ และกำลังประสานงานค้นหาห้องที่ตรงใจให้อย่างเร่งด่วนนะคะ\n\nระหว่างนี้ขอแนะนำวิลล่าไฮไลท์ยอดนิยมของภูเก็ตมาให้ชมด้านล่างนี้ค่ะ 👇`;
+    }
+
+    await sendMetaMessage(senderId, completionMsg, source);
+
+    if (matchedProps && matchedProps.length > 0) {
+      const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : lang === "ru" ? "Продажа" : "售";
+      const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "租";
+      const tBed = lang === "th" ? "นอน" : lang === "en" ? "bed" : lang === "ru" ? "спальни" : "卧";
+      const tSqm = lang === "th" ? "ตร.ม." : "sqm";
+      const tViewBtn = lang === "th" ? "ดูรายละเอียด" : lang === "en" ? "View Details" : lang === "cn" ? "查看详情" : "Подробнее";
+      const tBookBtn = lang === "th" ? "นัดดูหลังนี้" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
+
+      const carouselCards = matchedProps.map((p: any) => {
+        const images = Array.isArray(p.images) ? p.images : [];
+        const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
+        const propUrl = `${siteUrl}/properties/${p.slug || p.id}`;
+
+        const rPrice = p.rental_price || p.original_rental_price;
+        const sPrice = p.price || p.original_price;
+        let priceText = rPrice ? `${tRent} ฿${rPrice.toLocaleString()}/mo` : sPrice ? `${tSale} ฿${sPrice.toLocaleString()}` : "";
+        const bedText = p.bedrooms ? ` • ${p.bedrooms} ${tBed}` : "";
+        const sizeText = p.size_sqm ? ` • ${p.size_sqm} ${tSqm}` : "";
+
+        let pTitle = p.title || "Featured Unit";
+        if (lang === "en" && p.title_en) pTitle = p.title_en;
+        else if (lang === "cn" && (p.title_cn || p.title_en)) pTitle = p.title_cn || p.title_en;
+        else if (lang === "ru" && (p.title_ru || p.title_en)) pTitle = p.title_ru || p.title_en;
+
+        return {
+          title: pTitle.substring(0, 80),
+          subtitle: `${priceText}${bedText}${sizeText}`.substring(0, 80),
+          image_url: imageUrl,
+          default_action: { type: "web_url", url: propUrl },
+          buttons: [
+            { type: "web_url", url: propUrl, title: tViewBtn },
+            { type: "postback", title: tBookBtn, payload: `ACTION_BOOK_PROPERTY_${p.id}` },
+          ],
+        };
+      });
+
+      await sendMetaCarousel(senderId, carouselCards, source);
+    }
+  }
+}
+
+/**
+ * Handle Property Language Selection: saves preference, loads property, and delivers the card
+ */
+async function handlePropertyLanguageSelection(
+  senderId: string,
+  source: MetaPlatform,
+  leadId: string | undefined,
+  lang: "th" | "en" | "cn" | "ru",
+  propertyRef?: string,
+) {
+  const supabase = createAdminClient() as any;
+
+  // 1. Save language preference permanently in Identity
+  if (leadId) {
+    try {
+      const { data: leadRow } = await supabase
+        .from("crm_leads_v3")
+        .select("identity_id")
+        .eq("id", leadId)
+        .single();
+
+      if (leadRow?.identity_id) {
+        const { data: idRow } = await supabase
+          .from("identities_v3")
+          .select("social_links")
+          .eq("id", leadRow.identity_id)
+          .single();
+
+        const currentLinks = (idRow?.social_links as Record<string, any>) || {};
+        await supabase
+          .from("identities_v3")
+          .update({
+            social_links: {
+              ...currentLinks,
+              preferred_lang: lang,
+            },
+          })
+          .eq("id", leadRow.identity_id);
+      }
+    } catch (e) {
+      console.warn("[Meta Webhook] Error updating language preference:", e);
+    }
+  }
+
+  // 2. Resolve Property Ref (from argument or Redis fallback)
+  let refCode = propertyRef;
+  if (!refCode) {
+    const cachedRef = await safeRedisGet(`lead_ad_ref:${senderId}`);
+    if (cachedRef) {
+      try {
+        const parsed = JSON.parse(cachedRef);
+        refCode = parsed.ref;
+      } catch (e) {
+        refCode = cachedRef;
+      }
+    }
+  }
+
+  if (!refCode) {
+    // TTL Expired or missing ref -> Send friendly welcome fallback + featured carousel
+    const fallbackText =
+      lang === "en"
+        ? "Welcome! 😊 Are you interested in any particular villa or location? Here are some of our popular options:"
+        : lang === "cn"
+        ? "欢迎！😊 请问您对哪栋别墅或地段感兴趣呢？以下是我们的热门房源推荐："
+        : lang === "ru"
+        ? "Добро пожаловать! 😊 Вас интересует конкретная вилла или локация? Вот наши популярные варианты:"
+        : "ยินดีต้อนรับค่ะ 😊 สนใจวิลล่าโซนไหนหรือหลังใดเป็นพิเศษไหมคะ? แอดมินรวบรวมทรัพย์ยอดนิยมมาให้ชมด้านล่างนี้ค่ะ:";
+
+    await sendMetaMessage(senderId, fallbackText, source);
+    await sendFeaturedPropertiesCarousel(senderId, source, lang);
+    return;
+  }
+
+  // 3. Deliver the requested property card
+  await sendSinglePropertyCard(senderId, source, refCode, lang);
+}
+
+/**
+ * Handle Inbound Property Referral Flow (Triggered by ad m.me/?ref=... click)
+ */
+async function handlePropertyReferralFlow(
+  senderId: string,
+  source: MetaPlatform,
+  leadId: string,
+  rawRef: string,
+  adId?: string,
+  traceId?: string,
+) {
+  // Validate ref format: alphanumeric, underscore, hyphen, dot up to 250 chars
+  const sanitizedRef = rawRef.trim().substring(0, 250);
+  if (!/^[a-zA-Z0-9_\-\.]{1,250}$/.test(sanitizedRef)) {
+    console.warn(`[Meta Webhook] [${traceId}] Invalid ref parameter format: "${rawRef}"`);
+    return;
+  }
+
+  // Store in Redis with TTL 2 Hours (Overwrite any older ref)
+  const statePayload = JSON.stringify({
+    ref: sanitizedRef,
+    adId: adId || null,
+    timestamp: Date.now(),
+  });
+  await safeRedisSet(`lead_ad_ref:${senderId}`, statePayload, 7200);
+
+  const supabase = createAdminClient() as any;
+
+  // Multi-touch Analytics Logging: Cap ad_click_history to 20 items in lead utm_data
+  try {
+    const { data: leadRow } = await supabase
+      .from("crm_leads_v3")
+      .select("utm_data")
+      .eq("id", leadId)
+      .single();
+
+    const currentUtmData = (leadRow?.utm_data as Record<string, any>) || {};
+    const existingHistory = Array.isArray(currentUtmData.ad_click_history)
+      ? currentUtmData.ad_click_history
+      : [];
+
+    const newHistory = [
+      {
+        ref: sanitizedRef,
+        ad_id: adId || null,
+        source,
+        clicked_at: new Date().toISOString(),
+      },
+      ...existingHistory,
+    ].slice(0, 20); // Cap at 20 items
+
+    await supabase
+      .from("crm_leads_v3")
+      .update({
+        utm_data: {
+          ...currentUtmData,
+          ref: sanitizedRef,
+          ad_id: adId || currentUtmData.ad_id,
+          ad_click_history: newHistory,
+        },
+      })
+      .eq("id", leadId);
+  } catch (err) {
+    console.warn(`[Meta Webhook] [${traceId}] Failed to update ad_click_history:`, err);
+  }
+
+  // Check if User already has a preferred language remembered
+  let rememberedLang: "th" | "en" | "cn" | "ru" | null = null;
+  try {
+    const { data: leadRow } = await supabase
+      .from("crm_leads_v3")
+      .select("identity_id")
+      .eq("id", leadId)
+      .single();
+
+    if (leadRow?.identity_id) {
+      const { data: idRow } = await supabase
+        .from("identities_v3")
+        .select("social_links")
+        .eq("id", leadRow.identity_id)
+        .single();
+
+      const pref = idRow?.social_links?.preferred_lang;
+      if (pref === "th" || pref === "en" || pref === "cn" || pref === "ru") {
+        rememberedLang = pref;
+      }
+    }
+  } catch (e) {
+    // Non-blocking
+  }
+
+  // If language is already known, immediately send the property card in that language!
+  if (rememberedLang) {
+    console.log(`[Meta Webhook] [${traceId}] User ${senderId} has remembered language "${rememberedLang}". Sending card directly.`);
+    await sendSinglePropertyCard(senderId, source, sanitizedRef, rememberedLang);
+    return;
+  }
+
+  // Otherwise, prompt user with Language Selection Quick Replies
+  const promptText =
+    "Welcome to VC Connect Asset! ✨\nยินดีต้อนรับค่ะ กรุณาเลือกภาษาที่ต้องการรับข้อมูล / Please select your preferred language:";
+
+  const quickReplies = [
+    {
+      content_type: "text" as const,
+      title: "🇹🇭 ภาษาไทย",
+      payload: `PROP_LANG_th_${sanitizedRef}`,
+    },
+    {
+      content_type: "text" as const,
+      title: "🇬🇧 English",
+      payload: `PROP_LANG_en_${sanitizedRef}`,
+    },
+    {
+      content_type: "text" as const,
+      title: "🇷🇺 Русский",
+      payload: `PROP_LANG_ru_${sanitizedRef}`,
+    },
+    {
+      content_type: "text" as const,
+      title: "🇨🇳 中文",
+      payload: `PROP_LANG_cn_${sanitizedRef}`,
+    },
+  ];
+
+  await sendMetaQuickReplies(senderId, promptText, quickReplies, source);
+}
+
+/**
+ * Fetch and send a single property card with Lean Select, Transient 503 Retry,
+ * Typo Normalization, and 2-Tier Language Fallback (Target -> English -> Thai)
+ */
+async function sendSinglePropertyCard(
+  senderId: string,
+  platform: MetaPlatform,
+  rawRef: string,
+  lang: "th" | "en" | "cn" | "ru" = "th",
+) {
+  const supabase = createAdminClient() as any;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+
+  // Normalization candidates (e.g. "prop_1" vs "prop-1")
+  const candidates = [
+    rawRef,
+    rawRef.replace(/_/g, "-"),
+    rawRef.replace(/-/g, "_"),
+    rawRef.toLowerCase(),
+  ];
+  const uniqueCandidates = Array.from(new Set(candidates));
+
+  // Query property with retry logic for transient 503 / network errors
+  let property: any = null;
+  const maxRetries = 2;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // 1. Try matching slug or id with candidates
+      const { data, error } = await supabase
+        .from("properties")
+        .select(`
+          id,
+          slug,
+          title,
+          price,
+          rental_price,
+          listing_type,
+          images,
+          bedrooms,
+          bathrooms,
+          size_sqm,
+          status,
+          address_info,
+          project:projects(name)
+        `)
+        .or(uniqueCandidates.map((c) => `slug.eq.${c},id.eq.${c}`).join(","))
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        property = data;
+        break;
+      }
+      if (error && attempt < maxRetries) {
+        console.warn(`[Meta Webhook] PostgREST query retry attempt ${attempt}:`, error.message);
+        await new Promise((r) => setTimeout(r, 200));
+        continue;
+      }
+    } catch (err) {
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, 200));
+        continue;
+      }
+    }
+  }
+
+  // 1. Fallback Case: Property Not Found (Possible Admin Typo in Ads Manager)
+  if (!property) {
+    console.warn(`[Meta Webhook Warning] Property ref "${rawRef}" not found in database! Checked: ${uniqueCandidates.join(", ")}`);
+    const notFoundText =
+      lang === "en"
+        ? "Thank you for your interest! ✨ The specific unit you clicked seems to be updating. Here are our top featured properties:"
+        : lang === "cn"
+        ? "感谢您的咨询！✨ 您所点击的房源信息正在更新中。以下是我们的精选推荐："
+        : lang === "ru"
+        ? "Спасибо за интерес! ✨ Информация по этой вилле обновляется. Предлагаем посмотреть наши популярные варианты:"
+        : "ขอบคุณที่สนใจนะคะ ✨ ทรัพย์ที่คุณลูกค้ากดเข้ามา ระบบกำลังอัปเดตข้อมูลพอดีค่ะ แอดมินขอแนะนำรายการทรัพย์ยอดนิยมด้านล่างนี้นะคะ:";
+
+    await sendMetaMessage(senderId, notFoundText, platform);
+    await sendFeaturedPropertiesCarousel(senderId, platform, lang);
+    return;
+  }
+
+  // 2. Fallback Case: Property Found but Sold/Rented or Inactive
+  const isActive = ["AVAILABLE", "ACTIVE", "PUBLISHED"].includes(property.status);
+  if (!isActive) {
+    const soldText =
+      lang === "en"
+        ? "Thank you for your interest! 🏡 This particular villa has recently been booked. However, we have very similar options nearby you might love:"
+        : lang === "cn"
+        ? "感谢您的咨询！🏡 这套房源近期已被预订。不过我们在附近有非常相似的优质房源推荐："
+        : lang === "ru"
+        ? "Спасибо за интерес! 🏡 Эта вилла недавно была забронирована. Но у нас есть очень похожие отличные варианты поблизости:"
+        : "ขอบคุณที่สนใจนะคะ 🏡 ทรัพย์หลังนี้เพิ่งมีผู้เช่า/ผู้จองไปเมื่อเร็วๆ นี้ค่ะ แต่เรายังมีตัวเลือกทำเลใกล้เคียงที่สวยและคุ้มค่าแนะนำดังนี้ค่ะ:";
+
+    await sendMetaMessage(senderId, soldText, platform);
+    await sendAlternativePropertiesCarousel(senderId, platform, property.project_id, property.id, lang);
+    return;
+  }
+
+  // 3. Success Case: Format Single Property Card
+  const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : lang === "ru" ? "Продажа" : "售";
+  const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "租";
+  const tBed = lang === "th" ? "นอน" : lang === "en" ? "bed" : lang === "ru" ? "спальни" : "卧";
+  const tSqm = lang === "th" ? "ตร.ม." : "sqm";
+  const tViewBtn = lang === "th" ? "ดูรายละเอียดห้อง" : lang === "en" ? "View Details" : lang === "cn" ? "查看详情" : "Подробнее";
+  const tBookBtn = lang === "th" ? "นัดดูห้องนี้" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
+
+  // Lean Image Resolution (Use Direct CDN URL)
+  const images = Array.isArray(property.images) ? property.images : [];
+  const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
+
+  let priceSubtitle = "";
+  if (property.listing_type === "SALE_AND_RENT") {
+    const parts = [];
+    if (property.price) parts.push(`${tSale} ฿${property.price.toLocaleString()}`);
+    if (property.rental_price) parts.push(`${tRent} ฿${property.rental_price.toLocaleString()}/mo`);
+    priceSubtitle = parts.join(" | ");
+  } else if (property.listing_type === "RENT") {
+    priceSubtitle = property.rental_price ? `${tRent} ฿${property.rental_price.toLocaleString()}/mo` : `${tRent} (Inquire)`;
+  } else {
+    priceSubtitle = property.price ? `${tSale} ฿${property.price.toLocaleString()}` : `${tSale} (Inquire)`;
+  }
+
+  // 2-Tier Language Fallback for Title
+  // 1) Target Lang -> 2) English -> 3) Default (Thai)
+  let title = property.title || "Featured Property";
+  if (lang === "en" && property.title_en) {
+    title = property.title_en;
+  } else if (lang === "cn" && (property.title_cn || property.title_en)) {
+    title = property.title_cn || property.title_en;
+  } else if (lang === "ru" && (property.title_ru || property.title_en)) {
+    title = property.title_ru || property.title_en;
+  }
+
+  const projectName = property.project?.name || property.address_info?.th || "";
+  const sizeInfo = property.size_sqm ? ` • ${property.size_sqm} ${tSqm}` : "";
+  const bedInfo = property.bedrooms ? ` • ${property.bedrooms} ${tBed}` : "";
+  const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
+  const propUrl = `${siteUrl}/properties/${property.slug || property.id}`;
+
+  const greetingIntro =
+    lang === "en"
+      ? "Here is the property you requested! 🏡 Click below to view full photos or schedule a viewing:"
+      : lang === "cn"
+      ? "这是您所咨询的房源详情！🏡 点击下方可查看完整图片或预约看房："
+      : lang === "ru"
+      ? "Вот вилла, которой вы интересовались! 🏡 Нажмите ниже, чтобы посмотреть фото или записаться на просмотр:"
+      : "นี่คือข้อมูลทรัพย์ที่คุณลูกค้าสนใจค่ะ 🏡 สามารถคลิกดูรูปภาพทั้งหมดหรือกดนัดชมห้องจริงได้เลยนะคะ:";
+
+  await sendMetaMessage(senderId, greetingIntro, platform);
+
+  const cardElement = [
+    {
+      title: title.substring(0, 80),
+      subtitle: subtitle.substring(0, 80),
+      image_url: imageUrl,
+      default_action: {
+        type: "web_url",
+        url: propUrl,
+      },
+      buttons: [
+        {
+          type: "web_url",
+          url: propUrl,
+          title: tViewBtn,
+        },
+        {
+          type: "postback",
+          title: tBookBtn,
+          payload: `ACTION_BOOK_PROPERTY_${property.id}`,
+        },
+        {
+          type: "postback",
+          title: lang === "en" ? "🔍 Find Other Properties" : lang === "cn" ? "🔍 寻找其他房源" : lang === "ru" ? "🔍 Другие варианты" : "🔍 ให้ช่วยหาทรัพย์อื่น",
+          payload: `START_QUESTIONNAIRE_${lang}`,
+        },
+      ],
+    },
+  ];
+
+  await sendMetaCarousel(senderId, cardElement, platform);
+
+  // Per-Lead Telegram Alert (Cooldown 10 mins per senderId to avoid duplicate spam from same user)
+  const priceDisplay = property.price 
+    ? `฿${property.price.toLocaleString()}` 
+    : property.rental_price 
+    ? `฿${property.rental_price.toLocaleString()}/mo` 
+    : "N/A";
+
+  const leadCrmLink = `${siteUrl}/protected/admin/leads`;
+
+  await sendDebouncedTelegramAlert(
+    `🎯 <b>[Ad Lead Alert] ลูกค้าสนใจทรัพย์จาก Carousel Ads</b>\n\n` +
+    `📱 แพลตฟอร์ม: ${platform}\n` +
+    `🌐 ภาษาที่เลือก: <b>${lang.toUpperCase()}</b>\n` +
+    `🏡 ทรัพย์ที่คลิก: <b>${title}</b>\n` +
+    `💰 ราคาทรัพย์ที่คลิก: <b>${priceDisplay}</b> (<i>*ราคาทรัพย์ที่กดดู ยังไม่ใช่งบจริงของลูกค้า</i>)\n` +
+    `🔗 รหัส/Slug: <code>${property.slug || property.id}</code>\n\n` +
+    `👉 <a href="${leadCrmLink}">เปิดดูข้อมูล Lead ใน CRM</a>`,
+    `ad_click_lead_${senderId}`,
+    600 // 10 minutes cooldown per sender
+  );
 }
 
 /**

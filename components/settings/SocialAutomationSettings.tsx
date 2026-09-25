@@ -65,6 +65,25 @@ export function SocialAutomationSettings({
   const [autoFeaturedCarouselEnabled, setAutoFeaturedCarouselEnabled] = useState(
     initialSettings?.auto_featured_carousel_enabled !== false
   );
+  const [questionnaireBudgetOptions, setQuestionnaireBudgetOptions] = useState<
+    Array<{ label: string; min_price?: number; max_price?: number }>
+  >(
+    initialSettings?.questionnaire_budget_options || [
+      { label: "< ฿100k/mo", max_price: 100000 },
+      { label: "฿100k - ฿200k", min_price: 100000, max_price: 200000 },
+      { label: "฿200k - ฿350k", min_price: 200000, max_price: 350000 },
+      { label: "> ฿350k/mo", min_price: 350000 },
+    ]
+  );
+  const [questionnaireZoneOptions, setQuestionnaireZoneOptions] = useState<
+    Array<{ label: string; keywords: string[] }>
+  >(
+    initialSettings?.questionnaire_zone_options || [
+      { label: "ฉลอง / ราไวย์ (Chalong)", keywords: ["Chalong", "Rawai", "ฉลอง", "ราไวย์"] },
+      { label: "บางเทา (Bangtao)", keywords: ["Bangtao", "Cherngtalay", "บางเทา", "เชิงทะเล"] },
+      { label: "กะทู้ (Kathu)", keywords: ["Kathu", "Phuket Town", "กะทู้", "เมืองภูเก็ต"] },
+    ]
+  );
   const [followGateEnabled, setFollowGateEnabled] = useState(
     !!initialSettings?.follow_gate_enabled
   );
@@ -163,6 +182,12 @@ export function SocialAutomationSettings({
         setStoryAdsButtonsEnabled(settings.story_ads_buttons_enabled !== false);
         setStoryAdsCustomButtons(settings.story_ads_custom_buttons || []);
         setAutoFeaturedCarouselEnabled(settings.auto_featured_carousel_enabled !== false);
+        if (settings.questionnaire_budget_options) {
+          setQuestionnaireBudgetOptions(settings.questionnaire_budget_options);
+        }
+        if (settings.questionnaire_zone_options) {
+          setQuestionnaireZoneOptions(settings.questionnaire_zone_options);
+        }
         setFollowGateEnabled(!!settings.follow_gate_enabled);
         setLeadCaptureGateEnabled(!!settings.lead_capture_gate_enabled);
         setTemplates({
@@ -282,6 +307,17 @@ export function SocialAutomationSettings({
       storyAdsButtonsEnabled !== (initialData.story_ads_buttons_enabled !== false) ||
       JSON.stringify(storyAdsCustomButtons) !== JSON.stringify(initialData.story_ads_custom_buttons || []) ||
       autoFeaturedCarouselEnabled !== (initialData.auto_featured_carousel_enabled !== false) ||
+      JSON.stringify(questionnaireBudgetOptions) !== JSON.stringify(initialData.questionnaire_budget_options || [
+        { label: "< ฿100k/mo", max_price: 100000 },
+        { label: "฿100k - ฿200k", min_price: 100000, max_price: 200000 },
+        { label: "฿200k - ฿350k", min_price: 200000, max_price: 350000 },
+        { label: "> ฿350k/mo", min_price: 350000 },
+      ]) ||
+      JSON.stringify(questionnaireZoneOptions) !== JSON.stringify(initialData.questionnaire_zone_options || [
+        { label: "ฉลอง / ราไวย์ (Chalong)", keywords: ["Chalong", "Rawai", "ฉลอง", "ราไวย์"] },
+        { label: "บางเทา (Bangtao)", keywords: ["Bangtao", "Cherngtalay", "บางเทา", "เชิงทะเล"] },
+        { label: "กะทู้ (Kathu)", keywords: ["Kathu", "Phuket Town", "กะทู้", "เมืองภูเก็ต"] },
+      ]) ||
       followGateEnabled !== !!initialData.follow_gate_enabled ||
       leadCaptureGateEnabled !== !!initialData.lead_capture_gate_enabled ||
       checkTemplate(templates.facebook, initialData.facebook_post_template, initialData.facebook_post_template_en, initialData.facebook_post_template_cn, initialData.facebook_post_template_ru) ||
@@ -290,7 +326,7 @@ export function SocialAutomationSettings({
       checkTemplate(templates.line, initialData.line_post_template, initialData.line_post_template_en, initialData.line_post_template_cn, initialData.line_post_template_ru);
 
     setIsDirty(changed);
-  }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, storyAdsWelcomeMessages, storyAdsButtonsEnabled, storyAdsCustomButtons, autoFeaturedCarouselEnabled, followGateEnabled, leadCaptureGateEnabled, templates, initialData]);
+  }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, storyAdsWelcomeMessages, storyAdsButtonsEnabled, storyAdsCustomButtons, autoFeaturedCarouselEnabled, questionnaireBudgetOptions, questionnaireZoneOptions, followGateEnabled, leadCaptureGateEnabled, templates, initialData]);
 
   const hasChanges = isDirty;
 
@@ -313,6 +349,8 @@ export function SocialAutomationSettings({
           updateSiteSetting("story_ads_buttons_enabled", storyAdsButtonsEnabled).then((r) => ({ key: "story_ads_buttons_enabled", ...r })),
           updateSiteSetting("story_ads_custom_buttons", storyAdsCustomButtons as any).then((r) => ({ key: "story_ads_custom_buttons", ...r })),
           updateSiteSetting("auto_featured_carousel_enabled", autoFeaturedCarouselEnabled).then((r) => ({ key: "auto_featured_carousel_enabled", ...r })),
+          updateSiteSetting("questionnaire_budget_options", questionnaireBudgetOptions as any).then((r) => ({ key: "questionnaire_budget_options", ...r })),
+          updateSiteSetting("questionnaire_zone_options", questionnaireZoneOptions as any).then((r) => ({ key: "questionnaire_zone_options", ...r })),
           updateSiteSetting("follow_gate_enabled", followGateEnabled).then((r) => ({ key: "follow_gate_enabled", ...r })),
           updateSiteSetting("lead_capture_gate_enabled", leadCaptureGateEnabled).then((r) => ({ key: "lead_capture_gate_enabled", ...r })),
           updateSiteSetting("facebook_post_template", templates.facebook.th).then((r) => ({ key: "facebook_post_template", ...r })),
@@ -837,6 +875,163 @@ export function SocialAutomationSettings({
                       )}
                     </div>
                   )}
+
+                  {/* Ad Campaign Questionnaire Options (Dynamic Budgets & Zones) */}
+                  <div className="p-4 bg-slate-50/70 rounded-xl border border-slate-200/80 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                          <span>{isEn ? "Smart Match Questionnaire Options" : "ตัวเลือกคำถาม Smart Match (แอด Carousel / ให้ช่วยหาทรัพย์)"}</span>
+                          <span className="text-[10px] font-medium bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
+                            {isEn ? "Dynamic Campaigns" : "ปรับเปลี่ยนตามแคมเปญ"}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          {isEn
+                            ? "Customize budget tiers and zones shown in Messenger Quick Replies when users click '🔍 ให้ช่วยหาทรัพย์อื่น'"
+                            : "ตั้งค่าช่วงราคาและโซนที่ให้ลูกค้ากดเลือกใน Messenger เมื่อกดปุ่ม '🔍 ให้ช่วยหาทรัพย์อื่น' (ส่งผลทันที ไม่ต้องแก้โค้ด)"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Budget Options */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-semibold text-slate-600">
+                          {isEn ? "Budget Range Options (Max 4-5 items recommended)" : "1. ตัวเลือกงบประมาณ (Budget Options)"}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuestionnaireBudgetOptions([
+                              ...questionnaireBudgetOptions,
+                              { label: "฿50k - ฿100k", min_price: 50000, max_price: 100000 },
+                            ]);
+                            setIsDirty(true);
+                          }}
+                          className="text-[11px] text-blue-600 hover:text-blue-700 font-semibold"
+                        >
+                          + {isEn ? "Add Budget" : "เพิ่มช่วงงบ"}
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {questionnaireBudgetOptions.map((b, idx) => (
+                          <div key={idx} className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-slate-200">
+                            <input
+                              type="text"
+                              value={b.label}
+                              onChange={(e) => {
+                                const updated = [...questionnaireBudgetOptions];
+                                updated[idx].label = e.target.value;
+                                setQuestionnaireBudgetOptions(updated);
+                                setIsDirty(true);
+                              }}
+                              placeholder={isEn ? "Button Label (e.g. < ฿100k/mo)" : "ข้อความบนปุ่ม (เช่น < ฿100k/mo)"}
+                              className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 flex-1 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            />
+                            <input
+                              type="number"
+                              value={b.min_price !== undefined ? b.min_price : ""}
+                              onChange={(e) => {
+                                const updated = [...questionnaireBudgetOptions];
+                                updated[idx].min_price = e.target.value ? Number(e.target.value) : undefined;
+                                setQuestionnaireBudgetOptions(updated);
+                                setIsDirty(true);
+                              }}
+                              placeholder="Min ฿ (ต่ำสุด)"
+                              className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 w-24 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            />
+                            <input
+                              type="number"
+                              value={b.max_price !== undefined ? b.max_price : ""}
+                              onChange={(e) => {
+                                const updated = [...questionnaireBudgetOptions];
+                                updated[idx].max_price = e.target.value ? Number(e.target.value) : undefined;
+                                setQuestionnaireBudgetOptions(updated);
+                                setIsDirty(true);
+                              }}
+                              placeholder="Max ฿ (สูงสุด)"
+                              className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 w-24 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setQuestionnaireBudgetOptions(questionnaireBudgetOptions.filter((_, i) => i !== idx));
+                                setIsDirty(true);
+                              }}
+                              className="text-slate-400 hover:text-red-500 p-1 text-xs"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Zone Options */}
+                    <div className="space-y-2 pt-2 border-t border-slate-200">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-semibold text-slate-600">
+                          {isEn ? "Zone Options & Matching Keywords" : "2. ตัวเลือกทำเล/โซน และคีย์เวิร์ดค้นหา (Zone Options)"}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuestionnaireZoneOptions([
+                              ...questionnaireZoneOptions,
+                              { label: "กมลา (Kamala)", keywords: ["Kamala", "กมลา"] },
+                            ]);
+                            setIsDirty(true);
+                          }}
+                          className="text-[11px] text-blue-600 hover:text-blue-700 font-semibold"
+                        >
+                          + {isEn ? "Add Zone" : "เพิ่มโซน"}
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {questionnaireZoneOptions.map((z, idx) => (
+                          <div key={idx} className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-slate-200">
+                            <input
+                              type="text"
+                              value={z.label}
+                              onChange={(e) => {
+                                const updated = [...questionnaireZoneOptions];
+                                updated[idx].label = e.target.value;
+                                setQuestionnaireZoneOptions(updated);
+                                setIsDirty(true);
+                              }}
+                              placeholder={isEn ? "Button Label (e.g. ฉลอง / ราไวย์)" : "ชื่อปุ่ม (เช่น ฉลอง / ราไวย์)"}
+                              className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 w-1/3 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            />
+                            <input
+                              type="text"
+                              value={z.keywords.join(", ")}
+                              onChange={(e) => {
+                                const updated = [...questionnaireZoneOptions];
+                                updated[idx].keywords = e.target.value.split(",").map((k) => k.trim()).filter(Boolean);
+                                setQuestionnaireZoneOptions(updated);
+                                setIsDirty(true);
+                              }}
+                              placeholder={isEn ? "Keywords separated by comma (e.g. Chalong, Rawai, ฉลอง)" : "คำค้นหาแยกด้วยจุลภาค (เช่น Chalong, Rawai, ฉลอง)"}
+                              className="text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 flex-1 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setQuestionnaireZoneOptions(questionnaireZoneOptions.filter((_, i) => i !== idx));
+                                setIsDirty(true);
+                              }}
+                              className="text-slate-400 hover:text-red-500 p-1 text-xs"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

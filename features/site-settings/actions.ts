@@ -104,6 +104,8 @@ const DEFAULT_SETTINGS: SiteSettings = {
   story_ads_buttons_enabled: true,
   story_ads_custom_buttons: [],
   auto_featured_carousel_enabled: true,
+  questionnaire_budget_options: [],
+  questionnaire_zone_options: [],
   follow_gate_enabled: false,
   lead_capture_gate_enabled: false,
   facebook_post_template: "",
@@ -217,8 +219,13 @@ async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> 
 
       const val = await decryptValue(key, row.value);
 
-      // 1. Handle Arrays (Keywords)
-      if (key === "social_automation_keywords") {
+      // 1. Handle Arrays (Keywords, Buttons, Questionnaire Options)
+      if (
+        key === "social_automation_keywords" ||
+        key === "story_ads_custom_buttons" ||
+        key === "questionnaire_budget_options" ||
+        key === "questionnaire_zone_options"
+      ) {
         (settings as Record<string, unknown>)[key] = Array.isArray(val) ? val : [];
         continue;
       }

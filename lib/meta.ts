@@ -119,6 +119,69 @@ export async function sendMetaMessage(
   }
 }
 
+export interface MetaQuickReplyItem {
+  content_type?: "text";
+  title: string;
+  payload: string;
+  image_url?: string;
+}
+
+/**
+ * Send Quick Reply message to Messenger or Instagram PSID
+ */
+export async function sendMetaQuickReplies(
+  psid: string,
+  content: string,
+  quickReplies: MetaQuickReplyItem[],
+  platform: MetaPlatform = "FACEBOOK",
+): Promise<MetaApiResponse> {
+  const token = await getActiveToken();
+  if (!token)
+    return {
+      success: false,
+      error: "ไม่พบ Token สำหรับการเชื่อมต่อ (Page Access Token)",
+    };
+
+  try {
+    const url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
+    const payload = {
+      recipient: { id: psid },
+      messaging_type: "RESPONSE",
+      message: {
+        text: content.substring(0, 640),
+        quick_replies: quickReplies.slice(0, 13).map((qr) => ({
+          content_type: qr.content_type || "text",
+          title: qr.title.substring(0, 20),
+          payload: qr.payload,
+          ...(qr.image_url ? { image_url: qr.image_url } : {}),
+        })),
+      },
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json();
+      console.error(`[meta.ts] sendMetaQuickReplies failure:`, errData);
+      return {
+        success: false,
+        error: `Meta Quick Reply Error (${response.status}): ${errData.error?.message || "Unknown error"}`,
+      };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error(`Error sending Quick Replies for ${platform}:`, err);
+    return {
+      success: false,
+      error: err.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ",
+    };
+  }
+}
+
 /**
  * Send media message (image, video, etc) to PSID
  */
