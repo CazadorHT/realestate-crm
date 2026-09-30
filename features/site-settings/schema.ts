@@ -68,7 +68,20 @@ export type SiteSettingKey =
   | "partners_description"
   | "partners_description_en"
   | "partners_description_cn"
-  | "partners_description_ru";
+  | "partners_description_ru"
+  | "meta_connected_accounts"
+  | "follow_gate_message"
+  | "follow_gate_message_en"
+  | "follow_gate_retry_message"
+  | "follow_gate_retry_message_en"
+  | "follow_gate_success_message"
+  | "follow_gate_success_message_en"
+  | "follow_gate_public_reply"
+  | "follow_gate_public_reply_en"
+  | "follow_gate_btn_profile"
+  | "follow_gate_btn_profile_en"
+  | "follow_gate_btn_check"
+  | "follow_gate_btn_check_en";
 
 export interface QuestionnaireBudgetOption {
   label: string; // e.g. "< ฿100k/mo"
@@ -98,6 +111,26 @@ export interface SocialKeyword {
   enabled?: boolean;
   linked_post_id?: string;      // Optional: restrict to a specific IG/FB post media_id
   linked_post_preview?: string; // Thumbnail URL for UI display
+  account_id?: string;          // Optional: Target specific Meta account (or "ALL" / undefined)
+}
+
+export interface MetaConnectedAccount {
+  id: string; // uuid or unique string
+  name: string; // e.g. "VCC Asset Official", "Hunter VCC"
+  handle?: string; // e.g. "@vccasset", "@hunter.vcc"
+  platform: "INSTAGRAM" | "FACEBOOK" | "BOTH";
+  page_id: string; // Facebook Page ID
+  page_name?: string; // Facebook Page Name
+  instagram_business_id: string; // Instagram Business Account ID
+  instagram_username?: string; // e.g. "hunter.vcc"
+  page_access_token: string; // Access Token (Encrypted at rest)
+  is_active: boolean;
+  is_default: boolean;
+  token_status?: "VALID" | "EXPIRED" | "REVOKED" | "UNKNOWN";
+  last_token_check_at?: string;
+  assigned_agent_id?: string; // Profile ID for auto-assigning leads
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface SiteSettings {
@@ -108,6 +141,7 @@ export interface SiteSettings {
   isolation_leads_enabled: boolean;
   isolation_deals_enabled: boolean;
   social_automation_keywords: SocialKeyword[];
+  meta_connected_accounts?: MetaConnectedAccount[];
   instagram_story_reply_enabled?: boolean;
   direct_dm_reply_enabled?: boolean;
   story_ads_welcome_message?: string;
@@ -120,6 +154,18 @@ export interface SiteSettings {
   questionnaire_budget_options?: QuestionnaireBudgetOption[];
   questionnaire_zone_options?: QuestionnaireZoneOption[];
   follow_gate_enabled?: boolean;
+  follow_gate_message?: string;
+  follow_gate_message_en?: string;
+  follow_gate_retry_message?: string;
+  follow_gate_retry_message_en?: string;
+  follow_gate_success_message?: string;
+  follow_gate_success_message_en?: string;
+  follow_gate_public_reply?: string;
+  follow_gate_public_reply_en?: string;
+  follow_gate_btn_profile?: string;
+  follow_gate_btn_profile_en?: string;
+  follow_gate_btn_check?: string;
+  follow_gate_btn_check_en?: string;
   lead_capture_gate_enabled?: boolean;
   facebook_post_template?: string;
   facebook_post_template_en?: string;
@@ -231,6 +277,18 @@ export const getSiteSettingsSchema = (isEn: boolean) => z.object({
   instagram_story_reply_enabled: z.boolean().optional(),
   direct_dm_reply_enabled: z.boolean().optional(),
   follow_gate_enabled: z.boolean().optional(),
+  follow_gate_message: z.string().optional(),
+  follow_gate_message_en: z.string().optional(),
+  follow_gate_retry_message: z.string().optional(),
+  follow_gate_retry_message_en: z.string().optional(),
+  follow_gate_success_message: z.string().optional(),
+  follow_gate_success_message_en: z.string().optional(),
+  follow_gate_public_reply: z.string().optional(),
+  follow_gate_public_reply_en: z.string().optional(),
+  follow_gate_btn_profile: z.string().optional(),
+  follow_gate_btn_profile_en: z.string().optional(),
+  follow_gate_btn_check: z.string().optional(),
+  follow_gate_btn_check_en: z.string().optional(),
   lead_capture_gate_enabled: z.boolean().optional(),
   onboarding_line_skipped: z.boolean().optional(),
   onboarding_staff_skipped: z.boolean().optional(),
@@ -266,6 +324,28 @@ export const getSiteSettingsSchema = (isEn: boolean) => z.object({
   meta_page_name: z.string().optional(),
   brand_card: z.string().or(z.literal("")).optional(),
   facebook_app_id: z.string().max(50).optional(),
+  meta_connected_accounts: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        handle: z.string().optional(),
+        platform: z.enum(["INSTAGRAM", "FACEBOOK", "BOTH"]),
+        page_id: z.string(),
+        page_name: z.string().optional(),
+        instagram_business_id: z.string(),
+        instagram_username: z.string().optional(),
+        page_access_token: z.string(),
+        is_active: z.boolean(),
+        is_default: z.boolean(),
+        token_status: z.enum(["VALID", "EXPIRED", "REVOKED", "UNKNOWN"]).optional(),
+        last_token_check_at: z.string().optional(),
+        assigned_agent_id: z.string().optional(),
+        created_at: z.string(),
+        updated_at: z.string().optional(),
+      })
+    )
+    .optional(),
   partners_description: z.string().max(1000).optional().or(z.literal("")),
   partners_description_en: z.string().max(1000).optional().or(z.literal("")),
   partners_description_cn: z.string().max(1000).optional().or(z.literal("")),
@@ -280,6 +360,7 @@ export const SENSITIVE_KEYS: SiteSettingKey[] = [
   "meta_page_access_token",
   "line_channel_access_token",
   "meta_page_name",
+  "meta_connected_accounts",
   "meta_page_id" as SiteSettingKey,
   "meta_user_access_token" as SiteSettingKey,
   // Reserved for future use

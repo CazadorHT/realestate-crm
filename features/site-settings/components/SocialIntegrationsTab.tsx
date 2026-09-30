@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { saveManualMetaTokenAction } from "../actions";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { MetaAccountsManager } from "@/components/settings/social-automation/MetaAccountsManager";
 
 interface SocialIntegrationsTabProps {
   allSettings: any;
@@ -269,6 +270,10 @@ export function SocialIntegrationsTab({
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-8">
+        <MetaAccountsManager />
       </div>
 
       <div id="social-automation" className="mt-8">

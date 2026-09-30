@@ -20,8 +20,6 @@ const languages: {
 }[] = [
   { code: "th", label: "Thai", nativeLabel: "ไทย", flagClass: "fi fi-th" },
   { code: "en", label: "English", nativeLabel: "English", flagClass: "fi fi-us" },
-  { code: "cn", label: "Chinese", nativeLabel: "中文", flagClass: "fi fi-cn" },
-  { code: "ru", label: "Russian", nativeLabel: "Русский", flagClass: "fi fi-ru" },
 ];
 
 export function LanguageSwitcher({ className }: { className?: string }) {

@@ -71,7 +71,7 @@ export function LanguageProvider({
       if (isCrm) {
         // CRM Workspace Language (Independent from Public)
         const savedCrmLang = (localStorage.getItem("crm-language") || getCookie("crm-language")) as Language;
-        if (savedCrmLang && ["th", "en", "cn", "ru"].includes(savedCrmLang)) {
+        if (savedCrmLang && ["th", "en"].includes(savedCrmLang)) {
           setLanguageState(savedCrmLang);
           return;
         }

@@ -11,6 +11,7 @@ import {
   SiteSettings,
   siteSettingsSchema,
   SENSITIVE_KEYS,
+  MetaConnectedAccount,
 } from "./schema";
 import { Json } from "@/lib/database.types.generated";
 import { siteConfig } from "@/lib/site-config";
@@ -95,6 +96,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   isolation_leads_enabled: false,
   isolation_deals_enabled: false,
   social_automation_keywords: [],
+  meta_connected_accounts: [],
   instagram_story_reply_enabled: false,
   direct_dm_reply_enabled: false,
   story_ads_welcome_message: "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕",
@@ -154,7 +156,18 @@ const DEFAULT_SETTINGS: SiteSettings = {
   partners_description: "เราโปรโมทและลงประกาศทรัพย์สินของคุณผ่านช่องทางการตลาดและโซเชียลมีเดียชั้นนำ เช่น Facebook, Instagram, TikTok, LivingInsider และเว็บไซต์ของเรา เพื่อความคุ้มค่าและโอกาสขายสำเร็จสูงสุด",
   partners_description_en: "We promote and advertise your properties across leading channels and social media including Facebook, Instagram, TikTok, LivingInsider, and our website.",
   partners_description_cn: "我们在领先的营销渠道和社交媒体上推广并发布您的房产，包括 Facebook, Instagram, TikTok, LivingInsider 以及我们的官方网站。",
-  partners_description_ru: "Мы продвигаем и публикуем вашу недвижимость на ведущих маркетинговых каналах и в социальных сетях, включая Facebook, Instagram, TikTok, LivingInsider и наш веб-сайт.",
+  follow_gate_message: "ขอบคุณที่สนใจน้า ✨ เพื่อรับรายละเอียดห้องและราคาพิเศษ รบกวนกดติดตามโปรไฟล์ {{handle}} ก่อนน้า แล้วกดปุ่ม \"ฟอลแล้ว\" ด้านล่างได้เลยครับ 💕",
+  follow_gate_message_en: "Thanks for your interest! ✨ To receive room details and special price, please follow our profile {{handle}} first, then tap 'Followed' below 💕",
+  follow_gate_retry_message: "ระบบตรวจพบว่ายังไม่ได้กดติดตามเลยน้า 🥺 ฝากกดติดตาม {{handle}} ก่อนน้าเด่วส่งข้อมูลให้ทันทีเลยครับ ✨",
+  follow_gate_retry_message_en: "It looks like you haven't followed yet 🥺 Please follow {{handle}} first, then tap the button below to get the details! ✨",
+  follow_gate_success_message: "ขอบคุณที่กดติดตามน้า 🙏✨ นี่คือรายละเอียดโครงการที่ขอไว้ครับ 👇",
+  follow_gate_success_message_en: "Thank you for following! 🙏✨ Here are the property details you requested 👇",
+  follow_gate_public_reply: "ส่งข้อมูลให้ทาง DM แล้วน้า ฝากกดติดตาม {{handle}} แล้วเช็ก Inbox ได้เลยครับ 😊📩",
+  follow_gate_public_reply_en: "Sent you a DM! Please follow {{handle}} and check your Inbox 😊📩",
+  follow_gate_btn_profile: "👉 ไปที่หน้าโปรไฟล์",
+  follow_gate_btn_profile_en: "👉 View Profile",
+  follow_gate_btn_check: "✅ ฟอลแล้ว (รับข้อมูล)",
+  follow_gate_btn_check_en: "✅ Followed (Get Info)",
 };
 
 /**
@@ -219,12 +232,13 @@ async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> 
 
       const val = await decryptValue(key, row.value);
 
-      // 1. Handle Arrays (Keywords, Buttons, Questionnaire Options)
+      // 1. Handle Arrays (Keywords, Buttons, Questionnaire Options, Connected Accounts)
       if (
         key === "social_automation_keywords" ||
         key === "story_ads_custom_buttons" ||
         key === "questionnaire_budget_options" ||
-        key === "questionnaire_zone_options"
+        key === "questionnaire_zone_options" ||
+        key === "meta_connected_accounts"
       ) {
         (settings as Record<string, unknown>)[key] = Array.isArray(val) ? val : [];
         continue;
@@ -244,7 +258,10 @@ async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> 
         "line_id", "logo_light", "logo_dark", "favicon",
         "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name",
         "facebook_app_id",
-        "partners_description", "partners_description_en", "partners_description_cn", "partners_description_ru"
+        "partners_description", "partners_description_en", "partners_description_cn", "partners_description_ru",
+        "follow_gate_message", "follow_gate_message_en", "follow_gate_retry_message", "follow_gate_retry_message_en",
+        "follow_gate_success_message", "follow_gate_success_message_en", "follow_gate_public_reply", "follow_gate_public_reply_en",
+        "follow_gate_btn_profile", "follow_gate_btn_profile_en", "follow_gate_btn_check", "follow_gate_btn_check_en"
       ];
 
       if (key.includes("_post_template") || stringKeys.includes(key)) {
@@ -274,6 +291,30 @@ async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> 
           (settings as Record<string, unknown>)[key] = `${supabaseUrl}${val}`;
         }
       }
+    }
+
+    // 7. Backward-Compatibility for Meta Connected Accounts
+    if (
+      (!settings.meta_connected_accounts || settings.meta_connected_accounts.length === 0) &&
+      settings.meta_page_access_token
+    ) {
+      settings.meta_connected_accounts = [
+        {
+          id: "default-vcc-account",
+          name: settings.meta_page_name || "VCC Asset Official",
+          handle: "@vccasset",
+          platform: "INSTAGRAM",
+          page_id: (settings as any).meta_page_id || "",
+          page_name: settings.meta_page_name || "VCC Asset",
+          instagram_business_id: process.env.META_INSTAGRAM_BUSINESS_ID || "",
+          instagram_username: "vccasset",
+          page_access_token: settings.meta_page_access_token,
+          is_active: true,
+          is_default: true,
+          token_status: "VALID",
+          created_at: new Date().toISOString(),
+        },
+      ];
     }
 
     siteSettingsMemoryCache.set(tenantId, { data: settings, timestamp: now });
@@ -800,5 +841,274 @@ export async function saveManualMetaTokenAction(
   } catch (error: any) {
     console.error("Error in saveManualMetaTokenAction:", error);
     return { success: false, message: error.message || "เกิดข้อผิดพลาดไม่ทราบสาเหตุ" };
+  }
+}
+
+/**
+ * Helper to mask access token for UI safe rendering (e.g. EAAB...****...XYZ)
+ */
+function maskToken(token: string): string {
+  if (!token || token.length < 12) return "••••••••";
+  const start = token.substring(0, 4);
+  const end = token.substring(token.length - 4);
+  return `${start}...••••...${end}`;
+}
+
+/**
+ * Get all connected Meta accounts with masked tokens for client UI
+ */
+export async function getMaskedMetaAccountsAction(): Promise<{
+  success: boolean;
+  accounts: Array<Omit<MetaConnectedAccount, "page_access_token"> & { masked_token: string }>;
+}> {
+  try {
+    const settings = await getSiteSettings();
+    const accounts = (settings.meta_connected_accounts || []).map((acc) => ({
+      ...acc,
+      masked_token: maskToken(acc.page_access_token),
+      page_access_token: undefined as any,
+    }));
+    return { success: true, accounts };
+  } catch (err: any) {
+    console.error("Error getting masked meta accounts:", err);
+    return { success: false, accounts: [] };
+  }
+}
+
+/**
+ * Saves or updates a Meta Connected Account (Instagram/Facebook)
+ * Validates token via Meta Graph API and automatically fetches Page ID, Page Name,
+ * and connected Instagram Business Account ID.
+ */
+export async function saveMetaConnectedAccountAction(input: {
+  id?: string;
+  name: string;
+  handle?: string;
+  platform?: "INSTAGRAM" | "FACEBOOK" | "BOTH";
+  page_access_token: string;
+  is_default?: boolean;
+  assigned_agent_id?: string;
+}): Promise<{ success: boolean; message: string; account?: any }> {
+  try {
+    const { getCurrentProfile } = await import("@/lib/supabase/getCurrentProfile");
+    const user = await getCurrentProfile();
+
+    if (!user || !["ADMIN", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized: สิทธิ์ไม่เพียงพอ" };
+    }
+
+    const token = input.page_access_token?.trim();
+    if (!token) {
+      return { success: false, message: "กรุณาระบุ Page Access Token" };
+    }
+
+    // Call Facebook Graph API to validate token and fetch page & IG business account details
+    const fbUrl = `https://graph.facebook.com/v19.0/me?fields=id,name,instagram_business_account{id,username}&access_token=${token}`;
+    const fbRes = await fetch(fbUrl);
+
+    if (!fbRes.ok) {
+      const fbError = await fbRes.json().catch(() => ({}));
+      return {
+        success: false,
+        message: `Token ไม่ถูกต้องหรือหมดอายุ: ${fbError.error?.message || "ไม่สามารถเชื่อมต่อ Facebook Graph API ได้"}`,
+      };
+    }
+
+    const fbData = await fbRes.json();
+    const pageId = fbData.id;
+    const pageName = fbData.name;
+    const igAccount = fbData.instagram_business_account;
+    const igId = igAccount?.id || "";
+    const igUsername = igAccount?.username || (input.handle ? input.handle.replace("@", "") : "");
+
+    if (!pageId) {
+      return { success: false, message: "ไม่พบ Facebook Page ID จาก Token นี้" };
+    }
+
+    const settings = await getSiteSettings();
+    const currentAccounts: MetaConnectedAccount[] = [...(settings.meta_connected_accounts || [])];
+
+    const accountId = input.id || `meta_acc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const isFirstAccount = currentAccounts.length === 0;
+    const isDefault = input.is_default !== undefined ? input.is_default : isFirstAccount;
+
+    // If setting this account as default, unmark default on other accounts
+    if (isDefault) {
+      for (const acc of currentAccounts) {
+        if (acc.id !== accountId) {
+          acc.is_default = false;
+        }
+      }
+    }
+
+    const newAccount: MetaConnectedAccount = {
+      id: accountId,
+      name: input.name?.trim() || pageName || "Meta Account",
+      handle: input.handle?.trim() || (igUsername ? `@${igUsername}` : undefined),
+      platform: input.platform || "INSTAGRAM",
+      page_id: pageId,
+      page_name: pageName,
+      instagram_business_id: igId,
+      instagram_username: igUsername,
+      page_access_token: token,
+      is_active: true,
+      is_default: isDefault,
+      token_status: "VALID",
+      last_token_check_at: new Date().toISOString(),
+      assigned_agent_id: input.assigned_agent_id || undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const existingIndex = currentAccounts.findIndex((a) => a.id === accountId || a.page_id === pageId);
+    if (existingIndex >= 0) {
+      currentAccounts[existingIndex] = {
+        ...currentAccounts[existingIndex],
+        ...newAccount,
+        created_at: currentAccounts[existingIndex].created_at,
+      };
+    } else {
+      currentAccounts.push(newAccount);
+    }
+
+    // Save to site_settings (encrypted by SENSITIVE_KEYS)
+    await updateSiteSetting("meta_connected_accounts", currentAccounts as any);
+
+    // If default, also update legacy single keys for 100% backward compatibility
+    if (isDefault) {
+      await updateSiteSetting("meta_page_access_token", token);
+      await updateSiteSetting("meta_page_id" as any, pageId);
+      await updateSiteSetting("meta_page_name", pageName);
+    }
+
+    let warningNotice = "";
+    if (!igId) {
+      warningNotice = " (คำเตือน: เพจนี้ยังไม่ได้ผูกกับ Instagram Business Account ในระบบ Meta โปรดเชื่อมต่อ IG กับเพจใน Meta Business Suite เพื่อให้บอท IG ทำงานได้สมบูรณ์)";
+    }
+
+    return {
+      success: true,
+      message: `เชื่อมต่อบัญชี "${newAccount.name}" (${newAccount.handle || newAccount.page_name}) สำเร็จแล้ว!${warningNotice}`,
+      account: {
+        ...newAccount,
+        masked_token: maskToken(newAccount.page_access_token),
+        page_access_token: undefined,
+      },
+    };
+  } catch (error: any) {
+    console.error("Error in saveMetaConnectedAccountAction:", error);
+    return { success: false, message: error.message || "เกิดข้อผิดพลาดในการบันทึกบัญชี Meta" };
+  }
+}
+
+/**
+ * Delete a connected Meta Account
+ */
+export async function deleteMetaConnectedAccountAction(
+  accountId: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const { getCurrentProfile } = await import("@/lib/supabase/getCurrentProfile");
+    const user = await getCurrentProfile();
+
+    if (!user || !["ADMIN", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    const settings = await getSiteSettings();
+    const accounts = [...(settings.meta_connected_accounts || [])];
+    const filtered = accounts.filter((a) => a.id !== accountId);
+
+    if (filtered.length === accounts.length) {
+      return { success: false, message: "ไม่พบบัญชีที่ต้องการลบ" };
+    }
+
+    // If we deleted the default account, make the first remaining one default
+    if (filtered.length > 0 && !filtered.some((a) => a.is_default)) {
+      filtered[0].is_default = true;
+    }
+
+    await updateSiteSetting("meta_connected_accounts", filtered as any);
+
+    // If remaining default exists, sync legacy key
+    const newDefault = filtered.find((a) => a.is_default);
+    if (newDefault) {
+      await updateSiteSetting("meta_page_access_token", newDefault.page_access_token);
+      await updateSiteSetting("meta_page_id" as any, newDefault.page_id);
+      await updateSiteSetting("meta_page_name", newDefault.page_name || newDefault.name);
+    }
+
+    return { success: true, message: "ลบบัญชีเรียบร้อยแล้ว" };
+  } catch (error: any) {
+    console.error("Error in deleteMetaConnectedAccountAction:", error);
+    return { success: false, message: error.message || "เกิดข้อผิดพลาดในการลบบัญชี" };
+  }
+}
+
+/**
+ * Toggle active status of a connected Meta Account
+ */
+export async function toggleMetaAccountStatusAction(
+  accountId: string,
+  isActive: boolean
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const settings = await getSiteSettings();
+    const accounts = [...(settings.meta_connected_accounts || [])];
+    const acc = accounts.find((a) => a.id === accountId);
+    if (!acc) return { success: false, message: "ไม่พบบัญชี" };
+
+    acc.is_active = isActive;
+    acc.updated_at = new Date().toISOString();
+
+    await updateSiteSetting("meta_connected_accounts", accounts as any);
+    return { success: true, message: isActive ? "เปิดใช้งานบัญชีแล้ว" : "ปิดการใช้งานบัญชีชั่วคราวแล้ว" };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Check health status of a Meta Account's token
+ */
+export async function checkMetaAccountTokenHealthAction(
+  accountId: string
+): Promise<{ success: boolean; status: "VALID" | "EXPIRED" | "REVOKED"; message: string }> {
+  try {
+    const settings = await getSiteSettings();
+    const accounts = [...(settings.meta_connected_accounts || [])];
+    const acc = accounts.find((a) => a.id === accountId);
+    if (!acc) return { success: false, status: "REVOKED", message: "ไม่พบบัญชี" };
+
+    const fbUrl = `https://graph.facebook.com/v19.0/me?fields=id,name&access_token=${acc.page_access_token}`;
+    const res = await fetch(fbUrl);
+
+    acc.last_token_check_at = new Date().toISOString();
+
+    if (res.ok) {
+      acc.token_status = "VALID";
+      await updateSiteSetting("meta_connected_accounts", accounts as any);
+      return { success: true, status: "VALID", message: "Token ใช้งานได้ปกติ (Active)" };
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      acc.token_status = "EXPIRED";
+      await updateSiteSetting("meta_connected_accounts", accounts as any);
+
+      // Alert via Telegram
+      await sendAdminNotification(
+        `🚨 <b>[CRM Alert] Meta Token หมดอายุหรือถูกเพิกถอน!</b>\n━━━━━━━━━━━━━━━━━━\n` +
+        `<b>บัญชี:</b> ${acc.name} (${acc.handle || acc.page_name || acc.id})\n` +
+        `<b>ข้อความผิดพลาด:</b> ${errData.error?.message || "Invalid or Expired Token"}\n` +
+        `กรุณาอัปเดต Token ในหน้า Settings เพื่อให้ระบบ Auto-DM ทำงานต่อได้`
+      ).catch(console.error);
+
+      return {
+        success: false,
+        status: "EXPIRED",
+        message: `Token มีปัญหา: ${errData.error?.message || "หมดอายุ"}`,
+      };
+    }
+  } catch (err: any) {
+    return { success: false, status: "EXPIRED", message: err.message || "เกิดข้อผิดพลาดในการตรวจสอบ" };
   }
 }

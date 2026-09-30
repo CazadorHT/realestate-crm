@@ -29,6 +29,11 @@ export function KeywordChip({ index, item, error, onClick }: KeywordChipProps) {
       <span className={`text-[15px] font-semibold ${!isEnabled ? "text-slate-400" : error ? "text-red-700" : "text-slate-700 group-hover:text-blue-600"}`}>
         {item.keyword || (isEn ? "Not configured" : "ยังไม่ได้ตั้งค่า")}
       </span>
+      {item.account_id && item.account_id !== "ALL" && (
+        <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-md">
+          Custom
+        </span>
+      )}
       {error ? (
         <AlertCircle className="h-3.5 w-3.5 text-red-500 animate-pulse" />
       ) : (

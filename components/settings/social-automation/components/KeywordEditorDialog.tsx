@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
 import { SocialKeyword } from "@/features/site-settings/schema";
 import { PostPickerDialog, InstagramPost } from "./PostPickerDialog";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { getMaskedMetaAccountsAction } from "@/features/site-settings/actions";
 
 interface KeywordEditorDialogProps {
   open: boolean;
@@ -44,6 +45,21 @@ export function KeywordEditorDialog({
   const { language } = useLanguage();
   const isEn = language === "en";
   const [postPickerOpen, setPostPickerOpen] = useState(false);
+  const [availableAccounts, setAvailableAccounts] = useState<
+    Array<{ id: string; name: string; handle?: string }>
+  >([]);
+
+  useEffect(() => {
+    if (open) {
+      getMaskedMetaAccountsAction().then((res) => {
+        if (res.success && res.accounts.length > 0) {
+          setAvailableAccounts(
+            res.accounts.map((a) => ({ id: a.id, name: a.name, handle: a.handle }))
+          );
+        }
+      });
+    }
+  }, [open]);
 
   if (!item || editingIndex === null) return null;
 
@@ -173,6 +189,54 @@ export function KeywordEditorDialog({
               })}
             </div>
           </div>
+
+          {/* Target Account (Multi-Account Support) */}
+          {availableAccounts.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {isEn ? "Target Account (Brand Filter)" : "บัญชีเป้าหมาย (Target Account)"}
+                </Label>
+                <span className="text-[10px] text-slate-400">
+                  {isEn ? "Restrict to specific IG/FB account" : "เลือกให้ทำงานเฉพาะบัญชีที่ต้องการ"}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                <Button
+                  type="button"
+                  variant={!item.account_id || item.account_id === "ALL" ? "default" : "outline"}
+                  className={`h-10 text-xs font-bold rounded-xl justify-start px-3 transition-all ${
+                    !item.account_id || item.account_id === "ALL"
+                      ? "bg-slate-900 hover:bg-slate-800 text-white shadow-md"
+                      : "text-slate-600 hover:text-slate-600 hover:bg-slate-50 border-slate-200"
+                  }`}
+                  onClick={() => onUpdate({ account_id: "ALL" })}
+                >
+                  <span className="truncate">🌐 {isEn ? "All Accounts" : "ทุกบัญชี (All)"}</span>
+                </Button>
+                {availableAccounts.map((acc) => {
+                  const isSelected = item.account_id === acc.id;
+                  return (
+                    <Button
+                      key={acc.id}
+                      type="button"
+                      variant={isSelected ? "default" : "outline"}
+                      className={`h-10 text-xs font-bold rounded-xl justify-start px-3 transition-all ${
+                        isSelected
+                          ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200"
+                          : "text-slate-600! hover:bg-slate-50 border-slate-200"
+                      }`}
+                      onClick={() => onUpdate({ account_id: acc.id })}
+                    >
+                      <span className="truncate">
+                        📱 {acc.name} {acc.handle ? `(${acc.handle})` : ""}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Post Filter */}
           <div className="space-y-3">

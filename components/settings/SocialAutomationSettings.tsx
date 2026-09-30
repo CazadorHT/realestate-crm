@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, UserCheck, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -22,6 +22,7 @@ import { useLanguage } from "@/lib/i18n/language-context";
 import { KeywordAutomationCard } from "./social-automation/KeywordAutomationCard";
 import { TemplateEditorCard } from "./social-automation/TemplateEditorCard";
 import { PhoneSimulator } from "./social-automation/PhoneSimulator";
+import { MetaAccountsManager } from "./social-automation/MetaAccountsManager";
 
 export function SocialAutomationSettings({
   lineBotInfo,
@@ -85,6 +86,34 @@ export function SocialAutomationSettings({
     ]
   );
   const [followGateEnabled, setFollowGateEnabled] = useState(
+    !!initialSettings?.follow_gate_enabled
+  );
+  const [followGateTab, setFollowGateTab] = useState<"th" | "en">("th");
+  const [followGateMessages, setFollowGateMessages] = useState({
+    th: initialSettings?.follow_gate_message || "ขอบคุณที่สนใจน้า ✨ เพื่อรับรายละเอียดห้องและราคาพิเศษ รบกวนกดติดตามโปรไฟล์ {{handle}} ก่อนน้า แล้วกดปุ่ม \"ฟอลแล้ว\" ด้านล่างได้เลยครับ 💕",
+    en: initialSettings?.follow_gate_message_en || "Thanks for your interest! ✨ To receive room details and special price, please follow our profile {{handle}} first, then tap 'Followed' below 💕",
+  });
+  const [followGateRetryMessages, setFollowGateRetryMessages] = useState({
+    th: initialSettings?.follow_gate_retry_message || "ระบบตรวจพบว่ายังไม่ได้กดติดตามเลยน้า 🥺 ฝากกดติดตาม {{handle}} ก่อนน้าเด่วส่งข้อมูลให้ทันทีเลยครับ ✨",
+    en: initialSettings?.follow_gate_retry_message_en || "It looks like you haven't followed yet 🥺 Please follow {{handle}} first, then tap the button below to get the details! ✨",
+  });
+  const [followGateSuccessMessages, setFollowGateSuccessMessages] = useState({
+    th: initialSettings?.follow_gate_success_message || "ขอบคุณที่กดติดตามน้า 🙏✨ นี่คือรายละเอียดโครงการที่ขอไว้ครับ 👇",
+    en: initialSettings?.follow_gate_success_message_en || "Thank you for following! 🙏✨ Here are the property details you requested 👇",
+  });
+  const [followGatePublicReplies, setFollowGatePublicReplies] = useState({
+    th: initialSettings?.follow_gate_public_reply || "ส่งข้อมูลให้ทาง DM แล้วน้า ฝากกดติดตาม {{handle}} แล้วเช็ก Inbox ได้เลยครับ 😊📩",
+    en: initialSettings?.follow_gate_public_reply_en || "Sent you a DM! Please follow {{handle}} and check your Inbox 😊📩",
+  });
+  const [followGateBtnProfiles, setFollowGateBtnProfiles] = useState({
+    th: initialSettings?.follow_gate_btn_profile || "👉 ไปที่หน้าโปรไฟล์",
+    en: initialSettings?.follow_gate_btn_profile_en || "👉 View Profile",
+  });
+  const [followGateBtnChecks, setFollowGateBtnChecks] = useState({
+    th: initialSettings?.follow_gate_btn_check || "✅ ฟอลแล้ว (รับข้อมูล)",
+    en: initialSettings?.follow_gate_btn_check_en || "✅ Followed (Get Info)",
+  });
+  const [showFollowGateCustomizer, setShowFollowGateCustomizer] = useState(
     !!initialSettings?.follow_gate_enabled
   );
   const [leadCaptureGateEnabled, setLeadCaptureGateEnabled] = useState(
@@ -189,6 +218,43 @@ export function SocialAutomationSettings({
           setQuestionnaireZoneOptions(settings.questionnaire_zone_options);
         }
         setFollowGateEnabled(!!settings.follow_gate_enabled);
+        if (settings.follow_gate_enabled) setShowFollowGateCustomizer(true);
+        if (settings.follow_gate_message || settings.follow_gate_message_en) {
+          setFollowGateMessages({
+            th: settings.follow_gate_message || "ขอบคุณที่สนใจน้า ✨ เพื่อรับรายละเอียดห้องและราคาพิเศษ รบกวนกดติดตามโปรไฟล์ {{handle}} ก่อนน้า แล้วกดปุ่ม \"ฟอลแล้ว\" ด้านล่างได้เลยครับ 💕",
+            en: settings.follow_gate_message_en || "Thanks for your interest! ✨ To receive room details and special price, please follow our profile {{handle}} first, then tap 'Followed' below 💕",
+          });
+        }
+        if (settings.follow_gate_retry_message || settings.follow_gate_retry_message_en) {
+          setFollowGateRetryMessages({
+            th: settings.follow_gate_retry_message || "ระบบตรวจพบว่ายังไม่ได้กดติดตามเลยน้า 🥺 ฝากกดติดตาม {{handle}} ก่อนน้าเด่วส่งข้อมูลให้ทันทีเลยครับ ✨",
+            en: settings.follow_gate_retry_message_en || "It looks like you haven't followed yet 🥺 Please follow {{handle}} first, then tap the button below to get the details! ✨",
+          });
+        }
+        if (settings.follow_gate_success_message || settings.follow_gate_success_message_en) {
+          setFollowGateSuccessMessages({
+            th: settings.follow_gate_success_message || "ขอบคุณที่กดติดตามน้า 🙏✨ นี่คือรายละเอียดโครงการที่ขอไว้ครับ 👇",
+            en: settings.follow_gate_success_message_en || "Thank you for following! 🙏✨ Here are the property details you requested 👇",
+          });
+        }
+        if (settings.follow_gate_public_reply || settings.follow_gate_public_reply_en) {
+          setFollowGatePublicReplies({
+            th: settings.follow_gate_public_reply || "ส่งข้อมูลให้ทาง DM แล้วน้า ฝากกดติดตาม {{handle}} แล้วเช็ก Inbox ได้เลยครับ 😊📩",
+            en: settings.follow_gate_public_reply_en || "Sent you a DM! Please follow {{handle}} and check your Inbox 😊📩",
+          });
+        }
+        if (settings.follow_gate_btn_profile || settings.follow_gate_btn_profile_en) {
+          setFollowGateBtnProfiles({
+            th: settings.follow_gate_btn_profile || "👉 ไปที่หน้าโปรไฟล์",
+            en: settings.follow_gate_btn_profile_en || "👉 View Profile",
+          });
+        }
+        if (settings.follow_gate_btn_check || settings.follow_gate_btn_check_en) {
+          setFollowGateBtnChecks({
+            th: settings.follow_gate_btn_check || "✅ ฟอลแล้ว (รับข้อมูล)",
+            en: settings.follow_gate_btn_check_en || "✅ Followed (Get Info)",
+          });
+        }
         setLeadCaptureGateEnabled(!!settings.lead_capture_gate_enabled);
         setTemplates({
           facebook: {
@@ -319,6 +385,18 @@ export function SocialAutomationSettings({
         { label: "กะทู้ (Kathu)", keywords: ["Kathu", "Phuket Town", "กะทู้", "เมืองภูเก็ต"] },
       ]) ||
       followGateEnabled !== !!initialData.follow_gate_enabled ||
+      followGateMessages.th !== (initialData.follow_gate_message || "ขอบคุณที่สนใจน้า ✨ เพื่อรับรายละเอียดห้องและราคาพิเศษ รบกวนกดติดตามโปรไฟล์ {{handle}} ก่อนน้า แล้วกดปุ่ม \"ฟอลแล้ว\" ด้านล่างได้เลยครับ 💕") ||
+      followGateMessages.en !== (initialData.follow_gate_message_en || "Thanks for your interest! ✨ To receive room details and special price, please follow our profile {{handle}} first, then tap 'Followed' below 💕") ||
+      followGateRetryMessages.th !== (initialData.follow_gate_retry_message || "ระบบตรวจพบว่ายังไม่ได้กดติดตามเลยน้า 🥺 ฝากกดติดตาม {{handle}} ก่อนน้าเด่วส่งข้อมูลให้ทันทีเลยครับ ✨") ||
+      followGateRetryMessages.en !== (initialData.follow_gate_retry_message_en || "It looks like you haven't followed yet 🥺 Please follow {{handle}} first, then tap the button below to get the details! ✨") ||
+      followGateSuccessMessages.th !== (initialData.follow_gate_success_message || "ขอบคุณที่กดติดตามน้า 🙏✨ นี่คือรายละเอียดโครงการที่ขอไว้ครับ 👇") ||
+      followGateSuccessMessages.en !== (initialData.follow_gate_success_message_en || "Thank you for following! 🙏✨ Here are the property details you requested 👇") ||
+      followGatePublicReplies.th !== (initialData.follow_gate_public_reply || "ส่งข้อมูลให้ทาง DM แล้วน้า ฝากกดติดตาม {{handle}} แล้วเช็ก Inbox ได้เลยครับ 😊📩") ||
+      followGatePublicReplies.en !== (initialData.follow_gate_public_reply_en || "Sent you a DM! Please follow {{handle}} and check your Inbox 😊📩") ||
+      followGateBtnProfiles.th !== (initialData.follow_gate_btn_profile || "👉 ไปที่หน้าโปรไฟล์") ||
+      followGateBtnProfiles.en !== (initialData.follow_gate_btn_profile_en || "👉 View Profile") ||
+      followGateBtnChecks.th !== (initialData.follow_gate_btn_check || "✅ ฟอลแล้ว (รับข้อมูล)") ||
+      followGateBtnChecks.en !== (initialData.follow_gate_btn_check_en || "✅ Followed (Get Info)") ||
       leadCaptureGateEnabled !== !!initialData.lead_capture_gate_enabled ||
       checkTemplate(templates.facebook, initialData.facebook_post_template, initialData.facebook_post_template_en, initialData.facebook_post_template_cn, initialData.facebook_post_template_ru) ||
       checkTemplate(templates.instagram, initialData.instagram_post_template, initialData.instagram_post_template_en, initialData.instagram_post_template_cn, initialData.instagram_post_template_ru) ||
@@ -326,7 +404,7 @@ export function SocialAutomationSettings({
       checkTemplate(templates.line, initialData.line_post_template, initialData.line_post_template_en, initialData.line_post_template_cn, initialData.line_post_template_ru);
 
     setIsDirty(changed);
-  }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, storyAdsWelcomeMessages, storyAdsButtonsEnabled, storyAdsCustomButtons, autoFeaturedCarouselEnabled, questionnaireBudgetOptions, questionnaireZoneOptions, followGateEnabled, leadCaptureGateEnabled, templates, initialData]);
+  }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, storyAdsWelcomeMessages, storyAdsButtonsEnabled, storyAdsCustomButtons, autoFeaturedCarouselEnabled, questionnaireBudgetOptions, questionnaireZoneOptions, followGateEnabled, followGateMessages, followGateRetryMessages, followGateSuccessMessages, followGatePublicReplies, followGateBtnProfiles, followGateBtnChecks, leadCaptureGateEnabled, templates, initialData]);
 
   const hasChanges = isDirty;
 
@@ -352,6 +430,18 @@ export function SocialAutomationSettings({
           updateSiteSetting("questionnaire_budget_options", questionnaireBudgetOptions as any).then((r) => ({ key: "questionnaire_budget_options", ...r })),
           updateSiteSetting("questionnaire_zone_options", questionnaireZoneOptions as any).then((r) => ({ key: "questionnaire_zone_options", ...r })),
           updateSiteSetting("follow_gate_enabled", followGateEnabled).then((r) => ({ key: "follow_gate_enabled", ...r })),
+          updateSiteSetting("follow_gate_message", followGateMessages.th.trim()).then((r) => ({ key: "follow_gate_message", ...r })),
+          updateSiteSetting("follow_gate_message_en", followGateMessages.en.trim()).then((r) => ({ key: "follow_gate_message_en", ...r })),
+          updateSiteSetting("follow_gate_retry_message", followGateRetryMessages.th.trim()).then((r) => ({ key: "follow_gate_retry_message", ...r })),
+          updateSiteSetting("follow_gate_retry_message_en", followGateRetryMessages.en.trim()).then((r) => ({ key: "follow_gate_retry_message_en", ...r })),
+          updateSiteSetting("follow_gate_success_message", followGateSuccessMessages.th.trim()).then((r) => ({ key: "follow_gate_success_message", ...r })),
+          updateSiteSetting("follow_gate_success_message_en", followGateSuccessMessages.en.trim()).then((r) => ({ key: "follow_gate_success_message_en", ...r })),
+          updateSiteSetting("follow_gate_public_reply", followGatePublicReplies.th.trim()).then((r) => ({ key: "follow_gate_public_reply", ...r })),
+          updateSiteSetting("follow_gate_public_reply_en", followGatePublicReplies.en.trim()).then((r) => ({ key: "follow_gate_public_reply_en", ...r })),
+          updateSiteSetting("follow_gate_btn_profile", followGateBtnProfiles.th.trim().slice(0, 20) || "👉 ไปที่หน้าโปรไฟล์").then((r) => ({ key: "follow_gate_btn_profile", ...r })),
+          updateSiteSetting("follow_gate_btn_profile_en", followGateBtnProfiles.en.trim().slice(0, 20) || "👉 View Profile").then((r) => ({ key: "follow_gate_btn_profile_en", ...r })),
+          updateSiteSetting("follow_gate_btn_check", followGateBtnChecks.th.trim().slice(0, 20) || "✅ ฟอลแล้ว (รับข้อมูล)").then((r) => ({ key: "follow_gate_btn_check", ...r })),
+          updateSiteSetting("follow_gate_btn_check_en", followGateBtnChecks.en.trim().slice(0, 20) || "✅ Followed (Get Info)").then((r) => ({ key: "follow_gate_btn_check_en", ...r })),
           updateSiteSetting("lead_capture_gate_enabled", leadCaptureGateEnabled).then((r) => ({ key: "lead_capture_gate_enabled", ...r })),
           updateSiteSetting("facebook_post_template", templates.facebook.th).then((r) => ({ key: "facebook_post_template", ...r })),
           updateSiteSetting("facebook_post_template_en", templates.facebook.en).then((r) => ({ key: "facebook_post_template_en", ...r })),
@@ -505,6 +595,8 @@ export function SocialAutomationSettings({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Left Column: Form Editor */}
       <div className="lg:col-span-8 space-y-6">
+        <MetaAccountsManager />
+
         <KeywordAutomationCard
           keywords={keywords}
           addRow={addRow}
@@ -567,37 +659,379 @@ export function SocialAutomationSettings({
 
             {/* Premium Gates Section */}
             <div className="pt-4 border-t border-slate-100">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-                {isEn ? "Premium Automation Gates" : "ระบบประตูกรองแชต (Premium Automation Gates)"}
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
-                  <div>
-                    <div className="text-sm font-semibold text-slate-700">Follow Gate</div>
-                    <div className="text-xs text-slate-400">
-                      {isEn ? "Must follow account before receiving info" : "ต้องติดตามบัญชีก่อนรับข้อมูล"}
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  {isEn ? "Premium Automation Gates" : "ระบบประตูกรองแชต (Premium Automation Gates)"}
+                </h4>
+                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200/50 px-2 py-0.5 rounded-full">
+                  Lead & Follower Boost
+                </span>
+              </div>
+
+              {/* Toggles Grid (items-start prevents awkward vertical stretching) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                {/* 1. Follow Gate Toggle Card */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  followGateEnabled 
+                    ? "bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/20 border-blue-200 shadow-xs" 
+                    : "bg-slate-50/50 border-slate-200/80"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold ${
+                        followGateEnabled ? "bg-blue-600 text-white shadow-xs" : "bg-slate-200 text-slate-600"
+                      }`}>
+                        <UserCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                          Follow Gate
+                          {followGateEnabled && (
+                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {isEn ? "Must follow account before receiving info" : "ต้องติดตามบัญชีก่อนรับข้อมูล"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {followGateEnabled && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowFollowGateCustomizer(!showFollowGateCustomizer)}
+                          className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 px-2.5 rounded-lg border border-blue-200/60"
+                        >
+                          {showFollowGateCustomizer 
+                            ? (isEn ? "Hide Messages" : "ซ่อนข้อความ") 
+                            : (isEn ? "⚙️ Configure Messages" : "⚙️ ตั้งค่าข้อความ")}
+                        </Button>
+                      )}
+                      <Switch
+                        checked={followGateEnabled}
+                        onCheckedChange={(v) => {
+                          setFollowGateEnabled(v);
+                          if (v) setShowFollowGateCustomizer(true);
+                          setIsDirty(true);
+                        }}
+                        className="data-[state=checked]:bg-blue-600"
+                      />
                     </div>
                   </div>
-                  <Switch
-                    checked={followGateEnabled}
-                    onCheckedChange={(v) => { setFollowGateEnabled(v); setIsDirty(true); }}
-                    className="data-[state=checked]:bg-blue-600"
-                  />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
-                  <div>
-                    <div className="text-sm font-semibold text-slate-700">Lead Capture Gate</div>
-                    <div className="text-xs text-slate-400">
-                      {isEn ? "Request email/phone before sending links" : "ขออีเมล/เบอร์โทรศัพท์ลูกค้าก่อนเฉลยส่งลิงก์"}
+                {/* 2. Lead Capture Gate Toggle Card */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  leadCaptureGateEnabled 
+                    ? "bg-gradient-to-br from-purple-50/40 via-white to-pink-50/20 border-purple-200 shadow-xs" 
+                    : "bg-slate-50/50 border-slate-200/80"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold ${
+                        leadCaptureGateEnabled ? "bg-purple-600 text-white shadow-xs" : "bg-slate-200 text-slate-600"
+                      }`}>
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                          Lead Capture Gate
+                          {leadCaptureGateEnabled && (
+                            <span className="text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {isEn ? "Request email/phone before sending links" : "ขออีเมล/เบอร์โทรศัพท์ลูกค้าก่อนเฉลยส่งลิงก์"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Switch
+                      checked={leadCaptureGateEnabled}
+                      onCheckedChange={(v) => { setLeadCaptureGateEnabled(v); setIsDirty(true); }}
+                      className="data-[state=checked]:bg-purple-600"
+                    />
+                  </div>
+                </div>
+
+                {/* 3. Follow Gate Full-Width Customizer (Spans all columns for clean balance) */}
+                {followGateEnabled && showFollowGateCustomizer && (
+                  <div className="col-span-1 md:col-span-2 p-5 bg-gradient-to-b from-slate-50/90 to-white rounded-2xl border border-slate-200 shadow-xs space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200/70 gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-sm shadow-2xs">
+                          ✍️
+                        </div>
+                        <div>
+                          <h5 className="text-xs font-bold text-slate-800">
+                            {isEn ? "Customize Messages & Buttons (Follow Gate Flow)" : "ปรับแต่งข้อความและปุ่มกด (Follow Gate Flow)"}
+                          </h5>
+                          <p className="text-[11px] text-slate-500">
+                            {isEn ? "Configure bot responses and button labels for both Thai and English" : "กำหนดข้อความและชื่อปุ่มที่ส่งให้ลูกค้าได้ทั้งเวอร์ชันภาษาไทยและอังกฤษ"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Language Switcher Tabs & Close */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/70">
+                          <button
+                            type="button"
+                            onClick={() => setFollowGateTab("th")}
+                            className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                              followGateTab === "th"
+                                ? "bg-white text-blue-600 shadow-xs"
+                                : "text-slate-500 hover:text-slate-800"
+                            }`}
+                          >
+                            🇹🇭 ภาษาไทย (TH)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFollowGateTab("en")}
+                            className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                              followGateTab === "en"
+                                ? "bg-white text-blue-600 shadow-xs"
+                                : "text-slate-500 hover:text-slate-800"
+                            }`}
+                          >
+                            🇬🇧 English (EN)
+                          </button>
+                        </div>
+
+                        <span className="text-[10px] font-mono font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1.5 rounded-lg">
+                          {isEn ? "{{handle}} = IG Username" : "ใส่ {{handle}} แทนชื่อไอจี"}
+                        </span>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowFollowGateCustomizer(false)}
+                          className="h-8 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                        >
+                          ✕ {isEn ? "Close" : "ปิด"}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Left Column: DM Message, Button 1, Button 2, Retry */}
+                      <div className="space-y-3.5">
+                        {/* 1. DM Follow Invitation */}
+                        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                          <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                            <span>
+                              {followGateTab === "th" ? "1. ข้อความใน DM ชวนให้กดติดตาม (TH)" : "1. DM Follow Invitation Message (EN)"}
+                            </span>
+                            <span className="text-[10px] font-normal text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                              {isEn ? "Includes 2 buttons below" : "ส่งพร้อม 2 ปุ่มด้านล่าง"}
+                            </span>
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={followGateMessages[followGateTab]}
+                            onChange={(e) => {
+                              setFollowGateMessages((prev) => ({
+                                ...prev,
+                                [followGateTab]: e.target.value,
+                              }));
+                              setIsDirty(true);
+                            }}
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-200 bg-slate-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-y leading-relaxed text-slate-700"
+                            placeholder={
+                              followGateTab === "th"
+                                ? "ขอบคุณที่สนใจน้า ✨ เพื่อรับรายละเอียดห้องและราคาพิเศษ รบกวนกดติดตามโปรไฟล์ {{handle}} ก่อนน้า แล้วกดปุ่ม \"ฟอลแล้ว\" ด้านล่างได้เลยครับ 💕"
+                                : "Thanks for your interest! ✨ To receive room details and special price, please follow our profile {{handle}} first, then tap 'Followed' below 💕"
+                            }
+                          />
+                        </div>
+
+                        {/* Buttons Customization (Button 1 & Button 2) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* Button 1: Profile Link */}
+                          <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                            <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                              <span>{followGateTab === "th" ? "ปุ่มที่ 1: ไปหน้าโปรไฟล์" : "Button 1: View Profile"}</span>
+                              <span className={`text-[10px] font-mono px-1 rounded ${
+                                (followGateBtnProfiles[followGateTab]?.length || 0) >= 20
+                                  ? "text-amber-600 bg-amber-50 font-bold"
+                                  : "text-slate-400"
+                              }`}>
+                                {followGateBtnProfiles[followGateTab]?.length || 0}/20
+                              </span>
+                            </label>
+                            <input
+                              type="text"
+                              maxLength={20}
+                              value={followGateBtnProfiles[followGateTab]}
+                              onChange={(e) => {
+                                setFollowGateBtnProfiles((prev) => ({
+                                  ...prev,
+                                  [followGateTab]: e.target.value,
+                                }));
+                                setIsDirty(true);
+                              }}
+                              className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 font-medium"
+                              placeholder={followGateTab === "th" ? "👉 ไปที่หน้าโปรไฟล์" : "👉 View Profile"}
+                            />
+                            <div className="flex items-center justify-between text-[10px] text-slate-400">
+                              <span>{isEn ? "* Direct link to IG profile" : "* ลิงก์ตรงไปหน้าโปรไฟล์ IG"}</span>
+                              <span className="text-[9px] font-mono text-slate-400">max 20</span>
+                            </div>
+                          </div>
+
+                          {/* Button 2: Follow Check */}
+                          <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                            <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                              <span>{followGateTab === "th" ? "ปุ่มที่ 2: ปุ่มยืนยันฟอล" : "Button 2: Confirm Follow"}</span>
+                              <span className={`text-[10px] font-mono px-1 rounded ${
+                                (followGateBtnChecks[followGateTab]?.length || 0) >= 20
+                                  ? "text-amber-600 bg-amber-50 font-bold"
+                                  : "text-slate-400"
+                              }`}>
+                                {followGateBtnChecks[followGateTab]?.length || 0}/20
+                              </span>
+                            </label>
+                            <input
+                              type="text"
+                              maxLength={20}
+                              value={followGateBtnChecks[followGateTab]}
+                              onChange={(e) => {
+                                setFollowGateBtnChecks((prev) => ({
+                                  ...prev,
+                                  [followGateTab]: e.target.value,
+                                }));
+                                setIsDirty(true);
+                              }}
+                              className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 font-medium"
+                              placeholder={followGateTab === "th" ? "✅ ฟอลแล้ว (รับข้อมูล)" : "✅ Followed (Get Info)"}
+                            />
+                            <div className="flex items-center justify-between text-[10px] text-slate-400">
+                              <span>{isEn ? "* Checks follow via Meta API" : "* กดเพื่อตรวจสถานะฟอลผ่าน API"}</span>
+                              <span className="text-[9px] font-mono text-slate-400">max 20</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 4. Retry Reminder Message */}
+                        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                          <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                            <span>
+                              {followGateTab === "th" ? "2. ข้อความเตือนเมื่อยังไม่ได้กดฟอลจริง" : "2. Reminder Message when not following yet"}
+                            </span>
+                            <span className="text-[10px] font-normal text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                              {isEn ? "If not followed" : "กรณีเช็กแล้วไม่พบการฟอล"}
+                            </span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={followGateRetryMessages[followGateTab]}
+                            onChange={(e) => {
+                              setFollowGateRetryMessages((prev) => ({
+                                ...prev,
+                                [followGateTab]: e.target.value,
+                              }));
+                              setIsDirty(true);
+                            }}
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-200 bg-slate-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-y leading-relaxed text-slate-700"
+                            placeholder={
+                              followGateTab === "th"
+                                ? "ระบบตรวจพบว่ายังไม่ได้กดติดตามเลยน้า 🥺 ฝากกดติดตาม {{handle}} ก่อนน้าเด่วส่งข้อมูลให้ทันทีเลยครับ ✨"
+                                : "It looks like you haven't followed yet 🥺 Please follow {{handle}} first, then tap the button to get the details! ✨"
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      {/* Right Column: Step 3, 4 + Live Preview */}
+                      <div className="space-y-3.5">
+                        {/* 3. Follow Success Confirmation */}
+                        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                          <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                            <span>
+                              {followGateTab === "th" ? "3. ข้อความยืนยันเมื่อฟอลสำเร็จแล้ว" : "3. Confirmation Message after following"}
+                            </span>
+                            <span className="text-[10px] font-normal text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                              {isEn ? "Sent before room details" : "ส่งก่อนปล่อยข้อมูลห้อง"}
+                            </span>
+                          </label>
+                          <input
+                            type="text"
+                            value={followGateSuccessMessages[followGateTab]}
+                            onChange={(e) => {
+                              setFollowGateSuccessMessages((prev) => ({
+                                ...prev,
+                                [followGateTab]: e.target.value,
+                              }));
+                              setIsDirty(true);
+                            }}
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-200 bg-slate-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-700"
+                            placeholder={
+                              followGateTab === "th"
+                                ? "ขอบคุณที่กดติดตามน้า 🙏✨ นี่คือรายละเอียดโครงการที่ขอไว้ครับ 👇"
+                                : "Thank you for following! 🙏✨ Here are the property details you requested 👇"
+                            }
+                          />
+                        </div>
+
+                        {/* 4. Public Comment Reply */}
+                        <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1.5">
+                          <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                            <span>
+                              {followGateTab === "th" ? "4. ข้อความตอบกลับหน้าคอมเมนต์ใต้โพสต์" : "4. Public Reply under Comment"}
+                            </span>
+                            <span className="text-[10px] font-normal text-slate-400">
+                              {isEn ? "Public comment alert" : "สะกิดเตือนใต้คอมเมนต์"}
+                            </span>
+                          </label>
+                          <input
+                            type="text"
+                            value={followGatePublicReplies[followGateTab]}
+                            onChange={(e) => {
+                              setFollowGatePublicReplies((prev) => ({
+                                ...prev,
+                                [followGateTab]: e.target.value,
+                              }));
+                              setIsDirty(true);
+                            }}
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-200 bg-slate-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
+                            placeholder={
+                              followGateTab === "th"
+                                ? "ส่งข้อมูลให้ทาง DM แล้วน้า ฝากกดติดตาม {{handle}} แล้วเช็ก Inbox ได้เลยครับ 😊📩"
+                                : "Sent you a DM! Please follow {{handle}} and check your Inbox 😊📩"
+                            }
+                          />
+                        </div>
+
+                        {/* Interactive Buttons Simulation preview */}
+                        <div className="p-4 bg-slate-100/80 rounded-xl border border-slate-200/80 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-700">
+                              {isEn ? "Live Button Preview:" : "ตัวอย่างปุ่มที่ส่งให้ลูกค้าจริง:"}
+                            </span>
+                            <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200/60 px-2 py-0.5 rounded-md">
+                              {followGateTab === "th" ? "🇹🇭 TH Mode" : "🇬🇧 EN Mode"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 pt-1">
+                            <div className="flex-1 text-center text-xs font-bold bg-white text-blue-600 border border-slate-300 py-2 px-3 rounded-xl shadow-2xs truncate">
+                              {followGateBtnProfiles[followGateTab] || (followGateTab === "th" ? "👉 ไปที่หน้าโปรไฟล์" : "👉 View Profile")}
+                            </div>
+                            <div className="flex-1 text-center text-xs font-bold bg-blue-600 text-white py-2 px-3 rounded-xl shadow-xs truncate">
+                              {followGateBtnChecks[followGateTab] || (followGateTab === "th" ? "✅ ฟอลแล้ว (รับข้อมูล)" : "✅ Followed (Get Info)")}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <Switch
-                    checked={leadCaptureGateEnabled}
-                    onCheckedChange={(v) => { setLeadCaptureGateEnabled(v); setIsDirty(true); }}
-                    className="data-[state=checked]:bg-blue-600"
-                  />
-                </div>
+                )}
               </div>
             </div>
 
@@ -1058,9 +1492,15 @@ export function SocialAutomationSettings({
           instagramTemplate={templates.instagram[activeTab] || ""}
           keywords={keywords}
           followGateEnabled={followGateEnabled}
+          followGateMessage={followGateMessages[followGateTab]}
+          followGateSuccessMessage={followGateSuccessMessages[followGateTab]}
+          followGatePublicReply={followGatePublicReplies[followGateTab]}
+          followGateBtnProfile={followGateBtnProfiles[followGateTab]}
+          followGateBtnCheck={followGateBtnChecks[followGateTab]}
           leadCaptureGateEnabled={leadCaptureGateEnabled}
           instagramStoryReplyEnabled={instagramStoryReplyEnabled}
           directDmReplyEnabled={directDmReplyEnabled}
+          accountHandle="@hunter.vcc"
         />
       </div>
 

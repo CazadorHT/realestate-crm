@@ -36,9 +36,15 @@ export interface PhoneSimulatorProps {
     enabled?: boolean;
   }>;
   followGateEnabled?: boolean;
+  followGateMessage?: string;
+  followGateSuccessMessage?: string;
+  followGatePublicReply?: string;
+  followGateBtnProfile?: string;
+  followGateBtnCheck?: string;
   leadCaptureGateEnabled?: boolean;
   instagramStoryReplyEnabled?: boolean;
   directDmReplyEnabled?: boolean;
+  accountHandle?: string;
 }
 
 export function PhoneSimulator({
@@ -47,9 +53,15 @@ export function PhoneSimulator({
   instagramTemplate,
   keywords,
   followGateEnabled = false,
+  followGateMessage = "",
+  followGateSuccessMessage = "",
+  followGatePublicReply = "",
+  followGateBtnProfile = "",
+  followGateBtnCheck = "",
   leadCaptureGateEnabled = false,
   instagramStoryReplyEnabled = false,
   directDmReplyEnabled = false,
+  accountHandle = "@hunter.vcc",
 }: PhoneSimulatorProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
@@ -76,6 +88,12 @@ export function PhoneSimulator({
   };
 
   const getDisplayPublicReply = () => {
+    if (followGateEnabled) {
+      const fallback = isEn
+        ? `Sent you a DM! Please follow ${accountHandle} and check your Inbox 📩✨`
+        : `ส่งข้อมูลให้ทาง DM แล้วน้า ฝากกดติดตาม ${accountHandle} แล้วเช็ก Inbox ได้เลยครับ 😊📩`;
+      return (followGatePublicReply || fallback).replace(/{{handle}}/g, accountHandle);
+    }
     if (activeKeyword.public_replies && activeKeyword.public_replies.length > 0) {
       return activeKeyword.public_replies[0];
     }
@@ -271,18 +289,36 @@ export function PhoneSimulator({
                   </div>
                 )}
 
-                {/* Follow Gate Restriction Mock */}
-                {followGateEnabled && (
-                  <div className="self-center w-full max-w-[220px] bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl text-center mb-2">
-                    <UserCheck className="h-4 w-4 text-amber-400 mx-auto mb-1" />
-                    <span className="text-[10px] text-amber-300 font-semibold block">Follow Gate Enabled</span>
-                    <span className="text-[8.5px] text-slate-400">
-                      {isEn 
-                        ? "Bot checks follow status before sending property info" 
-                        : "บอทจะตรวจสอบสถานะการกดติดตาม ก่อนอนุญาตให้รับข้อมูลทรัพย์สิน"}
-                    </span>
-                  </div>
-                )}
+                {/* Follow Gate Flow Simulation */}
+                {followGateEnabled ? (
+                  <>
+                    {/* 1. Bot Prompt with 2 Buttons */}
+                    <div className="bg-slate-850 text-slate-200 px-3 py-2 rounded-2xl rounded-bl-sm max-w-[245px] shadow-sm border border-slate-800/40 space-y-2 mt-1">
+                      <div className="text-[10px] leading-relaxed">
+                        {(followGateMessage || "ขอบคุณที่สนใจน้า ✨ เพื่อรับรายละเอียดห้องและราคาพิเศษ รบกวนกดติดตามโปรไฟล์ {{handle}} ก่อนน้า แล้วกดปุ่ม \"ฟอลแล้ว\" ด้านล่างได้เลยครับ 💕").replace(/{{handle}}/g, accountHandle)}
+                      </div>
+                      <div className="space-y-1.5 pt-1">
+                        <div className="bg-slate-800 text-blue-400 font-medium text-[9.5px] py-1.5 px-2.5 rounded-lg text-center border border-slate-700/80 flex items-center justify-center gap-1">
+                          {followGateBtnProfile || (isEn ? "👉 View Profile" : "👉 ไปที่หน้าโปรไฟล์")}
+                        </div>
+                        <div className="bg-blue-600 text-white font-medium text-[9.5px] py-1.5 px-2.5 rounded-lg text-center shadow-xs flex items-center justify-center gap-1">
+                          {followGateBtnCheck || (isEn ? "✅ Followed (Get Info)" : "✅ ฟอลแล้ว (รับข้อมูล)")}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. Customer clicks button */}
+                    <div className="bg-blue-600 text-white px-3 py-1.5 rounded-2xl rounded-br-sm self-end max-w-[190px] shadow-sm text-[9.5px] mt-1 font-medium">
+                      {followGateBtnCheck || (isEn ? "✅ Followed (Get Info)" : "✅ ฟอลแล้ว (รับข้อมูล)")}
+                    </div>
+
+                    {/* 3. Follow verified notice */}
+                    <div className="bg-slate-850 text-emerald-400 px-3 py-1.5 rounded-2xl rounded-bl-sm self-start max-w-[230px] shadow-sm border border-emerald-900/40 text-[9.5px] mt-1 flex items-center gap-1.5">
+                      <CheckCircle className="h-3 w-3 text-emerald-400 shrink-0" />
+                      <span>{(followGateSuccessMessage || "ขอบคุณที่กดติดตามน้า 🙏✨ นี่คือรายละเอียดโครงการที่ขอไว้ครับ 👇").replace(/{{handle}}/g, accountHandle)}</span>
+                    </div>
+                  </>
+                ) : null}
 
                 {/* Lead Capture Gate Option */}
                 {leadCaptureGateEnabled ? (

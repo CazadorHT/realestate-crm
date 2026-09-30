@@ -358,11 +358,49 @@ export async function POST(req: NextRequest) {
     // Instagram subscription
     else if (body.object === "instagram") {
       for (const entry of body.entry) {
+        const entryId = entry.id;
         if (entry.messaging) {
           for (const messagingEvent of entry.messaging) {
+            const senderId = messagingEvent.sender?.id;
+            const eventTime = messagingEvent.timestamp || entry.time || Date.now();
+            const messageMid = messagingEvent.message?.mid;
+            const postbackPayload = messagingEvent.postback?.payload || messagingEvent.message?.quick_reply?.payload;
+            const referralRef = messagingEvent.referral?.ref || messagingEvent.postback?.referral?.ref;
+
+            // Generate Composite Idempotency Key
+            let dedupKey = "";
+            if (messageMid) {
+              dedupKey = `meta_dedup:ig_msg:${messageMid}`;
+            } else if (referralRef && senderId) {
+              dedupKey = `meta_dedup:ig_ref:${senderId}:${referralRef}:${eventTime}`;
+            } else if (postbackPayload && senderId) {
+              dedupKey = `meta_dedup:ig_pb:${senderId}:${postbackPayload}:${eventTime}`;
+            }
+
+            // Deduplication Check (TTL 24 hours = 86400s)
+            if (dedupKey) {
+              const alreadyProcessed = await safeRedisGet(dedupKey);
+              if (alreadyProcessed) {
+                console.log(`[Meta Webhook] [${traceId}] Skipping duplicate Instagram event: ${dedupKey}`);
+                continue;
+              }
+              await safeRedisSet(dedupKey, "1", 86400);
+            }
+
+            // Rate Limiting Check (10 req/min per senderId)
+            if (senderId) {
+              const rateKey = `meta_rate:ig:${senderId}`;
+              const count = await safeRedisIncr(rateKey, 60);
+              const allowed = count !== null ? count <= 10 : checkInMemoryRateLimit(rateKey, 10, 60000);
+              if (!allowed) {
+                console.warn(`[Meta Webhook] [${traceId}] Rate limit exceeded for Instagram sender: ${senderId}`);
+                continue;
+              }
+            }
+
             if ((messagingEvent.message && !messagingEvent.message.is_echo) || messagingEvent.postback || messagingEvent.referral) {
               try {
-                await handleMetaMessage(messagingEvent, "INSTAGRAM", traceId);
+                await handleMetaMessage(messagingEvent, "INSTAGRAM", traceId, entryId);
               } catch (err) {
                 console.error(`[Meta Webhook] [${traceId}] Error handling Instagram message:`, err);
               }
@@ -372,7 +410,7 @@ export async function POST(req: NextRequest) {
         if (entry.changes) {
           for (const change of entry.changes) {
             try {
-              await handleInstagramChange(change);
+              await handleInstagramChange(change, entryId);
             } catch (err) {
               console.error(`[Meta Webhook] [${traceId}] Error handling Instagram change:`, err);
             }
@@ -424,6 +462,8 @@ async function handleFacebookChange(change: any, pageId?: string) {
   let senderId = "";
   let senderName = "Facebook User";
   let externalId = "";
+  let customerPhone: string | undefined;
+  let customerEmail: string | undefined;
 
   if (field === "feed") {
     // feed covers posts and comments
@@ -467,10 +507,17 @@ async function handleFacebookChange(change: any, pageId?: string) {
       const phoneField = leadDetails.field_data?.find(
         (f: any) => f.name === "phone_number",
       )?.values?.[0];
+      const emailField = leadDetails.field_data?.find(
+        (f: any) => f.name === "email",
+      )?.values?.[0];
+
+      customerPhone = phoneField;
+      customerEmail = emailField;
 
       senderName = fullNameField || "FB Lead Ad User";
       text = `[FB Lead Ad]: New submission via Form ID: ${value.form_id}. Customer: ${senderName}`;
       if (phoneField) text += ` | Phone: ${phoneField}`;
+      if (emailField) text += ` | Email: ${emailField}`;
     } else {
       text = `[FB Lead Ad]: New lead submitted. Form ID: ${value.form_id} (Details pending)`;
     }
@@ -549,6 +596,36 @@ async function handleFacebookChange(change: any, pageId?: string) {
         }
       }
 
+      // Fallback 2: Check by phone number if available (e.g. Facebook Lead Ads)
+      if (!existingIdentity && customerPhone) {
+        const cleanPhone = customerPhone.replace(/[\s-]/g, "");
+        const phoneHash = generateBlindIndex(cleanPhone);
+        const { data: phoneIdentity } = await supabase
+          .from("identities_v3")
+          .select("id, social_links, crm_leads_v3(id)")
+          .eq("social_links->>phone_hash", phoneHash)
+          .eq("role", "LEAD")
+          .maybeSingle();
+        if (phoneIdentity) {
+          existingIdentity = phoneIdentity;
+        }
+      }
+
+      // Fallback 3: Check by email if available (e.g. Facebook Lead Ads)
+      if (!existingIdentity && customerEmail) {
+        const cleanEmail = customerEmail.trim().toLowerCase();
+        const emailHash = generateBlindIndex(cleanEmail);
+        const { data: emailIdentity } = await supabase
+          .from("identities_v3")
+          .select("id, social_links, crm_leads_v3(id)")
+          .eq("social_links->>email_hash", emailHash)
+          .eq("role", "LEAD")
+          .maybeSingle();
+        if (emailIdentity) {
+          existingIdentity = emailIdentity;
+        }
+      }
+
       if (existingIdentity?.crm_leads_v3?.[0]) {
         lead = existingIdentity.crm_leads_v3[0] as { id: string };
 
@@ -559,11 +636,17 @@ async function handleFacebookChange(change: any, pageId?: string) {
           full_name_hash: fullNameHash,
           facebook_psid_hash: facebookPsidHash,
           facebook_psid: encrypt(senderId),
+          ...(customerPhone ? { phone_hash: generateBlindIndex(customerPhone.replace(/[\s-]/g, "")) } : {}),
+          ...(customerEmail ? { email_hash: generateBlindIndex(customerEmail.trim().toLowerCase()) } : {}),
         };
+
+        const identityUpdates: Record<string, any> = { social_links: updatedSocialLinks };
+        if (customerPhone) identityUpdates.phone = customerPhone;
+        if (customerEmail) identityUpdates.email = customerEmail;
 
         await supabase
           .from("identities_v3")
-          .update({ social_links: updatedSocialLinks })
+          .update(identityUpdates)
           .eq("id", existingIdentity.id);
       }
     }
@@ -588,10 +671,14 @@ async function handleFacebookChange(change: any, pageId?: string) {
         category: 2, // External
         role: "LEAD",
         display_name: encryptedDisplayName,
+        phone: customerPhone || null,
+        email: customerEmail || null,
         social_links: {
           facebook_psid_hash: facebookPsidHash,
           facebook_psid: encryptedFacebookPsid,
           full_name_hash: generateBlindIndex(senderName.toLowerCase().trim()),
+          ...(customerPhone ? { phone_hash: generateBlindIndex(customerPhone.replace(/[\s-]/g, "")) } : {}),
+          ...(customerEmail ? { email_hash: generateBlindIndex(customerEmail.trim().toLowerCase()) } : {}),
         },
         is_active: true,
       })
@@ -646,7 +733,7 @@ async function handleFacebookChange(change: any, pageId?: string) {
   }
 }
 
-async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: string) {
+async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: string, entryId?: string) {
   const senderId = event.sender?.id; // PSID or IG SID
   const text = event.message?.text || event.postback?.title || "";
   const postbackPayload = event.postback?.payload || event.message?.quick_reply?.payload;
@@ -925,6 +1012,139 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
       return;
     }
 
+    // 2.2.2 Follow Gate Verification (Postback button click or DM reply)
+    if (redis && senderId && source === "INSTAGRAM") {
+      const followGateKey = `follow_gate_pending:${senderId}`;
+      const isPostbackCheck = postbackPayload === "CHECK_FOLLOW_GATE";
+      const normalizedText = (text || "").trim().toLowerCase();
+      const isTextCheck = !!normalizedText && /ฟอล|ติดตาม|follow|done|เรียบร้อย|แล้ว/i.test(normalizedText);
+
+      if (isPostbackCheck || isTextCheck) {
+        // Debounce lock: prevent double-clicks / rapid taps from triggering duplicate messages
+        const lockKey = `follow_gate_lock:${senderId}`;
+        const acquired = await redis.set(lockKey, "1", { nx: true, ex: 4 });
+        if (!acquired) {
+          console.warn(`[Meta Webhook] Debounce: duplicate follow gate check blocked for ${senderId}`);
+          return;
+        }
+
+        const pendingDataStr = (await redis.get(followGateKey)) as string | null;
+        if (pendingDataStr) {
+          try {
+            const pendingData = JSON.parse(pendingDataStr);
+            const targetOpts = {
+              accountId: pendingData.targetAccountId,
+              instagramBusinessId: pendingData.entryId,
+            };
+            const { getActiveToken } = await import("@/lib/meta");
+            const tokenToUse = await getActiveToken(targetOpts);
+
+            if (tokenToUse) {
+              const isFollowing = await checkInstagramFollows(senderId, tokenToUse);
+              const pLang = pendingData.language || "th";
+
+              const settings = await getSiteSettings();
+
+              const isEnglish = pLang === "en";
+
+              if (isFollowing) {
+                // User is following! Clear pending state
+                await redis.del(followGateKey);
+                if (pendingData.postId) {
+                  await redis.set(`user_post_dm_sent:${senderId}:${pendingData.postId}`, "1", { ex: 86400 });
+                }
+
+                const defaultSuccess = isEnglish
+                  ? "Thank you for following! 🙏✨ Here are the property details you requested 👇"
+                  : "ขอบคุณที่กดติดตามน้า 🙏✨ นี่คือรายละเอียดโครงการที่ขอไว้ครับ 👇";
+                const customSuccess = (isEnglish ? settings.follow_gate_success_message_en : settings.follow_gate_success_message)?.trim();
+                const successNotice = (customSuccess || defaultSuccess).replace(/{{handle}}/g, pendingData.igHandle || "");
+                await sendMetaMessage(senderId, successNotice, source, undefined, targetOpts);
+
+                // Deliver property details with skipFollowGate = true
+                await handleKeywordAutomation(
+                  pendingData.keyword,
+                  pendingData.commentId,
+                  source,
+                  pendingData.postId,
+                  senderId,
+                  pendingData.entryId,
+                  pendingData.targetAccountId,
+                  true // skipFollowGate
+                );
+                return;
+              } else {
+                // User has NOT followed yet!
+                const defaultNotFollowing = isEnglish
+                  ? `It looks like you haven't followed yet 🥺 Please follow {{handle}} first, then tap the button below to get the details! ✨`
+                  : `ระบบตรวจพบว่ายังไม่ได้กดติดตามเลยน้า 🥺 ฝากกดติดตาม {{handle}} ก่อนน้าเด่วส่งข้อมูลให้ทันทีเลยครับ ✨`;
+                const customNotFollowing = (isEnglish ? settings.follow_gate_retry_message_en : settings.follow_gate_retry_message)?.trim();
+                const notFollowingMsg = (customNotFollowing || defaultNotFollowing).replace(/{{handle}}/g, pendingData.igHandle || (isEnglish ? "our profile" : "โปรไฟล์"));
+
+                const rawBtnProfile = isEnglish
+                  ? (settings.follow_gate_btn_profile_en || "👉 View Profile")
+                  : (settings.follow_gate_btn_profile || "👉 ไปที่หน้าโปรไฟล์");
+                const rawBtnCheck = isEnglish
+                  ? (settings.follow_gate_btn_check_en || "✅ Followed (Get Info)")
+                  : (settings.follow_gate_btn_check || "✅ ฟอลแล้ว (รับข้อมูล)");
+
+                // Defensive clamp to max 20 chars (Meta Graph API limit)
+                const btnProfile = (rawBtnProfile || "").trim().slice(0, 20) || (isEnglish ? "👉 View Profile" : "👉 ไปที่หน้าโปรไฟล์");
+                const btnCheck = (rawBtnCheck || "").trim().slice(0, 20) || (isEnglish ? "✅ Followed" : "✅ ฟอลแล้ว");
+
+                const retryButtons: SocialButton[] = [
+                  {
+                    title: btnProfile,
+                    type: "web_url",
+                    url: pendingData.profileUrl || "https://instagram.com",
+                  },
+                  {
+                    title: btnCheck,
+                    type: "postback",
+                    payload: "CHECK_FOLLOW_GATE",
+                  },
+                ];
+
+                await sendMetaMessage(senderId, notFollowingMsg, source, retryButtons, targetOpts);
+                return;
+              }
+            }
+          } catch (err) {
+            console.error("[Meta Webhook] Error in Follow Gate verification:", err);
+          }
+        } else if (isPostbackCheck) {
+          // If the button was clicked but Redis key expired or was already completed,
+          // don't leave the user hanging in silence! Provide friendly fallback navigation.
+          const settings = await getSiteSettings();
+          const isEnglish = (text && /[a-zA-Z]{3,}/.test(text) && !/[ก-ฮ]/.test(text)) ? true : false;
+          const expiredNotice = isEnglish
+            ? "This verification has expired or was already completed 😊 If you'd like more property details, feel free to chat with us below 👇"
+            : "คำขอนี้หมดอายุหรือได้ปลดล็อกไปแล้วครับ 😊 หากสนใจห้องไหน สามารถพิมพ์บอกแอดมินหรือเลือกเมนูด้านล่างได้เลยน้า 👇";
+
+          const fallbackButtons: SocialButton[] = [
+            {
+              title: isEnglish ? "📅 Book Viewing" : "📅 นัดดูห้องจริง",
+              type: "postback",
+              payload: "BOOK_VIEWING",
+            },
+            {
+              title: isEnglish ? "🏠 Available Units" : "🏠 ดูห้องว่าง/ราคา",
+              type: "postback",
+              payload: "PROJECT_PRICE",
+            },
+            {
+              title: isEnglish ? "💬 Chat with Agent" : "💬 คุยกับแอดมิน",
+              type: "postback",
+              payload: "AGENT_CHAT",
+            },
+          ];
+
+          await sendMetaMessage(senderId, expiredNotice, source, fallbackButtons);
+          return;
+        }
+      }
+    }
+
     // 2.3 Handle Postback / Quick Reply Button Clicks
     if (postbackPayload) {
       await handleMetaPostback(postbackPayload, senderId, source, lead.id);
@@ -979,6 +1199,29 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
     const settings = await getSiteSettings();
     let handled = false;
 
+    // 2.4.9 DM Auto-Reply Burst & Rapid Typing Protection (กันลูกค้ารัวแชต / พิมซ้ำๆ ใน DM)
+    if (redis && senderId && (settings.direct_dm_reply_enabled || isStoryReply)) {
+      // 1. Debounce: If bot already processed/replied to an automated trigger for this user within 3 seconds,
+      // hold off to avoid firing multiple concurrent replies while the user is typing sentence by sentence.
+      const dmBurstLock = `dm_auto_reply_lock:${senderId}`;
+      const isBurstLocked = !(await redis.set(dmBurstLock, "1", { nx: true, ex: 3 }));
+      if (isBurstLocked) {
+        console.log(`[Meta Webhook] Rapid DM burst detected for sender ${senderId}. Stored in CRM, skipping concurrent bot reply.`);
+        return;
+      }
+
+      // 2. Exact text deduplication (prevent user spamming the exact same message within 30 seconds)
+      if (text && text.trim()) {
+        const textHash = generateBlindIndex(text.trim().toLowerCase());
+        const exactTextLock = `user_exact_text_lock:${senderId}:${textHash}`;
+        const isDuplicateText = !(await redis.set(exactTextLock, "1", { nx: true, ex: 30 }));
+        if (isDuplicateText) {
+          console.log(`[Meta Webhook] Duplicate exact text "${text.slice(0, 30)}" from sender ${senderId} within 30s. Skipping duplicate bot reply.`);
+          return;
+        }
+      }
+    }
+
     if (settings.direct_dm_reply_enabled || isStoryReply) {
       handled = await handleKeywordAutomation(
         text,
@@ -1018,29 +1261,47 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
   }
 }
 
-async function handleInstagramChange(change: any) {
+async function handleInstagramChange(change: any, entryId?: string) {
   const { field, value } = change;
   if (!value) return;
 
-  const instagramBusinessId = process.env.META_INSTAGRAM_BUSINESS_ID;
-  if (value.from?.id && instagramBusinessId && value.from.id === instagramBusinessId) {
-    console.log(`[Meta Webhook] Ignoring Instagram page's own comment/reply to prevent infinite loop. ID: ${instagramBusinessId}`);
+  const settings = await getSiteSettings();
+
+  // Multi-account infinite loop prevention: Check against all known account IDs
+  const knownAccountIds = new Set<string>();
+  if (process.env.META_INSTAGRAM_BUSINESS_ID) knownAccountIds.add(process.env.META_INSTAGRAM_BUSINESS_ID);
+  if (settings.meta_connected_accounts) {
+    for (const acc of settings.meta_connected_accounts) {
+      if (acc.instagram_business_id) knownAccountIds.add(acc.instagram_business_id);
+      if (acc.page_id) knownAccountIds.add(acc.page_id);
+    }
+  }
+
+  if (value.from?.id && knownAccountIds.has(value.from.id)) {
+    console.log(`[Meta Webhook] Ignoring own comment/reply from known account ID: ${value.from.id}`);
     return;
   }
+
+  // Resolve which connected account owns this event
+  const matchedAccount = settings.meta_connected_accounts?.find(
+    (a) =>
+      (entryId && (a.instagram_business_id === entryId || a.page_id === entryId)) ||
+      (value.from?.id && a.instagram_business_id === value.from.id)
+  );
 
   const supabase = createAdminClient() as any;
   let text = "";
   let senderId = "";
   let senderName = "IG User";
   let externalId = value.id;
+  let mediaId = value.media?.id || value.media_id || "";
 
   if (field === "comments") {
     text = `[IG Comment]: ${value.text}`;
     senderId = value.from?.id;
     senderName = value.from?.username || "IG User";
-    const mediaId = value.media?.id || value.media_id;
+    mediaId = value.media?.id || value.media_id || mediaId;
 
-    const settings = await getSiteSettings();
     const isStory = value.media?.media_product_type === "STORY" || value.media_product_type === "STORY";
 
     if (!isStory || settings.instagram_story_reply_enabled) {
@@ -1051,6 +1312,8 @@ async function handleInstagramChange(change: any) {
         "INSTAGRAM",
         mediaId,
         senderId,
+        entryId,
+        matchedAccount?.id,
       );
     }
   } else if (field === "mentions") {
@@ -1172,9 +1435,14 @@ async function handleInstagramChange(change: any) {
         status: "ACTIVE",
         stage: "NEW",
         source: "INSTAGRAM",
+        assigned_to: matchedAccount?.assigned_agent_id || null,
         utm_data: {
+          channel: matchedAccount?.handle || (field === "comments" ? "@vccasset" : "Instagram"),
+          account_id: matchedAccount?.id,
+          account_name: matchedAccount?.name,
+          post_id: mediaId,
           preferences: {
-            note: `Auto-captured from IG ${field}.`
+            note: `Auto-captured from IG ${field} (${matchedAccount?.handle || "@vccasset"}).`
           }
         }
       })
@@ -1557,6 +1825,9 @@ async function handleKeywordAutomation(
   platform: MetaPlatform,
   postId?: string,
   senderId?: string,
+  entryId?: string,
+  targetAccountId?: string,
+  skipFollowGate = false,
 ): Promise<boolean> {
   if (!text || !commentId) return false;
 
@@ -1578,37 +1849,219 @@ async function handleKeywordAutomation(
 
   const lowerText = text.toLowerCase();
 
-  // 2. Find matching keyword (respects linked_post_id if set)
-  const match = automationKeywords.find(
+  // 2. Find matching keyword (respects linked_post_id and account_id with priority)
+  const candidateKeywords = automationKeywords.filter(
     (k: SocialKeyword) =>
       k.enabled !== false &&
       lowerText.includes(k.keyword.toLowerCase()) &&
-      // If keyword is pinned to a specific post, only match that post's comments
-      (!k.linked_post_id || k.linked_post_id === postId),
+      (!k.linked_post_id || k.linked_post_id === postId) &&
+      (!k.account_id || k.account_id === "ALL" || (targetAccountId && k.account_id === targetAccountId))
   );
 
-  if (!match) return false;
+  if (candidateKeywords.length === 0) return false;
+
+  // Prioritize account-specific keywords over generic "ALL" accounts
+  candidateKeywords.sort((a, b) => {
+    const aSpecific = a.account_id && a.account_id !== "ALL" ? 1 : 0;
+    const bSpecific = b.account_id && b.account_id !== "ALL" ? 1 : 0;
+    return bSpecific - aSpecific;
+  });
+
+  const match = candidateKeywords[0];
+
+  const targetOptions = {
+    accountId: targetAccountId,
+    instagramBusinessId: entryId,
+  };
 
   console.log(
-    `🤖 Dynamic keyword matched in ${platform} comment: "${text}" matches "${match.keyword}"`,
+    `🤖 Dynamic keyword matched in ${platform} comment: "${text}" matches "${match.keyword}" (account: ${targetAccountId || "ALL"})`,
   );
 
-  const isDirectDM = !postId;
-  let lang = match.language || detectLanguage(match.dm_content || "");
+  const isDirectDM = !postId || skipFollowGate;
+  
+  // Smart Language Detection:
+  // 1. Check customer's comment / text patterns (Thai, Chinese, Russian, English)
+  // 2. Fall back to Keyword Rule's explicit language
+  // 3. Fall back to DM content language
+  let lang = match.language;
+  if (text) {
+    if (/[ก-ฮ]/.test(text)) {
+      lang = "th";
+    } else if (/[\u4e00-\u9fa5]/.test(text)) {
+      lang = "cn";
+    } else if (/[а-яА-Я]/.test(text)) {
+      lang = "ru";
+    } else if (/[a-zA-Z]{3,}/.test(text) && (!lang || lang === "th")) {
+      lang = "en";
+    }
+  }
+  if (!lang) {
+    lang = detectLanguage(match.dm_content || "") || "th";
+  }
+
+  // 1.1 Same-Post Anti-Spam & Dedup Protection (กันลูกค้าพิมซ้ำโพสต์เดิม)
+  if (redis && senderId && postId && !isDirectDM) {
+    // A. Rapid comment spam protection (< 3 minutes)
+    const rapidPostCommentKey = `user_post_rapid:${senderId}:${postId}`;
+    const isRapid = !(await redis.set(rapidPostCommentKey, "1", { nx: true, ex: 180 }));
+    if (isRapid) {
+      console.log(`[Meta Webhook] Rapid duplicate comment from sender ${senderId} on post ${postId} within 3m. Skipping to avoid spam.`);
+      return true;
+    }
+
+    // B. If user already received the full details for this post in the last 24h:
+    const postDmSentKey = `user_post_dm_sent:${senderId}:${postId}`;
+    const alreadySent = await redis.get(postDmSentKey);
+    if (alreadySent) {
+      console.log(`[Meta Webhook] Sender ${senderId} already received DM for post ${postId}. Throttling re-send.`);
+
+      // Send a gentle, helpful reminder instead of re-blasting the entire property brochure/Follow Gate
+      const followUpCooldownKey = `user_post_followup_cooldown:${senderId}:${postId}`;
+      const canFollowUp = await redis.set(followUpCooldownKey, "1", { nx: true, ex: 1800 }); // Cooldown 30 mins
+      if (canFollowUp) {
+        const isEnglish = (lang || "th") === "en";
+        const followUpMsg = isEnglish
+          ? "We've already sent the property details earlier in this chat! ✨ Please scroll up to view, or let us know if you have any questions or would like to schedule a viewing 😊"
+          : "แอดมินได้ส่งรายละเอียดโครงการนี้ให้ในแชตนี้แล้วน้า เลื่อนดูข้อความด้านบนได้เลยครับ 😊 หรือหากสนใจนัดชมห้องจริง/ต้องการข้อมูลเพิ่มเติม พิมพ์บอกแอดมินในนี้ได้เลยนะครับ ✨";
+
+        const followUpButtons: SocialButton[] = [
+          {
+            title: (isEnglish ? "📅 Book Viewing" : "📅 นัดดูห้องจริง").slice(0, 20),
+            type: "postback",
+            payload: "BOOK_VIEWING",
+          },
+          {
+            title: (isEnglish ? "💬 Chat with Agent" : "💬 คุยกับแอดมิน").slice(0, 20),
+            type: "postback",
+            payload: "AGENT_CHAT",
+          },
+        ];
+
+        await sendMetaMessage(senderId, followUpMsg, platform, followUpButtons, targetOptions);
+      }
+      return true;
+    }
+  }
+
+  // 1.2 Direct DM Anti-Spam & Keyword Cooldown (กันลูกค้าพิม keyword ซ้ำใน DM โดยไม่ได้มาจากโพสต์ไหน)
+  if (redis && senderId && isDirectDM) {
+    // A. Rapid Direct DM keyword spam protection (< 30 seconds)
+    const rapidDmKey = `user_dm_keyword_rapid:${senderId}`;
+    const isRapidDm = !(await redis.set(rapidDmKey, "1", { nx: true, ex: 30 }));
+    if (isRapidDm) {
+      console.log(`[Meta Webhook] Rapid duplicate keyword from sender ${senderId} in Direct DM within 30s. Skipping to avoid spam.`);
+      return true;
+    }
+
+    // B. If user already triggered this exact keyword in Direct DM recently (cooldown 10 minutes)
+    const keywordDedupKey = `user_dm_keyword_sent:${senderId}:${match.keyword}`;
+    const alreadySentKeyword = await redis.get(keywordDedupKey);
+    if (alreadySentKeyword) {
+      console.log(`[Meta Webhook] Sender ${senderId} already received response for keyword "${match.keyword}" in Direct DM within 10m. Skipping duplicate.`);
+      return true;
+    }
+
+    // Mark keyword as sent for this user in Direct DM (10 minutes cooldown)
+    await redis.set(keywordDedupKey, "1", { ex: 600 });
+  }
 
   // 2.1 Follow Gate Check
-  if (settings.follow_gate_enabled && platform === "INSTAGRAM" && senderId) {
-    const tokenToUse = settings.meta_page_access_token || process.env.META_PAGE_ACCESS_TOKEN;
+  if (settings.follow_gate_enabled && !skipFollowGate && platform === "INSTAGRAM" && senderId) {
+    const { getActiveToken } = await import("@/lib/meta");
+    const tokenToUse = await getActiveToken(targetOptions);
     if (tokenToUse) {
       const isFollowing = await checkInstagramFollows(senderId, tokenToUse);
       if (!isFollowing) {
-        const followPrompt = lang === "th" 
-          ? "กรุณากดติดตามเพจ Instagram ของเราก่อนรับรายละเอียดโครงการนะคะ 😊" 
-          : "Please follow our Instagram page first to receive the details! 😊";
+        // Resolve account details for handle and profile link
+        const connectedAccounts = settings.meta_connected_accounts || [];
+        const currentAccount = connectedAccounts.find(
+          (a) => a.id === targetAccountId || (entryId && (a.instagram_business_id === entryId || a.page_id === entryId))
+        );
+        const igHandle = currentAccount?.handle || (currentAccount?.instagram_username ? `@${currentAccount.instagram_username}` : "@hunter.vcc");
+        const cleanUsername = igHandle.replace(/[@\s]/g, "");
+        const profileUrl = cleanUsername ? `https://instagram.com/${cleanUsername}` : "https://instagram.com";
+
+        const isEnglish = lang === "en";
+
+        const defaultPrompt = isEnglish
+          ? (postId
+              ? `Thanks for your interest! ✨ To receive full property details, please follow our profile ${igHandle} first, then tap "Followed" below! 💕`
+              : `Thanks for messaging us! ✨ To receive our exclusive property listings and deals, please follow our profile ${igHandle} first, then tap "Followed" below! 💕`)
+          : (postId
+              ? `ขอบคุณที่สนใจน้า ✨ เพื่อรับรายละเอียดห้องและราคาพิเศษ รบกวนกดติดตามโปรไฟล์ ${igHandle} ก่อนน้า แล้วกดปุ่ม "ฟอลแล้ว" ด้านล่างได้เลยครับ 💕`
+              : `ขอบคุณที่ทักแชตมาน้า ✨ เพื่อรับข้อมูลโครงการแนะนำและสิทธิพิเศษ รบกวนกดติดตามโปรไฟล์ ${igHandle} ก่อนน้า แล้วกดปุ่ม "ฟอลแล้ว" ด้านล่างได้เลยครับ 💕`);
+        const customPrompt = (isEnglish ? settings.follow_gate_message_en : settings.follow_gate_message)?.trim();
+        const followPrompt = (customPrompt || defaultPrompt).replace(/{{handle}}/g, igHandle);
+
+        const rawBtnProfileTitle = isEnglish
+          ? (settings.follow_gate_btn_profile_en || "👉 View Profile")
+          : (settings.follow_gate_btn_profile || "👉 ไปที่หน้าโปรไฟล์");
+        const rawBtnCheckTitle = isEnglish
+          ? (settings.follow_gate_btn_check_en || "✅ Followed (Get Info)")
+          : (settings.follow_gate_btn_check || "✅ ฟอลแล้ว (รับข้อมูล)");
+
+        // Defensive clamp to max 20 chars (Meta Graph API limit)
+        const btnProfileTitle = (rawBtnProfileTitle || "").trim().slice(0, 20) || (isEnglish ? "👉 View Profile" : "👉 ไปที่หน้าโปรไฟล์");
+        const btnCheckTitle = (rawBtnCheckTitle || "").trim().slice(0, 20) || (isEnglish ? "✅ Followed" : "✅ ฟอลแล้ว");
+
+        const followButtons: SocialButton[] = [
+          {
+            title: btnProfileTitle,
+            type: "web_url",
+            url: profileUrl,
+          },
+          {
+            title: btnCheckTitle,
+            type: "postback",
+            payload: "CHECK_FOLLOW_GATE",
+          },
+        ];
+
+        // Store pending request in Redis (24 hours TTL) for instant auto-resume
+        if (redis) {
+          const followGateKey = `follow_gate_pending:${senderId}`;
+          await redis.set(
+            followGateKey,
+            JSON.stringify({
+              keyword: match.keyword,
+              commentId,
+              postId,
+              targetAccountId,
+              entryId,
+              language: lang,
+              igHandle,
+              profileUrl,
+            }),
+            { ex: 86400 } // 24 hours matching Meta messaging window
+          );
+        }
+
         if (isDirectDM) {
-          await sendMetaMessage(senderId, followPrompt, platform);
+          await sendMetaMessage(senderId, followPrompt, platform, followButtons, targetOptions);
         } else {
-          await sendPrivateReply(commentId, followPrompt, platform);
+          await sendPrivateReply(commentId, followPrompt, platform, undefined, undefined, followButtons, targetOptions);
+          // Public Comment Notice to prompt the user to check their DMs (throttled to 1 per user per post per 24h)
+          let canPublicReply = true;
+          if (redis && senderId && postId) {
+            const publicReplyKey = `user_post_public_reply:${senderId}:${postId}`;
+            const lockAcquired = await redis.set(publicReplyKey, "1", { nx: true, ex: 86400 });
+            if (!lockAcquired) {
+              canPublicReply = false;
+              console.log(`[Meta Webhook] Follow Gate public notice already posted for sender ${senderId} on post ${postId}. Skipping duplicate comment reply.`);
+            }
+          }
+
+          if (canPublicReply) {
+            const defaultPublicNotice = isEnglish
+              ? `Sent you a DM! Please follow ${igHandle} and check your Inbox 📩✨`
+              : `ส่งข้อมูลให้ทาง DM แล้วน้า ฝากกดติดตาม ${igHandle} แล้วเช็ก Inbox ได้เลยครับ 😊📩`;
+            const customPublicNotice = (isEnglish ? settings.follow_gate_public_reply_en : settings.follow_gate_public_reply)?.trim();
+            const publicNotice = (customPublicNotice || defaultPublicNotice).replace(/{{handle}}/g, igHandle);
+            await replyToMetaComment(commentId, publicNotice, platform, targetOptions).catch((err) =>
+              console.warn("[Meta Webhook] Follow Gate public comment reply error:", err)
+            );
+          }
         }
         return true;
       }
@@ -1639,9 +2092,9 @@ async function handleKeywordAutomation(
           ? "กรุณาพิมพ์อีเมลหรือเบอร์โทรศัพท์ของคุณเพื่อรับสิทธิ์ดูรายละเอียดโครงการค่ะ 😊"
           : "Please reply with your email or phone number to receive the property details! 😊";
         if (isDirectDM) {
-          await sendMetaMessage(senderId, promptText, platform);
+          await sendMetaMessage(senderId, promptText, platform, undefined, targetOptions);
         } else {
-          await sendPrivateReply(commentId, promptText, platform);
+          await sendPrivateReply(commentId, promptText, platform, undefined, undefined, undefined, targetOptions);
         }
         return true;
       }
@@ -1854,8 +2307,19 @@ async function handleKeywordAutomation(
       publicReply = replaceTemplateTags(publicReply, propertyData, dynamicValues, lang);
     }
   } else {
-    // Fallback: Remove tags and sanitize text when no specific property is found
-    dmContent = dmContent.replace(/{{[a-z_]+}}/g, "");
+    // Fallback: When no specific post/property is linked (e.g. user typed keyword directly in DM)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const catalogUrl = `${siteUrl}/properties`;
+
+    // Smart replacement so sentences stay natural and don't leave empty holes:
+    dmContent = dmContent
+      .replace(/{{project_name}}/g, lang === "th" ? "โครงการของเรา" : lang === "cn" ? "精选房源" : lang === "ru" ? "наши проекты" : "our properties")
+      .replace(/{{price}}|{{price_tag}}|{{rental_price}}|{{sale_price}}/g, lang === "th" ? "ราคาพิเศษ" : lang === "cn" ? "特惠价格" : lang === "ru" ? "специальная цена" : "special price")
+      .replace(/{{link}}|{{property_url}}/g, catalogUrl)
+      .replace(/{{location}}|{{zone}}/g, lang === "th" ? "ภูเก็ต" : "Phuket")
+      .replace(/{{[a-z_]+}}/g, "") // remove any remaining unsupported tags
+      .trim();
+
     dmContent = sanitizeTemplateOutput(dmContent);
     if (publicReply) {
       publicReply = publicReply.replace(/{{[a-z_]+}}/g, "");
@@ -1901,35 +2365,40 @@ async function handleKeywordAutomation(
   let dmRes;
   if (isDirectDM && senderId) {
     if (buttonsToAttach.length > 0) {
-      dmRes = await sendMetaMessage(senderId, dmContent, platform, buttonsToAttach);
+      dmRes = await sendMetaMessage(senderId, dmContent, platform, buttonsToAttach, targetOptions);
     } else if (propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
       const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
       const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
       const contentWithLink = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
-      dmRes = await sendMetaMessage(senderId, contentWithLink, platform);
+      dmRes = await sendMetaMessage(senderId, contentWithLink, platform, undefined, targetOptions);
     } else {
-      dmRes = await sendMetaMessage(senderId, dmContent, platform);
+      dmRes = await sendMetaMessage(senderId, dmContent, platform, undefined, targetOptions);
     }
   } else {
     if (buttonsToAttach.length > 0) {
-      dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, buttonsToAttach);
+      dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, buttonsToAttach, targetOptions);
     } else if (propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
       const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
       const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
-      dmRes = await sendPrivateReply(commentId, dmContent, platform, buttonUrl, buttonTitle);
+      dmRes = await sendPrivateReply(commentId, dmContent, platform, buttonUrl, buttonTitle, undefined, targetOptions);
       
       // Fallback: If button template fails, send as plain text
       if (!dmRes.success) {
         console.warn(`[Meta Webhook] Button template failed, falling back to plain text DM:`, dmRes.error);
         const fallbackContent = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
-        dmRes = await sendPrivateReply(commentId, fallbackContent, platform);
+        dmRes = await sendPrivateReply(commentId, fallbackContent, platform, undefined, undefined, undefined, targetOptions);
       }
     } else {
-      dmRes = await sendPrivateReply(commentId, dmContent, platform);
+      dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, undefined, targetOptions);
     }
   }
 
   if (dmRes.success && senderId) {
+    // Record that DM for this post was delivered to this user (valid for 24h)
+    if (redis && postId) {
+      await redis.set(`user_post_dm_sent:${senderId}:${postId}`, "1", { ex: 86400 });
+    }
+
     // 6. Media Support (Albums or Featured Properties Carousel)
     if (propertyData && propertyData.images) {
       const images = Array.isArray(propertyData.images) ? propertyData.images : [];
@@ -1953,13 +2422,25 @@ async function handleKeywordAutomation(
     console.error(`Failed to send private reply for ${platform}:`, dmRes.error);
   }
 
-  // 7. Public Reply (if configured)
-  if (publicReply) {
-    const commentRes = await replyToMetaComment(commentId, publicReply, platform);
-    if (!commentRes.success) {
-      console.error(`[Meta Webhook] Failed to reply to comment ${commentId}:`, commentRes.error);
-    } else {
-      console.log(`[Meta Webhook] Successfully replied to comment ${commentId}`);
+  // 7. Public Reply (only for original post comments, not for DMs or resumed follow gates, throttled to 1 per user per post per 24h)
+  if (publicReply && !isDirectDM && !skipFollowGate && commentId) {
+    let canPublicReply = true;
+    if (redis && senderId && postId) {
+      const publicReplyKey = `user_post_public_reply:${senderId}:${postId}`;
+      const lockAcquired = await redis.set(publicReplyKey, "1", { nx: true, ex: 86400 });
+      if (!lockAcquired) {
+        canPublicReply = false;
+        console.log(`[Meta Webhook] Public reply already posted for sender ${senderId} on post ${postId} in last 24h. Skipping duplicate comment reply.`);
+      }
+    }
+
+    if (canPublicReply) {
+      const commentRes = await replyToMetaComment(commentId, publicReply, platform, targetOptions);
+      if (!commentRes.success) {
+        console.error(`[Meta Webhook] Failed to reply to comment ${commentId}:`, commentRes.error);
+      } else {
+        console.log(`[Meta Webhook] Successfully replied to comment ${commentId}`);
+      }
     }
   }
 
@@ -3480,10 +3961,20 @@ async function checkInstagramFollows(psid: string, token: string): Promise<boole
   try {
     const url = `https://graph.facebook.com/v20.0/${psid}?fields=follows_business_page&access_token=${token}`;
     const res = await fetch(url);
-    if (!res.ok) return false;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      console.warn(`[Meta Webhook] checkInstagramFollows response not ok (${res.status}): ${errText}`);
+      // Fallback to true if permission error or Graph API dev restriction so user is not permanently trapped
+      if (errText.includes("OAuthException") || errText.includes("Permissions error")) {
+        console.warn("[Meta Webhook] Falling back to true due to OAuth/permission restriction.");
+        return true;
+      }
+      return false;
+    }
     const data = await res.json();
     return !!data.follows_business_page;
-  } catch {
-    return true; // fallback to true to prevent blocking under dev environments
+  } catch (err) {
+    console.error("[Meta Webhook] checkInstagramFollows network exception:", err);
+    return true; // fallback to true to prevent blocking under network hiccups
   }
 }

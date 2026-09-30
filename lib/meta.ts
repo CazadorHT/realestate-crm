@@ -4,13 +4,56 @@ import { SocialButton } from "@/features/site-settings/schema";
 
 // Cache bust: Force reload to pick up new database tokens.
 
+export interface MetaAccountTargetOptions {
+  accountId?: string;
+  pageId?: string;
+  instagramBusinessId?: string;
+}
+
 /**
- * Dynamically load token from database settings, fallback to env variables
+ * Dynamically load token from database settings (multi-account aware), fallback to env variables
  */
-async function getActiveToken(): Promise<string> {
+export async function getActiveToken(options?: MetaAccountTargetOptions): Promise<string> {
   try {
     const { getSiteSettings } = await import("@/features/site-settings/actions");
     const settings = await getSiteSettings();
+
+    if (settings?.meta_connected_accounts && settings.meta_connected_accounts.length > 0) {
+      // 1. Match by accountId
+      if (options?.accountId) {
+        const found = settings.meta_connected_accounts.find(
+          (a) => a.id === options.accountId && a.is_active !== false
+        );
+        if (found?.page_access_token) return found.page_access_token;
+      }
+
+      // 2. Match by instagramBusinessId
+      if (options?.instagramBusinessId) {
+        const found = settings.meta_connected_accounts.find(
+          (a) => a.instagram_business_id === options.instagramBusinessId && a.is_active !== false
+        );
+        if (found?.page_access_token) return found.page_access_token;
+      }
+
+      // 3. Match by pageId
+      if (options?.pageId) {
+        const found = settings.meta_connected_accounts.find(
+          (a) => a.page_id === options.pageId && a.is_active !== false
+        );
+        if (found?.page_access_token) return found.page_access_token;
+      }
+
+      // 4. Default account
+      const defaultAcc = settings.meta_connected_accounts.find(
+        (a) => a.is_default && a.is_active !== false
+      );
+      if (defaultAcc?.page_access_token) return defaultAcc.page_access_token;
+
+      // 5. First active account
+      const firstActive = settings.meta_connected_accounts.find((a) => a.is_active !== false);
+      if (firstActive?.page_access_token) return firstActive.page_access_token;
+    }
+
     if (settings?.meta_page_access_token) {
       return settings.meta_page_access_token;
     }
@@ -50,8 +93,9 @@ export async function sendMetaMessage(
   content: string,
   platform: MetaPlatform,
   buttons?: SocialButton[],
+  targetOptions?: MetaAccountTargetOptions,
 ): Promise<MetaApiResponse> {
-  const token = await getActiveToken();
+  const token = await getActiveToken(targetOptions);
   if (!token)
     return {
       success: false,
@@ -417,8 +461,9 @@ export async function replyToMetaComment(
   commentId: string,
   content: string,
   platform?: MetaPlatform,
+  targetOptions?: MetaAccountTargetOptions,
 ): Promise<MetaApiResponse<{ id: string }>> {
-  const token = await getActiveToken();
+  const token = await getActiveToken(targetOptions);
   if (!token)
     return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
@@ -456,8 +501,9 @@ export async function sendPrivateReply(
   buttonUrl?: string,
   buttonTitle?: string,
   customButtons?: SocialButton[],
+  targetOptions?: MetaAccountTargetOptions,
 ): Promise<MetaApiResponse> {
-  const token = await getActiveToken();
+  const token = await getActiveToken(targetOptions);
   if (!token)
     return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
