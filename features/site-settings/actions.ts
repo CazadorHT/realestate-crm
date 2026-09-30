@@ -857,14 +857,35 @@ function maskToken(token: string): string {
 
 /**
  * Get all connected Meta accounts with masked tokens for client UI
+ * Reads directly from DB to avoid any stale cache on settings dashboard.
  */
 export async function getMaskedMetaAccountsAction(): Promise<{
   success: boolean;
   accounts: Array<Omit<MetaConnectedAccount, "page_access_token"> & { masked_token: string }>;
 }> {
   try {
-    const settings = await getSiteSettings();
-    const accounts = (settings.meta_connected_accounts || []).map((acc) => ({
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabase = await createAdminClient();
+    const { data } = await (supabase as any)
+      .from("system_settings_v3")
+      .select("value")
+      .eq("key", "meta_connected_accounts")
+      .maybeSingle();
+
+    let rawAccounts: MetaConnectedAccount[] = [];
+    if (data?.value) {
+      const decrypted = await decryptValue("meta_connected_accounts", data.value);
+      if (Array.isArray(decrypted)) {
+        rawAccounts = decrypted;
+      }
+    }
+
+    if (rawAccounts.length === 0) {
+      const settings = await getSiteSettings();
+      rawAccounts = settings.meta_connected_accounts || [];
+    }
+
+    const accounts = rawAccounts.map((acc) => ({
       ...acc,
       masked_token: maskToken(acc.page_access_token),
       page_access_token: undefined as any,
