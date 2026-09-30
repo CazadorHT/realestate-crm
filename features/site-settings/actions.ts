@@ -294,21 +294,22 @@ async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> 
     }
 
     // 7. Backward-Compatibility for Meta Connected Accounts
+    const fallbackToken = settings.meta_page_access_token || process.env.META_PAGE_ACCESS_TOKEN || "";
     if (
       (!settings.meta_connected_accounts || settings.meta_connected_accounts.length === 0) &&
-      settings.meta_page_access_token
+      fallbackToken
     ) {
       settings.meta_connected_accounts = [
         {
           id: "default-vcc-account",
-          name: settings.meta_page_name || "VCC Asset Official",
+          name: settings.meta_page_name || "VC Connect Asset",
           handle: "@vccasset",
           platform: "INSTAGRAM",
-          page_id: (settings as any).meta_page_id || "",
-          page_name: settings.meta_page_name || "VCC Asset",
-          instagram_business_id: process.env.META_INSTAGRAM_BUSINESS_ID || "",
+          page_id: (settings as any).meta_page_id || "111608617234370",
+          page_name: settings.meta_page_name || "VC Connect Asset",
+          instagram_business_id: process.env.META_INSTAGRAM_BUSINESS_ID || "17841446199195491",
           instagram_username: "vccasset",
-          page_access_token: settings.meta_page_access_token,
+          page_access_token: fallbackToken,
           is_active: true,
           is_default: true,
           token_status: "VALID",
@@ -903,8 +904,19 @@ export async function saveMetaConnectedAccountAction(input: {
     }
 
     // Call Facebook Graph API to validate token and fetch page & IG business account details
-    const fbUrl = `https://graph.facebook.com/v19.0/me?fields=id,name,instagram_business_account{id,username}&access_token=${token}`;
-    const fbRes = await fetch(fbUrl);
+    // If the input indicates hunter.vcc or Hunter VCC, query that specific page directly if accessible with this token
+    const targetEndpoint =
+      input.handle?.toLowerCase().includes("hunter") || input.name?.toLowerCase().includes("hunter")
+        ? "1386378974552787"
+        : "me";
+
+    let fbUrl = `https://graph.facebook.com/v19.0/${targetEndpoint}?fields=id,name,instagram_business_account{id,username}&access_token=${token}`;
+    let fbRes = await fetch(fbUrl);
+
+    if (!fbRes.ok && targetEndpoint !== "me") {
+      fbUrl = `https://graph.facebook.com/v19.0/me?fields=id,name,instagram_business_account{id,username}&access_token=${token}`;
+      fbRes = await fetch(fbUrl);
+    }
 
     if (!fbRes.ok) {
       const fbError = await fbRes.json().catch(() => ({}));
@@ -960,7 +972,9 @@ export async function saveMetaConnectedAccountAction(input: {
       updated_at: new Date().toISOString(),
     };
 
-    const existingIndex = currentAccounts.findIndex((a) => a.id === accountId || a.page_id === pageId);
+    const existingIndex = currentAccounts.findIndex(
+      (a) => a.id === accountId || (a.page_id === pageId && (a.instagram_business_id === igId || !igId || !a.instagram_business_id))
+    );
     if (existingIndex >= 0) {
       currentAccounts[existingIndex] = {
         ...currentAccounts[existingIndex],
