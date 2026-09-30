@@ -623,8 +623,9 @@ export async function postToMetaPage(
   content: string,
   imageUrls?: string | string[],
   platform: MetaPlatform = "FACEBOOK",
+  targetOptions?: MetaAccountTargetOptions,
 ): Promise<MetaApiResponse> {
-  const token = await getActiveToken();
+  const token = await getActiveToken(targetOptions);
   if (!token)
     return {
       success: false,
@@ -639,9 +640,18 @@ export async function postToMetaPage(
 
   try {
     if (platform === "FACEBOOK") {
+      let targetPageId = targetOptions?.pageId;
+      if (!targetPageId && targetOptions?.accountId) {
+        const { getSiteSettings } = await import("@/features/site-settings/actions");
+        const settings = await getSiteSettings();
+        const acc = settings.meta_connected_accounts?.find((a) => a.id === targetOptions.accountId);
+        if (acc?.page_id) targetPageId = acc.page_id;
+      }
+      targetPageId = targetPageId || "me";
+
       if (images.length === 0) {
         // Text only post
-        const url = `${metaConfig.graphApiUrl}/me/feed?access_token=${token}`;
+        const url = `${metaConfig.graphApiUrl}/${targetPageId}/feed?access_token=${token}`;
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -655,7 +665,7 @@ export async function postToMetaPage(
 
       if (images.length === 1) {
         // Native Photo Post (Hides domain, looks better)
-        const url = `${metaConfig.graphApiUrl}/me/photos?access_token=${token}`;
+        const url = `${metaConfig.graphApiUrl}/${targetPageId}/photos?access_token=${token}`;
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -684,7 +694,7 @@ export async function postToMetaPage(
         const batch = imagesToUpload.slice(i, i + batchSize);
         console.log(`[FB-POST] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(imagesToUpload.length / batchSize)}:`, batch);
         const uploadPromises = batch.map(async (imgUrl) => {
-          const uploadUrl = `${metaConfig.graphApiUrl}/me/photos?access_token=${token}`;
+          const uploadUrl = `${metaConfig.graphApiUrl}/${targetPageId}/photos?access_token=${token}`;
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
@@ -744,7 +754,7 @@ export async function postToMetaPage(
       }
 
       // 2. Attach to feed
-      const feedUrl = `${metaConfig.graphApiUrl}/me/feed?access_token=${token}`;
+      const feedUrl = `${metaConfig.graphApiUrl}/${targetPageId}/feed?access_token=${token}`;
       const attachedMedia = mediaIds.map((id) => ({ media_fbid: id }));
       const feedRes = await fetch(feedUrl, {
         method: "POST",
@@ -765,7 +775,17 @@ export async function postToMetaPage(
       return { success: true, data: feedData };
     } else if (platform === "INSTAGRAM") {
       // Instagram Post
-      const igId = await discoverInstagramBusinessId();
+      let igId: string | null | undefined = targetOptions?.instagramBusinessId;
+      if (!igId && targetOptions?.accountId) {
+        const { getSiteSettings } = await import("@/features/site-settings/actions");
+        const settings = await getSiteSettings();
+        const acc = settings.meta_connected_accounts?.find((a) => a.id === targetOptions.accountId);
+        if (acc?.instagram_business_id) igId = acc.instagram_business_id;
+      }
+      if (!igId) {
+        igId = await discoverInstagramBusinessId();
+      }
+
       if (!igId) {
         return {
           success: false,

@@ -1227,6 +1227,7 @@ export async function postPropertyToMetaAction(
   customContent?: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
   customCoverUrl?: string,
+  targetAccountId?: string,
 ) {
   try {
     const { supabase, user, role } = await requireAuthContext();
@@ -1317,7 +1318,12 @@ export async function postPropertyToMetaAction(
         )
       : contentData.content;
 
-    const result = await postToMetaPage(finalContent, images, platform);
+    const result = await postToMetaPage(
+      finalContent,
+      images,
+      platform,
+      targetAccountId ? { accountId: targetAccountId } : undefined
+    );
 
     if (result.success) {
       await logAudit(

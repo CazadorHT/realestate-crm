@@ -19,6 +19,7 @@ import {
   updateSocialPostTimestampAction,
   uploadCoverBannerAction,
 } from "@/features/properties/actions/social";
+import { getMaskedMetaAccountsAction } from "@/features/site-settings/actions";
 import { postPropertyToLineAction } from "@/features/properties/actions/line";
 import { postPropertyToTikTokAction, getTikTokPostStatusAction } from "@/features/properties/actions/tiktok";
 import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
@@ -154,6 +155,27 @@ export function SocialPostDialog({
   // Social Studio Cover Banner Integration State
   const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [customCoverUrl, setCustomCoverUrl] = useState<string | null>(initialCoverUrl || null);
+
+  // Multi-Account Meta Integration State
+  const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (isOpen && (platform === "FACEBOOK" || platform === "INSTAGRAM")) {
+      getMaskedMetaAccountsAction().then((res) => {
+        if (res.success && res.accounts.length > 0) {
+          const activeAccs = res.accounts.filter((a) => a.is_active !== false);
+          setMetaAccounts(activeAccs);
+          const defaultAcc = activeAccs.find((a) => a.is_default);
+          if (defaultAcc) {
+            setSelectedAccountIds([defaultAcc.id]);
+          } else if (activeAccs.length > 0) {
+            setSelectedAccountIds([activeAccs[0].id]);
+          }
+        }
+      });
+    }
+  }, [isOpen, platform]);
 
   useEffect(() => {
     if (initialCoverUrl) {
@@ -342,13 +364,44 @@ export function SocialPostDialog({
       }
 
       if (platform === "FACEBOOK" || platform === "INSTAGRAM") {
-        res = await postPropertyToMetaAction(
-          propertyId,
-          platform,
-          activeContent,
-          selectedLangs[0] || "th",
-          activeCoverUrl
-        );
+        if (metaAccounts.length > 1 && selectedAccountIds.length > 0) {
+          const targetIds = selectedAccountIds;
+          let allSuccess = true;
+          const messages: string[] = [];
+
+          for (const accId of targetIds) {
+            const targetAcc = metaAccounts.find((a) => a.id === accId);
+            const accLabel = targetAcc?.name || targetAcc?.handle || "Meta";
+            const singleRes = await postPropertyToMetaAction(
+              propertyId,
+              platform,
+              activeContent,
+              selectedLangs[0] || "th",
+              activeCoverUrl,
+              accId
+            );
+            if (singleRes.success) {
+              messages.push(`✅ ${accLabel}`);
+            } else {
+              allSuccess = false;
+              messages.push(`❌ ${accLabel}: ${singleRes.message}`);
+            }
+          }
+
+          res = {
+            success: allSuccess,
+            message: `${isEn ? "Results:" : "ผลการโพสต์:"} ${messages.join(" | ")}`,
+          };
+        } else {
+          res = await postPropertyToMetaAction(
+            propertyId,
+            platform,
+            activeContent,
+            selectedLangs[0] || "th",
+            activeCoverUrl,
+            selectedAccountIds[0]
+          );
+        }
       } else if (platform === "LINE") {
         res = await postPropertyToLineAction(
           propertyId,
@@ -423,6 +476,97 @@ export function SocialPostDialog({
         duration: 6000,
       });
     }
+  };
+
+  const renderAccountSelector = () => {
+    if ((platform !== "FACEBOOK" && platform !== "INSTAGRAM") || metaAccounts.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="p-3.5 xs:p-4 rounded-2xl border border-slate-200/90 bg-linear-to-b from-slate-50/70 to-white shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+              {platform === "FACEBOOK" ? <FaFacebook className="h-3.5 w-3.5" /> : <FaInstagram className="h-3.5 w-3.5" />}
+            </div>
+            <div>
+              <Label className="text-xs font-bold text-slate-800">
+                {isEn ? "Select Target Account(s)" : "เลือกบัญชีที่ต้องการโพสต์"}
+              </Label>
+              <p className="text-[10px] text-slate-400">
+                {isEn ? "Choose which account(s) receive this post" : "เลือกบัญชีที่จะลงประกาศ (เลือกพร้อมกันได้)"}
+              </p>
+            </div>
+          </div>
+          {metaAccounts.length > 1 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedAccountIds.length === metaAccounts.length) {
+                  const def = metaAccounts.find((a) => a.is_default);
+                  setSelectedAccountIds(def ? [def.id] : [metaAccounts[0].id]);
+                } else {
+                  setSelectedAccountIds(metaAccounts.map((a) => a.id));
+                }
+              }}
+              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer"
+            >
+              {selectedAccountIds.length === metaAccounts.length
+                ? (isEn ? "Select Default" : "เฉพาะบัญชีหลัก")
+                : (isEn ? "Select All" : "เลือกทั้งหมด")}
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+          {metaAccounts.map((acc) => {
+            const isSelected = selectedAccountIds.includes(acc.id);
+            return (
+              <div
+                key={acc.id}
+                onClick={() => {
+                  if (isSelected) {
+                    if (selectedAccountIds.length > 1) {
+                      setSelectedAccountIds(selectedAccountIds.filter((id) => id !== acc.id));
+                    } else {
+                      toast.info(isEn ? "At least one account must be selected" : "ต้องเลือกอย่างน้อย 1 บัญชี");
+                    }
+                  } else {
+                    setSelectedAccountIds([...selectedAccountIds, acc.id]);
+                  }
+                }}
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer select-none",
+                  isSelected
+                    ? "bg-indigo-50/70 border-indigo-200 text-indigo-950 shadow-xs ring-1 ring-indigo-500/20"
+                    : "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50"
+                )}
+              >
+                <div className="min-w-0 pr-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-bold text-slate-900 truncate">{acc.name}</span>
+                    {acc.is_default && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold shrink-0">
+                        ⭐ {isEn ? "Default" : "หลัก"}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                    {acc.handle || acc.page_name || "@" + acc.instagram_username}
+                  </p>
+                </div>
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={() => {}}
+                  className="data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600 shrink-0 pointer-events-none"
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const config = PLATFORM_CONFIG[platform];
@@ -509,6 +653,8 @@ export function SocialPostDialog({
                     ))}
                   </div>
                 </div>
+
+                {renderAccountSelector()}
 
                 {/* Custom Content Options */}
                 <div className="space-y-3 pt-2 border-t border-slate-100">
@@ -807,6 +953,8 @@ export function SocialPostDialog({
       <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-4 md:gap-6 lg:gap-8 py-2">
         {/* Left Column: Settings/Info */}
         <div className="space-y-4 xs:space-y-6">
+          {renderAccountSelector()}
+
           {/* Custom Content Options */}
           <div className="space-y-4">
             <button
