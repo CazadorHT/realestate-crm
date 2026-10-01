@@ -9,7 +9,7 @@ import {
 import { z } from "zod";
 
 const GITHUB_BASE_URL =
-  "https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest";
+  "https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/v2";
 const PROXY_BASE_URL = "/api/thai-address";
 
 const ENDPOINTS = {
@@ -40,6 +40,21 @@ export class ThaiAddressService {
   private static pendingRequests: Record<string, Promise<any>> = {};
 
   /**
+   * Normalizes upstream data objects to always guarantee name_th and name_en fields
+   * regardless of whether upstream serves v2 (name_th) or v3 (name.th) format.
+   */
+  private static normalizeItem(item: any): any {
+    if (!item || typeof item !== "object") return item;
+    const name_th = item.name_th ?? (typeof item.name === "object" ? item.name?.th : item.name) ?? "";
+    const name_en = item.name_en ?? (typeof item.name === "object" ? item.name?.en : "") ?? "";
+    return {
+      ...item,
+      name_th,
+      name_en,
+    };
+  }
+
+  /**
    * Validates a sample of the data array to ensure structure is correct.
    * Checks first, middle, and last items.
    */
@@ -61,37 +76,46 @@ export class ThaiAddressService {
   ): Promise<T[]> {
     const isBrowser = typeof window !== "undefined";
     const primaryUrl = isBrowser ? `${PROXY_BASE_URL}/${endpoint}` : `${GITHUB_BASE_URL}/${endpoint}`;
-    const fallbackUrl = isBrowser ? `${GITHUB_BASE_URL}/${endpoint}` : `${PROXY_BASE_URL}/${endpoint}`;
+    const fallbackUrl = isBrowser ? `${GITHUB_BASE_URL}/${endpoint}` : null;
 
     try {
       const response = await fetch(primaryUrl, {
         next: { revalidate: 31536000 }, // 1 year cache
       });
-      if (!response.ok) throw new Error("Primary Fetch Failed");
-      const data = await response.json();
+      if (!response.ok) throw new Error(`Primary Fetch Failed (${response.status})`);
+      const rawData = await response.json();
+      const data = Array.isArray(rawData) ? rawData.map(this.normalizeItem) : rawData;
       
       // Hardening: Sampling Validation
       this.validateSample(data, schema);
       
       return data as T[];
     } catch (error) {
+      if (!fallbackUrl) {
+        console.error(
+          `[ThaiAddressService] Fetch failed for ${endpoint}`,
+          error,
+        );
+        throw error;
+      }
       try {
         const response = await fetch(fallbackUrl, {
           next: { revalidate: 31536000 }, // 1 year cache
         });
-        if (!response.ok) throw new Error("Fallback Fetch Failed");
-        const data = await response.json();
+        if (!response.ok) throw new Error(`Fallback Fetch Failed (${response.status})`);
+        const rawData = await response.json();
+        const data = Array.isArray(rawData) ? rawData.map(this.normalizeItem) : rawData;
         
-        // Hardening: Sampling Validation even on proxy
+        // Hardening: Sampling Validation even on fallback
         this.validateSample(data, schema);
         
         return data as T[];
-      } catch (proxyError) {
+      } catch (fallbackError) {
         console.error(
           `[ThaiAddressService] All fetch methods failed for ${endpoint}`,
-          proxyError,
+          fallbackError,
         );
-        throw proxyError;
+        throw fallbackError;
       }
     }
   }

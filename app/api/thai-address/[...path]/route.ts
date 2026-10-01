@@ -17,7 +17,7 @@ export async function GET(
     );
   }
 
-  const GITHUB_RAW_URL = `https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/${fileName}`;
+  const GITHUB_RAW_URL = `https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/v2/${fileName}`;
 
   try {
     const response = await fetch(GITHUB_RAW_URL, {
@@ -31,7 +31,21 @@ export async function GET(
       );
     }
 
-    const data = await response.json();
+    let data = await response.json();
+
+    // Resilient Normalization: Ensure name_th and name_en always exist even if upstream schema evolves
+    if (Array.isArray(data)) {
+      data = data.map((item: any) => {
+        if (item && typeof item === "object") {
+          return {
+            ...item,
+            name_th: item.name_th ?? (typeof item.name === "object" ? item.name?.th : item.name) ?? "",
+            name_en: item.name_en ?? (typeof item.name === "object" ? item.name?.en : "") ?? "",
+          };
+        }
+        return item;
+      });
+    }
 
     // Return with Cache headers
     // s-maxage=3600 (shared cache/CDN - 1 hour)

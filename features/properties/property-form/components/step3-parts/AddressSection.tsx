@@ -387,7 +387,12 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
 
   const activeDistrictId = React.useMemo(() => {
     if (!watchedDistrict || !districtOptions.length) return null;
-    const d = districtOptions.find((item) => item.name_th === watchedDistrict);
+    const target = cleanWordGlobal(watchedDistrict).toLowerCase();
+    const d = districtOptions.find(
+      (item) =>
+        cleanWordGlobal(item.name_th).toLowerCase() === target ||
+        item.name_en?.toLowerCase() === target
+    );
     return d ? d.id : null;
   }, [watchedDistrict, districtOptions]);
 
