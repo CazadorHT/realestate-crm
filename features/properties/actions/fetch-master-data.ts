@@ -428,6 +428,39 @@ export async function getTransitStationsWithCountsAction() {
   }
 }
 
+/**
+ * Fetch count of properties per province across non-deleted properties.
+ * Cached with short revalidation for fast UI rendering in property form step 1.
+ */
+export async function getProvincePropertyCountsAction(): Promise<Record<string, number>> {
+  try {
+    return await unstable_cache(
+      async () => {
+        const supabase = createPublicClient();
+        const { data, error } = await supabase
+          .from("properties")
+          .select("province")
+          .is("deleted_at", null);
 
+        if (error) {
+          console.error("Error fetching province property counts:", error);
+          return {};
+        }
 
-
+        const counts: Record<string, number> = {};
+        data?.forEach((row: { province: string | null }) => {
+          const p = row.province?.trim();
+          if (p) {
+            counts[p] = (counts[p] || 0) + 1;
+          }
+        });
+        return counts;
+      },
+      ["province-property-counts-v1"],
+      { revalidate: 60, tags: ["properties", "province-counts"] }
+    )();
+  } catch (err) {
+    console.error("Error in getProvincePropertyCountsAction:", err);
+    return {};
+  }
+}

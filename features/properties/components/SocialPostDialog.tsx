@@ -8,7 +8,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertCircle, ImageIcon, Settings, Zap, X, Copy, Edit, Sparkles, Trash2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, ImageIcon, Settings, Zap, X, Copy, Edit, Sparkles, Trash2, Upload, Clipboard } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -155,6 +155,59 @@ export function SocialPostDialog({
   // Social Studio Cover Banner Integration State
   const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [customCoverUrl, setCustomCoverUrl] = useState<string | null>(initialCoverUrl || null);
+  const [isDraggingPoster, setIsDraggingPoster] = useState(false);
+  const posterFileInputRef = useRef<HTMLInputElement>(null);
+
+  const processPosterFile = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error(isEn ? "Please upload an image file (PNG, JPG, WEBP)" : "กรุณาอัปโหลดไฟล์รูปภาพ (PNG, JPG, WEBP)");
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error(isEn ? "File size must not exceed 20MB" : "ขนาดไฟล์ต้องไม่เกิน 20MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setCustomCoverUrl(dataUrl);
+        setImages((prev) => [dataUrl, ...prev.filter((u) => u !== dataUrl)]);
+        toast.success(
+          isEn
+            ? "Custom poster set as Cover #1 ✨ (Will not affect CRM property gallery)"
+            : "ตั้งภาพโปสเตอร์เป็นภาพปกแรกเรียบร้อย ✨ (ไม่กระทบคลังรูปในระบบ)"
+        );
+      }
+    };
+    reader.readAsDataURL(file);
+  }, [isEn]);
+
+  // Listen to Paste (Ctrl+V / Cmd+V) when modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith("image/")) {
+          const file = items[i].getAsFile();
+          if (file) {
+            e.preventDefault();
+            processPosterFile(file);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [isOpen, processPosterFile]);
 
   // Multi-Account Meta Integration State
   const [metaAccounts, setMetaAccounts] = useState<any[]>([]);
@@ -1016,7 +1069,41 @@ export function SocialPostDialog({
             )}
 
             {/* Social Studio Banner Option */}
-            <div className="p-3.5 rounded-2xl border border-amber-200/80 bg-linear-to-r from-amber-500/10 via-amber-400/5 to-transparent space-y-3 shadow-xs">
+            <input
+              type="file"
+              ref={posterFileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  processPosterFile(file);
+                }
+                e.target.value = "";
+              }}
+            />
+
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingPoster(true);
+              }}
+              onDragLeave={() => setIsDraggingPoster(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingPoster(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) {
+                  processPosterFile(file);
+                }
+              }}
+              className={cn(
+                "p-3.5 rounded-2xl border transition-all space-y-3 shadow-xs",
+                isDraggingPoster
+                  ? "border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20"
+                  : "border-amber-200/80 bg-linear-to-r from-amber-500/10 via-amber-400/5 to-transparent"
+              )}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {customCoverUrl ? (
@@ -1054,27 +1141,45 @@ export function SocialPostDialog({
                             ? "This custom banner is set as the first image (Image #1) for all channels (Facebook, IG, LINE, TikTok)." 
                             : "ภาพปกนี้ถูกตั้งเป็นภาพแรก (Image #1) เรียบร้อยแล้ว สำหรับทุกช่องทาง (Facebook, IG, LINE, TikTok)")
                         : (isEn 
-                            ? "Create or set a highlight banner as image #1 for all social channels including TikTok." 
-                            : "สร้างหรือใส่ภาพปกแบนเนอร์ไฮไลท์เป็นภาพแรกของโพสต์ (ใช้ได้กับทุกช่องทางรวมถึง TikTok)")}
+                            ? "Upload your own poster, paste with Ctrl+V, or create with AI Studio (used for this post only)." 
+                            : "อัปโหลดภาพโปสเตอร์เอง, ก๊อปปี้แล้วกดวาง (Ctrl+V) หรือสร้างด้วย AI Studio (ใช้เฉพาะโพสต์นี้ ไม่กระทบคลังรูปในระบบ)")}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* 1. Upload Poster from Device */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => posterFileInputRef.current?.click()}
+                  className="flex-1 min-w-[140px] h-9 rounded-xl border-blue-200 bg-blue-50/80 hover:bg-blue-100/90 text-blue-800 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                >
+                  <Upload className="h-3.5 w-3.5 text-blue-600" />
+                  <span>
+                    {customCoverUrl 
+                      ? (isEn ? "📁 Replace Poster" : "📁 เปลี่ยนภาพโปสเตอร์") 
+                      : (isEn ? "📁 Upload Poster" : "📁 อัปโหลดภาพโปสเตอร์เอง")}
+                  </span>
+                </Button>
+
+                {/* 2. AI Social Studio */}
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsStudioOpen(true)}
-                  className="flex-1 h-9 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 hover:text-amber-800 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                  className="flex-1 min-w-[140px] h-9 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 hover:text-amber-800 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-amber-600" />
                   <span>
                     {customCoverUrl 
-                      ? (isEn ? "🎨 Edit / Create New Banner" : "🎨 แก้ไข/สร้างภาพปกใหม่") 
-                      : (isEn ? "✨ + Add Cover Banner with AI Studio" : "✨ + เพิ่ม/สร้างภาพปกด้วย AI Social Studio")}
+                      ? (isEn ? "🎨 Edit in AI Studio" : "🎨 แก้ไขใน AI Studio") 
+                      : (isEn ? "✨ AI Social Studio" : "✨ สร้างด้วย AI Studio")}
                   </span>
                 </Button>
+
+                {/* 3. Remove Cover Button */}
                 {customCoverUrl && (
                   <Button
                     type="button"
@@ -1083,7 +1188,7 @@ export function SocialPostDialog({
                     onClick={() => {
                       setImages((prev) => prev.filter((u) => u !== customCoverUrl));
                       setCustomCoverUrl(null);
-                      toast.info(isEn ? "Removed Social Studio cover banner" : "ถอดภาพปก Social Studio ออกแล้ว");
+                      toast.info(isEn ? "Removed cover banner" : "ถอดภาพปกออกแล้ว");
                     }}
                     className="h-9 px-3 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 text-xs font-bold cursor-pointer"
                     title={isEn ? "Remove Cover" : "ถอดภาพปกออก"}
@@ -1092,6 +1197,16 @@ export function SocialPostDialog({
                     <span>{isEn ? "Remove" : "ถอดภาพปก"}</span>
                   </Button>
                 )}
+              </div>
+
+              {/* Paste / Drag Hint */}
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 pt-0.5 px-0.5">
+                <Clipboard className="h-3 w-3 text-slate-400 shrink-0" />
+                <span>
+                  {isEn 
+                    ? "Tip: Copy any image & press Ctrl+V / ⌘+V to paste as cover, or drag & drop image file here" 
+                    : "ทิป: ก๊อปปี้รูปจากที่ไหนก็ได้ แล้วกด Ctrl+V / ⌘+V เพื่อวางเป็นภาพปกได้ทันที หรือลากไฟล์มาวางที่นี่"}
+                </span>
               </div>
             </div>
           </div>

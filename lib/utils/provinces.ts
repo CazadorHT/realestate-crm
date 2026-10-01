@@ -533,3 +533,90 @@ export function normalizeProvinceInput(input: string | null | undefined): string
   return trimmed;
 }
 
+export interface ProvinceWithCount {
+  id: number | string;
+  name_th: string;
+  name_en?: string;
+  count: number;
+}
+
+export interface PartitionedProvinces {
+  withProperties: ProvinceWithCount[];
+  withoutProperties: ProvinceWithCount[];
+  all: ProvinceWithCount[];
+}
+
+/**
+ * Sorts and partitions provinces for Step 1 of property creation:
+ * 1. Provinces with properties (count > 0) sorted descending (มากไปน้อย).
+ * 2. Visual divider / partition.
+ * 3. Provinces without properties (count === 0) sorted alphabetically ก-ฮ (or A-Z if EN).
+ * Supports search query filtering both groups.
+ */
+export function sortAndPartitionProvinces(
+  provinces: Array<{ id: number | string; name_th: string; name_en?: string }>,
+  propertyCounts: Record<string, number>,
+  searchQuery: string = "",
+  lang: string = "th"
+): PartitionedProvinces {
+  const isEn = lang === "en";
+  const query = searchQuery.trim().toLowerCase();
+
+  // Normalize and attach count
+  const withCounts: ProvinceWithCount[] = provinces.map((p) => {
+    const count = propertyCounts[p.name_th] || propertyCounts[p.name_th.trim()] || 0;
+    return {
+      id: p.id,
+      name_th: p.name_th,
+      name_en: p.name_en || (PROVINCES[p.name_th]?.en ?? ""),
+      count,
+    };
+  });
+
+  // Filter if search query is provided
+  const filtered = query
+    ? withCounts.filter((p) => {
+        const thMatch = p.name_th.toLowerCase().includes(query);
+        const enMatch = (p.name_en || "").toLowerCase().includes(query);
+        const localized = getProvinceName(p.name_th, isEn ? "en" : "th").toLowerCase();
+        const locMatch = localized.includes(query);
+        return thMatch || enMatch || locMatch;
+      })
+    : withCounts;
+
+  const withProperties: ProvinceWithCount[] = [];
+  const withoutProperties: ProvinceWithCount[] = [];
+
+  for (const item of filtered) {
+    if (item.count > 0) {
+      withProperties.push(item);
+    } else {
+      withoutProperties.push(item);
+    }
+  }
+
+  // Sort withProperties: Count descending, tie-breaker alphabetical
+  withProperties.sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;
+    }
+    const nameA = isEn ? (a.name_en || a.name_th) : a.name_th;
+    const nameB = isEn ? (b.name_en || b.name_th) : b.name_th;
+    return nameA.localeCompare(nameB, isEn ? "en" : "th");
+  });
+
+  // Sort withoutProperties: Alphabetical ก-ฮ (or A-Z for en)
+  withoutProperties.sort((a, b) => {
+    const nameA = isEn ? (a.name_en || a.name_th) : a.name_th;
+    const nameB = isEn ? (b.name_en || b.name_th) : b.name_th;
+    return nameA.localeCompare(nameB, isEn ? "en" : "th");
+  });
+
+  return {
+    withProperties,
+    withoutProperties,
+    all: [...withProperties, ...withoutProperties],
+  };
+}
+
+

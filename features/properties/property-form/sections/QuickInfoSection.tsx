@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getProvinceName, getDistrictName, translateLocation } from "@/lib/utils/provinces";
 import { isCbdProperty } from "@/lib/property-utils";
+import { Step1ProvinceSelector } from "@/features/properties/property-form/components/step1-parts";
 
 type Props = {
   popularAreas: string[];
@@ -80,7 +81,6 @@ export function QuickInfoSection({
   const [showAddArea, setShowAddArea] = React.useState(false);
   const { isTranslating, translateTitle } = useAITranslation(form);
   const [isTranslatingArea, setIsTranslatingArea] = React.useState(false);
-  const [provinceOpen, setProvinceOpen] = React.useState(false);
   const [areaOpen, setAreaOpen] = React.useState(false);
   const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false);
 
@@ -405,86 +405,13 @@ export function QuickInfoSection({
                   {isEn ? "Province" : "จังหวัด"} <span className="text-red-500">*</span>
                 </label>
                 <div className="mt-auto w-full">
-                  {isMobileOrTablet ? (
-                    <ResponsiveDialog
-                      open={provinceOpen}
-                      onOpenChange={setProvinceOpen}
-                      title={isEn ? "Select Province" : "เลือกจังหวัด"}
-                      trigger={
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="group rounded-2xl bg-white font-medium px-4 py-7 relative w-full border-slate-200 justify-start h-14 flex items-center gap-3 hover:border-slate-300 hover:bg-slate-50/50 transition-all"
-                        >
-                          <Flag className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
-                          <span className={cn("font-medium transition-colors", field.value ? "text-slate-800 group-hover:text-slate-900" : "text-slate-400 group-hover:text-slate-500")}>
-                            {field.value ? getProvinceName(field.value, isEn ? "en" : "th") : (isEn ? "Select Province" : "เลือกจังหวัด")}
-                          </span>
-                        </Button>
-                      }
-                    >
-                      <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
-                        {provinces.map((p) => {
-                          const isSelected = field.value === p.name_th;
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => {
-                                field.onChange(p.name_th);
-                                setProvinceOpen(false);
-                              }}
-                              className={cn(
-                                "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left",
-                                isSelected
-                                  ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                  : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                              )}
-                            >
-                              <span className="text-sm font-bold">{getProvinceName(p.name_th, isEn ? "en" : "th")}</span>
-                              {isSelected && (
-                                <div className="bg-blue-600 rounded-full p-1 text-white">
-                                  <Check className="h-3 w-3" />
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </ResponsiveDialog>
-                  ) : (
-                    <Select
-                      value={field.value || ""}
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger
-                          id={field.name}
-                          className="rounded-2xl bg-white font-medium px-4 py-7 relative w-full border-slate-200 h-14 focus:ring-2 focus:ring-blue-500"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Flag className="h-5 w-5 text-slate-400" />
-                            <SelectValue placeholder={isEn ? "Select Province" : "เลือกจังหวัด"}>
-                              {field.value ? getProvinceName(field.value, isEn ? "en" : "th") : undefined}
-                            </SelectValue>
-                          </div>
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white rounded-2xl shadow-xl border-slate-100 max-h-[300px]">
-                        <SelectGroup>
-                          {provinces.map((p) => (
-                            <SelectItem
-                              key={p.id}
-                              value={p.name_th}
-                              className="rounded-lg"
-                            >
-                              {getProvinceName(p.name_th, isEn ? "en" : "th")}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
+                  <FormControl>
+                    <Step1ProvinceSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                      isMobileOrTablet={isMobileOrTablet}
+                    />
+                  </FormControl>
                 </div>
                 <FormMessage />
               </FormItem>
