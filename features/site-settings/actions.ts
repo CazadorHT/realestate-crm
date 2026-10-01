@@ -196,10 +196,10 @@ export async function invalidateSiteSettingsCache(tenantId?: string) {
 /**
  * Internal function to get all site settings (Hits DB only on cache miss)
  */
-async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> {
+async function getSiteSettingsInternal(tenantId: string, forceFresh = false): Promise<SiteSettings> {
   const now = Date.now();
   const cached = siteSettingsMemoryCache.get(tenantId);
-  if (cached && now - cached.timestamp < SITE_SETTINGS_CACHE_TTL_MS) {
+  if (!forceFresh && cached && now - cached.timestamp < SITE_SETTINGS_CACHE_TTL_MS) {
     return cached.data;
   }
 
@@ -339,7 +339,7 @@ const getCachedSiteSettingsInternal = (tenantId: string) =>
     }
   )();
 
-export async function getSiteSettings() {
+export async function getSiteSettings(options?: { bypassCache?: boolean }) {
   let tenantId = "global";
   try {
     const { cookies } = await import("next/headers");
@@ -355,6 +355,10 @@ export async function getSiteSettings() {
     }
   } catch (e) {
     // Ignore error for public/anonymous access
+  }
+
+  if (options?.bypassCache) {
+    return getSiteSettingsInternal(tenantId, true);
   }
 
   try {

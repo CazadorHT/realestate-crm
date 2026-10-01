@@ -11,55 +11,55 @@ export interface MetaAccountTargetOptions {
 }
 
 /**
- * Dynamically load token from database settings (multi-account aware), fallback to env variables
+ * Get active Meta connected account (multi-account aware, fresh from service layer)
  */
-export async function getActiveToken(options?: MetaAccountTargetOptions): Promise<string> {
+export async function getActiveMetaAccount(options?: MetaAccountTargetOptions): Promise<any | null> {
   try {
     const { getSiteSettings } = await import("@/features/site-settings/actions");
-    const settings = await getSiteSettings();
+    const settings = await getSiteSettings({ bypassCache: true });
+    const accounts = settings?.meta_connected_accounts || [];
 
-    if (settings?.meta_connected_accounts && settings.meta_connected_accounts.length > 0) {
+    if (accounts && accounts.length > 0) {
       // 1. Match by accountId
       if (options?.accountId) {
-        const found = settings.meta_connected_accounts.find(
-          (a) => a.id === options.accountId && a.is_active !== false
-        );
-        if (found?.page_access_token) return found.page_access_token;
+        const found = accounts.find((a) => a.id === options.accountId && a.is_active !== false);
+        if (found) return found;
       }
 
       // 2. Match by instagramBusinessId
       if (options?.instagramBusinessId) {
-        const found = settings.meta_connected_accounts.find(
+        const found = accounts.find(
           (a) => a.instagram_business_id === options.instagramBusinessId && a.is_active !== false
         );
-        if (found?.page_access_token) return found.page_access_token;
+        if (found) return found;
       }
 
       // 3. Match by pageId
       if (options?.pageId) {
-        const found = settings.meta_connected_accounts.find(
-          (a) => a.page_id === options.pageId && a.is_active !== false
-        );
-        if (found?.page_access_token) return found.page_access_token;
+        const found = accounts.find((a) => a.page_id === options.pageId && a.is_active !== false);
+        if (found) return found;
       }
 
       // 4. Default account
-      const defaultAcc = settings.meta_connected_accounts.find(
-        (a) => a.is_default && a.is_active !== false
-      );
-      if (defaultAcc?.page_access_token) return defaultAcc.page_access_token;
+      const defaultAcc = accounts.find((a) => a.is_default && a.is_active !== false);
+      if (defaultAcc) return defaultAcc;
 
       // 5. First active account
-      const firstActive = settings.meta_connected_accounts.find((a) => a.is_active !== false);
-      if (firstActive?.page_access_token) return firstActive.page_access_token;
-    }
-
-    if (settings?.meta_page_access_token) {
-      return settings.meta_page_access_token;
+      const firstActive = accounts.find((a) => a.is_active !== false);
+      if (firstActive) return firstActive;
     }
   } catch (e) {
-    // Ignore and fallback
+    console.error("[getActiveMetaAccount] Error resolving account:", e);
   }
+  return null;
+}
+
+/**
+ * Dynamically load token from database settings (multi-account aware), fallback to env variables
+ */
+export async function getActiveToken(options?: MetaAccountTargetOptions): Promise<string> {
+  const acc = await getActiveMetaAccount(options);
+  if (acc?.page_access_token) return acc.page_access_token;
   return metaConfig.pageAccessToken;
 }
 
@@ -625,7 +625,8 @@ export async function postToMetaPage(
   platform: MetaPlatform = "FACEBOOK",
   targetOptions?: MetaAccountTargetOptions,
 ): Promise<MetaApiResponse> {
-  const token = await getActiveToken(targetOptions);
+  const targetAcc = await getActiveMetaAccount(targetOptions);
+  const token = targetAcc?.page_access_token || metaConfig.pageAccessToken;
   if (!token)
     return {
       success: false,
@@ -640,14 +641,9 @@ export async function postToMetaPage(
 
   try {
     if (platform === "FACEBOOK") {
-      let targetPageId = targetOptions?.pageId;
-      if (!targetPageId && targetOptions?.accountId) {
-        const { getSiteSettings } = await import("@/features/site-settings/actions");
-        const settings = await getSiteSettings();
-        const acc = settings.meta_connected_accounts?.find((a) => a.id === targetOptions.accountId);
-        if (acc?.page_id) targetPageId = acc.page_id;
-      }
-      targetPageId = targetPageId || "me";
+      // With dedicated Page Access Token, posting to /me posts directly as that page itself!
+      // This strictly prevents any Facebook impersonation/permission errors.
+      const targetPageId = "me";
 
       if (images.length === 0) {
         // Text only post
@@ -687,6 +683,7 @@ export async function postToMetaPage(
       const mediaIds: string[] = [];
       const batchSize = 10;
       const imagesToUpload = images.slice(0, 50);
+      let lastError = "";
 
       console.log(`[FB-POST] Starting upload of ${imagesToUpload.length} photos in batches of ${batchSize}...`);
 
@@ -712,11 +709,17 @@ export async function postToMetaPage(
               return { success: true, id: uploadData.id };
             } else {
               console.warn(`[FB-POST] Failed to upload photo (${imgUrl}) to FB:`, uploadData);
-              if (uploadData.error?.code === 190 || uploadData.error?.message?.toLowerCase().includes("access token") || uploadData.error?.message?.toLowerCase().includes("session")) {
+              if (
+                uploadData.error?.code === 190 ||
+                uploadData.error?.code === 200 ||
+                uploadData.error?.message?.toLowerCase().includes("access token") ||
+                uploadData.error?.message?.toLowerCase().includes("session") ||
+                uploadData.error?.message?.includes("as the page itself")
+              ) {
                 return {
                   success: false,
                   isTokenError: true,
-                  error: `Token การเชื่อมต่อหมดอายุหรือไม่มีสิทธิ์ใช้งาน (กรุณากดอัปเดต Token ในหน้าตั้งค่า) [รายละเอียด: ${uploadData.error.message}]`,
+                  error: `Token หรือสิทธิ์ของเพจไม่ถูกต้อง: ${uploadData.error?.message || "Token error"} (กรุณาตรวจสอบว่าบัญชีนี้ใช้ Page Access Token ของเพจตนเองในหน้าตั้งค่า)`,
                 };
               }
               return { success: false, error: uploadData.error?.message || "Unknown error" };
@@ -739,6 +742,8 @@ export async function postToMetaPage(
         for (const r of batchResults) {
           if (r.success && r.id) {
             mediaIds.push(r.id);
+          } else if (!r.success && r.error) {
+            lastError = r.error;
           }
         }
       }
@@ -748,8 +753,9 @@ export async function postToMetaPage(
       if (mediaIds.length === 0) {
         return {
           success: false,
-          error:
-            "ไม่สามารถอัปโหลดรูปภาพไปยัง Facebook สำหรับโพสต์แบบกลุ่มได้เลยแม้แต่รูปเดียว (กรุณาเช็คว่า URL รูปภาพเข้าถึงได้จากอินเทอร์เน็ตหรือไม่)",
+          error: lastError
+            ? `ไม่สามารถอัปโหลดรูปภาพไปยัง Facebook ได้ (${lastError})`
+            : "ไม่สามารถอัปโหลดรูปภาพไปยัง Facebook สำหรับโพสต์แบบกลุ่มได้เลยแม้แต่รูปเดียว (กรุณาเช็คว่า URL รูปภาพเข้าถึงได้จากอินเทอร์เน็ตหรือไม่)",
         };
       }
 
@@ -775,13 +781,8 @@ export async function postToMetaPage(
       return { success: true, data: feedData };
     } else if (platform === "INSTAGRAM") {
       // Instagram Post
-      let igId: string | null | undefined = targetOptions?.instagramBusinessId;
-      if (!igId && targetOptions?.accountId) {
-        const { getSiteSettings } = await import("@/features/site-settings/actions");
-        const settings = await getSiteSettings();
-        const acc = settings.meta_connected_accounts?.find((a) => a.id === targetOptions.accountId);
-        if (acc?.instagram_business_id) igId = acc.instagram_business_id;
-      }
+      let igId: string | null | undefined =
+        targetOptions?.instagramBusinessId || targetAcc?.instagram_business_id;
       if (!igId) {
         igId = await discoverInstagramBusinessId();
       }

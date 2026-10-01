@@ -1154,7 +1154,7 @@ export function SocialPostDialog({
                   type="button"
                   variant="outline"
                   onClick={() => posterFileInputRef.current?.click()}
-                  className="flex-1 min-w-[140px] h-9 rounded-xl border-blue-200 bg-blue-50/80 hover:bg-blue-100/90 text-blue-800 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                  className="flex-1 min-w-[140px] h-9 rounded-xl border-blue-200 bg-blue-50/80 hover:bg-blue-100/90 text-blue-800! font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
                 >
                   <Upload className="h-3.5 w-3.5 text-blue-600" />
                   <span>
