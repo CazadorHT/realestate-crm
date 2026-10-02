@@ -70,7 +70,7 @@ export function ImageLightbox({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="fixed! inset-0! left-0! top-0! translate-x-0! translate-y-0! w-full! h-[100dvh]! max-h-[100dvh]! max-w-none! rounded-none! p-0 border-none bg-black/90 flex flex-col items-center justify-center z-150 overflow-hidden"
+        className="fixed! inset-0! left-0! top-0! translate-x-0! translate-y-0! w-full! h-[100dvh]! max-h-[100dvh]! max-w-none! rounded-none! p-0 border-none bg-black flex flex-col items-center justify-center z-150 overflow-hidden"
         showCloseButton={false}
         overlayClassName="z-150"
       >
@@ -109,7 +109,7 @@ export function ImageLightbox({
           <X className="h-6 w-6" />
         </button>
 
-        <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-6 md:p-10 mb-24 md:mb-28 mt-20 md:mt-24 overflow-hidden select-none">
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden select-none">
           <AnimatePresence initial={false} custom={direction}>
             <m.div
               key={currentIndex}
@@ -151,7 +151,7 @@ export function ImageLightbox({
                   }
                 }
               }}
-              className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 select-none touch-pan-y"
+              className="absolute inset-0 flex items-center justify-center select-none touch-pan-y pt-14 md:pt-16 pb-20 md:pb-24 px-2 sm:px-6 md:px-8"
             >
               <div className="relative w-full h-full">
                 <Image
