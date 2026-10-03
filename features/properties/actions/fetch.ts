@@ -72,6 +72,7 @@ interface MetaData {
   created_by?: string;
   requires_ai_review?: boolean;
   co_agent?: { name?: string; phone?: string; contact_id?: string };
+  catalog_target_listing_type?: "ALL" | "SALE" | "RENT";
 }
 
 interface AggregationRow {
@@ -237,6 +238,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       co_agent_name: meta?.co_agent?.name || "",
       co_agent_phone: meta?.co_agent?.phone || "",
       co_agent_contact_id: meta?.co_agent?.contact_id || "",
+      catalog_target_listing_type: meta?.catalog_target_listing_type || "ALL",
     } as unknown as PropertyRow;
 
     return property;

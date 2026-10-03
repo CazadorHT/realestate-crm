@@ -355,6 +355,7 @@ export interface BannerRenderOptions {
   highlights?: string[];
   propertyType?: string | null;
   listingType?: string | null;
+  targetListingType?: "ALL" | "SALE" | "RENT";
   priceText: string;
   originalPriceText?: string;
   locationText?: string;

@@ -60,6 +60,7 @@ describe("updatePropertyAction", () => {
     description_en: "Description EN",
     property_type: "CONDO",
     listing_type: "SALE",
+    catalog_target_listing_type: "ALL",
     status: "ACTIVE",
     price: 1000000,
     original_price: 1000000,

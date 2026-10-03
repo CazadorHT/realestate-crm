@@ -162,6 +162,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   property_source: "",
   video_url: "",
   floor_plan_url: "",
+  catalog_target_listing_type: "ALL",
   version: 1,
 };
 
@@ -294,6 +295,7 @@ export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
     "has_wine_cellar",
   ],
   6: ["description", "description_en", "description_cn", "description_ru", "status"],
+  7: ["catalog_target_listing_type"],
 };
 
 export const FIELD_LABELS: Record<string, string> = {
@@ -638,5 +640,6 @@ export function mapRowToFormValues(
 
     // Versioning
     version: Number(row.version || meta.version || 1),
+    catalog_target_listing_type: (get("catalog_target_listing_type", "ALL") as "ALL" | "SALE" | "RENT") || "ALL",
   };
 }

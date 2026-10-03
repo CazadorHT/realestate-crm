@@ -16,6 +16,7 @@ export async function postPropertyToLineAction(
   customMessage?: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
   customCoverUrl?: string,
+  targetListingType?: "ALL" | "SALE" | "RENT",
 ) {
   try {
     const { supabase, role } = await requireAuthContext();
@@ -70,8 +71,10 @@ export async function postPropertyToLineAction(
     }
 
     // 3. เตรียมรูปภาพและเนื้อหา (ใช้ Line Template เฉพาะ)
-    const contentData = await getPropertySocialContent(propertyId, lang, "LINE");
-    let images = contentData.images || [];
+    const contentData = await getPropertySocialContent(propertyId, lang, "LINE", targetListingType);
+    let images = (contentData.images || []).filter(
+      (u: string) => typeof u === "string" && !u.includes("social-covers/")
+    );
 
     if (customCoverUrl && customCoverUrl.trim()) {
       const cleanUrl = customCoverUrl.trim();
@@ -80,7 +83,7 @@ export async function postPropertyToLineAction(
 
     // หากมีการแก้ไขข้อความ (customMessage) ให้ลอง Render Tags ใหม่
     const finalContent = customMessage 
-      ? await renderPropertySocialTemplate(customMessage, p, lang)
+      ? await renderPropertySocialTemplate(customMessage, p, lang, targetListingType)
       : contentData.content;
 
     // 3. สร้าง Flex Message

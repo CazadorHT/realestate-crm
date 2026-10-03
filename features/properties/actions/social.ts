@@ -136,6 +136,7 @@ export async function renderPropertySocialTemplate(
   template: string,
   property: SocialProperty,
   lang: string,
+  targetListingType?: "ALL" | "SALE" | "RENT",
 ) {
   if (!template) return "";
   if (!property) return template;
@@ -145,7 +146,13 @@ export async function renderPropertySocialTemplate(
     process.env.NEXT_PUBLIC_SITE_URL ||
     ""
   ).replace(/\/$/, "");
-  const publicUrl = `${baseUrl}/properties/${property.slug || property.id || ""}`;
+  const utmCampaign =
+    targetListingType === "SALE"
+      ? "sale_post"
+      : targetListingType === "RENT"
+        ? "rent_post"
+        : "social_post";
+  const publicUrl = `${baseUrl}/properties/${property.slug || property.id || ""}?utm_source=social&utm_medium=post&utm_campaign=${utmCampaign}`;
 
   const tSale =
     lang === "th"
@@ -180,8 +187,15 @@ export async function renderPropertySocialTemplate(
           ? "/мес"
           : "/月";
 
+  const effectiveListingType =
+    targetListingType === "SALE"
+      ? "SALE"
+      : targetListingType === "RENT"
+        ? "RENT"
+        : property.listing_type;
+
   let priceText = "";
-  if (property.listing_type === "SALE_AND_RENT") {
+  if (effectiveListingType === "SALE_AND_RENT") {
     const parts = [];
     if (property.price)
       parts.push(`${tSale} ${formatPrice(property.price)} ${tBaht}`);
@@ -190,7 +204,7 @@ export async function renderPropertySocialTemplate(
         `${tRent} ${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}`,
       );
     priceText = parts.join(" | ");
-  } else if (property.listing_type === "RENT") {
+  } else if (effectiveListingType === "RENT") {
     priceText = property.rental_price
       ? `${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}`
       : "";
@@ -199,7 +213,7 @@ export async function renderPropertySocialTemplate(
   }
 
   let originalPriceText = "";
-  if (property.listing_type === "SALE_AND_RENT") {
+  if (effectiveListingType === "SALE_AND_RENT") {
     const parts = [];
     if (property.original_price)
       parts.push(`${tSale} ${formatPrice(property.original_price)} ${tBaht}`);
@@ -208,7 +222,7 @@ export async function renderPropertySocialTemplate(
         `${tRent} ${formatPrice(property.original_rental_price)} ${tBaht}${tPerMonth}`,
       );
     originalPriceText = parts.join(" | ");
-  } else if (property.listing_type === "RENT") {
+  } else if (effectiveListingType === "RENT") {
     originalPriceText = property.original_rental_price
       ? `${formatPrice(property.original_rental_price)} ${tBaht}${tPerMonth}`
       : "";
@@ -313,9 +327,9 @@ export async function renderPropertySocialTemplate(
     cn: { SALE: "出售", RENT: "出租", SALE_AND_RENT: "出售/出租" },
     ru: { SALE: "Продажа", RENT: "Аренда", SALE_AND_RENT: "Продажа/Аренда" },
   };
-  const tListingType = property.listing_type
-    ? LISTING_TYPE_LABELS[lang]?.[property.listing_type] ||
-      property.listing_type
+  const tListingType = effectiveListingType
+    ? LISTING_TYPE_LABELS[lang]?.[effectiveListingType] ||
+      effectiveListingType
     : "";
 
   const tAmenities =
@@ -829,6 +843,7 @@ export async function getPropertySocialContent(
   propertyId: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
   platform?: "FACEBOOK" | "INSTAGRAM" | "LINE" | "TIKTOK",
+  targetListingType?: "ALL" | "SALE" | "RENT",
 ) {
   const { supabase } = await requireAuthContext();
 
@@ -1055,8 +1070,15 @@ export async function getPropertySocialContent(
           ? "/мес"
           : "/月";
 
+  const effectiveListingType =
+    targetListingType === "SALE"
+      ? "SALE"
+      : targetListingType === "RENT"
+        ? "RENT"
+        : property.listing_type;
+
   let priceText = "";
-  if (property.listing_type === "SALE_AND_RENT") {
+  if (effectiveListingType === "SALE_AND_RENT") {
     const parts = [];
     if (property.price)
       parts.push(`${tSale} ${formatPrice(property.price)} ${tBaht}`);
@@ -1065,7 +1087,7 @@ export async function getPropertySocialContent(
         `${tRent} ${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}`,
       );
     priceText = parts.join(" | ");
-  } else if (property.listing_type === "RENT") {
+  } else if (effectiveListingType === "RENT") {
     priceText = property.rental_price
       ? `${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}`
       : "";
@@ -1168,6 +1190,7 @@ export async function getPropertySocialContent(
     template,
     property,
     lang,
+    targetListingType,
   );
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const rawImages =
@@ -1204,13 +1227,15 @@ export async function getPropertySocialContent(
     bathrooms: property.bathrooms,
     size_sqm: property.size_sqm,
     land_size_sqwah: property.land_size_sqwah,
-    listingType: property.listing_type,
+    listingType: effectiveListingType,
     listingType_label:
-      property.listing_type === "SALE"
+      effectiveListingType === "SALE"
         ? tSale
-        : property.listing_type === "RENT"
+        : effectiveListingType === "RENT"
           ? tRent
-          : "Sale/Rent",
+          : `${tSale}/${tRent}`,
+    targetListingType: targetListingType || "ALL",
+    hasBothSaleAndRent: Boolean(property.price && property.rental_price) || property.listing_type === "SALE_AND_RENT",
     isExclusive: property.is_exclusive,
     verified: property.verified,
     isConnected,
@@ -1228,6 +1253,7 @@ export async function postPropertyToMetaAction(
   lang: "th" | "en" | "cn" | "ru" = "th",
   customCoverUrl?: string,
   targetAccountId?: string,
+  targetListingType?: "ALL" | "SALE" | "RENT",
 ) {
   try {
     const { supabase, user, role } = await requireAuthContext();
@@ -1249,8 +1275,11 @@ export async function postPropertyToMetaAction(
       propertyId,
       lang,
       platform,
+      targetListingType,
     );
-    let rawImages = contentData.images || [];
+    let rawImages = (contentData.images || []).filter(
+      (u: string) => typeof u === "string" && !u.includes("social-covers/")
+    );
 
     // Process Custom Cover URL if provided (Base64 or HTTP URL)
     if (customCoverUrl && customCoverUrl.trim()) {
@@ -1295,8 +1324,8 @@ export async function postPropertyToMetaAction(
     const images = rawImages
       .map((url) => {
         let activeUrl = url;
-        // Rewrite localhost URLs in production to prevent Facebook from failing to fetch them
-        if (process.env.NODE_ENV === "production" && (activeUrl.includes("localhost") || activeUrl.includes("127.0.0.1"))) {
+        // Rewrite localhost URLs to public Supabase URL so Facebook can always fetch them
+        if (activeUrl.includes("localhost") || activeUrl.includes("127.0.0.1")) {
           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
           if (supabaseUrl && activeUrl.includes("/storage/v1/object/public/")) {
             const pathParts = activeUrl.split("/storage/v1/object/public/");
@@ -1315,6 +1344,7 @@ export async function postPropertyToMetaAction(
           customContent,
           p as SocialProperty,
           lang,
+          targetListingType,
         )
       : contentData.content;
 
@@ -1502,6 +1532,11 @@ export async function generateSocialBannerContentAction(
     - Location: ${input.popularArea || ""} ${input.province || ""}
     - Specs: ${input.bedrooms ? input.bedrooms + " Bed" : ""} ${input.bathrooms ? input.bathrooms + " Bath" : ""} ${input.sizeSqm ? input.sizeSqm + " Sqm" : ""}
     - Near Transit: ${input.transitStationName ? input.transitStationName + (input.transitDistanceMeters ? ` (${input.transitDistanceMeters}m)` : "") : "N/A"}
+    ${input.listingType === "SALE"
+      ? "- TARGET AUDIENCE: BUYER / INVESTOR. Write an irresistible buyer-oriented hook focusing on great investment value, capital growth, loan availability, or owning prime real estate."
+      : input.listingType === "RENT"
+      ? "- TARGET AUDIENCE: TENANT / RENTER. Write an attractive tenant-oriented hook focusing on ready-to-move-in convenience, prime lifestyle, monthly affordability, or fully furnished comfort."
+      : "- TARGET AUDIENCE: General buyers and tenants (Dual Sale & Rent listing)."}
 
     Language requested: ${lang === "en" ? "English" : lang === "cn" ? "Chinese" : lang === "ru" ? "Russian" : "Thai"}
 

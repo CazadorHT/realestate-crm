@@ -199,8 +199,14 @@ function buildMetaCatalogXml(propertiesData: any[]) {
 
     const modesToGenerate: ListingMode[] = [];
 
-    const hasSale = (p.listing_type === 0 || p.listing_type === 2) && Boolean(p.sale_price && p.sale_price > 0);
-    const hasRent = (p.listing_type === 1 || p.listing_type === 2) && Boolean(p.rent_price && p.rent_price > 0);
+    // Check if property specifies target listing type in metadata (e.g. ALL, SALE, RENT)
+    const catalogTargetMode = String(metaObj?.catalog_target_listing_type || "ALL").toUpperCase();
+    const isSaleAllowed = catalogTargetMode !== "RENT";
+    const isRentAllowed = catalogTargetMode !== "SALE";
+
+    const isOriginallyDual = (p.listing_type === 2) || (Boolean(p.sale_price && p.sale_price > 0) && Boolean(p.rent_price && p.rent_price > 0));
+    const hasSale = isSaleAllowed && (p.listing_type === 0 || p.listing_type === 2) && Boolean(p.sale_price && p.sale_price > 0);
+    const hasRent = isRentAllowed && (p.listing_type === 1 || p.listing_type === 2) && Boolean(p.rent_price && p.rent_price > 0);
     const isBoth = hasSale && hasRent;
 
     if (hasSale) {
@@ -213,15 +219,18 @@ function buildMetaCatalogXml(propertiesData: any[]) {
       else if (price < 30000000) pb = "ขาย 10-30 ล้าน";
       else pb = "ขาย 30 ล้าน+";
 
+      // Stable ID: if property is originally dual (sale & rent), always preserve ${p.id}-sale to prevent duplicate items on Meta
+      const saleItemId = isOriginallyDual ? `${p.id}-sale` : p.id;
+
       modesToGenerate.push({
-        id: isBoth ? `${p.id}-sale` : p.id,
+        id: saleItemId,
         mode: "sale",
         listingType: "for_sale_by_agent",
         availability: "for_sale",
         currentPrice: price,
         originalPrice: orig,
         hasDiscount: disc,
-        title: isBoth ? formatTitleForMode(title, "sale") : title,
+        title: isOriginallyDual ? formatTitleForMode(title, "sale") : title,
         priceBand: pb,
         modeTh: "ขาย",
       });
@@ -237,15 +246,18 @@ function buildMetaCatalogXml(propertiesData: any[]) {
       else if (price < 80000) pb = "เช่า 30,000-80,000";
       else pb = "เช่า 80,000+";
 
+      // Stable ID: if property is originally dual (sale & rent), always preserve ${p.id}-rent to prevent duplicate items on Meta
+      const rentItemId = isOriginallyDual ? `${p.id}-rent` : p.id;
+
       modesToGenerate.push({
-        id: isBoth ? `${p.id}-rent` : p.id,
+        id: rentItemId,
         mode: "rent",
         listingType: "for_rent_by_agent",
         availability: "for_rent",
         currentPrice: price,
         originalPrice: orig,
         hasDiscount: disc,
-        title: isBoth ? formatTitleForMode(title, "rent") : title,
+        title: isOriginallyDual ? formatTitleForMode(title, "rent") : title,
         priceBand: pb,
         modeTh: "ให้เช่า",
       });

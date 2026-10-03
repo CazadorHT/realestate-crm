@@ -39,6 +39,7 @@ interface SocialStudioModalProps {
   onClose: () => void;
   property: SocialStudioProperty;
   onApplyCoverToPost?: (coverDataUrl: string) => void;
+  initialTargetListingType?: "ALL" | "SALE" | "RENT";
 }
 
 export function SocialStudioModal({
@@ -46,6 +47,7 @@ export function SocialStudioModal({
   onClose,
   property,
   onApplyCoverToPost,
+  initialTargetListingType,
 }: SocialStudioModalProps) {
   const { language: uiLang } = useLanguage();
   const isEn = uiLang === "en";
@@ -67,6 +69,7 @@ export function SocialStudioModal({
     isOpen,
     property,
     initialLanguage: (uiLang as StudioLanguage) || "en",
+    initialTargetListingType,
   });
 
   // Export & Share Engine
@@ -348,6 +351,52 @@ export function SocialStudioModal({
                   ))}
                 </div>
 
+                {/* 📢 Dual Listing Quick Mode Switcher (Visible across all tabs when property has both sale & rent) */}
+                {state.hasBothSaleAndRent && (
+                  <div className="p-2.5 rounded-2xl bg-linear-to-r from-amber-500/10 via-slate-950/80 to-slate-950/80 border border-amber-500/30 flex items-center justify-between gap-2 shadow-xs">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-xs font-bold text-amber-300 flex items-center gap-1">
+                        ✨ {isEn ? "Post Type:" : "โหมดโพสต์:"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-xl border border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => state.setTargetListingType("ALL")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          state.targetListingType === "ALL"
+                            ? "bg-amber-500 text-slate-950 font-bold shadow-xs"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {isEn ? "Sale & Rent" : "ขาย & เช่า"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => state.setTargetListingType("SALE")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          state.targetListingType === "SALE"
+                            ? "bg-blue-600 text-white font-bold shadow-xs"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {isEn ? "For Sale" : "เฉพาะขาย"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => state.setTargetListingType("RENT")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          state.targetListingType === "RENT"
+                            ? "bg-emerald-600 text-white font-bold shadow-xs"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {isEn ? "For Rent" : "เฉพาะเช่า"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* TAB 1: Layout & Theme */}
                 {activeTab === "layout" && (
                   <div className="space-y-4 animate-in fade-in duration-200">
@@ -526,6 +575,9 @@ export function SocialStudioModal({
                       }
                       headline={state.headline}
                       setHeadline={state.setHeadline}
+                      targetListingType={state.targetListingType}
+                      setTargetListingType={state.setTargetListingType}
+                      hasBothSaleAndRent={state.hasBothSaleAndRent}
                       isGeneratingAI={state.isGeneratingAI}
                       onFetchAIContent={() => state.fetchAIContent()}
                       showQrCode={state.showQrCode}

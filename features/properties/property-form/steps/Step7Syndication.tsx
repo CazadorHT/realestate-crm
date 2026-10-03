@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { toast } from "sonner";
 
@@ -25,6 +26,11 @@ export function Step7Syndication({ mode }: Step7SyndicationProps) {
   const isEn = language === "en";
   const form = useFormContext<PropertyFormValues>();
   const propertyId = form.getValues().id || "new";
+
+  const listingType = form.watch("listing_type");
+  const salePrice = form.watch("original_price") || form.watch("price");
+  const rentPrice = form.watch("original_rental_price") || form.watch("rental_price");
+  const isDual = listingType === "SALE_AND_RENT" || (Boolean(salePrice && salePrice > 0) && Boolean(rentPrice && rentPrice > 0));
 
   const platforms = [
     {
@@ -140,6 +146,93 @@ export function Step7Syndication({ mode }: Step7SyndicationProps) {
         })}
       </div>
 
+      {/* Target Listing Type for Meta Catalog (ป้องกันสินค้าซ้ำ และจัดสรรงบยิงแอด) */}
+      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="font-bold text-slate-900 text-base">
+                {isEn ? "Target Listing Type for Meta Catalog" : "เลือกประเภทประกาศที่ส่งเข้า Meta Catalog"}
+              </h4>
+              {isDual && (
+                <span className="text-[11px] bg-amber-50 text-amber-700 border border-amber-200 font-semibold px-2 py-0.5 rounded-full">
+                  {isEn ? "Dual Listing (Sale & Rent)" : "ทรัพย์มีทั้งขายและเช่า"}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              {isEn
+                ? "Choose whether to syndicate both, or send only Sale or Rent. The system maintains stable IDs (e.g. ID-sale / ID-rent) to prevent duplicate items."
+                : "เลือกว่าจะส่งทั้ง 2 รายการ หรือส่งเฉพาะขาย หรือเฉพาะเช่า ระบบใช้ Unique Key แยก ID ชัดเจนเพื่อป้องกันการส่งสินค้าซ้ำเข้า Facebook Catalog"}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          {[
+            {
+              id: "ALL",
+              title: isEn ? "Both (Sale & Rent)" : "ทั้งขายและเช่า (ส่ง 2 รายการ)",
+              desc: isEn
+                ? "Syndicates both IDs (id-sale & id-rent) to Meta Catalog"
+                : "ส่งทั้งประกาศขายและเช่าเข้า Catalog โดยแยก ID ไม่ทับกัน",
+              badgeColor: "bg-slate-100 text-slate-700",
+            },
+            {
+              id: "SALE",
+              title: isEn ? "Sale Only" : "เฉพาะขาย (Sale Only)",
+              desc: isEn
+                ? "Syndicates only sale price (id-sale). Optimizes ad spend."
+                : "ส่งเฉพาะราคาขาย เหมาะกับการยิงโฆษณา ไม่เปลืองงบกับทรัพย์เช่า",
+              badgeColor: "bg-blue-100 text-blue-700",
+            },
+            {
+              id: "RENT",
+              title: isEn ? "Rent Only" : "เฉพาะเช่า (Rent Only)",
+              desc: isEn
+                ? "Syndicates only rental price (id-rent)."
+                : "ส่งเฉพาะราคาค่าเช่า สำหรับเจาะกลุ่มผู้เช่าโดยตรง",
+              badgeColor: "bg-emerald-100 text-emerald-700",
+            },
+          ].map((item) => {
+            const isSelected = (form.watch("catalog_target_listing_type") || "ALL") === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  form.setValue("catalog_target_listing_type", item.id as any, { shouldDirty: true });
+                  toast.success(
+                    isEn
+                      ? `Catalog mode set to: ${item.title}`
+                      : `ตั้งค่าประเภทใน Catalog เป็น: ${item.title}`
+                  );
+                }}
+                className={cn(
+                  "p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2",
+                  isSelected
+                    ? "border-blue-600 bg-blue-50/60 shadow-xs ring-1 ring-blue-600"
+                    : "border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm text-slate-900">{item.title}</span>
+                  <div
+                    className={cn(
+                      "w-4 h-4 rounded-full border flex items-center justify-center",
+                      isSelected ? "border-blue-600 bg-blue-600" : "border-slate-300 bg-white"
+                    )}
+                  >
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl">
         <h5 className="font-bold text-slate-800 flex items-center gap-2 mb-3">
           <Globe className="h-4 w-4 text-slate-400" />
@@ -179,23 +272,5 @@ export function Step7Syndication({ mode }: Step7SyndicationProps) {
         </div>
       )}
     </div>
-  );
-}
-
-// Simple fallback Button if not imported
-function Button({ children, variant, size, className, onClick }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "px-4 py-2 rounded-lg font-medium transition-all text-sm",
-        variant === "outline"
-          ? "border border-slate-200 hover:bg-slate-50"
-          : "bg-blue-600 text-white hover:bg-blue-700",
-        className,
-      )}
-    >
-      {children}
-    </button>
   );
 }

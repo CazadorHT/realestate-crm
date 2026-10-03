@@ -234,6 +234,7 @@ export const getPropertySchema = (isEn: boolean) => z
         }),
       )
       .optional(),
+    catalog_target_listing_type: z.enum(["ALL", "SALE", "RENT"]).optional().default("ALL"),
   });
 
 export const PropertySchema = getPropertySchema(false);

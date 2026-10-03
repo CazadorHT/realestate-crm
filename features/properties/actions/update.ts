@@ -556,6 +556,7 @@ export async function updatePropertyAction(
             contact_id: safeValues.co_agent_contact_id,
           },
           property_source: safeValues.property_source,
+          catalog_target_listing_type: safeValues.catalog_target_listing_type || (existingMeta?.catalog_target_listing_type as any) || "ALL",
           requires_ai_review: currentRequiresAiReview,
           video_url: safeValues.video_url,
           floor_plan_url: safeValues.floor_plan_url,

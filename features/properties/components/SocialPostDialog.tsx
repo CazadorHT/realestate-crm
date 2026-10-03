@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 
 async function ensurePublicCoverUrl(
   propertyId: string,
-  coverUrl: string | null
+  coverUrl: string | null | undefined
 ): Promise<string | undefined> {
   if (!coverUrl || !coverUrl.trim()) return undefined;
   const url = coverUrl.trim();
@@ -38,8 +38,35 @@ async function ensurePublicCoverUrl(
     return url;
   }
 
+  if (url.startsWith("blob:")) {
+    try {
+      const blobRes = await fetch(url);
+      const blob = await blobRes.blob();
+      const formData = new FormData();
+      formData.append("file", blob, "cover.jpg");
+      formData.append("propertyId", propertyId);
+      const response = await fetch("/api/upload-cover", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.success && data.url) {
+        return data.url;
+      }
+    } catch (err) {
+      console.error("[ensurePublicCoverUrl] Failed to convert blob:", err);
+    }
+  }
+
   if (url.startsWith("data:image/")) {
     try {
+      // 1. Try Server Action directly
+      const actionRes = await uploadCoverBannerAction(propertyId, url);
+      if (actionRes.success && actionRes.url) {
+        return actionRes.url;
+      }
+
+      // 2. Fallback to API route
       const response = await fetch("/api/upload-cover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -52,7 +79,7 @@ async function ensurePublicCoverUrl(
         console.error("[ensurePublicCoverUrl] API upload error:", data.message);
       }
     } catch (err) {
-      console.error("[ensurePublicCoverUrl] Failed to fetch /api/upload-cover:", err);
+      console.error("[ensurePublicCoverUrl] Failed to upload cover:", err);
     }
   }
 
@@ -140,11 +167,18 @@ export function SocialPostDialog({
   const [isCustomContent, setIsCustomContent] = useState(false);
   const [customContent, setCustomContent] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [previewData, setPreviewData] = useState<Record<string, any> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<"IDLE" | "POSTING" | "SUCCESS" | "ERROR">("IDLE");
   const [resultMessage, setResultMessage] = useState("");
   const [selectedLangs, setSelectedLangs] = useState<Array<Language>>(["th"]);
+  const [targetListingType, setTargetListingType] = useState<"ALL" | "SALE" | "RENT">("ALL");
+  const [previewTab, setPreviewTab] = useState<"SALE" | "RENT">("SALE");
+  const [saleContent, setSaleContent] = useState("");
+  const [rentContent, setRentContent] = useState("");
+  const [salePreviewData, setSalePreviewData] = useState<Record<string, any> | null>(null);
+  const [rentPreviewData, setRentPreviewData] = useState<Record<string, any> | null>(null);
   const [isConnected, setIsConnected] = useState(true);
   const [identity, setIdentity] = useState<{ display_name?: string; avatar_url?: string }>({});
   const versionRef = useRef(0);
@@ -155,10 +189,36 @@ export function SocialPostDialog({
   // Social Studio Cover Banner Integration State
   const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [customCoverUrl, setCustomCoverUrl] = useState<string | null>(initialCoverUrl || null);
+  const [saleCoverUrl, setSaleCoverUrl] = useState<string | null>(null);
+  const [rentCoverUrl, setRentCoverUrl] = useState<string | null>(null);
+  const [studioTargetType, setStudioTargetType] = useState<"ALL" | "SALE" | "RENT">("ALL");
   const [isDraggingPoster, setIsDraggingPoster] = useState(false);
   const posterFileInputRef = useRef<HTMLInputElement>(null);
+  const salePosterFileInputRef = useRef<HTMLInputElement>(null);
+  const rentPosterFileInputRef = useRef<HTMLInputElement>(null);
 
-  const processPosterFile = useCallback((file: File) => {
+  const isDualProperty = React.useMemo(() => {
+    const p = previewData?.property || previewData || {};
+    const priceVal = p.price ?? p.sale_price ?? p.selling_price;
+    const rentVal = p.rental_price ?? p.rent_price ?? p.price_rent;
+    return Boolean(priceVal && rentVal) || p.listing_type === "SALE_AND_RENT" || p.listingType === "SALE_AND_RENT";
+  }, [previewData]);
+
+  const effectivePreviewType: "SALE" | "RENT" | "ALL" =
+    targetListingType === "ALL" && isDualProperty
+      ? previewTab
+      : targetListingType;
+
+  const currentCoverUrl = React.useMemo(() => {
+    if (isDualProperty) {
+      if (effectivePreviewType === "SALE") return saleCoverUrl || customCoverUrl;
+      if (effectivePreviewType === "RENT") return rentCoverUrl || customCoverUrl;
+      return saleCoverUrl || rentCoverUrl || customCoverUrl;
+    }
+    return customCoverUrl || saleCoverUrl || rentCoverUrl;
+  }, [isDualProperty, effectivePreviewType, saleCoverUrl, rentCoverUrl, customCoverUrl]);
+
+  const processPosterFile = useCallback(async (file: File, specificTarget?: "SALE" | "RENT") => {
     if (!file.type.startsWith("image/")) {
       toast.error(isEn ? "Please upload an image file (PNG, JPG, WEBP)" : "กรุณาอัปโหลดไฟล์รูปภาพ (PNG, JPG, WEBP)");
       return;
@@ -169,21 +229,93 @@ export function SocialPostDialog({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      if (dataUrl) {
-        setCustomCoverUrl(dataUrl);
-        setImages((prev) => [dataUrl, ...prev.filter((u) => u !== dataUrl)]);
+    const effectiveTarget = specificTarget || targetListingType;
+    const localPreviewUrl = URL.createObjectURL(file);
+
+    // 1. Instant preview in UI
+    if (isDualProperty) {
+      if (effectiveTarget === "SALE") {
+        setSaleCoverUrl(localPreviewUrl);
+        setPreviewTab("SALE");
+      } else if (effectiveTarget === "RENT") {
+        setRentCoverUrl(localPreviewUrl);
+        setPreviewTab("RENT");
+      } else {
+        setCustomCoverUrl(localPreviewUrl);
+      }
+    } else {
+      setCustomCoverUrl(localPreviewUrl);
+    }
+
+    // 2. Upload file in background to get CDN URL immediately
+    const toastId = toast.loading(isEn ? "Uploading poster banner..." : "กำลังบันทึกภาพปกขึ้นระบบ...");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("propertyId", propertyId);
+
+      const res = await fetch("/api/upload-cover", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (data.success && data.url) {
+        const cdnUrl = data.url;
+        if (isDualProperty) {
+          if (effectiveTarget === "SALE") setSaleCoverUrl(cdnUrl);
+          else if (effectiveTarget === "RENT") setRentCoverUrl(cdnUrl);
+          else setCustomCoverUrl(cdnUrl);
+        } else {
+          setCustomCoverUrl(cdnUrl);
+        }
         toast.success(
           isEn
-            ? "Custom poster set as Cover #1 ✨ (Will not affect CRM property gallery)"
-            : "ตั้งภาพโปสเตอร์เป็นภาพปกแรกเรียบร้อย ✨ (ไม่กระทบคลังรูปในระบบ)"
+            ? `Custom poster set as Cover #1 (${effectiveTarget === "SALE" ? "For Sale" : effectiveTarget === "RENT" ? "For Rent" : "General"}) ✨`
+            : `ตั้งภาพโปสเตอร์เป็นภาพปกเรียบร้อย (${effectiveTarget === "SALE" ? "สำหรับขาย" : effectiveTarget === "RENT" ? "สำหรับเช่า" : "ทั่วไป"}) ✨`,
+          { id: toastId }
         );
+      } else {
+        toast.dismiss(toastId);
       }
-    };
-    reader.readAsDataURL(file);
-  }, [isEn]);
+    } catch (err) {
+      console.error("[processPosterFile] Upload error:", err);
+      toast.dismiss(toastId);
+    }
+  }, [isEn, isDualProperty, targetListingType, propertyId]);
+
+  const openStudioForTarget = (type?: "ALL" | "SALE" | "RENT") => {
+    const t = type || targetListingType;
+    setStudioTargetType(t);
+    if (type && type !== targetListingType) {
+      setTargetListingType(type);
+    }
+    setIsStudioOpen(true);
+  };
+
+  const handleApplyStudioCover = async (coverDataUrl: string) => {
+    const publicUrl = await ensurePublicCoverUrl(propertyId, coverDataUrl);
+    const finalCoverUrl = publicUrl || coverDataUrl;
+    const effectiveTarget = studioTargetType || targetListingType;
+    if (isDualProperty) {
+      if (effectiveTarget === "SALE") {
+        setSaleCoverUrl(finalCoverUrl);
+        setPreviewTab("SALE");
+      } else if (effectiveTarget === "RENT") {
+        setRentCoverUrl(finalCoverUrl);
+        setPreviewTab("RENT");
+      } else {
+        setCustomCoverUrl(finalCoverUrl);
+      }
+    } else {
+      setCustomCoverUrl(finalCoverUrl);
+    }
+    toast.success(
+      isEn
+        ? `Applied AI Studio Cover (${effectiveTarget === "SALE" ? "Sale" : effectiveTarget === "RENT" ? "Rent" : "Post"}) ✨`
+        : `บันทึกภาพปก AI Studio (${effectiveTarget === "SALE" ? "โพสต์ขาย" : effectiveTarget === "RENT" ? "โพสต์เช่า" : "ประกาศ"}) เรียบร้อย ✨`
+    );
+  };
 
   // Listen to Paste (Ctrl+V / Cmd+V) when modal is open
   useEffect(() => {
@@ -237,12 +369,35 @@ export function SocialPostDialog({
   }, [initialCoverUrl]);
 
   const displayImages = React.useMemo(() => {
-    const realImages = images.filter((u) => typeof u === "string" && !u.startsWith("data:image/"));
-    if (customCoverUrl) {
-      return [customCoverUrl, ...realImages.filter((u) => u !== customCoverUrl)];
+    const cleanGallery = galleryImages.filter(
+      (u) => typeof u === "string" && !u.startsWith("data:image/") && !u.includes("social-covers/")
+    );
+
+    if (isDualProperty) {
+      if (effectivePreviewType === "SALE") {
+        const activeSale = saleCoverUrl || customCoverUrl;
+        return [
+          ...(activeSale ? [activeSale] : []),
+          ...cleanGallery.filter((u) => u !== saleCoverUrl && u !== rentCoverUrl && u !== customCoverUrl),
+        ];
+      }
+      if (effectivePreviewType === "RENT") {
+        const activeRent = rentCoverUrl || customCoverUrl;
+        return [
+          ...(activeRent ? [activeRent] : []),
+          ...cleanGallery.filter((u) => u !== saleCoverUrl && u !== rentCoverUrl && u !== customCoverUrl),
+        ];
+      }
     }
-    return realImages.length > 0 ? realImages : images;
-  }, [customCoverUrl, images]);
+
+    if (currentCoverUrl) {
+      return [
+        currentCoverUrl,
+        ...cleanGallery.filter((u) => u !== currentCoverUrl && u !== saleCoverUrl && u !== rentCoverUrl),
+      ];
+    }
+    return cleanGallery.length > 0 ? cleanGallery : galleryImages;
+  }, [isDualProperty, effectivePreviewType, saleCoverUrl, rentCoverUrl, customCoverUrl, galleryImages]);
 
   const studioProperty: SocialStudioProperty = React.useMemo(() => {
     const p = previewData?.property || previewData || {};
@@ -250,6 +405,13 @@ export function SocialPostDialog({
     const rentVal = p.rental_price ?? p.rent_price ?? p.price_rent;
     const origPriceVal = p.original_price ?? p.original_sale_price;
     const origRentVal = p.original_rental_price ?? p.original_rent_price;
+
+    const effectiveListingType =
+      targetListingType === "SALE"
+        ? "SALE"
+        : targetListingType === "RENT"
+          ? "RENT"
+          : (p.listing_type || p.listingType || "SALE");
 
     return {
       id: propertyId,
@@ -259,11 +421,11 @@ export function SocialPostDialog({
       project_name: p.project_name || (typeof p.project?.name === "string" ? p.project.name : null),
       project: p.project,
       property_type: p.property_type || p.propertyType || "CONDO",
-      listing_type: p.listing_type || p.listingType || "SALE",
-      price: priceVal !== undefined && priceVal !== null ? Number(priceVal) : null,
-      rental_price: rentVal !== undefined && rentVal !== null ? Number(rentVal) : null,
-      original_price: origPriceVal !== undefined && origPriceVal !== null ? Number(origPriceVal) : null,
-      original_rental_price: origRentVal !== undefined && origRentVal !== null ? Number(origRentVal) : null,
+      listing_type: effectiveListingType,
+      price: targetListingType === "RENT" ? null : (priceVal !== undefined && priceVal !== null ? Number(priceVal) : null),
+      rental_price: targetListingType === "SALE" ? null : (rentVal !== undefined && rentVal !== null ? Number(rentVal) : null),
+      original_price: targetListingType === "RENT" ? null : (origPriceVal !== undefined && origPriceVal !== null ? Number(origPriceVal) : null),
+      original_rental_price: targetListingType === "SALE" ? null : (origRentVal !== undefined && origRentVal !== null ? Number(origRentVal) : null),
       popular_area: p.popular_area,
       popular_area_en: p.popular_area_en,
       popular_area_cn: p.popular_area_cn,
@@ -291,9 +453,24 @@ export function SocialPostDialog({
           }
         : null,
     };
-  }, [previewData, propertyId, propertyTitle, displayImages]);
+  }, [previewData, propertyId, propertyTitle, displayImages, targetListingType]);
 
   const activeContent = isCustomContent ? customContent : content;
+
+  const activePreviewContent = isCustomContent
+    ? customContent
+    : effectivePreviewType === "SALE"
+      ? (saleContent || content)
+      : effectivePreviewType === "RENT"
+        ? (rentContent || content)
+        : content;
+
+  const activePreviewData =
+    effectivePreviewType === "SALE"
+      ? (salePreviewData || previewData)
+      : effectivePreviewType === "RENT"
+        ? (rentPreviewData || previewData)
+        : previewData;
 
   const loadContent = useCallback(async () => {
     if (!isOpen || !propertyId || selectedLangs.length === 0) return;
@@ -304,7 +481,7 @@ export function SocialPostDialog({
     setIsLoading(true);
     try {
       const contents = await Promise.all(
-        selectedLangs.map((l) => getPropertySocialContent(propertyId, l, platform))
+        selectedLangs.map((l) => getPropertySocialContent(propertyId, l, platform, targetListingType))
       );
 
       // If a newer request has started, ignore this one
@@ -316,18 +493,39 @@ export function SocialPostDialog({
         throw new Error("Unable to load property dynamic content");
       }
 
-      const fetchedImages = validContents[0].images || [];
-      if (customCoverUrl) {
-        setImages([customCoverUrl, ...fetchedImages.filter((u: string) => u !== customCoverUrl)]);
-      } else {
-        setImages(fetchedImages);
-      }
+      const fetchedImages = (validContents[0].images || []).filter(
+        (u: string) => typeof u === "string" && !u.includes("social-covers/")
+      );
+      setGalleryImages(fetchedImages);
+      setImages(fetchedImages);
       setPreviewData(validContents[0]);
       
       const mergedContent = validContents.map((c) => c.content).join("\n\n---\n\n").trim();
       setContent(mergedContent);
       setIsConnected(validContents[0].isConnected);
       setIdentity(validContents[0].identity || {});
+
+      // Preload dedicated Sale and Rent content for dual properties
+      if (isDualProperty || targetListingType === "ALL") {
+        try {
+          const [saleContents, rentContents] = await Promise.all([
+            Promise.all(selectedLangs.map((l) => getPropertySocialContent(propertyId, l, platform, "SALE"))),
+            Promise.all(selectedLangs.map((l) => getPropertySocialContent(propertyId, l, platform, "RENT"))),
+          ]);
+          const sValid = saleContents.filter(Boolean);
+          const rValid = rentContents.filter(Boolean);
+          if (sValid.length > 0) {
+            setSaleContent(sValid.map((c) => c.content).join("\n\n---\n\n").trim());
+            setSalePreviewData(sValid[0]);
+          }
+          if (rValid.length > 0) {
+            setRentContent(rValid.map((c) => c.content).join("\n\n---\n\n").trim());
+            setRentPreviewData(rValid[0]);
+          }
+        } catch (subErr) {
+          console.warn("[SocialPostDialog] Failed to preload dual contents:", subErr);
+        }
+      }
       
       if (!mergedContent) {
         setResultMessage(
@@ -346,7 +544,7 @@ export function SocialPostDialog({
         setIsLoading(false);
       }
     }
-  }, [isOpen, propertyId, selectedLangs, platform, customCoverUrl, isEn]);
+  }, [isOpen, propertyId, selectedLangs, platform, targetListingType, isDualProperty, isEn]);
 
   useEffect(() => {
     if (isOpen && propertyId) {
@@ -406,87 +604,188 @@ export function SocialPostDialog({
     try {
       let res: any;
 
-      // Ensure custom cover URL is converted to public CDN URL before calling Server Action with fallback
-      let activeCoverUrl: string | undefined = customCoverUrl || undefined;
-      if (customCoverUrl && customCoverUrl.startsWith("data:image/")) {
-        const uploaded = await ensurePublicCoverUrl(propertyId, customCoverUrl);
+      // Ensure all custom cover URLs (Sale, Rent, General) are converted to public CDN URLs before calling Server Action
+      let activeSaleCover: string | undefined = saleCoverUrl || undefined;
+      if (activeSaleCover && (activeSaleCover.startsWith("data:image/") || activeSaleCover.startsWith("blob:"))) {
+        const uploaded = await ensurePublicCoverUrl(propertyId, activeSaleCover);
         if (uploaded) {
-          activeCoverUrl = uploaded;
+          activeSaleCover = uploaded;
+          setSaleCoverUrl(uploaded);
+        }
+      }
+
+      let activeRentCover: string | undefined = rentCoverUrl || undefined;
+      if (activeRentCover && (activeRentCover.startsWith("data:image/") || activeRentCover.startsWith("blob:"))) {
+        const uploaded = await ensurePublicCoverUrl(propertyId, activeRentCover);
+        if (uploaded) {
+          activeRentCover = uploaded;
+          setRentCoverUrl(uploaded);
+        }
+      }
+
+      let activeGeneralCover: string | undefined = customCoverUrl || undefined;
+      if (activeGeneralCover && (activeGeneralCover.startsWith("data:image/") || activeGeneralCover.startsWith("blob:"))) {
+        const uploaded = await ensurePublicCoverUrl(propertyId, activeGeneralCover);
+        if (uploaded) {
+          activeGeneralCover = uploaded;
           setCustomCoverUrl(uploaded);
         }
       }
 
-      if (platform === "FACEBOOK" || platform === "INSTAGRAM") {
-        if (metaAccounts.length > 1 && selectedAccountIds.length > 0) {
-          const targetIds = selectedAccountIds;
-          let allSuccess = true;
-          const messages: string[] = [];
+      const shouldPostDual = isDualProperty && targetListingType === "ALL";
+
+      const packagesToPost = shouldPostDual
+        ? [
+            {
+              targetType: "SALE" as const,
+              coverUrl: activeSaleCover || activeGeneralCover,
+              label: isEn ? "Sale Post" : "โพสต์ขาย",
+            },
+            {
+              targetType: "RENT" as const,
+              coverUrl: activeRentCover || activeGeneralCover,
+              label: isEn ? "Rent Post" : "โพสต์เช่า",
+            },
+          ]
+        : [
+            {
+              targetType: targetListingType,
+              coverUrl:
+                targetListingType === "SALE"
+                  ? (activeSaleCover || activeGeneralCover)
+                  : targetListingType === "RENT"
+                    ? (activeRentCover || activeGeneralCover)
+                    : (activeGeneralCover || activeSaleCover || activeRentCover),
+              label:
+                targetListingType === "SALE"
+                  ? (isEn ? "Sale Post" : "โพสต์ขาย")
+                  : targetListingType === "RENT"
+                    ? (isEn ? "Rent Post" : "โพสต์เช่า")
+                    : (isEn ? "Post" : "โพสต์"),
+            },
+          ];
+
+      const postResults: { label: string; success: boolean; message?: string }[] = [];
+
+      for (const pkg of packagesToPost) {
+        // If content is not customized, pass undefined so Server Action generates the type-specific template
+        const pkgContent = isCustomContent ? customContent : undefined;
+
+        if (platform === "FACEBOOK" || platform === "INSTAGRAM") {
+          const targetIds =
+            metaAccounts.length > 1 && selectedAccountIds.length > 0
+              ? selectedAccountIds
+              : [selectedAccountIds[0]];
 
           for (const accId of targetIds) {
             const targetAcc = metaAccounts.find((a) => a.id === accId);
             const accLabel = targetAcc?.name || targetAcc?.handle || "Meta";
+            const fullLabel =
+              packagesToPost.length > 1
+                ? `${pkg.label} (${accLabel})`
+                : (targetIds.length > 1 ? `${accLabel}` : pkg.label);
+
             const singleRes = await postPropertyToMetaAction(
               propertyId,
               platform,
-              activeContent,
+              pkgContent,
               selectedLangs[0] || "th",
-              activeCoverUrl,
-              accId
+              pkg.coverUrl,
+              accId,
+              pkg.targetType,
             );
-            if (singleRes.success) {
-              messages.push(`✅ ${accLabel}`);
-            } else {
-              allSuccess = false;
-              messages.push(`❌ ${accLabel}: ${singleRes.message}`);
-            }
-          }
 
-          res = {
-            success: allSuccess,
-            message: `${isEn ? "Results:" : "ผลการโพสต์:"} ${messages.join(" | ")}`,
-          };
-        } else {
-          res = await postPropertyToMetaAction(
+            postResults.push({
+              label: fullLabel,
+              success: !!singleRes?.success,
+              message: singleRes?.message,
+            });
+          }
+        } else if (platform === "LINE") {
+          const lineRes = await postPropertyToLineAction(
             propertyId,
-            platform,
-            activeContent,
+            pkgContent,
             selectedLangs[0] || "th",
-            activeCoverUrl,
-            selectedAccountIds[0]
+            pkg.coverUrl,
+            pkg.targetType,
           );
+          postResults.push({
+            label: pkg.label,
+            success: !!lineRes?.success,
+            message: lineRes?.message,
+          });
+        } else if (platform === "TIKTOK") {
+          const tiktokRes = await postPropertyToTikTokAction(
+            propertyId,
+            pkgContent,
+            selectedLangs[0] || "th",
+            "DIRECT_POST",
+            pkg.coverUrl,
+            pkg.targetType,
+          );
+          if (tiktokRes?.publish_id) {
+            setPublishId(tiktokRes.publish_id);
+          }
+          postResults.push({
+            label: pkg.label,
+            success: !!tiktokRes?.success,
+            message: tiktokRes?.message,
+          });
         }
-      } else if (platform === "LINE") {
-        res = await postPropertyToLineAction(
-          propertyId,
-          activeContent,
-          selectedLangs[0] || "th",
-          activeCoverUrl
-        );
-      } else if (platform === "TIKTOK") {
-        res = await postPropertyToTikTokAction(
-          propertyId,
-          activeContent,
-          selectedLangs[0] || "th",
-          "DIRECT_POST",
-          activeCoverUrl
-        );
       }
 
+      const allSuccess = postResults.every((r) => r.success);
+      const anySuccess = postResults.some((r) => r.success);
+      const summaryMsg = postResults
+        .map((r) => `${r.success ? "✅" : "❌"} ${r.label}${r.message ? `: ${r.message}` : ""}`)
+        .join(" | ");
+
+      res = {
+        success: allSuccess || anySuccess,
+        message:
+          summaryMsg ||
+          (allSuccess
+            ? isEn
+              ? "Posted successfully ✨"
+              : "โพสต์สำเร็จเรียบร้อย ✨"
+            : isEn
+              ? "Failed to post ❌"
+              : "เกิดข้อผิดพลาดในการโพสต์ ❌"),
+      };
+
       if (res && res.success) {
-        finishProcess(processId, "SUCCESS", res.message || (isEn ? "Posted successfully ✨" : "โพสต์สำเร็จเรียบร้อย ✨"));
+        finishProcess(
+          processId,
+          "SUCCESS",
+          res.message || (isEn ? "Posted successfully ✨" : "โพสต์สำเร็จเรียบร้อย ✨")
+        );
         setStatus("SUCCESS");
         setResultMessage(res.message || (isEn ? "Posted successfully" : "โพสต์สำเร็จเรียบร้อย"));
-        
+
         // Clear saved draft on success
         localStorage.removeItem(`social_post_draft:${propertyId}:${platform}`);
-        
-        if (platform === "TIKTOK" && res.publish_id) {
-          setPublishId(res.publish_id);
+
+        if (allSuccess) {
+          toast.success(
+            packagesToPost.length > 1
+              ? (isEn ? "Both Sale & Rent posts published successfully ✨" : "เผยแพร่แยก 2 โพสต์ (ขาย & เช่า) สำเร็จเรียบร้อย ✨")
+              : (isEn ? "Posted successfully ✨" : "โพสต์สำเร็จเรียบร้อย ✨")
+          );
+        } else {
+          toast.warning(
+            isEn ? "Some posts encountered issues" : "บางโพสต์อาจมีปัญหา กรุณาตรวจสอบผลลัพธ์",
+            { description: summaryMsg }
+          );
         }
+
         router.refresh();
         onSuccess?.();
       } else {
-        finishProcess(processId, "ERROR", res?.message || (isEn ? "Failed to post ❌" : "เกิดข้อผิดพลาดในการโพสต์ ❌"));
+        finishProcess(
+          processId,
+          "ERROR",
+          res?.message || (isEn ? "Failed to post ❌" : "เกิดข้อผิดพลาดในการโพสต์ ❌")
+        );
         setStatus("ERROR");
         setResultMessage(res?.message || (isEn ? "Failed to post" : "เกิดข้อผิดพลาดในการโพสต์"));
       }
@@ -622,6 +921,418 @@ export function SocialPostDialog({
     );
   };
 
+  const renderCoverBannerSection = () => {
+    if (isDualProperty) {
+      return (
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDraggingPoster(true);
+          }}
+          onDragLeave={() => setIsDraggingPoster(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDraggingPoster(false);
+            const file = e.dataTransfer.files?.[0];
+            if (file) processPosterFile(file);
+          }}
+          className={cn(
+            "p-3.5 rounded-2xl border transition-all space-y-3 shadow-xs",
+            isDraggingPoster
+              ? "border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20"
+              : "border-amber-200/80 bg-linear-to-r from-amber-500/10 via-amber-400/5 to-transparent"
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-amber-500 text-slate-950 font-bold shadow-xs">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  {targetListingType === "SALE"
+                    ? (isEn ? "Sale Post Cover Banner" : "ภาพปก: โพสต์ขาย (Sale Cover)")
+                    : targetListingType === "RENT"
+                    ? (isEn ? "Rent Post Cover Banner" : "ภาพปก: โพสต์เช่า (Rent Cover)")
+                    : (isEn ? "Dual Cover Posters (Sale & Rent)" : "ภาพปกแยก 2 โพสต์ (ขาย & เช่า)")}
+                </h4>
+                <p className="text-[10px] text-slate-500 leading-snug">
+                  {targetListingType === "SALE"
+                    ? (isEn ? "Custom cover banner for Sale post (won't affect CRM gallery)" : "ภาพปกสำหรับโพสต์ขายนี้ (ไม่กระทบคลังรูปในระบบ)")
+                    : targetListingType === "RENT"
+                    ? (isEn ? "Custom cover banner for Rent post (won't affect CRM gallery)" : "ภาพปกสำหรับโพสต์เช่านี้ (ไม่กระทบคลังรูปในระบบ)")
+                    : (isEn ? "Set different cover banners for Sale post vs Rent post" : "ใส่ภาพปกคนละภาพได้เมื่อส่งแยกโพสต์ขาย หรือโพสต์เช่า")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className={cn(
+            "grid gap-2.5",
+            targetListingType === "ALL" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"
+          )}>
+            {/* 1. Sale Cover Card (Shown when ALL or SALE) */}
+            {(targetListingType === "ALL" || targetListingType === "SALE") && (
+              <div
+                className={cn(
+                  "p-2.5 rounded-xl border transition-all flex flex-col justify-between gap-2.5",
+                  targetListingType === "SALE"
+                    ? "border-blue-500 bg-blue-50/70 ring-2 ring-blue-500/20 shadow-xs"
+                    : "border-slate-200/90 bg-white hover:border-slate-300"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                    {saleCoverUrl ? (
+                      <Image src={saleCoverUrl} alt="Sale Cover" fill unoptimized className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-[10px] font-bold">
+                        <span>🏷️</span>
+                        <span>ขาย</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-blue-950">
+                        {isEn ? "Sale Post Cover" : "ภาพปก: โพสต์ขาย"}
+                      </span>
+                      {targetListingType === "SALE" && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-600 text-white font-bold">
+                          {isEn ? "Active" : "กำลังใช้"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                      {saleCoverUrl
+                        ? (isEn ? "✨ Custom cover ready" : "✨ มีภาพปกเฉพาะแล้ว")
+                        : (isEn ? "Using default first photo" : "ใช้รูปแรกของทรัพย์")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 pt-1 border-t border-slate-100">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openStudioForTarget("SALE")}
+                    className="flex-1 h-7 text-[10px] font-bold text-amber-900! border-amber-300 bg-amber-50 hover:bg-amber-100 cursor-pointer shadow-2xs"
+                  >
+                    <Sparkles className="h-3 w-3 mr-1 text-amber-600" />
+                    {isEn ? "AI Studio" : "ทำภาพปก ประเภทขาย"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => salePosterFileInputRef.current?.click()}
+                    className="h-7 px-2 text-[10px] font-bold text-blue-800! border-blue-200 bg-blue-50 hover:bg-blue-100 cursor-pointer shadow-2xs"
+                    title={isEn ? "Upload Sale Cover" : "อัปโหลดรูปปกขาย"}
+                  >
+                    <Upload className="h-3 w-3" />
+                  </Button>
+                  {saleCoverUrl && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setSaleCoverUrl(null);
+                        toast.info(isEn ? "Removed Sale cover" : "ถอดภาพปกขายออกแล้ว");
+                      }}
+                      className="h-7 px-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 text-[10px] cursor-pointer"
+                      title={isEn ? "Remove Sale cover" : "ถอดภาพปกขาย"}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 2. Rent Cover Card (Shown when ALL or RENT) */}
+            {(targetListingType === "ALL" || targetListingType === "RENT") && (
+              <div
+                className={cn(
+                  "p-2.5 rounded-xl border transition-all flex flex-col justify-between gap-2.5",
+                  targetListingType === "RENT"
+                    ? "border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20 shadow-xs"
+                    : "border-slate-200/90 bg-white hover:border-slate-300"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                    {rentCoverUrl ? (
+                      <Image src={rentCoverUrl} alt="Rent Cover" fill unoptimized className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-[10px] font-bold">
+                        <span>🏷️</span>
+                        <span>เช่า</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-emerald-950">
+                        {isEn ? "Rent Post Cover" : "ภาพปก: โพสต์เช่า"}
+                      </span>
+                      {targetListingType === "RENT" && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-600 text-white font-bold">
+                          {isEn ? "Active" : "กำลังใช้"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                      {rentCoverUrl
+                        ? (isEn ? "✨ Custom cover ready" : "✨ มีภาพปกเฉพาะแล้ว")
+                        : (isEn ? "Using default first photo" : "ใช้รูปแรกของทรัพย์")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 pt-1 border-t border-slate-100">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openStudioForTarget("RENT")}
+                    className="flex-1 h-7 text-[10px] font-bold text-amber-900! border-amber-300 bg-amber-50 hover:bg-amber-100 cursor-pointer shadow-2xs"
+                  >
+                    <Sparkles className="h-3 w-3 mr-1 text-amber-600" />
+                    {isEn ? "AI Studio" : "ทำภาพปก ประเภทเช่า"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => rentPosterFileInputRef.current?.click()}
+                    className="h-7 px-2 text-[10px] font-bold text-emerald-800! border-emerald-200 bg-emerald-50 hover:bg-emerald-100 cursor-pointer shadow-2xs"
+                    title={isEn ? "Upload Rent Cover" : "อัปโหลดรูปปกเช่า"}
+                  >
+                    <Upload className="h-3 w-3" />
+                  </Button>
+                  {rentCoverUrl && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setRentCoverUrl(null);
+                        toast.info(isEn ? "Removed Rent cover" : "ถอดภาพปกเช่าออกแล้ว");
+                      }}
+                      className="h-7 px-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 text-[10px] cursor-pointer"
+                      title={isEn ? "Remove Rent cover" : "ถอดภาพปกเช่า"}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Paste / Drag Hint */}
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 pt-0.5 px-0.5">
+            <Clipboard className="h-3 w-3 text-slate-400 shrink-0" />
+            <span>
+              {isEn 
+                ? `Tip: Press Ctrl+V / ⌘+V to paste cover image for active mode (${targetListingType === "SALE" ? "For Sale" : targetListingType === "RENT" ? "For Rent" : "Current"}), or drag image here` 
+                : `ทิป: กด Ctrl+V / ⌘+V วางรูปปกสำหรับโหมดที่เลือก (${targetListingType === "SALE" ? "สำหรับขาย" : targetListingType === "RENT" ? "สำหรับเช่า" : "ปัจจุบัน"}) หรือลากไฟล์มาวางที่นี่`}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // Default Single Cover
+    return (
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDraggingPoster(true);
+        }}
+        onDragLeave={() => setIsDraggingPoster(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDraggingPoster(false);
+          const file = e.dataTransfer.files?.[0];
+          if (file) {
+            processPosterFile(file);
+          }
+        }}
+        className={cn(
+          "p-3.5 rounded-2xl border transition-all space-y-3 shadow-xs",
+          isDraggingPoster
+            ? "border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20"
+            : "border-amber-200/80 bg-linear-to-r from-amber-500/10 via-amber-400/5 to-transparent"
+        )}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {customCoverUrl ? (
+              <div className="relative w-14 h-14 shrink-0">
+                <Image
+                  src={customCoverUrl}
+                  alt={isEn ? "Social Studio Banner" : "ภาพปกสไตล์โปร"}
+                  fill
+                  unoptimized
+                  className="rounded-xl object-cover border-2 border-emerald-500 shadow-md animate-in zoom-in-75 duration-200"
+                />
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center border border-white z-10">
+                  ✓
+                </span>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold shadow-xs shrink-0">
+                <Sparkles className="h-5 w-5" />
+              </div>
+            )}
+            <div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="text-sm font-bold text-slate-900">
+                  {isEn ? "Social Studio Banner (Cover #1)" : "ภาพปกสไตล์โปร (Social Studio Banner)"}
+                </p>
+                {customCoverUrl && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-xs">
+                    {isEn ? "✨ Custom Cover Ready" : "✨ มีภาพปกใหม่แล้ว"}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                {customCoverUrl
+                  ? (isEn 
+                      ? "This custom banner is set as the first image (Image #1) for all channels (Facebook, IG, LINE, TikTok)." 
+                      : "ภาพปกนี้ถูกตั้งเป็นภาพแรก (Image #1) เรียบร้อยแล้ว สำหรับทุกช่องทาง (Facebook, IG, LINE, TikTok)")
+                  : (isEn 
+                      ? "Upload your own poster, paste with Ctrl+V, or create with AI Studio (used for this post only)." 
+                      : "อัปโหลดภาพโปสเตอร์เอง, ก๊อปปี้แล้วกดวาง (Ctrl+V) หรือสร้างด้วย AI Studio (ใช้เฉพาะโพสต์นี้ ไม่กระทบคลังรูปในระบบ)")}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 1. Upload Poster from Device */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => posterFileInputRef.current?.click()}
+            className="flex-1 min-w-[140px] h-9 rounded-xl border-blue-200 bg-blue-50/80 hover:bg-blue-100/90 text-blue-800! font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+          >
+            <Upload className="h-3.5 w-3.5 text-blue-600" />
+            <span>
+              {customCoverUrl 
+                ? (isEn ? "📁 Replace Poster" : "📁 เปลี่ยนภาพโปสเตอร์") 
+                : (isEn ? "📁 Upload Poster" : "📁 อัปโหลดภาพโปสเตอร์เอง")}
+            </span>
+          </Button>
+
+          {/* 2. AI Social Studio */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => openStudioForTarget()}
+            className="flex-1 min-w-[140px] h-9 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 hover:text-amber-800 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+            <span>
+              {customCoverUrl 
+                ? (isEn ? "🎨 Edit in AI Studio" : "🎨 แก้ไขใน AI Studio") 
+                : (isEn ? "✨ AI Social Studio" : "✨ สร้างด้วย AI Studio")}
+            </span>
+          </Button>
+
+          {/* 3. Remove Cover Button */}
+          {customCoverUrl && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setImages((prev) => prev.filter((u) => u !== customCoverUrl));
+                setCustomCoverUrl(null);
+                toast.info(isEn ? "Removed cover banner" : "ถอดภาพปกออกแล้ว");
+              }}
+              className="h-9 px-3 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 text-xs font-bold cursor-pointer"
+              title={isEn ? "Remove Cover" : "ถอดภาพปกออก"}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              <span>{isEn ? "Remove" : "ถอดภาพปก"}</span>
+            </Button>
+          )}
+        </div>
+
+        {/* Paste / Drag Hint */}
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 pt-0.5 px-0.5">
+          <Clipboard className="h-3 w-3 text-slate-400 shrink-0" />
+          <span>
+            {isEn 
+              ? "Tip: Copy any image & press Ctrl+V / ⌘+V to paste as cover, or drag & drop image file here" 
+              : "ทิป: ก๊อปปี้รูปจากที่ไหนก็ได้ แล้วกด Ctrl+V / ⌘+V เพื่อวางเป็นภาพปกได้ทันที หรือลากไฟล์มาวางที่นี่"}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderDualPreviewSwitcher = () => {
+    if (!isDualProperty || targetListingType !== "ALL") return null;
+
+    return (
+      <div className="mb-3 p-2.5 bg-linear-to-r from-amber-500/10 via-slate-50 to-slate-50 border border-amber-200/90 rounded-2xl space-y-2 animate-in fade-in duration-200">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+            {isEn ? "Previewing 2 Separate Posts:" : "เลือกดูตัวอย่าง 2 โพสต์ที่จะส่งออกไป:"}
+          </span>
+          <span className="text-[10px] text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-full font-bold">
+            {isEn ? "2 Independent Posts" : "แยก 2 โพสต์อิสระ"}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-1.5 p-1 bg-white rounded-xl border border-amber-200/70 shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setPreviewTab("SALE")}
+            className={cn(
+              "py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+              effectivePreviewType === "SALE"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            )}
+          >
+            <span>🏷️</span>
+            <span>{isEn ? "Post 1: For Sale" : "โพสต์ที่ 1: สำหรับขาย"}</span>
+            {saleCoverUrl && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPreviewTab("RENT")}
+            className={cn(
+              "py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+              effectivePreviewType === "RENT"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            )}
+          >
+            <span>🔑</span>
+            <span>{isEn ? "Post 2: For Rent" : "โพสต์ที่ 2: สำหรับเช่า"}</span>
+            {rentCoverUrl && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+          </button>
+        </div>
+        <p className="text-[10px] text-slate-500 leading-tight">
+          {effectivePreviewType === "SALE"
+            ? (isEn 
+                ? "Showing Post 1 preview (Sale banner + sale price + sale UTM)" 
+                : "ตัวอย่างโพสต์ที่ 1: ใช้ภาพปกขาย + แคปชั่นขาย + ราคาขาย (ไม่ปนกับภาพปกเช่า)")
+            : (isEn 
+                ? "Showing Post 2 preview (Rent banner + rental price + rent UTM)" 
+                : "ตัวอย่างโพสต์ที่ 2: ใช้ภาพปกเช่า + แคปชั่นเช่า + ค่าเช่า (ไม่ปนกับภาพปกขาย)")}
+        </p>
+      </div>
+    );
+  };
+
   const config = PLATFORM_CONFIG[platform];
   const Icon = config.icon;
 
@@ -707,7 +1418,70 @@ export function SocialPostDialog({
                   </div>
                 </div>
 
+                {/* Mobile Dual Listing Target Switcher */}
+                {isDualProperty && (
+                  <div className="p-3 bg-linear-to-r from-amber-500/10 via-slate-50 to-slate-50 border border-amber-200/80 rounded-2xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                        {isEn ? "Listing Post Target:" : "ประเภทประกาศโพสต์นี้:"}
+                      </span>
+                      <span className="text-[10px] text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded-full font-semibold">
+                        {targetListingType === "ALL" ? (isEn ? "Both" : "ขาย & เช่า") : targetListingType === "SALE" ? (isEn ? "Sale" : "เฉพาะขาย") : (isEn ? "Rent" : "เฉพาะเช่า")}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5 p-1 bg-white rounded-xl border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setTargetListingType("ALL")}
+                        className={cn(
+                          "py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center",
+                          targetListingType === "ALL" ? "bg-amber-500 text-white shadow-xs font-bold" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        )}
+                      >
+                        {isEn ? "Both" : "ทั้งสอง"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTargetListingType("SALE")}
+                        className={cn(
+                          "py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center",
+                          targetListingType === "SALE" ? "bg-blue-600 text-white shadow-xs font-bold" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        )}
+                      >
+                        {isEn ? "Sale" : "เฉพาะขาย"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTargetListingType("RENT")}
+                        className={cn(
+                          "py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center",
+                          targetListingType === "RENT" ? "bg-emerald-600 text-white shadow-xs font-bold" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        )}
+                      >
+                        {isEn ? "Rent" : "เฉพาะเช่า"}
+                      </button>
+                    </div>
+
+                    {/* Mobile UTM Auto-Tracking Indicator */}
+                    <div className="flex items-center justify-between text-[10px] bg-white px-2.5 py-1.5 rounded-xl border border-slate-200">
+                      <span className="flex items-center gap-1.5 font-mono text-[10px] text-slate-700">
+                        <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold">🔗 UTM</span>
+                        <span className="text-slate-400">utm_campaign=</span>
+                        <span className="font-bold text-slate-800">
+                          {targetListingType === "SALE" ? "sale_post" : targetListingType === "RENT" ? "rent_post" : "social_post"}
+                        </span>
+                      </span>
+                      <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> Auto
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {renderAccountSelector()}
+
+                {renderCoverBannerSection()}
 
                 {/* Custom Content Options */}
                 <div className="space-y-3 pt-2 border-t border-slate-100">
@@ -800,16 +1574,19 @@ export function SocialPostDialog({
                       </Link>
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-1 min-h-[300px]">
-                      {platform === "LINE" && previewData ? (
-                        <LinePreview images={displayImages} previewData={previewData} lang={selectedLangs[0] || "th"} />
-                      ) : platform === "FACEBOOK" ? (
-                        <FacebookPreview content={activeContent} images={displayImages} previewData={previewData} lang={selectedLangs[0] || "th"} />
-                      ) : platform === "INSTAGRAM" ? (
-                        <InstagramPreview content={activeContent} images={displayImages} previewData={previewData} />
-                      ) : (
-                        <GenericPreview content={activeContent} images={displayImages} />
-                      )}
+                    <div className="space-y-3">
+                      {renderDualPreviewSwitcher()}
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-1 min-h-[300px]">
+                        {platform === "LINE" && activePreviewData ? (
+                          <LinePreview images={displayImages} previewData={activePreviewData} lang={selectedLangs[0] || "th"} />
+                        ) : platform === "FACEBOOK" ? (
+                          <FacebookPreview content={activePreviewContent} images={displayImages} previewData={activePreviewData} lang={selectedLangs[0] || "th"} />
+                        ) : platform === "INSTAGRAM" ? (
+                          <InstagramPreview content={activePreviewContent} images={displayImages} previewData={activePreviewData} />
+                        ) : (
+                          <GenericPreview content={activePreviewContent} images={displayImages} />
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -834,12 +1611,50 @@ export function SocialPostDialog({
             {/* Sticky Footer */}
             <DrawerFooter className="px-5 py-4 border-t border-slate-100 bg-slate-50/50 shrink-0 flex flex-col sm:flex-row gap-3">
               {status === "SUCCESS" ? (
-                <Button
-                  className="w-full h-12 rounded-2xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg cursor-pointer"
-                  onClick={() => onOpenChange(false)}
-                >
-                  {isEn ? "Done" : "ตกลง (เรียบร้อยแล้ว)"}
-                </Button>
+                <div className="flex flex-col gap-2 w-full">
+                  {isDualProperty && targetListingType === "SALE" && (
+                    <Button
+                      className="w-full h-12 rounded-2xl font-bold bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                      onClick={() => {
+                        setTargetListingType("RENT");
+                        setStatus("IDLE");
+                        setResultMessage("");
+                        toast.success(
+                          isEn
+                            ? "Switched to Rent post mode! Ready to post 🚀"
+                            : "สลับสู่โหมดโพสต์เช่าแล้ว พร้อมภาพปกและแคปชั่นเฉพาะกลุ่มเช่า 🚀"
+                        );
+                      }}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span>{isEn ? "✨ Post For Rent Next (Step 2/2)" : "✨ ทำโพสต์เช่าต่อทันที (ขั้นตอน 2/2)"}</span>
+                    </Button>
+                  )}
+                  {isDualProperty && targetListingType === "RENT" && (
+                    <Button
+                      className="w-full h-12 rounded-2xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                      onClick={() => {
+                        setTargetListingType("SALE");
+                        setStatus("IDLE");
+                        setResultMessage("");
+                        toast.success(
+                          isEn
+                            ? "Switched to Sale post mode! Ready to post 🚀"
+                            : "สลับสู่โหมดโพสต์ขายแล้ว พร้อมภาพปกและแคปชั่นเฉพาะกลุ่มซื้อ 🚀"
+                        );
+                      }}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span>{isEn ? "✨ Post For Sale Next (Step 2/2)" : "✨ ทำโพสต์ขายต่อทันที (ขั้นตอน 2/2)"}</span>
+                    </Button>
+                  )}
+                  <Button
+                    className="w-full h-12 rounded-2xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg cursor-pointer"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    {isEn ? "Done (Finish)" : "เสร็จสิ้น"}
+                  </Button>
+                </div>
               ) : status === "ERROR" ? (
                 <div className="flex w-full gap-3">
                   <DrawerClose asChild>
@@ -879,7 +1694,17 @@ export function SocialPostDialog({
                     ) : (
                       <Zap className="h-5 w-5" />
                     )}
-                    {status === "POSTING" ? (isEn ? "Sending..." : "กำลังส่งข้อมูล...") : (isEn ? "Post Now" : "โพสต์เลย")}
+                    {status === "POSTING"
+                      ? (isDualProperty && targetListingType === "ALL"
+                          ? (isEn ? "Posting 2 Posts..." : "กำลังส่ง 2 โพสต์ (ขาย & เช่า)...")
+                          : (isEn ? "Sending..." : "กำลังส่งข้อมูล..."))
+                      : (isDualProperty && targetListingType === "ALL"
+                          ? (isEn ? "Post Both (2 Posts)" : "โพสต์ 2 โพสต์เลย (ขาย & เช่า)")
+                          : (isDualProperty && targetListingType === "SALE"
+                              ? (isEn ? "Post Sale Now" : "โพสต์เลย (เฉพาะขาย)")
+                              : (isDualProperty && targetListingType === "RENT"
+                                  ? (isEn ? "Post Rent Now" : "โพสต์เลย (เฉพาะเช่า)")
+                                  : (isEn ? "Post Now" : "โพสต์เลย"))))}
                   </Button>
                 </div>
               )}
@@ -893,6 +1718,40 @@ export function SocialPostDialog({
   // --- DESKTOP VIEW ---
   return (
     <>
+      <input
+        type="file"
+        ref={posterFileInputRef}
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) processPosterFile(file);
+          e.target.value = "";
+        }}
+      />
+      <input
+        type="file"
+        ref={salePosterFileInputRef}
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) processPosterFile(file, "SALE");
+          e.target.value = "";
+        }}
+      />
+      <input
+        type="file"
+        ref={rentPosterFileInputRef}
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) processPosterFile(file, "RENT");
+          e.target.value = "";
+        }}
+      />
+
       <ResponsiveDialog
       open={isOpen}
       onOpenChange={onOpenChange}
@@ -961,12 +1820,50 @@ export function SocialPostDialog({
           </Button>
 
           {status === "SUCCESS" ? (
-            <Button
-              className="flex-1 rounded-2xl h-11 xs:h-12 font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg cursor-pointer"
-              onClick={() => onOpenChange(false)}
-            >
-              {isEn ? "Done" : "ตกลง"}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 flex-1">
+              {isDualProperty && targetListingType === "SALE" && (
+                <Button
+                  className="flex-1 h-11 xs:h-12 rounded-2xl font-bold bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                  onClick={() => {
+                    setTargetListingType("RENT");
+                    setStatus("IDLE");
+                    setResultMessage("");
+                    toast.success(
+                      isEn
+                        ? "Switched to Rent post mode! Ready to post 🚀"
+                        : "สลับสู่โหมดโพสต์เช่าแล้ว พร้อมภาพปกและแคปชั่นเฉพาะกลุ่มเช่า 🚀"
+                    );
+                  }}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>{isEn ? "✨ Post For Rent Next (Step 2/2)" : "✨ ทำโพสต์เช่าต่อทันที (ขั้นตอน 2/2)"}</span>
+                </Button>
+              )}
+              {isDualProperty && targetListingType === "RENT" && (
+                <Button
+                  className="flex-1 h-11 xs:h-12 rounded-2xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                  onClick={() => {
+                    setTargetListingType("SALE");
+                    setStatus("IDLE");
+                    setResultMessage("");
+                    toast.success(
+                      isEn
+                        ? "Switched to Sale post mode! Ready to post 🚀"
+                        : "สลับสู่โหมดโพสต์ขายแล้ว พร้อมภาพปกและแคปชั่นเฉพาะกลุ่มซื้อ 🚀"
+                    );
+                  }}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>{isEn ? "✨ Post For Sale Next (Step 2/2)" : "✨ ทำโพสต์ขายต่อทันที (ขั้นตอน 2/2)"}</span>
+                </Button>
+              )}
+              <Button
+                className="flex-1 rounded-2xl h-11 xs:h-12 font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg cursor-pointer"
+                onClick={() => onOpenChange(false)}
+              >
+                {isEn ? "Done (Finish)" : "เสร็จสิ้น"}
+              </Button>
+            </div>
           ) : status === "ERROR" ? (
             <Button
               className="flex-1 rounded-2xl h-11 xs:h-12 font-bold bg-slate-100 hover:bg-slate-200 text-slate-900 cursor-pointer"
@@ -997,7 +1894,17 @@ export function SocialPostDialog({
               ) : (
                 <Zap className="h-5 w-5" />
               )}
-              {status === "POSTING" ? (isEn ? "Processing..." : "กำลังประมวลผล...") : (isEn ? "Post Now" : "โพสต์เลย")}
+              {status === "POSTING"
+                ? (isDualProperty && targetListingType === "ALL"
+                    ? (isEn ? "Posting 2 Posts..." : "กำลังส่ง 2 โพสต์ (ขาย & เช่า)...")
+                    : (isEn ? "Processing..." : "กำลังประมวลผล..."))
+                : (isDualProperty && targetListingType === "ALL"
+                    ? (isEn ? "Post Both (2 Posts)" : "โพสต์ 2 โพสต์เลย (ขาย & เช่า)")
+                    : (isDualProperty && targetListingType === "SALE"
+                        ? (isEn ? "Post Sale Now" : "โพสต์เลย (เฉพาะขาย)")
+                        : (isDualProperty && targetListingType === "RENT"
+                            ? (isEn ? "Post Rent Now" : "โพสต์เลย (เฉพาะเช่า)")
+                            : (isEn ? "Post Now" : "โพสต์เลย"))))}
             </Button>
           )}
         </div>
@@ -1006,6 +1913,77 @@ export function SocialPostDialog({
       <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-4 md:gap-6 lg:gap-8 py-2">
         {/* Left Column: Settings/Info */}
         <div className="space-y-4 xs:space-y-6">
+          {/* Desktop Dual Listing Target Switcher */}
+          {isDualProperty && (
+            <div className="p-3 bg-linear-to-r from-amber-500/10 via-slate-50 to-slate-50 border border-amber-200/80 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  {isEn ? "Post Listing Type Target (2 Posts Support):" : "ประเภทประกาศสำหรับโพสต์นี้ (แยก 2 โพสต์):"}
+                </span>
+                <span className="text-[10px] text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded-full font-semibold">
+                  {targetListingType === "ALL"
+                    ? (isEn ? "Sale & Rent (Both)" : "ทั้งขายและเช่า")
+                    : targetListingType === "SALE"
+                    ? (isEn ? "For Sale" : "เฉพาะขาย")
+                    : (isEn ? "For Rent" : "เฉพาะเช่า")}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-white rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setTargetListingType("ALL")}
+                  className={cn(
+                    "py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center",
+                    targetListingType === "ALL"
+                      ? "bg-amber-500 text-white shadow-xs font-bold"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  )}
+                >
+                  {isEn ? "Sale & Rent" : "ขาย & เช่า"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTargetListingType("SALE")}
+                  className={cn(
+                    "py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center",
+                    targetListingType === "SALE"
+                      ? "bg-blue-600 text-white shadow-xs font-bold"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  )}
+                >
+                  {isEn ? "For Sale" : "เฉพาะขาย"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTargetListingType("RENT")}
+                  className={cn(
+                    "py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center",
+                    targetListingType === "RENT"
+                      ? "bg-emerald-600 text-white shadow-xs font-bold"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  )}
+                >
+                  {isEn ? "For Rent" : "เฉพาะเช่า"}
+                </button>
+              </div>
+
+              {/* Desktop Dynamic UTM indicator */}
+              <div className="flex items-center justify-between text-[10px] bg-white px-2.5 py-1.5 rounded-xl border border-slate-200">
+                <span className="flex items-center gap-1.5 font-mono text-[10px] text-slate-700">
+                  <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold">🔗 UTM</span>
+                  <span className="text-slate-400">utm_campaign=</span>
+                  <span className="font-bold text-slate-800">
+                    {targetListingType === "SALE" ? "sale_post" : targetListingType === "RENT" ? "rent_post" : "social_post"}
+                  </span>
+                </span>
+                <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> Auto
+                </span>
+              </div>
+            </div>
+          )}
+
           {renderAccountSelector()}
 
           {/* Custom Content Options */}
@@ -1068,147 +2046,8 @@ export function SocialPostDialog({
               </div>
             )}
 
-            {/* Social Studio Banner Option */}
-            <input
-              type="file"
-              ref={posterFileInputRef}
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  processPosterFile(file);
-                }
-                e.target.value = "";
-              }}
-            />
-
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDraggingPoster(true);
-              }}
-              onDragLeave={() => setIsDraggingPoster(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDraggingPoster(false);
-                const file = e.dataTransfer.files?.[0];
-                if (file) {
-                  processPosterFile(file);
-                }
-              }}
-              className={cn(
-                "p-3.5 rounded-2xl border transition-all space-y-3 shadow-xs",
-                isDraggingPoster
-                  ? "border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20"
-                  : "border-amber-200/80 bg-linear-to-r from-amber-500/10 via-amber-400/5 to-transparent"
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {customCoverUrl ? (
-                    <div className="relative w-14 h-14 shrink-0">
-                      <Image
-                        src={customCoverUrl}
-                        alt={isEn ? "Social Studio Banner" : "ภาพปกสไตล์โปร"}
-                        fill
-                        unoptimized
-                        className="rounded-xl object-cover border-2 border-emerald-500 shadow-md animate-in zoom-in-75 duration-200"
-                      />
-                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center border border-white z-10">
-                        ✓
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="p-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold shadow-xs shrink-0">
-                      <Sparkles className="h-5 w-5" />
-                    </div>
-                  )}
-                  <div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-sm font-bold text-slate-900">
-                        {isEn ? "Social Studio Banner (Cover #1)" : "ภาพปกสไตล์โปร (Social Studio Banner)"}
-                      </p>
-                      {customCoverUrl && (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-xs">
-                          {isEn ? "✨ Custom Cover Ready" : "✨ มีภาพปกใหม่แล้ว"}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
-                      {customCoverUrl
-                        ? (isEn 
-                            ? "This custom banner is set as the first image (Image #1) for all channels (Facebook, IG, LINE, TikTok)." 
-                            : "ภาพปกนี้ถูกตั้งเป็นภาพแรก (Image #1) เรียบร้อยแล้ว สำหรับทุกช่องทาง (Facebook, IG, LINE, TikTok)")
-                        : (isEn 
-                            ? "Upload your own poster, paste with Ctrl+V, or create with AI Studio (used for this post only)." 
-                            : "อัปโหลดภาพโปสเตอร์เอง, ก๊อปปี้แล้วกดวาง (Ctrl+V) หรือสร้างด้วย AI Studio (ใช้เฉพาะโพสต์นี้ ไม่กระทบคลังรูปในระบบ)")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                {/* 1. Upload Poster from Device */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => posterFileInputRef.current?.click()}
-                  className="flex-1 min-w-[140px] h-9 rounded-xl border-blue-200 bg-blue-50/80 hover:bg-blue-100/90 text-blue-800! font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
-                >
-                  <Upload className="h-3.5 w-3.5 text-blue-600" />
-                  <span>
-                    {customCoverUrl 
-                      ? (isEn ? "📁 Replace Poster" : "📁 เปลี่ยนภาพโปสเตอร์") 
-                      : (isEn ? "📁 Upload Poster" : "📁 อัปโหลดภาพโปสเตอร์เอง")}
-                  </span>
-                </Button>
-
-                {/* 2. AI Social Studio */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsStudioOpen(true)}
-                  className="flex-1 min-w-[140px] h-9 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 hover:text-amber-800 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                  <span>
-                    {customCoverUrl 
-                      ? (isEn ? "🎨 Edit in AI Studio" : "🎨 แก้ไขใน AI Studio") 
-                      : (isEn ? "✨ AI Social Studio" : "✨ สร้างด้วย AI Studio")}
-                  </span>
-                </Button>
-
-                {/* 3. Remove Cover Button */}
-                {customCoverUrl && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setImages((prev) => prev.filter((u) => u !== customCoverUrl));
-                      setCustomCoverUrl(null);
-                      toast.info(isEn ? "Removed cover banner" : "ถอดภาพปกออกแล้ว");
-                    }}
-                    className="h-9 px-3 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 text-xs font-bold cursor-pointer"
-                    title={isEn ? "Remove Cover" : "ถอดภาพปกออก"}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    <span>{isEn ? "Remove" : "ถอดภาพปก"}</span>
-                  </Button>
-                )}
-              </div>
-
-              {/* Paste / Drag Hint */}
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 pt-0.5 px-0.5">
-                <Clipboard className="h-3 w-3 text-slate-400 shrink-0" />
-                <span>
-                  {isEn 
-                    ? "Tip: Copy any image & press Ctrl+V / ⌘+V to paste as cover, or drag & drop image file here" 
-                    : "ทิป: ก๊อปปี้รูปจากที่ไหนก็ได้ แล้วกด Ctrl+V / ⌘+V เพื่อวางเป็นภาพปกได้ทันที หรือลากไฟล์มาวางที่นี่"}
-                </span>
-              </div>
-            </div>
+            {/* Social Studio Banner Section (Supports Independent Sale & Rent Covers) */}
+            {renderCoverBannerSection()}
           </div>
         </div>
 
@@ -1256,6 +2095,7 @@ export function SocialPostDialog({
             </div>
           ) : (
             <div className="space-y-2">
+              {renderDualPreviewSwitcher()}
               <div className="w-full space-y-3 px-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[11px] text-slate-400 italic">
@@ -1267,23 +2107,23 @@ export function SocialPostDialog({
                   </div>
                   <div className={cn(
                     "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                    (platform === "INSTAGRAM" && activeContent.length > 2200) || (platform === "TIKTOK" && activeContent.length > 4000)
+                    (platform === "INSTAGRAM" && activePreviewContent.length > 2200) || (platform === "TIKTOK" && activePreviewContent.length > 4000)
                       ? "bg-red-50 text-red-600 border-red-100 animate-pulse"
                       : "bg-white text-slate-400 border-slate-200"
                   )}>
-                    {activeContent.length.toLocaleString()} /{" "}
+                    {activePreviewContent.length.toLocaleString()} /{" "}
                     {platform === "INSTAGRAM" ? "2,200" : platform === "TIKTOK" ? "4,000" : "63,000"}
                   </div>
                 </div>
               </div>
-              {platform === "LINE" && previewData ? (
-                <LinePreview images={displayImages} previewData={previewData} lang={selectedLangs[0] || "th"} />
+              {platform === "LINE" && activePreviewData ? (
+                <LinePreview images={displayImages} previewData={activePreviewData} lang={selectedLangs[0] || "th"} />
               ) : platform === "FACEBOOK" ? (
-                <FacebookPreview content={activeContent} images={displayImages} previewData={previewData} lang={selectedLangs[0] || "th"} />
+                <FacebookPreview content={activePreviewContent} images={displayImages} previewData={activePreviewData} lang={selectedLangs[0] || "th"} />
               ) : platform === "INSTAGRAM" ? (
-                <InstagramPreview content={activeContent} images={displayImages} previewData={previewData} />
+                <InstagramPreview content={activePreviewContent} images={displayImages} previewData={activePreviewData} />
               ) : (
-                <GenericPreview content={activeContent} images={displayImages} />
+                <GenericPreview content={activePreviewContent} images={displayImages} />
               )}
 
             </div>
@@ -1298,12 +2138,9 @@ export function SocialPostDialog({
         isOpen={isStudioOpen}
         onClose={() => setIsStudioOpen(false)}
         property={studioProperty}
+        initialTargetListingType={studioTargetType || (targetListingType === "ALL" ? "SALE" : targetListingType)}
         onApplyCoverToPost={async (coverDataUrl) => {
-          // Immediately convert Base64 cover to public CDN URL so all social channels (TikTok draft/publish) get the cover banner
-          const publicUrl = await ensurePublicCoverUrl(propertyId, coverDataUrl);
-          const finalCoverUrl = publicUrl || coverDataUrl;
-          setCustomCoverUrl(finalCoverUrl);
-          setImages((prev) => [finalCoverUrl, ...prev.filter((u) => u !== finalCoverUrl)]);
+          await handleApplyStudioCover(coverDataUrl);
         }}
       />
     )}

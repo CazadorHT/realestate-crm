@@ -8,20 +8,38 @@ export async function POST(req: Request) {
     const { role } = await requireAuthContext();
     assertStaff(role);
 
-    const body = await req.json();
-    const { propertyId, base64DataUrl } = body || {};
+    let propertyId = "";
+    let buffer: Buffer;
 
-    if (!propertyId || !base64DataUrl || typeof base64DataUrl !== "string" || !base64DataUrl.startsWith("data:image/")) {
-      return NextResponse.json({ success: false, message: "Invalid image payload" }, { status: 400 });
+    const contentType = req.headers.get("content-type") || "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      propertyId = (formData.get("propertyId") as string) || "";
+      const file = formData.get("file") as File | null;
+
+      if (!file || !propertyId) {
+        return NextResponse.json({ success: false, message: "Missing file or propertyId" }, { status: 400 });
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+    } else {
+      const body = await req.json();
+      propertyId = body?.propertyId || "";
+      const base64DataUrl = body?.base64DataUrl;
+
+      if (!propertyId || !base64DataUrl || typeof base64DataUrl !== "string" || !base64DataUrl.startsWith("data:image/")) {
+        return NextResponse.json({ success: false, message: "Invalid image payload" }, { status: 400 });
+      }
+
+      const base64Data = base64DataUrl.split(",")[1];
+      if (!base64Data) {
+        return NextResponse.json({ success: false, message: "Invalid base64 encoding" }, { status: 400 });
+      }
+
+      buffer = Buffer.from(base64Data, "base64");
     }
-
-    const base64Data = base64DataUrl.split(",")[1];
-    if (!base64Data) {
-      return NextResponse.json({ success: false, message: "Invalid base64 encoding" }, { status: 400 });
-    }
-
-    const adminSupabase = createAdminClient();
-    const buffer = Buffer.from(base64Data, "base64");
 
     // Staff upload size limit check (Max 20MB)
     const MAX_STAFF_UPLOAD_BYTES = 20 * 1024 * 1024;
@@ -43,6 +61,7 @@ export async function POST(req: Request) {
       .jpeg({ quality: 90 })
       .toBuffer();
 
+    const adminSupabase = createAdminClient();
     const { error: coverUploadErr } = await adminSupabase.storage
       .from("property-images")
       .upload(tempCoverPath, jpegBuf, {

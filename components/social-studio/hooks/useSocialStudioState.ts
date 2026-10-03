@@ -49,9 +49,10 @@ export interface UseSocialStudioStateProps {
   isOpen: boolean;
   property: SocialStudioProperty;
   initialLanguage?: StudioLanguage;
+  initialTargetListingType?: "ALL" | "SALE" | "RENT";
 }
 
-export function useSocialStudioState({ isOpen, property, initialLanguage = "th" }: UseSocialStudioStateProps) {
+export function useSocialStudioState({ isOpen, property, initialLanguage = "th", initialTargetListingType }: UseSocialStudioStateProps) {
   // 4-Languages Support (TH, EN, ZH, RU)
   const [language, setLanguage] = useState<StudioLanguage>(initialLanguage);
 
@@ -100,6 +101,27 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     }
     return "";
   }, [property.project_name, property.project, property.title_en, initialLanguage]);
+
+  // Target Listing Type for Multi-post (Sale vs Rent separate posts)
+  const [targetListingType, setTargetListingType] = useState<"ALL" | "SALE" | "RENT">(initialTargetListingType || "ALL");
+
+  useEffect(() => {
+    if (initialTargetListingType) {
+      setTargetListingType(initialTargetListingType);
+    }
+  }, [initialTargetListingType]);
+
+  const hasBothSaleAndRent = useMemo(() => {
+    const hasSale = Boolean(property.price && property.price > 0) || property.listing_type === "SALE" || property.listing_type === "SALE_AND_RENT";
+    const hasRent = Boolean(property.rental_price && property.rental_price > 0) || property.listing_type === "RENT" || property.listing_type === "SALE_AND_RENT";
+    return (Boolean(property.price && property.rental_price)) || property.listing_type === "SALE_AND_RENT";
+  }, [property.price, property.rental_price, property.listing_type]);
+
+  const effectiveListingType = useMemo(() => {
+    if (targetListingType === "SALE") return "SALE";
+    if (targetListingType === "RENT") return "RENT";
+    return property.listing_type || "SALE";
+  }, [targetListingType, property.listing_type]);
 
   // Editable Text Customization
   const [customProjectName, setCustomProjectName] = useState<string>(initialProjectName);
@@ -215,14 +237,16 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
               : "ติดต่อสอบถาม"
       );
     }
+    const saleAmt = targetListingType === "RENT" ? null : property.price;
+    const rentAmt = targetListingType === "SALE" ? null : property.rental_price;
     return formatStudioPrice(
-      property.listing_type,
-      property.price,
-      property.rental_price,
+      effectiveListingType,
+      saleAmt,
+      rentAmt,
       language,
       priceStyle || "default"
     );
-  }, [property?.listing_type, property?.price, property?.rental_price, language]);
+  }, [property?.listing_type, property?.price, property?.rental_price, language, targetListingType, effectiveListingType]);
 
   // Helper: Smart Multi-line Text Effect Layer Adapter for Current Property
   const updateLineConfigsForCurrentProperty = useCallback((
@@ -952,23 +976,25 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     } else if (!showUsdApprox && effectiveStyle === "thb_with_usd") {
       effectiveStyle = "default";
     }
+    const saleAmt = targetListingType === "RENT" ? null : property.price;
+    const rentAmt = targetListingType === "SALE" ? null : property.rental_price;
     return formatStudioPrice(
-      property.listing_type,
-      property.price,
-      property.rental_price,
+      effectiveListingType,
+      saleAmt,
+      rentAmt,
       language,
       effectiveStyle
     );
-  }, [property.listing_type, property.price, property.rental_price, language, priceFormatStyle, showUsdApprox]);
+  }, [property.listing_type, property.price, property.rental_price, language, priceFormatStyle, showUsdApprox, targetListingType, effectiveListingType]);
 
   const originalPriceDisplay = useMemo(() => {
-    const isRent = property.listing_type === "RENT";
+    const isRent = effectiveListingType === "RENT";
     const amount = isRent ? property.original_rental_price : property.original_price;
     if (!amount) return undefined;
     return language === "en" || language === "zh" || language === "ru"
       ? `฿ ${amount.toLocaleString()}`
       : `฿ ${amount.toLocaleString()} บาท`;
-  }, [property.listing_type, property.original_price, property.original_rental_price, language]);
+  }, [effectiveListingType, property.original_price, property.original_rental_price, language]);
 
   const locationDisplay = useMemo(() => {
     return formatStudioLocation(
@@ -1007,9 +1033,9 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
           title: targetTitle,
           projectName: customProjectName || initialProjectName || null,
           propertyType: property.property_type,
-          listingType: property.listing_type,
-          price: property.price,
-          rentalPrice: property.rental_price,
+          listingType: effectiveListingType,
+          price: targetListingType === "RENT" ? undefined : (property.price || undefined),
+          rentalPrice: targetListingType === "SALE" ? undefined : (property.rental_price || undefined),
           popularArea: property.popular_area,
           province: property.province,
           bedrooms: property.bedrooms,
@@ -1224,7 +1250,8 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
         headline,
         highlights,
         propertyType: property.property_type,
-        listingType: property.listing_type,
+        listingType: effectiveListingType,
+        targetListingType,
         priceText: priceDisplay,
         originalPriceText: originalPriceDisplay,
         locationText: locationDisplay,
@@ -1579,6 +1606,9 @@ export function useSocialStudioState({ isOpen, property, initialLanguage = "th" 
     enabledSpecs, setEnabledSpecs,
     // Formatted texts
     priceDisplay, originalPriceDisplay, locationDisplay,
+    // Dual Listing Multi-post Target
+    targetListingType, setTargetListingType,
+    hasBothSaleAndRent, effectiveListingType,
     // Presets
     presets, isLoadingPresets, handleApplyPreset, handleApplyCuratedPreset, handleSavePreset,
     siteConfig,

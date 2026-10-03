@@ -503,6 +503,7 @@ export async function createPropertyAction(
           requires_ai_review: propertyData.requires_ai_review,
           created_by: user.id,
           property_source: propertyData.property_source,
+          catalog_target_listing_type: safeValues.catalog_target_listing_type || "ALL",
           video_url: safeValues.video_url,
           floor_plan_url: safeValues.floor_plan_url,
           bumped_at: new Date().toISOString(),

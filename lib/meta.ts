@@ -641,9 +641,8 @@ export async function postToMetaPage(
 
   try {
     if (platform === "FACEBOOK") {
-      // With dedicated Page Access Token, posting to /me posts directly as that page itself!
-      // This strictly prevents any Facebook impersonation/permission errors.
-      const targetPageId = "me";
+      // Use the specific Page ID if configured for the account, fallback to "me"
+      const targetPageId = targetAcc?.page_id || targetOptions?.pageId || "me";
 
       if (images.length === 0) {
         // Text only post

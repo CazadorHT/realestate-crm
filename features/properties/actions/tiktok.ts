@@ -16,6 +16,7 @@ export async function postPropertyToTikTokAction(
   lang: "th" | "en" | "cn" | "ru" = "th",
   postMode: "DIRECT_POST" | "MEDIA_UPLOAD" = "DIRECT_POST",
   customCoverUrl?: string,
+  targetListingType?: "ALL" | "SALE" | "RENT",
 ) {
   try {
     const { supabase, role } = await requireAuthContext();
@@ -99,10 +100,10 @@ export async function postPropertyToTikTokAction(
     // 3. จัดเตรียม Caption (Robust Logic)
     let finalCaption = caption || "";
     if (!finalCaption) {
-      const contentData = await getPropertySocialContent(propertyId, lang, "TIKTOK");
+      const contentData = await getPropertySocialContent(propertyId, lang, "TIKTOK", targetListingType);
       finalCaption = contentData.content;
     } else {
-      finalCaption = await renderPropertySocialTemplate(finalCaption, property as any, lang);
+      finalCaption = await renderPropertySocialTemplate(finalCaption, property as any, lang, targetListingType);
     }
 
     // TikTok Limits: 4000 characters for caption
@@ -128,7 +129,7 @@ export async function postPropertyToTikTokAction(
         let url = path.startsWith("http") ? path : getPublicImageUrl(path);
         return url;
       })
-      .filter(Boolean) as string[];
+      .filter((u: any) => Boolean(u) && !u.includes("social-covers/")) as string[];
 
     const sharp = (await import("sharp")).default;
     const adminSupabase = createAdminClient();

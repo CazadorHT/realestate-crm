@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { cn } from "@/lib/utils";
 import {
   Tag,
   Sparkles,
@@ -78,6 +79,10 @@ interface StudioContentEditorProps {
   defaultTransitPlaceholder: string;
   headline: string;
   setHeadline: (v: string) => void;
+  // Dual Listing Multi-post Target
+  targetListingType?: "ALL" | "SALE" | "RENT";
+  setTargetListingType?: (val: "ALL" | "SALE" | "RENT") => void;
+  hasBothSaleAndRent?: boolean;
   isGeneratingAI: boolean;
   onFetchAIContent: () => void;
   showQrCode: boolean;
@@ -229,6 +234,9 @@ export function StudioContentEditor({
   defaultTransitPlaceholder,
   headline,
   setHeadline,
+  targetListingType = "ALL",
+  setTargetListingType,
+  hasBothSaleAndRent,
   isGeneratingAI,
   onFetchAIContent,
   showQrCode,
@@ -676,6 +684,67 @@ export function StudioContentEditor({
             {isEn ? `Regenerate AI (${effectiveLang.toUpperCase()})` : `ให้ AI คิดใหม่ (${effectiveLang.toUpperCase()})`}
           </button>
         </div>
+
+        {/* 📢 Dual Listing Target Mode Switcher (สำหรับแยกทำ 2 โพสต์: ขาย vs เช่า) */}
+        {hasBothSaleAndRent && setTargetListingType && (
+          <div className="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+                🎯 {isEn ? "Post Listing Type Target:" : "ประเภทประกาศสำหรับโพสต์นี้ (แยก 2 โพสต์):"}
+              </span>
+              <span className="text-[10px] text-slate-400">
+                {targetListingType === "ALL"
+                  ? (isEn ? "Sale & Rent (Both)" : "ทั้งขายและเช่า")
+                  : targetListingType === "SALE"
+                    ? (isEn ? "Sale Focus" : "เน้นขาย")
+                    : (isEn ? "Rent Focus" : "เน้นเช่า")}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-1 p-0.5 bg-slate-950 rounded-lg border border-slate-800">
+              <button
+                type="button"
+                onClick={() => setTargetListingType("ALL")}
+                className={cn(
+                  "py-1.5 px-2 rounded-md text-xs font-semibold transition-all cursor-pointer text-center",
+                  targetListingType === "ALL"
+                    ? "bg-amber-500 text-slate-950 font-bold shadow-xs"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                )}
+              >
+                {isEn ? "All (Both)" : "ทั้งขาย & เช่า"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTargetListingType("SALE")}
+                className={cn(
+                  "py-1.5 px-2 rounded-md text-xs font-semibold transition-all cursor-pointer text-center",
+                  targetListingType === "SALE"
+                    ? "bg-blue-600 text-white font-bold shadow-xs"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                )}
+              >
+                {isEn ? "For Sale" : "เฉพาะขาย"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTargetListingType("RENT")}
+                className={cn(
+                  "py-1.5 px-2 rounded-md text-xs font-semibold transition-all cursor-pointer text-center",
+                  targetListingType === "RENT"
+                    ? "bg-emerald-600 text-white font-bold shadow-xs"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                )}
+              >
+                {isEn ? "For Rent" : "เฉพาะเช่า"}
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-tight">
+              {isEn
+                ? "💡 Switching updates the price tag, badge, and AI caption so you can export a separate poster for sale or rent."
+                : "💡 สลับแล้วระบบจะเปลี่ยนราคา ป้าย Badge และแคปชั่น AI ให้อัตโนมัติ เพื่อให้ทำ 2 โพสต์แยกกันได้ทันที"}
+            </p>
+          </div>
+        )}
 
         {/* Editable Project Name */}
         <div className="space-y-1">
