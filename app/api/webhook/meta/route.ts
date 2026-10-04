@@ -2794,6 +2794,22 @@ async function handleMetaPostback(
     } catch (e) {
       console.error("[Meta Webhook] Error sending telegram notification:", e);
     }
+  } else if (payload === "GET_STARTED") {
+    const cachedRefStr = await safeRedisGet(`lead_ad_ref:${senderId}`);
+    if (cachedRefStr) {
+      let propertyRef = "";
+      try {
+        const parsed = JSON.parse(cachedRefStr);
+        propertyRef = parsed.ref;
+      } catch {
+        propertyRef = cachedRefStr;
+      }
+      if (propertyRef) {
+        await handlePropertyReferralFlow(senderId, source, leadId || "", propertyRef);
+        return;
+      }
+    }
+    await sendStoryAdWelcomeFlow(senderId, source, leadId);
   } else if (payload.startsWith("PROP_LANG_")) {
     // Handling language selection for Ad Referral Card: PROP_LANG_<LANG>_<PROPERTY_REF>
     // Example: PROP_LANG_en_prop-1 or PROP_LANG_th_chalong-villa
