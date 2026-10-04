@@ -4,6 +4,7 @@ import { PropertyFacets } from "@/features/properties/types/search";
 import { detectSearchIntent } from "@/lib/search-config";
 import { isCbdProperty } from "@/lib/property-utils";
 import { getParentAreaName, AREA_PARENT_MAP } from "@/lib/utils/area-hierarchy";
+import { normalizeProvinceInput } from "@/lib/utils/provinces";
 
 type ApiProperty = PropertyCardProps;
 
@@ -178,7 +179,11 @@ export function usePropertyFiltering(
     }
 
     // 2. Base Metadata Filters (Sidebar)
-    if (!excludeFilters.includes("province") && province !== "ALL" && p.province !== province) return false;
+    if (!excludeFilters.includes("province") && province !== "ALL") {
+      const normFilter = normalizeProvinceInput(province) || province;
+      const normProp = normalizeProvinceInput(p.province) || p.province;
+      if (normFilter !== "ALL" && normProp !== normFilter) return false;
+    }
     
     if (!excludeFilters.includes("type") && type !== "ALL") {
       if (type.includes(",")) {
@@ -334,7 +339,8 @@ export function usePropertyFiltering(
       }
 
       if (checkMatch(p, ["province"]) && p.province) {
-        provinceMap.set(p.province, (provinceMap.get(p.province) || 0) + 1);
+        const normProv = normalizeProvinceInput(p.province) || p.province;
+        provinceMap.set(normProv, (provinceMap.get(normProv) || 0) + 1);
       }
 
       if (checkMatch(p, ["area"]) && p.popular_area && p.popular_area.trim() !== "") {

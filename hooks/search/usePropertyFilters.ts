@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { normalizeProvinceInput } from "@/lib/utils/provinces";
 
 export interface DefaultPropertyFilters {
   propertyType?: string;
@@ -59,7 +60,7 @@ export function usePropertyFilters(
 
   const [area, setArea] = useState(() => searchParams.get("popular_area") || "ALL");
   const [province, setProvince] = useState(
-    () => searchParams.get("province") || "ALL",
+    () => normalizeProvinceInput(searchParams.get("province")) || "ALL",
   );
   const [nearTrain, setNearTrain] = useState(
     () => searchParams.get("near_train") === "true",
@@ -113,7 +114,7 @@ export function usePropertyFilters(
     setMinSize(searchParams.get("min_size") || "");
     setMaxSize(searchParams.get("max_size") || "");
     setArea(searchParams.get("popular_area") || "ALL");
-    setProvince(searchParams.get("province") || "ALL");
+    setProvince(normalizeProvinceInput(searchParams.get("province")) || "ALL");
     setNearTrain(searchParams.get("near_train") === "true");
     setPetFriendly(searchParams.get("pet_friendly") === "true" || (searchParams.get("pet_friendly") === null && !!defaultFilters?.petFriendly));
     setFullyFurnished(searchParams.get("fully_furnished") === "true");

@@ -16,6 +16,7 @@ import { getPopularAreasLookupMap } from "@/features/public/popular-areas";
 import { detectSearchIntent } from "../search-config";
 import { AREA_PARENT_MAP } from "@/lib/utils/area-hierarchy";
 import { isCbdProperty } from "@/lib/property-utils";
+import { normalizeProvinceInput } from "@/lib/utils/provinces";
 
 // 🚀 Fast Memory Cache for Public Search Facets (1-hour TTL) for zero database egress across search queries
 const facetsMemoryCache = new Map<string, { data: any; timestamp: number }>();
@@ -203,6 +204,8 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
     return unstable_cache(
       async () => {
         const supabase = createPublicClient();
+        const normalizedProvince = normalizeProvinceInput(options.province);
+        const effectiveProvince = (normalizedProvince && normalizedProvince !== "ALL") ? normalizedProvince : undefined;
 
         let query = supabase
           .from("properties")
@@ -216,8 +219,8 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal")
           query = query.eq("is_hot_deal", true);
 
-        if (options.province && options.province !== "ALL") {
-          query = query.eq("province", options.province);
+        if (effectiveProvince) {
+          query = query.eq("province", effectiveProvince);
         }
         const targetArea = options.area || options.popular_area;
         if (targetArea && targetArea !== "ALL") {
@@ -448,7 +451,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         if (options.includeFacets !== false) {
           const rpcParams = {
             p_q: options.q || undefined,
-            p_province: options.province || undefined,
+            p_province: effectiveProvince,
             p_property_type: options.propertyType || undefined,
             p_listing_type: options.listingType || undefined
           };
@@ -501,8 +504,8 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
                 .eq("status", "ACTIVE")
                 .is("deleted_at", null);
 
-              if (options.province && options.province !== "ALL") {
-                areaCountQuery = areaCountQuery.eq("province", options.province);
+              if (effectiveProvince) {
+                areaCountQuery = areaCountQuery.eq("province", effectiveProvince);
               }
               if (options.propertyType && options.propertyType !== "ALL") {
                 if (options.propertyType.includes(",")) {

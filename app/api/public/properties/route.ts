@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPublicProperties, GetPropertiesOptions } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
+import { normalizeProvinceInput } from "@/lib/utils/provinces";
 
 /**
  * [S-Tier] High-Velocity Public Properties API
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
     } else if (key === "popular_area") {
       rawParams["popular_area"] = value === "ALL" ? undefined : value;
     } else if (key === "province") {
-      rawParams["province"] = value === "ALL" ? undefined : value;
+      rawParams["province"] = normalizeProvinceInput(value);
     } else if (key === "transit_station") {
       rawParams["transitStation"] = value;
     } else if (key === "keyword") {
