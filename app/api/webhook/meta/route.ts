@@ -935,9 +935,10 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
       } else {
         console.log(`[Meta Webhook] Bot is PAUSED for lead ${lead.id} (Human Handover mode).`);
         // Debounced notification to Telegram if customer is waiting
+        const leadInfo = await resolveLeadInfo(lead.id, senderId);
         await sendDebouncedTelegramAlert(
           `💬 <b>[CRM Reminder] ลูกค้าทักข้อความเข้ามาขณะโหมดพักบอท</b>\n\n` +
-          `👤 Lead ID: <code>${lead.id}</code>\n` +
+          `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
           `📱 แพลตฟอร์ม: ${source}\n` +
           `💬 ข้อความ: <i>${(text || "คลิกปุ่ม/แอด").substring(0, 100)}</i>\n` +
           `👉 เจ้าหน้าที่กรุณาเข้าดูแลลูกค้า`,
@@ -961,9 +962,10 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
 
     if (recentAdminMessage) {
       console.log(`[Meta Webhook] [${traceId}] Admin was active within last 3 minutes for lead ${lead.id}. Pausing bot to prevent race condition.`);
+      const leadInfo = await resolveLeadInfo(lead.id, senderId);
       await sendDebouncedTelegramAlert(
         `💬 <b>[CRM Active Admin] ลูกค้าตอบกลับในแชทที่แอดมินเพิ่งสนทนา</b>\n\n` +
-        `👤 Lead ID: <code>${lead.id}</code>\n` +
+        `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
         `📱 แพลตฟอร์ม: ${source}\n` +
         `💬 ข้อความลูกค้า: <i>${(text || "").substring(0, 100)}</i>`,
         `admin_active_guard_${lead.id}`,
@@ -2669,6 +2671,103 @@ async function sendFeaturedPropertiesCarousel(
 }
 
 /**
+ * Helper: Resolve Lead name (decrypted) and ID for readable Telegram Alerts
+ */
+async function resolveLeadInfo(leadId?: string, senderId?: string): Promise<{ name: string; leadId: string }> {
+  try {
+    const supabase = createAdminClient() as any;
+    if (leadId) {
+      const { data: leadRow } = await supabase
+        .from("crm_leads_v3")
+        .select("id, identity_id, utm_data")
+        .eq("id", leadId)
+        .maybeSingle();
+
+      if (leadRow?.identity_id) {
+        const { data: idRow } = await supabase
+          .from("identities_v3")
+          .select("display_name, social_links")
+          .eq("id", leadRow.identity_id)
+          .maybeSingle();
+
+        const raw = idRow?.display_name;
+        const dec = raw ? (decrypt(raw) || raw) : "";
+        if (dec && dec.trim()) {
+          return { name: dec.trim(), leadId };
+        }
+      }
+    }
+
+    if (senderId) {
+      const senderIdHash = generateBlindIndex(senderId);
+      const { data: idRow } = await supabase
+        .from("identities_v3")
+        .select("id, display_name")
+        .or(`social_links->>facebook_psid_hash.eq.${senderIdHash},social_links->>instagram_sid_hash.eq.${senderIdHash}`)
+        .maybeSingle();
+
+      if (idRow) {
+        const raw = idRow.display_name;
+        const dec = raw ? (decrypt(raw) || raw) : "";
+        if (dec && dec.trim()) {
+          return { name: dec.trim(), leadId: leadId || idRow.id };
+        }
+      }
+    }
+  } catch (e) {
+    // fail-safe
+  }
+  return { name: "ลูกค้าจากแชต (Chat User)", leadId: leadId || "New" };
+}
+
+/**
+ * Helper: Resolve Project name if exists, otherwise fallback to property title
+ */
+function getProjectOrPropertyTitle(prop: any, lang: string = "th"): string {
+  const p = Array.isArray(prop?.project) ? prop.project[0] : prop?.project;
+  if (p?.name) {
+    if (typeof p.name === "string" && p.name.trim()) return p.name.trim();
+    if (typeof p.name === "object") {
+      const name = p.name[lang] || p.name.en || p.name.th || "";
+      if (name.trim()) return name.trim();
+    }
+  }
+  if (lang === "en" && prop.title_en) return prop.title_en;
+  if (lang === "cn" && (prop.title_cn || prop.title_en)) return prop.title_cn || prop.title_en;
+  if (lang === "ru" && (prop.title_ru || prop.title_en)) return prop.title_ru || prop.title_en;
+  return prop.title || prop.title_en || "";
+}
+
+/**
+ * Helper: Resolve Property Title & Link for readable Telegram Alerts
+ */
+async function resolvePropertyDetails(propertyId?: string): Promise<{ title: string; url?: string }> {
+  if (!propertyId) return { title: "" };
+  try {
+    const supabase = createAdminClient() as any;
+    const { data: prop } = await supabase
+      .from("properties")
+      .select("id, slug, title, title_en, project:projects(name)")
+      .eq("id", propertyId)
+      .maybeSingle();
+    if (prop) {
+      const title = getProjectOrPropertyTitle(prop, "th") || propertyId;
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost")
+        ? process.env.NEXT_PUBLIC_SITE_URL
+        : "https://vccasset.com";
+      const url = `${baseUrl}/properties/${prop.slug || prop.id}`;
+      return { title, url };
+    }
+  } catch (e) {}
+  return { title: propertyId };
+}
+
+async function resolvePropertyTitle(propertyId?: string): Promise<string> {
+  const details = await resolvePropertyDetails(propertyId);
+  return details.title;
+}
+
+/**
  * Handle Postback Actions (Button clicks in Messenger / Instagram DM)
  */
 async function handleMetaPostback(
@@ -2761,12 +2860,15 @@ async function handleMetaPostback(
 
     // Send Telegram Notification to agents
     try {
+      const leadInfo = await resolveLeadInfo(leadId, senderId);
+      const propDetails = await resolvePropertyDetails(propertyId || undefined);
       await sendAdminNotification(
         `📅 <b>[Lead Alert] ลูกค้าขอนัดดูห้องจริง (${source})</b>\n\n` +
-        `👤 Lead ID: <code>${leadId || "New"}</code>\n` +
+        `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
         `📱 แพลตฟอร์ม: ${source}\n` +
-        (propertyId ? `🏠 ทรัพย์ที่สนใจ: <code>${propertyId}</code>\n` : "") +
-        `👉 กรุณาติดตามและติดต่อกลับโดยเร็วที่สุด`
+        (propDetails.title ? `🏠 ทรัพย์ที่สนใจ: <b>${propDetails.title}</b>\n` : "") +
+        (propDetails.url ? `🔗 <b>ลิงก์ทรัพย์:</b> <a href="${propDetails.url}">${propDetails.url}</a>\n\n` : "\n") +
+        `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`
       );
     } catch (e) {
       console.error("[Meta Webhook] Error sending telegram notification:", e);
@@ -2835,11 +2937,13 @@ async function handleMetaPostback(
 
     // Send Urgent Telegram Notification to agents
     try {
+      const leadInfo = await resolveLeadInfo(leadId, senderId);
       await sendAdminNotification(
         `🚨 <b>[CRM Urgent] ลูกค้าต้องการคุยกับแอดมิน/เจ้าหน้าที่</b>\n\n` +
-        `👤 Lead ID: <code>${leadId || "New"}</code>\n` +
+        `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
         `📱 แพลตฟอร์ม: ${source}\n` +
-        `👉 เข้าตรวจสอบกล่องข้อความ ${source} และดูแลลูกค้าได้ทันที!`
+        `👉 เข้าตรวจสอบกล่องข้อความ ${source} และดูแลลูกค้าได้ทันที!\n` +
+        `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`
       );
     } catch (e) {
       console.error("[Meta Webhook] Error sending telegram notification:", e);
@@ -2956,52 +3060,52 @@ async function handleSmartMatchQuestionnaire(
   // Parse action from payload
   if (payload.startsWith("START_QUESTIONNAIRE_")) {
     const lang = (payload.replace("START_QUESTIONNAIRE_", "") || "th") as "th" | "en" | "cn" | "ru";
-    // Initialize state (15 min TTL)
+    // Initialize state with 'purpose' step (15 min TTL)
     await safeRedisSet(
       stateKey,
-      JSON.stringify({ step: "budget", lang, answers: {} }),
+      JSON.stringify({ step: "purpose", lang, answers: {} }),
       900 // 15 mins
     );
 
     // Persist language preference in Redis (30 days TTL)
     await safeRedisSet(`user_preferred_lang:${senderId}`, lang, 86400 * 30);
 
-    // Question 1: Budget
-    const settings = await getSiteSettings();
+    // Question 1: Purpose (Rent or Buy?)
     const q1Text =
       lang === "en"
-        ? "To help us find your ideal home, what is your preferred monthly budget? 💰"
+        ? "We'd love to help you find your ideal property! Are you looking to Rent or Buy? ✨"
         : lang === "cn"
-        ? "为了帮您找到最合适的房源，请问您的月预算大概是多少？💰"
+        ? "很高兴为您服务！为了精准为您推荐房源，请问您打算租房还是买房呢？✨"
         : lang === "ru"
-        ? "Чтобы подобрать идеальный вариант, укажите ваш примерный бюджет в месяц: 💰"
-        : "เพื่อให้ทีมงานคัดสรรวิลล่าที่ตรงใจที่สุด รบกวนแจ้งงบประมาณต่อเดือนที่ต้องการค่ะ 💰";
+        ? "Рады помочь вам найти идеальное жилье! ✨ Вы планируете арендовать или купить?"
+        : "ยินดีให้บริการค่ะ ✨ เพื่อแนะนำอสังหาฯ ที่ตรงใจที่สุด คุณลูกค้าสนใจเช่า หรือ ซื้อดีคะ?";
 
-    // Dynamic budget options from Site Settings (or safe defaults)
-    const customBudgetOpts = settings.questionnaire_budget_options;
-    const defaultBudgetReplies = [
-      { content_type: "text" as const, title: "< ฿100k/mo", payload: `Q_ANS_BUDGET_idx_0` },
-      { content_type: "text" as const, title: "฿100k - ฿200k", payload: `Q_ANS_BUDGET_idx_1` },
-      { content_type: "text" as const, title: "฿200k - ฿350k", payload: `Q_ANS_BUDGET_idx_2` },
-      { content_type: "text" as const, title: "> ฿350k/mo", payload: `Q_ANS_BUDGET_idx_3` },
+    const purposeReplies = [
+      {
+        content_type: "text" as const,
+        title: lang === "en" ? "🏡 Rent" : lang === "cn" ? "🏡 租房 (Rent)" : lang === "ru" ? "🏡 Аренда" : "🏡 เช่า (Rent)",
+        payload: "Q_ANS_PURPOSE_rent",
+      },
+      {
+        content_type: "text" as const,
+        title: lang === "en" ? "💰 Buy" : lang === "cn" ? "💰 买房 (Buy)" : lang === "ru" ? "💰 Покупка" : "💰 ซื้อ (Buy)",
+        payload: "Q_ANS_PURPOSE_sale",
+      },
+      {
+        content_type: "text" as const,
+        title: lang === "en" ? "✨ Both / Either" : lang === "cn" ? "✨ 都可以 (Both)" : lang === "ru" ? "✨ И то, и другое" : "✨ ได้ทั้งสอง (Both)",
+        payload: "Q_ANS_PURPOSE_both",
+      },
     ];
 
-    const budgetReplies = customBudgetOpts && customBudgetOpts.length > 0
-      ? customBudgetOpts.slice(0, 8).map((opt, idx) => ({
-          content_type: "text" as const,
-          title: opt.label.substring(0, 20),
-          payload: `Q_ANS_BUDGET_idx_${idx}`,
-        }))
-      : defaultBudgetReplies;
-
-    await sendMetaQuickReplies(senderId, q1Text, budgetReplies, source);
+    await sendMetaQuickReplies(senderId, q1Text, purposeReplies, source);
     return;
   }
 
   // Retrieve existing state
   const rawState = await safeRedisGet(stateKey);
   let state: { step: string; lang: "th" | "en" | "cn" | "ru"; answers: Record<string, string> } = {
-    step: "budget",
+    step: "purpose",
     lang: "th",
     answers: {},
   };
@@ -3018,14 +3122,78 @@ async function handleSmartMatchQuestionnaire(
   const lang = state.lang || "th";
   const settings = await getSiteSettings();
 
-  // Answer 1 -> Proceed to Question 2 (Location / Zone)
+  // Answer 1 (Purpose: Rent vs Buy) -> Proceed to Question 2 (Budget based on purpose)
+  if (payload.startsWith("Q_ANS_PURPOSE_")) {
+    const purposeVal = payload.replace("Q_ANS_PURPOSE_", "");
+    state.answers.purpose = purposeVal;
+    state.step = "budget";
+    await safeRedisSet(stateKey, JSON.stringify(state), 900);
+
+    let q2Text = "";
+    let budgetReplies: Array<{ content_type: "text"; title: string; payload: string }> = [];
+
+    if (purposeVal === "rent") {
+      q2Text =
+        lang === "en"
+          ? "What is your preferred monthly rental budget? 💰"
+          : lang === "cn"
+          ? "请问您的月租金预算大概是多少呢？💰"
+          : lang === "ru"
+          ? "Какой у вас примерный бюджет на аренду в месяц? 💰"
+          : "งบประมาณค่าเช่าต่อเดือนที่คุณลูกค้าตั้งไว้ประมาณเท่าไหร่ดีคะ? 💰";
+
+      budgetReplies = [
+        { content_type: "text" as const, title: lang === "en" ? "< ฿50k/mo" : "< 50,000 บ./ด.", payload: "Q_ANS_BUDGET_rent_lt50k" },
+        { content_type: "text" as const, title: "฿50k - ฿150k", payload: "Q_ANS_BUDGET_rent_50k_150k" },
+        { content_type: "text" as const, title: "฿150k - ฿250k", payload: "Q_ANS_BUDGET_rent_150k_250k" },
+        { content_type: "text" as const, title: lang === "en" ? "> ฿250k/mo" : "> 250,000 บ./ด.", payload: "Q_ANS_BUDGET_rent_gt250k" },
+      ];
+    } else if (purposeVal === "sale") {
+      q2Text =
+        lang === "en"
+          ? "What is your target purchase budget? 💰"
+          : lang === "cn"
+          ? "请问您的购房总预算大概是多少呢？💰"
+          : lang === "ru"
+          ? "Какой у вас примерный бюджет на покупку? 💰"
+          : "งบประมาณสำหรับการซื้อที่คุณลูกค้าตั้งไว้ประมาณเท่าไหร่ดีคะ? 💰";
+
+      budgetReplies = [
+        { content_type: "text" as const, title: lang === "en" ? "< ฿10M" : "< 10 ล้าน", payload: "Q_ANS_BUDGET_sale_lt10m" },
+        { content_type: "text" as const, title: lang === "en" ? "฿10M - ฿20M" : "10 - 20 ล้าน", payload: "Q_ANS_BUDGET_sale_10m_20m" },
+        { content_type: "text" as const, title: lang === "en" ? "฿20M - ฿40M" : "20 - 40 ล้าน", payload: "Q_ANS_BUDGET_sale_20m_40m" },
+        { content_type: "text" as const, title: lang === "en" ? "> ฿40M" : "> 40 ล้านขึ้นไป", payload: "Q_ANS_BUDGET_sale_gt40m" },
+      ];
+    } else {
+      q2Text =
+        lang === "en"
+          ? "What is your target budget range? 💰"
+          : lang === "cn"
+          ? "请问您的预算范围大概是多少呢？💰"
+          : lang === "ru"
+          ? "Какой у вас примерный бюджет? 💰"
+          : "งบประมาณที่คุณลูกค้าตั้งไว้ประมาณเท่าไหร่ดีคะ? 💰";
+
+      budgetReplies = [
+        { content_type: "text" as const, title: lang === "en" ? "Rent < ฿100k/mo" : "เช่า < 100k/ด.", payload: "Q_ANS_BUDGET_rent_lt100k" },
+        { content_type: "text" as const, title: lang === "en" ? "Rent ฿100k-฿250k" : "เช่า 100k-250k", payload: "Q_ANS_BUDGET_rent_100k_250k" },
+        { content_type: "text" as const, title: lang === "en" ? "Buy < ฿20M" : "ซื้อ < 20 ล้าน", payload: "Q_ANS_BUDGET_sale_lt20m" },
+        { content_type: "text" as const, title: lang === "en" ? "Buy > ฿20M" : "ซื้อ > 20 ล้าน", payload: "Q_ANS_BUDGET_sale_gt20m" },
+      ];
+    }
+
+    await sendMetaQuickReplies(senderId, q2Text, budgetReplies, source);
+    return;
+  }
+
+  // Answer 2 (Budget) -> Proceed to Question 3 (Location / Zone)
   if (payload.startsWith("Q_ANS_BUDGET_")) {
     const budgetVal = payload.replace("Q_ANS_BUDGET_", "");
     state.answers.budget = budgetVal;
     state.step = "zone";
     await safeRedisSet(stateKey, JSON.stringify(state), 900);
 
-    const q2Text =
+    const q3Text =
       lang === "en"
         ? "Great! Which location in Phuket do you prefer? 📍"
         : lang === "cn"
@@ -3034,18 +3202,27 @@ async function handleSmartMatchQuestionnaire(
         ? "Отлично! В каком районе Пхукета вы предпочитаете жить? 📍"
         : "รับทราบค่ะ! ชอบทำเลโซนไหนในภูเก็ตเป็นพิเศษคะ? 📍";
 
-    // Dynamic zone options: scan active Phuket inventory so we ONLY show zones where we actually have villas!
+    // Dynamic zone options: scan active Phuket inventory for this purpose
     const supabase = createAdminClient() as any;
     const phuketFilter = "address_info->>province.ilike.%ภูเก็ต%,address_info->>province.ilike.%phuket%,address_info->>th.ilike.%ภูเก็ต%,address_info->>en.ilike.%phuket%";
 
+    const purpose = state.answers.purpose || (budgetVal.startsWith("sale") ? "sale" : "rent");
+    let villaQuery = supabase
+      .from("properties")
+      .select("id, title_en, title, address_info, project:projects(name)")
+      .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
+      .in("property_type", ["POOL_VILLA", "HOUSE"])
+      .or(phuketFilter);
+
+    if (purpose === "rent") {
+      villaQuery = villaQuery.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+    } else if (purpose === "sale") {
+      villaQuery = villaQuery.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+    }
+
     let matchedZoneDefs: typeof PHUKET_ZONE_CATALOG = [];
     try {
-      const { data: activeVillas } = await supabase
-        .from("properties")
-        .select("id, title_en, title_th, address_info, project:projects(name)")
-        .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
-        .in("property_type", ["POOL_VILLA", "HOUSE"])
-        .or(phuketFilter);
+      const { data: activeVillas } = await villaQuery;
 
       if (activeVillas && activeVillas.length > 0) {
         for (const zone of PHUKET_ZONE_CATALOG) {
@@ -3053,7 +3230,7 @@ async function handleSmartMatchQuestionnaire(
           for (const villa of activeVillas) {
             const searchBlob = [
               villa.title_en || "",
-              villa.title_th || "",
+              villa.title || "",
               villa.project?.name || "",
               JSON.stringify(villa.address_info || {}),
             ].join(" ").toLowerCase();
@@ -3111,18 +3288,18 @@ async function handleSmartMatchQuestionnaire(
       },
     ];
 
-    await sendMetaQuickReplies(senderId, q2Text, zoneReplies, source);
+    await sendMetaQuickReplies(senderId, q3Text, zoneReplies, source);
     return;
   }
 
-  // Answer 2 -> Proceed to Question 3 (Bedrooms)
+  // Answer 3 (Zone) -> Proceed to Question 4 (Bedrooms)
   if (payload.startsWith("Q_ANS_ZONE_")) {
     const zoneVal = payload.replace("Q_ANS_ZONE_", "");
     state.answers.zone = zoneVal;
     state.step = "bedrooms";
     await safeRedisSet(stateKey, JSON.stringify(state), 900);
 
-    const q3Text =
+    const q4Text =
       lang === "en"
         ? "Almost done! How many bedrooms are you looking for? 🛏️"
         : lang === "cn"
@@ -3132,36 +3309,83 @@ async function handleSmartMatchQuestionnaire(
         : "ข้อสุดท้ายค่ะ ต้องการวิลล่าขนาดกี่ห้องนอนดีคะ? 🛏️";
 
     const bedReplies = [
-      { content_type: "text" as const, title: lang === "en" ? "1-2 Bedrooms" : lang === "cn" ? "1-2 间卧室" : lang === "ru" ? "1-2 спальни" : "1 - 2 ห้องนอน (Beds)", payload: `Q_ANS_BEDS_1-2` },
-      { content_type: "text" as const, title: lang === "en" ? "3 Bedrooms" : lang === "cn" ? "3 间卧室" : lang === "ru" ? "3 спальни" : "3 ห้องนอน (Beds)", payload: `Q_ANS_BEDS_3` },
-      { content_type: "text" as const, title: lang === "en" ? "4+ Bedrooms" : lang === "cn" ? "4+ 间卧室" : lang === "ru" ? "4+ спальни" : "4+ ห้องนอน (Beds)", payload: `Q_ANS_BEDS_4+` },
+      { content_type: "text" as const, title: lang === "en" ? "1-2 Bedrooms" : lang === "cn" ? "1-2 间卧室" : lang === "ru" ? "1-2 спальни" : "1 - 2 ห้องนอน", payload: `Q_ANS_BEDS_1-2` },
+      { content_type: "text" as const, title: lang === "en" ? "3 Bedrooms" : lang === "cn" ? "3 间卧室" : lang === "ru" ? "3 спальни" : "3 ห้องนอน", payload: `Q_ANS_BEDS_3` },
+      { content_type: "text" as const, title: lang === "en" ? "4+ Bedrooms" : lang === "cn" ? "4+ 间卧室" : lang === "ru" ? "4+ спальни" : "4+ ห้องนอน", payload: `Q_ANS_BEDS_4+` },
     ];
 
-    await sendMetaQuickReplies(senderId, q3Text, bedReplies, source);
+    await sendMetaQuickReplies(senderId, q4Text, bedReplies, source);
     return;
   }
 
-  // Answer 3 -> Finish questionnaire & Deliver results + HOT Alert
+  // Answer 4 (Bedrooms) -> Finish questionnaire & Deliver results + HOT Alert
   if (payload.startsWith("Q_ANS_BEDS_")) {
     const bedsVal = payload.replace("Q_ANS_BEDS_", "");
     state.answers.bedrooms = bedsVal;
 
-    // Resolve labels and min/max values from Site Settings or defaults
     const customBudgetOpts = settings.questionnaire_budget_options || [];
     const customZoneOpts = settings.questionnaire_zone_options || [];
 
-    let displayBudgetLabel = state.answers.budget || "N/A";
+    let displayBudgetLabel = "N/A";
     let minBudget: number | null = null;
     let maxBudget: number | null = null;
+    let isSaleBudget = false;
 
-    if (state.answers.budget && state.answers.budget.startsWith("idx_")) {
-      const bIdx = parseInt(state.answers.budget.replace("idx_", ""), 10);
+    const bVal = state.answers.budget || "";
+    if (bVal === "rent_lt50k") {
+      displayBudgetLabel = "< ฿50k/mo";
+      maxBudget = 50000;
+    } else if (bVal === "rent_50k_150k") {
+      displayBudgetLabel = "฿50k - ฿150k/mo";
+      minBudget = 50000;
+      maxBudget = 150000;
+    } else if (bVal === "rent_150k_250k") {
+      displayBudgetLabel = "฿150k - ฿250k/mo";
+      minBudget = 150000;
+      maxBudget = 250000;
+    } else if (bVal === "rent_gt250k") {
+      displayBudgetLabel = "> ฿250k/mo";
+      minBudget = 250000;
+    } else if (bVal === "rent_lt100k") {
+      displayBudgetLabel = "< ฿100k/mo";
+      maxBudget = 100000;
+    } else if (bVal === "rent_100k_250k") {
+      displayBudgetLabel = "฿100k - ฿250k/mo";
+      minBudget = 100000;
+      maxBudget = 250000;
+    } else if (bVal === "sale_lt10m") {
+      displayBudgetLabel = "< ฿10M";
+      maxBudget = 10000000;
+      isSaleBudget = true;
+    } else if (bVal === "sale_10m_20m") {
+      displayBudgetLabel = "฿10M - ฿20M";
+      minBudget = 10000000;
+      maxBudget = 20000000;
+      isSaleBudget = true;
+    } else if (bVal === "sale_20m_40m") {
+      displayBudgetLabel = "฿20M - ฿40M";
+      minBudget = 20000000;
+      maxBudget = 40000000;
+      isSaleBudget = true;
+    } else if (bVal === "sale_gt40m") {
+      displayBudgetLabel = "> ฿40M";
+      minBudget = 40000000;
+      isSaleBudget = true;
+    } else if (bVal === "sale_lt20m") {
+      displayBudgetLabel = "< ฿20M";
+      maxBudget = 20000000;
+      isSaleBudget = true;
+    } else if (bVal === "sale_gt20m") {
+      displayBudgetLabel = "> ฿20M";
+      minBudget = 20000000;
+      isSaleBudget = true;
+    } else if (bVal.startsWith("idx_")) {
+      const bIdx = parseInt(bVal.replace("idx_", ""), 10);
       if (customBudgetOpts[bIdx]) {
         displayBudgetLabel = customBudgetOpts[bIdx].label;
         minBudget = customBudgetOpts[bIdx].min_price ?? null;
         maxBudget = customBudgetOpts[bIdx].max_price ?? null;
       } else {
-        // Fallback default mapping
         const defaultMap = [
           { label: "< ฿100k/mo", max: 100000 },
           { label: "฿100k - ฿200k", min: 100000, max: 200000 },
@@ -3174,7 +3398,17 @@ async function handleSmartMatchQuestionnaire(
           maxBudget = (defaultMap[bIdx] as any).max ?? null;
         }
       }
+    } else {
+      displayBudgetLabel = bVal || "N/A";
     }
+
+    const purpose = state.answers.purpose || (isSaleBudget ? "sale" : "rent");
+    const displayPurposeLabel =
+      purpose === "rent"
+        ? (lang === "en" ? "Rent" : lang === "cn" ? "租房" : lang === "ru" ? "Аренда" : "เช่า (Rent)")
+        : purpose === "sale"
+        ? (lang === "en" ? "Buy" : lang === "cn" ? "买房" : lang === "ru" ? "Покупка" : "ซื้อ (Buy)")
+        : (lang === "en" ? "Rent & Buy" : lang === "cn" ? "租售皆可" : lang === "ru" ? "Аренда/Покупка" : "เช่า/ซื้อ (ทั้งสอง)");
 
     let displayZoneLabel = lang === "en" ? "Any Zone in Phuket" : lang === "cn" ? "普吉全区" : lang === "ru" ? "Любой район" : "ทุกโซนในภูเก็ต (Any Zone)";
     let targetZoneKeywords: string[] = [];
@@ -3238,6 +3472,7 @@ async function handleSmartMatchQuestionnaire(
               preferences: {
                 ...currentPrefs,
                 preferred_lang: lang,
+                client_purpose: purpose,
                 client_budget_range: displayBudgetLabel,
                 preferred_zone: displayZoneLabel,
                 preferred_bedrooms: state.answers.bedrooms,
@@ -3281,14 +3516,16 @@ async function handleSmartMatchQuestionnaire(
       }
     }
 
-    // 3. HOT Lead Alert (BYPASS per-sender cooldown! Sent immediately to Telegram)
+    // 3. HOT Lead Alert (BYPASS per-sender cooldown! Sent immediately to Telegram with Lead Name)
     const leadCrmUrl = `${siteUrl}/protected/admin/leads`;
     try {
+      const leadInfo = await resolveLeadInfo(leadId, senderId);
       await sendAdminNotification(
         `🔥 <b>[HOT LEAD ALERT] ลูกค้าตอบ Requirement ครบแล้ว!</b>\n\n` +
-        `👤 Lead ID: <code>${leadId || "New"}</code>\n` +
+        `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
         `📱 แพลตฟอร์ม: ${source}\n` +
         `🌐 ภาษา: <b>${lang.toUpperCase()}</b>\n` +
+        `🎯 <b>ความต้องการ:</b> <b>${displayPurposeLabel}</b>\n` +
         `💰 <b>งบประมาณที่ลูกค้าแจ้งจริง:</b> <code>${displayBudgetLabel}</code>\n` +
         `📍 <b>โซนที่สนใจ:</b> <code>${displayZoneLabel}</code>\n` +
         `🛏️ <b>จำนวนห้องนอน:</b> <code>${state.answers.bedrooms}</code>\n\n` +
@@ -3298,11 +3535,10 @@ async function handleSmartMatchQuestionnaire(
       console.error("[Meta Webhook] Error sending HOT Lead Telegram Alert:", e);
     }
 
-    // 4. Multi-tier Query with Budget preservation (Never send mismatched budget or empty carousel)
-    // Filter specifically for Phuket Villas & Houses
+    // 4. Multi-tier Query with Purpose + Budget preservation
     const phuketFilter = "address_info->>province.ilike.%ภูเก็ต%,address_info->>province.ilike.%phuket%,address_info->>th.ilike.%ภูเก็ต%,address_info->>en.ilike.%phuket%";
 
-    // Tier 1 Query: Filter by Status + Budget Range + Specific Zone + Phuket Villas
+    // Tier 1 Query: Filter by Status + Purpose + Budget Range + Specific Zone + Phuket Villas
     let tier1Query = supabase
       .from("properties")
       .select(`
@@ -3329,34 +3565,50 @@ async function handleSmartMatchQuestionnaire(
       .in("property_type", ["POOL_VILLA", "HOUSE"])
       .or(phuketFilter);
 
-    // Budget filter: check rental_price -> original_rental_price (rent) and price -> original_price (sale)
-    // Uses AND-grouped ranges inside OR to prevent cross-column false matches
-    // Pattern matches the proven export-action.ts price filter
+    if (purpose === "rent") {
+      tier1Query = tier1Query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+    } else if (purpose === "sale") {
+      tier1Query = tier1Query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+    }
+
     const budgetOrParts: string[] = [];
     if (minBudget !== null || maxBudget !== null) {
       const min = minBudget ?? 0;
-      // Rental price columns
-      if (maxBudget !== null) {
-        budgetOrParts.push(`and(rental_price.gte.${min},rental_price.lte.${maxBudget})`);
-        budgetOrParts.push(`and(rental_price.is.null,original_rental_price.gte.${min},original_rental_price.lte.${maxBudget})`);
-        // Sale price columns
-        budgetOrParts.push(`and(price.gte.${min},price.lte.${maxBudget})`);
-        budgetOrParts.push(`and(price.is.null,original_price.gte.${min},original_price.lte.${maxBudget})`);
+      if (purpose === "rent") {
+        if (maxBudget !== null) {
+          budgetOrParts.push(`and(rental_price.gte.${min},rental_price.lte.${maxBudget})`);
+          budgetOrParts.push(`and(rental_price.is.null,original_rental_price.gte.${min},original_rental_price.lte.${maxBudget})`);
+        } else {
+          budgetOrParts.push(`rental_price.gte.${min}`);
+          budgetOrParts.push(`and(rental_price.is.null,original_rental_price.gte.${min})`);
+        }
+      } else if (purpose === "sale") {
+        if (maxBudget !== null) {
+          budgetOrParts.push(`and(price.gte.${min},price.lte.${maxBudget})`);
+          budgetOrParts.push(`and(price.is.null,original_price.gte.${min},original_price.lte.${maxBudget})`);
+        } else {
+          budgetOrParts.push(`price.gte.${min}`);
+          budgetOrParts.push(`and(price.is.null,original_price.gte.${min})`);
+        }
       } else {
-        // No max — open-ended
-        budgetOrParts.push(`rental_price.gte.${min}`);
-        budgetOrParts.push(`and(rental_price.is.null,original_rental_price.gte.${min})`);
-        budgetOrParts.push(`price.gte.${min}`);
-        budgetOrParts.push(`and(price.is.null,original_price.gte.${min})`);
+        // Both
+        if (maxBudget !== null) {
+          budgetOrParts.push(`and(rental_price.gte.${min},rental_price.lte.${maxBudget})`);
+          budgetOrParts.push(`and(price.gte.${min},price.lte.${maxBudget})`);
+        } else {
+          budgetOrParts.push(`rental_price.gte.${min}`);
+          budgetOrParts.push(`price.gte.${min}`);
+        }
       }
     }
 
-    // Bedrooms filter: map questionnaire answer to query condition
+    // Bedrooms filter with Smart Matching:
+    // If user asked for 3 beds, include 3 to 4 beds within that budget!
     const bedsAnswer = state.answers.bedrooms;
     if (bedsAnswer === "1-2") {
       tier1Query = tier1Query.gte("bedrooms", 1).lte("bedrooms", 2);
     } else if (bedsAnswer === "3") {
-      tier1Query = tier1Query.eq("bedrooms", 3);
+      tier1Query = tier1Query.gte("bedrooms", 3).lte("bedrooms", 4);
     } else if (bedsAnswer === "4+") {
       tier1Query = tier1Query.gte("bedrooms", 4);
     }
@@ -3365,7 +3617,6 @@ async function handleSmartMatchQuestionnaire(
     const zoneOrParts: string[] = [];
     if (targetZoneKeywords.length > 0) {
       targetZoneKeywords.forEach((kw) => {
-        // Sanitize: strip PostgREST reserved chars that break .or() syntax
         const safeKw = kw.replace(/[(),."\\]/g, "").trim();
         if (safeKw) {
           zoneOrParts.push(`address_info->>th.ilike.%${safeKw}%`);
@@ -3374,10 +3625,7 @@ async function handleSmartMatchQuestionnaire(
       });
     }
 
-    // Apply budget + zone as a single .or() call to avoid Supabase double-.or() overwrite
-    // Logic: (any budget match) AND (any zone match) — combined via nested and()
     if (budgetOrParts.length > 0 && zoneOrParts.length > 0) {
-      // Wrap each group: and(or(budget_conditions),or(zone_conditions))
       tier1Query = tier1Query.or(
         `and(or(${budgetOrParts.join(",")}),or(${zoneOrParts.join(",")}))`
       );
@@ -3390,10 +3638,10 @@ async function handleSmartMatchQuestionnaire(
     let { data: matchedProps } = await tier1Query.limit(5);
     let matchType: "exact" | "relaxed_zone" | "featured_fallback" = "exact";
 
-    // Tier 2 Fallback: If no units in selected zone, relax zone but KEEP THE BUDGET FILTER & PHUKET!
+    // Tier 2 Fallback: If no units in selected zone, relax zone but KEEP PURPOSE AND BUDGET!
     if (!matchedProps || matchedProps.length === 0) {
       if (targetZoneKeywords.length > 0) {
-        console.log(`[Meta Webhook] No units found in selected zone ${state.answers.zone} within budget. Relaxing zone while preserving budget.`);
+        console.log(`[Meta Webhook] No units found in selected zone ${state.answers.zone} within budget. Relaxing zone while preserving purpose and budget.`);
         let tier2Query = supabase
           .from("properties")
           .select(`
@@ -3420,15 +3668,20 @@ async function handleSmartMatchQuestionnaire(
           .in("property_type", ["POOL_VILLA", "HOUSE"])
           .or(phuketFilter);
 
+        if (purpose === "rent") {
+          tier2Query = tier2Query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+        } else if (purpose === "sale") {
+          tier2Query = tier2Query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+        }
+
         if (budgetOrParts.length > 0) {
           tier2Query = tier2Query.or(budgetOrParts.join(","));
         }
 
-        // Keep bedrooms filter in Tier 2 (only zone is relaxed)
         if (bedsAnswer === "1-2") {
           tier2Query = tier2Query.gte("bedrooms", 1).lte("bedrooms", 2);
         } else if (bedsAnswer === "3") {
-          tier2Query = tier2Query.eq("bedrooms", 3);
+          tier2Query = tier2Query.gte("bedrooms", 3).lte("bedrooms", 4);
         } else if (bedsAnswer === "4+") {
           tier2Query = tier2Query.gte("bedrooms", 4);
         }
@@ -3441,10 +3694,10 @@ async function handleSmartMatchQuestionnaire(
       }
     }
 
-    // Tier 3 Ultimate Fallback: If still no units within budget, fallback to Top Featured Phuket villas
+    // Tier 3 Fallback: If still no units, fallback to Top Featured Phuket villas OF THE SAME PURPOSE!
     if (!matchedProps || matchedProps.length === 0) {
-      console.log(`[Meta Webhook] No units matched budget or zone. Falling back to Featured Phuket villas.`);
-      const { data: featuredProps } = await supabase
+      console.log(`[Meta Webhook] No units matched budget or zone. Falling back to Featured Phuket villas for purpose: ${purpose}.`);
+      let featuredQuery = supabase
         .from("properties")
         .select(`
           id,
@@ -3468,7 +3721,15 @@ async function handleSmartMatchQuestionnaire(
         `)
         .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
         .in("property_type", ["POOL_VILLA", "HOUSE"])
-        .or(phuketFilter)
+        .or(phuketFilter);
+
+      if (purpose === "rent") {
+        featuredQuery = featuredQuery.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+      } else if (purpose === "sale") {
+        featuredQuery = featuredQuery.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+      }
+
+      const { data: featuredProps } = await featuredQuery
         .order("is_featured", { ascending: false, nullsFirst: false })
         .limit(5);
 
@@ -3645,7 +3906,7 @@ async function handlePropertyLanguageSelection(
   }
 
   // 3. Deliver the requested property card
-  await sendSinglePropertyCard(senderId, source, refCode, lang);
+  await sendSinglePropertyCard(senderId, source, refCode, lang, leadId);
 }
 
 /**
@@ -3742,7 +4003,7 @@ async function handlePropertyReferralFlow(
   // If language is already known, immediately send the property card in that language!
   if (rememberedLang) {
     console.log(`[Meta Webhook] [${traceId}] User ${senderId} has remembered language "${rememberedLang}". Sending card directly.`);
-    await sendSinglePropertyCard(senderId, source, sanitizedRef, rememberedLang);
+    await sendSinglePropertyCard(senderId, source, sanitizedRef, rememberedLang, leadId);
     return;
   }
 
@@ -3785,6 +4046,7 @@ async function sendSinglePropertyCard(
   platform: MetaPlatform,
   rawRef: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
+  leadId?: string,
 ) {
   const supabase = createAdminClient() as any;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
@@ -3977,15 +4239,20 @@ async function sendSinglePropertyCard(
     ? `฿${property.rental_price.toLocaleString()}/mo` 
     : "N/A";
 
-  const leadCrmLink = `${siteUrl}/protected/admin/leads`;
+  const publicSiteUrl = (siteUrl && !siteUrl.includes("localhost")) ? siteUrl : "https://vccasset.com";
+  const propertyUrl = `${publicSiteUrl}/properties/${property.slug || property.id}`;
+  const leadCrmLink = `${publicSiteUrl}/protected/admin/leads`;
+  const leadInfo = await resolveLeadInfo(leadId, senderId);
+  const clickedPropTitle = getProjectOrPropertyTitle(property, lang);
 
   await sendDebouncedTelegramAlert(
     `🎯 <b>[Ad Lead Alert] ลูกค้าสนใจทรัพย์จาก Carousel Ads</b>\n\n` +
+    `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
     `📱 แพลตฟอร์ม: ${platform}\n` +
     `🌐 ภาษาที่เลือก: <b>${lang.toUpperCase()}</b>\n` +
-    `🏡 ทรัพย์ที่คลิก: <b>${title}</b>\n` +
+    `🏡 <b>ทรัพย์ที่คลิก:</b> <b>${clickedPropTitle}</b>\n` +
     `💰 ราคาทรัพย์ที่คลิก: <b>${priceDisplay}</b> (<i>*ราคาทรัพย์ที่กดดู ยังไม่ใช่งบจริงของลูกค้า</i>)\n` +
-    `🔗 รหัส/Slug: <code>${property.slug || property.id}</code>\n\n` +
+    `🔗 <b>ลิงก์ทรัพย์:</b> <a href="${propertyUrl}">${propertyUrl}</a>\n\n` +
     `👉 <a href="${leadCrmLink}">เปิดดูข้อมูล Lead ใน CRM</a>`,
     `ad_click_lead_${senderId}`,
     600 // 10 minutes cooldown per sender
