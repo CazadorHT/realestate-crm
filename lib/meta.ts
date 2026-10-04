@@ -294,19 +294,27 @@ export async function sendMetaCarousel(
     const url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
     
     // Map elements to the correct structure for Meta API
-    const genericElements = elements.slice(0, 10).map((item) => ({
-      title: item.title.substring(0, 80),
-      subtitle: item.subtitle?.substring(0, 80),
-      image_url: item.image_url,
-      default_action: item.default_action,
-      buttons: item.buttons || [
+    const genericElements = elements.slice(0, 10).map((item) => {
+      const rawButtons = item.buttons || [
         {
           type: "web_url",
           url: item.default_action?.url || "",
           title: platform === "INSTAGRAM" ? "ดูรายละเอียด" : "View Details",
-        }
-      ],
-    }));
+        },
+      ];
+      const buttons = rawButtons.slice(0, 3).map((b: any) => ({
+        ...b,
+        title: (b.title || "").substring(0, 20),
+      }));
+
+      return {
+        title: item.title.substring(0, 80),
+        subtitle: item.subtitle?.substring(0, 80),
+        image_url: item.image_url,
+        default_action: item.default_action,
+        buttons,
+      };
+    });
 
     const response = await fetch(url, {
       method: "POST",

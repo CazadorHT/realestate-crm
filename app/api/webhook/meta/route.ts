@@ -740,7 +740,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
   const isStoryReply = !!event.message?.reply_to?.story || (event.referral?.source === "STORY" || event.referral?.type === "STORY");
   const referralData = event.referral || event.postback?.referral;
 
-  if (!senderId || (!text && !postbackPayload)) return;
+  if (!senderId || (!text && !postbackPayload && !referralData)) return;
 
   const supabase = createAdminClient() as any;
 
@@ -992,7 +992,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
       lead_id: lead.id,
       source: source as any,
       external_message_id: event.message?.mid || `postback_${Date.now()}`,
-      content: text || (postbackPayload ? `[Clicked Button: ${postbackPayload}]` : ""),
+      content: text || (postbackPayload ? `[Clicked Button: ${postbackPayload}]` : (referralData?.ref ? `[Ad Referral: ${referralData.ref}]` : "[Ad Referral]")),
       payload: event,
       direction: "INCOMING",
     });
@@ -1190,6 +1190,33 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
         } else {
           const promptText = "รูปแบบอีเมลหรือเบอร์โทรศัพท์ไม่ถูกต้อง กรุณาลองใหม่อีกครั้งค่ะ";
           await sendMetaMessage(senderId, promptText, source);
+          return;
+        }
+      }
+    }
+
+    // 2.4.8 Inbound Language Selection via Ice Breakers / Text with Pending Property Referral
+    const trimmedText = (text || "").trim();
+    const isLangSelectionText =
+      /^(🇹🇭\s*)?ภาษาไทย$/i.test(trimmedText) ? "th" :
+      /^(🇬🇧\s*)?english$/i.test(trimmedText) ? "en" :
+      /^(🇨🇳\s*)?中文$/i.test(trimmedText) ? "cn" :
+      /^(🇷🇺\s*)?(русский|russian)$/i.test(trimmedText) ? "ru" :
+      null;
+
+    if (isLangSelectionText && senderId) {
+      const cachedRefStr = await safeRedisGet(`lead_ad_ref:${senderId}`);
+      if (cachedRefStr) {
+        let propertyRef = "";
+        try {
+          const parsed = JSON.parse(cachedRefStr);
+          propertyRef = parsed.ref;
+        } catch {
+          propertyRef = cachedRefStr;
+        }
+        if (propertyRef) {
+          console.log(`[Meta Webhook] [${traceId}] Detected language selection "${isLangSelectionText}" via text/ice-breaker with pending ref "${propertyRef}".`);
+          await handlePropertyLanguageSelection(senderId, source, lead.id, isLangSelectionText as any, propertyRef);
           return;
         }
       }
@@ -2448,6 +2475,24 @@ async function handleKeywordAutomation(
 }
 
 /**
+ * Safely parse property images whether stored as JSON string, array, or single string
+ */
+function parsePropertyImages(imagesField: any): string[] {
+  if (!imagesField) return [];
+  if (Array.isArray(imagesField)) return imagesField.filter(Boolean);
+  if (typeof imagesField === "string") {
+    try {
+      const parsed = JSON.parse(imagesField);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean);
+      return [imagesField];
+    } catch {
+      return [imagesField];
+    }
+  }
+  return [];
+}
+
+/**
  * Clean up lonely emojis, empty brackets, and multiple blank lines
  */
 function sanitizeTemplateOutput(text: string): string {
@@ -2556,7 +2601,7 @@ async function sendFeaturedPropertiesCarousel(
     const tBookBtn = lang === "th" ? "นัดดูห้องนี้" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
 
     const carouselElements = properties.map((prop: any) => {
-      const images = Array.isArray(prop.images) ? prop.images : [];
+      const images = parsePropertyImages(prop.images);
       const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
 
       let priceSubtitle = "";
@@ -3472,13 +3517,20 @@ async function sendSinglePropertyCard(
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
   // Normalization candidates (e.g. "prop_1" vs "prop-1")
+  const cleanRef = rawRef.trim().replace(/\/+$/, "");
   const candidates = [
-    rawRef,
-    rawRef.replace(/_/g, "-"),
-    rawRef.replace(/-/g, "_"),
-    rawRef.toLowerCase(),
+    cleanRef,
+    cleanRef.replace(/_/g, "-"),
+    cleanRef.replace(/-/g, "_"),
+    cleanRef.toLowerCase(),
   ];
   const uniqueCandidates = Array.from(new Set(candidates));
+
+  // In Postgres, id column is UUID. Never pass non-UUID string to id.eq to avoid 22P02 error.
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const orClauses = uniqueCandidates
+    .flatMap((c) => (uuidRegex.test(c) ? [`slug.eq.${c}`, `id.eq.${c}`] : [`slug.eq.${c}`]))
+    .join(",");
 
   // Query property with retry logic for transient 503 / network errors
   let property: any = null;
@@ -3493,6 +3545,9 @@ async function sendSinglePropertyCard(
           id,
           slug,
           title,
+          title_en,
+          title_cn,
+          title_ru,
           price,
           rental_price,
           listing_type,
@@ -3504,7 +3559,7 @@ async function sendSinglePropertyCard(
           address_info,
           project:projects(name)
         `)
-        .or(uniqueCandidates.map((c) => `slug.eq.${c},id.eq.${c}`).join(","))
+        .or(orClauses)
         .limit(1)
         .maybeSingle();
 
@@ -3568,7 +3623,7 @@ async function sendSinglePropertyCard(
   const tBookBtn = lang === "th" ? "นัดดูห้องนี้" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
 
   // Lean Image Resolution (Use Direct CDN URL)
-  const images = Array.isArray(property.images) ? property.images : [];
+  const images = parsePropertyImages(property.images);
   const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
 
   let priceSubtitle = "";
@@ -3633,7 +3688,7 @@ async function sendSinglePropertyCard(
         },
         {
           type: "postback",
-          title: lang === "en" ? "🔍 Find Other Properties" : lang === "cn" ? "🔍 寻找其他房源" : lang === "ru" ? "🔍 Другие варианты" : "🔍 ให้ช่วยหาทรัพย์อื่น",
+          title: lang === "en" ? "🔍 Other Properties" : lang === "cn" ? "🔍 寻找其他房源" : lang === "ru" ? "🔍 Другие варианты" : "🔍 ค้นหาทรัพย์อื่น",
           payload: `START_QUESTIONNAIRE_${lang}`,
         },
       ],
@@ -3741,7 +3796,7 @@ async function sendAlternativePropertiesCarousel(
     const tBookBtn = lang === "th" ? "นัดดูห้องนี้" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
 
     const carouselElements = properties.map((prop: any) => {
-      const images = Array.isArray(prop.images) ? prop.images : [];
+      const images = parsePropertyImages(prop.images);
       const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
 
       let priceSubtitle = "";
