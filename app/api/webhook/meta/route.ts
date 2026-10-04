@@ -2678,6 +2678,47 @@ async function handleMetaPostback(
   leadId?: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
 ) {
+  // Resolve effective language from Redis or Identity if not explicitly provided
+  let effectiveLang: "th" | "en" | "cn" | "ru" = lang;
+  if (senderId) {
+    const cachedLang = await safeRedisGet(`user_preferred_lang:${senderId}`);
+    if (cachedLang && ["th", "en", "cn", "ru"].includes(cachedLang)) {
+      effectiveLang = cachedLang as "th" | "en" | "cn" | "ru";
+    }
+  }
+
+  if (leadId) {
+    try {
+      const supabase = createAdminClient() as any;
+      const { data: leadRow } = await supabase
+        .from("crm_leads_v3")
+        .select("identity_id, utm_data")
+        .eq("id", leadId)
+        .single();
+
+      const prefFromUtm = (leadRow?.utm_data as any)?.preferences?.preferred_lang;
+      if (prefFromUtm && ["th", "en", "cn", "ru"].includes(prefFromUtm)) {
+        effectiveLang = prefFromUtm;
+      }
+
+      if (leadRow?.identity_id) {
+        const { data: idRow } = await supabase
+          .from("identities_v3")
+          .select("social_links")
+          .eq("id", leadRow.identity_id)
+          .single();
+        const pref = idRow?.social_links?.preferred_lang;
+        if (pref && ["th", "en", "cn", "ru"].includes(pref)) {
+          effectiveLang = pref;
+        }
+      }
+    } catch (e) {
+      // non-blocking
+    }
+  }
+
+  lang = effectiveLang;
+
   const settings = await getSiteSettings();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
   const contactPhone = settings.contact_phone || "02-xxx-xxxx";
@@ -2699,6 +2740,10 @@ async function handleMetaPostback(
       replyText = "很高兴为您安排看房！📅 您可以通过下方链接选择方便的时间，或直接在聊天中告诉我们您的空闲时间 ✨";
       btnBookTitle = "📅 选择看房时间";
       btnAdminTitle = "💬 联系客服";
+    } else if (lang === "ru") {
+      replyText = "С удовольствием организуем просмотр! 📅 Выберите удобную дату и время по ссылке ниже или напишите нам прямо в этом чате ✨";
+      btnBookTitle = "📅 Выбрать дату/время";
+      btnAdminTitle = "💬 Чат с менеджером";
     }
 
     await sendMetaMessage(senderId, replyText, source, [
@@ -2732,6 +2777,8 @@ async function handleMetaPostback(
       browseText = "Here are our featured available properties and special deals 👇 Click to view photos and full details ✨";
     } else if (lang === "cn") {
       browseText = "这里是我们的精选房源与最新优惠 👇 点击查看照片与详细信息 ✨";
+    } else if (lang === "ru") {
+      browseText = "Вот наши лучшие предложения и специальные цены 👇 Нажмите, чтобы посмотреть фото и подробности ✨";
     }
     await sendMetaMessage(senderId, browseText, source);
     await sendFeaturedPropertiesCarousel(senderId, source, lang);
@@ -2745,6 +2792,9 @@ async function handleMetaPostback(
     } else if (lang === "cn") {
       contactText = `收到！😊 我们的专业客服正在为您准备资料。\n\n💬 快捷联系方式：\n📱 电话：${contactPhone}\n🟢 LINE：@${lineId.replace(/^@/, "")}\n\n您也可以直接在此留言！✨`;
       btnLineTitle = "🟢 添加 LINE 咨询";
+    } else if (lang === "ru") {
+      contactText = `Принято! 😊 Наш консультант уже готовит информацию для вас.\n\n💬 Прямые контакты:\n📱 Тел: ${contactPhone}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nИли просто напишите ваш вопрос прямо здесь! ✨`;
+      btnLineTitle = "🟢 Написать в LINE";
     }
     
     // Pause bot for 24h so human staff can talk without bot interruptions
@@ -2822,6 +2872,72 @@ async function handleMetaPostback(
   }
 }
 
+const PHUKET_ZONE_CATALOG = [
+  {
+    key: "cherngtalay_bangtao",
+    label_th: "เชิงทะเล / บางเทา",
+    label_en: "Cherngtalay / Bangtao",
+    label_cn: "程塔莱 / 邦涛",
+    label_ru: "Чернгталай / Бангтао",
+    keywords: [
+      "cherngtalay", "cherng talay", "bangtao", "bang tao", "เชิงทะเล", "บางเทา",
+      "pasak", "ป่าสัก", "boat avenue", "laguna", "ลากูน่า", "nakara", "thalang", "ถลาง",
+      "layan", "ลายัน"
+    ],
+  },
+  {
+    key: "chalong_rawai",
+    label_th: "ฉลอง / ราไวย์",
+    label_en: "Chalong / Rawai",
+    label_cn: "查龙 / 拉威",
+    label_ru: "Чалонг / Раваи",
+    keywords: [
+      "chalong", "rawai", "nai harn", "naiharn", "ฉลอง", "ราไวย์", "ในหาน",
+      "elite villa", "sai yuan", "saiyuan", "promthep", "พรหมเทพ"
+    ],
+  },
+  {
+    key: "kamala_surin",
+    label_th: "กมลา / สุรินทร์",
+    label_en: "Kamala / Surin",
+    label_cn: "卡马拉 / 苏林",
+    label_ru: "Камала / Сурин",
+    keywords: ["kamala", "surin", "กมลา", "สุรินทร์"],
+  },
+  {
+    key: "kata_karon",
+    label_th: "กะตะ / กะรน",
+    label_en: "Kata / Karon",
+    label_cn: "卡塔 / 卡伦",
+    label_ru: "Ката / Карон",
+    keywords: ["kata", "karon", "กะตะ", "กะรน"],
+  },
+  {
+    key: "kathu_patong",
+    label_th: "กะทู้ / ป่าตอง",
+    label_en: "Kathu / Patong",
+    label_cn: "卡图 / 芭东",
+    label_ru: "Кату / Патонг",
+    keywords: ["kathu", "patong", "กะทู้", "ป่าตอง", "loch palm", "red mountain"],
+  },
+  {
+    key: "phuket_town_koh_kaew",
+    label_th: "เมืองภูเก็ต / เกาะแก้ว",
+    label_en: "Phuket Town / Koh Kaew",
+    label_cn: "普吉镇 / 阁缴",
+    label_ru: "Пхукет Таун",
+    keywords: ["phuket town", "koh kaew", "เมืองภูเก็ต", "เกาะแก้ว", "wichit", "วิชิต", "rasada", "รัษฎา", "old town"],
+  },
+  {
+    key: "thalang_paklok",
+    label_th: "ถลาง / ป่าคลอก",
+    label_en: "Thalang / Paklok",
+    label_cn: "他朗 / 帕克洛",
+    label_ru: "Таланг / Паклок",
+    keywords: ["paklok", "ao po", "ป่าคลอก", "อ่าวปอ", "mission hills", "yamu", "ยามู", "airport", "สนามบิน"],
+  },
+];
+
 /**
  * Smart Match Questionnaire: Interactive 3-step requirement intake
  * State stored in Redis with 15-minute TTL.
@@ -2846,6 +2962,9 @@ async function handleSmartMatchQuestionnaire(
       JSON.stringify({ step: "budget", lang, answers: {} }),
       900 // 15 mins
     );
+
+    // Persist language preference in Redis (30 days TTL)
+    await safeRedisSet(`user_preferred_lang:${senderId}`, lang, 86400 * 30);
 
     // Question 1: Budget
     const settings = await getSiteSettings();
@@ -2889,11 +3008,12 @@ async function handleSmartMatchQuestionnaire(
 
   if (rawState) {
     try {
-      state = JSON.parse(rawState);
+      state = typeof rawState === "string" ? JSON.parse(rawState) : rawState;
     } catch (e) {
       // fallback
     }
   }
+  state.answers = state.answers || {};
 
   const lang = state.lang || "th";
   const settings = await getSiteSettings();
@@ -2914,25 +3034,82 @@ async function handleSmartMatchQuestionnaire(
         ? "Отлично! В каком районе Пхукета вы предпочитаете жить? 📍"
         : "รับทราบค่ะ! ชอบทำเลโซนไหนในภูเก็ตเป็นพิเศษคะ? 📍";
 
-    // Dynamic zone options from Site Settings (or safe defaults)
-    const customZoneOpts = settings.questionnaire_zone_options;
-    const defaultZoneReplies = [
-      { content_type: "text" as const, title: "ฉลอง / ราไวย์ (Chalong)", payload: `Q_ANS_ZONE_idx_0` },
-      { content_type: "text" as const, title: "บางเทา (Bangtao)", payload: `Q_ANS_ZONE_idx_1` },
-      { content_type: "text" as const, title: "กะทู้ (Kathu)", payload: `Q_ANS_ZONE_idx_2` },
-      { content_type: "text" as const, title: "โซนไหนก็ได้ (Any)", payload: `Q_ANS_ZONE_idx_any` },
-    ];
+    // Dynamic zone options: scan active Phuket inventory so we ONLY show zones where we actually have villas!
+    const supabase = createAdminClient() as any;
+    const phuketFilter = "address_info->>province.ilike.%ภูเก็ต%,address_info->>province.ilike.%phuket%,address_info->>th.ilike.%ภูเก็ต%,address_info->>en.ilike.%phuket%";
 
-    const zoneReplies = customZoneOpts && customZoneOpts.length > 0
-      ? [
-          ...customZoneOpts.slice(0, 7).map((z, idx) => ({
-            content_type: "text" as const,
-            title: z.label.substring(0, 20),
-            payload: `Q_ANS_ZONE_idx_${idx}`,
-          })),
-          { content_type: "text" as const, title: "ทุกโซน (Any Zone)", payload: `Q_ANS_ZONE_idx_any` },
-        ]
-      : defaultZoneReplies;
+    let matchedZoneDefs: typeof PHUKET_ZONE_CATALOG = [];
+    try {
+      const { data: activeVillas } = await supabase
+        .from("properties")
+        .select("id, title_en, title_th, address_info, project:projects(name)")
+        .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
+        .in("property_type", ["POOL_VILLA", "HOUSE"])
+        .or(phuketFilter);
+
+      if (activeVillas && activeVillas.length > 0) {
+        for (const zone of PHUKET_ZONE_CATALOG) {
+          let hasMatch = false;
+          for (const villa of activeVillas) {
+            const searchBlob = [
+              villa.title_en || "",
+              villa.title_th || "",
+              villa.project?.name || "",
+              JSON.stringify(villa.address_info || {}),
+            ].join(" ").toLowerCase();
+
+            if (zone.keywords.some(kw => searchBlob.includes(kw.toLowerCase()))) {
+              hasMatch = true;
+              break;
+            }
+          }
+          if (hasMatch) {
+            matchedZoneDefs.push(zone);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[Meta Webhook] Error scanning active inventory for zones:", e);
+    }
+
+    // Safe fallback if database query returned no matched zones
+    if (matchedZoneDefs.length === 0) {
+      matchedZoneDefs = PHUKET_ZONE_CATALOG.filter(z =>
+        z.key === "cherngtalay_bangtao" || z.key === "chalong_rawai"
+      );
+    }
+
+    const anyZoneTitle =
+      lang === "en"
+        ? "Any Zone in Phuket"
+        : lang === "cn"
+        ? "普吉全区"
+        : lang === "ru"
+        ? "Любой район"
+        : "ทุกโซน (Any Zone)";
+
+    const zoneReplies = [
+      ...matchedZoneDefs.slice(0, 7).map(z => {
+        const rawTitle =
+          lang === "en"
+            ? z.label_en
+            : lang === "cn"
+            ? z.label_cn
+            : lang === "ru"
+            ? z.label_ru
+            : z.label_th;
+        return {
+          content_type: "text" as const,
+          title: rawTitle.substring(0, 20),
+          payload: `Q_ANS_ZONE_${z.key}`,
+        };
+      }),
+      {
+        content_type: "text" as const,
+        title: anyZoneTitle.substring(0, 20),
+        payload: `Q_ANS_ZONE_any`,
+      },
+    ];
 
     await sendMetaQuickReplies(senderId, q2Text, zoneReplies, source);
     return;
@@ -2955,9 +3132,9 @@ async function handleSmartMatchQuestionnaire(
         : "ข้อสุดท้ายค่ะ ต้องการวิลล่าขนาดกี่ห้องนอนดีคะ? 🛏️";
 
     const bedReplies = [
-      { content_type: "text" as const, title: "1 - 2 ห้องนอน (Beds)", payload: `Q_ANS_BEDS_1-2` },
-      { content_type: "text" as const, title: "3 ห้องนอน (Beds)", payload: `Q_ANS_BEDS_3` },
-      { content_type: "text" as const, title: "4+ ห้องนอน (Beds)", payload: `Q_ANS_BEDS_4+` },
+      { content_type: "text" as const, title: lang === "en" ? "1-2 Bedrooms" : lang === "cn" ? "1-2 间卧室" : lang === "ru" ? "1-2 спальни" : "1 - 2 ห้องนอน (Beds)", payload: `Q_ANS_BEDS_1-2` },
+      { content_type: "text" as const, title: lang === "en" ? "3 Bedrooms" : lang === "cn" ? "3 间卧室" : lang === "ru" ? "3 спальни" : "3 ห้องนอน (Beds)", payload: `Q_ANS_BEDS_3` },
+      { content_type: "text" as const, title: lang === "en" ? "4+ Bedrooms" : lang === "cn" ? "4+ 间卧室" : lang === "ru" ? "4+ спальни" : "4+ ห้องนอน (Beds)", payload: `Q_ANS_BEDS_4+` },
     ];
 
     await sendMetaQuickReplies(senderId, q3Text, bedReplies, source);
@@ -2999,27 +3176,41 @@ async function handleSmartMatchQuestionnaire(
       }
     }
 
-    let displayZoneLabel = "Any Zone";
+    let displayZoneLabel = lang === "en" ? "Any Zone in Phuket" : lang === "cn" ? "普吉全区" : lang === "ru" ? "Любой район" : "ทุกโซนในภูเก็ต (Any Zone)";
     let targetZoneKeywords: string[] = [];
 
-    if (!state.answers.zone || state.answers.zone === "idx_any" || state.answers.zone === "Any") {
-      displayZoneLabel = "Any Zone (ทุกโซน)";
+    const zoneAnswer = state.answers.zone || "any";
+
+    if (zoneAnswer === "any" || zoneAnswer === "idx_any" || zoneAnswer === "Any") {
+      displayZoneLabel = lang === "en" ? "Any Zone in Phuket" : lang === "cn" ? "普吉全区" : lang === "ru" ? "Любой район" : "ทุกโซนในภูเก็ต (Any Zone)";
       targetZoneKeywords = [];
-    } else if (state.answers.zone.startsWith("idx_")) {
-      const zIdx = parseInt(state.answers.zone.replace("idx_", ""), 10);
-      if (customZoneOpts[zIdx]) {
-        displayZoneLabel = customZoneOpts[zIdx].label;
-        targetZoneKeywords = customZoneOpts[zIdx].keywords || [customZoneOpts[zIdx].label];
-      } else {
-        // Fallback default zones
-        const defaultZones = [
-          { label: "ฉลอง / ราไวย์ (Chalong)", kws: ["Chalong", "Rawai", "ฉลอง", "ราไวย์"] },
-          { label: "บางเทา (Bangtao)", kws: ["Bangtao", "Cherngtalay", "บางเทา", "เชิงทะเล"] },
-          { label: "กะทู้ (Kathu)", kws: ["Kathu", "Phuket Town", "กะทู้", "เมืองภูเก็ต"] },
-        ];
-        if (defaultZones[zIdx]) {
-          displayZoneLabel = defaultZones[zIdx].label;
-          targetZoneKeywords = defaultZones[zIdx].kws;
+    } else {
+      const catalogMatch = PHUKET_ZONE_CATALOG.find(z => z.key === zoneAnswer);
+      if (catalogMatch) {
+        displayZoneLabel =
+          lang === "en"
+            ? catalogMatch.label_en
+            : lang === "cn"
+            ? catalogMatch.label_cn
+            : lang === "ru"
+            ? catalogMatch.label_ru
+            : catalogMatch.label_th;
+        targetZoneKeywords = catalogMatch.keywords;
+      } else if (zoneAnswer.startsWith("idx_")) {
+        const zIdx = parseInt(zoneAnswer.replace("idx_", ""), 10);
+        if (customZoneOpts[zIdx]) {
+          displayZoneLabel = customZoneOpts[zIdx].label;
+          targetZoneKeywords = customZoneOpts[zIdx].keywords || [customZoneOpts[zIdx].label];
+        } else {
+          const defaultZones = [
+            { label: "ฉลอง / ราไวย์", kws: ["Chalong", "Rawai", "ฉลอง", "ราไวย์", "ในหาน"] },
+            { label: "บางเทา / เชิงทะเล", kws: ["Bangtao", "Cherngtalay", "บางเทา", "เชิงทะเล", "ถลาง"] },
+            { label: "กะทู้ / เมืองภูเก็ต", kws: ["Kathu", "Phuket Town", "กะทู้", "เมืองภูเก็ต"] },
+          ];
+          if (defaultZones[zIdx]) {
+            displayZoneLabel = defaultZones[zIdx].label;
+            targetZoneKeywords = defaultZones[zIdx].kws;
+          }
         }
       }
     }
@@ -3032,7 +3223,7 @@ async function handleSmartMatchQuestionnaire(
       try {
         const { data: leadRow } = await supabase
           .from("crm_leads_v3")
-          .select("utm_data")
+          .select("identity_id, utm_data")
           .eq("id", leadId)
           .single();
 
@@ -3046,6 +3237,7 @@ async function handleSmartMatchQuestionnaire(
               ...currentUtm,
               preferences: {
                 ...currentPrefs,
+                preferred_lang: lang,
                 client_budget_range: displayBudgetLabel,
                 preferred_zone: displayZoneLabel,
                 preferred_bedrooms: state.answers.bedrooms,
@@ -3055,12 +3247,32 @@ async function handleSmartMatchQuestionnaire(
             },
           })
           .eq("id", leadId);
+
+        if (leadRow?.identity_id) {
+          const { data: idRow } = await supabase
+            .from("identities_v3")
+            .select("social_links")
+            .eq("id", leadRow.identity_id)
+            .single();
+
+          const currentLinks = (idRow?.social_links as Record<string, any>) || {};
+          await supabase
+            .from("identities_v3")
+            .update({
+              social_links: {
+                ...currentLinks,
+                preferred_lang: lang,
+              },
+            })
+            .eq("id", leadRow.identity_id);
+        }
       } catch (err) {
         console.warn("[Meta Webhook] Error updating questionnaire preferences in Lead:", err);
       }
     }
 
-    // 2. Clear questionnaire state
+    // 2. Clear questionnaire state but preserve user language preference
+    await safeRedisSet(`user_preferred_lang:${senderId}`, lang, 86400 * 30);
     if (redis) {
       try {
         await redis.del(stateKey);
@@ -3087,7 +3299,10 @@ async function handleSmartMatchQuestionnaire(
     }
 
     // 4. Multi-tier Query with Budget preservation (Never send mismatched budget or empty carousel)
-    // Tier 1 Query: Filter by Status + Budget Range + Specific Zone
+    // Filter specifically for Phuket Villas & Houses
+    const phuketFilter = "address_info->>province.ilike.%ภูเก็ต%,address_info->>province.ilike.%phuket%,address_info->>th.ilike.%ภูเก็ต%,address_info->>en.ilike.%phuket%";
+
+    // Tier 1 Query: Filter by Status + Budget Range + Specific Zone + Phuket Villas
     let tier1Query = supabase
       .from("properties")
       .select(`
@@ -3110,7 +3325,9 @@ async function handleSmartMatchQuestionnaire(
         address_info,
         project:projects(name)
       `)
-      .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"]);
+      .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
+      .in("property_type", ["POOL_VILLA", "HOUSE"])
+      .or(phuketFilter);
 
     // Budget filter: check rental_price -> original_rental_price (rent) and price -> original_price (sale)
     // Uses AND-grouped ranges inside OR to prevent cross-column false matches
@@ -3173,7 +3390,7 @@ async function handleSmartMatchQuestionnaire(
     let { data: matchedProps } = await tier1Query.limit(5);
     let matchType: "exact" | "relaxed_zone" | "featured_fallback" = "exact";
 
-    // Tier 2 Fallback: If no units in selected zone, relax zone but KEEP THE BUDGET FILTER!
+    // Tier 2 Fallback: If no units in selected zone, relax zone but KEEP THE BUDGET FILTER & PHUKET!
     if (!matchedProps || matchedProps.length === 0) {
       if (targetZoneKeywords.length > 0) {
         console.log(`[Meta Webhook] No units found in selected zone ${state.answers.zone} within budget. Relaxing zone while preserving budget.`);
@@ -3199,7 +3416,9 @@ async function handleSmartMatchQuestionnaire(
             address_info,
             project:projects(name)
           `)
-          .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"]);
+          .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
+          .in("property_type", ["POOL_VILLA", "HOUSE"])
+          .or(phuketFilter);
 
         if (budgetOrParts.length > 0) {
           tier2Query = tier2Query.or(budgetOrParts.join(","));
@@ -3222,10 +3441,9 @@ async function handleSmartMatchQuestionnaire(
       }
     }
 
-    // Tier 3 Ultimate Fallback: If still no units within budget, fallback to Top Featured units
-    // (Be 100% honest with customer that these are top featured recommendations)
+    // Tier 3 Ultimate Fallback: If still no units within budget, fallback to Top Featured Phuket villas
     if (!matchedProps || matchedProps.length === 0) {
-      console.log(`[Meta Webhook] No units matched budget or zone. Falling back to Featured properties.`);
+      console.log(`[Meta Webhook] No units matched budget or zone. Falling back to Featured Phuket villas.`);
       const { data: featuredProps } = await supabase
         .from("properties")
         .select(`
@@ -3249,6 +3467,8 @@ async function handleSmartMatchQuestionnaire(
           project:projects(name)
         `)
         .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
+        .in("property_type", ["POOL_VILLA", "HOUSE"])
+        .or(phuketFilter)
         .order("is_featured", { ascending: false, nullsFirst: false })
         .limit(5);
 
@@ -3261,31 +3481,42 @@ async function handleSmartMatchQuestionnaire(
     if (matchType === "exact") {
       completionMsg =
         lang === "en"
-          ? `Thank you! 😊 We found properties matching your budget and location preferences (${state.answers.budget}, ${state.answers.bedrooms} beds). Take a look below:`
+          ? `Thank you! 😊 We found Phuket villas matching your preferences (${displayBudgetLabel}, ${bedsAnswer} beds). Take a look below:`
           : lang === "cn"
-          ? `非常感谢！😊 我们为您找到了符合预算与地段要求的精选房源（${state.answers.budget}，${state.answers.bedrooms}卧）。请查看下方推荐：`
+          ? `非常感谢！😊 我们为您找到了普吉岛符合要求的精选别墅（${displayBudgetLabel}，${bedsAnswer}卧）。请查看下方推荐：`
           : lang === "ru"
-          ? `Спасибо! 😊 Мы подобрали виллы по вашему бюджету и району (${state.answers.budget}, ${state.answers.bedrooms} сп.). Посмотрите варианты ниже:`
-          : `ขอบคุณสำหรับข้อมูลค่ะ! 😊 ระบบคัดสรรวิลล่าที่ตรงกับงบประมาณและทำเลที่คุณเลือกมาให้ชมด้านล่างนี้นะคะ 👇`;
+          ? `Спасибо! 😊 Мы подобрали виллы на Пхукете по вашим параметрам (${displayBudgetLabel}, ${bedsAnswer} сп.). Посмотрите варианты ниже:`
+          : `ขอบคุณสำหรับข้อมูลค่ะ! 😊 ระบบคัดสรรวิลล่าในภูเก็ตที่ตรงกับงบประมาณและทำเลที่คุณเลือกมาให้ชมด้านล่างนี้นะคะ 👇`;
     } else if (matchType === "relaxed_zone") {
       completionMsg =
         lang === "en"
-          ? `Thank you! 😊 Currently there are no available units in your chosen zone within ${state.answers.budget}. However, here are great options in other prime areas fitting your budget:`
+          ? `Thank you! 😊 Currently there are no available units in your chosen zone within ${displayBudgetLabel}. Here are great Phuket options in other prime areas:`
           : lang === "cn"
-          ? `非常感谢！😊 您所选区域当前在 ${state.answers.budget} 预算内暂无空房。为您推荐其他优质地段、符合该预算的房源：`
+          ? `非常感谢！😊 您所选区域当前在 ${displayBudgetLabel} 预算内暂无空房。为您推荐普吉岛其他优质地段房源：`
           : lang === "ru"
-          ? `Спасибо! 😊 В выбранном районе сейчас нет свободных вилл в бюджете ${state.answers.budget}. Предлагаем отличные варианты в других популярных районах в вашем бюджете:`
-          : `ขอบคุณค่ะ! 😊 ในโซนที่คุณเลือกขณะนี้ยังไม่มีห้องว่างในช่วงงบ ${state.answers.budget} พอดี แอดมินจึงคัดสรรวิลล่าในทำเลเด่นอื่นที่อยู่ในงบของคุณมาให้ชมแทนนะคะ 👇`;
+          ? `Спасибо! 😊 В выбранном районе сейчас нет свободных вилл в бюджете ${displayBudgetLabel}. Предлагаем отличные варианты в других районах Пхукета:`
+          : `ขอบคุณค่ะ! 😊 ในโซนที่คุณเลือกขณะนี้ยังไม่มีวิลล่าว่างในช่วงงบ ${displayBudgetLabel} พอดี แอดมินจึงคัดสรรวิลล่าในทำเลเด่นอื่นของภูเก็ตที่อยู่ในงบมาให้ชมแทนนะคะ 👇`;
     } else {
       completionMsg =
         lang === "en"
-          ? `Thank you! 😊 Our property consultant has received your specific requirements (${state.answers.budget}, ${state.answers.zone}) and will search our offline network for you shortly.\n\nMeanwhile, here are our most popular featured villas in Phuket:`
+          ? `Thank you! 😊 Our property consultant has received your requirements (${displayBudgetLabel}, ${displayZoneLabel}) and will search our offline network for you shortly.\n\nMeanwhile, here are our most popular featured villas in Phuket:`
           : lang === "cn"
-          ? `非常感谢！😊 我们的专业顾问已收到您的定制找房要求（${state.answers.budget}，${state.answers.zone}），并将尽快为您跟进。\n\n在此期间，为您推荐普吉岛目前最受欢迎的精选房源：`
+          ? `非常感谢！😊 我们的专业顾问已收到您的找房要求（${displayBudgetLabel}，${displayZoneLabel}），并将尽快为您跟进。\n\n在此期间，为您推荐普吉岛目前最受欢迎的精选房源：`
           : lang === "ru"
-          ? `Спасибо! 😊 Наш консультант получил ваши параметры (${state.answers.budget}, ${state.answers.zone}) и скоро свяжется с вами.\n\nА пока предлагаем взглянуть на самые популярные виллы на Пхукете:`
-          : `ขอบคุณสำหรับข้อมูลค่ะ! 😊 ทีมงานได้รับเงื่อนไขเฉพาะของคุณลูกค้าเรียบร้อยแล้วค่ะ และกำลังประสานงานค้นหาห้องที่ตรงใจให้อย่างเร่งด่วนนะคะ\n\nระหว่างนี้ขอแนะนำวิลล่าไฮไลท์ยอดนิยมของภูเก็ตมาให้ชมด้านล่างนี้ค่ะ 👇`;
+          ? `Спасибо! 😊 Наш консультант получил ваши параметры (${displayBudgetLabel}, ${displayZoneLabel}) и скоро свяжется с вами.\n\nА пока предлагаем взглянуть на самые популярные виллы на Пхукете:`
+          : `ขอบคุณสำหรับข้อมูลค่ะ! 😊 ทีมงานได้รับเงื่อนไขของคุณลูกค้าเรียบร้อยแล้วค่ะ และกำลังประสานงานค้นหาวิลล่าที่ตรงใจให้อย่างเร่งด่วนนะคะ\n\nระหว่างนี้ขอแนะนำวิลล่าไฮไลท์ยอดนิยมของภูเก็ตมาให้ชมด้านล่างนี้ค่ะ 👇`;
     }
+
+    const viewAllWebsiteText =
+      lang === "en"
+        ? `\n\n🌐 View all properties: ${siteUrl}/properties?province=phuket`
+        : lang === "cn"
+        ? `\n\n🌐 在官网查看全部房源: ${siteUrl}/properties?province=phuket`
+        : lang === "ru"
+        ? `\n\n🌐 Все варианты на сайте: ${siteUrl}/properties?province=phuket`
+        : `\n\n🌐 ดูทรัพย์ทั้งหมดในเว็บไซต์: ${siteUrl}/properties?province=phuket`;
+
+    completionMsg += viewAllWebsiteText;
 
     await sendMetaMessage(senderId, completionMsg, source);
 
@@ -3296,10 +3527,11 @@ async function handleSmartMatchQuestionnaire(
       const tSqm = lang === "th" ? "ตร.ม." : "sqm";
       const tViewBtn = lang === "th" ? "ดูรายละเอียด" : lang === "en" ? "View Details" : lang === "cn" ? "查看详情" : "Подробнее";
       const tBookBtn = lang === "th" ? "นัดดูหลังนี้" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
+      const tAllBtn = lang === "en" ? "🌐 All Properties" : lang === "cn" ? "🌐 更多房源" : lang === "ru" ? "🌐 Все варианты" : "🌐 ดูทรัพย์ทั้งหมด";
 
       const carouselCards = matchedProps.map((p: any) => {
-        const images = Array.isArray(p.images) ? p.images : [];
-        const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
+        const images = parsePropertyImages(p.images);
+        const imageUrl = images[0] || `${siteUrl}/images/luxury-villa.webp`;
         const propUrl = `${siteUrl}/properties/${p.slug || p.id}`;
 
         const rPrice = p.rental_price || p.original_rental_price;
@@ -3313,14 +3545,18 @@ async function handleSmartMatchQuestionnaire(
         else if (lang === "cn" && (p.title_cn || p.title_en)) pTitle = p.title_cn || p.title_en;
         else if (lang === "ru" && (p.title_ru || p.title_en)) pTitle = p.title_ru || p.title_en;
 
+        const projectName = resolveProjectName(p, lang);
+        const subtitleText = projectName ? `${priceText}\n${projectName}${bedText}${sizeText}` : `${priceText}${bedText}${sizeText}`;
+
         return {
           title: pTitle.substring(0, 80),
-          subtitle: `${priceText}${bedText}${sizeText}`.substring(0, 80),
+          subtitle: subtitleText.substring(0, 80),
           image_url: imageUrl,
           default_action: { type: "web_url", url: propUrl },
           buttons: [
             { type: "web_url", url: propUrl, title: tViewBtn },
             { type: "postback", title: tBookBtn, payload: `ACTION_BOOK_PROPERTY_${p.id}` },
+            { type: "web_url", url: `${siteUrl}/properties?province=phuket`, title: tAllBtn },
           ],
         };
       });
@@ -3342,7 +3578,11 @@ async function handlePropertyLanguageSelection(
 ) {
   const supabase = createAdminClient() as any;
 
-  // 1. Save language preference permanently in Identity
+  // 1. Save language preference permanently in Identity & Redis
+  if (senderId) {
+    await safeRedisSet(`user_preferred_lang:${senderId}`, lang, 86400 * 30);
+  }
+
   if (leadId) {
     try {
       const { data: leadRow } = await supabase
