@@ -2493,6 +2493,23 @@ function parsePropertyImages(imagesField: any): string[] {
 }
 
 /**
+ * Safely resolve project name whether stored as string or multilingual object { th, en }
+ */
+function resolveProjectName(prop: any, lang: string = "th"): string {
+  if (prop?.project?.name) {
+    if (typeof prop.project.name === "string") return prop.project.name;
+    if (typeof prop.project.name === "object") {
+      return prop.project.name[lang] || prop.project.name.th || prop.project.name.en || "";
+    }
+  }
+  if (prop?.address_info) {
+    if (typeof prop.address_info.th === "string") return prop.address_info.th;
+    if (typeof prop.address_info === "string") return prop.address_info;
+  }
+  return "";
+}
+
+/**
  * Clean up lonely emojis, empty brackets, and multiple blank lines
  */
 function sanitizeTemplateOutput(text: string): string {
@@ -2616,7 +2633,7 @@ async function sendFeaturedPropertiesCarousel(
         priceSubtitle = prop.price ? `${tSale} ฿${prop.price.toLocaleString()}` : `${tSale} (Inquire)`;
       }
 
-      const projectName = prop.project?.name || prop.address_info?.th || "";
+      const projectName = resolveProjectName(prop, lang);
       const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ${tSqm}` : "";
       const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} ${tBed}` : "";
       const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
@@ -3649,7 +3666,7 @@ async function sendSinglePropertyCard(
     title = property.title_ru || property.title_en;
   }
 
-  const projectName = property.project?.name || property.address_info?.th || "";
+  const projectName = resolveProjectName(property, lang);
   const sizeInfo = property.size_sqm ? ` • ${property.size_sqm} ${tSqm}` : "";
   const bedInfo = property.bedrooms ? ` • ${property.bedrooms} ${tBed}` : "";
   const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
@@ -3811,7 +3828,7 @@ async function sendAlternativePropertiesCarousel(
         priceSubtitle = prop.price ? `${tSale} ฿${prop.price.toLocaleString()}` : `${tSale} (Inquire)`;
       }
 
-      const projectName = prop.project?.name || prop.address_info?.th || "";
+      const projectName = resolveProjectName(prop, lang);
       const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ${tSqm}` : "";
       const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} ${tBed}` : "";
       const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
