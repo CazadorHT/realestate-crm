@@ -15,12 +15,12 @@ import { unstable_cache } from "next/cache";
 async function fetchAndBuildCatalog() {
   const supabase = createPublicClient();
 
-  // Filter properties active and updated within the last 60 days (2 months) for fresh inventory
-  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+  // Filter properties active and updated within the last 30 days for fresh inventory
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   // Fetch active properties directly from V3 Core tables
   // Completely eliminates select(*) to save bandwidth and reduce payload size
-  const { data: propertiesData, error } = await supabase
+  let { data: propertiesData, error } = await supabase
     .from("properties_core")
     .select(
       `
@@ -36,6 +36,7 @@ async function fetchAndBuildCatalog() {
       is_exclusive,
       co_broker_id,
       project_id,
+      created_at,
       updated_at,
       project:projects!properties_core_project_id_fkey (
         id,
@@ -58,11 +59,62 @@ async function fetchAndBuildCatalog() {
     `,
     )
     .eq("status", 1) // 1 = ACTIVE
-    .gte("updated_at", sixtyDaysAgo)
+    .gte("updated_at", thirtyDaysAgo)
     .order("updated_at", { ascending: false })
     .limit(300);
 
   if (error) throw error;
+
+  // Resilience: If fewer than 20 properties were updated in the last 30 days,
+  // gracefully fall back to recent active properties so the Meta Catalog never starves
+  if (!propertiesData || propertiesData.length < 20) {
+    const { data: fallbackData, error: fallbackErr } = await supabase
+      .from("properties_core")
+      .select(
+        `
+        id,
+        listing_type,
+        property_type,
+        sale_price,
+        rent_price,
+        bedrooms,
+        bathrooms,
+        floor_area,
+        verified,
+        is_exclusive,
+        co_broker_id,
+        project_id,
+        created_at,
+        updated_at,
+        project:projects!properties_core_project_id_fkey (
+          id,
+          name,
+          developer
+        ),
+        details:properties_details!properties_details_property_id_fkey (
+          title,
+          description,
+          address_info,
+          amenities,
+          pricing_details,
+          meta_data,
+          transit_info
+        ),
+        media:property_media_v3!property_media_v3_property_id_fkey (
+          url,
+          is_cover
+        )
+      `,
+      )
+      .eq("status", 1)
+      .order("updated_at", { ascending: false })
+      .limit(60);
+
+    if (!fallbackErr && fallbackData && fallbackData.length > 0) {
+      propertiesData = fallbackData;
+    }
+  }
+
   return buildMetaCatalogXml(propertiesData || []);
 }
 
@@ -94,6 +146,8 @@ function buildMetaCatalogXml(propertiesData: any[]) {
     is_exclusive: boolean | null;
     co_broker_id: string | null;
     project_id: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
     project: {
       id: string;
       name: Json;
@@ -409,25 +463,48 @@ function buildMetaCatalogXml(propertiesData: any[]) {
 
       const nearTransit = transitObj.near_transit as boolean | undefined;
 
+      // Check if property was created or updated within the last 30 days
+      const propDate = p.created_at || p.updated_at;
+      const isWithin30Days = propDate
+        ? (Date.now() - new Date(propDate).getTime()) <= 30 * 24 * 60 * 60 * 1000
+        : false;
+
       // label_0: ป้ายดึงดูด & SEO Keyword Hook (Search Intent & Advantage+ Catalog Ads)
-      // ผสมคำค้นหายอดนิยม (High-Intent SEO Keywords) เพื่อให้ Meta Algorithm จับกลุ่มผู้ค้นหาได้แม่นยำขึ้น
+      // ผสมคำค้นหายอดนิยม + ติดป้าย (NEW) สำหรับทรัพย์เข้าใหม่ไม่เกิน 30 วัน เพื่อให้แยก Product Set ได้
       let hookLabel = "";
-      if (item.hasDiscount) {
-        hookLabel = "🔥 ราคาพิเศษ Hot Deal";
-      } else if (p.is_exclusive) {
-        hookLabel = "⭐ สัญญาพิเศษ Exclusive";
-      } else if (isPetFriendly) {
-        hookLabel = "🐾 เลี้ยงสัตว์ได้ Pet-Friendly";
-      } else if (nearTransit) {
-        hookLabel = "🚇 ติดรถไฟฟ้า BTS-MRT";
-      } else if (isFullyFurnished) {
-        hookLabel = "✨ แต่งครบพร้อมอยู่ Ready to Move";
-      } else if (p.verified) {
-        hookLabel = "✅ ห้องจริงตรงปก Verified";
+      if (isWithin30Days) {
+        if (item.hasDiscount) {
+          hookLabel = "🔥 ดีลพิเศษมาใหม่ (NEW)";
+        } else if (p.is_exclusive) {
+          hookLabel = "⭐ สัญญาพิเศษมาใหม่ (NEW)";
+        } else if (isPetFriendly) {
+          hookLabel = "🐾 เลี้ยงสัตว์ได้มาใหม่ (NEW)";
+        } else if (nearTransit) {
+          hookLabel = "🚇 ติดรถไฟฟ้ามาใหม่ (NEW)";
+        } else if (isFullyFurnished) {
+          hookLabel = "✨ แต่งครบพร้อมอยู่มาใหม่ (NEW)";
+        } else {
+          hookLabel = "🆕 ทรัพย์เข้าใหม่ (NEW)";
+        }
       } else {
-        hookLabel = "💎 ยูนิตคัดพิเศษ New Listing";
+        if (item.hasDiscount) {
+          hookLabel = "🔥 ราคาพิเศษ Hot Deal";
+        } else if (p.is_exclusive) {
+          hookLabel = "⭐ สัญญาพิเศษ Exclusive";
+        } else if (isPetFriendly) {
+          hookLabel = "🐾 เลี้ยงสัตว์ได้ Pet-Friendly";
+        } else if (nearTransit) {
+          hookLabel = "🚇 ติดรถไฟฟ้า BTS-MRT";
+        } else if (isFullyFurnished) {
+          hookLabel = "✨ แต่งครบพร้อมอยู่ Ready to Move";
+        } else if (p.verified) {
+          hookLabel = "✅ ห้องจริงตรงปก Verified";
+        } else {
+          hookLabel = "💎 ยูนิตคัดพิเศษ Featured";
+        }
       }
       xml += `    <custom_label_0><![CDATA[${hookLabel}]]></custom_label_0>\n`;
+      xml += `    <tag>${isWithin30Days ? "NEW_ARRIVAL" : "REGULAR"}</tag>\n`;
 
       // label_1: ไลฟ์สไตล์ (Lifestyle Tags)
       const lifestyleParts: string[] = [];

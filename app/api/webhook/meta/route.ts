@@ -29,6 +29,14 @@ import { sendAdminNotification } from "@/lib/telegram";
 // RESILIENCE & CACHE HELPERS
 // ==========================================
 
+export function getPublicSiteUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || "";
+  if (raw && !raw.includes("localhost")) {
+    return raw.replace(/\/+$/, "");
+  }
+  return "https://vccasset.com";
+}
+
 // In-Memory Feature Flag Cache (TTL 60 seconds)
 let cachedAdReferralBotEnabled: boolean | null = null;
 let cachedAdReferralBotExpiry = 0;
@@ -2621,7 +2629,7 @@ async function sendFeaturedPropertiesCarousel(
 
     const carouselElements = properties.map((prop: any) => {
       const images = parsePropertyImages(prop.images);
-      const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
+      const imageUrl = images[0] || `${siteUrl}/images/luxury-villa.webp`;
 
       let priceSubtitle = "";
       if (prop.listing_type === "SALE_AND_RENT") {
@@ -2819,7 +2827,7 @@ async function handleMetaPostback(
   lang = effectiveLang;
 
   const settings = await getSiteSettings();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+  const siteUrl = getPublicSiteUrl();
   const contactPhone = settings.contact_phone || "02-xxx-xxxx";
   const lineId = settings.line_id || "vccasset";
 
@@ -3372,7 +3380,17 @@ async function handleSmartMatchQuestionnaire(
   }
   state.answers = state.answers || {};
 
-  const lang = state.lang || "th";
+  let lang = state.lang;
+  if (!lang || lang === "th") {
+    const cachedLang = await safeRedisGet(`user_preferred_lang:${senderId}`);
+    if (cachedLang && ["th", "en", "cn", "ru"].includes(cachedLang)) {
+      lang = cachedLang as "th" | "en" | "cn" | "ru";
+      state.lang = lang;
+    } else {
+      lang = "th";
+    }
+  }
+
   const settings = await getSiteSettings();
 
   // Answer 0 (Province: Bangkok vs Phuket) -> Proceed to Question 1 (Purpose: Rent vs Buy)
@@ -3381,6 +3399,7 @@ async function handleSmartMatchQuestionnaire(
     const chosenProv = provVal === "bangkok" ? "bangkok" : "phuket";
     state.answers.province = chosenProv;
     state.step = "purpose";
+    state.lang = lang;
     await safeRedisSet(`lead_ad_province:${senderId}`, chosenProv, 86400 * 7);
     await safeRedisSet(stateKey, JSON.stringify(state), 900);
 
@@ -3393,6 +3412,7 @@ async function handleSmartMatchQuestionnaire(
     const purposeVal = payload.replace("Q_ANS_PURPOSE_", "");
     state.answers.purpose = purposeVal;
     state.step = "budget";
+    state.lang = lang;
     await safeRedisSet(stateKey, JSON.stringify(state), 900);
 
     const isBangkok = state.answers.province === "bangkok";
@@ -3416,18 +3436,52 @@ async function handleSmartMatchQuestionnaire(
             ? "Какой у вас примерный бюджет на аренду в месяц на Пхукете? 💰"
             : "งบประมาณค่าเช่าต่อเดือนในภูเก็ตที่คุณลูกค้าตั้งไว้ประมาณเท่าไหร่ดีคะ? 💰");
 
+      const rentSuffix = lang === "en" ? "/mo" : lang === "cn" ? "/月" : lang === "ru" ? "/мес." : " บ./ด.";
+
       budgetReplies = isBangkok
         ? [
-            { content_type: "text" as const, title: lang === "en" ? "< ฿25k/mo" : "< 25,000 บ./ด.", payload: "Q_ANS_BUDGET_rent_lt25k" },
-            { content_type: "text" as const, title: "฿25k - ฿50k", payload: "Q_ANS_BUDGET_rent_25k_50k" },
-            { content_type: "text" as const, title: "฿50k - ฿100k", payload: "Q_ANS_BUDGET_rent_50k_100k" },
-            { content_type: "text" as const, title: lang === "en" ? "> ฿100k/mo" : "> 100,000 บ./ด.", payload: "Q_ANS_BUDGET_rent_gt100k" },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "< 25,000 บ./ด." : `< ฿25k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_lt25k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "25k - 50k บ." : `฿25k - ฿50k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_25k_50k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "50k - 100k บ." : `฿50k - ฿100k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_50k_100k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "> 100,000 บ./ด." : `> ฿100k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_gt100k",
+            },
           ]
         : [
-            { content_type: "text" as const, title: lang === "en" ? "< ฿50k/mo" : "< 50,000 บ./ด.", payload: "Q_ANS_BUDGET_rent_lt50k" },
-            { content_type: "text" as const, title: "฿50k - ฿150k", payload: "Q_ANS_BUDGET_rent_50k_150k" },
-            { content_type: "text" as const, title: "฿150k - ฿250k", payload: "Q_ANS_BUDGET_rent_150k_250k" },
-            { content_type: "text" as const, title: lang === "en" ? "> ฿250k/mo" : "> 250,000 บ./ด.", payload: "Q_ANS_BUDGET_rent_gt250k" },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "< 50,000 บ./ด." : `< ฿50k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_lt50k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "50k - 150k บ." : `฿50k - ฿150k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_50k_150k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "150k - 250k บ." : `฿150k - ฿250k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_150k_250k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "> 250,000 บ./ด." : `> ฿250k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_gt250k",
+            },
           ];
     } else if (purposeVal === "sale") {
       q2Text = isBangkok
@@ -3448,16 +3502,48 @@ async function handleSmartMatchQuestionnaire(
 
       budgetReplies = isBangkok
         ? [
-            { content_type: "text" as const, title: lang === "en" ? "< ฿5M" : "< 5 ล้าน", payload: "Q_ANS_BUDGET_sale_lt5m" },
-            { content_type: "text" as const, title: lang === "en" ? "฿5M - ฿10M" : "5 - 10 ล้าน", payload: "Q_ANS_BUDGET_sale_5m_10m" },
-            { content_type: "text" as const, title: lang === "en" ? "฿10M - ฿20M" : "10 - 20 ล้าน", payload: "Q_ANS_BUDGET_sale_10m_20m" },
-            { content_type: "text" as const, title: lang === "en" ? "> ฿20M" : "> 20 ล้านขึ้นไป", payload: "Q_ANS_BUDGET_sale_gt20m" },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "< 5 ล้านบาท" : "< ฿5M",
+              payload: "Q_ANS_BUDGET_sale_lt5m",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "5 - 10 ล้านบาท" : "฿5M - ฿10M",
+              payload: "Q_ANS_BUDGET_sale_5m_10m",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "10 - 20 ล้านบาท" : "฿10M - ฿20M",
+              payload: "Q_ANS_BUDGET_sale_10m_20m",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "> 20 ล้านขึ้นไป" : "> ฿20M",
+              payload: "Q_ANS_BUDGET_sale_gt20m",
+            },
           ]
         : [
-            { content_type: "text" as const, title: lang === "en" ? "< ฿10M" : "< 10 ล้าน", payload: "Q_ANS_BUDGET_sale_lt10m" },
-            { content_type: "text" as const, title: lang === "en" ? "฿10M - ฿20M" : "10 - 20 ล้าน", payload: "Q_ANS_BUDGET_sale_10m_20m" },
-            { content_type: "text" as const, title: lang === "en" ? "฿20M - ฿40M" : "20 - 40 ล้าน", payload: "Q_ANS_BUDGET_sale_20m_40m" },
-            { content_type: "text" as const, title: lang === "en" ? "> ฿40M" : "> 40 ล้านขึ้นไป", payload: "Q_ANS_BUDGET_sale_gt40m" },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "< 10 ล้านบาท" : "< ฿10M",
+              payload: "Q_ANS_BUDGET_sale_lt10m",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "10 - 20 ล้านบาท" : "฿10M - ฿20M",
+              payload: "Q_ANS_BUDGET_sale_10m_20m",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "20 - 40 ล้านบาท" : "฿20M - ฿40M",
+              payload: "Q_ANS_BUDGET_sale_20m_40m",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "> 40 ล้านขึ้นไป" : "> ฿40M",
+              payload: "Q_ANS_BUDGET_sale_gt40m",
+            },
           ];
     } else {
       q2Text =
@@ -3469,18 +3555,54 @@ async function handleSmartMatchQuestionnaire(
           ? `Какой у вас примерный бюджет в ${isBangkok ? "Бангкоке" : "Пхукете"}? 💰`
           : `งบประมาณใน${isBangkok ? "กรุงเทพฯ" : "ภูเก็ต"}ที่คุณลูกค้าตั้งไว้ประมาณเท่าไหร่ดีคะ? 💰`;
 
+      const tRent = lang === "en" ? "Rent" : lang === "cn" ? "租" : lang === "ru" ? "Аренда" : "เช่า";
+      const tBuy = lang === "en" ? "Buy" : lang === "cn" ? "买" : lang === "ru" ? "Покупка" : "ซื้อ";
+      const rentSuffix = lang === "en" ? "/mo" : lang === "cn" ? "/月" : lang === "ru" ? "" : "/ด.";
+
       budgetReplies = isBangkok
         ? [
-            { content_type: "text" as const, title: lang === "en" ? "Rent < ฿50k/mo" : "เช่า < 50k/ด.", payload: "Q_ANS_BUDGET_rent_lt50k" },
-            { content_type: "text" as const, title: lang === "en" ? "Rent > ฿50k/mo" : "เช่า > 50k/ด.", payload: "Q_ANS_BUDGET_rent_gt50k" },
-            { content_type: "text" as const, title: lang === "en" ? "Buy < ฿10M" : "ซื้อ < 10 ล้าน", payload: "Q_ANS_BUDGET_sale_lt10m" },
-            { content_type: "text" as const, title: lang === "en" ? "Buy > ฿10M" : "ซื้อ > 10 ล้าน", payload: "Q_ANS_BUDGET_sale_gt10m" },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "เช่า < 50k/ด." : `${tRent} < ฿50k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_lt50k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "เช่า > 50k/ด." : `${tRent} > ฿50k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_gt50k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "ซื้อ < 10 ล้าน" : `${tBuy} < ฿10M`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_sale_lt10m",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "ซื้อ > 10 ล้าน" : `${tBuy} > ฿10M`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_sale_gt10m",
+            },
           ]
         : [
-            { content_type: "text" as const, title: lang === "en" ? "Rent < ฿100k/mo" : "เช่า < 100k/ด.", payload: "Q_ANS_BUDGET_rent_lt100k" },
-            { content_type: "text" as const, title: lang === "en" ? "Rent ฿100k-฿250k" : "เช่า 100k-250k", payload: "Q_ANS_BUDGET_rent_100k_250k" },
-            { content_type: "text" as const, title: lang === "en" ? "Buy < ฿20M" : "ซื้อ < 20 ล้าน", payload: "Q_ANS_BUDGET_sale_lt20m" },
-            { content_type: "text" as const, title: lang === "en" ? "Buy > ฿20M" : "ซื้อ > 20 ล้าน", payload: "Q_ANS_BUDGET_sale_gt20m" },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "เช่า < 100k/ด." : `${tRent} < ฿100k${rentSuffix}`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_lt100k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "เช่า 100k-250k" : `${tRent} ฿100k-฿250k`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_rent_100k_250k",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "ซื้อ < 20 ล้าน" : `${tBuy} < ฿20M`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_sale_lt20m",
+            },
+            {
+              content_type: "text" as const,
+              title: lang === "th" ? "ซื้อ > 20 ล้าน" : `${tBuy} > ฿20M`.substring(0, 20),
+              payload: "Q_ANS_BUDGET_sale_gt20m",
+            },
           ];
     }
 
@@ -3493,6 +3615,7 @@ async function handleSmartMatchQuestionnaire(
     const budgetVal = payload.replace("Q_ANS_BUDGET_", "");
     state.answers.budget = budgetVal;
     state.step = "zone";
+    state.lang = lang;
     await safeRedisSet(stateKey, JSON.stringify(state), 900);
 
     const isBangkok = state.answers.province === "bangkok";
@@ -3576,6 +3699,7 @@ async function handleSmartMatchQuestionnaire(
     const zoneVal = payload.replace("Q_ANS_ZONE_", "");
     state.answers.zone = zoneVal;
     state.step = "bedrooms";
+    state.lang = lang;
     await safeRedisSet(stateKey, JSON.stringify(state), 900);
 
     const isBangkok = state.answers.province === "bangkok";
@@ -3725,7 +3849,12 @@ async function handleSmartMatchQuestionnaire(
       displayBudgetLabel = bVal || "N/A";
     }
 
-    const purpose = state.answers.purpose || (isSaleBudget ? "sale" : "rent");
+    let purpose = state.answers.purpose || (isSaleBudget ? "sale" : "rent");
+    if (bVal.startsWith("rent_")) {
+      purpose = "rent";
+    } else if (bVal.startsWith("sale_")) {
+      purpose = "sale";
+    }
     const displayPurposeLabel =
       purpose === "rent"
         ? (lang === "en" ? "Rent" : lang === "cn" ? "租房" : lang === "ru" ? "Аренда" : "เช่า (Rent)")
@@ -3816,7 +3945,7 @@ async function handleSmartMatchQuestionnaire(
 
     // 1. Data Separation: Save actual client requirements in Lead profile
     const supabase = createAdminClient() as any;
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const siteUrl = getPublicSiteUrl();
 
     if (leadId) {
       try {
@@ -4171,14 +4300,22 @@ async function handleSmartMatchQuestionnaire(
     }
 
     const targetProvinceSlug = isBangkok ? "bangkok" : "phuket";
+    const listingTypeParam =
+      purpose === "rent"
+        ? "&listing_type=RENT"
+        : purpose === "sale"
+        ? "&listing_type=SALE"
+        : "";
+    const allPropsUrl = `${siteUrl}/properties?province=${targetProvinceSlug}${listingTypeParam}`;
+
     const viewAllWebsiteText =
       lang === "en"
-        ? `\n\n🌐 View all properties: ${siteUrl}/properties?province=${targetProvinceSlug}`
+        ? `\n\n🌐 View all properties: ${allPropsUrl}`
         : lang === "cn"
-        ? `\n\n🌐 在官网查看全部房源: ${siteUrl}/properties?province=${targetProvinceSlug}`
+        ? `\n\n🌐 在官网查看全部房源: ${allPropsUrl}`
         : lang === "ru"
-        ? `\n\n🌐 Все варианты на сайте: ${siteUrl}/properties?province=${targetProvinceSlug}`
-        : `\n\n🌐 ดูทรัพย์ทั้งหมดในเว็บไซต์: ${siteUrl}/properties?province=${targetProvinceSlug}`;
+        ? `\n\n🌐 Все варианты на сайте: ${allPropsUrl}`
+        : `\n\n🌐 ดูทรัพย์ทั้งหมดในเว็บไซต์: ${allPropsUrl}`;
 
     completionMsg += viewAllWebsiteText;
 
@@ -4220,7 +4357,7 @@ async function handleSmartMatchQuestionnaire(
           buttons: [
             { type: "web_url", url: propUrl, title: tViewBtn },
             { type: "postback", title: tBookBtn, payload: `ACTION_BOOK_PROPERTY_${p.id}` },
-            { type: "web_url", url: `${siteUrl}/properties?province=${targetProvinceSlug}`, title: tAllBtn },
+            { type: "web_url", url: allPropsUrl, title: tAllBtn },
           ],
         };
       });
@@ -4571,7 +4708,7 @@ async function sendSinglePropertyCard(
 
   // Lean Image Resolution (Use Direct CDN URL)
   const images = parsePropertyImages(property.images);
-  const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
+  const imageUrl = images[0] || `${siteUrl}/images/luxury-villa.webp`;
 
   let priceSubtitle = "";
   if (property.listing_type === "SALE_AND_RENT") {
@@ -4754,7 +4891,7 @@ async function sendAlternativePropertiesCarousel(
 
     const carouselElements = properties.map((prop: any) => {
       const images = parsePropertyImages(prop.images);
-      const imageUrl = images[0] || `${siteUrl}/images/property-placeholder.jpg`;
+      const imageUrl = images[0] || `${siteUrl}/images/luxury-villa.webp`;
 
       let priceSubtitle = "";
       if (prop.listing_type === "SALE_AND_RENT") {
