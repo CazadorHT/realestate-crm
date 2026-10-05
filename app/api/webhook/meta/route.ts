@@ -3042,14 +3042,20 @@ const PHUKET_ZONE_CATALOG = [
   },
 ];
 
-/** Bangkok + vicinity provinces (same grouping used by the public website's popular areas) */
+/** Bangkok + vicinity provinces (supports both Thai and English database values) */
 const BKK_VICINITY_PROVINCES = [
   "กรุงเทพมหานคร",
+  "Bangkok",
   "สมุทรปราการ",
+  "Samut Prakan",
   "นนทบุรี",
+  "Nonthaburi",
   "ปทุมธานี",
+  "Pathum Thani",
   "สมุทรสาคร",
+  "Samut Sakhon",
   "นครปฐม",
+  "Nakhon Pathom",
 ];
 
 type DynamicAreaOption = {
@@ -3060,13 +3066,20 @@ type DynamicAreaOption = {
   count: number;
 };
 
-const PHUKET_PROVINCES = ["ภูเก็ต"];
+const PHUKET_PROVINCES = ["ภูเก็ต", "Phuket"];
 /** Property types used for the Phuket (villa) flow — Bangkok uses all types */
 const PHUKET_PROPERTY_TYPES = ["POOL_VILLA", "HOUSE"];
 
 /** Effective zone name of a property: popular_area → subdistrict → district */
 function resolvePropertyAreaName(r: any): string {
-  return (r.popular_area || r.subdistrict || r.district || "").trim();
+  return (
+    r.popular_area ||
+    r.subdistrict ||
+    r.district ||
+    r.address_info?.district ||
+    r.address_info?.subdistrict ||
+    ""
+  ).trim();
 }
 
 /**
@@ -3082,12 +3095,17 @@ async function getAreasFromInventory(
   provinces: string[],
   propertyTypes?: string[],
 ): Promise<DynamicAreaOption[]> {
+  const isBangkokArea = provinces.includes("กรุงเทพมหานคร") || provinces.includes("Bangkok");
+  const provFilter = isBangkokArea
+    ? `province.in.(${BKK_VICINITY_PROVINCES.join(",")}),address_info->>province.ilike.%กรุงเทพ%,address_info->>province.ilike.%bangkok%,address_info->>th.ilike.%กรุงเทพ%,address_info->>en.ilike.%bangkok%`
+    : `province.in.(${PHUKET_PROVINCES.join(",")}),address_info->>province.ilike.%ภูเก็ต%,address_info->>province.ilike.%phuket%,address_info->>th.ilike.%ภูเก็ต%,address_info->>en.ilike.%phuket%,province.ilike.%ภูเก็ต%,province.ilike.%phuket%`;
+
   let q = supabase
     .from("properties")
-    .select("popular_area, popular_area_en, popular_area_cn, popular_area_ru, subdistrict, district")
+    .select("popular_area, popular_area_en, popular_area_cn, popular_area_ru, subdistrict, district, address_info")
     .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
     .is("deleted_at", null)
-    .in("province", provinces);
+    .or(provFilter);
 
   if (propertyTypes && propertyTypes.length > 0) {
     q = q.in("property_type", propertyTypes);
@@ -3494,71 +3512,15 @@ async function handleSmartMatchQuestionnaire(
           ? "Отлично! В каком районе Пхукета вы предпочитаете жить? 📍"
           : "รับทราบค่ะ! ชอบทำเลโซนไหนในภูเก็ตเป็นพิเศษคะ? 📍");
 
-    // Dynamic zone options: scan active inventory in the selected province
     const supabase = createAdminClient() as any;
-    const activeCatalog = isBangkok ? BANGKOK_ZONE_CATALOG : PHUKET_ZONE_CATALOG;
-    const provinceFilter = isBangkok
-      ? "address_info->>province.ilike.%กรุงเทพ%,address_info->>province.ilike.%bangkok%,address_info->>th.ilike.%กรุงเทพ%,address_info->>en.ilike.%bangkok%,province.ilike.%กรุงเทพ%,province.ilike.%bangkok%"
-      : "address_info->>province.ilike.%ภูเก็ต%,address_info->>province.ilike.%phuket%,address_info->>th.ilike.%ภูเก็ต%,address_info->>en.ilike.%phuket%,province.ilike.%ภูเก็ต%,province.ilike.%phuket%";
-
     const purpose = state.answers.purpose || (budgetVal.startsWith("sale") ? "sale" : "rent");
-    let inventoryQuery = supabase
-      .from("properties")
-      .select("id, title_en, title, address_info, project:projects(name)")
-      .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
-      .or(provinceFilter);
-
-    if (!isBangkok) {
-      inventoryQuery = inventoryQuery.in("property_type", ["POOL_VILLA", "HOUSE"]);
-    }
-
-    if (purpose === "rent") {
-      inventoryQuery = inventoryQuery.in("listing_type", ["RENT", "SALE_AND_RENT"]);
-    } else if (purpose === "sale") {
-      inventoryQuery = inventoryQuery.in("listing_type", ["SALE", "SALE_AND_RENT"]);
-    }
-
-    let matchedZoneDefs: typeof activeCatalog = [];
-    try {
-      const { data: activeUnits } = await inventoryQuery;
-
-      if (activeUnits && activeUnits.length > 0) {
-        for (const zone of activeCatalog) {
-          let hasMatch = false;
-          for (const unit of activeUnits) {
-            const searchBlob = [
-              unit.title_en || "",
-              unit.title || "",
-              unit.project?.name || "",
-              JSON.stringify(unit.address_info || {}),
-            ].join(" ").toLowerCase();
-
-            if (zone.keywords.some(kw => searchBlob.includes(kw.toLowerCase()))) {
-              hasMatch = true;
-              break;
-            }
-          }
-          if (hasMatch) {
-            matchedZoneDefs.push(zone);
-          }
-        }
-      }
-    } catch (e) {
-      console.warn("[Meta Webhook] Error scanning active inventory for zones:", e);
-    }
-
-    // Safe fallback if database query returned no matched zones
-    if (matchedZoneDefs.length === 0) {
-      matchedZoneDefs = isBangkok
-        ? activeCatalog.slice(0, 3)
-        : activeCatalog.filter(z => z.key === "cherngtalay_bangtao" || z.key === "chalong_rawai");
-    }
+    const activeCatalog = isBangkok ? BANGKOK_ZONE_CATALOG : PHUKET_ZONE_CATALOG;
 
     const anyZoneTitle = isBangkok
       ? (lang === "en" ? "Any Zone in BKK" : lang === "cn" ? "曼谷全区" : lang === "ru" ? "Весь Бангкок" : "ทุกโซนใน กทม.")
       : (lang === "en" ? "Any Zone in Phuket" : lang === "cn" ? "普吉全区" : lang === "ru" ? "Любой район" : "ทุกโซนในภูเก็ต");
 
-    // 📍 Pull zones directly from REAL areas where we have active stock (Bangkok & Phuket)
+    // 📍 Pull zones directly from REAL active inventory (Bangkok & Phuket)
     let dynamicAreaReplies: Array<{ content_type: "text"; title: string; payload: string }> = [];
     try {
       const dynamicAreas = await getAreasFromInventory(
@@ -3579,7 +3541,8 @@ async function handleSmartMatchQuestionnaire(
       console.warn("[Meta Webhook] Error loading dynamic areas:", e);
     }
 
-    const catalogReplies = matchedZoneDefs.slice(0, 7).map(z => {
+    // Fallback only if dynamic inventory lookup returned 0 zones (e.g. initial setup)
+    const catalogFallbackReplies = activeCatalog.slice(0, 5).map((z) => {
       const rawTitle =
         lang === "en"
           ? z.label_en
@@ -3596,7 +3559,7 @@ async function handleSmartMatchQuestionnaire(
     });
 
     const zoneReplies = [
-      ...(dynamicAreaReplies.length > 0 ? dynamicAreaReplies : catalogReplies),
+      ...(dynamicAreaReplies.length > 0 ? dynamicAreaReplies : catalogFallbackReplies),
       {
         content_type: "text" as const,
         title: anyZoneTitle.substring(0, 20),
@@ -3789,6 +3752,31 @@ async function handleSmartMatchQuestionnaire(
       // Dynamic popular area chosen from real inventory
       targetPopularArea = zoneAnswer.replace("PA_", "").trim();
       displayZoneLabel = lang === "th" ? targetPopularArea : (translateLocation(targetPopularArea, lang) || targetPopularArea);
+
+      const cleanName = targetPopularArea.replace(/^(แขวง|ตำบล|เขต|อำเภอ)/, "").trim();
+      const enName = translateLocation(targetPopularArea, "en");
+
+      const paKeywords = new Set<string>();
+      if (targetPopularArea) paKeywords.add(targetPopularArea);
+      if (cleanName && cleanName !== targetPopularArea) paKeywords.add(cleanName);
+      if (enName && enName !== targetPopularArea) {
+        paKeywords.add(enName);
+        const enNoSpace = enName.replace(/\s+/g, "");
+        if (enNoSpace !== enName) paKeywords.add(enNoSpace);
+      }
+
+      // Also match against static catalogs to pull additional synonyms if available
+      const catalogMatch = zoneCatalog.find(
+        (z) =>
+          z.label_th.includes(cleanName) ||
+          (cleanName.length > 2 && z.keywords.some((kw) => kw.toLowerCase() === cleanName.toLowerCase())) ||
+          (enName.length > 2 && z.keywords.some((kw) => kw.toLowerCase() === enName.toLowerCase()))
+      );
+      if (catalogMatch) {
+        catalogMatch.keywords.forEach((kw) => paKeywords.add(kw));
+      }
+
+      targetZoneKeywords = Array.from(paKeywords);
     } else {
       const catalogMatch = zoneCatalog.find(z => z.key === zoneAnswer);
       if (catalogMatch) {
@@ -4002,14 +3990,20 @@ async function handleSmartMatchQuestionnaire(
       tier1Query = tier1Query.gte("bedrooms", 4);
     }
 
-    // Zone keyword filter for address_info JSONB
+    // Zone filter across popular_area, district, subdistrict, and address_info
     const zoneOrParts: string[] = [];
     if (targetZoneKeywords.length > 0) {
       targetZoneKeywords.forEach((kw) => {
         const safeKw = kw.replace(/[(),."\\]/g, "").trim();
         if (safeKw) {
+          zoneOrParts.push(`popular_area.ilike.%${safeKw}%`);
+          zoneOrParts.push(`popular_area_en.ilike.%${safeKw}%`);
+          zoneOrParts.push(`district.ilike.%${safeKw}%`);
+          zoneOrParts.push(`subdistrict.ilike.%${safeKw}%`);
           zoneOrParts.push(`address_info->>th.ilike.%${safeKw}%`);
           zoneOrParts.push(`address_info->>en.ilike.%${safeKw}%`);
+          zoneOrParts.push(`address_info->>district.ilike.%${safeKw}%`);
+          zoneOrParts.push(`address_info->>subdistrict.ilike.%${safeKw}%`);
         }
       });
     }
@@ -4022,11 +4016,6 @@ async function handleSmartMatchQuestionnaire(
       tier1Query = tier1Query.or(budgetOrParts.join(","));
     } else if (zoneOrParts.length > 0) {
       tier1Query = tier1Query.or(zoneOrParts.join(","));
-    }
-
-    // Exact popular_area match (dynamic Bangkok zones from real inventory)
-    if (targetPopularArea) {
-      tier1Query = tier1Query.eq("popular_area", targetPopularArea);
     }
 
     let { data: matchedProps } = await tier1Query.limit(5);
