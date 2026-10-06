@@ -235,6 +235,18 @@ const PLACEHOLDER_NAMES = [
 ];
 
 /**
+ * Format phone number to international WhatsApp URL with prefilled greeting
+ */
+function buildWhatsAppUrl(rawPhone?: string, prefilledText?: string): string | null {
+  const phone = rawPhone || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || process.env.META_WHATSAPP_NUMBER || "";
+  const cleaned = phone.replace(/\D/g, "");
+  if (!cleaned || cleaned.length < 9) return null;
+  const formatted = cleaned.startsWith("0") ? "66" + cleaned.slice(1) : cleaned;
+  const textParam = prefilledText ? `?text=${encodeURIComponent(prefilledText)}` : "";
+  return `https://wa.me/${formatted}${textParam}`;
+}
+
+/**
  * GET handler for Meta Webhook Verification
  */
 export async function GET(req: NextRequest) {
@@ -2883,18 +2895,31 @@ async function handleMetaPostback(
       btnAdminTitle = "💬 Чат с менеджером";
     }
 
-    await sendMetaMessage(senderId, replyText, source, [
+    const buttons: SocialButton[] = [
       {
         title: btnBookTitle,
         type: "web_url",
         url: bookingUrl,
       },
-      {
-        title: btnAdminTitle,
-        type: "postback",
-        payload: "ACTION_TALK_ADMIN",
-      }
-    ]);
+    ];
+
+    const waPhone = settings.whatsapp_number || settings.contact_phone;
+    const waUrl = buildWhatsAppUrl(waPhone, `Hello VC Connect Asset, I would like to schedule a viewing for property ref: ${propertyId || 'viewing'}`);
+    if (waUrl) {
+      buttons.push({
+        title: "💬 WhatsApp",
+        type: "web_url",
+        url: waUrl,
+      });
+    }
+
+    buttons.push({
+      title: btnAdminTitle,
+      type: "postback",
+      payload: "ACTION_TALK_ADMIN",
+    });
+
+    await sendMetaMessage(senderId, replyText, source, buttons);
 
     // Send Telegram Notification to agents
     try {
@@ -2923,17 +2948,19 @@ async function handleMetaPostback(
     await sendMetaMessage(senderId, browseText, source);
     await sendFeaturedPropertiesCarousel(senderId, source, lang);
   } else if (payload === "ACTION_TALK_ADMIN") {
-    let contactText = `รับทราบเลยค่ะ! 😊 แอดมินและเจ้าหน้าที่กำลังเตรียมข้อมูลเพื่อดูแลคุณโดยตรงนะคะ\n\n💬 ช่องทางติดต่อด่วน:\n📱 โทร: ${contactPhone}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nหรือพิมพ์ข้อความทิ้งไว้ในแชทนี้ได้เลยนะคะ ✨`;
+    const waPhone = settings.whatsapp_number || settings.contact_phone;
+    const waDisplay = waPhone ? `\n💬 WhatsApp: ${waPhone}` : "";
+    let contactText = `รับทราบเลยค่ะ! 😊 แอดมินและเจ้าหน้าที่กำลังเตรียมข้อมูลเพื่อดูแลคุณโดยตรงนะคะ\n\n💬 ช่องทางติดต่อด่วน:\n📱 โทร: ${contactPhone}${waDisplay}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nหรือพิมพ์ข้อความทิ้งไว้ในแชทนี้ได้เลยนะคะ ✨`;
     let btnLineTitle = "🟢 แอด LINE สอบถาม";
 
     if (lang === "en") {
-      contactText = `Got it! 😊 Our property consultant is getting ready to assist you.\n\n💬 Direct Contacts:\n📱 Phone: ${contactPhone}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nOr simply leave your message right here! ✨`;
+      contactText = `Got it! 😊 Our property consultant is getting ready to assist you.\n\n💬 Direct Contacts:\n📱 Phone: ${contactPhone}${waDisplay}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nOr simply leave your message right here! ✨`;
       btnLineTitle = "🟢 Chat on LINE";
     } else if (lang === "cn") {
-      contactText = `收到！😊 我们的专业客服正在为您准备资料。\n\n💬 快捷联系方式：\n📱 电话：${contactPhone}\n🟢 LINE：@${lineId.replace(/^@/, "")}\n\n您也可以直接在此留言！✨`;
+      contactText = `收到！😊 我们的专业客服正在为您准备资料。\n\n💬 快捷联系方式：\n📱 电话：${contactPhone}${waDisplay}\n🟢 LINE：@${lineId.replace(/^@/, "")}\n\n您也可以直接在此留言！✨`;
       btnLineTitle = "🟢 添加 LINE 咨询";
     } else if (lang === "ru") {
-      contactText = `Принято! 😊 Наш консультант уже готовит информацию для вас.\n\n💬 Прямые контакты:\n📱 Тел: ${contactPhone}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nИли просто напишите ваш вопрос прямо здесь! ✨`;
+      contactText = `Принято! 😊 Наш консультант уже готовит информацию для вас.\n\n💬 Прямые контакты:\n📱 Тел: ${contactPhone}${waDisplay}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nИли просто напишите ваш вопрос прямо здесь! ✨`;
       btnLineTitle = "🟢 Написать в LINE";
     }
     
@@ -2963,6 +2990,15 @@ async function handleMetaPostback(
     }
 
     const buttons: SocialButton[] = [];
+    const waUrl = buildWhatsAppUrl(waPhone, "Hello VC Connect Asset, I would like to speak with a consultant.");
+    if (waUrl) {
+      buttons.push({
+        title: "💬 WhatsApp",
+        type: "web_url",
+        url: waUrl,
+      });
+    }
+
     if (settings.line_url || lineId) {
       buttons.push({
         title: btnLineTitle,
@@ -4969,6 +5005,29 @@ async function sendMultiPropertyCarousel(
       const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
       const propUrl = `${siteUrl}/properties/${prop.slug || prop.id}`;
 
+      const propButtons: any[] = [
+        {
+          type: "web_url",
+          url: propUrl,
+          title: tViewBtn,
+        },
+        {
+          type: "postback",
+          title: tBookBtn,
+          payload: `ACTION_BOOK_PROPERTY_${prop.id}`,
+        },
+      ];
+
+      const waPhone = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || process.env.META_WHATSAPP_NUMBER || "");
+      const waUrl = buildWhatsAppUrl(waPhone, `Hello VC Connect Asset, I am interested in ${title} (ref: ${prop.slug || prop.id})`);
+      if (waUrl) {
+        propButtons.push({
+          type: "web_url",
+          url: waUrl,
+          title: "💬 WhatsApp",
+        });
+      }
+
       return {
         title: title.substring(0, 80),
         subtitle: subtitle.substring(0, 80),
@@ -4977,18 +5036,7 @@ async function sendMultiPropertyCarousel(
           type: "web_url",
           url: propUrl,
         },
-        buttons: [
-          {
-            type: "web_url",
-            url: propUrl,
-            title: tViewBtn,
-          },
-          {
-            type: "postback",
-            title: tBookBtn,
-            payload: `ACTION_BOOK_PROPERTY_${prop.id}`,
-          },
-        ],
+        buttons: propButtons,
       };
     });
 

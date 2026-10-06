@@ -137,6 +137,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   instagram_url: siteConfig.links.instagram,
   line_url: siteConfig.links.line,
   tiktok_url: siteConfig.links.tiktok,
+  whatsapp_number: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || process.env.META_WHATSAPP_NUMBER || "+66812345678"),
   line_id: siteConfig.contact.lineId,
   logo_light: siteConfig.logo,
   logo_dark: siteConfig.logoDark,
@@ -254,7 +255,7 @@ async function getSiteSettingsInternal(tenantId: string, forceFresh = false): Pr
       const stringKeys: SiteSettingKey[] = [
         "site_name", "company_name", "site_description",
         "contact_phone", "contact_email", "contact_address",
-        "google_maps_url", "facebook_url", "instagram_url", "line_url", "tiktok_url",
+        "google_maps_url", "facebook_url", "instagram_url", "line_url", "tiktok_url", "whatsapp_number",
         "line_id", "logo_light", "logo_dark", "favicon",
         "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name",
         "facebook_app_id",

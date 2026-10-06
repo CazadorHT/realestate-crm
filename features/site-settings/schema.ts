@@ -39,6 +39,7 @@ export type SiteSettingKey =
   | "instagram_url"
   | "line_url"
   | "tiktok_url"
+  | "whatsapp_number"
   | "line_id"
   | "logo_light"
   | "logo_dark"
@@ -194,6 +195,7 @@ export interface SiteSettings {
   instagram_url: string;
   line_url: string;
   tiktok_url: string;
+  whatsapp_number?: string;
   line_id: string;
   logo_light: string;
   logo_dark: string;
