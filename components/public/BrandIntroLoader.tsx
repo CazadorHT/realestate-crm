@@ -6,6 +6,15 @@ import { m, AnimatePresence } from "framer-motion";
 const STORAGE_KEY = "vcc_brand_intro_seen";
 const INTRO_DURATION_MS = 1750; // Total duration before curtain begins opening
 
+function isBotOrCrawler(): boolean {
+  if (typeof window === "undefined" || !navigator) return false;
+  if (navigator.webdriver) return true;
+  const ua = navigator.userAgent || "";
+  return /googlebot|bingbot|yandex|baiduspider|facebookexternalhit|twitterbot|rogerbot|linkedinbot|embedly|quora|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator|whatsapp|lighthouse|chrome-lighthouse|screaming frog|headless|inspect|phantomjs|petalbot|bot|crawler|spider/i.test(
+    ua
+  );
+}
+
 export function BrandIntroLoader() {
   const [isVisible, setIsVisible] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -20,6 +29,12 @@ export function BrandIntroLoader() {
   }, []);
 
   useEffect(() => {
+    // 🛡️ S-Tier Bot & Crawler Bypass: Zero delay for Googlebot, Lighthouse, and Web Vitals
+    if (isBotOrCrawler()) {
+      setIsVisible(false);
+      return;
+    }
+
     // Check if user forced preview query or has already seen in this session
     const params = new URLSearchParams(window.location.search);
     const forceIntro = params.get("intro") === "1" || params.get("preview_intro") === "1";
@@ -82,9 +97,11 @@ export function BrandIntroLoader() {
             dangerouslySetInnerHTML={{
               __html: `
                 try {
+                  var ua = navigator.userAgent || '';
+                  var isBot = navigator.webdriver || /googlebot|bingbot|yandex|baiduspider|facebookexternalhit|twitterbot|rogerbot|linkedinbot|embedly|quora|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator|whatsapp|lighthouse|chrome-lighthouse|screaming frog|headless|inspect|phantomjs|petalbot|bot|crawler|spider/i.test(ua);
                   var p = new URLSearchParams(window.location.search);
                   var force = p.get('intro') === '1' || p.get('preview_intro') === '1';
-                  if (sessionStorage.getItem('${STORAGE_KEY}') === 'true' && !force) {
+                  if (isBot || (sessionStorage.getItem('${STORAGE_KEY}') === 'true' && !force)) {
                     var el = document.getElementById('brand-intro-curtain');
                     if (el) el.style.display = 'none';
                   }

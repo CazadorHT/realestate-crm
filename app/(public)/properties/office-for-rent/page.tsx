@@ -131,7 +131,7 @@ export async function generateMetadata(props: {
       title: t("metadata.office_for_rent_title", { siteName: siteConfig.name }),
       description: t("metadata.office_for_rent_description"),
     },
-    ...(hasNoResults && {
+    ...(options.q && hasNoResults && {
       robots: {
         index: false,
         follow: true,

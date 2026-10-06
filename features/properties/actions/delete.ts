@@ -156,6 +156,7 @@ export async function deletePropertyAction(formData: FormData) {
 
     revalidatePath("/");
     revalidatePath("/properties");
+    revalidatePath("/sitemap.xml");
     revalidatePath("/properties/prime-cbd");
     revalidatePath("/properties/pet-friendly-condo");
     revalidatePath("/properties/luxury-villa");
@@ -176,6 +177,7 @@ export async function deletePropertyAction(formData: FormData) {
     revalidateTag("dashboard-performance", "seconds");
     purgeCloudflareCache([
       "/properties",
+      "/sitemap.xml",
       "/properties/prime-cbd",
       "/properties/pet-friendly-condo",
       "/properties/luxury-villa",

@@ -50,6 +50,9 @@ export function HeroTitle({ initialWord }: { initialWord?: string }) {
         <span className="bg-linear-to-r text-white bg-clip-text leading-normal lg:block">
           {t("home.hero.hero_for_you")}
         </span>
+        <span className="sr-only">
+          {" — VC Connect Asset นายหน้าอสังหาริมทรัพย์ ซื้อ ขาย เช่า บ้าน คอนโด สำนักงาน กรุงเทพฯ"}
+        </span>
       </h1>
     </div>
   );

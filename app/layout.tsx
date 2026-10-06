@@ -195,13 +195,6 @@ export async function generateMetadata(): Promise<Metadata> {
     keywords: finalKeywords,
     alternates: {
       canonical: `${siteConfig.url}/`,
-      languages: {
-        th: `${siteConfig.url}/th`,
-        en: `${siteConfig.url}/en`,
-        "zh-Hans": `${siteConfig.url}/cn`,
-        ru: `${siteConfig.url}/ru`,
-        "x-default": `${siteConfig.url}/`,
-      },
       types: {
         "application/rss+xml": `${siteConfig.url}/feed.xml`,
       },

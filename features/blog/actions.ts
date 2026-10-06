@@ -136,6 +136,7 @@ export async function createBlogPostAction(
     // Full Revalidation Strategy
     revalidatePath("/protected/blogs");
     revalidatePath("/blog");
+    revalidatePath("/sitemap.xml");
     
     return {
       success: true,
@@ -275,6 +276,7 @@ export async function updateBlogPostAction(
     revalidatePath("/protected/blogs");
     revalidatePath("/blog");
     revalidatePath(`/blog/${finalSlug}`);
+    revalidatePath("/sitemap.xml");
     
     return {
       success: true,
@@ -529,6 +531,7 @@ export async function permanentDeleteBlogPostAction(id: string): Promise<ActionR
     revalidatePath("/protected/blogs");
     revalidatePath("/protected/blogs/trash"); // 👈 มั่นใจว่าหน้าถังขยะจะอัปเดต
     revalidatePath("/blog");
+    revalidatePath("/sitemap.xml");
     
     return {
       success: true,
@@ -575,6 +578,7 @@ export async function bulkPermanentDeleteBlogAction(ids: string[]): Promise<Acti
     revalidatePath("/protected/blogs");
     revalidatePath("/protected/blogs/trash");
     revalidatePath("/blog");
+    revalidatePath("/sitemap.xml");
     
     return {
       success: true,
@@ -618,6 +622,7 @@ export async function bulkRestoreBlogAction(ids: string[]): Promise<ActionRespon
 
     revalidatePath("/protected/blogs");
     revalidatePath("/blog");
+    revalidatePath("/sitemap.xml");
     
     return {
       success: true,

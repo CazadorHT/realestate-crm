@@ -241,7 +241,7 @@ export async function generateMetadata(props: { searchParams: Promise<any> }): P
     title,
     description,
     alternates: getSeoAlternates("/properties"),
-    ...(hasNoResults && {
+    ...(options.q && hasNoResults && {
       robots: {
         index: false,
         follow: true,

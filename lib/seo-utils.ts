@@ -595,7 +595,7 @@ export function generateMetaTitle(
     parts.push(SEO_LABELS.FOR_SALE_RENT[lang]);
   }
 
-  // Prioritize Popular Area (e.g., "Sukhumvit") > District > Province
+  // Location: Prioritize Popular Area (e.g., "Sukhumvit") > District > Province
   const popular_area = getLocalizedField<string>(data, "popular_area", language) || data.popular_area;
   const district = getLocalizedField<string>(data, "district", language) || data.district;
   const province = getLocalizedField<string>(data, "province", language) || data.province;
@@ -608,11 +608,27 @@ export function generateMetaTitle(
       ? SEO_LABELS.FOR_SALE[lang] 
       : SEO_LABELS.FOR_SALE_RENT[lang];
 
+  // Long-Tail Secondary Keywords: Bedrooms / Size / Transit Station
+  const secondaryParts: string[] = [];
+  if (data.bedrooms) {
+    secondaryParts.push(`${data.bedrooms} ${SEO_LABELS.BEDS[lang] || "BR"}`);
+  } else if (data.size_sqm) {
+    secondaryParts.push(`${data.size_sqm} ${SEO_LABELS.SQM[lang] || "sqm"}`);
+  }
+
+  const transitStation = data.transit_station_name || data.nearby_transits?.[0]?.station_name;
+  if (transitStation && !title.toLowerCase().includes(transitStation.toLowerCase())) {
+    secondaryParts.push(lang === "th" ? `ใกล้ ${transitStation}` : `near ${transitStation}`);
+  }
+
+  const secondaryInfo = secondaryParts.length > 0 ? secondaryParts.join(" ") : undefined;
+
   return formatPrioritySeoTitle(
     {
       primarySubject: title,
       prefix: locationStr ? locationStr : undefined,
       action: actionStr,
+      secondaryInfo,
     },
     siteConfig.name
   );
@@ -874,7 +890,7 @@ export function generateBreadcrumbSchema(
 ): Record<string, any> {
   const lang = (language === "ru" ? "ru" : language === "cn" ? "cn" : language === "en" ? "en" : "th") as "th" | "en" | "cn" | "ru";
   const title = getLocalizedField<string>(data, "title", language);
-  const langPrefix = language === "th" ? "" : `/${language}`;
+  const langPrefix = "";
   
   const actionLabel = data.listing_type === "RENT" 
     ? SEO_LABELS.FOR_RENT[lang] 
@@ -1293,7 +1309,6 @@ export function formatSeoTitle(coreText: string, siteName: string, maxLen: numbe
  */
 export function getSeoAlternates(path: string): {
   canonical: string;
-  languages: Record<string, string>;
 } {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   const suffix = cleanPath === "/" ? "" : cleanPath;
@@ -1301,13 +1316,6 @@ export function getSeoAlternates(path: string): {
 
   return {
     canonical: canonicalUrl,
-    languages: {
-      th: `${siteConfig.url}/th${suffix}`,
-      en: `${siteConfig.url}/en${suffix}`,
-      "zh-Hans": `${siteConfig.url}/cn${suffix}`,
-      ru: `${siteConfig.url}/ru${suffix}`,
-      "x-default": canonicalUrl,
-    },
   };
 }
 

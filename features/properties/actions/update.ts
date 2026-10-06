@@ -688,6 +688,7 @@ export async function updatePropertyAction(
     revalidatePath("/");
     revalidatePath(`/properties/${seoData.slug}`);
     revalidatePath("/properties");
+    revalidatePath("/sitemap.xml");
     revalidatePath("/properties/prime-cbd");
     revalidatePath("/properties/pet-friendly-condo");
     revalidatePath("/properties/luxury-villa");
@@ -704,6 +705,7 @@ export async function updatePropertyAction(
     purgeCloudflareCache([
       `/properties/${seoData.slug}`,
       "/properties",
+      "/sitemap.xml",
       "/properties/prime-cbd",
       "/properties/pet-friendly-condo",
       "/properties/luxury-villa",
@@ -827,10 +829,11 @@ export async function updatePropertyStatusAction(input: {
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     revalidateTag("meta-catalog-feed", "seconds");
+    revalidatePath("/sitemap.xml");
     revalidatePath("/api/syndication/feed/meta");
     revalidatePath("/api/syndication/feed/facebook");
     refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache(["/properties", "/", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (err) {
     return { success: false, message: mapDbError(err) };

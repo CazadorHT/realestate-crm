@@ -135,7 +135,7 @@ export async function generateMetadata(props: {
       title: t("metadata.luxury_villa_title", { siteName: siteConfig.name }),
       description: t("metadata.luxury_villa_description"),
     },
-    ...(hasNoResults && {
+    ...(options.q && hasNoResults && {
       robots: {
         index: false,
         follow: true,

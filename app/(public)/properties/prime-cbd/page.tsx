@@ -145,7 +145,7 @@ export async function generateMetadata(props: {
       description: t("metadata.prime_cbd_description"),
       images: [`${siteConfig.url}/images/cbd-prime-city.png`],
     },
-    ...(hasNoResults && {
+    ...(options.q && hasNoResults && {
       robots: {
         index: false,
         follow: true,

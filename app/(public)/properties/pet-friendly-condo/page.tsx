@@ -167,7 +167,7 @@ export async function generateMetadata(props: {
       }),
       description: t("metadata.pet_friendly_condo_description"),
     },
-    ...(hasNoResults && {
+    ...(options.q && hasNoResults && {
       robots: {
         index: false,
         follow: true,

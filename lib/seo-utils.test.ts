@@ -72,6 +72,19 @@ describe("SEO Utilities", () => {
       expect(title.length).toBeLessThanOrEqual(60);
       expect(title).toContain("...");
     });
+
+    it("should include high-intent long-tail specs when fitting within limit", () => {
+      const shortProperty = {
+        title: "Ideo Rama 9",
+        listing_type: "RENT",
+        bedrooms: 1,
+        popular_area: "Rama 9",
+      };
+      const title = generateMetaTitle(shortProperty as any, "th");
+      expect(title).toContain("Ideo Rama 9");
+      expect(title).toContain("1 นอน");
+      expect(title.length).toBeLessThanOrEqual(60);
+    });
   });
 
   describe("generateMetaDescription", () => {
@@ -91,25 +104,10 @@ describe("SEO Utilities", () => {
   });
 
   describe("getSeoAlternates", () => {
-    it("should generate proper canonical and ISO 639-1 language alternates", () => {
+    it("should generate proper canonical URL", () => {
       const alternates = getSeoAlternates("/properties/pet-friendly-condo");
 
       expect(alternates.canonical).toBe(
-        `${siteConfig.url}/properties/pet-friendly-condo`
-      );
-      expect(alternates.languages.th).toBe(
-        `${siteConfig.url}/th/properties/pet-friendly-condo`
-      );
-      expect(alternates.languages.en).toBe(
-        `${siteConfig.url}/en/properties/pet-friendly-condo`
-      );
-      expect(alternates.languages["zh-Hans"]).toBe(
-        `${siteConfig.url}/cn/properties/pet-friendly-condo`
-      );
-      expect(alternates.languages.ru).toBe(
-        `${siteConfig.url}/ru/properties/pet-friendly-condo`
-      );
-      expect(alternates.languages["x-default"]).toBe(
         `${siteConfig.url}/properties/pet-friendly-condo`
       );
     });
@@ -118,11 +116,6 @@ describe("SEO Utilities", () => {
       const alternates = getSeoAlternates("/");
 
       expect(alternates.canonical).toBe(siteConfig.url);
-      expect(alternates.languages.th).toBe(`${siteConfig.url}/th`);
-      expect(alternates.languages.en).toBe(`${siteConfig.url}/en`);
-      expect(alternates.languages["zh-Hans"]).toBe(`${siteConfig.url}/cn`);
-      expect(alternates.languages.ru).toBe(`${siteConfig.url}/ru`);
-      expect(alternates.languages["x-default"]).toBe(siteConfig.url);
     });
   });
 

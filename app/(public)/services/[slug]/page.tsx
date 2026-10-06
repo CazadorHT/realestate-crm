@@ -245,13 +245,6 @@ export async function generateMetadata({
     description: description || `Explore our ${title} service.`,
     alternates: {
       canonical: canonicalUrl,
-      languages: {
-        th: `${siteConfig.url}/th/services/${encodeURIComponent(slug)}`,
-        en: `${siteConfig.url}/en/services/${encodeURIComponent(slug)}`,
-        "zh-Hans": `${siteConfig.url}/cn/services/${encodeURIComponent(slug)}`,
-        ru: `${siteConfig.url}/ru/services/${encodeURIComponent(slug)}`,
-        "x-default": canonicalUrl,
-      },
     },
     openGraph: {
       url: canonicalUrl,

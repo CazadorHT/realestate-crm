@@ -92,13 +92,6 @@ export async function generateMetadata({
       }, ${t("home.hero.title_highlight")}, ${post.tags?.join(", ")}`,
       alternates: {
         canonical: canonicalUrl,
-        languages: {
-          th: `${siteConfig.url}/th/blog/${encodeURIComponent(decodedSlug)}`,
-          en: `${siteConfig.url}/en/blog/${encodeURIComponent(decodedSlug)}`,
-          "zh-Hans": `${siteConfig.url}/cn/blog/${encodeURIComponent(decodedSlug)}`,
-          ru: `${siteConfig.url}/ru/blog/${encodeURIComponent(decodedSlug)}`,
-          "x-default": canonicalUrl,
-        },
       },
       openGraph: {
         title: getLocalizedField(post, "title", language),
