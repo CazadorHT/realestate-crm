@@ -995,6 +995,10 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
       await supabase.from("crm_leads_v3").update({
         utm_data: updatedUtmData,
       }).eq("id", lead.id);
+
+      if (referralData.ref && senderId) {
+        await safeRedisSet(`lead_ad_ref:${senderId}`, JSON.stringify({ ref: referralData.ref, adId: referralData.ad_id, timestamp: Date.now() }), 7200);
+      }
     }
 
     // 2.2 Log Message to Omni-channel
@@ -1011,6 +1015,32 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
     const isBotEnabled = await isAdReferralBotEnabled();
     if (isBotEnabled && referralData?.ref) {
       console.log(`[Meta Webhook] [${traceId}] Detected Ad Referral ref "${referralData.ref}" for sender ${senderId}. Triggering Property Flow.`);
+
+      // Check if message text or payload is ALREADY a language selection from Meta Ad Template Quick Reply
+      const trimmedText = (text || "").trim();
+      const directLang =
+        /^(🇹🇭\s*)?ภาษาไทย$/i.test(trimmedText) ? "th" :
+        /^(🇬🇧\s*)?english$/i.test(trimmedText) ? "en" :
+        /^(🇨🇳\s*)?中文$/i.test(trimmedText) ? "cn" :
+        /^(🇷🇺\s*)?(русский|russian)$/i.test(trimmedText) ? "ru" :
+        postbackPayload === "PROP_LANG_th" ? "th" :
+        postbackPayload === "PROP_LANG_en" ? "en" :
+        postbackPayload === "PROP_LANG_cn" ? "cn" :
+        postbackPayload === "PROP_LANG_ru" ? "ru" :
+        null;
+
+      if (directLang) {
+        console.log(`[Meta Webhook] [${traceId}] Direct language "${directLang}" from Ad Template with ref "${referralData.ref}". Delivering property card immediately.`);
+        await handlePropertyLanguageSelection(
+          senderId,
+          source,
+          lead.id,
+          directLang,
+          referralData.ref,
+        );
+        return;
+      }
+
       await handlePropertyReferralFlow(
         senderId,
         source,
@@ -1215,21 +1245,21 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
       null;
 
     if (isLangSelectionText && senderId) {
-      const cachedRefStr = await safeRedisGet(`lead_ad_ref:${senderId}`);
-      if (cachedRefStr) {
-        let propertyRef = "";
-        try {
-          const parsed = JSON.parse(cachedRefStr);
-          propertyRef = parsed.ref;
-        } catch {
-          propertyRef = cachedRefStr;
-        }
-        if (propertyRef) {
-          console.log(`[Meta Webhook] [${traceId}] Detected language selection "${isLangSelectionText}" via text/ice-breaker with pending ref "${propertyRef}".`);
-          await handlePropertyLanguageSelection(senderId, source, lead.id, isLangSelectionText as any, propertyRef);
-          return;
+      let propertyRef = referralData?.ref || "";
+      if (!propertyRef) {
+        const cachedRefStr = await safeRedisGet(`lead_ad_ref:${senderId}`);
+        if (cachedRefStr) {
+          try {
+            const parsed = JSON.parse(cachedRefStr);
+            propertyRef = parsed.ref;
+          } catch {
+            propertyRef = cachedRefStr;
+          }
         }
       }
+      console.log(`[Meta Webhook] [${traceId}] Detected language selection "${isLangSelectionText}" via text/ice-breaker with ref "${propertyRef || 'none'}".`);
+      await handlePropertyLanguageSelection(senderId, source, lead.id, isLangSelectionText as any, propertyRef || undefined);
+      return;
     }
 
     // 2.5 Direct DM / Story Reply Automation Trigger
@@ -4433,12 +4463,12 @@ async function handlePropertyLanguageSelection(
     // TTL Expired or missing ref -> Send friendly welcome fallback + featured carousel
     const fallbackText =
       lang === "en"
-        ? "Welcome! 😊 Are you interested in any particular villa or location? Here are some of our popular options:"
+        ? "Welcome! 😊 Are you interested in any particular property or location? Here are some of our popular options:"
         : lang === "cn"
-        ? "欢迎！😊 请问您对哪栋别墅或地段感兴趣呢？以下是我们的热门房源推荐："
+        ? "欢迎！😊 请问您对哪套房源或地段感兴趣呢？以下是我们的热门房源推荐："
         : lang === "ru"
-        ? "Добро пожаловать! 😊 Вас интересует конкретная вилла или локация? Вот наши популярные варианты:"
-        : "ยินดีต้อนรับค่ะ 😊 สนใจวิลล่าโซนไหนหรือหลังใดเป็นพิเศษไหมคะ? แอดมินรวบรวมทรัพย์ยอดนิยมมาให้ชมด้านล่างนี้ค่ะ:";
+        ? "Добро пожаловать! 😊 Вас интересует конкретный объект или район? Вот наши популярные варианты:"
+        : "ยินดีต้อนรับค่ะ 😊 สนใจอสังหาริมทรัพย์โซนไหนหรือโครงการใดเป็นพิเศษไหมคะ? แอดมินรวบรวมรายการยอดนิยมมาให้ชมด้านล่างนี้ค่ะ:";
 
     await sendMetaMessage(senderId, fallbackText, source);
     await sendFeaturedPropertiesCarousel(senderId, source, lang);
@@ -4540,41 +4570,44 @@ async function handlePropertyReferralFlow(
     // Non-blocking
   }
 
-  // If language is already known, immediately send the property card in that language!
-  if (rememberedLang) {
-    console.log(`[Meta Webhook] [${traceId}] User ${senderId} has remembered language "${rememberedLang}". Sending card directly.`);
-    await sendSinglePropertyCard(senderId, source, sanitizedRef, rememberedLang, leadId);
-    return;
+  // 3. Deliver the requested property card IMMEDIATELY upon Ad click / referral!
+  const effectiveLang: "th" | "en" | "cn" | "ru" = rememberedLang || "en";
+  const isMultiCarouselRef = sanitizedRef.includes(",") || sanitizedRef.includes("carousel");
+  if (isMultiCarouselRef) {
+    console.log(`[Meta Webhook] [${traceId}] Delivering multi-property carousel for "${sanitizedRef}" (lang: ${effectiveLang}).`);
+    await sendMultiPropertyCarousel(senderId, source, sanitizedRef, effectiveLang, leadId);
+  } else {
+    console.log(`[Meta Webhook] [${traceId}] Delivering property card directly for ref "${sanitizedRef}" (lang: ${effectiveLang}).`);
+    await sendSinglePropertyCard(senderId, source, sanitizedRef, effectiveLang, leadId);
   }
 
-  // Otherwise, prompt user with Language Selection Quick Replies
-  const promptText =
-    "Welcome to VC Connect Asset! ✨\nยินดีต้อนรับครับ 😊 กรุณาเลือกภาษาที่ต้องการรับข้อมูล \n Please select your preferred language!";
-
-  const quickReplies = [
-    {
-      content_type: "text" as const,
-      title: "🇹🇭 ภาษาไทย",
-      payload: `PROP_LANG_th_${sanitizedRef}`,
-    },
-    {
-      content_type: "text" as const,
-      title: "🇬🇧 English",
-      payload: `PROP_LANG_en_${sanitizedRef}`,
-    },
-    {
-      content_type: "text" as const,
-      title: "🇷🇺 Русский",
-      payload: `PROP_LANG_ru_${sanitizedRef}`,
-    },
-    {
-      content_type: "text" as const,
-      title: "🇨🇳 中文",
-      payload: `PROP_LANG_cn_${sanitizedRef}`,
-    },
-  ];
-
-  await sendMetaQuickReplies(senderId, promptText, quickReplies, source);
+  // If language wasn't previously remembered, offer optional quick replies to switch language
+  if (!rememberedLang) {
+    const langPrompt = "Need information in another language? / ต้องการข้อมูลภาษาอื่น เลือกได้เลยค่ะ 😊";
+    const quickReplies = [
+      {
+        content_type: "text" as const,
+        title: "🇹🇭 ภาษาไทย",
+        payload: `PROP_LANG_th_${sanitizedRef}`,
+      },
+      {
+        content_type: "text" as const,
+        title: "🇬🇧 English",
+        payload: `PROP_LANG_en_${sanitizedRef}`,
+      },
+      {
+        content_type: "text" as const,
+        title: "🇷🇺 Русский",
+        payload: `PROP_LANG_ru_${sanitizedRef}`,
+      },
+      {
+        content_type: "text" as const,
+        title: "🇨🇳 中文",
+        payload: `PROP_LANG_cn_${sanitizedRef}`,
+      },
+    ];
+    await sendMetaQuickReplies(senderId, langPrompt, quickReplies, source);
+  }
 }
 
 /**
@@ -4604,7 +4637,16 @@ async function sendSinglePropertyCard(
   // In Postgres, id column is UUID. Never pass non-UUID string to id.eq to avoid 22P02 error.
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const orClauses = uniqueCandidates
-    .flatMap((c) => (uuidRegex.test(c) ? [`slug.eq.${c}`, `id.eq.${c}`] : [`slug.eq.${c}`]))
+    .flatMap((c) => {
+      const clauses = [`slug.eq.${c}`];
+      if (uuidRegex.test(c)) {
+        clauses.push(`id.eq.${c}`);
+      } else if (c.length >= 3) {
+        clauses.push(`slug.ilike.%${c}%`);
+        clauses.push(`id.ilike.${c}%`);
+      }
+      return clauses;
+    })
     .join(",");
 
   // Query property with retry logic for transient 503 / network errors
@@ -4669,11 +4711,11 @@ async function sendSinglePropertyCard(
     console.warn(`[Meta Webhook Warning] Property ref "${rawRef}" not found in database! Checked: ${uniqueCandidates.join(", ")}`);
     const notFoundText =
       lang === "en"
-        ? "Thank you for your interest! ✨ The specific unit you clicked seems to be updating. Here are our top featured properties:"
+        ? "Thank you for your interest! ✨ The specific property you clicked seems to be updating. Here are our top featured properties:"
         : lang === "cn"
         ? "感谢您的咨询！✨ 您所点击的房源信息正在更新中。以下是我们的精选推荐："
         : lang === "ru"
-        ? "Спасибо за интерес! ✨ Информация по этой вилле обновляется. Предлагаем посмотреть наши популярные варианты:"
+        ? "Спасибо за интерес! ✨ Информация по этому объекту обновляется. Предлагаем посмотреть наши популярные варианты:"
         : "ขอบคุณที่สนใจนะคะ ✨ ทรัพย์ที่คุณลูกค้ากดเข้ามา ระบบกำลังอัปเดตข้อมูลพอดีค่ะ แอดมินขอแนะนำรายการทรัพย์ยอดนิยมด้านล่างนี้นะคะ:";
 
     await sendMetaMessage(senderId, notFoundText, platform);
@@ -4686,12 +4728,12 @@ async function sendSinglePropertyCard(
   if (!isActive) {
     const soldText =
       lang === "en"
-        ? "Thank you for your interest! 🏡 This particular villa has recently been booked. However, we have very similar options nearby you might love:"
+        ? "Thank you for your interest! ✨ This particular property has recently been booked. However, we have very similar options nearby you might love:"
         : lang === "cn"
-        ? "感谢您的咨询！🏡 这套房源近期已被预订。不过我们在附近有非常相似的优质房源推荐："
+        ? "感谢您的咨询！✨ 这套房源近期已被预订。不过我们在附近有非常相似的优质房源推荐："
         : lang === "ru"
-        ? "Спасибо за интерес! 🏡 Эта вилла недавно была забронирована. Но у нас есть очень похожие отличные варианты поблизости:"
-        : "ขอบคุณที่สนใจนะคะ 🏡 ทรัพย์หลังนี้เพิ่งมีผู้เช่า/ผู้จองไปเมื่อเร็วๆ นี้ค่ะ แต่เรายังมีตัวเลือกทำเลใกล้เคียงที่สวยและคุ้มค่าแนะนำดังนี้ค่ะ:";
+        ? "Спасибо за интерес! ✨ Этот объект недавно был забронирован. Но у нас есть очень похожие отличные варианты поблизости:"
+        : "ขอบคุณที่สนใจนะคะ ✨ ทรัพย์รายการนี้เพิ่งมีผู้เช่า/ผู้จองไปเมื่อเร็วๆ นี้ค่ะ แต่เรายังมีตัวเลือกทำเลใกล้เคียงที่สวยและคุ้มค่าแนะนำดังนี้ค่ะ:";
 
     await sendMetaMessage(senderId, soldText, platform);
     await sendAlternativePropertiesCarousel(senderId, platform, property.project_id, property.id, lang);
@@ -4703,8 +4745,8 @@ async function sendSinglePropertyCard(
   const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "租";
   const tBed = lang === "th" ? "นอน" : lang === "en" ? "bed" : lang === "ru" ? "спальни" : "卧";
   const tSqm = lang === "th" ? "ตร.ม." : "sqm";
-  const tViewBtn = lang === "th" ? "ดูรายละเอียดห้อง" : lang === "en" ? "View Details" : lang === "cn" ? "查看详情" : "Подробнее";
-  const tBookBtn = lang === "th" ? "นัดดูห้องนี้" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
+  const tViewBtn = lang === "th" ? "ดูรายละเอียด" : lang === "en" ? "View Details" : lang === "cn" ? "查看详情" : "Подробнее";
+  const tBookBtn = lang === "th" ? "นัดชมโครงการ" : lang === "en" ? "Book Viewing" : lang === "cn" ? "预约看房" : "На просмотр";
 
   // Lean Image Resolution (Use Direct CDN URL)
   const images = parsePropertyImages(property.images);
@@ -4745,7 +4787,7 @@ async function sendSinglePropertyCard(
       : lang === "cn"
       ? "这是您所咨询的房源详情！🏡 点击下方可查看完整图片或预约看房："
       : lang === "ru"
-      ? "Вот вилла, которой вы интересовались! 🏡 Нажмите ниже, чтобы посмотреть фото или записаться на просмотр:"
+      ? "Вот объект недвижимости, которым вы интересовались! 🏡 Нажмите ниже, чтобы посмотреть фото или записаться на просмотр:"
       : "นี่คือข้อมูลทรัพย์ที่คุณลูกค้าสนใจค่ะ 🏡 สามารถคลิกดูรูปภาพทั้งหมดหรือกดนัดชมห้องจริงได้เลยนะคะ:";
 
   await sendMetaMessage(senderId, greetingIntro, platform);
@@ -4796,10 +4838,11 @@ async function sendSinglePropertyCard(
 
   const rawProv = property.province || property.address_info?.province || property.address_info?.th || "";
   const normProv = normalizeProvinceInput(rawProv);
-  const provDisplay = normProv === "กรุงเทพมหานคร" ? "🏙️ กรุงเทพมหานคร (Bangkok)" : "🏖️ ภูเก็ต (Phuket)";
+  const provEn = normProv ? getProvinceName(normProv, "en") : "";
+  const provDisplay = normProv ? `${normProv}${provEn && provEn !== normProv ? ` (${provEn})` : ""}` : "ไม่ระบุ";
 
   await sendDebouncedTelegramAlert(
-    `🎯 <b>[Ad Lead Alert] ลูกค้าสนใจทรัพย์จาก Carousel Ads</b>\n\n` +
+    `🎯 <b>[Ad Lead Alert] ลูกค้าสนใจทรัพย์จากโฆษณา (Ad Click)</b>\n\n` +
     `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
     `📱 แพลตฟอร์ม: ${platform}\n` +
     `🌐 ภาษาที่เลือก: <b>${lang.toUpperCase()}</b>\n` +
@@ -4811,6 +4854,167 @@ async function sendSinglePropertyCard(
     `ad_click_lead_${senderId}`,
     600 // 10 minutes cooldown per sender
   );
+}
+
+/**
+ * Send Multi-Property Showcase Carousel (up to 10 properties) immediately upon Ad click
+ */
+async function sendMultiPropertyCarousel(
+  senderId: string,
+  platform: MetaPlatform,
+  rawRef: string,
+  lang: "th" | "en" | "cn" | "ru" = "en",
+  leadId?: string,
+) {
+  try {
+    const supabase = createAdminClient() as any;
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost"))
+      ? process.env.NEXT_PUBLIC_SITE_URL
+      : "https://vccasset.com";
+
+    // Extract individual candidate codes if comma-separated (e.g. "code1,code2" or "slug1,slug2")
+    const codeCandidates = rawRef
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 3 && !s.startsWith("carousel"));
+
+    let query = supabase
+      .from("properties")
+      .select(`
+        id,
+        slug,
+        title,
+        title_en,
+        title_cn,
+        title_ru,
+        price,
+        rental_price,
+        listing_type,
+        images,
+        bedrooms,
+        bathrooms,
+        size_sqm,
+        status,
+        province,
+        address_info,
+        project:projects(name)
+      `);
+
+    if (codeCandidates.length > 0) {
+      // Build specific query matching the candidate codes (up to 10 cards - Meta Messenger limit)
+      const orClauses = codeCandidates
+        .flatMap((c) => [`slug.ilike.%${c}%`, `id.ilike.${c}%`])
+        .join(",");
+      query = query.or(orClauses).limit(10);
+    } else {
+      // Fallback: Default to top active featured villas up to 10 cards
+      query = query
+        .in("status", ["AVAILABLE", "ACTIVE", "PUBLISHED"])
+        .order("is_featured", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(10);
+    }
+
+    const { data: properties, error } = await query;
+
+    if (error || !properties || properties.length === 0) {
+      console.warn("[Meta Webhook] Multi property query fallback to featured carousel:", error);
+      await sendFeaturedPropertiesCarousel(senderId, platform, lang);
+      return;
+    }
+
+    const count = properties.length;
+    const greetingIntro =
+      lang === "th"
+        ? `นี่คืออสังหาริมทรัพย์ ${count > 1 ? `${count} รายการ` : ""}ที่คุณลูกค้าสนใจค่ะ ✨ เลื่อนดูรูปและรายละเอียดได้เลยนะคะ:`
+        : lang === "cn"
+        ? `这是您所咨询的${count}套精选优质房源！✨ 滑动即可查看完整照片与详情：`
+        : lang === "ru"
+        ? `Вот ${count} объектов недвижимости по вашему запросу! ✨ Листайте карусель для просмотра деталей:`
+        : `Here are the ${count} properties from our showcase! ✨ Swipe to explore photos and details:`;
+
+    await sendMetaMessage(senderId, greetingIntro, platform);
+
+    const tSale = lang === "th" ? "ขาย" : lang === "ru" ? "Продажа" : lang === "cn" ? "售" : "Sale";
+    const tRent = lang === "th" ? "เช่า" : lang === "ru" ? "Аренда" : lang === "cn" ? "租" : "Rent";
+    const tBed = lang === "th" ? "นอน" : lang === "ru" ? "спальни" : lang === "cn" ? "卧" : "bed";
+    const tSqm = lang === "th" ? "ตร.ม." : "sqm";
+    const tViewBtn = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
+    const tBookBtn = lang === "th" ? "นัดชมโครงการ" : lang === "cn" ? "预约看房" : lang === "ru" ? "На просмотр" : "Book Viewing";
+
+    const cards = properties.map((prop: any) => {
+      const images = parsePropertyImages(prop.images);
+      const imageUrl = images[0] || `${siteUrl}/images/luxury-villa.webp`;
+
+      let priceSubtitle = "";
+      if (prop.listing_type === "SALE_AND_RENT") {
+        const parts = [];
+        if (prop.price) parts.push(`${tSale} ฿${prop.price.toLocaleString()}`);
+        if (prop.rental_price) parts.push(`${tRent} ฿${prop.rental_price.toLocaleString()}/mo`);
+        priceSubtitle = parts.join(" | ");
+      } else if (prop.listing_type === "RENT") {
+        priceSubtitle = prop.rental_price ? `${tRent} ฿${prop.rental_price.toLocaleString()}/mo` : `${tRent}`;
+      } else {
+        priceSubtitle = prop.price ? `${tSale} ฿${prop.price.toLocaleString()}` : `${tSale}`;
+      }
+
+      let title = prop.title || "Luxury Pool Villa";
+      if (lang === "en" && (prop.title_en || prop.title)) title = prop.title_en || prop.title;
+      else if (lang === "cn" && (prop.title_cn || prop.title_en)) title = prop.title_cn || prop.title_en || prop.title;
+      else if (lang === "ru" && (prop.title_ru || prop.title_en)) title = prop.title_ru || prop.title_en || prop.title;
+
+      const projectName = resolveProjectName(prop, lang);
+      const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ${tSqm}` : "";
+      const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} ${tBed}` : "";
+      const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
+      const propUrl = `${siteUrl}/properties/${prop.slug || prop.id}`;
+
+      return {
+        title: title.substring(0, 80),
+        subtitle: subtitle.substring(0, 80),
+        image_url: imageUrl,
+        default_action: {
+          type: "web_url",
+          url: propUrl,
+        },
+        buttons: [
+          {
+            type: "web_url",
+            url: propUrl,
+            title: tViewBtn,
+          },
+          {
+            type: "postback",
+            title: tBookBtn,
+            payload: `ACTION_BOOK_PROPERTY_${prop.id}`,
+          },
+        ],
+      };
+    });
+
+    await sendMetaCarousel(senderId, cards, platform);
+
+    // Send Admin Telegram Notification
+    const leadInfo = await resolveLeadInfo(leadId, senderId);
+    const propTitlesList = properties
+      .map((p: any) => `• ${p.title || p.title_en || p.slug}`)
+      .slice(0, 5)
+      .join("\n");
+    const morePropsText = properties.length > 5 ? `\n• <i>...และอีก ${properties.length - 5} รายการ</i>` : "";
+
+    await sendDebouncedTelegramAlert(
+      `🎯 <b>[Ad Lead Alert] ลูกค้าเปิดดู Carousel (${properties.length} รายการ)</b>\n\n` +
+      `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
+      `📱 แพลตฟอร์ม: ${platform}\n` +
+      `🌐 ภาษา: <b>${lang.toUpperCase()}</b>\n\n` +
+      `🏡 <b>รายการทรัพย์ใน Carousel:</b>\n${propTitlesList}${morePropsText}\n\n` +
+      `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`,
+      `ad_carousel_lead_${senderId}`,
+      600
+    );
+  } catch (err) {
+    console.error("[Meta Webhook] Error sending multi property carousel:", err);
+  }
 }
 
 /**
