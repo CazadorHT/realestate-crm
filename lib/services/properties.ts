@@ -438,12 +438,39 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           }
         }
 
-        const { data: propertiesData, error } = await query.limit(itemsPerPage);
+        let { data: propertiesData, error } = await query.limit(itemsPerPage);
         
+        // 🛡️ [RESILIENCE] If unindexed JSON sort times out (error 57014), fallback to indexed updated_at sort (which preserves bumped listings)
+        if (error && (error.code === "57014" || error.message?.includes("statement timeout"))) {
+          console.warn("[DB TIMEOUT] Query timed out on unindexed sort. Retrying with indexed updated_at sort (which preserves bump order)...");
+          let fallbackQuery = supabase
+            .from("properties")
+            .select(PUBLIC_LIST_COLUMNS)
+            .eq("status", "ACTIVE")
+            .is("deleted_at", null)
+            .order("updated_at", { ascending: false, nullsFirst: false });
+
+          if (effectiveProvince) {
+            fallbackQuery = fallbackQuery.eq("province", effectiveProvince);
+          }
+          if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal") {
+            fallbackQuery = fallbackQuery.eq("is_hot_deal", true);
+          }
+          const retryRes = await fallbackQuery.limit(itemsPerPage);
+          if (!retryRes.error && retryRes.data) {
+            propertiesData = retryRes.data;
+            error = null;
+          }
+        }
+
         if (error) {
           console.error("Error fetching properties:", error);
-          // 🚨 CRITICAL: Throw the error instead of returning [] so Next.js doesn't cache the empty array for 1 year.
-          // If this is an ISR revalidation, throwing will cause Next.js to keep serving the old Stale Cache instead of an empty page.
+          // If in build phase, gracefully return empty to prevent hard build crash
+          if (process.env.NEXT_PHASE === "phase-production-build") {
+            console.warn("[BUILD RESILIENCE] Returning empty properties array to prevent build crash.");
+            return { properties: [], facets: null };
+          }
+          // 🚨 In runtime ISR, throw error so Next.js serves stale cache instead of caching empty
           throw new Error(`Database error fetching properties: ${error.message}`);
         }
 
