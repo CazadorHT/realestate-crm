@@ -39,7 +39,8 @@ export function PublicNav() {
   const currentOffset = useRef(64);
 
   // Hook for translation
-  const { language, setLanguage, t } = useLanguage();
+  const { language, langPrefix, setLanguage, t } = useLanguage();
+  const homePath = langPrefix || "/";
   const settings = useSiteConfig();
   const siteName = settings.site_name || siteConfig.name;
 
@@ -120,7 +121,7 @@ export function PublicNav() {
   }, [pathname, mobileMenuOpen]);
 
   const navigationLinks = [
-    { name: t("nav.home"), href: "/" },
+    { name: t("nav.home"), href: homePath },
     { name: t("nav.properties"), href: "#latest-properties" },
     { name: t("nav.services"), href: "/services" },
     { name: t("nav.blog"), href: "/blog" },
@@ -137,8 +138,8 @@ export function PublicNav() {
       e.preventDefault();
 
       // If we are not on the home page, navigate to home with the hash
-      if (pathname !== "/") {
-        router.push(`/${href}`);
+      if (pathname !== homePath && pathname !== "/") {
+        router.push(`${homePath}${href}`);
         setMobileMenuOpen(false);
         return;
       }
@@ -210,7 +211,7 @@ export function PublicNav() {
               {/* Logo */}
               <div>
                 <Link
-                  href="/"
+                  href={homePath}
                   className="hover:scale-105 transition-transform block"
                 >
                     <Image
@@ -368,7 +369,7 @@ export function PublicNav() {
                     size="lg"
                     className="hover:bg-blue-500! hover:border-blue-500! hover:text-white! cursor-pointer"
                   >
-                    <Link href="/properties">
+                    <Link href={`${langPrefix}/properties`}>
                       <Search className="h-4 w-4 mr-1" />
                       {t("home.search_btn")}
                     </Link>
@@ -563,7 +564,7 @@ export function PublicNav() {
                     className="flex-1 min-w-0 cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-sm sm:text-base"
                   >
                     <Link
-                      href="/properties"
+                      href={`${langPrefix}/properties`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <Search className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 shrink-0" />

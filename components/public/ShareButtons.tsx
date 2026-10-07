@@ -17,33 +17,64 @@ interface ShareButtonsProps {
   propertyTitle?: string;
 }
 
+function getLocalizedShareUrl(rawUrl: string, langPrefix: string): string {
+  if (!rawUrl) return rawUrl;
+  try {
+    const isAbsolute = rawUrl.startsWith("http://") || rawUrl.startsWith("https://");
+    const base = typeof window !== "undefined" ? window.location.origin : "https://localhost";
+    const urlObj = new URL(rawUrl, base);
+
+    // In browser environment, use current browser origin so localhost/staging/prod links match
+    const origin = typeof window !== "undefined" && window.location.origin
+      ? window.location.origin
+      : (isAbsolute ? urlObj.origin : "");
+
+    const segments = urlObj.pathname.split("/").filter(Boolean);
+    if (["en", "zh", "ru", "cn"].includes(segments[0])) {
+      segments.shift();
+    }
+    const cleanPath = "/" + segments.join("/");
+
+    // Only apply langPrefix to routes that support [lang] (properties and homepage)
+    const isLangSupported = cleanPath === "/" || cleanPath.startsWith("/properties");
+    const targetPrefix = isLangSupported ? langPrefix : "";
+    const newPath = (targetPrefix + cleanPath) || "/";
+
+    return `${origin}${newPath}${urlObj.search}${urlObj.hash}`;
+  } catch {
+    return rawUrl;
+  }
+}
+
 export function ShareButtons({
-  url,
+  url: rawUrl,
   title: _title,
   variant = "default",
   propertyId,
   propertyTitle,
 }: ShareButtonsProps) {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
   const [copied, setCopied] = useState(false);
+
+  const localizedUrl = getLocalizedShareUrl(rawUrl, langPrefix);
 
   const shareLinks = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      url,
+      localizedUrl,
     )}`,
     line: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
-      url,
+      localizedUrl,
     )}`,
   };
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(localizedUrl);
       setCopied(true);
       toast.success(t("common.link_copied"));
       pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
         platform: "copy_link",
-        url: url,
+        url: localizedUrl,
         item_id: propertyId,
         item_name: propertyTitle,
       });
@@ -112,7 +143,7 @@ export function ShareButtons({
         onClick={() => {
           pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
             platform: "facebook",
-            url: url,
+            url: localizedUrl,
             item_id: propertyId,
             item_name: propertyTitle,
           });
@@ -130,7 +161,7 @@ export function ShareButtons({
         onClick={() => {
           pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
             platform: "line",
-            url: url,
+            url: localizedUrl,
             item_id: propertyId,
             item_name: propertyTitle,
           });
@@ -154,7 +185,7 @@ export function ShareButtons({
         onClick={() => {
           pushToDataLayer(GTM_EVENTS.SHARE_PROPERTY, {
             platform: "instagram",
-            url: url,
+            url: localizedUrl,
             item_id: propertyId,
             item_name: propertyTitle,
           });

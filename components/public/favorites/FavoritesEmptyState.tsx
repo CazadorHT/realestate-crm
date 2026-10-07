@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function FavoritesEmptyState() {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center py-24 px-4 bg-white rounded-3xl border border-slate-100 shadow-sm text-center animate-in fade-in zoom-in duration-500">
       <div className="h-24 w-24 rounded-full bg-slate-50 flex items-center justify-center mb-6">
@@ -19,7 +19,7 @@ export function FavoritesEmptyState() {
         className="text-slate-500 text-center max-w-md mb-8"
         dangerouslySetInnerHTML={{ __html: t("favorites.empty_desc") }}
       />
-      <Link href="/properties">
+      <Link href={`${langPrefix}/properties`}>
         <Button
           size="lg"
           className="rounded-xl bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all hover:scale-105"

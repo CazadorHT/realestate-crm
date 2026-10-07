@@ -574,10 +574,25 @@ export async function createPropertyAction(
     revalidatePath("/");
     revalidatePath("/properties");
     revalidatePath("/sitemap.xml");
-    revalidatePath("/properties/prime-cbd");
-    revalidatePath("/properties/pet-friendly-condo");
-    revalidatePath("/properties/luxury-villa");
-    revalidatePath("/properties/office-for-rent");
+    const categoryPaths = [
+      "/properties/prime-cbd",
+      "/en/properties/prime-cbd",
+      "/zh/properties/prime-cbd",
+      "/ru/properties/prime-cbd",
+      "/properties/pet-friendly-condo",
+      "/en/properties/pet-friendly-condo",
+      "/zh/properties/pet-friendly-condo",
+      "/ru/properties/pet-friendly-condo",
+      "/properties/luxury-villa",
+      "/en/properties/luxury-villa",
+      "/zh/properties/luxury-villa",
+      "/ru/properties/luxury-villa",
+      "/properties/office-for-rent",
+      "/en/properties/office-for-rent",
+      "/zh/properties/office-for-rent",
+      "/ru/properties/office-for-rent",
+    ];
+    categoryPaths.forEach((p) => revalidatePath(p));
     revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
     revalidatePath("/api/syndication/feed/meta");
@@ -589,12 +604,12 @@ export async function createPropertyAction(
     revalidateTag("meta-catalog-feed", "seconds");
     purgeCloudflareCache([
       `/properties/${seoData.slug}`,
+      `/en/properties/${seoData.slug}`,
+      `/zh/properties/${seoData.slug}`,
+      `/ru/properties/${seoData.slug}`,
       "/properties",
       "/sitemap.xml",
-      "/properties/prime-cbd",
-      "/properties/pet-friendly-condo",
-      "/properties/luxury-villa",
-      "/properties/office-for-rent",
+      ...categoryPaths,
       "/",
       "/api/public/properties",
       "/api/syndication/feed/meta",

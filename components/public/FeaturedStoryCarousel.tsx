@@ -237,7 +237,8 @@ export function FeaturedStoryCarousel({
   if (!currentProperty || totalItems === 0) return null;
 
   const currentImageUrl = getImageUrl(currentProperty);
-  const detailLink = `/properties/${currentProperty.slug || currentProperty.id}`;
+  const langPrefix = language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : "";
+  const detailLink = `${langPrefix}/properties/${currentProperty.slug || currentProperty.id}`;
 
   return (
     <>

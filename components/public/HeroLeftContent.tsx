@@ -18,7 +18,9 @@ export function HeroLeftContent({
   initialDescription,
   showSmartMatch,
 }: HeroLeftContentProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const langPrefix = language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : "";
+  const propertiesUrl = `${langPrefix}/properties`;
 
   return (
     <div
@@ -54,7 +56,7 @@ export function HeroLeftContent({
           size="lg"
           className="w-full sm:w-auto md:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl bg-linear-to-r from-blue-600 to-blue-500 hover:brightness-110 transition-all duration-300 animate-in fade-in-0 slide-in-from-bottom-2 text-white"
         >
-          <Link href="/properties">
+          <Link href={propertiesUrl}>
             {t("home.hero.cta_buy") || "ค้นหาทรัพย์"}
             <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 hidden sm:block" />
           </Link>

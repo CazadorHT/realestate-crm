@@ -122,7 +122,7 @@ const getActiveLocations = unstable_cache(
 );
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t, language } = await getServerTranslations();
+  const { t, language } = await getServerTranslations("th");
   const settings = await getSiteSettings();
   const siteName = settings.site_name || siteConfig.name;
   const siteDesc = settings.site_description || t("metadata.default_description");

@@ -72,7 +72,7 @@ export function PropertyRowActions({
   className?: string;
   cannotEdit?: boolean;
 }) {
-  const { language } = useLanguage();
+  const { language, langPrefix } = useLanguage();
   const isEn = language === "en";
   const isMobile = useIsMobile();
   const [showTransferDialog, setShowTransferDialog] = useState(false);
@@ -128,7 +128,7 @@ export function PropertyRowActions({
   };
 
   const copyPublicLink = async () => {
-    const url = `${window.location.origin}/properties/${slug || id}`;
+    const url = `${window.location.origin}${langPrefix}/properties/${slug || id}`;
     await navigator.clipboard.writeText(url);
     toast.success(isEn ? "Public link copied to clipboard" : "คัดลอกลิงก์หน้า Public แล้ว");
   };

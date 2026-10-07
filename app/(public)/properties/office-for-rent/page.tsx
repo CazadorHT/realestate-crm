@@ -4,7 +4,7 @@ import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { siteConfig } from "@/lib/site-config";
 import { getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, normalizeLocale } from "@/lib/i18n";
 import {
   getPublicProperties,
   GetPropertiesOptions,
@@ -85,8 +85,10 @@ function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
 
 export async function generateMetadata(props: {
   searchParams: Promise<any>;
+  locale?: string;
 }): Promise<Metadata> {
-  const { t } = await getServerTranslations();
+  const internalLocale = props.locale ? normalizeLocale(props.locale) : undefined;
+  const { t } = await getServerTranslations(internalLocale);
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
 
@@ -100,7 +102,7 @@ export async function generateMetadata(props: {
     includeFacets: false,
   }).catch(() => ({ properties: [] }));
   const hasNoResults = initialData.properties.length === 0;
-  const canonicalUrl = `${siteConfig.url}/properties/office-for-rent`;
+  const canonicalUrl = props.locale ? `${siteConfig.url}/${props.locale}/properties/office-for-rent` : `${siteConfig.url}/properties/office-for-rent`;
 
   return {
     title: t("metadata.office_for_rent_title", { siteName: siteConfig.name }),
@@ -117,14 +119,23 @@ export async function generateMetadata(props: {
       "Commercial space for rent",
       "Home office for rent",
     ],
-    alternates: getSeoAlternates("/properties/office-for-rent"),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        th: `${siteConfig.url}/properties/office-for-rent`,
+        en: `${siteConfig.url}/en/properties/office-for-rent`,
+        "zh-Hans": `${siteConfig.url}/zh/properties/office-for-rent`,
+        ru: `${siteConfig.url}/ru/properties/office-for-rent`,
+        "x-default": `${siteConfig.url}/properties/office-for-rent`,
+      },
+    },
     openGraph: {
       title: t("metadata.office_for_rent_title", { siteName: siteConfig.name }),
       description: t("metadata.office_for_rent_description"),
       url: canonicalUrl,
       siteName: siteConfig.name,
       type: "website",
-      locale: "th_TH",
+      locale: props.locale === "en" ? "en_US" : props.locale === "ru" ? "ru_RU" : props.locale === "cn" || props.locale === "zh" ? "zh_CN" : "th_TH",
     },
     twitter: {
       card: "summary_large_image",
@@ -142,8 +153,10 @@ export async function generateMetadata(props: {
 
 export default async function OfficeForRentPage(props: {
   searchParams: Promise<any>;
+  locale?: string;
 }) {
-  const { t, language } = await getServerTranslations();
+  const internalLocale = props.locale ? normalizeLocale(props.locale) : undefined;
+  const { t, language } = await getServerTranslations(internalLocale);
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
 
@@ -200,7 +213,7 @@ export default async function OfficeForRentPage(props: {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 
-  const canonicalUrl = `${siteConfig.url}/properties/office-for-rent`;
+  const canonicalUrl = props.locale ? `${siteConfig.url}/${props.locale}/properties/office-for-rent` : `${siteConfig.url}/properties/office-for-rent`;
   const schemaJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -330,7 +343,7 @@ export default async function OfficeForRentPage(props: {
         <PropertySearchPage
           initialProperties={initialData.properties}
           initialFacets={initialData.facets}
-          basePath="/properties/office-for-rent"
+          basePath={props.locale ? `/${props.locale === "cn" ? "zh" : props.locale}/properties/office-for-rent` : "/properties/office-for-rent"}
           defaultFilters={{
             listingType: "RENT",
             propertyType: "OFFICE_BUILDING,COMMERCIAL_BUILDING,HOME_OFFICE",

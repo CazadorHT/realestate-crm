@@ -14,10 +14,13 @@ export const getPublicPropertyDetail = cache(getRawPublicPropertyDetail);
 
 /**
  * Centered SEO & Metadata Helper for Property Detail Page
- * Refined and Hardened for S-Tier Performance.
+ * Refined and Hardened for S-Tier Performance and Multilingual Canonicalization.
  */
-export async function generatePropertyMetadataAsync(slug: string): Promise<Metadata> {
-  const { t, language } = await getServerTranslations();
+export async function generatePropertyMetadataAsync(
+  slug: string,
+  explicitLocale?: string
+): Promise<Metadata> {
+  const { t, language } = await getServerTranslations(explicitLocale);
   const data = await getPublicPropertyDetail(slug);
 
   if (!data) {
@@ -27,11 +30,52 @@ export async function generatePropertyMetadataAsync(slug: string): Promise<Metad
   }
 
   // 1. Generate SEO Strings
-  const pageTitle = generateMetaTitle(data as any, language);
+  const rawPageTitle = generateMetaTitle(data as any, language);
+  // Remove duplicate branding: ensure siteConfig.name appears only once
+  const brandSuffix = ` | ${siteConfig.name}`;
+  const cleanTitle = rawPageTitle.endsWith(brandSuffix) 
+    ? rawPageTitle.slice(0, -brandSuffix.length) 
+    : rawPageTitle;
+
   const pageDesc = generateMetaDescription(data as any, language);
   const keywords = generateMetaKeywords(data as any, language);
 
-  // 2. Resolve Cover Image and Optimize for Social Sharing
+  // 2. Multilingual Check & Noindex Shield for Duplicate Content Protection
+  const activeSlug = encodeURIComponent(data.slug || slug);
+  const isDefaultTh = language === "th";
+  
+  // Check if content is actually translated in the requested language
+  const hasEnTranslation = Boolean(data.title_en?.trim() || data.description_en?.trim());
+  const hasZhTranslation = Boolean(data.title_cn?.trim() || data.description_cn?.trim());
+  const hasRuTranslation = Boolean(data.title_ru?.trim() || data.description_ru?.trim());
+
+  let isTranslatedInCurrentLocale = true;
+  if (language === "en") isTranslatedInCurrentLocale = hasEnTranslation;
+  if (language === "cn") isTranslatedInCurrentLocale = hasZhTranslation;
+  if (language === "ru") isTranslatedInCurrentLocale = hasRuTranslation;
+
+  // 3. Construct Self-Referencing Canonical & Dynamic Alternates (Hreflang)
+  const canonicalPath = isDefaultTh 
+    ? `/properties/${activeSlug}` 
+    : `/${language === "cn" ? "zh" : language}/properties/${activeSlug}`;
+  const canonicalUrl = `${siteConfig.url}${canonicalPath}`;
+
+  const alternatesLanguages: Record<string, string> = {
+    th: `${siteConfig.url}/properties/${activeSlug}`,
+    "x-default": `${siteConfig.url}/properties/${activeSlug}`,
+  };
+
+  if (hasEnTranslation) {
+    alternatesLanguages.en = `${siteConfig.url}/en/properties/${activeSlug}`;
+  }
+  if (hasZhTranslation) {
+    alternatesLanguages["zh-Hans"] = `${siteConfig.url}/zh/properties/${activeSlug}`;
+  }
+  if (hasRuTranslation) {
+    alternatesLanguages.ru = `${siteConfig.url}/ru/properties/${activeSlug}`;
+  }
+
+  // 4. Resolve Cover Image and Optimize for Social Sharing
   const propertyImages = data.images || [];
   let rawCover =
     propertyImages.find((img) => img.is_cover)?.image_url ||
@@ -45,11 +89,9 @@ export async function generatePropertyMetadataAsync(slug: string): Promise<Metad
     COVER_IMAGE = `${siteConfig.url}${cleanPath}`;
   }
 
-  // 3. Dynamic OG Image Params
-  const canonicalUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || slug)}`;
+  // 5. Dynamic OG Image Params
   const ogUrl = new URL(`${siteConfig.url}/api/og/property`);
-  
-  const ogTitle = pageTitle.split(" - ")[0].split(" | ")[0];
+  const ogTitle = cleanTitle.split(" - ")[0].split(" | ")[0];
   ogUrl.searchParams.set("title", ogTitle.length > 60 ? ogTitle.slice(0, 57) + "..." : ogTitle);
   
   // Price Display Logic (Numerical consistency for GTM and SEO)
@@ -80,18 +122,26 @@ export async function generatePropertyMetadataAsync(slug: string): Promise<Metad
   const DYNAMIC_OG_IMAGE = ogUrl.toString();
 
   return {
-    title: pageTitle,
+    title: cleanTitle,
     description: pageDesc,
     keywords: keywords,
+    // [NOINDEX SHIELD]: If a foreign language page has no translated text, prevent Google from penalizing duplicate content
+    ...(!isDefaultTh && !isTranslatedInCurrentLocale && {
+      robots: {
+        index: false,
+        follow: true,
+      },
+    }),
     alternates: {
       canonical: canonicalUrl,
+      languages: alternatesLanguages,
     },
     openGraph: {
-      title: pageTitle,
+      title: cleanTitle,
       description: pageDesc,
       images: [
-        { url: COVER_IMAGE, width: 1200, height: 630, alt: pageTitle },
-        { url: DYNAMIC_OG_IMAGE, width: 1200, height: 630, alt: pageTitle },
+        { url: COVER_IMAGE, width: 1200, height: 630, alt: cleanTitle },
+        { url: DYNAMIC_OG_IMAGE, width: 1200, height: 630, alt: cleanTitle },
       ],
       url: canonicalUrl,
       type: "website",
@@ -100,7 +150,7 @@ export async function generatePropertyMetadataAsync(slug: string): Promise<Metad
     },
     twitter: {
       card: "summary_large_image",
-      title: pageTitle,
+      title: cleanTitle,
       description: pageDesc,
       images: [COVER_IMAGE, DYNAMIC_OG_IMAGE],
     },

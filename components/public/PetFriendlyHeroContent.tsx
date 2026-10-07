@@ -61,7 +61,7 @@ export function PetFriendlyHeroContent({
       <PopularAreaTags
         popularAreas={popularAreas}
         language={language}
-        basePath="/properties/pet-friendly-condo"
+        basePath={`${language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : ""}/properties/pet-friendly-condo`}
         targetId="pet-condos-list"
         themeColor="orange"
       />

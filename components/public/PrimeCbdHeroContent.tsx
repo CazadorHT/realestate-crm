@@ -95,7 +95,7 @@ export function PrimeCbdHeroContent({
       <PopularAreaTags
         popularAreas={popularAreas}
         language={language}
-        basePath="/properties/prime-cbd"
+        basePath={`${language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : ""}/properties/prime-cbd`}
         targetId="cbd-properties-list"
         themeColor="emerald"
       />

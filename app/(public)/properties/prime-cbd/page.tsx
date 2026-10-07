@@ -3,7 +3,7 @@ import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { siteConfig } from "@/lib/site-config";
 import { getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, normalizeLocale } from "@/lib/i18n";
 import {
   getPublicProperties,
   GetPropertiesOptions,
@@ -72,8 +72,10 @@ function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
 
 export async function generateMetadata(props: {
   searchParams: Promise<any>;
+  locale?: string;
 }): Promise<Metadata> {
-  const { t } = await getServerTranslations();
+  const internalLocale = props.locale ? normalizeLocale(props.locale) : undefined;
+  const { t } = await getServerTranslations(internalLocale);
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
 
@@ -86,7 +88,7 @@ export async function generateMetadata(props: {
     includeFacets: false,
   }).catch(() => ({ properties: [] }));
   const hasNoResults = initialData.properties.length === 0;
-  const canonicalUrl = `${siteConfig.url}/properties/prime-cbd`;
+  const canonicalUrl = props.locale ? `${siteConfig.url}/${props.locale}/properties/prime-cbd` : `${siteConfig.url}/properties/prime-cbd`;
 
   return {
     title: t("metadata.prime_cbd_title", { siteName: siteConfig.name }),
@@ -122,14 +124,23 @@ export async function generateMetadata(props: {
       "Кондо Саторн",
       "Кондо Силом",
     ],
-    alternates: getSeoAlternates("/properties/prime-cbd"),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        th: `${siteConfig.url}/properties/prime-cbd`,
+        en: `${siteConfig.url}/en/properties/prime-cbd`,
+        "zh-Hans": `${siteConfig.url}/zh/properties/prime-cbd`,
+        ru: `${siteConfig.url}/ru/properties/prime-cbd`,
+        "x-default": `${siteConfig.url}/properties/prime-cbd`,
+      },
+    },
     openGraph: {
       title: t("metadata.prime_cbd_title", { siteName: siteConfig.name }),
       description: t("metadata.prime_cbd_description"),
       url: canonicalUrl,
       siteName: siteConfig.name,
       type: "website",
-      locale: "th_TH",
+      locale: props.locale === "en" ? "en_US" : props.locale === "ru" ? "ru_RU" : props.locale === "cn" || props.locale === "zh" ? "zh_CN" : "th_TH",
       images: [
         {
           url: `${siteConfig.url}/images/cbd-prime-city.png`,
@@ -156,8 +167,10 @@ export async function generateMetadata(props: {
 
 export default async function PrimeCbdPage(props: {
   searchParams: Promise<any>;
+  locale?: string;
 }) {
-  const { t, language } = await getServerTranslations();
+  const internalLocale = props.locale ? normalizeLocale(props.locale) : undefined;
+  const { t, language } = await getServerTranslations(internalLocale);
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
 
@@ -212,7 +225,7 @@ export default async function PrimeCbdPage(props: {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 
-  const canonicalUrl = `${siteConfig.url}/properties/prime-cbd`;
+  const canonicalUrl = props.locale ? `${siteConfig.url}/${props.locale}/properties/prime-cbd` : `${siteConfig.url}/properties/prime-cbd`;
 
   // Structured Data (JSON-LD)
   const schemaJsonLd = {
@@ -380,7 +393,7 @@ export default async function PrimeCbdPage(props: {
         <PropertySearchPage
           initialProperties={initialData.properties}
           initialFacets={initialData.facets}
-          basePath="/properties/prime-cbd"
+          basePath={props.locale ? `/${props.locale === "cn" ? "zh" : props.locale}/properties/prime-cbd` : "/properties/prime-cbd"}
           defaultFilters={{
             cbd: true,
           }}

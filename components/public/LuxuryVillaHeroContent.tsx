@@ -66,7 +66,7 @@ export function LuxuryVillaHeroContent({
       <PopularAreaTags
         popularAreas={popularAreas}
         language={language}
-        basePath="/properties/luxury-villa"
+        basePath={`${language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : ""}/properties/luxury-villa`}
         targetId="villas-list"
         themeColor="violet"
         isDark={true}

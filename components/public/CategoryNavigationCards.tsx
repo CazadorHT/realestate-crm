@@ -20,11 +20,13 @@ export function CategoryNavigationCards({
 }: CategoryNavigationCardsProps) {
   const { language: contextLanguage } = useLanguage();
   const language = contextLanguage || propLanguage || "th";
+  const langPrefix =
+    language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : "";
 
   const cards = [
     {
       id: "luxury-villa",
-      href: "/properties/luxury-villa",
+      href: `${langPrefix}/properties/luxury-villa`,
       icon: <Star className="h-6 w-6 text-violet-500 fill-violet-500" />,
       iconBg: "bg-violet-500/10",
       themeBorder: "border-violet-500/20 hover:border-violet-500/40",
@@ -55,12 +57,12 @@ export function CategoryNavigationCards({
           : language === "cn"
             ? "浏览所有奢华别墅"
             : language === "ru"
-              ? "Посмотреть все виลлы"
+              ? "Посмотреть все виллы"
               : "ดูวิลล่าหรูทั้งหมด",
     },
     {
       id: "pet-friendly",
-      href: "/properties/pet-friendly-condo",
+      href: `${langPrefix}/properties/pet-friendly-condo`,
       icon: <MdOutlinePets className="h-6 w-6 text-orange-500" />,
       iconBg: "bg-orange-500/10",
       themeBorder: "border-orange-500/20 hover:border-orange-500/45",
@@ -96,7 +98,7 @@ export function CategoryNavigationCards({
     },
     {
       id: "office",
-      href: "/properties/office-for-rent",
+      href: `${langPrefix}/properties/office-for-rent`,
       icon: <FaBuilding className="h-6 w-6 text-blue-600" />,
       iconBg: "bg-blue-500/15",
       themeBorder: "border-blue-500/20 hover:border-blue-500/45",
@@ -132,7 +134,7 @@ export function CategoryNavigationCards({
     },
     {
       id: "prime-cbd",
-      href: "/properties/prime-cbd",
+      href: `${langPrefix}/properties/prime-cbd`,
       icon: <FaCity className="h-7 w-7 text-emerald-600" />,
       iconBg: "bg-emerald-500/10",
       themeBorder: "border-emerald-500/20 hover:border-emerald-500/40",

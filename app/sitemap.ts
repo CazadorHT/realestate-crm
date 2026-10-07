@@ -14,44 +14,51 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
   const supabase = createPublicClient();
 
-  // 1. Static Routes
-  const staticRoutes: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}/`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/properties`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/properties/pet-friendly-condo`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/properties/office-for-rent`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/properties/prime-cbd`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/properties/luxury-villa`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
+  // 1. Core Static & Category Routes (Multilingual)
+  const corePaths = [
+    { path: "", priority: 1, freq: "daily" as const },
+    { path: "/properties", priority: 0.9, freq: "daily" as const },
+    { path: "/properties/pet-friendly-condo", priority: 0.8, freq: "daily" as const },
+    { path: "/properties/office-for-rent", priority: 0.8, freq: "daily" as const },
+    { path: "/properties/prime-cbd", priority: 0.9, freq: "daily" as const },
+    { path: "/properties/luxury-villa", priority: 0.8, freq: "daily" as const },
+  ];
+
+  const staticRoutes: MetadataRoute.Sitemap = [];
+  const now = new Date();
+
+  for (const item of corePaths) {
+    const alternatesLanguages: Record<string, string> = {
+      th: `${baseUrl}${item.path || ""}`,
+      en: `${baseUrl}/en${item.path}`,
+      "zh-Hans": `${baseUrl}/zh${item.path}`,
+      ru: `${baseUrl}/ru${item.path}`,
+      "x-default": `${baseUrl}${item.path || ""}`,
+    };
+
+    // Thai / Default Route
+    staticRoutes.push({
+      url: `${baseUrl}${item.path || "/"}`,
+      lastModified: now,
+      changeFrequency: item.freq,
+      priority: item.priority,
+      alternates: { languages: alternatesLanguages },
+    });
+
+    // Foreign Language Routes
+    for (const lang of ["en", "zh", "ru"] as const) {
+      staticRoutes.push({
+        url: `${baseUrl}/${lang}${item.path}`,
+        lastModified: now,
+        changeFrequency: item.freq,
+        priority: Number((item.priority - 0.1).toFixed(1)),
+        alternates: { languages: alternatesLanguages },
+      });
+    }
+  }
+
+  // Other utility static routes (Mono-language)
+  const otherStaticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/near-station`,
       lastModified: new Date(),
@@ -98,13 +105,82 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 2. Fetch Active Properties (Cached long-term, purged on-demand)
   const properties = await getAllPropertySlugs();
-  const propertyRoutes: MetadataRoute.Sitemap = properties.map((prop: { slug: string; updated_at: string; image_url?: string }) => ({
-    url: `${baseUrl}/properties/${prop.slug}`,
-    lastModified: new Date(prop.updated_at),
-    changeFrequency: "weekly",
-    priority: 0.7,
-    images: prop.image_url ? [prop.image_url] : undefined,
-  }));
+  const propertyRoutes: MetadataRoute.Sitemap = [];
+
+  for (const prop of properties) {
+    const rawSlug = encodeURIComponent(prop.slug);
+    const lastMod = new Date(prop.updated_at);
+    const images = prop.image_url ? [prop.image_url] : undefined;
+
+    // Build alternates mapping only for languages with actual translated content
+    const alternatesLanguages: Record<string, string> = {
+      th: `${baseUrl}/properties/${rawSlug}`,
+      "x-default": `${baseUrl}/properties/${rawSlug}`,
+    };
+    if (prop.has_en) {
+      alternatesLanguages.en = `${baseUrl}/en/properties/${rawSlug}`;
+    }
+    if (prop.has_zh) {
+      alternatesLanguages["zh-Hans"] = `${baseUrl}/zh/properties/${rawSlug}`;
+    }
+    if (prop.has_ru) {
+      alternatesLanguages.ru = `${baseUrl}/ru/properties/${rawSlug}`;
+    }
+
+    // Default Thai Route (Always indexable)
+    propertyRoutes.push({
+      url: `${baseUrl}/properties/${rawSlug}`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 0.7,
+      images,
+      alternates: {
+        languages: alternatesLanguages,
+      },
+    });
+
+    // English Route (Only included if translated)
+    if (prop.has_en) {
+      propertyRoutes.push({
+        url: `${baseUrl}/en/properties/${rawSlug}`,
+        lastModified: lastMod,
+        changeFrequency: "weekly",
+        priority: 0.7,
+        images,
+        alternates: {
+          languages: alternatesLanguages,
+        },
+      });
+    }
+
+    // Chinese Route (Only included if translated)
+    if (prop.has_zh) {
+      propertyRoutes.push({
+        url: `${baseUrl}/zh/properties/${rawSlug}`,
+        lastModified: lastMod,
+        changeFrequency: "weekly",
+        priority: 0.7,
+        images,
+        alternates: {
+          languages: alternatesLanguages,
+        },
+      });
+    }
+
+    // Russian Route (Only included if translated)
+    if (prop.has_ru) {
+      propertyRoutes.push({
+        url: `${baseUrl}/ru/properties/${rawSlug}`,
+        lastModified: lastMod,
+        changeFrequency: "weekly",
+        priority: 0.7,
+        images,
+        alternates: {
+          languages: alternatesLanguages,
+        },
+      });
+    }
+  }
 
   // 3. Fetch Published Blogs (Cached long-term, purged on-demand)
   const blogs = await getAllBlogSlugs();
@@ -154,6 +230,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
+    ...otherStaticRoutes,
     ...propertyRoutes,
     ...blogRoutes,
     ...serviceRoutes,

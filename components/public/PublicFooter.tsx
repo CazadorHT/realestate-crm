@@ -21,12 +21,12 @@ interface DisplayStation {
 
 export function PublicFooter() {
   const pathname = usePathname();
-  const { language, t } = useLanguage();
+  const { language, langPrefix, t } = useLanguage();
   const settings = useSiteConfig();
   const [mounted, setMounted] = useState(false);
   const currentYear = mounted ? new Date().getFullYear() : 2026;
 
-  const normalizedPath = pathname?.replace(/^\/(th|en|cn)/, "") || "/";
+  const normalizedPath = pathname?.replace(/^\/(th|en|cn|zh|ru)/, "") || "/";
   const isPropertyDetail = normalizedPath.startsWith("/properties/") && !normalizedPath.endsWith("/properties");
 
   const [rawStations, setRawStations] = useState<DisplayStation[]>([
@@ -113,30 +113,30 @@ export function PublicFooter() {
 
 
   const services = [
-    { name: t("property_types.house"), href: "/properties?property_type=house" },
-    { name: t("property_types.condo"), href: "/properties?property_type=condo" },
+    { name: t("property_types.house"), href: `${langPrefix}/properties?property_type=house` },
+    { name: t("property_types.condo"), href: `${langPrefix}/properties?property_type=condo` },
     {
       name: t("property_types.townhome"),
-      href: "/properties?property_type=townhome",
+      href: `${langPrefix}/properties?property_type=townhome`,
     },
     {
       name: t("property_types.pool_villa"),
-      href: "/properties?property_type=pool_villa",
+      href: `${langPrefix}/properties?property_type=pool_villa`,
     },
-    { name: t("property_types.villa"), href: "/properties?property_type=villa" },
-    { name: t("property_types.office"), href: "/properties?property_type=office" },
-    { name: t("property_types.land"), href: "/properties?property_type=land" },
-    { name: t("property_types.commercial"), href: "/properties?property_type=commercial" },
-    { name: t("property_types.warehouse"), href: "/properties?property_type=warehouse" },
+    { name: t("property_types.villa"), href: `${langPrefix}/properties?property_type=villa` },
+    { name: t("property_types.office"), href: `${langPrefix}/properties?property_type=office` },
+    { name: t("property_types.land"), href: `${langPrefix}/properties?property_type=land` },
+    { name: t("property_types.commercial"), href: `${langPrefix}/properties?property_type=commercial` },
+    { name: t("property_types.warehouse"), href: `${langPrefix}/properties?property_type=warehouse` },
   ];
 
   const about = [
-    { name: t("nav.properties"), href: "/properties" },
-    { name: t("nav.services"), href: "/services" },
-    { name: t("nav.deposit"), href: "/deposit" },
-    { name: t("nav.blog"), href: "/blog" },
-    { name: t("nav.about"), href: "/about" },
-    { name: t("nav.contact"), href: "/contact" },
+    { name: t("nav.properties"), href: `${langPrefix}/properties` },
+    { name: t("nav.services"), href: `${langPrefix}/services` },
+    { name: t("nav.deposit"), href: `${langPrefix}/deposit` },
+    { name: t("nav.blog"), href: `${langPrefix}/blog` },
+    { name: t("nav.about"), href: `${langPrefix}/about` },
+    { name: t("nav.contact"), href: `${langPrefix}/contact` },
   ];
 
   const getStationNameFromLabel = (label: { th: string; en: string; cn?: string; ru?: string }) => {
@@ -206,7 +206,7 @@ export function PublicFooter() {
             <div className="lg:col-span-3 space-y-6">
               <div className="flex items-center gap-2">
                 <Link
-                  href="/"
+                  href={langPrefix || "/"}
                   className="block w-[240px] transition-opacity hover:opacity-90"
                   aria-label={`${siteName} - ${t("breadcrumb.home")}`}
                 >
@@ -375,31 +375,31 @@ export function PublicFooter() {
                       : "Featured Categories"}
               </h4>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400">
-                <Link href="/properties/prime-cbd" className="hover:text-emerald-400 transition-colors">
+                <Link href={`${langPrefix}/properties/prime-cbd`} className="hover:text-emerald-400 transition-colors">
                   {language === "th" ? "ทำเล CBD & New CBD" : language === "cn" ? "核心CBD与新CBD精选" : language === "ru" ? "CBD и New CBD районы" : "Prime CBD & New CBD"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties/pet-friendly-condo" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties/pet-friendly-condo`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "คอนโด & บ้านเลี้ยงสัตว์ได้" : language === "cn" ? "允许养宠物的住宅与公寓" : language === "ru" ? "Дома и кондо с животными" : "Pet-Friendly House & Condos"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties/luxury-villa" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties/luxury-villa`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "บ้านเดี่ยวหรู & พูลวิลล่า" : language === "cn" ? "豪宅与独栋泳池别墅" : language === "ru" ? "Элитные виллы и резиденции" : "Luxury Villas & Estates"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties/office-for-rent" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties/office-for-rent`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "สำนักงาน & ออฟฟิศให้เช่า" : language === "cn" ? "写字楼与办公室出租" : language === "ru" ? "Офисы и коммерческие помещения" : "Offices & Commercial Spaces"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?near_train=true" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?near_train=true`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "คอนโดใกล้รถไฟฟ้า BTS/MRT" : language === "cn" ? "靠近 BTS/MRT 的公寓" : language === "ru" ? "Кондоминиумы у метро BTS/MRT" : "Condos near BTS/MRT"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?hot_deal=true" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?hot_deal=true`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "ทรัพย์ราคาพิเศษ" : language === "cn" ? "特价特惠房源" : language === "ru" ? "Горячие предложения" : "Hot Deals & Special Offers"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?foreigner=true" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?foreigner=true`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "โควต้าต่างชาติซื้อได้ 100%" : language === "cn" ? "外籍人士可购买配额 (100%)" : language === "ru" ? "Иностранная квота (100%)" : "Foreigner Freehold Quota (100%)"}
                 </Link>
               </div>
@@ -416,39 +416,39 @@ export function PublicFooter() {
                       : "Popular Bangkok Locations"}
               </h4>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400">
-                <Link href="/properties?popular_area=บางนา" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?popular_area=บางนา`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "บางนา" : language === "cn" ? "曼那 (Bang Na)" : language === "ru" ? "Банг На (Bang Na)" : "Bang Na"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?popular_area=อโศก" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?popular_area=อโศก`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "อโศก" : language === "cn" ? "阿速 (Asoke)" : language === "ru" ? "Асок (Asoke)" : "Asoke"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?popular_area=สุขุมวิท" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?popular_area=สุขุมวิท`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "สุขุมวิท" : language === "cn" ? "素坤逸 (Sukhumvit)" : language === "ru" ? "Сукхумвит (Sukhumvit)" : "Sukhumvit"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?popular_area=พระราม 9" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?popular_area=พระราม 9`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "พระราม 9" : language === "cn" ? "拉玛九 (Rama 9)" : language === "ru" ? "Рама 9 (Rama 9)" : "Rama 9"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?popular_area=กรุงเทพกรีฑา" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?popular_area=กรุงเทพกรีฑา`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "กรุงเทพกรีฑา" : language === "cn" ? "空堤克里塔 (Krungthep Kreetha)" : language === "ru" ? "Крунгтеп Крита (Krungthep Kreetha)" : "Krungthep Kreetha"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?popular_area=ทองหล่อ" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?popular_area=ทองหล่อ`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "ทองหล่อ" : language === "cn" ? "通罗 (Thong Lo)" : language === "ru" ? "Тхонг Ло (Thong Lo)" : "Thong Lo"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?popular_area=ประชาชื่น" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?popular_area=ประชาชื่น`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "ประชาชื่น" : language === "cn" ? "普拉查春 (Prachachuen)" : language === "ru" ? "Прачачуен (Prachachuen)" : "Prachachuen"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?popular_area=สามย่าน" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?popular_area=สามย่าน`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "สามย่าน" : language === "cn" ? "三燕 (Sam Yan)" : language === "ru" ? "Сам Ян (Sam Yan)" : "Sam Yan"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/properties?popular_area=ศรีนครินทร์" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/properties?popular_area=ศรีนครินทร์`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "ศรีนครินทร์" : language === "cn" ? "席纳卡琳 (Srinakarin)" : language === "ru" ? "Сринакарин (Srinakarin)" : "Srinakarin"}
                 </Link>
               </div>

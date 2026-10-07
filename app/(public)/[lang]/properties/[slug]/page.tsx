@@ -6,12 +6,11 @@ import { Metadata } from "next";
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 // Logic & Helpers
-import { getPublicPropertyDetail } from "./property-metadata-helper";
-import { generatePropertyMetadataAsync } from "./property-metadata-helper";
+import { getPublicPropertyDetail } from "@/app/(public)/properties/[slug]/property-metadata-helper";
+import { generatePropertyMetadataAsync } from "@/app/(public)/properties/[slug]/property-metadata-helper";
 import { generatePropertySEO } from "@/lib/seo-utils";
 import { getPublicAvatarUrl } from "@/features/properties/image-utils";
-import { getSafeNearbyPlaces } from "@/lib/property-hardened-utils";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, normalizeLocale } from "@/lib/i18n";
 import { siteConfig } from "@/lib/site-config";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { isCbdProperty } from "@/lib/property-utils";
@@ -51,34 +50,45 @@ const GTMPropertyPageView = dynamic(() =>
   ),
 );
 
+const VALID_FOREIGN_LANGS = ["en", "zh", "ru"];
+
 /**
- * [S-Tier] Public Property Detail Page
- * Refactored via "The Lean Page Strategy"
+ * [S-Tier] Multilingual Public Property Detail Page (/en/..., /zh/..., /ru/...)
+ * Serves canonical multilingual content with 100% Edge CDN ISR Cache (0 Fast Origin DB Egress)
  */
-export default async function PublicPropertyDetailPage(props: {
-  params: Promise<{ slug: string }>;
+export default async function MultilingualPropertyDetailPage(props: {
+  params: Promise<{ lang: string; slug: string }>;
 }) {
-  const { slug } = await props.params;
-  const { language, t } = await getServerTranslations("th");
+  const { lang, slug } = await props.params;
+  const normalizedLang = lang?.toLowerCase();
+
+  // Guard against invalid language prefixes
+  if (!VALID_FOREIGN_LANGS.includes(normalizedLang)) {
+    notFound();
+  }
+
+  const internalLocale = normalizeLocale(normalizedLang);
+  const { language, t } = await getServerTranslations(internalLocale);
 
   // 1. Centralized Data Fetching (Single Source of Truth)
   const data = await getPublicPropertyDetail(slug);
   if (!data) notFound();
 
-  // SEO 301 Permanent Redirect: If user accessed via an old/historical slug or UUID, redirect to canonical slug
+  // SEO 301 Permanent Redirect: If accessed via old slug or uuid, redirect to canonical slug in this language
   if (data.slug && data.slug !== slug) {
-    redirect(`/properties/${encodeURIComponent(data.slug)}`);
+    redirect(`/${normalizedLang}/properties/${encodeURIComponent(data.slug)}`);
   }
 
   const agent = data.assigned_agent;
   const features = (data.property_features || [])
-    .map((pf) => pf.features)
-    .filter((f): f is NonNullable<typeof f> => !!f)
-    .map((f) => ({
+    .map((pf: any) => pf.features)
+    .filter((f: any): f is NonNullable<typeof f> => !!f)
+    .map((f: any) => ({
       ...f,
       icon_key: (f.icon_key || "check").toString().toLowerCase(),
     }));
-  const shareUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || slug)}`;
+
+  const shareUrl = `${siteConfig.url}/${normalizedLang}/properties/${encodeURIComponent(data.slug || slug)}`;
 
   // 2. SEO & Schema Generation
   const seo = generatePropertySEO(data, language);
@@ -107,7 +117,7 @@ export default async function PublicPropertyDetailPage(props: {
         property={{ ...data, popular_area: data.popular_area ?? null }}
       />
 
-      {/* 1 & 2. Responsive Hero Section: On Mobile (<lg) Gallery comes first; On Desktop (lg+) Header comes first */}
+      {/* 1 & 2. Responsive Hero Section */}
       <div className="flex flex-col">
         {/* Header: order-2 on mobile, order-1 on desktop */}
         <div className="order-2 lg:order-1">
@@ -228,6 +238,7 @@ export default async function PublicPropertyDetailPage(props: {
         </Suspense>
       </div>
 
+      {/* Floating Mobile Actions */}
       <MobilePropertyActions
         agentName={agent?.full_name}
         agentImage={getPublicAvatarUrl(agent?.avatar_url || "")}
@@ -244,8 +255,12 @@ export default async function PublicPropertyDetailPage(props: {
 }
 
 export async function generateMetadata(props: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ lang: string; slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await props.params;
-  return generatePropertyMetadataAsync(slug, "th");
+  const { lang, slug } = await props.params;
+  const normalizedLang = lang?.toLowerCase();
+  if (!VALID_FOREIGN_LANGS.includes(normalizedLang)) {
+    return {};
+  }
+  return generatePropertyMetadataAsync(slug, normalizedLang);
 }

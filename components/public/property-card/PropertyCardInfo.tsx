@@ -62,6 +62,7 @@ export function PropertyCardInfo({
   handleCardClick,
 }: PropertyCardInfoProps) {
   const { language, t } = useLanguage();
+  const langPrefix = language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : "";
   const searchParams = useSearchParams();
   const selectedStationFilter = searchParams
     ? searchParams.get("transit_station") || ""
@@ -122,16 +123,23 @@ export function PropertyCardInfo({
       </div>
 
       {/* Title block link */}
-      <Link
-        href={`/properties/${property.slug || property.id}`}
-        prefetch={false}
-        className="block group-hover:text-blue-600 transition-colors"
-        onClick={handleCardClick}
-      >
-        <h3 className="text-sm sm:text-base md:text-base font-semibold tracking-wide text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-800 transition-all duration-300 ease-in-out">
-          {localizedTitle}
-        </h3>
-      </Link>
+      {(() => {
+        const langPrefix = language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : "";
+        const propertyUrl = `${langPrefix}/properties/${property.slug || property.id}`;
+
+        return (
+          <Link
+            href={propertyUrl}
+            prefetch={false}
+            className="block group-hover:text-blue-600 transition-colors"
+            onClick={handleCardClick}
+          >
+            <h3 className="text-sm sm:text-base md:text-base font-semibold tracking-wide text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-800 transition-all duration-300 ease-in-out">
+              {localizedTitle}
+            </h3>
+          </Link>
+        );
+      })()}
 
       {/* Location block link below the title */}
       <div className="flex flex-col gap-1 pt-1">
@@ -155,7 +163,7 @@ export function PropertyCardInfo({
                       href={
                         projectSlug
                           ? `/projects/${projectSlug}`
-                          : `/properties/${property.slug || property.id}`
+                          : `${langPrefix}/properties/${property.slug || property.id}`
                       }
                       prefetch={false}
                       onClick={(e) => {
@@ -194,7 +202,7 @@ export function PropertyCardInfo({
               ? `/properties?popular_area=${encodeURIComponent(targetArea)}`
               : property.province
                 ? `/properties?province=${encodeURIComponent(property.province)}`
-                : `/properties/${property.slug || property.id}`;
+                : `${langPrefix}/properties/${property.slug || property.id}`;
 
           const areaTooltip = localizedAreaName
             ? language === "en"

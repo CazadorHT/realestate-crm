@@ -66,7 +66,7 @@ export function OfficeForRentHeroContent({
       <PopularAreaTags
         popularAreas={popularAreas}
         language={language}
-        basePath="/properties/office-for-rent"
+        basePath={`${language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : ""}/properties/office-for-rent`}
         targetId="offices-list"
         themeColor="blue"
       />

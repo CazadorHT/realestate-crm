@@ -93,7 +93,7 @@ function PropertyListingContent({
   initialProperties,
   initialFacets,
 }: PropertyListingSectionProps) {
-  const { t, language } = useLanguage();
+  const { t, language, langPrefix } = useLanguage();
   const [properties, setProperties] = useState<PropertyCardProps[]>(initialProperties || []);
   const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -501,7 +501,7 @@ function PropertyListingContent({
                   variant="outline"
                   className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base rounded-2xl hover:bg-slate-50 hover:border-blue-200 text-blue-500! transition-all duration-300"
                 >
-                  <Link href="/properties">
+                  <Link href={`${langPrefix}/properties`}>
                     {t("common.more")}
                     {hasMore && <ArrowRight className="h-4 w-4 ml-2" />}
                   </Link>
@@ -737,7 +737,7 @@ function PropertyListingContent({
                   variant="outline"
                   className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base w-full sm:w-auto"
                 >
-                  <Link href="/properties">
+                  <Link href={`${langPrefix}/properties`}>
                     {t("common.more")}
                     {hasMore && <ArrowRight className="h-4 w-4" />}
                   </Link>

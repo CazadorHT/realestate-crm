@@ -753,29 +753,37 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
  * Get all active property slugs for sitemap generation (Cached 1 year)
  */
 export const getAllPropertySlugs = unstable_cache(
-  async (): Promise<{ slug: string; updated_at: string; image_url?: string }[]> => {
+  async (): Promise<{ 
+    slug: string; 
+    updated_at: string; 
+    image_url?: string;
+    has_en?: boolean;
+    has_zh?: boolean;
+    has_ru?: boolean;
+  }[]> => {
     const supabase = createPublicClient();
     const { data, error } = await supabase
-      .from("properties_core")
-      .select("slug, updated_at, property_images(image_url, storage_path, is_cover, sort_order)")
-      .eq("status", 1)
+      .from("properties")
+      .select("slug, updated_at, title_en, description_en, title_cn, description_cn, title_ru, description_ru, images")
+      .eq("status", "ACTIVE")
       .not("slug", "is", null);
 
     if (error || !data) return [];
     return ((data as any[]) || []).map((item: any) => {
-      const coverImg =
-        (item.property_images || []).find((img: any) => img.is_cover) ||
-        item.property_images?.[0];
-      const imgTarget = coverImg?.storage_path || coverImg?.image_url;
-      const imageUrl = imgTarget ? getPublicImageUrl(imgTarget) : undefined;
+      const safeImages = getSafeImages(item.images);
+      const coverImg = safeImages.find((img) => img.is_cover) || safeImages[0];
+      const imageUrl = coverImg?.url || undefined;
 
       return {
         slug: item.slug,
         updated_at: item.updated_at || new Date().toISOString(),
         image_url: imageUrl,
+        has_en: Boolean(item.title_en?.trim() || item.description_en?.trim()),
+        has_zh: Boolean(item.title_cn?.trim() || item.description_cn?.trim()),
+        has_ru: Boolean(item.title_ru?.trim() || item.description_ru?.trim()),
       };
     });
   },
-  ["all-property-slugs-v2"],
+  ["all-property-slugs-v3"],
   { revalidate: 31536000, tags: ["properties", "property-slugs", "public-data"] }
 );

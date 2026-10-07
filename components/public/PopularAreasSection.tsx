@@ -37,7 +37,7 @@ export function PopularAreasSection({
   initialItems,
   initialProvinces,
 }: PopularAreasSectionProps) {
-  const { language, t } = useLanguage();
+  const { language, langPrefix, t } = useLanguage();
   const router = useRouter();
   const [items, setItems] = useState<PopularAreaItem[]>(initialItems || []);
   const [isLoading, setIsLoading] = useState(!initialItems);
@@ -477,7 +477,7 @@ export function PopularAreasSection({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
-                    href={`/properties?province=${encodeURIComponent(provinces[activeProvIndex]?.id || "กรุงเทพมหานคร")}`}
+                    href={`${langPrefix}/properties?province=${encodeURIComponent(provinces[activeProvIndex]?.id || "กรุงเทพมหานคร")}`}
                     className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center"
                   >
                     {/* Animated gradient overlay */}

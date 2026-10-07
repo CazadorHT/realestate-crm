@@ -12,7 +12,7 @@ import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import { m } from "framer-motion";
 
 export function CTASection() {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   const settings = useSiteConfig();
   useEffect(() => setIsMounted(true), []);
@@ -122,7 +122,7 @@ export function CTASection() {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-4"
         >
-          <Link href="/properties">
+          <Link href={`${langPrefix}/properties`}>
             <Button
               size="lg"
               variant="outline"

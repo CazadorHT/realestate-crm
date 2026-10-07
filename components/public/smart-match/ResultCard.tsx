@@ -91,10 +91,13 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
         cleanRawLocation
       : cleanRawLocation) || null;
 
+  const langPrefix = language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : "";
+  const resultUrl = `${langPrefix}/properties/${match.slug || match.id}`;
+
   return (
     <div className="group relative bg-white border border-slate-200/90 hover:border-blue-400/80 rounded-2xl p-3 sm:p-3.5 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 overflow-hidden">
       <Link
-        href={`/properties/${match.slug || match.id}`}
+        href={resultUrl}
         target="_blank"
         className="block"
       >

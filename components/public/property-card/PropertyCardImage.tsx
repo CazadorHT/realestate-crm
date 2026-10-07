@@ -45,9 +45,12 @@ export function PropertyCardImage({
   onCompareClick,
   hideShare = false,
 }: PropertyCardImageProps) {
-  const { t, language } = useLanguage();
+  const { t, language, langPrefix } = useLanguage();
   const socialStats = getSocialProofStats(property.id, property);
   const INITIAL_BATCH_SIZE = 5;
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}${langPrefix}/properties/${property.slug || property.id}`
+    : `${langPrefix}/properties/${property.slug || property.id}`;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   const [failedThumbnails, setFailedThumbnails] = useState<Record<number, boolean>>({});
@@ -331,10 +334,13 @@ export function PropertyCardImage({
             const isThumbFailed = failedThumbnails[index];
             const currentSrc = isThumbFailed ? img : getThumbnailUrl(img);
 
+            const langPrefix = language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : "";
+            const propertyUrl = `${langPrefix}/properties/${property.slug || property.id}`;
+
             return (
               <Link
                 key={index}
-                href={`/properties/${property.slug || property.id}`}
+                href={propertyUrl}
                 prefetch={false}
                 className="relative h-full w-full shrink-0 snap-start block"
               >
@@ -567,7 +573,7 @@ export function PropertyCardImage({
                       try {
                         await navigator.share({
                           title: property.title,
-                          url: `${window.location.origin}/properties/${property.slug || property.id}`,
+                          url: shareUrl,
                         });
                       } catch (err) {
                         console.error("Error sharing:", err);
@@ -585,8 +591,7 @@ export function PropertyCardImage({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const url = `${window.location.origin}/properties/${property.slug || property.id}`;
-                    navigator.clipboard.writeText(url);
+                    navigator.clipboard.writeText(shareUrl);
                     setCopied(true);
                     setTimeout(() => {
                       setCopied(false);
@@ -601,7 +606,7 @@ export function PropertyCardImage({
 
                 <a
                   href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
-                    `${window.location.origin}/properties/${property.slug || property.id}`
+                    shareUrl
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -619,7 +624,7 @@ export function PropertyCardImage({
 
                 <a
                   href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                    `${window.location.origin}/properties/${property.slug || property.id}`
+                    shareUrl
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -671,7 +676,7 @@ export function PropertyCardImage({
                   try {
                     await navigator.share({
                       title: property.title,
-                      url: `${window.location.origin}/properties/${property.slug || property.id}`,
+                      url: shareUrl,
                     });
                   } catch (err) {
                     console.error("Error sharing:", err);
@@ -690,8 +695,7 @@ export function PropertyCardImage({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const url = `${window.location.origin}/properties/${property.slug || property.id}`;
-                navigator.clipboard.writeText(url);
+                navigator.clipboard.writeText(shareUrl);
                 setCopied(true);
                 setTimeout(() => {
                   setCopied(false);
@@ -716,7 +720,7 @@ export function PropertyCardImage({
             {/* 3. LINE */}
             <a
               href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
-                `${window.location.origin}/properties/${property.slug || property.id}`
+                shareUrl
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -735,7 +739,7 @@ export function PropertyCardImage({
             {/* 4. Facebook */}
             <a
               href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                `${window.location.origin}/properties/${property.slug || property.id}`
+                shareUrl
               )}`}
               target="_blank"
               rel="noopener noreferrer"

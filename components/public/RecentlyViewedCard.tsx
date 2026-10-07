@@ -24,9 +24,13 @@ export function RecentlyViewedCard({
   isDragging,
   disableAos = false,
 }: RecentlyViewedCardProps) {
+  const langPrefix = language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : "";
+  const propertyTarget = item.slug ? `/properties/${item.slug}` : `/properties/${item.id}`;
+  const propertyUrl = `${langPrefix}${propertyTarget}`;
+
   const cardContent = (
     <Link
-      href={item.slug ? `/properties/${item.slug}` : `/properties/${item.id}`}
+      href={propertyUrl}
       className="block w-full h-full bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all! duration-500! group relative isolate hover:-translate-y-1"
       onClick={(e) => {
         if (isDragging) e.preventDefault();

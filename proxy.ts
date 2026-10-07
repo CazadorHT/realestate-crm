@@ -95,9 +95,28 @@ export async function proxy(request: NextRequest) {
   }
 
   // 🌏 Auto-Language Detection & URL Path Localization
-  const SUPPORTED_LOCALES = ["th", "en", "cn", "ru"];
+  // Primary locales: th (default without prefix), en, zh (Standard ISO), ru
+  const SUPPORTED_LOCALES = ["th", "en", "zh", "ru"];
   const pathParts = pathname.split("/");
   const firstPart = pathParts[1]?.toLowerCase();
+
+  // 301 Permanent Redirect: /cn/... -> /zh/... (Strict ISO 639-1 standardization for SEO)
+  if (firstPart === "cn") {
+    const canonicalZhPath = "/" + ["zh", ...pathParts.slice(2)].join("/");
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = canonicalZhPath;
+    return NextResponse.redirect(redirectUrl, { status: 301 });
+  }
+
+  // 301 Permanent Redirect: /th/... -> /... (Root is the canonical default for Thai SEO)
+  if (firstPart === "th") {
+    const rawPath = "/" + pathParts.slice(2).join("/");
+    const canonicalThPath = rawPath === "" ? "/" : rawPath;
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = canonicalThPath;
+    return NextResponse.redirect(redirectUrl, { status: 301 });
+  }
+
   const isLocalePath = SUPPORTED_LOCALES.includes(firstPart);
   
   let detectedLang: string | null = null;
@@ -111,20 +130,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const hasLangCookie = request.cookies.has("app-language");
   const currentCookieLang = request.cookies.get("app-language")?.value;
 
-  // Language detection without setting cookie automatically on public paths
-  // (Prevents Set-Cookie header from breaking static Edge CDN caching)
-  if (isLocalePath && detectedLang !== currentCookieLang && !isPublicApi) {
-    response.cookies.set("app-language", detectedLang!, {
-      path: "/",
-      maxAge: 31536000,
-      sameSite: "lax",
-    });
-  }
-
-  // Active language for downstream routing
+  // Active language for downstream routing (No Set-Cookie on public paths to preserve Edge CDN cache)
   const activeLang = detectedLang || currentCookieLang || "th";
 
   // 3. 🛡️ Identification & Bypass Logic
@@ -210,6 +218,7 @@ export async function proxy(request: NextRequest) {
     // [CRITICAL] Create a fresh next response to modify request headers safely
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-pathname", pathname);
+    requestHeaders.set("x-locale", detectedLang || (pathname.startsWith("/protected") || pathname.startsWith("/auth") ? activeLang : "th"));
 
     // Inject active language into Cookie header for downstream Server Components
     let cookieHeader = request.headers.get("cookie") || "";
@@ -221,7 +230,14 @@ export async function proxy(request: NextRequest) {
     requestHeaders.set("cookie", cookieHeader);
 
     let finalResponse;
-    if (isLocalePath) {
+    // Routes natively supported by app/(public)/[lang] MUST NOT be rewritten:
+    // - /en, /zh, /ru (Home)
+    // - /en/properties, /zh/properties, /ru/properties (Catalog, details, and category landing pages)
+    const isNativeLangRoute =
+      ["en", "zh", "ru"].includes(firstPart) &&
+      (pathParts.length === 2 || pathParts[2] === "properties");
+
+    if (isLocalePath && !isNativeLangRoute) {
       const rewriteUrl = request.nextUrl.clone();
       rewriteUrl.pathname = pathnameWithoutLocale;
       finalResponse = NextResponse.rewrite(rewriteUrl, {

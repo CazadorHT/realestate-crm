@@ -9,6 +9,14 @@ import ru from "@/i18n/locales/ru.json";
 
 export type Language = "th" | "en" | "cn" | "ru";
 
+export function getLangPrefix(lang?: string | null): string {
+  if (!lang || lang === "th") return "";
+  if (lang === "cn" || lang === "zh") return "/zh";
+  if (lang === "ru") return "/ru";
+  if (lang === "en") return "/en";
+  return `/${lang}`;
+}
+
 // Helper to access nested keys "nav.home"
 function getNestedValue(obj: any, path: string): string {
   return path.split(".").reduce((prev, curr) => prev?.[curr], obj) || path;
@@ -16,6 +24,7 @@ function getNestedValue(obj: any, path: string): string {
 
 interface LanguageContextType {
   language: Language;
+  langPrefix: string;
   setLanguage: (lang: Language) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }
@@ -49,6 +58,22 @@ export function LanguageProvider({
       document.cookie = `${storageKey}=${lang}; path=/; max-age=31536000; SameSite=Lax`;
     } catch {
       // Ignore in private mode
+    }
+
+    // If currently on any public route, navigate to the target language URL
+    if (!isCrm) {
+      const segments = pathname.split("/").filter(Boolean);
+      // Remove any existing language prefix (en, cn, zh, ru)
+      if (["en", "cn", "zh", "ru"].includes(segments[0])) {
+        segments.shift();
+      }
+      const rawPath = segments.length > 0 ? "/" + segments.join("/") : "";
+      const targetPrefix = lang === "th" ? "" : lang === "cn" ? "/zh" : `/${lang}`;
+      const targetUrl = (targetPrefix + rawPath) || "/";
+      if (targetUrl !== pathname) {
+        router.push(targetUrl);
+        return;
+      }
     }
 
     // Refresh to update server components (metadata, sidebars, etc)
@@ -191,8 +216,10 @@ export function LanguageProvider({
     return value;
   };
 
+  const langPrefix = getLangPrefix(language);
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, langPrefix, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
@@ -207,6 +234,7 @@ export function useLanguage() {
     );
     return {
       language: "th" as Language,
+      langPrefix: "",
       setLanguage: () => {},
       t: (key: string, params?: Record<string, string | number>) => {
         let value = key;

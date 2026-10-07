@@ -4,7 +4,7 @@ import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { siteConfig } from "@/lib/site-config";
 import { getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, normalizeLocale } from "@/lib/i18n";
 import {
   getPublicProperties,
   GetPropertiesOptions,
@@ -76,8 +76,10 @@ function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
 
 export async function generateMetadata(props: {
   searchParams: Promise<any>;
+  locale?: string;
 }): Promise<Metadata> {
-  const { t } = await getServerTranslations();
+  const internalLocale = props.locale ? normalizeLocale(props.locale) : undefined;
+  const { t } = await getServerTranslations(internalLocale);
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
 
@@ -90,7 +92,7 @@ export async function generateMetadata(props: {
     includeFacets: false,
   }).catch(() => ({ properties: [] }));
   const hasNoResults = initialData.properties.length === 0;
-  const canonicalUrl = `${siteConfig.url}/properties/luxury-villa`;
+  const canonicalUrl = props.locale ? `${siteConfig.url}/${props.locale}/properties/luxury-villa` : `${siteConfig.url}/properties/luxury-villa`;
 
   return {
     title: t("metadata.luxury_villa_title", { siteName: siteConfig.name }),
@@ -121,14 +123,23 @@ export async function generateMetadata(props: {
       "Luxury house for sale Bangkok",
       "Phuket luxury real estate",
     ],
-    alternates: getSeoAlternates("/properties/luxury-villa"),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        th: `${siteConfig.url}/properties/luxury-villa`,
+        en: `${siteConfig.url}/en/properties/luxury-villa`,
+        "zh-Hans": `${siteConfig.url}/zh/properties/luxury-villa`,
+        ru: `${siteConfig.url}/ru/properties/luxury-villa`,
+        "x-default": `${siteConfig.url}/properties/luxury-villa`,
+      },
+    },
     openGraph: {
       title: t("metadata.luxury_villa_title", { siteName: siteConfig.name }),
       description: t("metadata.luxury_villa_description"),
       url: canonicalUrl,
       siteName: siteConfig.name,
       type: "website",
-      locale: "th_TH",
+      locale: props.locale === "en" ? "en_US" : props.locale === "ru" ? "ru_RU" : props.locale === "cn" || props.locale === "zh" ? "zh_CN" : "th_TH",
     },
     twitter: {
       card: "summary_large_image",
@@ -146,8 +157,10 @@ export async function generateMetadata(props: {
 
 export default async function LuxuryVillaPage(props: {
   searchParams: Promise<any>;
+  locale?: string;
 }) {
-  const { t, language } = await getServerTranslations();
+  const internalLocale = props.locale ? normalizeLocale(props.locale) : undefined;
+  const { t, language } = await getServerTranslations(internalLocale);
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
 
@@ -201,7 +214,7 @@ export default async function LuxuryVillaPage(props: {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 
-  const canonicalUrl = `${siteConfig.url}/properties/luxury-villa`;
+  const canonicalUrl = props.locale ? `${siteConfig.url}/${props.locale}/properties/luxury-villa` : `${siteConfig.url}/properties/luxury-villa`;
   const schemaJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -331,7 +344,7 @@ export default async function LuxuryVillaPage(props: {
         <PropertySearchPage
           initialProperties={initialData.properties}
           initialFacets={initialData.facets}
-          basePath="/properties/luxury-villa"
+          basePath={props.locale ? `/${props.locale === "cn" ? "zh" : props.locale}/properties/luxury-villa` : "/properties/luxury-villa"}
           defaultFilters={{
             luxuryVilla: true,
           }}

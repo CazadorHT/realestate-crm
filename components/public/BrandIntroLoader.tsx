@@ -89,26 +89,6 @@ export function BrandIntroLoader() {
           style={{ zIndex: 999999 }}
           className="fixed inset-0 w-full h-[100dvh] flex flex-col items-center justify-center select-none cursor-pointer touch-none overscroll-none bg-[#FAF9F6] text-slate-800"
         >
-          {/* 
-            ⚡️ Synchronous inline script: Placed inside the element so it executes immediately 
-            as this element is parsed, hiding it before paint if already seen.
-          */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                try {
-                  var ua = navigator.userAgent || '';
-                  var isBot = navigator.webdriver || /googlebot|bingbot|yandex|baiduspider|facebookexternalhit|twitterbot|rogerbot|linkedinbot|embedly|quora|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator|whatsapp|lighthouse|chrome-lighthouse|screaming frog|headless|inspect|phantomjs|petalbot|bot|crawler|spider/i.test(ua);
-                  var p = new URLSearchParams(window.location.search);
-                  var force = p.get('intro') === '1' || p.get('preview_intro') === '1';
-                  if (isBot || (sessionStorage.getItem('${STORAGE_KEY}') === 'true' && !force)) {
-                    var el = document.getElementById('brand-intro-curtain');
-                    if (el) el.style.display = 'none';
-                  }
-                } catch (e) {}
-              `,
-            }}
-          />
             {/* Global Component Keyframes for guaranteed GPU Compositor animations */}
             <style>{`
               @keyframes vccGpuAssembleV {

@@ -41,33 +41,47 @@ export function getLocalizedField<T>(
   return data[field] || "";
 }
 
-const SUPPORTED_LANGS = ["th", "en", "cn", "ru"] as const;
+const SUPPORTED_LANGS = ["th", "en", "cn", "zh", "ru"] as const;
+
+/**
+ * Normalizes user/URL locale to internal dictionary/DB key.
+ * ISO 'zh' (or 'zh-Hans') is mapped to 'cn' for internal dictionary/column lookup.
+ */
+export function normalizeLocale(locale?: string | null): Language {
+  if (!locale) return "th";
+  const lower = locale.toLowerCase();
+  if (lower === "zh" || lower.startsWith("zh-")) return "cn";
+  if (lower === "en") return "en";
+  if (lower === "ru") return "ru";
+  if (lower === "cn") return "cn";
+  return "th";
+}
 
 /**
  * Server-side language detection.
- * Reads the `app-language` cookie set by LanguageProvider on the client.
- * Falls back to "th" for static pre-rendering or when no cookie is present.
+ * When explicitLocale is provided (e.g. from URL params or static page),
+ * it returns immediately WITHOUT calling cookies(), allowing 100% static ISR Edge caching.
  */
 export async function getServerLanguage(explicitLocale?: string): Promise<Language> {
-  if (explicitLocale && (SUPPORTED_LANGS as readonly string[]).includes(explicitLocale)) {
-    return explicitLocale as Language;
+  if (explicitLocale) {
+    return normalizeLocale(explicitLocale);
   }
 
-  // Try reading the cookie from the request (dynamic import to avoid breaking client bundles)
+  // Try reading the cookie from the request for CRM or interactive routes
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
     const publicLang = cookieStore.get("public-language")?.value;
-    if (publicLang && (SUPPORTED_LANGS as readonly string[]).includes(publicLang)) {
-      return publicLang as Language;
+    if (publicLang) {
+      return normalizeLocale(publicLang);
     }
     const crmLang = cookieStore.get("crm-language")?.value;
-    if (crmLang && (SUPPORTED_LANGS as readonly string[]).includes(crmLang)) {
-      return crmLang as Language;
+    if (crmLang) {
+      return normalizeLocale(crmLang);
     }
     const langCookie = cookieStore.get("app-language")?.value;
-    if (langCookie && (SUPPORTED_LANGS as readonly string[]).includes(langCookie)) {
-      return langCookie as Language;
+    if (langCookie) {
+      return normalizeLocale(langCookie);
     }
   } catch {
     // cookies() throws during static generation — that's fine, fall through
