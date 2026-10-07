@@ -71,6 +71,7 @@ export interface PropertyAddressV3 {
 }
 
 export interface PropertyMetaDataV3 {
+  slug?: string | null;
   owner_id?: string | null;
   ai_summary_content?: string | null;
   meta_keywords?: string[];

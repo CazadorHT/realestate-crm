@@ -43,7 +43,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
 
   // 🛡️ V3 Hardened Query: Join Core specs with Multi-language Details and Master Identity
   const publicColumns = `
-    id, listing_type, property_type, sale_price, rent_price,
+    id, slug, status, listing_type, property_type, sale_price, rent_price,
     bedrooms, bathrooms, floor_area, land_area,
     is_hot_deal, is_exclusive, verified, created_at, updated_at,
     created_by, project_id,
@@ -270,14 +270,16 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     }
   }
 
+  const rawProject = rawData.project as unknown as { id: string; slug: string; name: string } | null;
+
   const data: PropertyDetail = {
     id: rawData.id,
-    slug: address.slug || (details?.meta_data as any)?.slug || (rawData as any).slug || slugOrId,
+    slug: address.slug || details?.meta_data?.slug || rawData.slug || slugOrId,
     project_id: rawData.project_id,
-    project: rawData.project ? {
-      id: (rawData.project as any).id,
-      slug: (rawData.project as any).slug,
-      name: (rawData.project as any).name,
+    project: rawProject ? {
+      id: rawProject.id,
+      slug: rawProject.slug,
+      name: rawProject.name,
     } : null,
     status: rawData.status,
     listing_type: mappedListingType as ListingType,
