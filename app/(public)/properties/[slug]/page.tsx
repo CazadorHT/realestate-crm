@@ -11,7 +11,7 @@ import { generatePropertyMetadataAsync } from "./property-metadata-helper";
 import { generatePropertySEO } from "@/lib/seo-utils";
 import { getPublicAvatarUrl } from "@/features/properties/image-utils";
 import { getSafeNearbyPlaces } from "@/lib/property-hardened-utils";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, getLangPrefix } from "@/lib/i18n";
 import { siteConfig } from "@/lib/site-config";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { isCbdProperty } from "@/lib/property-utils";
@@ -59,7 +59,8 @@ export default async function PublicPropertyDetailPage(props: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await props.params;
-  const { language, t } = await getServerTranslations("th");
+  const { language, t } = await getServerTranslations();
+  const langPrefix = getLangPrefix(language);
 
   // 1. Centralized Data Fetching (Single Source of Truth)
   const data = await getPublicPropertyDetail(slug);
@@ -67,7 +68,7 @@ export default async function PublicPropertyDetailPage(props: {
 
   // SEO 301 Permanent Redirect: If user accessed via an old/historical slug or UUID, redirect to canonical slug
   if (data.slug && data.slug !== slug) {
-    redirect(`/properties/${encodeURIComponent(data.slug)}`);
+    redirect(`${langPrefix}/properties/${encodeURIComponent(data.slug)}`);
   }
 
   const agent = data.assigned_agent;
@@ -78,7 +79,7 @@ export default async function PublicPropertyDetailPage(props: {
       ...f,
       icon_key: (f.icon_key || "check").toString().toLowerCase(),
     }));
-  const shareUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || slug)}`;
+  const shareUrl = `${siteConfig.url}${langPrefix}/properties/${encodeURIComponent(data.slug || slug)}`;
 
   // 2. SEO & Schema Generation
   const seo = generatePropertySEO(data, language);
@@ -247,5 +248,6 @@ export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await props.params;
-  return generatePropertyMetadataAsync(slug, "th");
+  return generatePropertyMetadataAsync(slug);
 }
+

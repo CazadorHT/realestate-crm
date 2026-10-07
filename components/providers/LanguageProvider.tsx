@@ -48,8 +48,37 @@ export function LanguageProvider({
   const isCrm = pathname.startsWith("/protected") || pathname.startsWith("/auth");
   const storageKey = isCrm ? "crm-language" : "public-language";
 
-  const [language, setLanguageState] = useState<Language>(initialLanguage);
+  const resolveCurrentLanguage = (): Language => {
+    if (!isCrm) {
+      const pathToCheck = typeof window !== "undefined" ? window.location.pathname : pathname;
+      const firstSegment = pathToCheck.split("/").filter(Boolean)[0]?.toLowerCase();
+      if (firstSegment === "en") return "en";
+      if (firstSegment === "zh" || firstSegment === "cn") return "cn";
+      if (firstSegment === "ru") return "ru";
+    }
+    return initialLanguage;
+  };
+
+  const [language, setLanguageState] = useState<Language>(resolveCurrentLanguage);
   const [mounted, setMounted] = useState(false);
+
+  // Synchronously adjust state during render if pathname explicitly defines a locale
+  const currentPathLang = React.useMemo(() => {
+    if (isCrm) return null;
+    const firstSegment = pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+    if (firstSegment === "en") return "en";
+    if (firstSegment === "zh" || firstSegment === "cn") return "cn";
+    if (firstSegment === "ru") return "ru";
+    return null;
+  }, [pathname, isCrm]);
+
+  const [prevPathLang, setPrevPathLang] = useState<string | null>(currentPathLang);
+  if (currentPathLang && currentPathLang !== prevPathLang) {
+    setPrevPathLang(currentPathLang);
+    setLanguageState(currentPathLang as Language);
+  } else if (!currentPathLang && prevPathLang !== null) {
+    setPrevPathLang(null);
+  }
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

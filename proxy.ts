@@ -232,10 +232,8 @@ export async function proxy(request: NextRequest) {
     let finalResponse;
     // Routes natively supported by app/(public)/[lang] MUST NOT be rewritten:
     // - /en, /zh, /ru (Home)
-    // - /en/properties, /zh/properties, /ru/properties (Catalog, details, and category landing pages)
     const isNativeLangRoute =
-      ["en", "zh", "ru"].includes(firstPart) &&
-      (pathParts.length === 2 || pathParts[2] === "properties");
+      ["en", "zh", "ru"].includes(firstPart) && pathParts.length === 2;
 
     if (isLocalePath && !isNativeLangRoute) {
       const rewriteUrl = request.nextUrl.clone();

@@ -36,12 +36,14 @@ const SmartMatchWizard = dynamic(
 
 export async function HeroSection({
   hasProperties = true,
+  locale,
 }: {
   hasProperties?: boolean;
+  locale?: string;
 }) {
   // ⚡️ Parallel fetch for faster TTFB
   const [translations, config] = await Promise.all([
-    getServerTranslations(),
+    getServerTranslations(locale || "th"),
     getSiteSettings()
   ]);
   

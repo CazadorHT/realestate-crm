@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
 import { getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, normalizeLocale } from "@/lib/i18n";
 import { HotDealsSkeleton } from "@/components/public/HotDealsSkeleton";
 import { MortgageCalculatorSkeleton } from "@/components/public/MortgageCalculatorSkeleton";
 import { RecentlyViewedSkeleton } from "@/components/public/RecentlyViewedSkeleton";
@@ -139,8 +139,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function LandingPage() {
-  const { t, language } = await getServerTranslations("th");
+export default async function LandingPage(props: { locale?: string } = {}) {
+  const internalLocale = props.locale ? normalizeLocale(props.locale) : "th";
+  const { t, language } = await getServerTranslations(internalLocale);
 
   // ⚡️ Parallel execution for maximum performance (S-Tier Speed)
   const [
@@ -284,7 +285,10 @@ export default async function LandingPage() {
       
       {/* ABOVE THE FOLD: Static for maximum First Impression & Zero CLS */}
       <div className="relative">
-        <HeroSection hasProperties={!!(initialProperties && initialProperties.length > 0)} />
+        <HeroSection
+          hasProperties={!!(initialProperties && initialProperties.length > 0)}
+          locale={language}
+        />
       </div>
       
       <div className="min-h-[300px] md:min-h-[350px]">

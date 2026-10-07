@@ -3,7 +3,7 @@ import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { siteConfig } from "@/lib/site-config";
 import { getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations, normalizeLocale } from "@/lib/i18n";
+import { getServerTranslations, normalizeLocale, getLangPrefix } from "@/lib/i18n";
 import { getPublicProperties, GetPropertiesOptions } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
 import { Star, Heart, Briefcase, Sparkles, ShieldCheck, MapPin } from "lucide-react";
@@ -243,10 +243,12 @@ export async function generateMetadata(props: {
     }
   }
 
+  const langPrefix = getLangPrefix(language);
+
   return {
     title,
     description,
-    alternates: getSeoAlternates(normalizedLang ? `/${normalizedLang}/properties` : "/properties"),
+    alternates: getSeoAlternates(`${langPrefix}/properties`),
     ...(options.q && hasNoResults && {
       robots: {
         index: false,

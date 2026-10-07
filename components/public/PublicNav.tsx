@@ -229,17 +229,29 @@ export function PublicNav() {
 
               {/* Desktop Navigation */}
               <div className="hidden xl:flex items-center gap-6">
-                {navigationLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={(e) => handleNavClick(e, link.href as string)}
-                    className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group"
-                  >
-                    {link.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-                  </a>
-                ))}
+                {navigationLinks.map((link) => {
+                  const isHash = typeof link.href === "string" && link.href.startsWith("#");
+                  return isHash ? (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      onClick={(e) => handleNavClick(e, link.href as string)}
+                      className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group"
+                    >
+                      {link.name}
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                  ) : (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group"
+                    >
+                      {link.name}
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+                    </Link>
+                  );
+                })}
 
                 {/* Language Switcher */}
                 {mounted ? (
@@ -543,16 +555,28 @@ export function PublicNav() {
             }`}
           >
             <div className="px-4 py-4 space-y-3">
-              {navigationLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={(e) => handleNavClick(e, link.href as string)}
-                  className="block px-4 py-3 text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium "
-                >
-                  {link.name}
-                </a>
-              ))}
+              {navigationLinks.map((link) => {
+                const isHash = typeof link.href === "string" && link.href.startsWith("#");
+                return isHash ? (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    onClick={(e) => handleNavClick(e, link.href as string)}
+                    className="block px-4 py-3 text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium "
+                  >
+                    {link.name}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-4 py-3 text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors font-medium "
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
 
               <div className="pt-4 border-t border-slate-200 flex flex-col gap-3" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
                 {/* Mobile Search/Consignment CTA */}

@@ -10,6 +10,14 @@ export const revalidate = 31536000; // 1 year long-term cache (ISR with on-deman
 
 const VALID_FOREIGN_LANGS = ["en", "zh", "ru"];
 
+export function generateStaticParams() {
+  return [
+    { lang: "en" },
+    { lang: "zh" },
+    { lang: "ru" },
+  ];
+}
+
 /**
  * [S-Tier] Multilingual Public Home Page (/en, /zh, /ru)
  * 100% Static ISR Edge Caching with Zero Fast Origin DB Egress
@@ -25,7 +33,7 @@ export default async function MultilingualHomePage(props: {
   }
 
   // Reuses the core page components with zero runtime overhead
-  return <PublicHomePage />;
+  return <PublicHomePage locale={normalizedLang} />;
 }
 
 export async function generateMetadata(props: {
