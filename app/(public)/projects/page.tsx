@@ -64,23 +64,10 @@ function formatPrice(amount: number, lang: string): string {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { language } = await getServerTranslations();
+  const { t } = await getServerTranslations();
 
-  const title = language === "en"
-    ? "Explore Residential Projects & Condos in Bangkok | " + siteConfig.name
-    : language === "cn"
-      ? "浏览曼谷及周边地区的优质公寓和住宅项目 | " + siteConfig.name
-      : language === "ru"
-        ? "Каталог жилых комплексов и кондоминиумов в Бангкоке | " + siteConfig.name
-        : "โครงการคอนโดมิเนียมและบ้านเด่นในกรุงเทพฯ | " + siteConfig.name;
-
-  const description = language === "en"
-    ? "Browse top residential projects, luxury condos, and premium developments in Bangkok. Compare prices, facilities, and active listings."
-    : language === "cn"
-      ? "探索曼谷顶尖开发商的优质公寓及住宅楼盘。对比价格、配套设施并查看所有最新房源。"
-      : language === "ru"
-        ? "Просматривайте жилые комплексы и элитные кондоминиумы в Бангкоке. Сравнивайте цены, удобства и актуальные объявления."
-        : "ค้นหารวมโครงการคอนโดและบ้านเด่นจากดีเวล็อปเปอร์ชั้นนำในกรุงเทพฯ เปรียบเทียบราคา สิ่งอำนวยความสะดวก และห้องที่ว่างทั้งหมด";
+  const title = t("metadata.projects_title", { siteName: siteConfig.name });
+  const description = t("metadata.projects_description");
 
   return {
     title,

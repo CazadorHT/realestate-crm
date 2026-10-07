@@ -367,6 +367,8 @@
     "home_description": "Browse verified luxury villas, condos, and office spaces in Bangkok & Phuket. Real-time listings with smart budget filters. Get a free consultation today!",
     "search_title": "Properties for Sale & Rent in Thailand | {siteName}",
     "search_description": "Find verified houses, condos, and land matched to your budget. Real listings, updated daily, and zero fake ads. Start your property search now.",
+    "properties_title": "Properties for Sale & Rent in Thailand | {siteName}",
+    "properties_description": "Explore verified condos, houses, and prime commercial spaces in Thailand.",
     "jsonld_description": "VC Connect Asset is a trusted digital real estate platform providing seamless, comprehensive property solutions for international investors, expats, and businesses in Thailand.",
     "jsonld_address_locality": "Bangkok",
     "about_title": "About Us — Trusted Property Brokers | {siteName}",
@@ -386,7 +388,17 @@
     "luxury_villa_title": "Luxury Villas & High-End Houses for Sale | {siteName}",
     "luxury_villa_description": "Browse premium luxury houses, masterpieces, and private pool villas priced from 8 Million THB. Exquisite design, double volume ceilings, and top security.",
     "prime_cbd_title": "Prime CBD & New CBD Bangkok Properties for Sale & Rent | {siteName}",
-    "prime_cbd_description": "Explore luxury condos, houses, and commercial workspaces across Bangkok CBD & New CBD in Sukhumvit, Sathorn, Silom, and Rama 9 near BTS & MRT stations."
+    "prime_cbd_description": "Explore luxury condos, houses, and commercial workspaces across Bangkok CBD & New CBD in Sukhumvit, Sathorn, Silom, and Rama 9 near BTS & MRT stations.",
+    "projects_title": "Explore Residential Projects & Condos in Bangkok | {siteName}",
+    "projects_description": "Browse top residential projects, luxury condos, and premium developments in Bangkok. Compare prices, facilities, and active listings.",
+    "near_station_title": "Properties near BTS MRT ARL Transit Stations | {siteName}",
+    "near_station_description": "Search condos, houses, and townhomes near all Bangkok BTS, MRT, and ARL transit lines. View real photos, details, and current prices.",
+    "areas_title": "Popular Areas & Prime Neighborhoods in Bangkok | {siteName}",
+    "areas_description": "Explore popular neighborhoods, property price indices, and top lifestyle areas in Bangkok including Sukhumvit, Sathorn, Ari, and Rama 9.",
+    "compare_title": "Compare Properties Side-by-Side | {siteName}",
+    "compare_description": "Compare multiple properties side-by-side by price, size, floor, location, and amenities to make the best property decision.",
+    "favorites_title": "My Saved Favorite Properties | {siteName}",
+    "favorites_description": "View and manage your saved properties. Check availability, latest pricing, and update your personal shortlist anytime."
   },
   "loading": {
     "search_dream_home": "Finding your dream places...",

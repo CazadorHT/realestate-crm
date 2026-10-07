@@ -3,8 +3,10 @@ import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations, normalizeLocale } from "@/lib/i18n";
 
-// Reuse main properties page logic
-import PublicPropertiesPage from "@/app/(public)/properties/page";
+// Reuse main properties page logic and rich metadata engine
+import PublicPropertiesPage, {
+  generateMetadata as baseGenerateMetadata,
+} from "@/app/(public)/properties/page";
 
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
@@ -39,23 +41,5 @@ export async function generateMetadata(props: {
     return {};
   }
 
-  const internalLocale = normalizeLocale(normalizedLang);
-  const { t } = await getServerTranslations(internalLocale);
-
-  const canonicalUrl = `${siteConfig.url}/${normalizedLang}/properties`;
-
-  return {
-    title: t("metadata.properties_title") || "Properties for Sale & Rent in Thailand",
-    description: t("metadata.properties_description") || "Explore verified condos, houses, and luxury properties in Bangkok.",
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        th: `${siteConfig.url}/properties`,
-        en: `${siteConfig.url}/en/properties`,
-        "zh-Hans": `${siteConfig.url}/zh/properties`,
-        ru: `${siteConfig.url}/ru/properties`,
-        "x-default": `${siteConfig.url}/properties`,
-      },
-    },
-  };
+  return baseGenerateMetadata(props);
 }

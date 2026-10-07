@@ -3,7 +3,7 @@ import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { siteConfig } from "@/lib/site-config";
 import { getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, normalizeLocale } from "@/lib/i18n";
 import { getPublicProperties, GetPropertiesOptions } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
 import { Star, Heart, Briefcase, Sparkles, ShieldCheck, MapPin } from "lucide-react";
@@ -136,8 +136,14 @@ async function getAreaDisplay(areaString: string, lang: string): Promise<string>
   return translated.join(", ");
 }
 
-export async function generateMetadata(props: { searchParams: Promise<any> }): Promise<Metadata> {
-  const { t, language } = await getServerTranslations();
+export async function generateMetadata(props: {
+  searchParams: Promise<any>;
+  params?: Promise<{ lang?: string }>;
+}): Promise<Metadata> {
+  const params = props.params ? await props.params : undefined;
+  const normalizedLang = params?.lang?.toLowerCase();
+  const internalLocale = normalizedLang ? normalizeLocale(normalizedLang) : undefined;
+  const { t, language } = await getServerTranslations(internalLocale);
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
   
@@ -240,7 +246,7 @@ export async function generateMetadata(props: { searchParams: Promise<any> }): P
   return {
     title,
     description,
-    alternates: getSeoAlternates("/properties"),
+    alternates: getSeoAlternates(normalizedLang ? `/${normalizedLang}/properties` : "/properties"),
     ...(options.q && hasNoResults && {
       robots: {
         index: false,

@@ -365,6 +365,8 @@
     "home_description": "精选泰国高回报投资公寓、奢华泳池别墅及核心商圈写字楼。全量真实房源实时更新，支持智能预算筛选，资深中介提供免费看房咨询。",
     "search_title": "泰国房产精选搜索 — 100%真实房源与透明价格 | {siteName}",
     "search_description": "轻松搜索全泰优质住宅、高端公寓与写字楼。智能过滤系统精准匹配预算，100%真实房源拒绝虚假广告，直击一手真实价格。",
+    "properties_title": "泰国精选房产 购买、出售与租赁 | {siteName}",
+    "properties_description": "精选泰国曼谷优质公寓、独栋别墅与商业写字楼，100%真实房源每日更新。",
     "jsonld_description": "VC Connect Asset 是深受国际投资者与在泰外籍人士信赖的数字化房产综合服务平台，为您提供无缝、高效、专业的全方位资产配置方案。",
     "jsonld_address_locality": "曼谷",
     "about_title": "关于我们 — 值得信赖的泰国专业房产经纪团队 | {siteName}",
@@ -384,7 +386,17 @@
     "luxury_villa_title": "奢华别墅 & 高端住宅出售 | 豪华泳池别墅 | {siteName}",
     "luxury_villa_description": "浏览价格从 800 万泰铢起的高端豪华住宅、经典杰作及私人泳池别墅。高挑空客厅、卓越设计和顶级安保。",
     "prime_cbd_title": "曼谷核心CBD与新CBD地标房产 (出租·出售) | {siteName}",
-    "prime_cbd_description": "精选曼谷核心CBD及新CBD（素坤逸、沙吞、是隆、拉玛九）高端公寓、住宅与写字楼，毗邻BTS/MRT轨道交通，100%真实优质房源。"
+    "prime_cbd_description": "精选曼谷核心CBD及新CBD（素坤逸、沙吞、是隆、拉玛九）高端公寓、住宅与写字楼，毗邻BTS/MRT轨道交通，100%真实优质房源。",
+    "projects_title": "浏览曼谷及周边地区的优质公寓和住宅项目 | {siteName}",
+    "projects_description": "探索曼谷顶尖开发商的优质公寓及住宅楼盘。对比价格、配套设施并查看所有最新房源。",
+    "near_station_title": "靠近 BTS MRT ARL 轨道交通站的房源 | {siteName}",
+    "near_station_description": "在曼谷所有 BTS、MRT 和 ARL 轨道交通站点附近寻找公寓、别墅和联排别墅。提供实景图片、详细信息及最新价格。",
+    "areas_title": "曼谷热门核心商圈与优质居住地段 | {siteName}",
+    "areas_description": "探索曼谷核心商圈、房价指数走势及宜居生活地段，涵盖素坤逸、沙吞、阿里及拉玛九等热门区域。",
+    "compare_title": "房源多维度对比 | {siteName}",
+    "compare_description": "多套房源并排对比，涵盖价格、户型面积、楼层、地段及配套设施，助您做出明智的置业决策。",
+    "favorites_title": "我的收藏房源 | {siteName}",
+    "favorites_description": "查看和管理您收藏的房源，实时掌握最新售价、出租状态及房源变动。"
   },
   "loading": {
     "search_dream_home": "正在为您寻找梦想之所...",

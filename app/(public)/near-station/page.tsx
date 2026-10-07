@@ -96,23 +96,10 @@ const PAGE_LOCALIZATION: Record<string, Record<string, string>> = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { language } = await getServerTranslations();
+  const { t } = await getServerTranslations();
 
-  const title = language === "en" 
-    ? "Properties near BTS MRT ARL Transit Stations | " + siteConfig.name
-    : language === "cn" 
-      ? "靠近 BTS MRT ARL 轨道交通站的房源 | " + siteConfig.name
-      : language === "ru"
-        ? "Недвижимость рядом со станциями метро BTS MRT ARL | " + siteConfig.name
-        : "อสังหาริมทรัพย์ใกล้สถานีรถไฟฟ้า BTS MRT ARL | " + siteConfig.name;
-
-  const description = language === "en"
-    ? "Search condos, houses, and townhomes near all Bangkok BTS, MRT, and ARL transit lines. View real photos, details, and current prices."
-    : language === "cn"
-      ? "在曼谷所有 BTS、MRT 和 ARL 轨道交通站点附近寻找公寓、别墅和联排别墅。提供实景图片、详细信息及最新价格。"
-      : language === "ru"
-        ? "Поиск кондоминиумов, домов и таунхаусов рядом со всеми линиями метро BTS, MRT и ARL в Бангкоке. Реальные фото, подробности и цены."
-        : "ค้นหาคอนโด บ้าน ทาวน์โฮม ใกล้สถานีรถไฟฟ้า BTS MRT ARL ทุกสาย ทุกสถานี ในกรุงเทพฯ และปริมณฑล พร้อมรายละเอียดและราคา";
+  const title = t("metadata.near_station_title", { siteName: siteConfig.name });
+  const description = t("metadata.near_station_description");
 
   return {
     title,

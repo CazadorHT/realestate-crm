@@ -127,7 +127,12 @@ export function LanguageProvider({
   useEffect(() => {
     if (typeof window === "undefined" || !document) return;
 
-    const pathname = window.location.pathname;
+    const rawPath = window.location.pathname;
+    const segments = rawPath.split("/").filter(Boolean);
+    if (["en", "zh", "ru", "cn"].includes(segments[0])) {
+      segments.shift();
+    }
+    const pathname = "/" + segments.join("/");
     const dict = dictionaries[language];
     const siteName = "VC Connect Asset";
 
