@@ -18,7 +18,7 @@ export default function FavoritesPageClient() {
   const [favorites, setFavorites] = useState<PropertyCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
   async function loadFavorites() {
     const ids = readFavoriteIds();
     setFavoriteIds(ids);
@@ -77,8 +77,8 @@ export default function FavoritesPageClient() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <AppBreadcrumbs
           items={[
-            { label: t("breadcrumb.home"), href: "/" },
-            { label: t("nav.favorites"), href: "/favorites" },
+            { label: t("breadcrumb.home"), href: langPrefix || "/" },
+            { label: t("nav.favorites"), href: `${langPrefix}/favorites` },
           ]}
           className="mb-6"
         />

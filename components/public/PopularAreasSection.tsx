@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
-import { getProvinceName } from "@/lib/utils/provinces";
+import { getProvinceName, PROVINCES, translateLocation } from "@/lib/utils/provinces";
 import { m, AnimatePresence } from "framer-motion";
 import {
   Tooltip,
@@ -476,19 +476,29 @@ export function PopularAreasSection({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link
-                    href={`${langPrefix}/properties?province=${encodeURIComponent(provinces[activeProvIndex]?.id || "กรุงเทพมหานคร")}`}
-                    className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center"
-                  >
-                    {/* Animated gradient overlay */}
-                    <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {(() => {
+                    const provinceParam =
+                      language === "th"
+                        ? translateLocation(activeProvince, "th") || activeProvince
+                        : PROVINCES[activeProvince]?.en ||
+                          translateLocation(activeProvince, "en") ||
+                          activeProvince;
+                    return (
+                      <Link
+                        href={`${langPrefix}/properties?province=${encodeURIComponent(provinceParam)}`}
+                        className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center"
+                      >
+                        {/* Animated gradient overlay */}
+                        <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    {/* Button content */}
-                    <div className="relative flex items-center gap-2">
-                      <span>{t("common.view_all")}</span>
-                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-                    </div>
-                  </Link>
+                        {/* Button content */}
+                        <div className="relative flex items-center gap-2">
+                          <span>{t("common.view_all")}</span>
+                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                        </div>
+                      </Link>
+                    );
+                  })()}
                 </TooltipTrigger>
                 <TooltipContent className="text-sm font-medium">
                   {t("common.view_all")} {activeDisplay}
@@ -612,7 +622,7 @@ export function PopularAreasSection({
                 }`}
               >
                 {items.map((it, index) => {
-                  const href = `/areas/${it.slug}`;
+                  const href = `${langPrefix}/areas/${it.slug}`;
                   const isImgLoaded = loadedImages[it.key];
                   return (
                     <m.div

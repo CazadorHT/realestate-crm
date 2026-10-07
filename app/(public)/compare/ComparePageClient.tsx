@@ -39,7 +39,7 @@ function ComparePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const ids = searchParams.get("ids") ?? "";
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
 
   const [properties, setProperties] = useState<CompareProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,9 +75,9 @@ function ComparePageContent() {
     // We update the URL to reflect the removal
     const currentIds = ids.split(",").filter((x: string) => x && x !== id);
     if (currentIds.length === 0) {
-      router.push("/compare");
+      router.push(`${langPrefix}/compare`);
     } else {
-      router.push(`/compare?ids=${currentIds.join(",")}`);
+      router.push(`${langPrefix}/compare?ids=${currentIds.join(",")}`);
     }
   };
 
@@ -88,8 +88,8 @@ function ComparePageContent() {
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 relative z-10">
         <AppBreadcrumbs
           items={[
-            { label: t("breadcrumb.home"), href: "/" },
-            { label: t("compare_page.title"), href: "/compare" },
+            { label: t("breadcrumb.home"), href: langPrefix || "/" },
+            { label: t("compare_page.title"), href: `${langPrefix}/compare` },
           ]}
           className="mb-6"
         />

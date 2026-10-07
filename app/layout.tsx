@@ -229,10 +229,6 @@ export async function generateMetadata(): Promise<Metadata> {
         "google-site-verification": siteConfig.verificationTokens.google,
       }),
     },
-    icons: {
-      icon: settings.favicon || "/favicon.png",
-      apple: "/apple-touch-icon.png",
-    },
     facebook: {
       appId: settings.facebook_app_id || siteConfig.verificationTokens.facebookAppId || "",
     },
@@ -252,6 +248,10 @@ export default async function RootLayout({
   return (
     <html lang={lang} suppressHydrationWarning>
       <head>
+        {/* Favicon & Touch Icon (Direct link tags to prevent Next.js IconMark RSC bundler bug) */}
+        <link rel="icon" href={settings.favicon || "/favicon.png"} />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
         {/* Resource Hinting: S-Tier Performance Optimization */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

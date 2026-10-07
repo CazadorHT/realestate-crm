@@ -21,7 +21,7 @@ export function BlogDetailBreadcrumbs({
   slug,
   initialLanguage,
 }: BlogDetailBreadcrumbsProps) {
-  const { language: clientLanguage, t } = useLanguage();
+  const { language: clientLanguage, t, langPrefix } = useLanguage();
   const language = clientLanguage || initialLanguage || "th";
 
   const localizedTitle = getLocalizedField<string>(post, "title", language) || post.title;
@@ -34,19 +34,19 @@ export function BlogDetailBreadcrumbs({
   return (
     <AppBreadcrumbs
       items={[
-        { label: t("breadcrumb.home") || "หน้าแรก", href: "/" },
-        { label: t("breadcrumb.blog") || "บทความ", href: "/blog" },
+        { label: t("breadcrumb.home") || "หน้าแรก", href: langPrefix || "/" },
+        { label: t("breadcrumb.blog") || "บทความ", href: `${langPrefix}/blog` },
         ...(post.category
           ? [
               {
                 label: localizedCategory,
-                href: `/blog?category=${encodeURIComponent(post.category)}`,
+                href: `${langPrefix}/blog?category=${encodeURIComponent(post.category)}`,
               },
             ]
           : []),
         {
           label: localizedTitle,
-          href: `/blog/${slug}`,
+          href: `${langPrefix}/blog/${slug}`,
         },
       ]}
     />

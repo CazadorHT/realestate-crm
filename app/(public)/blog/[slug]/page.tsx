@@ -17,6 +17,7 @@ import {
   getServerTranslations,
   getServerLanguage,
   getLocalizedField,
+  getLangPrefix,
   type Language,
 } from "@/lib/i18n";
 import type { Locale } from "date-fns";
@@ -146,6 +147,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   const { t, language } = await getServerTranslations();
+  const langPrefix = getLangPrefix(language);
 
   // 🏗️ RELATIONAL: Get real author data from profiles table
   const author = {
@@ -283,7 +285,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </h2>
             </div>
             <Link
-              href="/properties"
+              href={`${langPrefix}/properties`}
               className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
             >
               {t("common.more") || "ดูทั้งหมด"} →

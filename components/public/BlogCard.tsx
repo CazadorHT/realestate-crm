@@ -5,7 +5,7 @@ import { Calendar, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 // Removed date-fns imports for bundle optimization
-import { getLocalizedField } from "@/lib/i18n";
+import { getLocalizedField, getLangPrefix } from "@/lib/i18n";
 
 interface BlogCardProps {
   post: BlogPost;
@@ -47,10 +47,11 @@ export function BlogCard({ post, className, language, t, priority = false }: Blo
 
   const title = getLocalizedField<string>(post, "title", language);
   const excerpt = getLocalizedField<string>(post, "excerpt", language);
+  const langPrefix = getLangPrefix(language);
 
   return (
     <Link
-      href={`/blog/${post.slug}`}
+      href={`${langPrefix}/blog/${post.slug}`}
       prefetch={false}
       className={cn("group block h-full", className)}
     >

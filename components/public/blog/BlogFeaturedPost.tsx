@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { BookOpen } from "lucide-react";
-import { getLocalizedField } from "@/lib/i18n";
+import { getLocalizedField, getLangPrefix } from "@/lib/i18n";
 // Removed date-fns imports for bundle optimization. Using native Intl API.
 import type { BlogPost } from "@/lib/services/blog";
 
@@ -28,6 +28,7 @@ export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
 
   const title = getLocalizedField<string>(post, "title", language);
   const excerpt = getLocalizedField<string>(post, "excerpt", language);
+  const langPrefix = getLangPrefix(language);
 
   return (
     <div className="mb-12">
@@ -47,7 +48,7 @@ export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
         {excerpt && <meta itemProp="description" content={excerpt} />}
 
         <Link
-          href={`/blog/${post.slug}`}
+          href={`${langPrefix}/blog/${post.slug}`}
           className="relative h-[280px] lg:h-full overflow-hidden block"
           itemProp="url"
         >
@@ -83,7 +84,7 @@ export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
               </span>
             )}
           </div>
-          <Link href={`/blog/${post.slug}`} className="block">
+          <Link href={`${langPrefix}/blog/${post.slug}`} className="block">
             <h3
               className="text-xl lg:text-2xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-700 group-hover:to-purple-700 transition-all leading-tight"
               itemProp="name"

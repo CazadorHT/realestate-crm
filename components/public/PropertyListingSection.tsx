@@ -16,7 +16,7 @@ import { PropertyCard, type PropertyCardProps } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
-import { getProvinceName } from "@/lib/utils/provinces";
+import { getProvinceName, normalizeProvinceInput } from "@/lib/utils/provinces";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { PropertyListingSkeleton } from "./PropertyListingSkeleton";
 import { useSectionTracking } from "@/hooks/use-section-tracking";
@@ -143,7 +143,11 @@ function PropertyListingContent({
 
   // Derived filters from searchParams
   const areaFilter = useMemo(() => (searchParams.get("area") ?? "").trim(), [searchParams]);
-  const provinceFilter = useMemo(() => (searchParams.get("province") ?? "").trim(), [searchParams]);
+  const provinceFilter = useMemo(() => {
+    const raw = (searchParams.get("province") ?? "").trim();
+    if (!raw) return "";
+    return normalizeProvinceInput(raw) || raw;
+  }, [searchParams]);
   const urlType = searchParams.get("type") ?? "";
   
   // Local state for type filter if not in URL, but prioritized by URL
@@ -206,7 +210,7 @@ function PropertyListingContent({
       params.set("type", urlVal);
     }
     const queryStr = params.toString() ? `?${params.toString()}` : "";
-    router.replace(`/${queryStr}#latest-properties`, { scroll: false });
+    router.replace(`${langPrefix}/${queryStr}#latest-properties`, { scroll: false });
   };
 
   // -- Drag to Scroll Logic --
@@ -523,7 +527,7 @@ function PropertyListingContent({
                     <button
                       onClick={() => {
                         setLocalFilter("ALL");
-                        router.push("/#latest-properties");
+                        router.push(`${langPrefix}/#latest-properties`);
                         document.getElementById("latest-properties")?.scrollIntoView({ behavior: "smooth" });
                       }}
                       className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-rose-400 hover:text-white duration-300 transition-colors"

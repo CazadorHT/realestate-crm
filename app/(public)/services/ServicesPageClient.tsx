@@ -24,7 +24,7 @@ import { FaLine } from "react-icons/fa";
 import { animate } from "framer-motion";
 
 function ServicesContent() {
-  const { t, language } = useLanguage();
+  const { t, language, langPrefix } = useLanguage();
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -139,7 +139,7 @@ function ServicesContent() {
                 {t("common.start_search")}
               </Button>
             </Link>
-            <Link href="/contact">
+            <Link href={`${langPrefix}/contact`}>
               <Button
                 size="lg"
                 variant="outline"
@@ -202,7 +202,7 @@ function ServicesContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               {services.map((service) => (
                 <Link
-                  href={`/services/${service.slug}`}
+                  href={`${langPrefix}/services/${service.slug}`}
                   key={service.id}
                   className="group relative bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 flex flex-col h-full border border-slate-100"
                 >
@@ -312,7 +312,7 @@ function ServicesContent() {
                     {t("contact.sidebar_line_button")}
                   </Button>
                 </a>
-                <Link href="/contact" className="w-full sm:w-auto">
+                <Link href={`${langPrefix}/contact`} className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"

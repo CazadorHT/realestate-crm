@@ -151,7 +151,7 @@ export function PublicFooter() {
     const prefix = station.prefix ? `${station.prefix} - ` : "";
     return {
       name: `${prefix}${name}`,
-      href: `/near-station/${station.slug}`,
+      href: `${langPrefix}/near-station/${station.slug}`,
     };
   });
 
@@ -465,43 +465,43 @@ export function PublicFooter() {
                       : "Popular Transit Stations"}
               </h4>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400">
-                <Link href="/near-station/thong-lo" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/thong-lo`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "BTS ทองหล่อ" : language === "cn" ? "BTS 通罗 (Thong Lo)" : language === "ru" ? "BTS Тонг Ло" : "BTS Thong Lo"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/near-station/phra-ram-9" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/phra-ram-9`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "MRT พระราม 9" : language === "cn" ? "MRT 帕蓝9 (Phra Ram 9)" : language === "ru" ? "MRT Пхра Рам 9" : "MRT Phra Ram 9"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/near-station/asok" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/asok`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "BTS อโศก" : language === "cn" ? "BTS 阿速 (Asok)" : language === "ru" ? "BTS Асок" : "BTS Asok"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/near-station/phrom-phong" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/phrom-phong`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "BTS พร้อมพงษ์" : language === "cn" ? "BTS 鹏蓬 (Phrom Phong)" : language === "ru" ? "BTS Промпхонг" : "BTS Phrom Phong"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/near-station/ekkamai" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/ekkamai`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "BTS เอกมัย" : language === "cn" ? "BTS 亿甲迈 (Ekkamai)" : language === "ru" ? "BTS Эккамай" : "BTS Ekkamai"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/near-station/udom-suk" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/udom-suk`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "BTS อุดมสุข" : language === "cn" ? "BTS 乌东苏 (Udom Suk)" : language === "ru" ? "BTS Удом Сук" : "BTS Udom Suk"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/near-station/bang-na" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/bang-na`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "BTS บางนา" : language === "cn" ? "BTS 曼那 (Bang Na)" : language === "ru" ? "BTS Банг На" : "BTS Bang Na"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/near-station/huai-khwang" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/huai-khwang`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "MRT ห้วยขวาง" : language === "cn" ? "MRT 惠恭王 (Huai Khwang)" : language === "ru" ? "MRT Хуайкхванг" : "MRT Huai Khwang"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/near-station/sam-yan" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/sam-yan`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "MRT สามย่าน" : language === "cn" ? "MRT 三养 (Sam Yan)" : language === "ru" ? "MRT Сам Ян" : "MRT Sam Yan"}
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link href="/near-station/si-iam" className="hover:text-blue-400 transition-colors">
+                <Link href={`${langPrefix}/near-station/si-iam`} className="hover:text-blue-400 transition-colors">
                   {language === "th" ? "MRT ศรีเอี่ยม (สายสีเหลือง)" : language === "cn" ? "MRT 西安站 (Si Iam)" : language === "ru" ? "MRT Си Лам (Si Iam)" : "MRT Si Iam"}
                 </Link>
               </div>
@@ -514,13 +514,13 @@ export function PublicFooter() {
             </p>
             <div className="flex flex-wrap gap-4 sm:gap-6 text-sm font-medium text-slate-400 items-center">
               <Link
-                href="/privacy-policy"
+                href={`${langPrefix}/privacy-policy`}
                 className="hover:text-blue-400 transition-colors"
               >
                 {t("footer.privacy_policy")}
               </Link>
               <Link
-                href="/terms"
+                href={`${langPrefix}/terms`}
                 className="hover:text-blue-400 transition-colors"
               >
                 {t("footer.terms_of_use")}

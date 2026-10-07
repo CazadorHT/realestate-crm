@@ -62,7 +62,7 @@ export function PropertyTypeGrid({
 }: {
   isLoading?: boolean;
 }) {
-  const { t, language } = useLanguage();
+  const { t, language, langPrefix } = useLanguage();
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
@@ -76,56 +76,56 @@ export function PropertyTypeGrid({
       image: "/images/property-types/condo.webp",
       title: t("home.property_types.condo"),
       count: "2,847",
-      href: "/?type=CONDO#latest-properties",
+      href: `${langPrefix}/?type=CONDO#latest-properties`,
     },
     {
       image: "/images/property-types/house.webp",
       title: t("home.property_types.house"),
       count: "1,653",
-      href: "/?type=HOUSE#latest-properties",
+      href: `${langPrefix}/?type=HOUSE#latest-properties`,
     },
     {
       image: "/images/property-types/townhome.webp",
       title: t("home.property_types.townhome"),
       count: "892",
-      href: "/?type=TOWNHOME#latest-properties",
+      href: `${langPrefix}/?type=TOWNHOME#latest-properties`,
     },
     
     {
       image: "/images/property-types/pool_villa.webp",
       title: t("home.property_types.pool_villa"),
       count: "328",
-      href: "/?type=POOL_VILLA#latest-properties",
+      href: `${langPrefix}/?type=POOL_VILLA#latest-properties`,
     },
     {
       image: "/images/property-types/office.webp",
       title: t("home.property_types.office_building"),
       count: "264",
-      href: "/?type=OFFICE_BUILDING#latest-properties",
+      href: `${langPrefix}/?type=OFFICE_BUILDING#latest-properties`,
     },
     {
       image: "/images/property-types/home_office.webp",
       title: t("home.property_types.home_office"),
       count: "135",
-      href: "/?type=HOME_OFFICE#latest-properties",
+      href: `${langPrefix}/?type=HOME_OFFICE#latest-properties`,
     },
     {
       image: "/images/property-types/commercial.webp",
       title: t("home.property_types.commercial_building"),
       count: "98",
-      href: "/?type=COMMERCIAL_BUILDING#latest-properties",
+      href: `${langPrefix}/?type=COMMERCIAL_BUILDING#latest-properties`,
     },
     {
       image: "/images/property-types/warehouse.webp",
       title: t("home.property_types.warehouse"),
       count: "187",
-      href: "/?type=WAREHOUSE#latest-properties",
+      href: `${langPrefix}/?type=WAREHOUSE#latest-properties`,
     },
     {
       image: "/images/property-types/land.webp",
       title: t("home.property_types.land"),
       count: "1,243",
-      href: "/?type=LAND#latest-properties",
+      href: `${langPrefix}/?type=LAND#latest-properties`,
     },
   ];
 

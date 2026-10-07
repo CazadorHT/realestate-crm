@@ -7,6 +7,7 @@ import {
   getServerTranslations,
   getServerLanguage,
   getLocalizedField,
+  getLangPrefix,
 } from "@/lib/i18n";
 
 // New modular components
@@ -41,6 +42,7 @@ export default async function BlogListingPage({
 }: BlogListingPageProps) {
   const { category, tag } = await searchParams;
   const { t, language } = await getServerTranslations();
+  const langPrefix = getLangPrefix(language);
   const categoryFilter = typeof category === "string" ? category : undefined;
   const tagFilter = typeof tag === "string" ? tag : undefined;
 
@@ -127,7 +129,7 @@ export default async function BlogListingPage({
                       : t("blog.latest_articles")}
                 </h2>
                 {(categoryFilter || tagFilter) && (
-                  <Link href="/blog" className="text-sm text-blue-600 hover:underline">
+                  <Link href={`${langPrefix}/blog`} className="text-sm text-blue-600 hover:underline">
                     {t("blog.view_all")}
                   </Link>
                 )}
@@ -155,6 +157,7 @@ export default async function BlogListingPage({
               t={t}
               currentTag={tagFilter}
               currentCategory={categoryFilter}
+              langPrefix={langPrefix}
             />
           </div>
         </section>

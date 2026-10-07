@@ -7,6 +7,7 @@ interface BlogSidebarProps {
   t: (key: string, options?: any) => string;
   currentTag?: string;
   currentCategory?: string;
+  langPrefix?: string;
 }
 
 export function BlogSidebar({
@@ -14,6 +15,7 @@ export function BlogSidebar({
   t,
   currentTag,
   currentCategory,
+  langPrefix = "",
 }: BlogSidebarProps) {
   const newsletterId = useId();
   return (
@@ -55,7 +57,7 @@ export function BlogSidebar({
                 const isActive = currentCategory === cat;
                 return (
                   <Link
-                    href={`/blog?category=${cat}`}
+                    href={`${langPrefix}/blog?category=${cat}`}
                     key={cat}
                     className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 border flex items-center justify-between group ${
                       isActive
@@ -131,7 +133,7 @@ export function BlogSidebar({
                 return (
                   <Link
                     key={tag}
-                    href={isActive ? "/blog" : `/blog?tag=${tag}`}
+                    href={isActive ? (langPrefix || "/blog") : `${langPrefix}/blog?tag=${tag}`}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all duration-300 hover:shadow-lg hover:scale-105 ${
                       isActive
                         ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white border-transparent shadow-md"

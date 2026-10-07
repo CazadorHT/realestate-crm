@@ -14,11 +14,11 @@ interface HeroActionsProps {
 }
 
 export function HeroActions({ t: initialT }: HeroActionsProps) {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
   const ctaDeposit = t("home.hero.cta_deposit") || initialT?.cta_deposit || "ฝากทรัพย์";
 
   return (
-    <Link href="/deposit" className="w-full sm:w-auto">
+    <Link href={`${langPrefix}/deposit`} className="w-full sm:w-auto">
       <Button
         size="lg"
         variant="outline"

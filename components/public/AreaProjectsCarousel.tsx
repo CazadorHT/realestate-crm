@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Building2 } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface Project {
   id: string;
@@ -26,6 +27,7 @@ export function AreaProjectsCarousel({
   viewDetailsLabel,
   unitsLabel,
 }: AreaProjectsCarouselProps) {
+  const { langPrefix } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -105,7 +107,7 @@ export function AreaProjectsCarousel({
         {projects.map((proj) => (
           <Link
             key={proj.id}
-            href={`/projects/${proj.slug}`}
+            href={`${langPrefix}/projects/${proj.slug}`}
             className="group bg-white rounded-3xl overflow-hidden border border-slate-200/50 hover:border-indigo-200 hover:shadow-md transition-all duration-300 flex flex-col shrink-0 w-72 md:w-80 snap-start"
           >
             {/* Project Cover Image */}

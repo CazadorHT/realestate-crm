@@ -16,7 +16,7 @@ export default function PublicError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
 
   useEffect(() => {
     console.error(error);
@@ -49,7 +49,7 @@ export default function PublicError({
           variant="outline"
           className="h-11 px-8 rounded-xl font-semibold border-slate-200"
         >
-          <Link href="/properties">
+          <Link href={`${langPrefix}/properties`}>
             {t("error_boundary.view_all")}
           </Link>
         </Button>

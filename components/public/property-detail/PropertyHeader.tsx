@@ -45,7 +45,7 @@ import {
   type Language,
 } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
-import { getProvinceName } from "@/lib/utils/provinces";
+import { getProvinceName, PROVINCES } from "@/lib/utils/provinces";
 import { useAddressLocalization } from "@/hooks/useAddressLocalization";
 import { getUnitSpecialFeatures } from "./helpers/badge-helpers";
 import { PropertyPricingSection } from "./PropertyPricingSection";
@@ -164,7 +164,7 @@ export function PropertyHeader({
   language: customLanguage,
   keySellingPoints: incomingKeySellingPoints,
 }: PropertyHeaderProps) {
-  const { language: globalLanguage, t: globalT } = useLanguage();
+  const { language: globalLanguage, t: globalT, langPrefix } = useLanguage();
   const language = customLanguage || globalLanguage;
 
   const t = (key: string, params?: Record<string, string | number>): string => {
@@ -315,15 +315,15 @@ export function PropertyHeader({
                 <AppBreadcrumbs
                   renderSchema={false}
                   items={[
-                    { label: t("nav.home"), href: "/" },
-                    { label: t("nav.properties"), href: "/properties" },
+                    { label: t("nav.home"), href: langPrefix || "/" },
+                    { label: t("nav.properties"), href: `${langPrefix}/properties` },
                     ...(property.property_type
                       ? [
                           {
                             label: t(
                               `property_types.${property.property_type.toLowerCase()}`,
                             ),
-                            href: `/properties?property_type=${property.property_type}`,
+                            href: `${langPrefix}/properties?property_type=${property.property_type}`,
                           },
                         ]
                       : []),
@@ -331,7 +331,9 @@ export function PropertyHeader({
                       ? [
                           {
                             label: displayProvince || provinceStr || "...",
-                            href: `/properties?province=${provinceStr}`,
+                            href: `${langPrefix}/properties?province=${encodeURIComponent(
+                              language !== "th" ? (PROVINCES[provinceStr]?.en || provinceStr) : provinceStr
+                            )}`,
                           },
                         ]
                       : []),
@@ -340,8 +342,8 @@ export function PropertyHeader({
                           {
                             label: popularAreaStr,
                             href: property.popular_area_slug
-                              ? `/areas/${property.popular_area_slug}`
-                              : `/properties?popular_area=${encodeURIComponent(
+                              ? `${langPrefix}/areas/${property.popular_area_slug}`
+                              : `${langPrefix}/properties?popular_area=${encodeURIComponent(
                                   typeof property.popular_area === "object"
                                     ? property.popular_area?.th ||
                                         popularAreaStr
@@ -355,7 +357,7 @@ export function PropertyHeader({
                         localizedTitle?.length && localizedTitle.length > 40
                           ? `${localizedTitle.slice(0, 40)}...`
                           : localizedTitle,
-                      href: `/properties/${encodeURIComponent(property.slug || property.id)}`,
+                      href: `${langPrefix}/properties/${encodeURIComponent(property.slug || property.id)}`,
                       className:
                         "text-slate-600 font-medium pointer-events-none",
                     },
@@ -468,7 +470,7 @@ export function PropertyHeader({
                       return (
                         <div className="mb-2 lg:mb-3">
                           <Link
-                            href={`/projects/${property.project.slug}`}
+                            href={`${langPrefix}/projects/${property.project.slug}`}
                             className="group/proj h-9 lg:h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
                             title={
                               t("property.view_project", {

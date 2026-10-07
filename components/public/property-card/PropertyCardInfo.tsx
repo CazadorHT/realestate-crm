@@ -19,7 +19,7 @@ import {
 } from "react-icons/md";
 import { getTypeColor, getSafeText } from "@/lib/property-utils";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
-import { getProvinceName } from "@/lib/utils/provinces";
+import { getProvinceName, PROVINCES } from "@/lib/utils/provinces";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { FaTrainSubway } from "react-icons/fa6";
@@ -196,12 +196,15 @@ export function PropertyCardInfo({
           const targetArea = property.popular_area;
           const localizedAreaName =
             getLocaleValue(property, "popular_area", language) || targetArea;
+          const provinceParam = property.province
+            ? (language !== "th" ? (PROVINCES[property.province]?.en || property.province) : property.province)
+            : "";
           const locationHref = areaSlug
-            ? `/areas/${encodeURIComponent(areaSlug)}`
+            ? `${langPrefix}/areas/${encodeURIComponent(areaSlug)}`
             : targetArea
-              ? `/properties?popular_area=${encodeURIComponent(targetArea)}`
+              ? `${langPrefix}/properties?popular_area=${encodeURIComponent(targetArea)}`
               : property.province
-                ? `/properties?province=${encodeURIComponent(property.province)}`
+                ? `${langPrefix}/properties?province=${encodeURIComponent(provinceParam)}`
                 : `${langPrefix}/properties/${property.slug || property.id}`;
 
           const areaTooltip = localizedAreaName

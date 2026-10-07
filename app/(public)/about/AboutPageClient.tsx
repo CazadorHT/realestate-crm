@@ -23,7 +23,7 @@ import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export default function AboutPageClient() {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
   const settings = useSiteConfig();
 
   const containerVariants = {
@@ -116,8 +116,8 @@ export default function AboutPageClient() {
             <AppBreadcrumbs
               variant="on-dark"
               items={[
-                { label: t("nav.home"), href: "/" },
-                { label: t("about.title"), href: "/about" },
+                { label: t("nav.home"), href: langPrefix || "/" },
+                { label: t("about.title"), href: `${langPrefix}/about` },
               ]}
               className="text-slate-400 mb-8 lg:mb-12"
             />
@@ -326,7 +326,7 @@ export default function AboutPageClient() {
             </p>
             <div className="pt-4">
               <Link
-                href="/contact"
+                href={`${langPrefix}/contact`}
                 className="h-14 px-8 rounded-2xl bg-blue-600 text-white font-bold inline-flex items-center gap-3 hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 group"
               >
                 {t("nav.contact")}
@@ -361,7 +361,7 @@ export default function AboutPageClient() {
               {t("contact.subtitle")}
             </p>
           </div>
-          <Link href="/contact" className="block">
+          <Link href={`${langPrefix}/contact`} className="block">
             <button className="h-16 px-12 rounded-[24px] bg-slate-900 text-white font-bold text-lg hover:bg-black transition-all active:scale-95 shadow-2xl shadow-slate-300">
               {t("nav.contact")}
             </button>

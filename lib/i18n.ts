@@ -57,6 +57,14 @@ export function normalizeLocale(locale?: string | null): Language {
   return "th";
 }
 
+export function getLangPrefix(lang?: string | null): string {
+  if (!lang || lang === "th") return "";
+  if (lang === "cn" || lang === "zh") return "/zh";
+  if (lang === "ru") return "/ru";
+  if (lang === "en") return "/en";
+  return `/${lang}`;
+}
+
 /**
  * Server-side language detection.
  * When explicitLocale is provided (e.g. from URL params or static page),
@@ -67,7 +75,26 @@ export async function getServerLanguage(explicitLocale?: string): Promise<Langua
     return normalizeLocale(explicitLocale);
   }
 
-  // Try reading the cookie from the request for CRM or interactive routes
+  // 1. Check headers injected by proxy middleware
+  try {
+    const { headers } = await import("next/headers");
+    const headerList = await headers();
+    const xLocale = headerList.get("x-locale");
+    if (xLocale && ["th", "en", "cn", "zh", "ru"].includes(xLocale.toLowerCase())) {
+      return normalizeLocale(xLocale);
+    }
+    const xPathname = headerList.get("x-pathname");
+    if (xPathname) {
+      const firstSegment = xPathname.split("/").filter(Boolean)[0]?.toLowerCase();
+      if (["en", "cn", "zh", "ru"].includes(firstSegment)) {
+        return normalizeLocale(firstSegment);
+      }
+    }
+  } catch {
+    // headers() throws during static generation — fall through
+  }
+
+  // 2. Try reading the cookie from the request for CRM or interactive routes
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();

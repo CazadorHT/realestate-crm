@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, MapPin, ArrowLeft } from "lucide-react";
 import { getProvinceName, getDistrictName, getSubdistrictName } from "@/lib/utils/provinces";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface ProjectHeroProps {
   project: any;
@@ -15,6 +16,7 @@ export function ProjectHero({
   nameText,
   getString,
 }: ProjectHeroProps) {
+  const { langPrefix } = useLanguage();
   const formatProjectCategory = (type: number, lang: string): string => {
     if (type === 1) return lang === "en" ? "Condominium" : lang === "cn" ? "公寓" : lang === "ru" ? "Кондоминиум" : "คอนโดมิเนียม";
     return lang === "en" ? "House Project" : lang === "cn" ? "住宅小区" : lang === "ru" ? "Жилой комплекс" : "โครงการบ้าน";
@@ -32,15 +34,15 @@ export function ProjectHero({
         {/* Breadcrumbs (Desktop lg+) & Back Button (Mobile < lg) */}
         <nav aria-label="breadcrumb" className="mb-6">
           <ol className="hidden lg:flex items-center gap-2 text-sm text-slate-300 flex-wrap">
-            <li><Link href="/" className="hover:text-white transition-colors">{getString("breadcrumb_home")}</Link></li>
+            <li><Link href={langPrefix || "/"} className="hover:text-white transition-colors">{getString("breadcrumb_home")}</Link></li>
             <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
-            <li><Link href="/projects" className="hover:text-white transition-colors">{getString("breadcrumb_projects")}</Link></li>
+            <li><Link href={`${langPrefix}/projects`} className="hover:text-white transition-colors">{getString("breadcrumb_projects")}</Link></li>
             <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
             <li className="text-white font-medium">{nameText}</li>
           </ol>
           <div className="block lg:hidden">
             <Link
-              href="/projects"
+              href={`${langPrefix}/projects`}
               className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-white/20 hover:bg-white/30 text-white border border-white/20 shadow-2xs active:scale-95 transition-all"
             >
               <ArrowLeft className="w-3.5 h-3.5" />

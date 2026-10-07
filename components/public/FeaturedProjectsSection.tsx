@@ -93,7 +93,7 @@ export function FeaturedProjectsSection({
   projects,
   language: initialLanguage,
 }: FeaturedProjectsSectionProps) {
-  const { language: clientLanguage } = useLanguage();
+  const { language: clientLanguage, langPrefix } = useLanguage();
   const language = clientLanguage || initialLanguage || "th";
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -184,7 +184,7 @@ export function FeaturedProjectsSection({
           </m.div>
           
           <Link
-            href="/projects"
+            href={`${langPrefix}/projects`}
             className="inline-flex items-center gap-2 px-5 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white text-xs font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105"
           >
             <span>{getPageString("view_all")}</span>
@@ -274,7 +274,7 @@ export function FeaturedProjectsSection({
                   className="shrink-0 snap-start will-change-transform"
                 >
                   <Link
-                    href={`/projects/${proj.slug}`}
+                    href={`${langPrefix}/projects/${proj.slug}`}
                     className="group bg-white rounded-3xl overflow-hidden border border-slate-200/70 hover:border-slate-300 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col w-72 md:w-80 h-full"
                   >
                     {/* Project Image with Progressive Blur-Up */}

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, getLangPrefix } from "@/lib/i18n";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import { format } from "date-fns";
 import { enUS, th, zhCN, ru } from "date-fns/locale";
@@ -30,6 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function PrivacyPolicyPage() {
   const { t, language } = await getServerTranslations();
+  const langPrefix = getLangPrefix(language);
   const settings = await getSiteSettings();
 
   // ✅ FORCE: Match Google Cloud Console App Name exactly
@@ -49,7 +50,7 @@ export default async function PrivacyPolicyPage() {
       <nav className="border-b bg-slate-50/50">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <Link
-            href="/"
+            href={langPrefix || "/"}
             className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
           >
             <Home className="w-4 h-4" />

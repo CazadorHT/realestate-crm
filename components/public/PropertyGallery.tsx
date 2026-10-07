@@ -160,7 +160,7 @@ export function PropertyGallery({
   language: customLanguage,
   imageAlt,
 }: PropertyGalleryProps) {
-  const { language: globalLanguage, t: globalT } = useLanguage();
+  const { language: globalLanguage, t: globalT, langPrefix } = useLanguage();
   const language = customLanguage || globalLanguage;
   const router = useRouter();
 
@@ -347,7 +347,7 @@ export function PropertyGallery({
                 ) {
                   router.back();
                 } else {
-                  router.push("/properties");
+                  router.push(`${langPrefix}/properties`);
                 }
               }}
               className="h-7 w-7 rounded-full bg-black/60 hover:bg-black/80 active:scale-95 text-white flex items-center justify-center shadow-md transition-all border border-white/15 cursor-pointer touch-manipulation pointer-events-auto"

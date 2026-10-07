@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { m, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,7 @@ const INTEREST_CONFIG = [
 ];
 
 export function ContactForm() {
-  const { t, language } = useLanguage();
+  const { t, language, langPrefix } = useLanguage();
   const [isPending, startTransition] = useTransition();
   const [isSuccess, setIsSuccess] = useState(false);
   const [name, setName] = useState("");
@@ -745,9 +746,9 @@ export function ContactForm() {
       {!isSuccess && (
         <p className="text-[10px] text-white/60 text-center mt-10 px-4 leading-relaxed">
           {t("contact.privacy_prefix")}
-          <a href="/privacy-policy" className="text-blue-400/60 hover:underline inline-block ml-1 font-medium transition-colors">
+          <Link href={`${langPrefix}/privacy-policy`} className="text-blue-400/60 hover:underline inline-block ml-1 font-medium transition-colors">
             {t("nav.privacy_policy")}
-          </a>
+          </Link>
         </p>
       )}
     </form>

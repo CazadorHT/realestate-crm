@@ -71,7 +71,7 @@ export function LanguageProvider({
       const targetPrefix = lang === "th" ? "" : lang === "cn" ? "/zh" : `/${lang}`;
       const targetUrl = (targetPrefix + rawPath) || "/";
       if (targetUrl !== pathname) {
-        router.push(targetUrl);
+        router.push(targetUrl, { scroll: false });
         return;
       }
     }
@@ -101,7 +101,22 @@ export function LanguageProvider({
           return;
         }
       } else {
-        // Public Portal Language
+        // 1. URL Path Locale takes absolute highest priority on public routes
+        const firstSegment = pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+        if (firstSegment === "en") {
+          setLanguageState("en");
+          return;
+        }
+        if (firstSegment === "zh" || firstSegment === "cn") {
+          setLanguageState("cn");
+          return;
+        }
+        if (firstSegment === "ru") {
+          setLanguageState("ru");
+          return;
+        }
+
+        // 2. Public Portal Language (from saved preference or cookie)
         const savedPublicLang = (localStorage.getItem("public-language") || getCookie("public-language") || localStorage.getItem("app-language") || getCookie("app-language")) as Language;
         if (savedPublicLang && ["th", "en", "cn", "ru"].includes(savedPublicLang)) {
           setLanguageState(savedPublicLang);

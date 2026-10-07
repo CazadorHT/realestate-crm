@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { 
   Building2, 
   MapPin, 
@@ -239,9 +240,11 @@ const cardVariants = {
 
 export function ProjectsHubClient({
   initialProjects,
-  language,
+  language: initialLanguage,
   translations,
 }: ProjectsHubClientProps) {
+  const { language: contextLanguage, langPrefix } = useLanguage();
+  const language = contextLanguage || initialLanguage || "th";
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedType, setSelectedType] = React.useState<string>("ALL");
   const [selectedProvince, setSelectedProvince] = React.useState<string>("ALL");
@@ -551,13 +554,13 @@ export function ProjectsHubClient({
         <div className="relative max-w-screen-2xl mx-auto px-5 md:px-8 z-10">
           <nav aria-label="breadcrumb" className="mb-4 md:mb-8">
             <ol className="hidden lg:flex items-center gap-2 text-xs text-slate-400 bg-white/10 px-4 py-2 rounded-full border border-white/10 w-fit">
-              <li><Link href="/" className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
+              <li><Link href={langPrefix || "/"} className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
               <li><ChevronRight className="w-3.5 h-3.5 opacity-60 text-slate-500" /></li>
               <li className="text-slate-200 font-bold">{getPageString("breadcrumb_projects")}</li>
             </ol>
             <div className="block lg:hidden">
               <Link
-                href="/"
+                href={langPrefix || "/"}
                 className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold bg-white/20 hover:bg-white/30 text-white border border-white/20 shadow-2xs active:scale-95 transition-all"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
@@ -1111,7 +1114,7 @@ export function ProjectsHubClient({
                     className="h-full"
                   >
                     <Link
-                      href={`/projects/${project.slug}`}
+                      href={`${langPrefix}/projects/${project.slug}`}
                       className="group bg-white rounded-3xl overflow-hidden border border-slate-200/60 hover:border-slate-350 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
                     >
                       {/* Cover Image */}

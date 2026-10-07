@@ -15,7 +15,7 @@ import {
 import Link from "next/link";
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, getLangPrefix } from "@/lib/i18n";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import Image from "next/image";
 import { ServiceGalleryClient } from "./ServiceGalleryClient";
@@ -39,6 +39,7 @@ interface PageProps {
 async function ServiceDetail({ params }: PageProps) {
   const { slug } = await params;
   const { language, t } = await getServerTranslations();
+  const langPrefix = getLangPrefix(language);
   const service = await getServiceBySlugCached(slug);
 
   if (!service) {
@@ -89,7 +90,7 @@ async function ServiceDetail({ params }: PageProps) {
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
           <Link
-            href="/services"
+            href={`${langPrefix}/services`}
             className="absolute top-8 left-4 md:left-8 text-white/80 hover:text-white flex items-center gap-2 transition-all py-2 px-5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95"
           >
             <ArrowLeft className="h-4 w-4" />{" "}
@@ -187,7 +188,7 @@ async function ServiceDetail({ params }: PageProps) {
                     </Button>
                   </a>
                   {!service.contact_link && (
-                    <Link href="/contact" className="block w-full transition-transform active:scale-95">
+                    <Link href={`${langPrefix}/contact`} className="block w-full transition-transform active:scale-95">
                       <Button
                         variant="outline"
                         className="w-full h-14 text-lg border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl"

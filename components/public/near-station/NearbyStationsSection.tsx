@@ -92,12 +92,14 @@ const cardVariants = {
 function StationCard({
   station,
   language,
+  langPrefix = "",
   lineColor,
   isCurrent,
   index,
 }: {
   station: StationForSEO;
   language: string;
+  langPrefix?: string;
   lineColor: string;
   isCurrent: boolean;
   index: number;
@@ -115,7 +117,7 @@ function StationCard({
       layout
     >
       <Link
-        href={`/near-station/${station.slug}`}
+        href={`${langPrefix}/near-station/${station.slug}`}
         aria-current={isCurrent ? "page" : undefined}
         className={[
           "group relative flex flex-col justify-between gap-2 rounded-2xl border border-slate-200 p-3 sm:p-4 transition-all duration-300",
@@ -212,7 +214,7 @@ export function NearbyStationsSection({
   currentTransitType,
   lineColor,
 }: NearbyStationsSectionProps) {
-  const { language } = useLanguage();
+  const { language, langPrefix } = useLanguage();
   const [page, setPage] = useState(0);
 
   const t = (k: string) => I18N[k]?.[language] || I18N[k]?.en || "";
@@ -275,7 +277,7 @@ export function NearbyStationsSection({
           </div>
 
           <Link
-            href="/near-station"
+            href={`${langPrefix}/near-station`}
             className="text-xs font-bold flex items-center gap-0.5 hover:underline shrink-0 self-start sm:self-end pb-0.5 transition-colors"
             style={{ color: lineColor }}
           >
@@ -299,6 +301,7 @@ export function NearbyStationsSection({
                 key={station.slug}
                 station={station}
                 language={language}
+                langPrefix={langPrefix}
                 lineColor={lineColor}
                 isCurrent={station.slug === currentStationSlug}
                 index={i}

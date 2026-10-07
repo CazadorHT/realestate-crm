@@ -283,7 +283,7 @@ const LOCALIZED_COPY: Record<
 };
 
 export default function DepositPageClient() {
-  const { t, language } = useLanguage();
+  const { t, language, langPrefix } = useLanguage();
   const router = useRouter();
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -541,7 +541,7 @@ export default function DepositPageClient() {
                             </Button>
                             <Button
                               size="sm"
-                              onClick={() => router.push("/")}
+                              onClick={() => router.push(langPrefix || "/")}
                               className="bg-blue-600 hover:bg-blue-700 text-white! rounded-xl px-6"
                             >
                               {t("breadcrumb.home") || "หน้าแรก"}
@@ -561,7 +561,7 @@ export default function DepositPageClient() {
                           </div>
                           <DepositWizard
                             onSuccessAction={() => setIsSuccess(true)}
-                            onCancelAction={() => router.push("/")}
+                            onCancelAction={() => router.push(langPrefix || "/")}
                             location="Landing Page"
                           />
                         </>

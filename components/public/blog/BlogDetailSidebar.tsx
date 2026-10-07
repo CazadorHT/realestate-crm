@@ -22,7 +22,7 @@ export function BlogDetailSidebar({
   relatedPosts,
   language: initialLanguage,
 }: BlogDetailSidebarProps) {
-  const { language: clientLanguage, t } = useLanguage();
+  const { language: clientLanguage, t, langPrefix } = useLanguage();
   const language = clientLanguage || initialLanguage || "th";
   const [currentUrl, setCurrentUrl] = useState("");
 
@@ -64,7 +64,7 @@ export function BlogDetailSidebar({
                 return (
                   <Link
                     key={relatedPost.id}
-                    href={`/blog/${relatedPost.slug}`}
+                    href={`${langPrefix}/blog/${relatedPost.slug}`}
                     className="block group"
                   >
                     <div className="bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all">
@@ -87,7 +87,7 @@ export function BlogDetailSidebar({
           <p className="text-sm text-slate-300 mb-4">
             {t("blog.need_help_desc")}
           </p>
-          <Link href="/contact">
+          <Link href={`${langPrefix}/contact`}>
             <button className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium transition-colors">
               {t("blog.contact_us_btn")}
             </button>

@@ -6,6 +6,7 @@ import type { Database } from "@/lib/database.types.generated";
 
 import { siteConfig } from "@/lib/site-config";
 import { getLocalizedField } from "@/lib/i18n";
+import { PROVINCES } from "@/lib/utils/provinces";
 
 type PropertyType = "HOUSE" | "CONDO" | "TOWNHOME" | "LAND" | "OFFICE_BUILDING" | "COMMERCIAL_BUILDING" | "VILLA" | "POOL_VILLA" | "WAREHOUSE" | "HOME_OFFICE" | "OTHER";
 type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
@@ -921,11 +922,13 @@ export function generateBreadcrumbSchema(
   // 3. Location (Province)
   const province = getLocalizedField<string>(data, "province", language) || data.province;
   if (province) {
+    const rawProv = data.province || province || "";
+    const provSlug = language !== "th" ? (PROVINCES[rawProv]?.en || rawProv) : rawProv;
     itemListElement.push({
       "@type": "ListItem",
       position: itemListElement.length + 1,
       name: province,
-      item: `${siteConfig.url}${langPrefix}/properties?province=${encodeURIComponent(data.province || province || "")}`,
+      item: `${siteConfig.url}${langPrefix}/properties?province=${encodeURIComponent(provSlug)}`,
     });
   }
 

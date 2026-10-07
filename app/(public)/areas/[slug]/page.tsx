@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { MapPin, Train, Building2, ChevronRight, BarChart3, HelpCircle, Compass } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { formatPrioritySeoTitle, generateAreaFAQSchema, getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, getLangPrefix } from "@/lib/i18n";
 import {
   getAreaBySlug,
   getAreaMarketInsights,
@@ -128,6 +128,7 @@ export default async function AreaDetailPage(
   }
 
   const { language } = await getServerTranslations();
+  const langPrefix = getLangPrefix(language);
   const nameText = area.name[language as keyof typeof area.name] || area.name.en || area.name.th;
   const breadcrumbHome = language === "en" ? "Home" : language === "cn" ? "首页" : language === "ru" ? "Главная" : "หน้าแรก";
 
@@ -155,9 +156,9 @@ export default async function AreaDetailPage(
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: breadcrumbHome, item: siteConfig.url },
-      { "@type": "ListItem", position: 2, name: t("related_areas"), item: `${siteConfig.url}/near-station` },
-      { "@type": "ListItem", position: 3, name: nameText, item: `${siteConfig.url}/areas/${area.slug}` },
+      { "@type": "ListItem", position: 1, name: breadcrumbHome, item: `${siteConfig.url}${langPrefix || ""}` },
+      { "@type": "ListItem", position: 2, name: t("related_areas"), item: `${siteConfig.url}${langPrefix}/near-station` },
+      { "@type": "ListItem", position: 3, name: nameText, item: `${siteConfig.url}${langPrefix}/areas/${area.slug}` },
     ],
   };
 
@@ -222,9 +223,9 @@ export default async function AreaDetailPage(
           {/* Breadcrumbs */}
           <nav aria-label="breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-xs text-slate-300">
-              <li><Link href="/" className="hover:text-white transition-colors">{breadcrumbHome}</Link></li>
+              <li><Link href={langPrefix || "/"} className="hover:text-white transition-colors">{breadcrumbHome}</Link></li>
               <li><ChevronRight className="w-3 h-3 opacity-60" /></li>
-              <li><Link href="/near-station" className="hover:text-white transition-colors">{t("related_areas")}</Link></li>
+              <li><Link href={`${langPrefix}/near-station`} className="hover:text-white transition-colors">{t("related_areas")}</Link></li>
               <li><ChevronRight className="w-3 h-3 opacity-60" /></li>
               <li className="text-white font-medium">{nameText}</li>
             </ol>
@@ -370,7 +371,7 @@ export default async function AreaDetailPage(
                     {connections.stations.map(station => (
                       <Link
                         key={station.code}
-                        href={`/near-station/${station.slug}`}
+                        href={`${langPrefix}/near-station/${station.slug}`}
                         className="group flex items-center justify-between p-3 rounded-xl bg-slate-50/80 hover:bg-slate-100/50 transition-colors"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">

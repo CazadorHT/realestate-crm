@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Train, ChevronRight } from "lucide-react";
 import type { StationDetail } from "@/features/public/stations";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface StationHeroProps {
   station: StationDetail;
@@ -21,6 +22,7 @@ export function StationHero({
   gradientColor,
   getString,
 }: StationHeroProps) {
+  const { langPrefix } = useLanguage();
   const getStationFallbackBg = (transitType: string) => {
     return "/images/hero-transit.jpg";
   };
@@ -48,9 +50,9 @@ export function StationHero({
         {/* Breadcrumbs */}
         <nav aria-label="breadcrumb" className="mb-6">
           <ol className="flex items-center gap-2 text-sm text-slate-300 flex-wrap">
-            <li><Link href="/" className="hover:text-white transition-colors">{getString("breadcrumb_home")}</Link></li>
+            <li><Link href={langPrefix || "/"} className="hover:text-white transition-colors">{getString("breadcrumb_home")}</Link></li>
             <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
-            <li><Link href="/near-station" className="hover:text-white transition-colors">{getString("breadcrumb_near_transit")}</Link></li>
+            <li><Link href={`${langPrefix}/near-station`} className="hover:text-white transition-colors">{getString("breadcrumb_near_transit")}</Link></li>
             <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
             <li className="text-white font-medium">{stationNameFormatted}</li>
           </ol>

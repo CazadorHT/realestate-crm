@@ -30,24 +30,6 @@ export async function decryptValue(key: string, value: unknown): Promise<unknown
   }
 
   if (!isEncrypted(value)) {
-    // 🛡️ Lazy Encryption Strategy: Re-save in background to encrypt
-    // Since this runs in a server action/route, we use after() for non-blocking update
-    try {
-      after(async () => {
-        try {
-          console.log(`[LAZY-ENCRYPTION] Encrypting plaintext key on-the-fly: ${key}`);
-          await updateSiteSettingAdmin(key as SiteSettingKey, value);
-        } catch (err) {
-          console.error(`[LAZY-ENCRYPTION-FAILED] Key: ${key}`, err);
-        }
-      });
-    } catch (afterError) {
-      // Fallback: update in background without after() if not in request scope
-      console.warn(`[LAZY-ENCRYPTION] outside request scope, running inline for key: ${key}`);
-      updateSiteSettingAdmin(key as SiteSettingKey, value).catch(err => {
-        console.error(`[LAZY-ENCRYPTION-FAILED] Key: ${key}`, err);
-      });
-    }
     return value; // Return plaintext for immediate use
   }
 

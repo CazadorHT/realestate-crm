@@ -123,10 +123,10 @@ export function PublicNav() {
   const navigationLinks = [
     { name: t("nav.home"), href: homePath },
     { name: t("nav.properties"), href: "#latest-properties" },
-    { name: t("nav.services"), href: "/services" },
-    { name: t("nav.blog"), href: "/blog" },
-    { name: t("nav.about"), href: "/about" },
-    { name: t("nav.contact"), href: "/contact" },
+    { name: t("nav.services"), href: `${langPrefix}/services` },
+    { name: t("nav.blog"), href: `${langPrefix}/blog` },
+    { name: t("nav.about"), href: `${langPrefix}/about` },
+    { name: t("nav.contact"), href: `${langPrefix}/contact` },
   ];
 
   // Smooth scroll handler
@@ -335,7 +335,7 @@ export function PublicNav() {
 
                 {/* Favorites Button */}
                 <Link
-                  href="/favorites"
+                  href={`${langPrefix}/favorites`}
                   className="relative group"
                   aria-label="favorites"
                 >
@@ -380,7 +380,7 @@ export function PublicNav() {
                     size="lg"
                     className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium outline-none ring-0 border-0 text-white"
                   >
-                    <Link href="/deposit">
+                    <Link href={`${langPrefix}/deposit`}>
                       <Key className="h-4 w-4 mr-1" />
                       {t("nav.deposit")}
                     </Link>
@@ -499,7 +499,7 @@ export function PublicNav() {
 
                 {/* Mobile Favorites */}
                 <Link
-                  href="/favorites"
+                  href={`${langPrefix}/favorites`}
                   className="relative group p-2"
                   aria-label="favorites"
                 >
@@ -577,7 +577,7 @@ export function PublicNav() {
                     className="flex-1 min-w-0 cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-sm sm:text-base outline-none ring-0 border-0 text-white"
                   >
                     <Link
-                      href="/deposit"
+                      href={`${langPrefix}/deposit`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <Key className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 shrink-0" />

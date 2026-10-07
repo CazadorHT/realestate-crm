@@ -205,7 +205,7 @@ export function TransitStationsSection({
   lines,
   language: propLanguage,
 }: TransitStationsSectionProps) {
-  const { language: contextLanguage } = useLanguage();
+  const { language: contextLanguage, langPrefix } = useLanguage();
   const language = contextLanguage || propLanguage || "th";
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
@@ -352,7 +352,7 @@ export function TransitStationsSection({
             </p>
           </m.div>
           <Link
-            href="/near-station"
+            href={`${langPrefix}/near-station`}
             className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-0.5 hover:underline shrink-0 self-start md:self-end transition-all pb-1 row-start-1"
           >
             {tAllStations}
@@ -513,7 +513,7 @@ export function TransitStationsSection({
                         className="w-full"
                       >
                         <Link
-                          href={`/near-station/${station.slug}`}
+                          href={`${langPrefix}/near-station/${station.slug}`}
                           className="group relative flex items-center justify-between px-2 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs overflow-hidden w-full"
                         >
                           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
@@ -627,7 +627,7 @@ export function TransitStationsSection({
                               return (
                                 <div key={station.code}>
                                   <Link
-                                    href={`/near-station/${station.slug}`}
+                                    href={`${langPrefix}/near-station/${station.slug}`}
                                     onClick={() => {
                                       setDrawerOpen(false);
                                       setPopoverOpen(false);
@@ -730,7 +730,7 @@ export function TransitStationsSection({
                               return (
                                 <div key={station.code}>
                                   <Link
-                                    href={`/near-station/${station.slug}`}
+                                    href={`${langPrefix}/near-station/${station.slug}`}
                                     onClick={() => {
                                       setDrawerOpen(false);
                                       setPopoverOpen(false);

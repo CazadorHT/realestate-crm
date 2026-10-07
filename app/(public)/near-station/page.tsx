@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Train, MapPin, ChevronRight, Building2, Home } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations } from "@/lib/i18n";
+import { getServerTranslations, getLangPrefix } from "@/lib/i18n";
 import { getTransitLinesWithStations, type TransitLine } from "@/features/public/stations";
 
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
@@ -117,6 +117,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function NearStationHubPage() {
   const { language } = await getServerTranslations();
+  const langPrefix = getLangPrefix(language);
   const lines = await getTransitLinesWithStations();
   const totalStations = lines.reduce((acc, line) => acc + line.stations.length, 0);
 
@@ -166,7 +167,7 @@ export default async function NearStationHubPage() {
           {/* Breadcrumbs */}
           <nav aria-label="breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-sm text-slate-300 flex-wrap">
-              <li><Link href="/" className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
+              <li><Link href={langPrefix || "/"} className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
               <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
               <li className="text-white font-medium">{getPageString("breadcrumb_near_transit")}</li>
             </ol>
@@ -192,7 +193,7 @@ export default async function NearStationHubPage() {
       <section className="max-w-screen-2xl mx-auto px-5 md:px-8 pb-16 pt-8">
         <div className="space-y-8">
           {lines.map((line) => (
-            <TransitLineSection key={line.type} line={line} language={language} />
+            <TransitLineSection key={line.type} line={line} language={language} langPrefix={langPrefix} />
           ))}
         </div>
       </section>
@@ -249,7 +250,7 @@ export default async function NearStationHubPage() {
   );
 }
 
-function TransitLineSection({ line, language }: { line: TransitLine; language: string }) {
+function TransitLineSection({ line, language, langPrefix = "" }: { line: TransitLine; language: string; langPrefix?: string }) {
   return (
     <div className="rounded-2xl bg-white border border-slate-200/80 shadow-xs overflow-hidden">
       {/* Line Header */}
@@ -307,7 +308,7 @@ function TransitLineSection({ line, language }: { line: TransitLine; language: s
           {line.stations.map((station) => (
             <Link
               key={station.code}
-              href={`/near-station/${station.slug}`}
+              href={`${langPrefix}/near-station/${station.slug}`}
               className="group flex items-center gap-2.5 px-3.5 py-3 rounded-xl bg-slate-50/80 hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all duration-200 hover:shadow-sm"
             >
               <div

@@ -10,7 +10,7 @@ interface CompareActionRowProps {
 }
 
 export function CompareActionRow({ properties }: CompareActionRowProps) {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
   return (
     <div
       className="grid divide-x divide-slate-100 bg-white border-t border-slate-100"
@@ -25,7 +25,7 @@ export function CompareActionRow({ properties }: CompareActionRowProps) {
             className="w-full rounded-lg md:rounded-xl bg-slate-900 hover:bg-slate-800 transition-all hover:scale-105 text-xs md:text-sm py-2 md:py-3"
             asChild
           >
-            <Link href={`/properties/${p.id}`}>
+            <Link href={`${langPrefix}/properties/${p.id}`}>
               {t("compare_page.view_details")}
             </Link>
           </Button>

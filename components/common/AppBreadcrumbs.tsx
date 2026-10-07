@@ -50,7 +50,7 @@ export function AppBreadcrumbs({
 }: AppBreadcrumbsProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
 
   const breadcrumbs = useMemo(() => {
     if (customItems) return customItems;
@@ -64,16 +64,24 @@ export function AppBreadcrumbs({
     if (showHome) {
       items.push({
         label: t("breadcrumb.home"),
-        href: "/",
+        href: langPrefix || "/",
       });
     }
 
-    let currentHref = "";
+    let currentHref = langPrefix;
 
-    segments.forEach((segment) => {
+    // Filter out foreign locale prefix from breadcrumb items so "En", "Zh", "Ru" never appear!
+    const effectiveSegments = segments.filter((segment, idx) => {
+      if (idx === 0 && ["en", "zh", "ru", "cn"].includes(segment.toLowerCase())) {
+        return false;
+      }
+      return true;
+    });
+
+    effectiveSegments.forEach((segment) => {
       // Don't show "protected" in breadcrumbs if we show "home" or other segments
       // Or map it to something meaningful if it's the only segment
-      if (segment === "protected" && segments.length > 1) {
+      if (segment === "protected" && effectiveSegments.length > 1) {
         currentHref += `/${segment}`;
         return;
       }
@@ -95,7 +103,7 @@ export function AppBreadcrumbs({
     });
 
     return items;
-  }, [pathname, showHome, customItems, t]);
+  }, [pathname, showHome, customItems, t, langPrefix]);
 
   // Schema.org for SEO
   const schemaData = useMemo(() => {
@@ -147,7 +155,7 @@ export function AppBreadcrumbs({
     if (parentHref) {
       router.push(parentHref);
     } else {
-      router.push("/");
+      router.push(langPrefix || "/");
     }
   };
 

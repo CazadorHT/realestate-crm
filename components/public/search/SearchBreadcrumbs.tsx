@@ -12,7 +12,7 @@ interface SearchBreadcrumbsProps {
 export function SearchBreadcrumbs({
   breadcrumbSchema,
 }: SearchBreadcrumbsProps) {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
 
   return (
     <>
@@ -27,7 +27,7 @@ export function SearchBreadcrumbs({
           aria-label="Breadcrumb"
         >
           <Link
-            href="/"
+            href={langPrefix || "/"}
             className="hover:text-blue-600 transition-colors flex items-center gap-1 shrink-0"
           >
             {/* Responsive icon size */}

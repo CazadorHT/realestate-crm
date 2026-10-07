@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { normalizeProvinceInput } from "@/lib/utils/provinces";
+import { normalizeProvinceInput, PROVINCES } from "@/lib/utils/provinces";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export interface DefaultPropertyFilters {
   propertyType?: string;
@@ -21,6 +22,7 @@ export function usePropertyFilters(
 ) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { language } = useLanguage();
 
   const normalizePropertyType = (val: string | null | undefined) => {
     if (!val) return "ALL";
@@ -161,7 +163,18 @@ export function usePropertyFilters(
     if (minPrice) params.set("min_price", minPrice); else params.delete("min_price");
     if (maxPrice) params.set("max_price", maxPrice); else params.delete("max_price");
     if (area !== "ALL") params.set("popular_area", area); else params.delete("popular_area");
-    if (province !== "ALL") params.set("province", province); else params.delete("province");
+    if (province !== "ALL") {
+      const isThaiRoute =
+        language === "th" &&
+        (typeof window === "undefined" ||
+          !window.location.pathname.match(/^\/(en|zh|ru)(\/|$)/));
+      const urlProvince = isThaiRoute
+        ? province
+        : (PROVINCES[province]?.en || province);
+      params.set("province", urlProvince);
+    } else {
+      params.delete("province");
+    }
     if (nearTrain) params.set("near_train", "true"); else params.delete("near_train");
     if (petFriendly) params.set("pet_friendly", "true"); else params.delete("pet_friendly");
     if (fullyFurnished) params.set("fully_furnished", "true"); else params.delete("fully_furnished");
@@ -193,7 +206,7 @@ export function usePropertyFilters(
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
     companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, cbd, minSize, maxSize, transitStation,
-    basePath
+    basePath, language
   ]);
 
   const clearFilters = useCallback(() => {

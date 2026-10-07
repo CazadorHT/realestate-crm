@@ -16,7 +16,7 @@ function isBotOrCrawler(): boolean {
 }
 
 export function BrandIntroLoader() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleDismiss = useCallback(() => {
@@ -31,7 +31,6 @@ export function BrandIntroLoader() {
   useEffect(() => {
     // 🛡️ S-Tier Bot & Crawler Bypass: Zero delay for Googlebot, Lighthouse, and Web Vitals
     if (isBotOrCrawler()) {
-      setIsVisible(false);
       return;
     }
 
@@ -47,9 +46,10 @@ export function BrandIntroLoader() {
     }
 
     if (hasSeen && !forceIntro) {
-      setIsVisible(false);
       return;
     }
+
+    setIsVisible(true);
 
     // Auto dismiss timer
     timerRef.current = setTimeout(() => {

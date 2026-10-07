@@ -26,7 +26,7 @@ export function SimilarPropertiesClient({
   propertyType,
   compareData,
 }: SimilarPropertiesClientProps) {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
 
   return (
     <section className="py-8 md:py-12 border-t border-slate-100">
@@ -41,7 +41,7 @@ export function SimilarPropertiesClient({
           </p>
         </div>
         <Link
-          href={`/properties?type=${propertyType}`}
+          href={`${langPrefix}/properties?type=${propertyType}`}
           className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 group self-start md:self-auto"
         >
           {t("similar_properties.view_all")}{" "}

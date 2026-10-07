@@ -9,7 +9,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function CompareBar() {
   const [ids, setIds] = useState<string[]>([]);
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
 
   useEffect(() => {
     setIds(readCompareIds());
@@ -51,7 +51,7 @@ export function CompareBar() {
           </Button>
 
           <Button asChild className="h-10 text-white!">
-            <Link href={`/compare?ids=${ids.join(",")}`}>
+            <Link href={`${langPrefix}/compare?ids=${ids.join(",")}`}>
               {t("compare_bar.compare_btn")}
             </Link>
           </Button>

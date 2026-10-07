@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { MapPin, ChevronLeft, ChevronRight, Compass } from "lucide-react";
 import { m } from "framer-motion";
+import { getLangPrefix } from "@/lib/i18n";
 
 // ============================================================
 // Types
@@ -56,6 +57,7 @@ export function NearbyAreasSection({ areas, language, title, embedded }: NearbyA
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft]   = useState(false);
   const [showRight, setShowRight] = useState(true);
+  const langPrefix = getLangPrefix(language);
 
   const t = (k: string) => I18N[k]?.[language] || I18N[k]?.en || "";
   const headingText = title ?? t("title");
@@ -155,7 +157,7 @@ export function NearbyAreasSection({ areas, language, title, embedded }: NearbyA
                 className="shrink-0 snap-start w-44 sm:w-70"
               >
                 <Link
-                  href={`/areas/${item.slug}`}
+                  href={`${langPrefix}/areas/${item.slug}`}
                   className="group relative block h-36 sm:h-40 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 border border-slate-200/40"
                 >
                   {/* Image */}

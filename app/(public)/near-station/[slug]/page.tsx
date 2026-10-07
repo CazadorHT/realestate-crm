@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Train, ChevronRight, ChevronLeft, MapPin, Building2, ArrowRight, Home, DollarSign } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { formatPrioritySeoTitle, getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations, getLocalizedField } from "@/lib/i18n";
+import { getServerTranslations, getLocalizedField, getLangPrefix } from "@/lib/i18n";
 import {
   getStationBySlug,
   getPropertiesNearStation,
@@ -132,11 +132,11 @@ const formatStationName = (name: string, lang: string) => {
 
 
 export async function generateMetadata(
-  props: { params: Promise<{ slug: string }> }
+  props: { params: Promise<{ slug: string; lang?: string }> }
 ): Promise<Metadata> {
   const params = await props.params;
   const station = await getStationBySlugCached(params.slug);
-  const { language } = await getServerTranslations();
+  const { language } = await getServerTranslations(params.lang);
 
   if (!station) {
     return {
@@ -189,7 +189,7 @@ export async function generateMetadata(
 }
 
 export default async function StationDetailPage(
-  props: { params: Promise<{ slug: string }> }
+  props: { params: Promise<{ slug: string; lang?: string }> }
 ) {
   const params = await props.params;
   const station = await getStationBySlugCached(params.slug);
@@ -198,7 +198,8 @@ export default async function StationDetailPage(
     notFound();
   }
 
-  const { language } = await getServerTranslations();
+  const { language } = await getServerTranslations(params.lang);
+  const langPrefix = getLangPrefix(language);
   const localizedName = (station.label as Record<string, string>)[language] || station.label.th;
   const stationNameFormatted = formatStationName(localizedName, language);
   const gradientColor = station.lineColor ? `${station.lineColor}60` : "rgba(2, 6, 23, 0.5)";
@@ -242,9 +243,9 @@ export default async function StationDetailPage(
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: getString("breadcrumb_home"), item: siteConfig.url },
-      { "@type": "ListItem", position: 2, name: getString("breadcrumb_near_transit"), item: `${siteConfig.url}/near-station` },
-      { "@type": "ListItem", position: 3, name: stationNameFormatted, item: `${siteConfig.url}/near-station/${station.slug}` },
+      { "@type": "ListItem", position: 1, name: getString("breadcrumb_home"), item: `${siteConfig.url}${langPrefix || ""}` },
+      { "@type": "ListItem", position: 2, name: getString("breadcrumb_near_transit"), item: `${siteConfig.url}${langPrefix}/near-station` },
+      { "@type": "ListItem", position: 3, name: stationNameFormatted, item: `${siteConfig.url}${langPrefix}/near-station/${station.slug}` },
     ],
   };
 
@@ -289,7 +290,7 @@ export default async function StationDetailPage(
       <PropertySearchPage
         initialProperties={properties as any}
         initialTransitStation={`${station.label.th}|${station.transitType}`}
-        basePath={`/near-station/${station.slug}`}
+        basePath={`${langPrefix}/near-station/${station.slug}`}
       />
 
       {/* Nearby Stations on Same Line */}

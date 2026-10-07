@@ -27,7 +27,7 @@ export function StationQuickSelector({
   currentStationSlug,
   currentTransitType,
 }: StationQuickSelectorProps) {
-  const { language } = useLanguage();
+  const { language, langPrefix } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedType, setSelectedType] = useState<string>(currentTransitType);
   const [searchQuery, setSearchQuery] = useState("");
@@ -242,7 +242,7 @@ export function StationQuickSelector({
                       {filteredAllStations.map(({ station, lineColor }) => (
                         <Link
                           key={station.code}
-                          href={`/near-station/${station.slug}`}
+                          href={`${langPrefix}/near-station/${station.slug}`}
                           onClick={() => setSearchQuery("")}
                           className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all text-xs font-medium text-slate-800"
                           style={{
@@ -336,7 +336,7 @@ export function StationQuickSelector({
                         return (
                           <Link
                             key={station.code}
-                            href={`/near-station/${station.slug}`}
+                            href={`${langPrefix}/near-station/${station.slug}`}
                             className="group/item flex items-center justify-between gap-2 p-2.5 rounded-xl border transition-all text-xs font-medium w-[150px] xs:w-[170px] lg:w-auto shrink-0 lg:shrink snap-start"
                             style={isCurrent ? {
                               backgroundColor: `${activeLine.color}08`,

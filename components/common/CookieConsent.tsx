@@ -18,7 +18,7 @@ export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
   const pathname = usePathname();
   const isCRM = pathname?.includes("/protected");
 
@@ -176,7 +176,7 @@ export function CookieConsent() {
                         <p className="text-slate-600 leading-relaxed max-w-2xl text-sm md:text-base">
                           {T("common.cookie_consent.description")}{" "}
                           <Link
-                            href="/privacy-policy"
+                            href={`${langPrefix}/privacy-policy`}
                             className="text-blue-600 hover:text-blue-700 underline underline-offset-4 font-medium transition-colors"
                           >
                             {T("common.cookie_consent.privacy_policy")}
