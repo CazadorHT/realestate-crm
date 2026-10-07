@@ -1,7 +1,5 @@
 import { HeroTitle } from "@/components/public/HeroTitle";
-import dynamic from "next/dynamic";
 import {
-  Loader2,
   TrendingUp,
   ArrowRight,
   CheckCircle2,
@@ -19,20 +17,7 @@ import { HeroActions } from "./HeroActions";
 import { HeroLeftContent } from "./HeroLeftContent";
 
 
-// Client-only components that are heavy or interactive
-const SmartMatchWizard = dynamic(
-  () =>
-    import("@/components/public/SmartMatchWizard").then(
-      (mod) => mod.SmartMatchWizard,
-    ),
-  {
-    loading: () => (
-      <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 md:p-8 border border-slate-100 h-[450px] flex flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-      </div>
-    ),
-  },
-);
+import { SmartMatchWizard } from "@/components/public/SmartMatchWizard";
 
 export async function HeroSection({
   hasProperties = true,

@@ -7,6 +7,8 @@ import { enUS, th, zhCN, ru } from "date-fns/locale";
 import { Shield, FileText, Info, Phone as PhoneIcon, Home } from "lucide-react";
 import Link from "next/link";
 
+import { getSeoAlternates } from "@/lib/seo-utils";
+
 // ✅ Optimized for Google OAuth Bot: Use static-ish rendering for 100% HTML compatibility
 // This prevents "improperly formatted" errors by ensuring a fast, stable response.
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
@@ -15,7 +17,8 @@ export const revalidate = 31536000; // 1 year long-term cache (ISR with on-deman
 const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getServerTranslations();
+  const { t, language } = await getServerTranslations();
+  const langPrefix = getLangPrefix(language);
   const settings = await getSiteSettings();
   // ✅ FORCE: Match Google Cloud Console App Name exactly
   const siteName = "VC Connect Asset Co., Ltd."; 
@@ -25,6 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("privacy.hero_desc"),
     applicationName: siteName,
     robots: "index, follow",
+    alternates: getSeoAlternates(`${langPrefix}/privacy-policy`),
   };
 }
 

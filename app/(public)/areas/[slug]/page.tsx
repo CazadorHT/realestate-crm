@@ -64,19 +64,21 @@ export async function generateMetadata(
           ? `Объявления о продаже и аренде жилья в ${nameText}. Медианные цены и популярные проекты.`
           : `รวมประกาศเช่า-ขาย คอนโด บ้านเดี่ยว ทาวน์โฮม ย่าน ${nameText} เปรียบเทียบราคา สรุปสถิติทำเลน่าอยู่บน ${siteConfig.name}`);
 
-  return {
-    title,
-    description,
-    openGraph: {
+    const langPrefix = getLangPrefix(language);
+
+    return {
       title,
       description,
-      url: `${siteConfig.url}/areas/${area.slug}`,
-      siteName: siteConfig.name,
-      images: area.imageUrl ? [{ url: area.imageUrl }] : undefined,
-      type: "website",
-    },
-    alternates: getSeoAlternates(`/areas/${area.slug}`),
-  };
+      openGraph: {
+        title,
+        description,
+        url: `${siteConfig.url}${langPrefix}/areas/${area.slug}`,
+        siteName: siteConfig.name,
+        images: area.imageUrl ? [{ url: area.imageUrl }] : undefined,
+        type: "website",
+      },
+      alternates: getSeoAlternates(`${langPrefix}/areas/${area.slug}`),
+    };
 }
 
 const LOCALIZATION: Record<string, Record<string, string>> = {

@@ -174,17 +174,19 @@ export async function generateMetadata(
           : `รวมคอนโดใกล้ ${stationNameFormatted} (${station.label.en}) ทั้งเช่าและขาย คัดสรรห้องสวย แต่งครบ พร้อมเข้าอยู่ ดูรูปจริง เช็กราคาล่าสุดบน VCC Asset`
   );
 
+  const langPrefix = getLangPrefix(language);
+
   return {
     title,
     description,
     openGraph: {
       title,
       description,
-      url: `${siteConfig.url}/near-station/${station.slug}`,
+      url: `${siteConfig.url}${langPrefix}/near-station/${station.slug}`,
       siteName: siteConfig.name,
       type: "website",
     },
-    alternates: getSeoAlternates(`/near-station/${station.slug}`),
+    alternates: getSeoAlternates(`${langPrefix}/near-station/${station.slug}`),
   };
 }
 

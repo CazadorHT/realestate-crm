@@ -239,7 +239,8 @@ export async function generateMetadata({
 
   const title = getLocaleValue(service, "title", language);
   const description = getLocaleValue(service, "description", language);
-  const canonicalUrl = `${siteConfig.url}/services/${encodeURIComponent(slug)}`;
+  const langPrefix = getLangPrefix(language);
+  const canonicalUrl = `${siteConfig.url}${langPrefix}/services/${encodeURIComponent(slug)}`;
 
   return {
     title: `${title} | Premium Services`,

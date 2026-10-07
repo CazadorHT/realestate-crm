@@ -81,7 +81,8 @@ export async function generateMetadata({
       COVER_IMAGE = `${siteConfig.url}${COVER_IMAGE}`;
     }
 
-    const canonicalUrl = `${siteConfig.url}/blog/${encodeURIComponent(decodedSlug)}`;
+    const langPrefix = getLangPrefix(language);
+    const canonicalUrl = `${siteConfig.url}${langPrefix}/blog/${encodeURIComponent(decodedSlug)}`;
 
     return {
       title: `${getLocalizedField(post, "title", language)} | ${t("blog.article_label")}`,

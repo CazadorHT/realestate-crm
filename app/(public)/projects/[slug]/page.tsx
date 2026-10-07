@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight, MapPin, Building2, Calendar, LayoutGrid, CheckCircle } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { formatPrioritySeoTitle, getSeoAlternates } from "@/lib/seo-utils";
-import { getServerTranslations, getLocalizedField } from "@/lib/i18n";
+import { getServerTranslations, getLocalizedField, getLangPrefix } from "@/lib/i18n";
 import { getProjectBySlug, getPropertiesInProject, getAllProjectSlugs, getRelatedProjects } from "@/features/public/projects";
 const getProjectBySlugCached = cache(getProjectBySlug);
 import { getPopularAreas } from "@/features/public/areas";
@@ -88,18 +88,20 @@ export async function generateMetadata(
           ? `Сравнивайте цены и просматривайте объявления в ЖК ${nameText}. Полная информация о комплексе и ценах.`
           : `รวมประกาศเช่า-ขายห้องว่างในโครงการ ${bilingualName} คัดสรรห้องสวย แต่งครบ มีรูปจริง สภาพจริง เช็กราคาเช่าและขายล่าสุดบน VCC Asset`);
 
+  const langPrefix = getLangPrefix(language);
+
   return {
     title,
     description,
     openGraph: {
       title,
       description,
-      url: `${siteConfig.url}/projects/${project.slug}`,
+      url: `${siteConfig.url}${langPrefix}/projects/${project.slug}`,
       siteName: siteConfig.name,
       images: project.imageUrl ? [{ url: project.imageUrl }] : undefined,
       type: "website",
     },
-    alternates: getSeoAlternates(`/projects/${project.slug}`),
+    alternates: getSeoAlternates(`${langPrefix}/projects/${project.slug}`),
   };
 }
 

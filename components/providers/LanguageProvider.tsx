@@ -78,6 +78,9 @@ export function LanguageProvider({
     setLanguageState(currentPathLang as Language);
   } else if (!currentPathLang && prevPathLang !== null) {
     setPrevPathLang(null);
+    if (!isCrm) {
+      setLanguageState("th");
+    }
   }
 
   const setLanguage = (lang: Language) => {

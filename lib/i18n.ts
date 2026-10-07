@@ -19,26 +19,57 @@ export function getLocalizedField<T>(
 ): T {
   if (!data) return "" as any;
 
+  const normalizedLang = (language === "zh" || language?.startsWith("zh-")) ? "cn" : (language || defaultLang);
+
   // Check if we are trying to get a field that is itself a nested object containing regional translations 
   // (e.g., station.description where description is { th: "...", en: "...", ... })
   if (data[field] && typeof data[field] === "object" && !Array.isArray(data[field])) {
     const obj = data[field];
-    return (obj[language] || obj[defaultLang] || "") as any;
+    if (normalizedLang === defaultLang || normalizedLang === "th") {
+      return (obj.th || obj[defaultLang] || "") as any;
+    }
+
+    // 1. Try target language
+    const exact = obj[normalizedLang] || (normalizedLang === "cn" ? obj.zh : undefined);
+    if (exact && typeof exact === "string" && exact.trim() !== "") {
+      return exact as any;
+    }
+
+    // 2. If zh/cn or ru has no data, fallback to English first
+    if (normalizedLang !== "en") {
+      const en = obj.en;
+      if (en && typeof en === "string" && en.trim() !== "") {
+        return en as any;
+      }
+    }
+
+    // 3. Fallback to default (Thai)
+    return (obj[defaultLang] || obj.th || "") as any;
   }
 
-  // If language is default, return the base field
-  if (language === defaultLang) {
-    return data[field] || "";
+  // If language is default (Thai), return the base field directly
+  if (normalizedLang === defaultLang || normalizedLang === "th") {
+    return (data[field] || "") as any;
   }
 
-  // Try the language specific field (e.g., title_en, title_cn, title_ru)
-  const langField = `${field}_${language}`;
-  if (data[langField]) {
-    return data[langField];
+  // 1. Try the language specific field (e.g., title_en, title_cn, title_ru)
+  const langField = `${field}_${normalizedLang}`;
+  const localizedVal = data[langField] || (normalizedLang === "cn" ? data[`${field}_zh`] : undefined);
+  if (localizedVal && typeof localizedVal === "string" && localizedVal.trim() !== "") {
+    return localizedVal as any;
   }
 
-  // Fallback to base field
-  return data[field] || "";
+  // 2. If zh/cn or ru has no data, fallback to English first
+  if (normalizedLang !== "en") {
+    const enField = `${field}_en`;
+    const enVal = data[enField];
+    if (enVal && typeof enVal === "string" && enVal.trim() !== "") {
+      return enVal as any;
+    }
+  }
+
+  // 3. Fallback to base field (Thai)
+  return (data[field] || "") as any;
 }
 
 const SUPPORTED_LANGS = ["th", "en", "cn", "zh", "ru"] as const;

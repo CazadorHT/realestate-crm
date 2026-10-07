@@ -157,18 +157,20 @@ export function getLocaleValue(
   const dataObj = data as Record<string, unknown>;
   const rawValue = dataObj[field];
 
+  const normLocale = (locale === "zh" || locale?.startsWith("zh-")) ? "cn" : (locale || "th");
+
   // --- V3: Hardened JSONB Structure Support ---
   if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) {
     const localizedObj = rawValue as LocalizedValueV3;
     
     // 1. Exact locale match (Elite Priority)
-    const exactMatch = localizedObj[locale];
+    const exactMatch = localizedObj[locale] || localizedObj[normLocale];
     if (typeof exactMatch === "string" && exactMatch.trim() !== "") {
       return exactMatch;
     }
     
     // 2. Fallback to English (Global Standard)
-    if (locale !== "en") {
+    if (normLocale !== "en") {
       const enMatch = localizedObj["en"];
       if (typeof enMatch === "string" && enMatch.trim() !== "") {
         return enMatch;
@@ -178,8 +180,8 @@ export function getLocaleValue(
     // 3. Last resort: Thai (Core Default)
     const thMatch = localizedObj["th"];
     if (typeof thMatch === "string" && thMatch.trim() !== "") {
-      if (locale !== "th" && LOCALE_DICTIONARY_FALLBACKS[thMatch.trim()]) {
-        const dictionaryHit = LOCALE_DICTIONARY_FALLBACKS[thMatch.trim()][locale] || LOCALE_DICTIONARY_FALLBACKS[thMatch.trim()]["en"];
+      if (normLocale !== "th" && LOCALE_DICTIONARY_FALLBACKS[thMatch.trim()]) {
+        const dictionaryHit = LOCALE_DICTIONARY_FALLBACKS[thMatch.trim()][normLocale] || LOCALE_DICTIONARY_FALLBACKS[thMatch.trim()]["en"];
         if (dictionaryHit) return dictionaryHit;
       }
       return thMatch;
@@ -195,23 +197,23 @@ export function getLocaleValue(
   // --- Legacy: Flat Field Structure Support (title, title_en, title_cn) ---
   const baseValue = typeof rawValue === "string" ? rawValue : "";
 
-  if (locale === "th") {
+  if (normLocale === "th") {
     return baseValue;
   }
 
-  const localizedField = `${field}_${locale}`;
-  const localizedValue = dataObj[localizedField];
+  const localizedField = `${field}_${normLocale}`;
+  const localizedValue = (dataObj[localizedField] ?? (normLocale === "cn" ? dataObj[`${field}_zh`] : undefined)) as string | undefined;
 
   if (typeof localizedValue === "string" && localizedValue.trim() !== "") {
     return localizedValue;
   }
 
   // Fallback to English for flat fields
-  if (locale !== "en") {
+  if (normLocale !== "en") {
     const englishField = `${field}_en`;
     const englishValue = dataObj[englishField];
     if (typeof englishValue === "string" && englishValue.trim() !== "") {
-      return englishValue;
+      return englishValue as string;
     }
   }
 

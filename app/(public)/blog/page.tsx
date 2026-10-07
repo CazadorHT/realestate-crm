@@ -28,12 +28,13 @@ interface BlogListingPageProps {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getServerTranslations();
+  const { t, language } = await getServerTranslations();
+  const langPrefix = getLangPrefix(language);
 
   return {
     title: t("metadata.blog_title", { siteName: siteConfig.name }),
     description: t("metadata.blog_description"),
-    alternates: getSeoAlternates("/blog"),
+    alternates: getSeoAlternates(`${langPrefix}/blog`),
   };
 }
 
