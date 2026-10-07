@@ -25,12 +25,7 @@ import { getServices } from "@/features/services/actions";
 
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
-export async function generateStaticParams() {
-  const res = await getServices(1, 100);
-  return (res.data || []).map((service) => ({
-    slug: service.slug,
-  }));
-}
+
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -55,7 +50,7 @@ async function ServiceDetail({ params }: PageProps) {
   // If we are NOT in Thai, and the value is still the default Thai string or empty,
   // we use the translation key for "Contact for price".
   const isThaiFallback = language !== "th" && 
-    (localizedPrice.includes("สอบถามราคา") || !localizedPrice);
+    (!localizedPrice || (typeof localizedPrice === "string" && localizedPrice.includes("สอบถามราคา")));
 
   const displayPrice = isThaiFallback
     ? t("common.contact_for_price")

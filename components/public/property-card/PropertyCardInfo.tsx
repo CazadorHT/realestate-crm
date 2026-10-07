@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CheckSquare, Square, ChevronRight } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import {
   HiMapPin,
   HiHome,
@@ -63,10 +63,15 @@ export function PropertyCardInfo({
 }: PropertyCardInfoProps) {
   const { language, t } = useLanguage();
   const langPrefix = language === "en" ? "/en" : language === "cn" ? "/zh" : language === "ru" ? "/ru" : "";
-  const searchParams = useSearchParams();
-  const selectedStationFilter = searchParams
-    ? searchParams.get("transit_station") || ""
-    : "";
+  const [selectedStationFilter, setSelectedStationFilter] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const station = params.get("transit_station") || "";
+      if (station) setSelectedStationFilter(station);
+    }
+  }, []);
   const typeColor = getTypeColor(property.property_type);
 
   // Property type localization

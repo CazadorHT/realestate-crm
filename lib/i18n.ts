@@ -106,6 +106,8 @@ export async function getServerLanguage(explicitLocale?: string): Promise<Langua
     return normalizeLocale(explicitLocale);
   }
 
+  let xPathname: string | null = null;
+
   // 1. Check headers injected by proxy middleware
   try {
     const { headers } = await import("next/headers");
@@ -114,7 +116,7 @@ export async function getServerLanguage(explicitLocale?: string): Promise<Langua
     if (xLocale && ["th", "en", "cn", "zh", "ru"].includes(xLocale.toLowerCase())) {
       return normalizeLocale(xLocale);
     }
-    const xPathname = headerList.get("x-pathname");
+    xPathname = headerList.get("x-pathname");
     if (xPathname) {
       const firstSegment = xPathname.split("/").filter(Boolean)[0]?.toLowerCase();
       if (["en", "cn", "zh", "ru"].includes(firstSegment)) {
@@ -125,24 +127,32 @@ export async function getServerLanguage(explicitLocale?: string): Promise<Langua
     // headers() throws during static generation — fall through
   }
 
-  // 2. Try reading the cookie from the request for CRM or interactive routes
-  try {
-    const { cookies } = await import("next/headers");
-    const cookieStore = await cookies();
-    const publicLang = cookieStore.get("public-language")?.value;
-    if (publicLang) {
-      return normalizeLocale(publicLang);
+  // 2. ONLY read cookies for CRM/protected routes.
+  // On public SEO routes (ISR), calling cookies() causes Next.js to throw:
+  // "Page changed from static to dynamic at runtime, reason: cookies" which causes a 500 Server Error.
+  const isProtectedOrCrm = xPathname
+    ? (xPathname.startsWith("/protected") || xPathname.startsWith("/admin") || xPathname.startsWith("/auth"))
+    : false;
+
+  if (isProtectedOrCrm) {
+    try {
+      const { cookies } = await import("next/headers");
+      const cookieStore = await cookies();
+      const publicLang = cookieStore.get("public-language")?.value;
+      if (publicLang) {
+        return normalizeLocale(publicLang);
+      }
+      const crmLang = cookieStore.get("crm-language")?.value;
+      if (crmLang) {
+        return normalizeLocale(crmLang);
+      }
+      const langCookie = cookieStore.get("app-language")?.value;
+      if (langCookie) {
+        return normalizeLocale(langCookie);
+      }
+    } catch {
+      // cookies() throws during static generation — that's fine, fall through
     }
-    const crmLang = cookieStore.get("crm-language")?.value;
-    if (crmLang) {
-      return normalizeLocale(crmLang);
-    }
-    const langCookie = cookieStore.get("app-language")?.value;
-    if (langCookie) {
-      return normalizeLocale(langCookie);
-    }
-  } catch {
-    // cookies() throws during static generation — that's fine, fall through
   }
 
   // Default fallback for SSG/ISR static pre-rendering

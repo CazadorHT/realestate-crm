@@ -26,6 +26,7 @@ export default function robots(): MetadataRoute.Robots {
         "/*?bedrooms=",
         "/*?bathrooms=",
         "/*?ids=",
+        "/*?dpl=",
       ],
     },
     sitemap: `${baseUrl}/sitemap.xml`,

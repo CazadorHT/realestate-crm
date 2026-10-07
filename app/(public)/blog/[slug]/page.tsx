@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cache, Suspense } from "react";
 import {
   getBlogPostBySlug,
   getBlogPosts,
@@ -118,11 +118,7 @@ export async function generateMetadata({
   }
 }
 
-export async function generateStaticParams() {
-  // 🚀 Resilient On-Demand ISR: Prevents database statement timeouts (57014) from failing Vercel builds.
-  // Pages are statically rendered on first visit and cached on Edge CDN for 1 year (revalidate = 31536000) with zero database egress.
-  return [];
-}
+
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
@@ -277,27 +273,29 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {/* Contextual Inventory Linking: Recommended Properties for readers */}
       {featuredProperties && featuredProperties.length > 0 && (
-        <div className="container px-4 md:px-6 mt-16 max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8 border-b border-slate-200/80 pb-4">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-indigo-600 rounded-full"></div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900">
-                {t("property_listing.title") || "อสังหาริมทรัพย์แนะนำล่าสุด"}
-              </h2>
+        <Suspense fallback={null}>
+          <div className="container px-4 md:px-6 mt-16 max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-8 border-b border-slate-200/80 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-indigo-600 rounded-full"></div>
+                <h2 className="text-xl md:text-2xl font-bold text-slate-900">
+                  {t("property_listing.title") || "อสังหาริมทรัพย์แนะนำล่าสุด"}
+                </h2>
+              </div>
+              <Link
+                href={`${langPrefix}/properties`}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
+              >
+                {t("common.more") || "ดูทั้งหมด"} →
+              </Link>
             </div>
-            <Link
-              href={`${langPrefix}/properties`}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
-            >
-              {t("common.more") || "ดูทั้งหมด"} →
-            </Link>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProperties.map((property: any) => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProperties.map((property: any) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
-        </div>
+        </Suspense>
       )}
 
       {/* Related Articles Section (Full Width) at the bottom */}

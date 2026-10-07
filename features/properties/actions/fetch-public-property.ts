@@ -272,7 +272,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
 
   const data: PropertyDetail = {
     id: rawData.id,
-    slug: address.slug || slugOrId,
+    slug: address.slug || (details?.meta_data as any)?.slug || (rawData as any).slug || slugOrId,
     project_id: rawData.project_id,
     project: rawData.project ? {
       id: (rawData.project as any).id,
