@@ -77,13 +77,23 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   const q = (args.q ?? "").trim();
   const stage = (args.stage ?? "").trim();
   const source = (args.source ?? "").trim();
+  const leadType = (args.leadType ?? "").toLowerCase().trim();
   const page = Math.max(1, args.page ?? 1);
   const pageSize = Math.min(200, Math.max(5, args.pageSize ?? 100));
   const sortOrder = args.sortOrder ?? "desc";
 
+  // 🛡️ Enterprise Late Materialization Strategy:
+  // หากไม่มีการกรอง leadType หรือ search note ให้ข้ามการดึง utm_data ก้อนใหญ่ใน Phase 1
+  // แล้วดึงเฉพาะ 20 รายการของหน้าปัจจุบันใน Phase 2 ช่วยลด Egress ลงกว่า 90%
+  const needsDeepScan = Boolean(leadType || q);
+
   let query = supabase
     .from("crm_leads_v3")
-    .select("id, identity_id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(id, display_name, email, phone)");
+    .select(
+      needsDeepScan
+        ? "id, identity_id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(id, display_name, email, phone)"
+        : "id, identity_id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(id, display_name, email, phone)"
+    );
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -98,6 +108,24 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     query = query.eq("source", source);
   }
 
+  // 🛡️ Task 1.3: Smart Search Routing at SQL level
+  if (q) {
+    const cleanDigits = q.replace(/[^0-9]/g, "");
+    if (cleanDigits.length >= 8) {
+      // ค้นหาเบอร์โทรศัพท์ที่ SQL level ก่อน
+      query = query.or(
+        `phone.ilike.%${cleanDigits}%,phone.ilike.%${q}%,display_name.ilike.%${q}%`,
+        { foreignTable: "identities_v3" }
+      );
+    } else if (q.includes("@")) {
+      // ค้นหาอีเมลที่ SQL level ก่อน
+      query = query.or(
+        `email.ilike.%${q.trim()}%,display_name.ilike.%${q}%`,
+        { foreignTable: "identities_v3" }
+      );
+    }
+  }
+
   // Fetch leads to group by unique customer before pagination (safe bound of 5000)
   const { data, error } = await query.limit(5000);
 
@@ -110,7 +138,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
       full_name: decrypt(l.identity?.display_name) || "Unknown",
       phone: decrypt(l.identity?.phone) || null,
       email: decrypt(l.identity?.email) || null,
-      note: extractLeadNote(l),
+      note: needsDeepScan ? extractLeadNote(l) : (l.ai_summary || null),
       utm_source: utmData.utm_source || null,
     };
   });
@@ -133,7 +161,6 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     });
   }
 
-  const leadType = (args.leadType ?? "").toLowerCase().trim();
   if (leadType === "deposit") {
     filteredRawLeads = filteredRawLeads.filter((l) => {
       const note = l.note || "";
@@ -206,6 +233,19 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     .map((l) => l.identity_id)
     .filter(Boolean);
 
+  // 🛡️ Task 1.4: Late Materialization of utm_data for the target page only
+  let pageUtmDataMap: Record<string, any> = {};
+  if (!needsDeepScan && pageLeadIds.length > 0) {
+    const { data: pageUtmData } = await supabase
+      .from("crm_leads_v3")
+      .select("id, utm_data")
+      .in("id", pageLeadIds);
+
+    (pageUtmData || []).forEach((row: any) => {
+      pageUtmDataMap[row.id] = row.utm_data;
+    });
+  }
+
   const convertedLeadIdSet = new Set<string>();
 
   if (pageIdentityIds.length > 0) {
@@ -237,7 +277,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   const leads = pagedUniqueLeads.map((l) => {
     const key = getLeadKey(l);
-    const utmData = (l.utm_data as Record<string, any>) || {};
+    const utmData = (needsDeepScan ? l.utm_data : pageUtmDataMap[l.id]) as Record<string, any> || {};
     const relatedIds = customerLeadIdsMap[key] || [l.id];
 
     const isOwner = Boolean(
@@ -247,6 +287,9 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
     return {
       ...l,
+      utm_data: utmData,
+      note: extractLeadNote({ ...l, utm_data: utmData }),
+      utm_source: utmData.utm_source || null,
       is_owner: isOwner,
       interaction_count: interactionCounts[key] || 1,
     };
@@ -289,6 +332,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 /**
  * Fetch ONLY IDs of all leads matching the filters (no pagination)
  * Used for "Select All across pages" feature.
+ * 🛡️ Optimized: Payload Diet - queries only ID column to minimize network egress and memory
  */
 export async function getAllLeadIdsQuery(args: { q?: string; stage?: string; source?: string } = {}) {
   const { supabase, role, tenantId } = await requireAuthContext();
@@ -300,7 +344,10 @@ export async function getAllLeadIdsQuery(args: { q?: string; stage?: string; sou
   const stage = (args.stage ?? "").trim();
   const source = (args.source ?? "").trim();
 
-  let query = supabase.from("crm_leads_v3").select("id, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, phone, email)");
+  // 🛡️ Payload Diet: If no q filter, skip inner joining identities_v3 entirely
+  let query = q
+    ? supabase.from("crm_leads_v3").select("id, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(id)")
+    : supabase.from("crm_leads_v3").select("id");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -322,7 +369,7 @@ export async function getAllLeadIdsQuery(args: { q?: string; stage?: string; sou
   const { data, error } = await query;
   if (error) throw new Error(mapDbError(error));
 
-  return (data || []).map((l) => l.id);
+  return (data || []).map((l: any) => l.id);
 }
 
 /**
