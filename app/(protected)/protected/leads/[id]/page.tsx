@@ -341,9 +341,13 @@ export default async function LeadDetailPage({
       />
 
       {/* Top Row - Contact & Requirements (2 columns) */}
-      <div className="grid gap-6 lg:gap-8 md:grid-cols-2">
-        <LeadContactCard lead={leadV3} />
-        <LeadRequirementsCard lead={leadV3} />
+      <div className="grid gap-6 lg:gap-8 md:grid-cols-2 min-w-0">
+        <div className="min-w-0 w-full">
+          <LeadContactCard lead={leadV3} />
+        </div>
+        <div className="min-w-0 w-full">
+          <LeadRequirementsCard lead={leadV3} />
+        </div>
       </div>
 
       {/* Main Content - Dynamic Grid for 3 Section Lists */}

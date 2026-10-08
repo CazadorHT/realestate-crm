@@ -83,7 +83,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   let query = supabase
     .from("crm_leads_v3")
-    .select("id, identity_id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(id, display_name, email, phone)", { count: "exact" });
+    .select("id, identity_id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(id, display_name, email, phone)");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -91,12 +91,6 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   query = query.order("created_at", { ascending: sortOrder === "asc" });
 
-  if (q) {
-    query = query.or(
-      `display_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
-      { foreignTable: "identities_v3" }
-    );
-  }
   if (stage && stage !== "ALL") {
     query = query.eq("stage", stage);
   }
@@ -104,10 +98,8 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     query = query.eq("source", source);
   }
 
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
-  const { data, count, error } = await query.range(from, to);
+  // Fetch leads to group by unique customer before pagination (safe bound of 5000)
+  const { data, error } = await query.limit(5000);
 
   if (error) throw new Error(mapDbError(error));
 
@@ -123,11 +115,27 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     };
   });
 
-  const leadType = (args.leadType ?? "").toLowerCase().trim();
-
+  // Filter by q (in memory to support both encrypted and decrypted fields)
   let filteredRawLeads = rawLeads;
-  if (leadType === "deposit") {
+  if (q) {
+    const lowerQ = q.toLowerCase();
     filteredRawLeads = rawLeads.filter((l) => {
+      const name = (l.full_name || "").toLowerCase();
+      const phone = (l.phone || "").toLowerCase();
+      const email = (l.email || "").toLowerCase();
+      const note = (l.note || "").toLowerCase();
+      return (
+        name.includes(lowerQ) ||
+        phone.includes(lowerQ) ||
+        email.includes(lowerQ) ||
+        note.includes(lowerQ)
+      );
+    });
+  }
+
+  const leadType = (args.leadType ?? "").toLowerCase().trim();
+  if (leadType === "deposit") {
+    filteredRawLeads = filteredRawLeads.filter((l) => {
       const note = l.note || "";
       const utmData = (l.utm_data as Record<string, any>) || {};
       return (
@@ -139,7 +147,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
       );
     });
   } else if (leadType === "inquiry") {
-    filteredRawLeads = rawLeads.filter((l) => {
+    filteredRawLeads = filteredRawLeads.filter((l) => {
       const note = l.note || "";
       const utmData = (l.utm_data as Record<string, any>) || {};
       const isDeposit = (
@@ -156,6 +164,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   // Group by name/phone so each unique customer appears once in the leads table
   const uniqueLeadsMap = new Map<string, any>();
   const interactionCounts: Record<string, number> = {};
+  const customerLeadIdsMap: Record<string, string[]> = {};
 
   const getLeadKey = (l: any) => {
     const cleanName = (l.full_name || "").toLowerCase().trim();
@@ -165,44 +174,75 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     return `id:${l.identity_id || l.id}`;
   };
 
-  const convertedLeadIdSet = new Set<string>();
-
-  const { data: ownerIdentities } = await supabase
-    .from("identities_v3")
-    .select("id, social_links")
-    .eq("category", 2);
-
-  (ownerIdentities || []).forEach((o: any) => {
-    const conv = o.social_links?.converted_from_lead_id;
-    if (conv) convertedLeadIdSet.add(conv);
-  });
-
-  const { data: convertTimelines } = await supabase
-    .from("activity_timeline_v3")
-    .select("target_id, metadata")
-    .eq("target_entity", "LEAD");
-
-  (convertTimelines || []).forEach((t: any) => {
-    if (t.metadata?.converted_to_owner_id && t.target_id) {
-      convertedLeadIdSet.add(t.target_id);
-    }
-  });
-
   filteredRawLeads.forEach((l) => {
     const key = getLeadKey(l);
     interactionCounts[key] = (interactionCounts[key] || 0) + 1;
+    if (!customerLeadIdsMap[key]) {
+      customerLeadIdsMap[key] = [];
+    }
+    customerLeadIdsMap[key].push(l.id);
+
     if (!uniqueLeadsMap.has(key)) {
       uniqueLeadsMap.set(key, l);
     }
   });
 
-  const leads = Array.from(uniqueLeadsMap.values()).map((l) => {
+  const allUniqueLeads = Array.from(uniqueLeadsMap.values());
+  const totalCount = allUniqueLeads.length;
+
+  // 📄 Paginate on UNIQUE CUSTOMERS (e.g. exactly 20 unique customers per page)
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize;
+  const pagedUniqueLeads = allUniqueLeads.slice(from, to);
+
+  // Collect all lead IDs and identity IDs belonging to the unique customers on this page
+  const pageLeadIds: string[] = [];
+  pagedUniqueLeads.forEach((l) => {
+    const key = getLeadKey(l);
+    const relatedIds = customerLeadIdsMap[key] || [l.id];
+    pageLeadIds.push(...relatedIds);
+  });
+  const pageIdentityIds = pagedUniqueLeads
+    .map((l) => l.identity_id)
+    .filter(Boolean);
+
+  const convertedLeadIdSet = new Set<string>();
+
+  if (pageIdentityIds.length > 0) {
+    const { data: ownerIdentities } = await supabase
+      .from("identities_v3")
+      .select("id, social_links")
+      .in("id", pageIdentityIds)
+      .eq("category", 2);
+
+    (ownerIdentities || []).forEach((o: any) => {
+      const conv = o.social_links?.converted_from_lead_id;
+      if (conv) convertedLeadIdSet.add(conv);
+    });
+  }
+
+  if (pageLeadIds.length > 0) {
+    const { data: convertTimelines } = await supabase
+      .from("activity_timeline_v3")
+      .select("target_id, metadata")
+      .eq("target_entity", "LEAD")
+      .in("target_id", pageLeadIds);
+
+    (convertTimelines || []).forEach((t: any) => {
+      if (t.metadata?.converted_to_owner_id && t.target_id) {
+        convertedLeadIdSet.add(t.target_id);
+      }
+    });
+  }
+
+  const leads = pagedUniqueLeads.map((l) => {
     const key = getLeadKey(l);
     const utmData = (l.utm_data as Record<string, any>) || {};
+    const relatedIds = customerLeadIdsMap[key] || [l.id];
 
     const isOwner = Boolean(
       utmData.converted_to_owner_id ||
-      convertedLeadIdSet.has(l.id)
+      relatedIds.some((id) => convertedLeadIdSet.has(id))
     );
 
     return {
@@ -211,15 +251,14 @@ export async function getLeadsQuery(args: ListArgs = {}) {
       interaction_count: interactionCounts[key] || 1,
     };
   }) as unknown as LeadWithJoins[];
-  const leadIds = leads.map((l) => l.id);
 
   // fetch deals for these leads and compute counts client-side
   let dealsCountMap: Record<string, number> = {};
-  if (leadIds.length > 0) {
+  if (pageLeadIds.length > 0) {
     const { data: dealsForLeads, error: dealsErr } = await supabase
       .from("crm_deals_v3")
       .select("id, lead_id")
-      .in("lead_id", leadIds);
+      .in("lead_id", pageLeadIds);
 
     if (!dealsErr && dealsForLeads) {
       (dealsForLeads as { lead_id: string }[]).forEach((d) => {
@@ -228,15 +267,20 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     }
   }
 
-  // attach counts to leads
-  const leadsWithCounts = leads.map((l) => ({
-    ...l,
-    deals_count: dealsCountMap[l.id] ?? 0,
-  }));
+  // attach counts to leads (aggregating deals across all leads of this customer)
+  const leadsWithCounts = leads.map((l) => {
+    const key = getLeadKey(l);
+    const relatedIds = customerLeadIdsMap[key] || [l.id];
+    const totalDeals = relatedIds.reduce((sum, id) => sum + (dealsCountMap[id] || 0), 0);
+    return {
+      ...l,
+      deals_count: totalDeals,
+    };
+  });
 
   return {
     data: leadsWithCounts as LeadWithJoins[],
-    count: count ?? 0,
+    count: totalCount,
     page,
     pageSize,
   };

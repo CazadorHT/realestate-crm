@@ -41,22 +41,22 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
   const isEn = language === "en";
 
   return (
-    <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-blue-900/5">
+    <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-blue-900/5 min-w-0 w-full">
       <div className="flex items-center gap-4 p-5 border-b border-slate-50 bg-slate-50/20">
         <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-100">
           <Target className="h-5 w-5 text-white" />
         </div>
-        <div>
-          <h3 className="font-semibold text-lg text-slate-800 tracking-tight">
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-lg text-slate-800 tracking-tight truncate">
             {isEn ? "Lead Requirements" : "ความต้องการของลูกค้า"}
           </h3>
-          <p className="text-[11px] text-slate-400 font-medium">
+          <p className="text-[11px] text-slate-400 font-medium truncate">
             {isEn ? "Property specifications and desired features" : "สเปกและคุณสมบัติอสังหาฯ ที่กำลังมองหา"}
           </p>
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-6 min-w-0 w-full">
         <div className="space-y-6">
           {/* Location & Budget */}
           <div className="grid gap-4">

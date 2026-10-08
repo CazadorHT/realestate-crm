@@ -67,7 +67,7 @@ export async function convertLeadToOwnerAction(leadId: string): Promise<ConvertL
     let propertyType = utmData.property_type || null;
 
     if (details.includes("[ฝากทรัพย์]")) {
-      const imgMatch = details.match(/Image:\s*(https?:\/\/[^\s\n\r]+)/i);
+      const imgMatch = details.match(/(?:Image|Photo):\s*(https?:\/\/[^\s\n\r]+)/i);
       if (imgMatch && imgMatch[1] && imgMatch[1].trim() !== "-") {
         imageUrl = imgMatch[1].trim();
       }
