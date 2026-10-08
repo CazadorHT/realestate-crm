@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { 
   leadStageLabelNullable, 
   leadSourceLabelNullable, 
@@ -15,7 +17,9 @@ import {
   Mail, 
   Globe, 
   StickyNote,
-  Compass
+  Compass,
+  ImageIcon,
+  ExternalLink
 } from "lucide-react";
 import { FaLine, FaWhatsapp } from "react-icons/fa";
 import { IoLogoWechat } from "react-icons/io5";
@@ -36,6 +40,96 @@ interface LeadContactCardProps {
     whatsapp: string | null;
     utm_data?: any;
   };
+}
+
+interface LeadAttachedImageProps {
+  url: string;
+  isDeposit?: boolean;
+  isEn?: boolean;
+}
+
+function LeadAttachedImage({ url, isDeposit, isEn }: LeadAttachedImageProps) {
+  const isFb = url.includes("platform-lookaside.fbsbx.com") || url.includes("fbcdn.net");
+  const initialUrl = isFb ? `/api/avatar-proxy?url=${encodeURIComponent(url)}` : url;
+
+  const [currentSrc, setCurrentSrc] = useState(initialUrl);
+  const [hasTriedProxy, setHasTriedProxy] = useState(isFb);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleError = () => {
+    if (!hasTriedProxy) {
+      // 🛡️ Fallback: Route through server-side avatar proxy to bypass Referer / CORS restrictions
+      setCurrentSrc(`/api/avatar-proxy?url=${encodeURIComponent(url)}`);
+      setHasTriedProxy(true);
+      setIsLoading(true);
+    } else {
+      // Both direct and proxy failed
+      setLoadFailed(true);
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="pt-2 min-w-0 w-full max-w-full">
+      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-2">
+        {isDeposit 
+          ? (isEn ? "Attached Property Photo" : "รูปภาพทรัพย์สินที่แนบมา")
+          : (isEn ? "Attached Photo" : "รูปภาพที่แนบมา")}
+      </span>
+
+      <div className="relative rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-50 max-w-sm w-full shadow-sm group min-h-[176px]">
+        {loadFailed ? (
+          <div className="h-44 w-full flex flex-col items-center justify-center p-4 text-center bg-slate-50/90 border border-dashed border-slate-200 rounded-2xl">
+            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
+              <ImageIcon className="w-5 h-5 text-slate-400" />
+            </div>
+            <p className="text-xs font-medium text-slate-600 mb-2">
+              {isEn ? "Unable to preview image directly" : "ไม่สามารถโหลดรูปภาพตัวอย่างได้"}
+            </p>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-semibold transition-colors"
+            >
+              <span>{isEn ? "Open original photo" : "คลิกดูรูปภาพต้นฉบับ"}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        ) : (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block relative w-full h-44 overflow-hidden"
+          >
+            {isLoading && (
+              <div className="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center">
+                <ImageIcon className="w-6 h-6 text-slate-300" />
+              </div>
+            )}
+            <img
+              src={currentSrc}
+              alt="Attached Attachment"
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
+              className={cn(
+                "w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300",
+                isLoading ? "opacity-0" : "opacity-100"
+              )}
+              onLoad={() => setIsLoading(false)}
+              onError={handleError}
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1.5">
+              <span>{isEn ? "Click to view original image" : "คลิกดูรูปภาพต้นฉบับ"}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </div>
+          </a>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function LeadContactCard({ lead }: LeadContactCardProps) {
@@ -248,22 +342,22 @@ export function LeadContactCard({ lead }: LeadContactCardProps) {
             let imageUrl: string | null = null;
             const isDeposit = text.includes("[ฝากทรัพย์]");
 
-            // Check for explicit Photo: / Image: / Picture: / รูปภาพ: / รูป:
-            const photoOrImgMatch = text.match(/(?:Photo|Image|Picture|รูปภาพ|รูป)\s*:\s*(https?:\/\/[^\s\n\r]+)/i);
+            // Check for explicit Photo: / Image: / Picture: / รูปภาพ: / รูป: / รูปภาพที่แนบมา:
+            const photoOrImgMatch = text.match(/(?:Photo|Image|Picture|รูปภาพที่แนบมา|รูปภาพทรัพย์สิน|รูปภาพ|รูป)\s*[:=]\s*(https?:\/\/[^\s\n\r"'>]+)/i);
             if (photoOrImgMatch && photoOrImgMatch[1] && photoOrImgMatch[1].trim() !== "-") {
               imageUrl = photoOrImgMatch[1].trim();
             }
 
-            // Fallback for general image URLs (like LINE profile CDN or standard extensions)
+            // Fallback for general image URLs (like LINE profile CDN, line-apps, googleusercontent, or standard extensions)
             if (!imageUrl) {
-              const genericImgMatch = text.match(/(https?:\/\/[^\s\n\r]+(?:\.(?:jpg|jpeg|png|webp|heic|gif)|line-scdn\.net|googleusercontent\.com)[^\s\n\r]*)/i);
+              const genericImgMatch = text.match(/(https?:\/\/[^\s\n\r"'>]+(?:\.(?:jpg|jpeg|png|webp|heic|gif)|line-scdn\.net|line-apps\.com|googleusercontent\.com|supabase\.co[^\s\n\r"'>]*\/storage)[^\s\n\r"'>]*)/i);
               if (genericImgMatch && genericImgMatch[1]) {
                 imageUrl = genericImgMatch[1].trim();
               }
             }
 
             if (imageUrl) {
-              imageUrl = imageUrl.replace(/[),.;]+$/, "");
+              imageUrl = imageUrl.replace(/[),.;"'\]>]+$/, "").trim();
             }
 
             // Clean message/details
@@ -276,14 +370,14 @@ export function LeadContactCard({ lead }: LeadContactCardProps) {
               } else {
                 details = details
                   .replace(/\[ฝากทรัพย์\]/gi, "")
-                  .replace(/(?:Photo|Image|Picture|รูปภาพ|รูป)\s*:\s*(?:https?:\/\/[^\s\n\r]+|-)/gi, "")
+                  .replace(/(?:Photo|Image|Picture|รูปภาพที่แนบมา|รูปภาพทรัพย์สิน|รูปภาพ|รูป)\s*[:=]\s*(?:https?:\/\/[^\s\n\r"'>]+|-)/gi, "")
                   .trim();
               }
             } else {
               // Strip Photo: or Image: lines so long URLs don't bloat and stretch the text box
               if (photoOrImgMatch) {
                 details = details
-                  .replace(/(?:Photo|Image|Picture|รูปภาพ|รูป)\s*:\s*https?:\/\/[^\s\n\r]+/gi, "")
+                  .replace(/(?:Photo|Image|Picture|รูปภาพที่แนบมา|รูปภาพทรัพย์สิน|รูปภาพ|รูป)\s*[:=]\s*https?:\/\/[^\s\n\r"'>]+/gi, "")
                   .trim();
               } else if (imageUrl) {
                 details = details.replace(imageUrl, "").trim();
@@ -360,31 +454,7 @@ export function LeadContactCard({ lead }: LeadContactCardProps) {
                 )}
 
                 {imageUrl && (
-                  <div className="pt-2 min-w-0 w-full max-w-full">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-2">
-                      {isDeposit 
-                        ? (isEn ? "Attached Property Photo" : "รูปภาพทรัพย์สินที่แนบมา")
-                        : (isEn ? "Attached Photo" : "รูปภาพที่แนบมา")}
-                    </span>
-                    <a
-                      href={imageUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 group hover:opacity-95 transition-all max-w-sm w-full shadow-sm"
-                    >
-                      <img
-                        src={imageUrl}
-                        alt="Attached Attachment"
-                        className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLElement).style.display = "none";
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
-                        <span>{isEn ? "Click to view original image" : "คลิกดูรูปภาพต้นฉบับ"}</span>
-                      </div>
-                    </a>
-                  </div>
+                  <LeadAttachedImage url={imageUrl} isDeposit={isDeposit} isEn={isEn} />
                 )}
               </div>
             );
