@@ -6,6 +6,8 @@ interface PropertyMapSectionProps {
   propertyId?: string;
   propertyTitle?: string;
   language?: Language;
+  compact?: boolean;
+  className?: string;
 }
 
 /**
@@ -47,17 +49,20 @@ export async function PropertyMapSection({
   propertyId,
   propertyTitle,
   language,
+  compact = false,
+  className = "",
 }: PropertyMapSectionProps) {
   // Resolve link on server to avoid client-side CORS issues
   const googleMapsLink = await resolveGoogleMapsLink(rawLink);
 
   return (
-    <section id="map-section" className="scroll-mt-20">
+    <section id="map-section" className={`scroll-mt-20 ${className}`}>
       <PropertyMapClient 
         googleMapsLink={googleMapsLink}
         propertyId={propertyId}
         propertyTitle={propertyTitle}
         language={language}
+        compact={compact}
       />
     </section>
   );

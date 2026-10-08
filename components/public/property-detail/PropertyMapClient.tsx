@@ -14,6 +14,8 @@ interface PropertyMapClientProps {
   propertyId?: string;
   propertyTitle?: string;
   language?: Language;
+  compact?: boolean;
+  className?: string;
 }
 
 export function PropertyMapClient({
@@ -21,6 +23,8 @@ export function PropertyMapClient({
   propertyId,
   propertyTitle,
   language: customLanguage,
+  compact = false,
+  className = "",
 }: PropertyMapClientProps) {
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
@@ -74,13 +78,21 @@ export function PropertyMapClient({
     : null;
 
   return (
-    <>
-      <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
-        <LuMap className="w-5 h-5 text-blue-600" /> {t("property_map.title")}
+    <div className={className}>
+      <h3
+        className={`border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-semibold text-blue-900 mb-4 flex items-center gap-2 ${
+          compact ? "text-base md:text-lg" : "text-lg md:text-xl mb-6"
+        }`}
+      >
+        <LuMap className="w-5 h-5 text-blue-600 shrink-0" /> {t("property_map.title")}
       </h3>
 
-      <div className="space-y-4">
-        <div className="w-full h-[300px] md:h-[450px] bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative group">
+      <div className={compact ? "space-y-3" : "space-y-4"}>
+        <div
+          className={`w-full bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative group ${
+            compact ? "h-[220px] md:h-[240px]" : "h-[300px] md:h-[450px]"
+          }`}
+        >
           {googleMapsLink && embedUrl ? (
             <iframe
               width="100%"
@@ -120,14 +132,18 @@ export function PropertyMapClient({
                   updateAIScore(10);
                 } catch (e) {}
               }}
-              className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-6 py-2.5 rounded-full text-sm font-semibold transition-all border border-slate-200 shadow-sm hover:shadow-md cursor-pointer group"
+              className={`inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 rounded-full font-semibold transition-all border border-slate-200 shadow-xs hover:shadow-md cursor-pointer group ${
+                compact
+                  ? "w-full py-2.5 px-4 text-xs xl:text-sm"
+                  : "px-6 py-2.5 text-sm"
+              }`}
             >
-              <MapPin className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
+              <MapPin className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform shrink-0" />
               {t("property_map.open_google_maps")}
             </a>
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

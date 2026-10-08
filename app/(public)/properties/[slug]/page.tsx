@@ -173,15 +173,19 @@ export default async function PublicPropertyDetailPage(props: {
             />
             <hr className="border-slate-100" />
             <PropertyAmenities features={features} />
-            <hr className="border-slate-100" />
-            <Suspense fallback={<MapSkeleton />}>
-              <PropertyMapSection
-                propertyId={data.id}
-                propertyTitle={data.title}
-                googleMapsLink={data.google_maps_link}
-                language={language as any}
-              />
-            </Suspense>
+
+            {/* Mobile / Tablet Only Map: stays on left content flow */}
+            <div className="xl:hidden">
+              <hr className="border-slate-100 my-6" />
+              <Suspense fallback={<MapSkeleton />}>
+                <PropertyMapSection
+                  propertyId={data.id}
+                  propertyTitle={data.title}
+                  googleMapsLink={data.google_maps_link}
+                  language={language as any}
+                />
+              </Suspense>
+            </div>
           </div>
 
           {/* Right Sidebar */}
@@ -196,7 +200,8 @@ export default async function PublicPropertyDetailPage(props: {
               airbnbMonthlyPrice={data.airbnb_monthly_price}
               airbnbMinContract={data.airbnb_min_contract}
             />
-            <div className="flex-1 xl:flex-none min-w-0 w-full flex flex-col xl:sticky xl:top-24 self-start">
+            {/* Sticky Container for Agent Card + Map (Desktop xl+) - Bottom-pinned smart sticky */}
+            <div className="flex-1 xl:flex-none min-w-0 w-full flex flex-col xl:sticky xl:top-[min(6rem,calc(100vh-100%-1.5rem))] self-start space-y-6">
               <AgentSidebar
                 agentName={agent?.full_name}
                 agentImage={getPublicAvatarUrl(agent?.avatar_url || "")}
@@ -210,6 +215,19 @@ export default async function PublicPropertyDetailPage(props: {
                 property={data}
                 shareUrl={shareUrl}
               />
+
+              {/* Desktop Only Map: Sticky together with Agent Sidebar */}
+              <div className="hidden xl:block">
+                <Suspense fallback={<MapSkeleton />}>
+                  <PropertyMapSection
+                    propertyId={data.id}
+                    propertyTitle={data.title}
+                    googleMapsLink={data.google_maps_link}
+                    language={language as any}
+                    compact={true}
+                  />
+                </Suspense>
+              </div>
             </div>
           </aside>
         </div>
