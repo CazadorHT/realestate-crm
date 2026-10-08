@@ -133,7 +133,8 @@ export function LanguageProvider({
           return;
         }
       } else {
-        // 1. URL Path Locale takes absolute highest priority on public routes
+        // On public routes, URL path is the strict single source of truth:
+        // /en -> English, /zh -> Chinese, /ru -> Russian, / (root) -> Thai
         const firstSegment = pathname.split("/").filter(Boolean)[0]?.toLowerCase();
         if (firstSegment === "en") {
           setLanguageState("en");
@@ -148,21 +149,8 @@ export function LanguageProvider({
           return;
         }
 
-        // 2. Public Portal Language (from saved preference or cookie)
-        const savedPublicLang = (localStorage.getItem("public-language") || getCookie("public-language") || localStorage.getItem("app-language") || getCookie("app-language")) as Language;
-        if (savedPublicLang && ["th", "en", "cn", "ru"].includes(savedPublicLang)) {
-          setLanguageState(savedPublicLang);
-          return;
-        }
-
-        // Auto-detect browser language for public portal if no preference is saved
-        const browserLang = navigator.language?.split("-")[0];
-        const supportedLangs: Language[] = ["th", "en", "cn", "ru"];
-        if (supportedLangs.includes(browserLang as Language)) {
-          setLanguageState(browserLang as Language);
-          localStorage.setItem("public-language", browserLang);
-          document.cookie = `public-language=${browserLang}; path=/; max-age=31536000; SameSite=Lax`;
-        }
+        // Unprefixed public routes (e.g. /, /about, /properties) are strictly Thai
+        setLanguageState("th");
       }
     } catch {
       // Fallback
