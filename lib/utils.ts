@@ -97,8 +97,18 @@ export function getBaseUrl(request: Request) {
   const host = request.headers.get("host");
   const protocol = host?.includes("localhost") ? "http" : "https";
 
-  // Fallback for cases without Host header (e.g., Edge functions or background tasks)
-  if (!host) return process.env.NEXT_PUBLIC_SITE_URL || "https://vccasset.com";
-
   return `${protocol}://${host}`;
 }
+
+/**
+ * Split an array into chunks of specified size
+ */
+export function chunkArray<T>(items: T[], size: number): T[][] {
+  if (!items || items.length === 0 || size <= 0) return [];
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+

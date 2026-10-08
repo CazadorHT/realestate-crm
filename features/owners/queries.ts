@@ -3,7 +3,37 @@ import { requireAuthContext } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { mapDbError } from "@/lib/db-error";
 import type { Owner } from "./types";
-import { decrypt } from "@/lib/crypto";
+import { decrypt, generateBlindIndex } from "@/lib/crypto";
+
+function buildOwnerSearchFilter(q: string): string | null {
+  const trimmed = q.trim();
+  if (!trimmed) return null;
+
+  const conditions: string[] = [];
+  const blindIndex = generateBlindIndex(trimmed);
+  if (blindIndex) {
+    conditions.push(`social_links->>full_name_hash.eq.${blindIndex}`);
+    conditions.push(`social_links->>phone_hash.eq.${blindIndex}`);
+  }
+
+  const cleanDigits = trimmed.replace(/[^0-9]/g, "");
+  if (cleanDigits.length >= 8) {
+    const cleanPhoneHash = generateBlindIndex(cleanDigits);
+    if (cleanPhoneHash && cleanPhoneHash !== blindIndex) {
+      conditions.push(`social_links->>phone_hash.eq.${cleanPhoneHash}`);
+    }
+  }
+
+  conditions.push(`display_name.ilike.%${trimmed}%`);
+  conditions.push(`phone.ilike.%${trimmed}%`);
+  conditions.push(`line_id.ilike.%${trimmed}%`);
+
+  if (cleanDigits && cleanDigits !== trimmed) {
+    conditions.push(`phone.ilike.%${cleanDigits}%`);
+  }
+
+  return conditions.join(",");
+}
 
 export async function getOwnerById(id: string): Promise<Owner | null> {
   const { supabase, tenantId } = await requireAuthContext();
@@ -66,7 +96,8 @@ export async function getOwners(): Promise<Owner[]> {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
   }
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+  // Safe guard: Cap dropdown lookup to 200 recent records to prevent unbounded memory usage
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(200);
 
   if (error || !data) {
     console.error("Error fetching owners:", error);
@@ -111,7 +142,8 @@ export async function getOwnerProperties(ownerId: string) {
     query = query.eq("tenant_id", tenantId);
   }
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+  // Safe guard: Cap property listings per owner to 100 to prevent payload blowout
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(100);
 
   if (error || !data) {
     console.error("Error fetching owner properties:", error);
@@ -149,8 +181,6 @@ export type GetOwnersParams = {
   pageSize?: number;
   allBranches?: boolean;
 };
-
-import { generateBlindIndex } from "@/lib/crypto";
 
 export async function getOwnersQuery({
   q,
@@ -190,15 +220,9 @@ export async function getOwnersQuery({
 
   // Search by keyword
   if (q) {
-    const blindIndex = generateBlindIndex(q);
-    if (blindIndex) {
-      query = query.or(
-        `social_links->>full_name_hash.eq.${blindIndex},social_links->>phone_hash.eq.${blindIndex},display_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`
-      );
-    } else {
-      query = query.or(
-        `display_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`
-      );
+    const searchFilter = buildOwnerSearchFilter(q);
+    if (searchFilter) {
+      query = query.or(searchFilter);
     }
   }
 
@@ -368,9 +392,10 @@ export async function getAllOwnerIdsQuery(args: { q?: string; allBranches?: bool
   }
 
   if (q) {
-    query = query.or(
-      `display_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`,
-    );
+    const searchFilter = buildOwnerSearchFilter(q);
+    if (searchFilter) {
+      query = query.or(searchFilter);
+    }
   }
 
   const { data, error } = await query;

@@ -7,6 +7,7 @@ import { getSystemConfig } from "@/lib/actions/system-config";
 import { recordAuditLog } from "@/lib/audit";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { mapDbError } from "@/lib/db-error";
+import { chunkArray } from "@/lib/utils";
 
 export interface ConvertLeadToOwnerResult {
   success: boolean;
@@ -251,12 +252,11 @@ export async function bulkConvertLeadsToOwnersAction(leadIds: string[]) {
     const errors: string[] = [];
 
     // 🛡️ Enterprise Chunking: แปลงทีละ batch ย่อย 5 รายการขนานกัน เพื่อความเร็วและปลอดภัยต่อ connection pool
-    const { chunkArray } = await import("./bulk-actions");
     const chunks = chunkArray(leadIds, 5);
 
     for (const batch of chunks) {
       const results = await Promise.all(
-        batch.map((id) => convertLeadToOwnerAction(id))
+        batch.map((id: string) => convertLeadToOwnerAction(id))
       );
       for (const res of results) {
         if (res.success) {

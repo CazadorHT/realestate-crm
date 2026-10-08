@@ -53,7 +53,8 @@ export async function getOwnersAction(allBranches = false) {
       .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
       .eq("category", 2)
       .eq("role", "OWNER")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(300);
 
     const config = await getSystemConfig();
     const isMultiTenant = config.multi_tenant_enabled;
@@ -165,57 +166,98 @@ export async function createOwnerAction(input: CreateOwnerInput) {
       targetTenantId = ctx.tenantId || null;
     }
 
-    let query = ctx.supabase
-      .from("identities_v3")
-      .select("id, display_name, phone, line_id")
-      .eq("category", 2)
-      .eq("role", "OWNER");
+    const inputPhoneNormalized = validated.phone?.trim().replace(/[- ]/g, "") || null;
+    const inputLineNormalized = validated.line_id?.trim().toLowerCase() || null;
+    const phoneHash = inputPhoneNormalized ? generateBlindIndex(inputPhoneNormalized) : null;
 
-    if (targetTenantId) {
-      query = query.or(`tenant_id.eq.${targetTenantId},tenant_id.is.null`);
-    } else {
-      query = query.is("tenant_id", null);
+    // 🛡️ O(1) Fast Duplicate Check via Blind Index
+    if (phoneHash) {
+      let dupQuery = ctx.supabase
+        .from("identities_v3")
+        .select("id, display_name")
+        .eq("category", 2)
+        .eq("role", "OWNER")
+        .eq("social_links->>phone_hash", phoneHash);
+
+      if (targetTenantId) {
+        dupQuery = dupQuery.or(`tenant_id.eq.${targetTenantId},tenant_id.is.null`);
+      } else {
+        dupQuery = dupQuery.is("tenant_id", null);
+      }
+
+      const { data: dupOwner } = await dupQuery.maybeSingle();
+
+      const targetDup = Array.isArray(dupOwner)
+        ? (dupOwner.length > 0 ? dupOwner[0] : null)
+        : dupOwner;
+
+      if (targetDup) {
+        const ownerName = decrypt(targetDup.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
+        return {
+          success: false,
+          code: "DUPLICATE",
+          message: isEn
+            ? `This phone number is already registered in the system (Owner: K. ${ownerName})`
+            : `เบอร์โทรศัพท์นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+          duplicateId: targetDup.id,
+          duplicateName: ownerName,
+        };
+      }
     }
 
-    const { data: existingOwners } = await query;
+    // Secondary fallback for legacy unindexed records (scoped check)
+    if (inputPhoneNormalized || inputLineNormalized) {
+      let legacyQuery = ctx.supabase
+        .from("identities_v3")
+        .select("id, display_name, phone, line_id")
+        .eq("category", 2)
+        .eq("role", "OWNER")
+        .is("social_links->>phone_hash", null)
+        .limit(200);
 
-    if (existingOwners) {
-      const inputPhoneNormalized = validated.phone?.trim().replace(/[- ]/g, "");
-      const inputLineNormalized = validated.line_id?.trim().toLowerCase();
+      if (targetTenantId) {
+        legacyQuery = legacyQuery.or(`tenant_id.eq.${targetTenantId},tenant_id.is.null`);
+      } else {
+        legacyQuery = legacyQuery.is("tenant_id", null);
+      }
 
-      for (const row of existingOwners) {
-        const decryptedPhone = decrypt(row.phone);
-        const decryptedLine = decrypt(row.line_id);
+      const { data: legacyOwners } = await legacyQuery;
 
-        if (inputPhoneNormalized && decryptedPhone) {
-          const dbPhoneNormalized = decryptedPhone.trim().replace(/[- ]/g, "");
-          if (dbPhoneNormalized === inputPhoneNormalized) {
-            const ownerName = decrypt(row.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
-            return {
-              success: false,
-              code: "DUPLICATE",
-              message: isEn
-                ? `This phone number is already registered in the system (Owner: K. ${ownerName})`
-                : `เบอร์โทรศัพท์นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
-              duplicateId: row.id,
-              duplicateName: ownerName,
-            };
+      if (legacyOwners) {
+        for (const row of legacyOwners) {
+          const decryptedPhone = decrypt(row.phone);
+          const decryptedLine = decrypt(row.line_id);
+
+          if (inputPhoneNormalized && decryptedPhone) {
+            const dbPhoneNormalized = decryptedPhone.trim().replace(/[- ]/g, "");
+            if (dbPhoneNormalized === inputPhoneNormalized) {
+              const ownerName = decrypt(row.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
+              return {
+                success: false,
+                code: "DUPLICATE",
+                message: isEn
+                  ? `This phone number is already registered in the system (Owner: K. ${ownerName})`
+                  : `เบอร์โทรศัพท์นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+                duplicateId: row.id,
+                duplicateName: ownerName,
+              };
+            }
           }
-        }
 
-        if (inputLineNormalized && decryptedLine) {
-          const dbLineNormalized = decryptedLine.trim().toLowerCase();
-          if (dbLineNormalized === inputLineNormalized) {
-            const ownerName = decrypt(row.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
-            return {
-              success: false,
-              code: "DUPLICATE",
-              message: isEn
-                ? `This Line ID is already registered in the system (Owner: K. ${ownerName})`
-                : `Line ID นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
-              duplicateId: row.id,
-              duplicateName: ownerName,
-            };
+          if (inputLineNormalized && decryptedLine) {
+            const dbLineNormalized = decryptedLine.trim().toLowerCase();
+            if (dbLineNormalized === inputLineNormalized) {
+              const ownerName = decrypt(row.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
+              return {
+                success: false,
+                code: "DUPLICATE",
+                message: isEn
+                  ? `This Line ID is already registered in the system (Owner: K. ${ownerName})`
+                  : `Line ID นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+                duplicateId: row.id,
+                duplicateName: ownerName,
+              };
+            }
           }
         }
       }
@@ -228,7 +270,7 @@ export async function createOwnerAction(input: CreateOwnerInput) {
       owner_type: validated.owner_type,
       created_by: ctx.user.id,
       full_name_hash: generateBlindIndex(validated.full_name),
-      phone_hash: generateBlindIndex(validated.phone),
+      phone_hash: phoneHash || generateBlindIndex(validated.phone),
     };
 
     const { data: owner, error } = await ctx.supabase

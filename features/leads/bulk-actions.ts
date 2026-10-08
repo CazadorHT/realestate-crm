@@ -5,24 +5,13 @@ import { requireAuthContext, assertStaff, authzFail } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
+import { chunkArray } from "@/lib/utils";
 
 export type BulkDeleteResult = {
   success: boolean;
   deletedCount?: number;
   message?: string;
 };
-
-/**
- * Helper to split an array into chunks of specified size
- */
-export function chunkArray<T>(items: T[], size: number): T[][] {
-  if (!items || items.length === 0 || size <= 0) return [];
-  const chunks: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    chunks.push(items.slice(i, i + size));
-  }
-  return chunks;
-}
 
 /**
  * Bulk delete leads - ลบหลายลีดพร้อมกัน (Enterprise Chunked & Safe Execution)

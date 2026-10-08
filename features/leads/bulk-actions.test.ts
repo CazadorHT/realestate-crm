@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { chunkArray } from "./bulk-actions";
+import { chunkArray } from "@/lib/utils";
 
 describe("features/leads/bulk-actions", () => {
   describe("chunkArray", () => {

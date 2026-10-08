@@ -46,12 +46,11 @@ describe("Owners Module - Actions", () => {
   });
 
   it("should block creation if phone number already exists", async () => {
-    // Mock the duplicate search query to return an existing owner with the same phone
+    // Mock the blind index duplicate search query to return an existing owner with the same phone
     mockSupabase.mockTableResult("identities_v3", [
       {
+        id: "existing-owner-id",
         display_name: encrypt("Existing Owner"),
-        phone: encrypt("0812345678"),
-        line_id: encrypt("existing.line"),
       },
     ]);
 
@@ -67,9 +66,12 @@ describe("Owners Module - Actions", () => {
   });
 
   it("should block creation if line_id already exists", async () => {
-    // Mock the duplicate search query to return an existing owner with the same line_id
+    // 1. First query (phone_hash check) finds no match
+    mockSupabase.mockTableResult("identities_v3", []);
+    // 2. Second query (legacy scoped check) returns existing owner with matching line_id
     mockSupabase.mockTableResult("identities_v3", [
       {
+        id: "existing-owner-id",
         display_name: encrypt("Existing Owner"),
         phone: encrypt("0899999999"),
         line_id: encrypt("duplicate.line"),
@@ -88,9 +90,11 @@ describe("Owners Module - Actions", () => {
   });
 
   it("should successfully create owner if phone and line_id are unique", async () => {
-    // Mock the duplicate search query to return empty results (no duplicates)
+    // 1. First query (phone_hash check) returns empty
     mockSupabase.mockTableResult("identities_v3", []);
-    // Mock the insert response
+    // 2. Second query (legacy check) returns empty
+    mockSupabase.mockTableResult("identities_v3", []);
+    // 3. Third query (insert response) returns new owner
     mockSupabase.mockTableResult("identities_v3", { id: "new-owner-id" });
 
     const result = await createOwnerAction({
