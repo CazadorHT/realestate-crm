@@ -8,7 +8,9 @@ import { purgeCloudflareCache } from "@/lib/cloudflare";
  */
 export async function refreshProjectStatsView(supabase: SupabaseClient) {
   try {
-    await supabase.rpc("refresh_project_property_stats");
+    if (typeof supabase.rpc === "function") {
+      await supabase.rpc("refresh_project_property_stats");
+    }
   } catch (error) {
     console.error("[RPC] Failed to refresh project property stats view:", error);
   }
@@ -18,20 +20,35 @@ export async function refreshProjectStatsView(supabase: SupabaseClient) {
     revalidatePath("/projects");
     revalidatePath("/");
     revalidatePath("/", "layout");
+    revalidatePath("/api/public/popular-areas");
+    revalidatePath("/api/public/properties");
     
-    try {
-      revalidateTag("projects", "seconds");
-      revalidateTag("public-data", "seconds");
-      revalidateTag("properties", "seconds");
-    } catch {
-      // Fallback for single-arg revalidateTag signatures
-      (revalidateTag as any)("projects");
-      (revalidateTag as any)("public-data");
-      (revalidateTag as any)("properties");
+    const tagsToRevalidate = [
+      "projects",
+      "public-data",
+      "properties",
+      "popular-areas",
+      "provinces",
+      "public-properties",
+      "property-facets",
+    ];
+
+    for (const tag of tagsToRevalidate) {
+      try {
+        revalidateTag(tag, "seconds");
+      } catch {
+        (revalidateTag as any)(tag);
+      }
     }
   } catch (error) {
     console.error("[Revalidate] Error revalidating paths/tags:", error);
   }
 
-  purgeCloudflareCache(["/", "/projects", "/properties"]).catch((e) => console.error("[Cloudflare] Auto-purge failed:", e));
+  purgeCloudflareCache([
+    "/",
+    "/projects",
+    "/properties",
+    "/api/public/popular-areas",
+    "/api/public/properties",
+  ]).catch((e) => console.error("[Cloudflare] Auto-purge failed:", e));
 }

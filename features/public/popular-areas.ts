@@ -120,12 +120,35 @@ export const getPopularAreasAction = unstable_cache(
         ภูเก็ต: ["ภูเก็ต", "Phuket"],
       };
 
-      // 1. ดึงสถิติจริงผ่านตารางสรุปวิวโครงการทันที (เบาหวิว ไม่กินแบนด์วิธ)
-      const { data: statsData, error: statsError } = await client
-        .from("mv_project_property_stats")
-        .select("primary_popular_area, property_count, price_min, rental_min");
+      // 1. ดึงสถิติจำนวนทรัพย์ตามย่านจากตาราง properties โดยตรง (เฉพาะคอลัมน์ popular_area สำหรับทรัพย์สถานะ ACTIVE)
+      // ขนาดข้อมูลเพียงไม่กี่ KB และมี unstable_cache คลุมไว้ จึงเป็น Zero Egress สำหรับผู้ใช้งานทั่วไป
+      const targetProvinces = (province && provinceMap[province])
+        ? provinceMap[province]
+        : (province ? [province] : bkkVicinity);
 
-      if (statsError) throw statsError;
+      let propQuery = client
+        .from("properties")
+        .select("popular_area")
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null)
+        .not("popular_area", "is", null);
+
+      if (targetProvinces.length > 0) {
+        propQuery = propQuery.in("province", targetProvinces);
+      }
+
+      const { data: propRows, error: propErr } = await propQuery;
+      if (propErr) {
+        console.error("Error fetching active property counts by area:", propErr.message);
+      }
+
+      const areaCounts = new Map<string, number>();
+      for (const r of propRows || []) {
+        const area = (r.popular_area as string)?.trim().toLowerCase();
+        if (area) {
+          areaCounts.set(area, (areaCounts.get(area) || 0) + 1);
+        }
+      }
 
       // 2. ดึงข้อมูล Master Data ของย่านยอดนิยม โดยกรองตามเงื่อนไขจังหวัดที่ส่งมาจากหน้าบ้าน
       let areasQuery = client
@@ -141,21 +164,14 @@ export const getPopularAreasAction = unstable_cache(
 
       const { data: areaMaster } = await areasQuery;
 
-      // 3. กรองเอาเฉพาะย่านที่มีจำนวนทรัพย์จริงก่อนเพื่อจัดอันดับหา Top 8 ย่านแรก
+      // 3. กรองเอาเฉพาะย่านที่มีจำนวนทรัพย์จริงก่อนเพื่อจัดอันดับหา Top 16 ย่านแรก
       const preMappedAreas = (areaMaster || []).map((area: any) => {
         const areaNameTh = typeof area.name === "string" ? area.name : area.name?.th || "";
         const areaNameEn = typeof area.name === "string" ? null : area.name?.en || null;
         const areaNameCn = typeof area.name === "string" ? null : area.name?.cn || null;
         const areaNameRu = typeof area.name === "string" ? null : area.name?.ru || null;
 
-        let totalCount = 0;
-        if (statsData) {
-          for (const s of statsData) {
-            if (s.primary_popular_area && s.primary_popular_area.trim().toLowerCase() === areaNameTh.trim().toLowerCase()) {
-              totalCount += Number(s.property_count || 0);
-            }
-          }
-        }
+        const totalCount = areaCounts.get(areaNameTh.trim().toLowerCase()) || 0;
 
         return {
           id: area.id,

@@ -178,7 +178,7 @@ export function FeaturedProjectsSection({
                 return titleStr;
               })()}
             </h2>
-            <p className="text-base md:text-lg text-slate-550 font-medium">
+            <p className="text-base md:text-lg text-slate-500 font-medium">
               {getPageString("subtitle")}
             </p>
           </m.div>
@@ -195,13 +195,13 @@ export function FeaturedProjectsSection({
         {/* Carousel Container */}
         <div className="relative group/carousel w-full">
           {/* Left/Right Edge Fades to indicate scrollability */}
-          <div className={`absolute left-0 top-0 bottom-6 w-20 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showLeftArrow ? "opacity-100" : "opacity-0"}`} />
-          <div className={`absolute right-0 top-0 bottom-6 w-20 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showRightArrow ? "opacity-100" : "opacity-0"}`} />
+          <div className={`absolute left-0 top-0 bottom-6 w-20 bg-linear-to-r from-slate-50 to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showLeftArrow ? "opacity-100" : "opacity-0"}`} />
+          <div className={`absolute right-0 top-0 bottom-6 w-20 bg-linear-to-l from-slate-50 to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showRightArrow ? "opacity-100" : "opacity-0"}`} />
 
           {/* Left Arrow Button */}
           <button
             onClick={() => scroll("left")}
-            className={`absolute -left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 hover:text-blue-600 active:scale-95 transition-all duration-300 z-20 cursor-pointer hidden md:flex ${
+            className={`absolute -left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg hidden md:flex items-center justify-center text-slate-700 hover:text-blue-600 active:scale-95 transition-all duration-300 z-20 cursor-pointer ${
               showLeftArrow ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
             }`}
             aria-label="Scroll left"
@@ -212,7 +212,7 @@ export function FeaturedProjectsSection({
           {/* Right Arrow Button */}
           <button
             onClick={() => scroll("right")}
-            className={`absolute -right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 hover:text-blue-600 active:scale-95 transition-all duration-300 z-20 cursor-pointer hidden md:flex ${
+            className={`absolute -right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg hidden md:flex items-center justify-center text-slate-700 hover:text-blue-600 active:scale-95 transition-all duration-300 z-20 cursor-pointer ${
               showRightArrow ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
             }`}
             aria-label="Scroll right"
@@ -278,7 +278,7 @@ export function FeaturedProjectsSection({
                     className="group bg-white rounded-3xl overflow-hidden border border-slate-200/70 hover:border-slate-300 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col w-72 md:w-80 h-full"
                   >
                     {/* Project Image with Progressive Blur-Up */}
-                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 shrink-0">
+                    <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-100 shrink-0">
                       {proj.imageUrl ? (
                         <Image
                           src={proj.imageUrl}
@@ -298,7 +298,7 @@ export function FeaturedProjectsSection({
                           }
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-150 flex items-center justify-center text-slate-300">
+                        <div className="w-full h-full bg-linear-to-br from-slate-50 to-slate-100 flex items-center justify-center text-slate-300">
                           <Building2 className="w-12 h-12 stroke-[1.5]" />
                         </div>
                       )}
@@ -314,17 +314,17 @@ export function FeaturedProjectsSection({
                     {/* Project Info */}
                     <div className="p-5 flex-1 flex flex-col justify-between text-left">
                       <div>
-                        <h3 className="font-extrabold text-slate-800 text-sm group-hover:text-blue-600 transition-colors line-clamp-1">
+                        <h3 className="font-extrabold text-slate-800 text-base group-hover:text-blue-600 transition-colors line-clamp-1">
                           {nameText}
                         </h3>
                         {proj.developer && (
-                          <p className="text-[10px] text-slate-400 mt-0.5 font-medium">
+                          <p className="text-xs text-slate-500 mt-0.5 font-medium">
                             {getPageString("developer")}: {proj.developer}
                           </p>
                         )}
-                        <p className="text-[10px] text-slate-500 mt-2.5 flex items-center gap-1 line-clamp-1">
+                        <p className="text-xs text-slate-500 mt-2.5 flex items-center gap-1 min-w-0">
                           <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span>{locationText}</span>
+                          <span className="truncate">{locationText}</span>
                         </p>
                       </div>
                       

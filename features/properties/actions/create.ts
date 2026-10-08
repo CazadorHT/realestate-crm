@@ -616,9 +616,11 @@ export async function createPropertyAction(
       "/api/syndication/feed/facebook",
     ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
+    revalidateTag("projects", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
 
     // 🚀 Step 6: Background Job (Non-blocking)
     await (inngest.send({

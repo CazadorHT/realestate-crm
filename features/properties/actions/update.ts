@@ -720,6 +720,9 @@ export async function updatePropertyAction(
     revalidateTag("public-properties", "seconds");
     revalidateTag("property-facets", "seconds");
     revalidateTag("meta-catalog-feed", "seconds");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("projects", "seconds");
+    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
     purgeCloudflareCache([
       `/properties/${seoData.slug}`,
       `/en/properties/${seoData.slug}`,
@@ -730,6 +733,7 @@ export async function updatePropertyAction(
       ...categoryPaths,
       "/",
       "/api/public/properties",
+      "/api/public/popular-areas",
       "/api/syndication/feed/meta",
       "/api/syndication/feed/facebook",
     ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));

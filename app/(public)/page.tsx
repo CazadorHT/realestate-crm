@@ -325,9 +325,13 @@ export default async function LandingPage(props: { locale?: string } = {}) {
       )}
 
       {/* FEATURED PROJECTS CAROUSEL */}
-      {projects && projects.length > 0 && (
-        <FeaturedProjectsSection projects={projects.slice(0, 10)} language={language} />
-      )}
+      {(() => {
+        // แสดงเฉพาะโครงการที่มียูนิตว่าง (กรองก่อน slice เพื่อให้ได้ครบ 10 การ์ด)
+        const featuredProjects = (projects || []).filter((p) => p.propertyCount > 0).slice(0, 10);
+        return featuredProjects.length > 0 ? (
+          <FeaturedProjectsSection projects={featuredProjects} language={language} />
+        ) : null;
+      })()}
       
       {/* BELOW THE FOLD: Dynamic / Lazy with realistic height placeholders */}
       <div className={initialProperties && initialProperties.length > 0 ? "min-h-[1000px] md:min-h-[1100px] flex flex-col" : "py-12 flex flex-col"}>

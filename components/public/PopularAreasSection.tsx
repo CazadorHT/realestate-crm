@@ -651,7 +651,7 @@ export function PopularAreasSection({
                             alt={it.popular_area}
                             fill
                             sizes="(max-width: 640px) 220px, 260px"
-                            className={`object-cover transition-all duration-700 ease-out group-hover:scale-108 ${
+                            className={`object-cover brightness-110 transition-all duration-700 ease-out group-hover:scale-108 ${
                               isImgLoaded
                                 ? "blur-0 opacity-100 scale-100"
                                 : "blur-sm opacity-0 scale-105"
@@ -664,21 +664,21 @@ export function PopularAreasSection({
                             }
                           />
                           {/* Lightweight Gradients (No Backdrop Filters) */}
-                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent" />
+                          <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-300" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/5 via-45% to-transparent" />
                         </div>
 
                         <div className="relative p-5 sm:p-6 h-[160px] sm:h-[180px] flex flex-col justify-end">
                           {/* Area Name */}
-                          <div className="transform transition-transform duration-300 -translate-y-8 lg:translate-y-0 lg:group-hover:-translate-y-8">
-                            <h3 className="text-white text-lg sm:text-xl font-bold tracking-tight drop-shadow-md truncate">
+                          <div className="mb-2">
+                            <h3 className="text-white text-lg sm:text-xl font-bold tracking-tight truncate [text-shadow:0_1px_2px_rgba(0,0,0,0.8),0_2px_10px_rgba(0,0,0,0.6)]">
                               {getLocaleValue(it, "popular_area", language)}
                             </h3>
                           </div>
 
-                          {/* Info Row: Mobile visible always, Desktop reveal on Hover */}
-                          <div className="absolute bottom-4 sm:bottom-5 left-5 sm:left-6 right-5 sm:right-6 flex items-center justify-between opacity-100 lg:opacity-0 lg:group-hover:opacity-100 translate-y-0 lg:translate-y-2 lg:group-hover:translate-y-0 transition-all duration-300 gap-3">
-                            <span className="bg-slate-900/80 border border-white/20 text-white/90 text-[10px] sm:text-[11px] font-semibold px-2.5 sm:px-3 py-1 rounded-full shadow-xs truncate max-w-[65%]">
+                          {/* Info Row: Always visible */}
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="bg-white/95 border border-white text-slate-900 text-[10px] sm:text-[11px] font-bold px-2.5 sm:px-3 py-1 rounded-full shadow-md truncate max-w-[65%]">
                               {it.count.toLocaleString()}{" "}
                               {t("property_listing.found_suffix")}
                             </span>
@@ -686,7 +686,7 @@ export function PopularAreasSection({
                               <span className="hidden sm:inline truncate max-w-[80px]">
                                 {t("home.popular_areas.explore")}
                               </span>
-                              <ArrowRight className="h-3 w-3 shrink-0 transition-transform duration-200 lg:group-hover:translate-x-1" />
+                              <ArrowRight className="h-3 w-3 shrink-0 transition-transform duration-200 group-hover:translate-x-1" />
                             </div>
                           </div>
                         </div>

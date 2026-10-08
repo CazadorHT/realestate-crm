@@ -62,9 +62,10 @@ describe("Public Data - Popular Areas (เทสโหดๆ แบบไม่�
 
     it("should aggregate popular areas with cover images in public mode", async () => {
       mockSupabase
-        .mockTableResult("mv_project_property_stats", [
-          { primary_popular_area: "Asoke", property_count: 2, price_min: 5000000, rental_min: 20000 },
-          { primary_popular_area: "Thonglor", property_count: 1, price_min: 8000000, rental_min: 35000 },
+        .mockTableResult("properties", [
+          { popular_area: "Asoke" },
+          { popular_area: "Asoke" },
+          { popular_area: "Thonglor" },
         ])
         .mockTableResult("popular_areas_v3", [
           { id: "a1", name: { th: "Asoke", en: "Asoke" }, slug: "asoke", image_url: "http://img.com/asoke.jpg", province: "กรุงเทพมหานคร", is_active: true },
