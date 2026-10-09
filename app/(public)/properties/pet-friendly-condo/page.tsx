@@ -101,9 +101,11 @@ export async function generateMetadata(props: {
   const canonicalUrl = `${siteConfig.url}${langPrefix}/properties/pet-friendly-condo`;
 
   return {
-    title: t("metadata.pet_friendly_condo_title", {
-      siteName: siteConfig.name,
-    }),
+    title: {
+      absolute: t("metadata.pet_friendly_condo_title", {
+        siteName: siteConfig.name,
+      }),
+    },
     description: t("metadata.pet_friendly_condo_description"),
     keywords: [
       // คอนโดมิเนียมเลี้ยงสัตว์ได้

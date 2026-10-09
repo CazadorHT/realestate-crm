@@ -92,7 +92,9 @@ export async function generateMetadata(props: {
   const canonicalUrl = `${siteConfig.url}${langPrefix}/properties/prime-cbd`;
 
   return {
-    title: t("metadata.prime_cbd_title", { siteName: siteConfig.name }),
+    title: {
+      absolute: t("metadata.prime_cbd_title", { siteName: siteConfig.name }),
+    },
     description: t("metadata.prime_cbd_description"),
     keywords: [
       // ย่าน CBD หลัก & New CBD

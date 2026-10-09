@@ -106,7 +106,9 @@ export async function generateMetadata(props: {
   const canonicalUrl = `${siteConfig.url}${langPrefix}/properties/office-for-rent`;
 
   return {
-    title: t("metadata.office_for_rent_title", { siteName: siteConfig.name }),
+    title: {
+      absolute: t("metadata.office_for_rent_title", { siteName: siteConfig.name }),
+    },
     description: t("metadata.office_for_rent_description"),
     keywords: [
       "ออฟฟิศให้เช่า",

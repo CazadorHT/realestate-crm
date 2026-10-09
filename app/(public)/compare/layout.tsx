@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "เปรียบเทียบทรัพย์ | Your Real Estate Company",
+  title: "เปรียบเทียบทรัพย์",
   description: "เปรียบเทียบราคา ทำเล และรายละเอียดของทรัพย์ที่คุณสนใจ",
   robots: {
     index: false,

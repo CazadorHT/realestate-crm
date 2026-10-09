@@ -60,7 +60,9 @@ export async function generateMetadata(props: {
   const canonicalUrl = `${siteConfig.url}/${normalizedLang}`;
 
   return {
-    title: t("metadata.home_title", { siteName: siteConfig.name }),
+    title: {
+      absolute: t("metadata.home_title", { siteName: siteConfig.name }),
+    },
     description: t("metadata.home_description"),
     alternates: {
       canonical: canonicalUrl,

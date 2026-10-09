@@ -12,7 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const langPrefix = getLangPrefix(language);
 
   return {
-    title: t("metadata.services_title", { siteName: siteConfig.name }),
+    title: {
+      absolute: t("metadata.services_title", { siteName: siteConfig.name }),
+    },
     description: t("metadata.services_description"),
     alternates: getSeoAlternates(`${langPrefix}/services`),
   };

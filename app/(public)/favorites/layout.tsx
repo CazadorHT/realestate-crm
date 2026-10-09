@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "รายการโปรด | Your Real Estate Company",
+  title: "รายการโปรด",
   description: "รายการทรัพย์สินที่คุณบันทึกไว้ ดูบ้าน คอนโด สำนักงานออฟฟิศที่คุณสนใจ",
   robots: {
     index: false,

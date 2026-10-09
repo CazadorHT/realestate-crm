@@ -12,7 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const { t, language } = await getServerTranslations();
   const langPrefix = getLangPrefix(language);
   return {
-    title: t("metadata.contact_title", { siteName: siteConfig.name }),
+    title: {
+      absolute: t("metadata.contact_title", { siteName: siteConfig.name }),
+    },
     description: t("metadata.contact_description"),
     alternates: getSeoAlternates(`${langPrefix}/contact`),
   };

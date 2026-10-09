@@ -13,7 +13,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = t("metadata.favorites_description");
 
   return {
-    title,
+    title: {
+      absolute: title,
+    },
     description,
     openGraph: {
       title,

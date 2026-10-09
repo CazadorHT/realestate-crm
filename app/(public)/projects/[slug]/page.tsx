@@ -91,7 +91,9 @@ export async function generateMetadata(
   const langPrefix = getLangPrefix(language);
 
   return {
-    title,
+    title: {
+      absolute: title,
+    },
     description,
     openGraph: {
       title,

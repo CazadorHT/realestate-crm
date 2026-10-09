@@ -24,7 +24,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteName = "VC Connect Asset Co., Ltd."; 
 
   return {
-    title: `${t("privacy.title")} | ${siteName}`,
+    title: {
+      absolute: `${t("privacy.title")} | ${siteName}`,
+    },
     description: t("privacy.hero_desc"),
     applicationName: siteName,
     robots: "index, follow",

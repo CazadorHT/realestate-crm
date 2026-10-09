@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: `สมัครสมาชิก | ${siteConfig.name}`,
+  title: "สมัครสมาชิก",
   description: `เข้าร่วมครอบครัว ${siteConfig.name}`,
 };
 

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: `เข้าสู่ระบบ | ${siteConfig.name}`,
+  title: "เข้าสู่ระบบ",
   description: siteConfig.description,
 };
 

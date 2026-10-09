@@ -22,7 +22,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteName = "VC Connect Asset Co., Ltd.";
 
   return {
-    title: `${t("terms.title")} | ${siteName}`,
+    title: {
+      absolute: `${t("terms.title")} | ${siteName}`,
+    },
     description: t("terms.hero_desc"),
     applicationName: siteName,
     robots: "index, follow",

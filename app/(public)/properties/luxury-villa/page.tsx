@@ -96,7 +96,9 @@ export async function generateMetadata(props: {
   const canonicalUrl = `${siteConfig.url}${langPrefix}/properties/luxury-villa`;
 
   return {
-    title: t("metadata.luxury_villa_title", { siteName: siteConfig.name }),
+    title: {
+      absolute: t("metadata.luxury_villa_title", { siteName: siteConfig.name }),
+    },
     description: t("metadata.luxury_villa_description"),
     keywords: [
       "บ้านหรู",

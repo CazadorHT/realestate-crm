@@ -114,7 +114,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const currentLocale = localeMap[language] || "th_TH";
 
   return {
-    title: t("metadata.home_title", { siteName: siteConfig.name }),
+    title: {
+      absolute: t("metadata.home_title", { siteName: siteConfig.name }),
+    },
     description: t("metadata.home_description"),
     alternates: getSeoAlternates("/"),
     openGraph: {

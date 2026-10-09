@@ -102,7 +102,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = t("metadata.near_station_description");
 
   return {
-    title,
+    title: {
+      absolute: title,
+    },
     description,
     openGraph: {
       title,
