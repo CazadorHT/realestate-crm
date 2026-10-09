@@ -13,9 +13,24 @@ vi.mock('@/features/ai-monitor/actions', () => ({
   logAiUsage: vi.fn().mockResolvedValue({ success: true }),
 }));
 
-vi.mock('./storage-service', () => ({
-  uploadBlogImage: vi.fn().mockResolvedValue({ success: true, data: { publicUrl: 'https://test.com/img.png' } }),
+vi.mock('@/lib/services/blog', () => ({
+  getBlogCategories: vi.fn().mockResolvedValue([]),
 }));
+
+vi.mock('@/lib/supabase/server', () => {
+  const queryObj = {
+    eq: () => queryObj,
+    limit: () => Promise.resolve({ data: [] }),
+    then: (resolve: any) => resolve({ data: [] }),
+  };
+  return {
+    createPublicClient: vi.fn(() => ({
+      from: () => ({
+        select: () => queryObj,
+      }),
+    })),
+  };
+});
 
 // ⚡ MOCK AI RESPONSE
 vi.mock('@/lib/ai/gemini', () => ({

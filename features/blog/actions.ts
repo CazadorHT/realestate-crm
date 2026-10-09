@@ -960,6 +960,43 @@ export async function generateBlogPostAction(
       finalTaskId = uuidv4();
     }
 
+    // 🛡️ SEO Safety Guardrail 1: Prevent Programmatic Spam penalty by checking 24h creation volume
+    let quotaWarning = "";
+    let cannibalizationNotice = "";
+    try {
+      const supabase = await createClient();
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count: dailyCount } = await supabase
+        .from("cms_content_v3")
+        .select("id", { count: "exact", head: true })
+        .eq("content_type", "BLOG")
+        .gte("created_at", oneDayAgo);
+
+      if (dailyCount && dailyCount >= 8) {
+        quotaWarning = ` (💡 คำแนะนำ SEO: มีการสร้างบทความไปแล้ว ${dailyCount} บทความในรอบ 24 ชม. แนะนำทยอยเผยแพร่วันละ 3-5 บทความ เพื่อรักษาความน่าเชื่อถือกับ Google)`;
+      }
+
+      // 🛡️ SEO Safety Guardrail 2: Keyword Cannibalization Pre-check
+      const rawKeywords = keyword.trim().split(/\s+/).filter(w => w.length >= 3);
+      if (rawKeywords.length > 0) {
+        const firstToken = rawKeywords[0];
+        const { data: existingSimilars } = await supabase
+          .from("cms_content_v3")
+          .select("title, slug")
+          .eq("content_type", "BLOG")
+          .or(`title->>th.ilike.%${firstToken}%,slug.ilike.%${firstToken}%`)
+          .limit(1);
+
+        if (existingSimilars && existingSimilars.length > 0) {
+          const sim = existingSimilars[0];
+          const simTitle = typeof sim.title === "object" && sim.title ? (sim.title as any).th || (sim.title as any).en : sim.title;
+          cannibalizationNotice = ` (⚠️ ตรวจพบหัวข้อใกล้เคียง: "${simTitle}" แนะนำให้อัปเดตบทความเดิมแทน เพื่อเลี่ยง Keyword Cannibalization)`;
+        }
+      }
+    } catch {
+      // Non-blocking guardrail check
+    }
+
     // 🚀 Step 2: Trigger Inngest Background Worker (TRUE Non-blocking)
     // We don't await this if we want it to be super fast, 
     // but for stability we'll try to send it and catch immediate network errors
@@ -991,7 +1028,7 @@ export async function generateBlogPostAction(
       
       return { 
         success: true, 
-        message: "ระบบกำลังเจนบทความในพื้นหลัง คุณสามารถปิดหน้าต่างนี้ได้เลยครับ",
+        message: `ระบบกำลังสร้างบทความในพื้นหลัง คุณสามารถปิดหน้าต่างนี้ได้เลยครับ${quotaWarning}${cannibalizationNotice}`,
         taskId: finalTaskId 
       };
     } catch (inngestError: any) {

@@ -182,15 +182,84 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // 3. Fetch Published Blogs (Cached long-term, purged on-demand)
+  // 3. Fetch Published Blogs (Multilingual supported)
   const blogs = await getAllBlogSlugs();
-  const blogRoutes: MetadataRoute.Sitemap = blogs.map((blog: { slug: string; updated_at: string; cover_image?: string }) => ({
-    url: `${baseUrl}/blog/${blog.slug}`,
-    lastModified: blog.updated_at ? new Date(blog.updated_at) : new Date(),
-    changeFrequency: "monthly",
-    priority: 0.6,
-    images: blog.cover_image ? [blog.cover_image] : undefined,
-  }));
+  const blogRoutes: MetadataRoute.Sitemap = [];
+
+  for (const blog of blogs) {
+    const rawSlug = encodeURIComponent(blog.slug);
+    const lastMod = blog.updated_at ? new Date(blog.updated_at) : new Date();
+    const images = blog.cover_image ? [blog.cover_image] : undefined;
+
+    const alternatesLanguages: Record<string, string> = {
+      th: `${baseUrl}/blog/${rawSlug}`,
+      "x-default": `${baseUrl}/blog/${rawSlug}`,
+    };
+
+    if (blog.has_en) {
+      alternatesLanguages.en = `${baseUrl}/en/blog/${rawSlug}`;
+    }
+    if (blog.has_zh) {
+      alternatesLanguages["zh-Hans"] = `${baseUrl}/zh/blog/${rawSlug}`;
+    }
+    if (blog.has_ru) {
+      alternatesLanguages.ru = `${baseUrl}/ru/blog/${rawSlug}`;
+    }
+
+    // Default (Thai) route
+    blogRoutes.push({
+      url: `${baseUrl}/blog/${rawSlug}`,
+      lastModified: lastMod,
+      changeFrequency: "monthly",
+      priority: 0.7,
+      images,
+      alternates: {
+        languages: alternatesLanguages,
+      },
+    });
+
+    // English Route
+    if (blog.has_en) {
+      blogRoutes.push({
+        url: `${baseUrl}/en/blog/${rawSlug}`,
+        lastModified: lastMod,
+        changeFrequency: "monthly",
+        priority: 0.6,
+        images,
+        alternates: {
+          languages: alternatesLanguages,
+        },
+      });
+    }
+
+    // Chinese Route
+    if (blog.has_zh) {
+      blogRoutes.push({
+        url: `${baseUrl}/zh/blog/${rawSlug}`,
+        lastModified: lastMod,
+        changeFrequency: "monthly",
+        priority: 0.6,
+        images,
+        alternates: {
+          languages: alternatesLanguages,
+        },
+      });
+    }
+
+    // Russian Route
+    if (blog.has_ru) {
+      blogRoutes.push({
+        url: `${baseUrl}/ru/blog/${rawSlug}`,
+        lastModified: lastMod,
+        changeFrequency: "monthly",
+        priority: 0.6,
+        images,
+        alternates: {
+          languages: alternatesLanguages,
+        },
+      });
+    }
+  }
 
   // 4. Fetch Active Services
   const services = await getAllServiceSlugs();

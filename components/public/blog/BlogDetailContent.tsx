@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { User, ChevronDown, ChevronUp } from "lucide-react";
+import { User, ChevronDown, ChevronUp, ShieldAlert } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
 import { ShareButtons } from "@/components/public/ShareButtons";
@@ -232,8 +232,33 @@ export function BlogDetailContent({
         </div>
       )}
 
+      {/* Legal & Financial Disclaimer */}
+      <div className="mt-8 p-4 sm:p-5 rounded-xl bg-amber-50/60 border border-amber-200/80 text-amber-900/90 text-xs sm:text-sm leading-relaxed flex items-start gap-3">
+        <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div>
+          <span className="font-semibold block mb-0.5 text-amber-950">
+            {language === "en"
+              ? "Legal & Financial Disclaimer"
+              : language === "cn"
+              ? "法律与免责声明"
+              : language === "ru"
+              ? "Отказ от ответственности"
+              : "ข้อสงวนสิทธิ์และความคุ้มครอง (Disclaimer)"}
+          </span>
+          <p className="text-amber-800/90">
+            {language === "en"
+              ? "Information, statistics, and estimated prices/yields in this article are provided for informational and educational purposes only and do not constitute legal or financial advice. Prices and terms are subject to change by developers. Please verify all details with official representatives or qualified professionals before entering into any transaction."
+              : language === "cn"
+              ? "本文所载之信息、市场统计及预估价格/回报率仅供参考，不构成任何法律或财务投资建议。实际价格及优惠政策以开发商或产权所有人最新规定为准，交易前请咨询专业顾问核实。"
+              : language === "ru"
+              ? "Информация, статистика и ориентировочные цены/доходность в этой статье носят исключительно ознакомительный характер и не являются финансовой или юридической консультацией. Условия и цены могут меняться. Пожалуйста, уточняйте детали у специалистов."
+              : "ข้อมูล ตัวเลขสถิติ และการประมาณการราคา/ผลตอบแทนในบทความนี้ มีวัตถุประสงค์เพื่อให้ข้อมูลเบื้องต้นเท่านั้น ไม่ถือเป็นคำแนะนำทางการเงินหรือการลงทุนอย่างเป็นทางการ ข้อมูลราคาและโปรโมชั่นอาจมีการเปลี่ยนแปลงตามนโยบายของโครงการ กรุณาตรวจสอบเอกสารและเงื่อนไขจริงกับผู้เชี่ยวชาญก่อนทำธุรกรรม"}
+          </p>
+        </div>
+      </div>
+
       {/* Author Bio */}
-      <div className="mt-10 md:my-12 pt-8 border-t border-slate-200 ">
+      <div className="mt-8 md:my-10 pt-8 border-t border-slate-200 ">
         <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4  p-5 sm:p-6 bg-linear-to-br from-slate-50 to-blue-50/30 rounded-2xl border border-slate-200">
           <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md shrink-0">
             {author.avatar ? (

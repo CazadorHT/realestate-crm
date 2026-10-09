@@ -238,25 +238,39 @@ export async function getRelatedPosts(
 }
 
 /**
- * Get all blog slugs for sitemap generation (Cached 1 year)
+ * Get all blog slugs for sitemap generation (Cached 1 year, includes translation checks)
  */
 export const getAllBlogSlugs = unstable_cache(
-  async (): Promise<{ slug: string; updated_at: string; cover_image?: string }[]> => {
+  async (): Promise<{
+    slug: string;
+    updated_at: string;
+    cover_image?: string;
+    has_en?: boolean;
+    has_zh?: boolean;
+    has_ru?: boolean;
+  }[]> => {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("blog_posts")
-      .select("slug, updated_at, cover_image")
+      .select("slug, updated_at, cover_image, title, content")
       .eq("is_published", true)
       .not("slug", "is", null);
 
     if (error || !data) return [];
-    return (data || []).map((item: any) => ({
-      slug: item.slug,
-      updated_at: item.updated_at || new Date().toISOString(),
-      cover_image: item.cover_image || undefined,
-    }));
+    return (data || []).map((item: any) => {
+      const titleObj = typeof item.title === "object" && item.title !== null ? item.title : {};
+      const contentObj = typeof item.content === "object" && item.content !== null ? item.content : {};
+      return {
+        slug: item.slug,
+        updated_at: item.updated_at || new Date().toISOString(),
+        cover_image: item.cover_image || undefined,
+        has_en: Boolean(titleObj.en || contentObj.en),
+        has_zh: Boolean(titleObj.cn || titleObj.zh || contentObj.cn || contentObj.zh),
+        has_ru: Boolean(titleObj.ru || contentObj.ru),
+      };
+    });
   },
-  ["all-blog-slugs-v2"],
+  ["all-blog-slugs-v3"],
   { revalidate: 31536000, tags: ["cms", "blog", "public-data"] }
 );
 

@@ -21,6 +21,10 @@ function slugify(text: string) {
 }
 
 import { BlogAiResult, RelatedLink } from "../types";
+import {
+  resolveRelevantInternalLinks,
+  resolveRelevantInternalLinksAndInsights,
+} from "./internal-link-resolver";
 
 /**
  * 🛡️ SCHEMA: Validate AI Response Structure
@@ -226,6 +230,31 @@ export async function generateBlogPost(
       break;
   }
 
+  // 🔗 Smart Internal Link & Real-time Inventory Insights Resolver
+  let resolvedLinks = relatedLinks && relatedLinks.length > 0 ? relatedLinks : [];
+  let liveMarketInsightsPrompt = "";
+  if (resolvedLinks.length === 0) {
+    try {
+      const resolution = await resolveRelevantInternalLinksAndInsights(keyword);
+      resolvedLinks = resolution.links;
+      if (resolution.marketInsightsText) {
+        liveMarketInsightsPrompt = `
+    -------------------------------------------------------------
+    📊 ข้อมูลจริงจากฐานข้อมูลระบบ (LIVE DATABASE SNAPSHOT):
+    ${resolution.marketInsightsText}
+    คำสั่งเด็ดขาด: ให้นำตัวเลขและสถิติจริงข้างต้นไปใช้อ้างอิงในเนื้อหาและตารางเปรียบเทียบราคา ห้ามแต่งตัวเลขลอยๆ!
+    -------------------------------------------------------------`;
+      }
+    } catch (err) {
+      console.warn("Failed to automatically resolve internal links & insights:", err);
+    }
+  }
+
+  const internalLinksPrompt = resolvedLinks.length > 0
+    ? `คุณต้องแทรก Internal Link ลงในเนื้อหาบทความเป็นธรรมชาติ (Contextual Hyperlinks แทรกในประโยคที่เกี่ยวข้อง) อย่างน้อย 2-3 จุด โดยใช้ Anchor Text ที่เป็นภาษาพูดธรรมชาติที่เข้ากับบริบท (ห้ามใช้คำว่า "คลิกที่นี่" หรือ "อ่านต่อ")\n       กฎเหล็ก: ใช้เฉพาะ URL จริงในระบบด้านล่างนี้เท่านั้น (ห้ามสร้างหรือมโน URL ปลอมขึ้นมาเองเด็ดขาด):\n` +
+      resolvedLinks.map(l => `       * <a href="${l.url}">${l.title}</a> (Path: ${l.url})`).join("\n")
+    : "ไม่มีลิงก์ภายในเฉพาะเจาะจง ให้เน้นเนื้อหาที่มีคุณภาพสูง";
+
   const prompt = `
     คุณเป็น "Global SEO Content Master" และ "Real Estate Analyst" 
     เขียนบทความคุณภาพสูง (Diamond Grade Content) เรื่อง: "${keyword}"
@@ -234,20 +263,29 @@ export async function generateBlogPost(
     โทน: ${tone}
     ความยาวขั้นต่ำ: ${minWords} คำ
     [ignoring loop detection]
+    ${liveMarketInsightsPrompt}
 
     โครงสร้างเนื้อหา (Mandatory Structure):
-    1. Introduction: เปิดเรื่องให้น่าสนใจ พร้อม Focus Keyword ใน 100 คำแรก
+    1. Introduction: เปิดเรื่องให้น่าสนใจ ชี้ Pain Point ของผู้ซื้อ/ผู้เช่าให้ตรงจุด พร้อม Focus Keyword ใน 100 คำแรก
     2. Detailed Content: แบ่งเป็น ${sectionCount} (ใช้ <h2>, <h3>, <h4> เท่านั้น) 
-       - เนื้อหาต้องลึกซึ้ง ไม่ใช่น้ำเยอะ 
-       - ใส่สถิติหรือตัวเลขประกอบให้น่าเชื่อถือ
+       - เนื้อหาต้องมี First-hand Real Estate Insights: อิงพฤติกรรมจริงของผู้ซื้อ/ผู้เช่าในไทย ไม่ใช่น้ำเยอะหรือแปลจากวิกิพีเดีย
+       - ใส่สถิติ ตัวเลขประมาณการราคาเช่า/ซื้อต่อ ตร.ม. หรือผลตอบแทน Rental Yield ประกอบให้น่าเชื่อถือและจับต้องได้จริง
+       - MANDATORY INSIDER SECTION (ต้องมีหัวข้อย่อยนี้เสมอ):
+         "💡 ข้อมูลวงในจากนายหน้าภาคสนาม (Field Agent Insider Tips)" 
+         เจาะลึกข้อเท็จจริงที่คนอยู่จริงต้องรู้และกูเกิลไม่มีบอก:
+         * สภาพการจราจรจริงชั่วโมงเร่งด่วน (เช้า 07:30-09:00 / เย็น 17:30-19:30) และทางลัดเลี่ยงรถติด
+         * ปัญหาน้ำรอระบาย/น้ำท่วมในซอยช่วงฤดูฝน
+         * อัตราส่วนที่จอดรถ และค่าที่จอดรถคันที่สอง
+         * ความเข้มงวดของนิติบุคคล และบรรยากาศกลางวัน vs กลางคืน
+         * Checklist 3-4 ข้อที่ต้องตรวจให้ดีก่อนทำสัญญา
     3. Interactive Elements: 
        - ตาราง HTML (<table>) ${tableCount}
        - ใส่ [Infographic Ideas: ...] แทรกระหว่างเนื้อหาเพื่อบอกว่าจุดนี้ควรมีรูปอะไรประกอบ
-    4. Link Strategy:
-       - EXTERNAL: ลิงก์ไปยัง Forbes, World Bank, หรือสำนักข่าวอสังหาฯ ใหญ่ๆ (ใช้ <a href="..." target="_blank" rel="nofollow">)
-       - INTERNAL: ${relatedLinks.length > 0 ? relatedLinks.map(link => `<a href="${link.url}">${link.title}</a>`).join(', ') : "ไม่มีลิงก์ภายใน"}
+    4. Link Strategy (Mandatory SEO Rule):
+       - EXTERNAL: หากมีการอ้างอิงข้อมูลสถิติหรือหน่วยงาน ให้ระบุชื่อหน่วยงานชัดเจน (เช่น ธนาคารแห่งประเทศไทย https://www.bot.or.th, ศูนย์ข้อมูลอสังหาริมทรัพย์ https://www.reic.or.th, สภาพัฒน์ https://www.nesdc.go.th) โดยใช้ Root URL ที่มีอยู่จริงเท่านั้น (ห้ามสร้างหรือกุ Deep URL หรือ Path ย่อยปลอมขึ้นมาเด็ดขาด เพื่อป้องกัน 404 Outbound Link เสียคะแนน SEO)
+       - INTERNAL: ${internalLinksPrompt}
     5. FAQ Section (ฝังใน HTML): คำถามพบบ่อย ${faqCount} ใช้โครงสร้าง <h3>คำถาม</h3><p>คำตอบ</p>
-    6. Conclusion: สรุปจบพร้อมสรุปใจความสำคัญในรูปแบบ Checklist หรือ Bullet points
+    6. Conclusion: สรุปจบพร้อมสรุปใจความสำคัญในรูปแบบ Checklist หรือ Bullet points ที่ผู้อ่านนำไปใช้ตัดสินใจได้ทันที
     7. High-Conversion CTA: ออกแบบปุ่ม 2-3 สไตล์ (เช่น "ปรึกษาผู้เชี่ยวชาญ", "ดูรายละเอียดโครงการ", "ดาวน์โหลดคู่มือ")
        - ครอบด้วย <div class="flex flex-wrap gap-4 mt-8 mb-4">
        - ปุ่มหลัก: 'contact-agent-trigger inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white transition-all duration-200 bg-indigo-600 rounded-full hover:-translate-y-1 shadow-lg hover:shadow-xl'

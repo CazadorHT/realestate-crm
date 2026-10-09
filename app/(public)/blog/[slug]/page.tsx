@@ -23,6 +23,7 @@ import {
 import type { Locale } from "date-fns";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getBlogContextualProperties } from "@/features/blog/services/blog-property-matcher";
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
 
 // New modular components
@@ -164,14 +165,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     ? await getRelatedPosts(decodedSlug, post.category).catch(() => [])
     : [];
 
-  // Schema.org Article markup
-  const defaultSchema = {
-    "@context": "https://schema.org",
+  // Schema.org Structured Data (@graph with BlogPosting, Breadcrumbs, and FAQPage for Rich Snippets)
+  const postHeadline = getLocalizedField(post, "title", language) || post.title;
+  const postDesc = getLocalizedField(post, "excerpt", language) || "";
+  const postCanonical = `${siteConfig.url}${langPrefix}/blog/${encodeURIComponent(decodedSlug)}`;
+
+  const blogPostingSchema: any = {
     "@type": "BlogPosting",
-    headline: getLocalizedField(post, "title", language),
-    description: getLocalizedField(post, "excerpt", language) || "",
-    image: post.cover_image || "",
-    url: `${siteConfig.url}/blog/${decodedSlug}`, // ✅ Fix: Added URL
+    "@id": `${postCanonical}#article`,
+    headline: postHeadline,
+    description: postDesc,
+    image: post.cover_image || `${siteConfig.url}${siteConfig.ogImage}`,
+    url: postCanonical,
     datePublished: post.published_at,
     dateModified: post.updated_at || post.published_at,
     author: {
@@ -192,36 +197,92 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         "@type": "ImageObject",
         url: `${siteConfig.url}${siteConfig.logo}`,
       },
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: "กรุงเทพมหานคร",
-        addressLocality: "Bangkok",
-        postalCode: "10110",
-        addressCountry: "TH"
-      },
-      url: siteConfig.url
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${siteConfig.url}/blog/${decodedSlug}`,
+      "@id": postCanonical,
     },
     keywords: post.tags?.join(", ") || "",
   };
 
-  // Safe structured data handling
-  let finalSchema = defaultSchema;
-  if (post.structured_data) {
-    try {
-      finalSchema = typeof post.structured_data === "string" 
-        ? JSON.parse(post.structured_data) 
-        : post.structured_data;
-    } catch {
-      finalSchema = defaultSchema;
-    }
+  const breadcrumbSchema: any = {
+    "@type": "BreadcrumbList",
+    "@id": `${postCanonical}#breadcrumb`,
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: language === "en" ? "Home" : "หน้าแรก",
+        item: `${siteConfig.url}${langPrefix}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: language === "en" ? "Blog" : "บทความ",
+        item: `${siteConfig.url}${langPrefix}/blog`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: postHeadline,
+        item: postCanonical,
+      },
+    ],
+  };
+
+  const schemaGraph: any[] = [blogPostingSchema, breadcrumbSchema];
+
+  // 3. Auto FAQPage Rich Snippet (If FAQs present in post)
+  const rawFaqs = (post as any).faqs;
+  if (Array.isArray(rawFaqs) && rawFaqs.length > 0) {
+    schemaGraph.push({
+      "@type": "FAQPage",
+      "@id": `${postCanonical}#faq`,
+      mainEntity: rawFaqs.map((f: any) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: f.answer,
+        },
+      })),
+    });
   }
 
-  // Contextual Content-to-Inventory Linking (Pass PageRank to listing inventory)
-  const { properties: featuredProperties } = await getPublicProperties({ limit: 4, sort: "NEWEST" }).catch(() => ({ properties: [] }));
+  const finalSchema = {
+    "@context": "https://schema.org",
+    "@graph": schemaGraph,
+  };
+
+  // Contextual Content-to-Inventory Linking (Match area/property type from blog)
+  const contextualResult = await getBlogContextualProperties(post, 4).catch(() => ({
+    properties: [],
+    contextTitleTh: "อสังหาริมทรัพย์แนะนำล่าสุด",
+    contextTitleEn: "Latest Featured Properties",
+    contextTitleCn: "最新推荐房产",
+    contextTitleRu: "Новые рекомендуемые объекты",
+    matchedArea: undefined,
+    matchedType: undefined,
+  }));
+  const featuredProperties = contextualResult.properties;
+
+  const propertySectionTitle = language === "en"
+    ? contextualResult.contextTitleEn
+    : language === "cn"
+    ? contextualResult.contextTitleCn
+    : language === "ru"
+    ? contextualResult.contextTitleRu
+    : contextualResult.contextTitleTh;
+
+  const morePropertiesLink = contextualResult.matchedType === "OFFICE"
+    ? `${langPrefix}/properties/office-for-rent`
+    : contextualResult.matchedType === "PET_FRIENDLY"
+    ? `${langPrefix}/properties/pet-friendly-condo`
+    : contextualResult.matchedType === "LUXURY_VILLA"
+    ? `${langPrefix}/properties/luxury-villa`
+    : contextualResult.matchedArea
+    ? `${langPrefix}/properties?area=${encodeURIComponent(contextualResult.matchedArea)}`
+    : `${langPrefix}/properties`;
 
   return (
     <article className="min-h-screen bg-slate-50 pb-20 pt-16 md:pt-16">
@@ -279,11 +340,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               <div className="flex items-center gap-2">
                 <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-indigo-600 rounded-full"></div>
                 <h2 className="text-xl md:text-2xl font-bold text-slate-900">
-                  {t("property_listing.title") || "อสังหาริมทรัพย์แนะนำล่าสุด"}
+                  {propertySectionTitle}
                 </h2>
               </div>
               <Link
-                href={`${langPrefix}/properties`}
+                href={morePropertiesLink}
                 className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
               >
                 {t("common.more") || "ดูทั้งหมด"} →
