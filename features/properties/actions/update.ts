@@ -715,14 +715,14 @@ export async function updatePropertyAction(
     revalidatePath("/protected/properties");
     revalidatePath("/api/syndication/feed/meta");
     revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("public-properties", "seconds");
-    revalidateTag("property-facets", "seconds");
-    revalidateTag("meta-catalog-feed", "seconds");
-    revalidateTag("popular-areas", "seconds");
-    revalidateTag("projects", "seconds");
-    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
+    revalidateTag("properties", "max");
+    revalidateTag("public-data", "max");
+    revalidateTag("public-properties", "max");
+    revalidateTag("property-facets", "max");
+    revalidateTag("meta-catalog-feed", "max");
+    revalidateTag("popular-areas", "max");
+    revalidateTag("projects", "max");
+    await refreshProjectStatsView(supabase);
     purgeCloudflareCache([
       `/properties/${seoData.slug}`,
       `/en/properties/${seoData.slug}`,
@@ -848,14 +848,14 @@ export async function updatePropertyStatusAction(input: {
       await sendStatusUpdateNotification({ id: input.id, title }, input.status as "SOLD" | "RENTED");
     }
 
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("meta-catalog-feed", "seconds");
+    revalidateTag("properties", "max");
+    revalidateTag("public-data", "max");
+    revalidateTag("meta-catalog-feed", "max");
     revalidatePath("/sitemap.xml");
     revalidatePath("/api/syndication/feed/meta");
     revalidatePath("/api/syndication/feed/facebook");
-    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    await refreshProjectStatsView(supabase);
+    await purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (err) {
     return { success: false, message: mapDbError(err) };

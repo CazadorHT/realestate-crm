@@ -597,11 +597,11 @@ export async function createPropertyAction(
     revalidatePath("/protected/properties");
     revalidatePath("/api/syndication/feed/meta");
     revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("public-properties", "seconds");
-    revalidateTag("property-facets", "seconds");
-    revalidateTag("meta-catalog-feed", "seconds");
+    revalidateTag("properties", "max");
+    revalidateTag("public-data", "max");
+    revalidateTag("public-properties", "max");
+    revalidateTag("property-facets", "max");
+    revalidateTag("meta-catalog-feed", "max");
     purgeCloudflareCache([
       `/properties/${seoData.slug}`,
       `/en/properties/${seoData.slug}`,
@@ -615,12 +615,12 @@ export async function createPropertyAction(
       "/api/syndication/feed/meta",
       "/api/syndication/feed/facebook",
     ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "seconds");
-    revalidateTag("projects", "seconds");
-    revalidateTag("dashboard-stats", "seconds");
-    revalidateTag("dashboard-charts", "seconds");
-    revalidateTag("dashboard-performance", "seconds");
-    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
+    revalidateTag("popular-areas", "max");
+    revalidateTag("projects", "max");
+    revalidateTag("dashboard-stats", "max");
+    revalidateTag("dashboard-charts", "max");
+    revalidateTag("dashboard-performance", "max");
+    await refreshProjectStatsView(supabase);
 
     // 🚀 Step 6: Background Job (Non-blocking)
     await (inngest.send({
@@ -851,17 +851,17 @@ export async function duplicatePropertyAction(
     revalidatePath("/protected/properties");
     revalidatePath("/api/syndication/feed/meta");
     revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("public-properties", "seconds");
-    revalidateTag("property-facets", "seconds");
-    revalidateTag("meta-catalog-feed", "seconds");
-    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "seconds");
-    revalidateTag("dashboard-stats", "seconds");
-    revalidateTag("dashboard-charts", "seconds");
-    revalidateTag("dashboard-performance", "seconds");
+    revalidateTag("properties", "max");
+    revalidateTag("public-data", "max");
+    revalidateTag("public-properties", "max");
+    revalidateTag("property-facets", "max");
+    revalidateTag("meta-catalog-feed", "max");
+    await refreshProjectStatsView(supabase);
+    await purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    revalidateTag("popular-areas", "max");
+    revalidateTag("dashboard-stats", "max");
+    revalidateTag("dashboard-charts", "max");
+    revalidateTag("dashboard-performance", "max");
 
     // 🚀 Step 4.5: Background Job (Non-blocking)
     await (inngest.send({

@@ -6,7 +6,7 @@ import { purgeCloudflareCache } from "@/lib/cloudflare";
  * Triggers refresh of PostgreSQL Materialized View `mv_project_property_stats`,
  * purges Cloudflare edge cache, and revalidates Next.js ISR & Data Cache for public property/project pages.
  */
-export async function refreshProjectStatsView(supabase: SupabaseClient) {
+export async function refreshProjectStatsView(supabase: SupabaseClient, projectSlug?: string) {
   try {
     if (typeof supabase.rpc === "function") {
       await supabase.rpc("refresh_project_property_stats");
@@ -16,12 +16,36 @@ export async function refreshProjectStatsView(supabase: SupabaseClient) {
   }
   
   try {
-    revalidatePath("/properties");
-    revalidatePath("/projects");
-    revalidatePath("/");
+    const pathsToRevalidate = [
+      "/",
+      "/en",
+      "/zh",
+      "/ru",
+      "/projects",
+      "/en/projects",
+      "/zh/projects",
+      "/ru/projects",
+      "/properties",
+      "/en/properties",
+      "/zh/properties",
+      "/ru/properties",
+      "/api/public/popular-areas",
+      "/api/public/properties",
+    ];
+
+    if (projectSlug) {
+      pathsToRevalidate.push(
+        `/projects/${projectSlug}`,
+        `/en/projects/${projectSlug}`,
+        `/zh/projects/${projectSlug}`,
+        `/ru/projects/${projectSlug}`
+      );
+    }
+
+    for (const p of pathsToRevalidate) {
+      revalidatePath(p);
+    }
     revalidatePath("/", "layout");
-    revalidatePath("/api/public/popular-areas");
-    revalidatePath("/api/public/properties");
     
     const tagsToRevalidate = [
       "projects",
@@ -35,20 +59,39 @@ export async function refreshProjectStatsView(supabase: SupabaseClient) {
 
     for (const tag of tagsToRevalidate) {
       try {
-        revalidateTag(tag, "seconds");
+        revalidateTag(tag, "max");
       } catch {
-        (revalidateTag as any)(tag);
+        // Fallback if revalidateTag is not available in current scope
       }
     }
   } catch (error) {
     console.error("[Revalidate] Error revalidating paths/tags:", error);
   }
 
-  purgeCloudflareCache([
-    "/",
-    "/projects",
-    "/properties",
-    "/api/public/popular-areas",
-    "/api/public/properties",
-  ]).catch((e) => console.error("[Cloudflare] Auto-purge failed:", e));
+  try {
+    const cfPaths = [
+      "/",
+      "/en",
+      "/zh",
+      "/ru",
+      "/projects",
+      "/en/projects",
+      "/zh/projects",
+      "/ru/projects",
+      "/properties",
+      "/api/public/popular-areas",
+      "/api/public/properties",
+    ];
+    if (projectSlug) {
+      cfPaths.push(
+        `/projects/${projectSlug}`,
+        `/en/projects/${projectSlug}`,
+        `/zh/projects/${projectSlug}`,
+        `/ru/projects/${projectSlug}`
+      );
+    }
+    await purgeCloudflareCache(cfPaths);
+  } catch (e) {
+    console.error("[Cloudflare] Auto-purge failed:", e);
+  }
 }

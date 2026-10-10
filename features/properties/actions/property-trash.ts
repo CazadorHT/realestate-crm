@@ -109,12 +109,12 @@ export async function softDeleteProperty(id: string) {
     revalidatePath("/sitemap.xml");
     revalidatePath("/api/syndication/feed/meta");
     revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("meta-catalog-feed", "seconds");
-    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "seconds");
+    revalidateTag("properties", "max");
+    revalidateTag("public-data", "max");
+    revalidateTag("meta-catalog-feed", "max");
+    await refreshProjectStatsView(supabase);
+    await purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    revalidateTag("popular-areas", "max");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -194,12 +194,12 @@ export async function restoreProperty(id: string) {
     revalidatePath("/sitemap.xml");
     revalidatePath("/api/syndication/feed/meta");
     revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("meta-catalog-feed", "seconds");
-    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "seconds");
+    revalidateTag("properties", "max");
+    revalidateTag("public-data", "max");
+    revalidateTag("meta-catalog-feed", "max");
+    await refreshProjectStatsView(supabase);
+    await purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    revalidateTag("popular-areas", "max");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -289,12 +289,12 @@ export async function permanentDeleteProperty(id: string) {
     revalidatePath("/protected/properties/trash");
     revalidatePath("/api/syndication/feed/meta");
     revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("meta-catalog-feed", "seconds");
-    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    purgeCloudflareCache(["/properties", "/", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "seconds");
+    revalidateTag("properties", "max");
+    revalidateTag("public-data", "max");
+    revalidateTag("meta-catalog-feed", "max");
+    await refreshProjectStatsView(supabase);
+    await purgeCloudflareCache(["/properties", "/", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
+    revalidateTag("popular-areas", "max");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };

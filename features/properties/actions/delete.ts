@@ -180,16 +180,16 @@ export async function deletePropertyAction(formData: FormData) {
     revalidatePath("/protected/properties");
     revalidatePath("/api/syndication/feed/meta");
     revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("public-properties", "seconds");
-    revalidateTag("property-facets", "seconds");
-    revalidateTag("meta-catalog-feed", "seconds");
-    refreshProjectStatsView(supabase).catch(e => console.error("[RPC] View refresh failed:", e));
-    revalidateTag("popular-areas", "seconds");
-    revalidateTag("dashboard-stats", "seconds");
-    revalidateTag("dashboard-charts", "seconds");
-    revalidateTag("dashboard-performance", "seconds");
+    revalidateTag("properties", "max");
+    revalidateTag("public-data", "max");
+    revalidateTag("public-properties", "max");
+    revalidateTag("property-facets", "max");
+    revalidateTag("meta-catalog-feed", "max");
+    await refreshProjectStatsView(supabase);
+    revalidateTag("popular-areas", "max");
+    revalidateTag("dashboard-stats", "max");
+    revalidateTag("dashboard-charts", "max");
+    revalidateTag("dashboard-performance", "max");
     purgeCloudflareCache([
       "/properties",
       "/sitemap.xml",

@@ -197,7 +197,7 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
       revalidatePath(`/projects/${input.slug}`);
     }
 
-    await refreshProjectStatsView(ctx.supabase);
+    await refreshProjectStatsView(ctx.supabase, input.slug);
 
     return { success: true, message: "บันทึกข้อมูลโครงการสำเร็จ ✨", id: data.id };
   } catch (err: any) {

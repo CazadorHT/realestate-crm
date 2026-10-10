@@ -98,25 +98,43 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
         }
       });
 
-      // ดึงรูปภาพ cover (main_image) ยูนิตแรกของแต่ละโครงการมาแสดงเป็นรูปภาพคู่ตัวการ์ดโครงการ (เพื่อความไวสูงสุดแบบ Zero Egress)
+      // ดึงรูปภาพ cover (main_image) ยูนิตแรก และคำนวณ fallback count / min prices ป้องกันเคส Materialized View ยังไม่รีเฟรช
       const { data: recentProps } = await supabase
         .from("properties")
-        .select("project_id, main_image, popular_area_en, popular_area_cn, popular_area_ru")
+        .select("project_id, main_image, price, rental_price, popular_area_en, popular_area_cn, popular_area_ru")
         .eq("status", "ACTIVE")
         .is("deleted_at", null)
-        .not("main_image", "is", null)
         .order("created_at", { ascending: false });
 
-      const propDataMap = new Map<string, { main_image: string; popular_area_en?: string | null; popular_area_cn?: string | null; popular_area_ru?: string | null }>();
+      const propDataMap = new Map<string, { main_image?: string | null; popular_area_en?: string | null; popular_area_cn?: string | null; popular_area_ru?: string | null }>();
+      const fallbackCountMap = new Map<string, number>();
+      const fallbackPriceMinMap = new Map<string, number>();
+      const fallbackRentalMinMap = new Map<string, number>();
+
       if (recentProps) {
         for (const p of recentProps) {
-          if (p.project_id && !propDataMap.has(p.project_id)) {
-            propDataMap.set(p.project_id, {
-              main_image: p.main_image,
-              popular_area_en: p.popular_area_en,
-              popular_area_cn: p.popular_area_cn,
-              popular_area_ru: p.popular_area_ru
-            });
+          if (p.project_id) {
+            fallbackCountMap.set(p.project_id, (fallbackCountMap.get(p.project_id) || 0) + 1);
+            if (!propDataMap.has(p.project_id) && p.main_image) {
+              propDataMap.set(p.project_id, {
+                main_image: p.main_image,
+                popular_area_en: p.popular_area_en,
+                popular_area_cn: p.popular_area_cn,
+                popular_area_ru: p.popular_area_ru
+              });
+            }
+            if (p.price != null && p.price > 0) {
+              const cur = fallbackPriceMinMap.get(p.project_id);
+              if (cur === undefined || p.price < cur) {
+                fallbackPriceMinMap.set(p.project_id, p.price);
+              }
+            }
+            if (p.rental_price != null && p.rental_price > 0) {
+              const cur = fallbackRentalMinMap.get(p.project_id);
+              if (cur === undefined || p.rental_price < cur) {
+                fallbackRentalMinMap.set(p.project_id, p.rental_price);
+              }
+            }
           }
         }
       }
@@ -131,7 +149,10 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
       return projects.map((p: any) => {
         const stat = statsMap.get(p.id);
         const propData = propDataMap.get(p.id);
-        const propertyCount = stat ? Number(stat.property_count || 0) : 0;
+        const mvCount = stat ? Number(stat.property_count || 0) : 0;
+        const fallbackCount = fallbackCountMap.get(p.id) || 0;
+        // กันพลาด 100%: ถ้า Materialized View ยังไม่รีเฟรช ให้ใช้ค่าจริงจาก Properties
+        const propertyCount = Math.max(mvCount, fallbackCount);
 
         // ดึงภาพหน้าปกโครงการ (ใช้ภาพโครงการเป็นหลัก ถ้าไม่มี ดึงภาพอสังหาฯ ล่าสุดในโครงการนั้นมาเป็น Cover Image)
         const coverImage = p.image_url || propData?.main_image || null;
@@ -161,9 +182,9 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
           seoTitle: p.seo_title,
           seoDescription: p.seo_description,
           propertyCount,
-          priceMin: stat ? stat.price_min : null,
+          priceMin: stat?.price_min ?? fallbackPriceMinMap.get(p.id) ?? null,
           priceMax: stat ? stat.price_max : null,
-          rentalMin: stat ? stat.rental_min : null,
+          rentalMin: stat?.rental_min ?? fallbackRentalMinMap.get(p.id) ?? null,
           rentalMax: stat ? stat.rental_max : null,
           popularArea: popAreaTh,
           popularAreaEn: propData?.popular_area_en || popAreaI18n?.en || null,
@@ -244,6 +265,36 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         }
       }
 
+      let propertyCount = stat ? Number(stat.property_count || 0) : 0;
+      let priceMin = stat ? stat.price_min : null;
+      let priceMax = stat ? stat.price_max : null;
+      let rentalMin = stat ? stat.rental_min : null;
+      let rentalMax = stat ? stat.rental_max : null;
+
+      // Fallback: ถ้า Materialized View สถิติยังไม่รีเฟรช ให้ดึงจาก Live Properties ทันที
+      if (propertyCount === 0) {
+        const { count, data: liveProps } = await supabase
+          .from("properties")
+          .select("price, rental_price", { count: "exact" })
+          .eq("project_id", p.id)
+          .eq("status", "ACTIVE")
+          .is("deleted_at", null);
+
+        if (count && count > 0) {
+          propertyCount = count;
+          const prices = (liveProps || []).map((lp: any) => lp.price).filter((v: any) => v != null && v > 0);
+          const rentals = (liveProps || []).map((lp: any) => lp.rental_price).filter((v: any) => v != null && v > 0);
+          if (prices.length > 0) {
+            priceMin = Math.min(...prices);
+            priceMax = Math.max(...prices);
+          }
+          if (rentals.length > 0) {
+            rentalMin = Math.min(...rentals);
+            rentalMax = Math.max(...rentals);
+          }
+        }
+      }
+
       return {
         id: p.id,
         name: typeof p.name === "object" && p.name !== null ? (p.name as { th: string; en: string }) : { th: String(p.name || ""), en: String(p.name || "") },
@@ -266,11 +317,11 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         nearestStationDistance: p.nearest_station_distance,
         seoTitle: p.seo_title as PublicProject["seoTitle"],
         seoDescription: p.seo_description as PublicProject["seoDescription"],
-        propertyCount: stat ? Number(stat.property_count || 0) : 0,
-        priceMin: stat ? stat.price_min : null,
-        priceMax: stat ? stat.price_max : null,
-        rentalMin: stat ? stat.rental_min : null,
-        rentalMax: stat ? stat.rental_max : null,
+        propertyCount,
+        priceMin,
+        priceMax,
+        rentalMin,
+        rentalMax,
         popularArea: stat ? stat.primary_popular_area : null,
         popularAreaEn: areaI18n?.en || null,
         popularAreaCn: areaI18n?.cn || null,
