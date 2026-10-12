@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, MapPin, ArrowLeft } from "lucide-react";
 import { getProvinceName, getDistrictName, getSubdistrictName } from "@/lib/utils/provinces";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLangPrefix } from "@/lib/i18n";
 
 interface ProjectHeroProps {
   project: any;
@@ -16,7 +16,7 @@ export function ProjectHero({
   nameText,
   getString,
 }: ProjectHeroProps) {
-  const { langPrefix } = useLanguage();
+  const langPrefix = getLangPrefix(language);
   const formatProjectCategory = (type: number, lang: string): string => {
     if (type === 1) return lang === "en" ? "Condominium" : lang === "cn" ? "公寓" : lang === "ru" ? "Кондоминиум" : "คอนโดมิเนียม";
     return lang === "en" ? "House Project" : lang === "cn" ? "住宅小区" : lang === "ru" ? "Жилой комплекс" : "โครงการบ้าน";

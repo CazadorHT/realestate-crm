@@ -1,3 +1,5 @@
+"use client";
+
 import { OfficeSizeOption } from "@/features/smart-match/config-actions";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 

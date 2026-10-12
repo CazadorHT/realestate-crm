@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { CheckSquare, Square, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";

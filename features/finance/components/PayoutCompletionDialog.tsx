@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef } from "react";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { 

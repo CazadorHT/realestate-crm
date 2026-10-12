@@ -1,3 +1,5 @@
+"use client";
+
 import { HelpCircle, CheckCircle, FolderOpen, Eye, History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FAQItem } from "@/features/admin/faqs-actions";

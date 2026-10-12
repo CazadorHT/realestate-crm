@@ -1,3 +1,5 @@
+"use client";
+
 import { Check, Star } from "lucide-react";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";

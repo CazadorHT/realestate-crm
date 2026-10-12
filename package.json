@@ -9,9 +9,11 @@
   },
   "scripts": {
     "dev": "next dev --turbo",
+    "prebuild": "tsx scripts/audit-rsc-boundaries.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint . && tsx scripts/audit-rsc-boundaries.ts",
+    "audit:rsc": "tsx scripts/audit-rsc-boundaries.ts",
     "gen:types-old": "supabase gen types typescript --project-id nxvoynycshhqiffygddv --schema public > lib/database.types.ts",
     "gen:types": "supabase gen types typescript --linked > lib/database.types.generated.ts",
     "migrate:slugs": "tsx scripts/migrate-slugs.ts",

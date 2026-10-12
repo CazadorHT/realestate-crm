@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Train, ChevronRight } from "lucide-react";
 import type { StationDetail } from "@/features/public/stations";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getLangPrefix } from "@/lib/i18n";
 
 interface StationHeroProps {
   station: StationDetail;
@@ -22,7 +22,7 @@ export function StationHero({
   gradientColor,
   getString,
 }: StationHeroProps) {
-  const { langPrefix } = useLanguage();
+  const langPrefix = getLangPrefix(language);
   const getStationFallbackBg = (transitType: string) => {
     return "/images/hero-transit.jpg";
   };
