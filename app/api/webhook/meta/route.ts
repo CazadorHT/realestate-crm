@@ -4679,7 +4679,6 @@ async function sendSinglePropertyCard(
         clauses.push(`id.eq.${c}`);
       } else if (c.length >= 3) {
         clauses.push(`slug.ilike.%${c}%`);
-        clauses.push(`id.ilike.${c}%`);
       }
       return clauses;
     })
@@ -4800,20 +4799,41 @@ async function sendSinglePropertyCard(
     priceSubtitle = property.price ? `${tSale} ฿${property.price.toLocaleString()}` : `${tSale} (Inquire)`;
   }
 
-  // 2-Tier Language Fallback for Title
-  // 1) Target Lang -> 2) English -> 3) Default (Thai)
-  let title = property.title || "Featured Property";
-  if (lang === "en" && property.title_en) {
-    title = property.title_en;
-  } else if (lang === "cn" && (property.title_cn || property.title_en)) {
-    title = property.title_cn || property.title_en;
-  } else if (lang === "ru" && (property.title_ru || property.title_en)) {
-    title = property.title_ru || property.title_en;
-  }
-
   const projectName = resolveProjectName(property, lang);
   const sizeInfo = property.size_sqm ? ` • ${property.size_sqm} ${tSqm}` : "";
   const bedInfo = property.bedrooms ? ` • ${property.bedrooms} ${tBed}` : "";
+
+  // 2-Tier Language Fallback for Title
+  let title = property.title || "Featured Property";
+  if (lang === "en") {
+    if (property.title_en) {
+      title = property.title_en;
+    } else {
+      const action = property.listing_type === "RENT" ? "For Rent" : property.listing_type === "SALE" ? "For Sale" : "For Sale/Rent";
+      const pName = projectName || "Luxury Residence";
+      const bedText = property.bedrooms ? ` (${property.bedrooms} Bed)` : "";
+      title = `${action} ${pName}${bedText}`;
+    }
+  } else if (lang === "cn") {
+    if (property.title_cn || property.title_en) {
+      title = property.title_cn || property.title_en;
+    } else {
+      const action = property.listing_type === "RENT" ? "出租" : "出售";
+      const pName = projectName || "奢华公寓";
+      const bedText = property.bedrooms ? ` (${property.bedrooms}居室)` : "";
+      title = `${action} ${pName}${bedText}`;
+    }
+  } else if (lang === "ru") {
+    if (property.title_ru || property.title_en) {
+      title = property.title_ru || property.title_en;
+    } else {
+      const action = property.listing_type === "RENT" ? "Аренда" : "Продажа";
+      const pName = projectName || "Элитные апартаменты";
+      const bedText = property.bedrooms ? ` (${property.bedrooms} спальни)` : "";
+      title = `${action} ${pName}${bedText}`;
+    }
+  }
+
   const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
   const propUrl = `${siteUrl}/properties/${property.slug || property.id}`;
 
@@ -4939,7 +4959,7 @@ async function sendMultiPropertyCarousel(
     if (codeCandidates.length > 0) {
       // Build specific query matching the candidate codes (up to 10 cards - Meta Messenger limit)
       const orClauses = codeCandidates
-        .flatMap((c) => [`slug.ilike.%${c}%`, `id.ilike.${c}%`])
+        .flatMap((c) => [`slug.ilike.%${c}%`])
         .join(",");
       query = query.or(orClauses).limit(10);
     } else {
@@ -4994,14 +5014,39 @@ async function sendMultiPropertyCarousel(
         priceSubtitle = prop.price ? `${tSale} ฿${prop.price.toLocaleString()}` : `${tSale}`;
       }
 
-      let title = prop.title || "Luxury Pool Villa";
-      if (lang === "en" && (prop.title_en || prop.title)) title = prop.title_en || prop.title;
-      else if (lang === "cn" && (prop.title_cn || prop.title_en)) title = prop.title_cn || prop.title_en || prop.title;
-      else if (lang === "ru" && (prop.title_ru || prop.title_en)) title = prop.title_ru || prop.title_en || prop.title;
-
       const projectName = resolveProjectName(prop, lang);
       const sizeInfo = prop.size_sqm ? ` • ${prop.size_sqm} ${tSqm}` : "";
       const bedInfo = prop.bedrooms ? ` • ${prop.bedrooms} ${tBed}` : "";
+
+      let title = prop.title || "Featured Property";
+      if (lang === "en") {
+        if (prop.title_en) {
+          title = prop.title_en;
+        } else {
+          const action = prop.listing_type === "RENT" ? "For Rent" : prop.listing_type === "SALE" ? "For Sale" : "For Sale/Rent";
+          const pName = projectName || "Luxury Residence";
+          const bedText = prop.bedrooms ? ` (${prop.bedrooms} Bed)` : "";
+          title = `${action} ${pName}${bedText}`;
+        }
+      } else if (lang === "cn") {
+        if (prop.title_cn || prop.title_en) {
+          title = prop.title_cn || prop.title_en;
+        } else {
+          const action = prop.listing_type === "RENT" ? "出租" : "出售";
+          const pName = projectName || "奢华公寓";
+          const bedText = prop.bedrooms ? ` (${prop.bedrooms}居室)` : "";
+          title = `${action} ${pName}${bedText}`;
+        }
+      } else if (lang === "ru") {
+        if (prop.title_ru || prop.title_en) {
+          title = prop.title_ru || prop.title_en;
+        } else {
+          const action = prop.listing_type === "RENT" ? "Аренда" : "Продажа";
+          const pName = projectName || "Элитные апартаменты";
+          const bedText = prop.bedrooms ? ` (${prop.bedrooms} спальни)` : "";
+          title = `${action} ${pName}${bedText}`;
+        }
+      }
       const subtitle = `${priceSubtitle}\n${projectName}${bedInfo}${sizeInfo}`.trim();
       const propUrl = `${siteUrl}/properties/${prop.slug || prop.id}`;
 
