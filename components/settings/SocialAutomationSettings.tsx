@@ -110,8 +110,8 @@ export function SocialAutomationSettings({
     en: initialSettings?.follow_gate_btn_profile_en || "👉 View Profile",
   });
   const [followGateBtnChecks, setFollowGateBtnChecks] = useState({
-    th: initialSettings?.follow_gate_btn_check || "✅ ฟอลแล้ว (รับข้อมูล)",
-    en: initialSettings?.follow_gate_btn_check_en || "✅ Followed (Get Info)",
+    th: initialSettings?.follow_gate_btn_check || "✅ ฟอลแล้ว รับข้อมูล",
+    en: initialSettings?.follow_gate_btn_check_en || "✅ Followed (Info)",
   });
   const [showFollowGateCustomizer, setShowFollowGateCustomizer] = useState(
     !!initialSettings?.follow_gate_enabled
@@ -186,6 +186,12 @@ export function SocialAutomationSettings({
   };
 
   useEffect(() => {
+    if (initialSettings) {
+      setInitialData(initialSettings);
+    }
+  }, [initialSettings]);
+
+  useEffect(() => {
     // Only load if initialSettings wasn't provided or we need to refresh
     if (initialSettings && initialData) {
       return;
@@ -251,8 +257,8 @@ export function SocialAutomationSettings({
         }
         if (settings.follow_gate_btn_check || settings.follow_gate_btn_check_en) {
           setFollowGateBtnChecks({
-            th: settings.follow_gate_btn_check || "✅ ฟอลแล้ว (รับข้อมูล)",
-            en: settings.follow_gate_btn_check_en || "✅ Followed (Get Info)",
+            th: settings.follow_gate_btn_check || "✅ ฟอลแล้ว รับข้อมูล",
+            en: settings.follow_gate_btn_check_en || "✅ Followed (Info)",
           });
         }
         setLeadCaptureGateEnabled(!!settings.lead_capture_gate_enabled);
@@ -356,47 +362,86 @@ export function SocialAutomationSettings({
     const kw = JSON.stringify(normalizeKeywords(keywords));
     const savedKw = JSON.stringify(normalizeKeywords(initialData.social_automation_keywords || []));
 
+    const getStr = (val: any) => (typeof val === "string" ? val.trim() : "");
+
     const checkTemplate = (p: any, dbTh: any, dbEn: any, dbCn: any, dbRu: any) => {
       return (
-        (p.th || "").trim() !== (dbTh || "").trim() ||
-        (p.en || "").trim() !== (dbEn || "").trim() ||
-        (p.cn || "").trim() !== (dbCn || "").trim() ||
-        (p.ru || "").trim() !== (dbRu || "").trim()
+        getStr(p?.th) !== getStr(dbTh) ||
+        getStr(p?.en) !== getStr(dbEn) ||
+        getStr(p?.cn) !== getStr(dbCn) ||
+        getStr(p?.ru) !== getStr(dbRu)
       );
     };
+
+    const defaultStoryAdsWelcome = {
+      th: "เซฮายยย ขอบคุณที่แวะมาสอบถามน้า ✨\nยินดีให้บริการค่ะ ต้องการสอบถามข้อมูลห้อง นัดชมสถานที่จริง หรือพูดคุยกับทีมงาน เลือกรายการด้านล่างได้เลยน้าาา 💕",
+      en: "Hello! Thank you for reaching out ✨\nWe're delighted to assist you. Would you like to schedule a viewing, check available units, or chat with our team? Please choose an option below 💕",
+      cn: "您好！感谢您的咨询 ✨\n很高兴为您服务。如果您想预约看房、查看最新房源หรือกับ客服交谈，请选择下方选项 💕",
+      ru: "Здравствуйте! Спасибо за обращение ✨\nБудем рады помочь! Выберите нужный пункт ниже: запись на просмотр, свободные вариантыหรือ связь с менеджером 💕",
+    };
+
+    const defaultFollowGate = {
+      message: "ขอบคุณที่สนใจน้า ✨ เพื่อรับรายละเอียดห้องและราคาพิเศษ รบกวนกดติดตามโปรไฟล์ {{handle}} ก่อนน้า แล้วกดปุ่ม \"ฟอลแล้ว\" ด้านล่างได้เลยครับ 💕",
+      message_en: "Thanks for your interest! ✨ To receive room details and special price, please follow our profile {{handle}} first, then tap 'Followed' below 💕",
+      retry_message: "ระบบตรวจพบว่ายังไม่ได้กดติดตามเลยน้า 🥺 ฝากกดติดตาม {{handle}} ก่อนน้าเด่วส่งข้อมูลให้ทันทีเลยครับ ✨",
+      retry_message_en: "It looks like you haven't followed yet 🥺 Please follow {{handle}} first, then tap the button below to get the details! ✨",
+      success_message: "ขอบคุณที่กดติดตามน้า 🙏✨ นี่คือรายละเอียดโครงการที่ขอไว้ครับ 👇",
+      success_message_en: "Thank you for following! 🙏✨ Here are the property details you requested 👇",
+      public_reply: "ส่งข้อมูลให้ทาง DM แล้วน้า ฝากกดติดตาม {{handle}} แล้วเช็ก Inbox ได้เลยครับ 😊📩",
+      public_reply_en: "Sent you a DM! Please follow {{handle}} and check your Inbox 😊📩",
+      btn_profile: "👉 ไปที่หน้าโปรไฟล์",
+      btn_profile_en: "👉 View Profile",
+      btn_check: "✅ ฟอลแล้ว รับข้อมูล",
+      btn_check_en: "✅ Followed (Info)",
+    };
+
+    const defaultBudgets = [
+      { label: "< ฿100k/mo", max_price: 100000 },
+      { label: "฿100k - ฿200k", min_price: 100000, max_price: 200000 },
+      { label: "฿200k - ฿350k", min_price: 200000, max_price: 350000 },
+      { label: "> ฿350k/mo", min_price: 350000 },
+    ];
+    const defaultZones = [
+      { label: "ฉลอง / ราไวย์ (Chalong)", keywords: ["Chalong", "Rawai", "ฉลอง", "ราไวย์"] },
+      { label: "บางเทา (Bangtao)", keywords: ["Bangtao", "Cherngtalay", "บางเทา", "เชิงทะเล"] },
+      { label: "กะทู้ (Kathu)", keywords: ["Kathu", "Phuket Town", "กะทู้", "เมืองภูเก็ต"] },
+    ];
+
+    const currentBudgets = questionnaireBudgetOptions?.length ? questionnaireBudgetOptions : defaultBudgets;
+    const savedBudgets = initialData.questionnaire_budget_options?.length ? initialData.questionnaire_budget_options : defaultBudgets;
+
+    const currentZones = questionnaireZoneOptions?.length ? questionnaireZoneOptions : defaultZones;
+    const savedZones = initialData.questionnaire_zone_options?.length ? initialData.questionnaire_zone_options : defaultZones;
 
     const changed =
       kw !== savedKw ||
       instagramStoryReplyEnabled !== !!initialData.instagram_story_reply_enabled ||
       directDmReplyEnabled !== !!initialData.direct_dm_reply_enabled ||
-      checkTemplate(storyAdsWelcomeMessages, initialData.story_ads_welcome_message, initialData.story_ads_welcome_message_en, initialData.story_ads_welcome_message_cn, initialData.story_ads_welcome_message_ru) ||
+      checkTemplate(
+        storyAdsWelcomeMessages,
+        initialData.story_ads_welcome_message || defaultStoryAdsWelcome.th,
+        initialData.story_ads_welcome_message_en || defaultStoryAdsWelcome.en,
+        initialData.story_ads_welcome_message_cn || defaultStoryAdsWelcome.cn,
+        initialData.story_ads_welcome_message_ru || defaultStoryAdsWelcome.ru
+      ) ||
       storyAdsButtonsEnabled !== (initialData.story_ads_buttons_enabled !== false) ||
       JSON.stringify(storyAdsCustomButtons) !== JSON.stringify(initialData.story_ads_custom_buttons || []) ||
       autoFeaturedCarouselEnabled !== (initialData.auto_featured_carousel_enabled !== false) ||
-      JSON.stringify(questionnaireBudgetOptions) !== JSON.stringify(initialData.questionnaire_budget_options || [
-        { label: "< ฿100k/mo", max_price: 100000 },
-        { label: "฿100k - ฿200k", min_price: 100000, max_price: 200000 },
-        { label: "฿200k - ฿350k", min_price: 200000, max_price: 350000 },
-        { label: "> ฿350k/mo", min_price: 350000 },
-      ]) ||
-      JSON.stringify(questionnaireZoneOptions) !== JSON.stringify(initialData.questionnaire_zone_options || [
-        { label: "ฉลอง / ราไวย์ (Chalong)", keywords: ["Chalong", "Rawai", "ฉลอง", "ราไวย์"] },
-        { label: "บางเทา (Bangtao)", keywords: ["Bangtao", "Cherngtalay", "บางเทา", "เชิงทะเล"] },
-        { label: "กะทู้ (Kathu)", keywords: ["Kathu", "Phuket Town", "กะทู้", "เมืองภูเก็ต"] },
-      ]) ||
+      JSON.stringify(currentBudgets) !== JSON.stringify(savedBudgets) ||
+      JSON.stringify(currentZones) !== JSON.stringify(savedZones) ||
       followGateEnabled !== !!initialData.follow_gate_enabled ||
-      followGateMessages.th !== (initialData.follow_gate_message || "ขอบคุณที่สนใจน้า ✨ เพื่อรับรายละเอียดห้องและราคาพิเศษ รบกวนกดติดตามโปรไฟล์ {{handle}} ก่อนน้า แล้วกดปุ่ม \"ฟอลแล้ว\" ด้านล่างได้เลยครับ 💕") ||
-      followGateMessages.en !== (initialData.follow_gate_message_en || "Thanks for your interest! ✨ To receive room details and special price, please follow our profile {{handle}} first, then tap 'Followed' below 💕") ||
-      followGateRetryMessages.th !== (initialData.follow_gate_retry_message || "ระบบตรวจพบว่ายังไม่ได้กดติดตามเลยน้า 🥺 ฝากกดติดตาม {{handle}} ก่อนน้าเด่วส่งข้อมูลให้ทันทีเลยครับ ✨") ||
-      followGateRetryMessages.en !== (initialData.follow_gate_retry_message_en || "It looks like you haven't followed yet 🥺 Please follow {{handle}} first, then tap the button below to get the details! ✨") ||
-      followGateSuccessMessages.th !== (initialData.follow_gate_success_message || "ขอบคุณที่กดติดตามน้า 🙏✨ นี่คือรายละเอียดโครงการที่ขอไว้ครับ 👇") ||
-      followGateSuccessMessages.en !== (initialData.follow_gate_success_message_en || "Thank you for following! 🙏✨ Here are the property details you requested 👇") ||
-      followGatePublicReplies.th !== (initialData.follow_gate_public_reply || "ส่งข้อมูลให้ทาง DM แล้วน้า ฝากกดติดตาม {{handle}} แล้วเช็ก Inbox ได้เลยครับ 😊📩") ||
-      followGatePublicReplies.en !== (initialData.follow_gate_public_reply_en || "Sent you a DM! Please follow {{handle}} and check your Inbox 😊📩") ||
-      followGateBtnProfiles.th !== (initialData.follow_gate_btn_profile || "👉 ไปที่หน้าโปรไฟล์") ||
-      followGateBtnProfiles.en !== (initialData.follow_gate_btn_profile_en || "👉 View Profile") ||
-      followGateBtnChecks.th !== (initialData.follow_gate_btn_check || "✅ ฟอลแล้ว (รับข้อมูล)") ||
-      followGateBtnChecks.en !== (initialData.follow_gate_btn_check_en || "✅ Followed (Get Info)") ||
+      getStr(followGateMessages.th) !== getStr(initialData.follow_gate_message || defaultFollowGate.message) ||
+      getStr(followGateMessages.en) !== getStr(initialData.follow_gate_message_en || defaultFollowGate.message_en) ||
+      getStr(followGateRetryMessages.th) !== getStr(initialData.follow_gate_retry_message || defaultFollowGate.retry_message) ||
+      getStr(followGateRetryMessages.en) !== getStr(initialData.follow_gate_retry_message_en || defaultFollowGate.retry_message_en) ||
+      getStr(followGateSuccessMessages.th) !== getStr(initialData.follow_gate_success_message || defaultFollowGate.success_message) ||
+      getStr(followGateSuccessMessages.en) !== getStr(initialData.follow_gate_success_message_en || defaultFollowGate.success_message_en) ||
+      getStr(followGatePublicReplies.th) !== getStr(initialData.follow_gate_public_reply || defaultFollowGate.public_reply) ||
+      getStr(followGatePublicReplies.en) !== getStr(initialData.follow_gate_public_reply_en || defaultFollowGate.public_reply_en) ||
+      getStr(followGateBtnProfiles.th).slice(0, 20) !== getStr(initialData.follow_gate_btn_profile || defaultFollowGate.btn_profile).slice(0, 20) ||
+      getStr(followGateBtnProfiles.en).slice(0, 20) !== getStr(initialData.follow_gate_btn_profile_en || defaultFollowGate.btn_profile_en).slice(0, 20) ||
+      getStr(followGateBtnChecks.th).slice(0, 20) !== getStr(initialData.follow_gate_btn_check || defaultFollowGate.btn_check).slice(0, 20) ||
+      getStr(followGateBtnChecks.en).slice(0, 20) !== getStr(initialData.follow_gate_btn_check_en || defaultFollowGate.btn_check_en).slice(0, 20) ||
       leadCaptureGateEnabled !== !!initialData.lead_capture_gate_enabled ||
       checkTemplate(templates.facebook, initialData.facebook_post_template, initialData.facebook_post_template_en, initialData.facebook_post_template_cn, initialData.facebook_post_template_ru) ||
       checkTemplate(templates.instagram, initialData.instagram_post_template, initialData.instagram_post_template_en, initialData.instagram_post_template_cn, initialData.instagram_post_template_ru) ||
@@ -440,15 +485,15 @@ export function SocialAutomationSettings({
           updateSiteSetting("follow_gate_public_reply_en", followGatePublicReplies.en.trim()).then((r) => ({ key: "follow_gate_public_reply_en", ...r })),
           updateSiteSetting("follow_gate_btn_profile", followGateBtnProfiles.th.trim().slice(0, 20) || "👉 ไปที่หน้าโปรไฟล์").then((r) => ({ key: "follow_gate_btn_profile", ...r })),
           updateSiteSetting("follow_gate_btn_profile_en", followGateBtnProfiles.en.trim().slice(0, 20) || "👉 View Profile").then((r) => ({ key: "follow_gate_btn_profile_en", ...r })),
-          updateSiteSetting("follow_gate_btn_check", followGateBtnChecks.th.trim().slice(0, 20) || "✅ ฟอลแล้ว (รับข้อมูล)").then((r) => ({ key: "follow_gate_btn_check", ...r })),
-          updateSiteSetting("follow_gate_btn_check_en", followGateBtnChecks.en.trim().slice(0, 20) || "✅ Followed (Get Info)").then((r) => ({ key: "follow_gate_btn_check_en", ...r })),
+          updateSiteSetting("follow_gate_btn_check", followGateBtnChecks.th.trim().slice(0, 20) || "✅ ฟอลแล้ว รับข้อมูล").then((r) => ({ key: "follow_gate_btn_check", ...r })),
+          updateSiteSetting("follow_gate_btn_check_en", followGateBtnChecks.en.trim().slice(0, 20) || "✅ Followed (Info)").then((r) => ({ key: "follow_gate_btn_check_en", ...r })),
           updateSiteSetting("lead_capture_gate_enabled", leadCaptureGateEnabled).then((r) => ({ key: "lead_capture_gate_enabled", ...r })),
           updateSiteSetting("facebook_post_template", templates.facebook.th).then((r) => ({ key: "facebook_post_template", ...r })),
           updateSiteSetting("facebook_post_template_en", templates.facebook.en).then((r) => ({ key: "facebook_post_template_en", ...r })),
           updateSiteSetting("facebook_post_template_cn", templates.facebook.cn).then((r) => ({ key: "facebook_post_template_cn", ...r })),
           updateSiteSetting("facebook_post_template_ru", templates.facebook.ru).then((r) => ({ key: "facebook_post_template_ru", ...r })),
           updateSiteSetting("instagram_post_template", templates.instagram.th).then((r) => ({ key: "instagram_post_template", ...r })),
-          updateSiteSetting("instagram_post_template_en", templates.instagram.en).then((r) => ({ key: "instagram_post_template_en", ...r })),
+          updateSiteSetting("instagram_post_template_en", templates.instagram.en).then((r) => ({ key: "instagram_post_template", ...r })),
           updateSiteSetting("instagram_post_template_cn", templates.instagram.cn).then((r) => ({ key: "instagram_post_template_cn", ...r })),
           updateSiteSetting("instagram_post_template_ru", templates.instagram.ru).then((r) => ({ key: "instagram_post_template_ru", ...r })),
           updateSiteSetting("line_post_template", templates.line.th).then((r) => ({ key: "line_post_template", ...r })),
@@ -465,6 +510,51 @@ export function SocialAutomationSettings({
 
         if (allSuccess) {
           if (!silent) toast.success(isEn ? "Settings saved successfully ✅" : "บันทึกการตั้งค่าเรียบร้อย ✅");
+          setInitialData((prev) => ({
+            ...(prev || initialSettings || {}),
+            social_automation_keywords: keywords,
+            instagram_story_reply_enabled: instagramStoryReplyEnabled,
+            direct_dm_reply_enabled: directDmReplyEnabled,
+            story_ads_welcome_message: storyAdsWelcomeMessages.th,
+            story_ads_welcome_message_en: storyAdsWelcomeMessages.en,
+            story_ads_welcome_message_cn: storyAdsWelcomeMessages.cn,
+            story_ads_welcome_message_ru: storyAdsWelcomeMessages.ru,
+            story_ads_buttons_enabled: storyAdsButtonsEnabled,
+            story_ads_custom_buttons: storyAdsCustomButtons,
+            auto_featured_carousel_enabled: autoFeaturedCarouselEnabled,
+            questionnaire_budget_options: questionnaireBudgetOptions,
+            questionnaire_zone_options: questionnaireZoneOptions,
+            follow_gate_enabled: followGateEnabled,
+            follow_gate_message: followGateMessages.th.trim(),
+            follow_gate_message_en: followGateMessages.en.trim(),
+            follow_gate_retry_message: followGateRetryMessages.th.trim(),
+            follow_gate_retry_message_en: followGateRetryMessages.en.trim(),
+            follow_gate_success_message: followGateSuccessMessages.th.trim(),
+            follow_gate_success_message_en: followGateSuccessMessages.en.trim(),
+            follow_gate_public_reply: followGatePublicReplies.th.trim(),
+            follow_gate_public_reply_en: followGatePublicReplies.en.trim(),
+            follow_gate_btn_profile: followGateBtnProfiles.th.trim().slice(0, 20),
+            follow_gate_btn_profile_en: followGateBtnProfiles.en.trim().slice(0, 20),
+            follow_gate_btn_check: followGateBtnChecks.th.trim().slice(0, 20),
+            follow_gate_btn_check_en: followGateBtnChecks.en.trim().slice(0, 20),
+            lead_capture_gate_enabled: leadCaptureGateEnabled,
+            facebook_post_template: templates.facebook.th,
+            facebook_post_template_en: templates.facebook.en,
+            facebook_post_template_cn: templates.facebook.cn,
+            facebook_post_template_ru: templates.facebook.ru,
+            instagram_post_template: templates.instagram.th,
+            instagram_post_template_en: templates.instagram.en,
+            instagram_post_template_cn: templates.instagram.cn,
+            instagram_post_template_ru: templates.instagram.ru,
+            line_post_template: templates.line.th,
+            line_post_template_en: templates.line.en,
+            line_post_template_cn: templates.line.cn,
+            line_post_template_ru: templates.line.ru,
+            tiktok_post_template: templates.tiktok.th,
+            tiktok_post_template_en: templates.tiktok.en,
+            tiktok_post_template_cn: templates.tiktok.cn,
+            tiktok_post_template_ru: templates.tiktok.ru,
+          } as SiteSettings));
           setIsDirty(false);
         } else if (!silent) {
           const failedKeys = results

@@ -149,8 +149,8 @@ const DEFAULT_SETTINGS: SiteSettings = {
   follow_gate_public_reply_en: "Sent you a DM! Please follow {{handle}} and check your Inbox 😊📩",
   follow_gate_btn_profile: "👉 ไปที่หน้าโปรไฟล์",
   follow_gate_btn_profile_en: "👉 View Profile",
-  follow_gate_btn_check: "✅ ฟอลแล้ว (รับข้อมูล)",
-  follow_gate_btn_check_en: "✅ Followed (Get Info)",
+  follow_gate_btn_check: "✅ ฟอลแล้ว รับข้อมูล",
+  follow_gate_btn_check_en: "✅ Followed (Info)",
 };
 
 /**
@@ -240,7 +240,8 @@ async function getSiteSettingsInternal(tenantId: string, forceFresh = false): Pr
         "google_maps_url", "facebook_url", "instagram_url", "line_url", "tiktok_url", "whatsapp_number",
         "line_id", "logo_light", "logo_dark", "favicon",
         "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name",
-        "facebook_app_id",
+        "facebook_app_id", "brand_card",
+        "story_ads_welcome_message", "story_ads_welcome_message_en", "story_ads_welcome_message_cn", "story_ads_welcome_message_ru",
         "partners_description", "partners_description_en", "partners_description_cn", "partners_description_ru",
         "follow_gate_message", "follow_gate_message_en", "follow_gate_retry_message", "follow_gate_retry_message_en",
         "follow_gate_success_message", "follow_gate_success_message_en", "follow_gate_public_reply", "follow_gate_public_reply_en",
