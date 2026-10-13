@@ -20,6 +20,7 @@ import {
 } from "../types";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
 import { refreshProjectStatsView } from "./refresh-stats";
+import { revalidatePropertyPublicCache } from "./revalidate-property-cache";
 import {
   PROPERTY_STATUS_DB_VALUE,
   LISTING_TYPE_DB_VALUE,
@@ -571,55 +572,8 @@ export async function createPropertyAction(
         },
       },
     );
-    revalidatePath("/");
-    revalidatePath("/properties");
-    revalidatePath("/sitemap.xml");
-    const categoryPaths = [
-      "/properties/prime-cbd",
-      "/en/properties/prime-cbd",
-      "/zh/properties/prime-cbd",
-      "/ru/properties/prime-cbd",
-      "/properties/pet-friendly-condo",
-      "/en/properties/pet-friendly-condo",
-      "/zh/properties/pet-friendly-condo",
-      "/ru/properties/pet-friendly-condo",
-      "/properties/luxury-villa",
-      "/en/properties/luxury-villa",
-      "/zh/properties/luxury-villa",
-      "/ru/properties/luxury-villa",
-      "/properties/office-for-rent",
-      "/en/properties/office-for-rent",
-      "/zh/properties/office-for-rent",
-      "/ru/properties/office-for-rent",
-    ];
-    categoryPaths.forEach((p) => revalidatePath(p));
-    revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
-    revalidatePath("/api/syndication/feed/meta");
-    revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
-    revalidateTag("public-properties", "max");
-    revalidateTag("property-facets", "max");
-    revalidateTag("meta-catalog-feed", "max");
-    purgeCloudflareCache([
-      `/properties/${seoData.slug}`,
-      `/en/properties/${seoData.slug}`,
-      `/zh/properties/${seoData.slug}`,
-      `/ru/properties/${seoData.slug}`,
-      "/properties",
-      "/sitemap.xml",
-      ...categoryPaths,
-      "/",
-      "/api/public/properties",
-      "/api/syndication/feed/meta",
-      "/api/syndication/feed/facebook",
-    ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "max");
-    revalidateTag("projects", "max");
-    revalidateTag("dashboard-stats", "max");
-    revalidateTag("dashboard-charts", "max");
-    revalidateTag("dashboard-performance", "max");
+    await revalidatePropertyPublicCache({ slug: seoData.slug });
     await refreshProjectStatsView(supabase);
 
     // 🚀 Step 6: Background Job (Non-blocking)
@@ -844,24 +798,9 @@ export async function duplicatePropertyAction(
       await supabase.from("property_features").insert(oldFeatures.map(f => ({ property_id: newPropertyId, feature_id: f.feature_id })));
     }
 
-    revalidatePath("/", "layout");
-    revalidatePath("/properties");
-    revalidatePath("/sitemap.xml");
-    revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
-    revalidatePath("/api/syndication/feed/meta");
-    revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
-    revalidateTag("public-properties", "max");
-    revalidateTag("property-facets", "max");
-    revalidateTag("meta-catalog-feed", "max");
+    await revalidatePropertyPublicCache();
     await refreshProjectStatsView(supabase);
-    await purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "max");
-    revalidateTag("dashboard-stats", "max");
-    revalidateTag("dashboard-charts", "max");
-    revalidateTag("dashboard-performance", "max");
 
     // 🚀 Step 4.5: Background Job (Non-blocking)
     await (inngest.send({

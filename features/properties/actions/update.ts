@@ -27,9 +27,9 @@ import {
   getListingTypeFromDb,
   getPropertyTypeFromDb,
 } from "../labels";
-import { PropertyRow } from "@/lib/services/properties";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
 import { refreshProjectStatsView } from "./refresh-stats";
+import { revalidatePropertyPublicCache } from "./revalidate-property-cache";
 import {
   finalizeUploadSession,
   validatePropertyImagePaths,
@@ -159,7 +159,7 @@ export async function updatePropertyAction(
     const { data, error: findErr } = await supabase
       .from("properties_core")
       .select(`
-        id, tenant_id, status, listing_type, property_type, sale_price, rent_price, 
+        id, slug, tenant_id, status, listing_type, property_type, sale_price, rent_price, 
         bedrooms, bathrooms, floor_area, land_area, branch_id, owner_id, assigned_to, 
         is_exclusive, verified, h3_index_res8, created_by,
         properties_details (
@@ -685,58 +685,9 @@ export async function updatePropertyAction(
       console.warn("Post-update side effects partially failed (non-critical):", sideEffectError);
     }
 
-    revalidatePath("/");
-    revalidatePath(`/properties/${seoData.slug}`);
-    revalidatePath(`/en/properties/${seoData.slug}`);
-    revalidatePath(`/zh/properties/${seoData.slug}`);
-    revalidatePath(`/ru/properties/${seoData.slug}`);
-    revalidatePath("/properties");
-    revalidatePath("/sitemap.xml");
-    const categoryPaths = [
-      "/properties/prime-cbd",
-      "/en/properties/prime-cbd",
-      "/zh/properties/prime-cbd",
-      "/ru/properties/prime-cbd",
-      "/properties/pet-friendly-condo",
-      "/en/properties/pet-friendly-condo",
-      "/zh/properties/pet-friendly-condo",
-      "/ru/properties/pet-friendly-condo",
-      "/properties/luxury-villa",
-      "/en/properties/luxury-villa",
-      "/zh/properties/luxury-villa",
-      "/ru/properties/luxury-villa",
-      "/properties/office-for-rent",
-      "/en/properties/office-for-rent",
-      "/zh/properties/office-for-rent",
-      "/ru/properties/office-for-rent",
-    ];
-    categoryPaths.forEach((p) => revalidatePath(p));
-    revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
-    revalidatePath("/api/syndication/feed/meta");
-    revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
-    revalidateTag("public-properties", "max");
-    revalidateTag("property-facets", "max");
-    revalidateTag("meta-catalog-feed", "max");
-    revalidateTag("popular-areas", "max");
-    revalidateTag("projects", "max");
+    await revalidatePropertyPublicCache({ slug: seoData.slug, oldSlug: data.slug });
     await refreshProjectStatsView(supabase);
-    purgeCloudflareCache([
-      `/properties/${seoData.slug}`,
-      `/en/properties/${seoData.slug}`,
-      `/zh/properties/${seoData.slug}`,
-      `/ru/properties/${seoData.slug}`,
-      "/properties",
-      "/sitemap.xml",
-      ...categoryPaths,
-      "/",
-      "/api/public/properties",
-      "/api/public/popular-areas",
-      "/api/syndication/feed/meta",
-      "/api/syndication/feed/facebook",
-    ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {
@@ -762,7 +713,7 @@ export async function updatePropertyStatusAction(input: {
     const { data: existing, error: fetchErr } = await supabase
       .from("properties_core")
       .select(`
-        id, tenant_id, status, created_by, assigned_to,
+        id, slug, tenant_id, status, created_by, assigned_to,
         properties_details ( title, meta_data )
       `)
       .eq("id", input.id)
@@ -848,14 +799,9 @@ export async function updatePropertyStatusAction(input: {
       await sendStatusUpdateNotification({ id: input.id, title }, input.status as "SOLD" | "RENTED");
     }
 
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
-    revalidateTag("meta-catalog-feed", "max");
-    revalidatePath("/sitemap.xml");
-    revalidatePath("/api/syndication/feed/meta");
-    revalidatePath("/api/syndication/feed/facebook");
+    revalidatePath("/protected/properties");
+    await revalidatePropertyPublicCache({ slug: existing.slug });
     await refreshProjectStatsView(supabase);
-    await purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (err) {
     return { success: false, message: mapDbError(err) };

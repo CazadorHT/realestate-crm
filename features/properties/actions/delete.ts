@@ -13,6 +13,7 @@ import { PROPERTY_IMAGES_BUCKET } from "../logic/images";
 import { mapDbError } from "@/lib/db-error";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
 import { refreshProjectStatsView } from "./refresh-stats";
+import { revalidatePropertyPublicCache } from "./revalidate-property-cache";
 
 /**
  * Delete property and cleanup storage
@@ -30,7 +31,7 @@ export async function deletePropertyAction(formData: FormData) {
     // 0) โหลดเจ้าของทรัพย์เพื่อเช็คสิทธิ (owner/admin) โดยดึงข้อมูลโดยตรงก่อน เพื่อเช็คข้ามสาขาแบบปลอดภัยได้
     const { data: property, error: propErr } = await supabase
       .from("properties_core")
-      .select("id, created_by, tenant_id")
+      .select("id, created_by, tenant_id, slug")
       .eq("id", id)
       .single();
 
@@ -154,51 +155,9 @@ export async function deletePropertyAction(formData: FormData) {
 
     // Clean up TEMP uploads (V3 handled via storage cleanup)
 
-    revalidatePath("/");
-    revalidatePath("/properties");
-    revalidatePath("/sitemap.xml");
-    const categoryPaths = [
-      "/properties/prime-cbd",
-      "/en/properties/prime-cbd",
-      "/zh/properties/prime-cbd",
-      "/ru/properties/prime-cbd",
-      "/properties/pet-friendly-condo",
-      "/en/properties/pet-friendly-condo",
-      "/zh/properties/pet-friendly-condo",
-      "/ru/properties/pet-friendly-condo",
-      "/properties/luxury-villa",
-      "/en/properties/luxury-villa",
-      "/zh/properties/luxury-villa",
-      "/ru/properties/luxury-villa",
-      "/properties/office-for-rent",
-      "/en/properties/office-for-rent",
-      "/zh/properties/office-for-rent",
-      "/ru/properties/office-for-rent",
-    ];
-    categoryPaths.forEach((p) => revalidatePath(p));
-    revalidatePath("/api/public/properties");
     revalidatePath("/protected/properties");
-    revalidatePath("/api/syndication/feed/meta");
-    revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
-    revalidateTag("public-properties", "max");
-    revalidateTag("property-facets", "max");
-    revalidateTag("meta-catalog-feed", "max");
+    await revalidatePropertyPublicCache({ slug: property?.slug });
     await refreshProjectStatsView(supabase);
-    revalidateTag("popular-areas", "max");
-    revalidateTag("dashboard-stats", "max");
-    revalidateTag("dashboard-charts", "max");
-    revalidateTag("dashboard-performance", "max");
-    purgeCloudflareCache([
-      "/properties",
-      "/sitemap.xml",
-      ...categoryPaths,
-      "/",
-      "/api/public/properties",
-      "/api/syndication/feed/meta",
-      "/api/syndication/feed/facebook",
-    ]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePropertyAction → error:", error);

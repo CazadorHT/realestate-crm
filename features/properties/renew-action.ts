@@ -28,12 +28,19 @@ export async function renewPropertyAction(id: string) {
 
     const bumpIso = new Date().toISOString();
 
-    // 1. Fetch current meta_data from properties_details
-    const { data: detailsData } = await supabase
-      .from("properties_details")
-      .select("meta_data")
-      .eq("property_id", id)
-      .maybeSingle();
+    // 1. Fetch current meta_data from properties_details and slug from properties_core
+    const [{ data: detailsData }, { data: coreData }] = await Promise.all([
+      supabase
+        .from("properties_details")
+        .select("meta_data")
+        .eq("property_id", id)
+        .maybeSingle(),
+      supabase
+        .from("properties_core")
+        .select("slug")
+        .eq("id", id)
+        .maybeSingle(),
+    ]);
 
     const currentMeta = (detailsData?.meta_data as Record<string, unknown>) || {};
     const updatedMeta = {
@@ -66,11 +73,9 @@ export async function renewPropertyAction(id: string) {
       }
     );
 
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidatePath("/");
-    revalidatePath("/properties");
     revalidatePath("/protected/properties");
+    const { revalidatePropertyPublicCache } = await import("./actions/revalidate-property-cache");
+    await revalidatePropertyPublicCache({ slug: coreData?.slug });
     return { success: true };
   } catch (error) {
     console.error("Renew property error:", error);

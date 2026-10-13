@@ -7,6 +7,7 @@ import { mapDbError } from "@/lib/db-error";
 import { getStatusFromDb } from "../labels";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
 import { refreshProjectStatsView } from "./refresh-stats";
+import { revalidatePropertyPublicCache } from "./revalidate-property-cache";
 
 /**
  * Soft delete a property by setting deleted_at to now
@@ -18,7 +19,7 @@ export async function softDeleteProperty(id: string) {
     const { supabase, tenantId, role } = ctx;
 
     // 🛡️ SECURITY LOCK 1: Always check boundary if scoped, otherwise fetch first
-    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to").eq("id", id);
+    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to, slug").eq("id", id);
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
     }
@@ -104,17 +105,10 @@ export async function softDeleteProperty(id: string) {
       metadata: { status: prop.status },
     });
 
-    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidatePath("/sitemap.xml");
-    revalidatePath("/api/syndication/feed/meta");
-    revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
-    revalidateTag("meta-catalog-feed", "max");
+    revalidatePath("/protected/properties/trash");
+    await revalidatePropertyPublicCache({ slug: prop.slug });
     await refreshProjectStatsView(supabase);
-    await purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "max");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -130,7 +124,7 @@ export async function restoreProperty(id: string) {
     const { supabase, tenantId, role } = ctx;
 
     // Fetch the property first to verify access if tenantId is undefined
-    let query = supabase.from("properties_core").select("tenant_id, created_by, assigned_to").eq("id", id);
+    let query = supabase.from("properties_core").select("tenant_id, created_by, assigned_to, slug").eq("id", id);
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
     }
@@ -189,17 +183,10 @@ export async function restoreProperty(id: string) {
       entity: "properties",
       entityId: id,
     });
-    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidatePath("/sitemap.xml");
-    revalidatePath("/api/syndication/feed/meta");
-    revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
-    revalidateTag("meta-catalog-feed", "max");
+    revalidatePath("/protected/properties/trash");
+    await revalidatePropertyPublicCache({ slug: prop.slug });
     await refreshProjectStatsView(supabase);
-    await purgeCloudflareCache(["/properties", "/", "/sitemap.xml", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "max");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -215,7 +202,7 @@ export async function permanentDeleteProperty(id: string) {
     const ctx = await requireAuthContext();
     const { supabase, tenantId, role } = ctx;
 
-    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to").eq("id", id);
+    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to, slug").eq("id", id);
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
     }
@@ -284,17 +271,10 @@ export async function permanentDeleteProperty(id: string) {
       entity: "properties",
       entityId: id,
     });
-    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    revalidatePath("/api/syndication/feed/meta");
-    revalidatePath("/api/syndication/feed/facebook");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
-    revalidateTag("meta-catalog-feed", "max");
+    await revalidatePropertyPublicCache({ slug: prop.slug });
     await refreshProjectStatsView(supabase);
-    await purgeCloudflareCache(["/properties", "/", "/api/public/properties", "/api/syndication/feed/meta", "/api/syndication/feed/facebook"]).catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
-    revalidateTag("popular-areas", "max");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };

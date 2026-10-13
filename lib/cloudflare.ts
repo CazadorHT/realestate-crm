@@ -19,42 +19,68 @@ export async function purgeCloudflareCache(pathsOrUrls?: string[]) {
       baseUrl = "https://vccasset.com";
     }
     
-    let body: Record<string, unknown>;
     if (pathsOrUrls && pathsOrUrls.length > 0) {
       // Normalize relative paths into full absolute URLs (Cloudflare requires full URLs on the registered domain)
-      const fullUrls = pathsOrUrls.map((p) => {
+      const fullUrls = Array.from(new Set(pathsOrUrls.map((p) => {
         if (p.startsWith("http://localhost") || p.startsWith("https://localhost")) {
           return p.replace(/https?:\/\/localhost(:\d+)?/, "https://vccasset.com");
         }
         if (p.startsWith("http://") || p.startsWith("https://")) return p;
         return `${baseUrl}${p.startsWith("/") ? "" : "/"}${p}`;
-      });
+      })));
       console.log(`[Cloudflare] Initiating targeted cache purge for ${fullUrls.length} URLs:`, fullUrls);
-      // Cloudflare allows up to 30 URLs per batch on all plans for free
-      body = { files: fullUrls.slice(0, 30) };
+
+      // Cloudflare allows up to 30 URLs per batch on all plans for free.
+      // Batch into chunks of 30 to guarantee NO URLs are silently truncated.
+      const BATCH_SIZE = 30;
+      const batches: string[][] = [];
+      for (let i = 0; i < fullUrls.length; i += BATCH_SIZE) {
+        batches.push(fullUrls.slice(i, i + BATCH_SIZE));
+      }
+
+      const results = await Promise.all(
+        batches.map(async (batch) => {
+          const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ files: batch }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            console.error("[Cloudflare] Batch cache purge failed:", data.errors || data);
+            return { success: false, errors: data.errors };
+          }
+          return { success: true };
+        })
+      );
+
+      const allSuccess = results.every((r) => r.success);
+      if (!allSuccess) {
+        return { success: false, message: "Some purge batches failed" };
+      }
+      console.log(`[Cloudflare] Edge cache purged successfully for all ${fullUrls.length} URLs.`);
+      return { success: true };
     } else {
       console.log(`[Cloudflare] Initiating full cache purge for Zone: ${zoneId}`);
-      body = { purge_everything: true };
+      const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ purge_everything: true }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        console.error("[Cloudflare] Cache purge failed:", data.errors || data);
+        return { success: false, errors: data.errors };
+      }
+      console.log("[Cloudflare] Full edge cache purged successfully.");
+      return { success: true };
     }
-
-    const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      console.error("[Cloudflare] Cache purge failed:", data.errors || data);
-      return { success: false, errors: data.errors };
-    }
-
-    console.log("[Cloudflare] Edge cache purged successfully.");
-    return { success: true };
   } catch (error) {
     console.error("[Cloudflare] Error calling cache purge API:", error);
     return { success: false, error };

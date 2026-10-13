@@ -16,45 +16,10 @@ export async function refreshProjectStatsView(supabase: SupabaseClient, projectS
   }
   
   try {
-    const pathsToRevalidate = [
-      "/",
-      "/en",
-      "/zh",
-      "/ru",
-      "/projects",
-      "/en/projects",
-      "/zh/projects",
-      "/ru/projects",
-      "/properties",
-      "/en/properties",
-      "/zh/properties",
-      "/ru/properties",
-      "/api/public/popular-areas",
-      "/api/public/properties",
-    ];
-
-    if (projectSlug) {
-      pathsToRevalidate.push(
-        `/projects/${projectSlug}`,
-        `/en/projects/${projectSlug}`,
-        `/zh/projects/${projectSlug}`,
-        `/ru/projects/${projectSlug}`
-      );
-    }
-
-    for (const p of pathsToRevalidate) {
-      revalidatePath(p);
-    }
-    revalidatePath("/", "layout");
-    
     const tagsToRevalidate = [
       "projects",
-      "public-data",
-      "properties",
       "popular-areas",
       "provinces",
-      "public-properties",
-      "property-facets",
     ];
 
     for (const tag of tagsToRevalidate) {
@@ -65,33 +30,25 @@ export async function refreshProjectStatsView(supabase: SupabaseClient, projectS
       }
     }
   } catch (error) {
-    console.error("[Revalidate] Error revalidating paths/tags:", error);
+    console.error("[Revalidate] Error revalidating stats tags:", error);
   }
 
-  try {
-    const cfPaths = [
-      "/",
-      "/en",
-      "/zh",
-      "/ru",
-      "/projects",
-      "/en/projects",
-      "/zh/projects",
-      "/ru/projects",
-      "/properties",
-      "/api/public/popular-areas",
-      "/api/public/properties",
-    ];
-    if (projectSlug) {
-      cfPaths.push(
+  if (projectSlug) {
+    try {
+      const projectPaths = [
         `/projects/${projectSlug}`,
         `/en/projects/${projectSlug}`,
         `/zh/projects/${projectSlug}`,
-        `/ru/projects/${projectSlug}`
-      );
+        `/ru/projects/${projectSlug}`,
+      ];
+      for (const p of projectPaths) {
+        try {
+          revalidatePath(p);
+        } catch {}
+      }
+      await purgeCloudflareCache(projectPaths);
+    } catch (e) {
+      console.error("[Cloudflare] Project auto-purge failed:", e);
     }
-    await purgeCloudflareCache(cfPaths);
-  } catch (e) {
-    console.error("[Cloudflare] Auto-purge failed:", e);
   }
 }

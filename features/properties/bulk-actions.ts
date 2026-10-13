@@ -8,6 +8,7 @@ import { PROPERTY_IMAGES_BUCKET } from "./logic/images";
 import { mapDbError } from "@/lib/db-error";
 import { PROPERTY_STATUS_DB_VALUE, PropertyStatus, getStatusFromDb } from "./labels";
 import { refreshProjectStatsView } from "./actions/refresh-stats";
+import { revalidatePropertyPublicCache } from "./actions/revalidate-property-cache";
 
 /**
  * Result type for bulk operations
@@ -106,14 +107,10 @@ export async function bulkDeletePropertiesAction(
       }
     );
 
-    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
+    await revalidatePropertyPublicCache();
     await refreshProjectStatsView(supabase);
-    revalidateTag("popular-areas", "max");
-    revalidateTag("dashboard-stats", "max");
 
     const skipped = blockedIds.size;
     const msg = skipped > 0 
@@ -182,14 +179,10 @@ export async function bulkRestorePropertiesAction(
       }
     );
 
-    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
+    await revalidatePropertyPublicCache();
     await refreshProjectStatsView(supabase);
-    revalidateTag("popular-areas", "max");
-    revalidateTag("dashboard-stats", "max");
 
     return { success: true, count: count ?? ids.length, message: `กู้คืนทรัพย์สำเร็จ ${count} รายการ` };
   } catch (error) {
@@ -295,14 +288,10 @@ export async function bulkPermanentDeletePropertiesAction(
       }
     );
 
-    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
+    await revalidatePropertyPublicCache();
     await refreshProjectStatsView(supabase);
-    revalidateTag("popular-areas", "max");
-    revalidateTag("dashboard-stats", "max");
 
     // 🔔 Notify Admins about bulk permanent delete
     try {
