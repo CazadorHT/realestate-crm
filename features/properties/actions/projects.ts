@@ -189,15 +189,14 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
         : `สร้างโครงการใหม่: ${input.name.th} [Slug: ${input.slug}]`
     });
 
+    await refreshProjectStatsView(ctx.supabase, input.slug);
+    const { revalidatePropertyPublicCache } = await import("./revalidate-property-cache");
+    await revalidatePropertyPublicCache();
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/protected/admin/projects");
-    revalidatePath("/projects");
-    revalidatePath("/");
     if (input.slug) {
       revalidatePath(`/projects/${input.slug}`);
     }
-
-    await refreshProjectStatsView(ctx.supabase, input.slug);
 
     return { success: true, message: "บันทึกข้อมูลโครงการสำเร็จ ✨", id: data.id };
   } catch (err: any) {

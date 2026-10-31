@@ -109,8 +109,8 @@ export async function bulkDeletePropertiesAction(
 
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    await revalidatePropertyPublicCache();
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache();
 
     const skipped = blockedIds.size;
     const msg = skipped > 0 
@@ -181,8 +181,8 @@ export async function bulkRestorePropertiesAction(
 
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    await revalidatePropertyPublicCache();
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache();
 
     return { success: true, count: count ?? ids.length, message: `กู้คืนทรัพย์สำเร็จ ${count} รายการ` };
   } catch (error) {
@@ -290,8 +290,8 @@ export async function bulkPermanentDeletePropertiesAction(
 
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    await revalidatePropertyPublicCache();
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache();
 
     // 🔔 Notify Admins about bulk permanent delete
     try {

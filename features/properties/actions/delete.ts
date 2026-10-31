@@ -156,8 +156,8 @@ export async function deletePropertyAction(formData: FormData) {
     // Clean up TEMP uploads (V3 handled via storage cleanup)
 
     revalidatePath("/protected/properties");
-    await revalidatePropertyPublicCache({ slug: property?.slug });
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache({ slug: property?.slug });
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePropertyAction → error:", error);

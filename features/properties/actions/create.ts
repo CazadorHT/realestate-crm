@@ -573,8 +573,8 @@ export async function createPropertyAction(
       },
     );
     revalidatePath("/protected/properties");
-    await revalidatePropertyPublicCache({ slug: seoData.slug });
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache({ slug: seoData.slug });
 
     // 🚀 Step 6: Background Job (Non-blocking)
     await (inngest.send({
@@ -799,8 +799,8 @@ export async function duplicatePropertyAction(
     }
 
     revalidatePath("/protected/properties");
-    await revalidatePropertyPublicCache();
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache();
 
     // 🚀 Step 4.5: Background Job (Non-blocking)
     await (inngest.send({

@@ -686,8 +686,8 @@ export async function updatePropertyAction(
     }
 
     revalidatePath("/protected/properties");
-    await revalidatePropertyPublicCache({ slug: seoData.slug, oldSlug: data.slug });
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache({ slug: seoData.slug, oldSlug: data.slug });
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {
@@ -800,8 +800,8 @@ export async function updatePropertyStatusAction(input: {
     }
 
     revalidatePath("/protected/properties");
-    await revalidatePropertyPublicCache({ slug: existing.slug });
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache({ slug: existing.slug });
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (err) {
     return { success: false, message: mapDbError(err) };

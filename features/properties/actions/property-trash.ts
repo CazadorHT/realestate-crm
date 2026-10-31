@@ -107,8 +107,8 @@ export async function softDeleteProperty(id: string) {
 
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    await revalidatePropertyPublicCache({ slug: prop.slug });
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache({ slug: prop.slug });
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -185,8 +185,8 @@ export async function restoreProperty(id: string) {
     });
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    await revalidatePropertyPublicCache({ slug: prop.slug });
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache({ slug: prop.slug });
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -273,8 +273,8 @@ export async function permanentDeleteProperty(id: string) {
     });
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
-    await revalidatePropertyPublicCache({ slug: prop.slug });
     await refreshProjectStatsView(supabase);
+    await revalidatePropertyPublicCache({ slug: prop.slug });
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
