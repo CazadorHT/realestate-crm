@@ -120,9 +120,19 @@ export function PublicNav() {
     };
   }, [pathname, mobileMenuOpen]);
 
+  const mapNavLabel =
+    language === "en"
+      ? "Price Map"
+      : language === "cn"
+        ? "地图找房"
+        : language === "ru"
+          ? "На карте"
+          : "แผนที่ราคา";
+
   const navigationLinks = [
     { name: t("nav.home"), href: homePath },
     { name: t("nav.properties"), href: "#latest-properties" },
+    { name: mapNavLabel, href: `${langPrefix}/map` },
     { name: t("nav.services"), href: `${langPrefix}/services` },
     { name: t("nav.blog"), href: `${langPrefix}/blog` },
     { name: t("nav.about"), href: `${langPrefix}/about` },
@@ -550,7 +560,7 @@ export function PublicNav() {
           <div
             className={`xl:hidden relative z-10 border-t border-slate-200 shadow-lg bg-white overflow-hidden transition-all rounded-b-xl   duration-300 ease-in-out ${
               mobileMenuOpen
-                ? "max-h-[500px] opacity-100 "
+                ? "max-h-[600px] opacity-100 "
                 : "max-h-0 opacity-0 border-t-transparent"
             }`}
           >

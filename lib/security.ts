@@ -11,10 +11,10 @@ export function applySecurityHeaders(request: NextRequest, response: NextRespons
     response.headers.set(key, value);
   });
 
-  // 2. Permissions Policy (Block sensitive device access)
+  // 2. Permissions Policy (Allow self-origin geolocation only when user taps Near Me on map)
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+    "camera=(), microphone=(), geolocation=(self), browsing-topics=()"
   );
 
   return response;

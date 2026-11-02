@@ -43,6 +43,12 @@ import { AddressSelectorField } from "./AddressSelectorField";
 import { QuickCreateProjectDialog } from "./QuickCreateProjectDialog";
 import { QuickCreateAreaDialog } from "./QuickCreateAreaDialog";
 import { checkPopularAreaExistsAction } from "@/features/properties/actions/popular-area-actions";
+import {
+  parseCoordinatesFromUrlSync,
+  isShortenedGoogleMapsUrl,
+  sanitizeGoogleMapsInput,
+} from "@/lib/utils/google-maps-coords";
+import { resolveMapCoordinatesAction } from "@/features/properties/actions/resolve-map-coords";
 import { isCbdProperty } from "@/lib/property-utils";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -87,6 +93,38 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = React.useState(false);
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [showDropdownEn, setShowDropdownEn] = React.useState(false);
+  const [mapCoordStatus, setMapCoordStatus] = React.useState<{
+    state: "idle" | "resolving" | "ok" | "invalid";
+    lat?: number;
+    lng?: number;
+  }>({ state: "idle" });
+
+  const verifyMapLink = React.useCallback(async (rawVal: string) => {
+    const cleaned = sanitizeGoogleMapsInput(rawVal);
+    if (!cleaned) {
+      setMapCoordStatus({ state: "idle" });
+      return;
+    }
+    if (cleaned !== rawVal.trim()) {
+      form.setValue("google_maps_link", cleaned, { shouldValidate: true, shouldDirty: true });
+    }
+    const syncCoords = parseCoordinatesFromUrlSync(cleaned);
+    if (syncCoords) {
+      setMapCoordStatus({ state: "ok", lat: syncCoords.lat, lng: syncCoords.lng });
+      return;
+    }
+    if (isShortenedGoogleMapsUrl(cleaned)) {
+      setMapCoordStatus({ state: "resolving" });
+      const res = await resolveMapCoordinatesAction(cleaned);
+      if (res.success && res.lat != null && res.lng != null) {
+        setMapCoordStatus({ state: "ok", lat: res.lat, lng: res.lng });
+      } else {
+        setMapCoordStatus({ state: "invalid" });
+      }
+      return;
+    }
+    setMapCoordStatus({ state: "invalid" });
+  }, [form]);
   const [isProjectSearchModalOpen, setIsProjectSearchModalOpen] = React.useState(false);
   const [modalSearchQuery, setModalSearchQuery] = React.useState("");
   const [modalSuggestions, setModalSuggestions] = React.useState<any[]>([]);
@@ -866,12 +904,33 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <Input
                     {...field}
                     value={field.value ?? ""}
+                    onBlur={(e) => {
+                      field.onBlur();
+                      verifyMapLink(e.target.value);
+                    }}
                     placeholder={isEn ? "Link from Google Maps..." : "ลิงก์จาก Google Maps..."}
                     className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
                   />
                 </FormControl>
                 {fieldState.error ? (
                   <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
+                ) : mapCoordStatus.state === "resolving" ? (
+                  <p className="text-[10px] text-blue-600 mt-1 flex items-center gap-1 font-medium">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>{isEn ? "Resolving pin coordinates..." : "กำลังตรวจสอบพิกัดจากลิงก์..."}</span>
+                  </p>
+                ) : mapCoordStatus.state === "ok" ? (
+                  <p className="text-[10px] text-emerald-600 mt-1 font-semibold">
+                    {isEn
+                      ? `✓ Pin verified (${mapCoordStatus.lat?.toFixed(5)}, ${mapCoordStatus.lng?.toFixed(5)})`
+                      : `✓ ถอดพิกัดหมุดสำเร็จ (${mapCoordStatus.lat?.toFixed(5)}, ${mapCoordStatus.lng?.toFixed(5)})`}
+                  </p>
+                ) : mapCoordStatus.state === "invalid" ? (
+                  <p className="text-[10px] text-amber-600 mt-1 font-medium">
+                    {isEn
+                      ? "⚠ Could not detect a Thailand map pin from this link"
+                      : "⚠ ไม่พบจุดปักหมุดในไทยจากลิงก์นี้ (ระบบยังบันทึกลิงก์ได้ตามปกติ)"}
+                  </p>
                 ) : (
                   <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 leading-relaxed">
                     {isEn ? "Google Maps link e.g. 'https://maps.app.goo.gl/...'" : "google map ตัวอย่าง 'https://maps.app.goo.gl/...'"}

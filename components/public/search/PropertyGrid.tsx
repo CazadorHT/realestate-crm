@@ -3,6 +3,7 @@
 import { m, AnimatePresence } from "framer-motion";
 import { PropertyCard, PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { cn } from "@/lib/utils";
 
 type ApiProperty = PropertyCardProps;
 
@@ -16,6 +17,9 @@ interface PropertyGridProps {
   loadMore?: () => void;
   areaFilterName?: string;
   filterLabel?: string;
+  compactColumns?: boolean;
+  hoveredPropertyId?: string | null;
+  onHoverProperty?: (id: string | null) => void;
 }
 
 /**
@@ -34,12 +38,20 @@ export function PropertyGrid({
   loadMore,
   areaFilterName,
   filterLabel,
+  compactColumns = false,
+  hoveredPropertyId = null,
+  onHoverProperty,
 }: PropertyGridProps) {
   const { language } = useLanguage();
 
   return (
     <div
-      className="grid gap-6 md:gap-y-8 lg:gap-x-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 mb-12"
+      className={cn(
+        "grid gap-6 md:gap-y-8 lg:gap-x-4 mb-12",
+        compactColumns
+          ? "grid-cols-1 md:grid-cols-2"
+          : "md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+      )}
     >
       <AnimatePresence>
         {properties.map((item, i) => (
@@ -53,6 +65,17 @@ export function PropertyGrid({
               delay: Math.min(i * 0.02, 0.2),
               ease: [0.25, 0.1, 0.25, 1],
             }}
+            onMouseEnter={
+              onHoverProperty ? () => onHoverProperty(item.id) : undefined
+            }
+            onMouseLeave={
+              onHoverProperty ? () => onHoverProperty(null) : undefined
+            }
+            className={cn(
+              "rounded-3xl transition-shadow duration-200",
+              hoveredPropertyId === item.id &&
+                "ring-2 ring-blue-600 shadow-xl shadow-blue-500/15"
+            )}
           >
             <PropertyCard
               property={item}

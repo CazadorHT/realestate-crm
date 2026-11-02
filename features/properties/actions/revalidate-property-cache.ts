@@ -1,5 +1,6 @@
 import { revalidateTag, revalidatePath } from "next/cache";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
+import { invalidateMapPinsMemoryCache } from "@/lib/services/map-pins-memory";
 
 /**
  * 🌐 Complete list of static public property listing pages across all 4 supported locales:
@@ -19,6 +20,11 @@ export const PROPERTY_PUBLIC_PATHS = [
   "/en/properties",
   "/zh/properties",
   "/ru/properties",
+  // Interactive Map Explorer Hub
+  "/map",
+  "/en/map",
+  "/zh/map",
+  "/ru/map",
   // Projects Hub
   "/projects",
   "/en/projects",
@@ -44,6 +50,7 @@ export const PROPERTY_PUBLIC_PATHS = [
   // Public APIs and Syndication Feeds
   "/sitemap.xml",
   "/api/public/properties",
+  "/api/public/map-pins",
   "/api/public/popular-areas",
   "/api/syndication/feed/meta",
   "/api/syndication/feed/facebook",
@@ -73,6 +80,7 @@ export interface PropertyCacheRevalidateOptions {
  * for all supported languages (TH, EN, ZH, RU) simultaneously.
  */
 export async function revalidatePropertyPublicCache(options?: PropertyCacheRevalidateOptions) {
+  invalidateMapPinsMemoryCache();
   const paths = [...PROPERTY_PUBLIC_PATHS];
 
   if (options?.slug) {

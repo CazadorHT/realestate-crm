@@ -120,6 +120,9 @@ export type PropertyCardProps = {
       }[]
     | null;
   footerVariant?: "default" | "minimal";
+  latitude?: number | null;
+  longitude?: number | null;
+  project_image_url?: string | null;
 };
 
 /**

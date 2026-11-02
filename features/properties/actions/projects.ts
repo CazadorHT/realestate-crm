@@ -4,6 +4,11 @@ import { requireAuthContext, assertAdminOrManager, assertStaff } from "@/lib/aut
 import { type Database, type Json } from "@/lib/database.types.generated";
 import { mapDbError } from "@/lib/db-error";
 import { refreshProjectStatsView } from "./refresh-stats";
+import {
+  resolveAndExtractCoordinates,
+  sanitizeGoogleMapsInput,
+  isWithinThailandBounds,
+} from "@/lib/utils/google-maps-coords";
 
 export interface ProjectAdminItem {
   id?: string;
@@ -133,6 +138,38 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
       }
     }
 
+    const cleanMapsUrl = sanitizeGoogleMapsInput(input.google_maps_url) || input.google_maps_url || null;
+    let resolvedLat =
+      typeof input.latitude === "number" && isWithinThailandBounds(input.latitude, input.longitude ?? 0)
+        ? input.latitude
+        : null;
+    let resolvedLng =
+      typeof input.longitude === "number" && isWithinThailandBounds(input.latitude ?? 0, input.longitude)
+        ? input.longitude
+        : null;
+
+    if (cleanMapsUrl) {
+      // Check if URL changed on an existing project or if coordinates are still empty
+      let shouldResolveFromUrl = resolvedLat == null || resolvedLng == null;
+      if (!shouldResolveFromUrl && input.id) {
+        const { data: existingProj } = await ctx.supabase
+          .from("projects")
+          .select("google_maps_url")
+          .eq("id", input.id)
+          .maybeSingle();
+        if (existingProj && existingProj.google_maps_url !== cleanMapsUrl) {
+          shouldResolveFromUrl = true;
+        }
+      }
+      if (shouldResolveFromUrl) {
+        const extracted = await resolveAndExtractCoordinates(cleanMapsUrl);
+        if (extracted) {
+          resolvedLat = extracted.lat;
+          resolvedLng = extracted.lng;
+        }
+      }
+    }
+
     const projectData: any = {
       tenant_id: tenantId,
       name: input.name as unknown as Json,
@@ -142,9 +179,9 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
       province: input.province || "กรุงเทพมหานคร",
       district: input.district || null,
       subdistrict: input.subdistrict || null,
-      latitude: input.latitude || null,
-      longitude: input.longitude || null,
-      google_maps_url: input.google_maps_url || null,
+      latitude: resolvedLat,
+      longitude: resolvedLng,
+      google_maps_url: cleanMapsUrl,
       year_completed: input.year_completed || null,
       total_units: input.total_units || null,
       description: (input.description || {}) as Json,
@@ -160,8 +197,8 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
       updated_at: new Date().toISOString(),
     };
 
-    if (input.latitude && input.longitude) {
-      projectData.location = `POINT(${input.longitude} ${input.latitude})`;
+    if (resolvedLat != null && resolvedLng != null) {
+      projectData.location = `POINT(${resolvedLng} ${resolvedLat})`;
     }
 
     if (input.id) {

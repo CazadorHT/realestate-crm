@@ -49,17 +49,10 @@ import { isCbdProperty } from "@/lib/property-utils";
  * Update property with images
  */
 import { getPropertyDiff } from "../logic/diff";
-
-function parseCoordinatesFromGoogleMaps(url: string): { lat: number; lng: number } | null {
-  if (!url) return null;
-  const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
-  const qMatch = url.match(/[?&](?:q|query)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
-  const pathMatch = url.match(/\/(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (pathMatch) return { lat: parseFloat(pathMatch[1]), lng: parseFloat(pathMatch[2]) };
-  return null;
-}
+import {
+  resolveAndExtractCoordinates,
+  sanitizeGoogleMapsInput,
+} from "@/lib/utils/google-maps-coords";
 
 async function syncProjectAddress(supabase: any, projectId: string | null | undefined, values: any) {
   if (!projectId) return;
@@ -112,14 +105,21 @@ async function syncProjectAddress(supabase: any, projectId: string | null | unde
       updates.name = newName;
     }
 
-    // Sync google maps link and update coordinates
-    if (values.google_maps_link && project.google_maps_url !== values.google_maps_link) {
-      updates.google_maps_url = values.google_maps_link;
-      const coords = parseCoordinatesFromGoogleMaps(values.google_maps_link);
-      if (coords) {
-        updates.latitude = coords.lat;
-        updates.longitude = coords.lng;
-        updates.location = `POINT(${coords.lng} ${coords.lat})`;
+    // Sync google maps link and update coordinates (only fill missing project link/coords, never overwrite existing project pin)
+    const cleanMapsLink = sanitizeGoogleMapsInput(values.google_maps_link);
+    if (cleanMapsLink) {
+      const linkChanged = project.google_maps_url !== cleanMapsLink;
+      const missingCoords = project.latitude == null || project.longitude == null;
+      if (linkChanged && !project.google_maps_url) {
+        updates.google_maps_url = cleanMapsLink;
+      }
+      if (missingCoords || (linkChanged && !project.google_maps_url)) {
+        const coords = await resolveAndExtractCoordinates(cleanMapsLink);
+        if (coords) {
+          updates.latitude = coords.lat;
+          updates.longitude = coords.lng;
+          updates.location = `POINT(${coords.lng} ${coords.lat})`;
+        }
       }
     }
 
@@ -196,10 +196,14 @@ export async function updatePropertyAction(
     type AddressInfoV3 = { 
       th?: string; 
       en?: string;
+      cn?: string;
+      ru?: string;
       district?: string; 
       province?: string; 
       subdistrict?: string; 
       maps_link?: string;
+      latitude?: number | null;
+      longitude?: number | null;
       slug?: string;
       popular_area?: string;
       popular_area_en?: string;
@@ -417,6 +421,26 @@ export async function updatePropertyAction(
       }
     }
 
+    // Resolve coordinates only when maps_link changed or coordinates are not yet stored
+    const sanitizedMapsLink = sanitizeGoogleMapsInput(safeValues.google_maps_link) || safeValues.google_maps_link;
+    const prevMapsLink = typeof addressInfo?.maps_link === "string" ? addressInfo.maps_link : "";
+    const prevLat = typeof addressInfo?.latitude === "number" ? addressInfo.latitude : null;
+    const prevLng = typeof addressInfo?.longitude === "number" ? addressInfo.longitude : null;
+
+    let finalLat: number | null = prevLat;
+    let finalLng: number | null = prevLng;
+
+    if (!sanitizedMapsLink) {
+      finalLat = null;
+      finalLng = null;
+    } else if (sanitizedMapsLink !== prevMapsLink || prevLat == null || prevLng == null) {
+      const extracted = await resolveAndExtractCoordinates(sanitizedMapsLink);
+      if (extracted) {
+        finalLat = extracted.lat;
+        finalLng = extracted.lng;
+      }
+    }
+
     // 4.2 Update properties_details (Warm Layer / JSONB)
     const { error: detailsUpdateError } = await supabase
       .from("properties_details")
@@ -435,17 +459,24 @@ export async function updatePropertyAction(
           ru: safeValues.description_ru,
         },
         address_info: {
+          ...addressInfo,
           th: safeValues.address_line1,
+          en: safeValues.address_line1_en ?? addressInfo?.en,
+          cn: safeValues.address_line1_cn ?? addressInfo?.cn,
+          ru: safeValues.address_line1_ru ?? addressInfo?.ru,
           province: safeValues.province,
           district: safeValues.district,
           subdistrict: safeValues.subdistrict,
           postal_code: safeValues.postal_code,
-          maps_link: safeValues.google_maps_link,
+          maps_link: sanitizedMapsLink,
+          latitude: finalLat,
+          longitude: finalLng,
           popular_area: safeValues.popular_area,
           popular_area_en: popularAreaEn,
           popular_area_cn: popularAreaCn,
           popular_area_ru: popularAreaRu,
           nearby_places: safeValues.nearby_places || [],
+          slug: seoData.slug || addressInfo?.slug,
         },
         amenities: {
           floor: safeValues.floor,

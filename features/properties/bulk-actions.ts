@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff, isAdmin } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { PROPERTY_IMAGES_BUCKET } from "./logic/images";
 import { mapDbError } from "@/lib/db-error";
 import { PROPERTY_STATUS_DB_VALUE, PropertyStatus, getStatusFromDb } from "./labels";
@@ -354,11 +354,8 @@ export async function bulkMovePropertiesToTenantAction(
 
     revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
     await refreshProjectStatsView(supabase);
-    revalidateTag("popular-areas", "max");
-    revalidateTag("dashboard-stats", "max");
+    await revalidatePropertyPublicCache();
 
     return { success: true, count: count ?? 0, message: `ดึงข้อมูลมายังสาขาของคุณสำเร็จ ${count} รายการ` };
   } catch (error) {
@@ -430,11 +427,8 @@ export async function bulkApproveAiReviewAction(
 
     revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
     await refreshProjectStatsView(supabase);
-    revalidateTag("popular-areas", "max");
-    revalidateTag("dashboard-stats", "max");
+    await revalidatePropertyPublicCache();
 
     return { 
       success: true, 
@@ -512,11 +506,8 @@ export async function bulkUpdateStatusAction(
 
     revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidateTag("properties", "max");
-    revalidateTag("public-data", "max");
     await refreshProjectStatsView(supabase);
-    revalidateTag("popular-areas", "max");
-    revalidateTag("dashboard-stats", "max");
+    await revalidatePropertyPublicCache();
 
     return { 
       success: true, 

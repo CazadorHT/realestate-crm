@@ -247,6 +247,11 @@ export function PublicFooter() {
     },
   ];
 
+  // Hide footer on full-screen interactive /map explorer to prevent unwanted page scrolling
+  if (normalizedPath === "/map") {
+    return null;
+  }
+
   return (
     <Suspense fallback={null}>
       <footer 

@@ -38,18 +38,10 @@ import { FormSchema } from "../schema";
 import { mapDbError } from "@/lib/db-error";
 import { encrypt, generateBlindIndex } from "@/lib/crypto";
 import { isCbdProperty } from "@/lib/property-utils";
-
-
-function parseCoordinatesFromGoogleMaps(url: string): { lat: number; lng: number } | null {
-  if (!url) return null;
-  const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
-  const qMatch = url.match(/[?&](?:q|query)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
-  const pathMatch = url.match(/\/(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (pathMatch) return { lat: parseFloat(pathMatch[1]), lng: parseFloat(pathMatch[2]) };
-  return null;
-}
+import {
+  resolveAndExtractCoordinates,
+  sanitizeGoogleMapsInput,
+} from "@/lib/utils/google-maps-coords";
 
 async function syncProjectAddress(supabase: any, projectId: string | null | undefined, values: any) {
   if (!projectId) return;
@@ -102,14 +94,21 @@ async function syncProjectAddress(supabase: any, projectId: string | null | unde
       updates.name = newName;
     }
 
-    // Sync google maps link and update coordinates
-    if (values.google_maps_link && project.google_maps_url !== values.google_maps_link) {
-      updates.google_maps_url = values.google_maps_link;
-      const coords = parseCoordinatesFromGoogleMaps(values.google_maps_link);
-      if (coords) {
-        updates.latitude = coords.lat;
-        updates.longitude = coords.lng;
-        updates.location = `POINT(${coords.lng} ${coords.lat})`;
+    // Sync google maps link and update coordinates (auto-resolves shortened maps.app.goo.gl links)
+    const cleanMapsLink = sanitizeGoogleMapsInput(values.google_maps_link);
+    if (cleanMapsLink) {
+      const linkChanged = project.google_maps_url !== cleanMapsLink;
+      const missingCoords = project.latitude == null || project.longitude == null;
+      if (linkChanged && !project.google_maps_url) {
+        updates.google_maps_url = cleanMapsLink;
+      }
+      if (missingCoords || (linkChanged && !project.google_maps_url)) {
+        const coords = await resolveAndExtractCoordinates(cleanMapsLink);
+        if (coords) {
+          updates.latitude = coords.lat;
+          updates.longitude = coords.lng;
+          updates.location = `POINT(${coords.lng} ${coords.lat})`;
+        }
       }
     }
 
@@ -361,6 +360,12 @@ export async function createPropertyAction(
       }
     }
 
+    // Resolve coordinates once on save from shortened/full Google Maps link (3s fail-safe)
+    const sanitizedMapsLink = sanitizeGoogleMapsInput(propertyData.google_maps_link) || propertyData.google_maps_link;
+    const extractedMapCoords = sanitizedMapsLink
+      ? await resolveAndExtractCoordinates(sanitizedMapsLink)
+      : null;
+
     // 2. Insert into properties_details (Warm Layer / JSONB)
     const { error: detailsError } = await supabase
       .from("properties_details")
@@ -387,7 +392,9 @@ export async function createPropertyAction(
           district: propertyData.district,
           subdistrict: propertyData.subdistrict,
           postal_code: propertyData.postal_code,
-          maps_link: propertyData.google_maps_link,
+          maps_link: sanitizedMapsLink,
+          latitude: extractedMapCoords?.lat ?? null,
+          longitude: extractedMapCoords?.lng ?? null,
           popular_area: propertyData.popular_area,
           popular_area_en: popularAreaEn,
           popular_area_cn: popularAreaCn,

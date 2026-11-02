@@ -31,16 +31,10 @@ const PROPERTY_TYPES = [
   { value: "10", label: "อื่นๆ (Other)", labelEn: "Other" },
 ];
 
-function parseCoordinatesFromGoogleMaps(url: string): { lat: number; lng: number } | null {
-  if (!url) return null;
-  const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
-  const qMatch = url.match(/[?&](?:q|query)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
-  const pathMatch = url.match(/\/(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (pathMatch) return { lat: parseFloat(pathMatch[1]), lng: parseFloat(pathMatch[2]) };
-  return null;
-}
+import {
+  parseCoordinatesFromUrlSync,
+  sanitizeGoogleMapsInput,
+} from "@/lib/utils/google-maps-coords";
 
 interface QuickCreateProjectDialogProps {
   isOpen: boolean;
@@ -261,10 +255,10 @@ export function QuickCreateProjectDialog({
         district: cleanAddressWord(district) || null,
         subdistrict: cleanAddressWord(subdistrict) || null,
         ...(() => {
-          const coords = parseCoordinatesFromGoogleMaps(googleMapsUrl);
+          const coords = parseCoordinatesFromUrlSync(googleMapsUrl);
           return coords ? { latitude: coords.lat, longitude: coords.lng } : { latitude: null, longitude: null };
         })(),
-        google_maps_url: googleMapsUrl.trim() || null,
+        google_maps_url: sanitizeGoogleMapsInput(googleMapsUrl) || googleMapsUrl.trim() || null,
         year_completed: yearCompleted.trim() ? Number(yearCompleted) : null,
         total_units: totalUnits.trim() ? Number(totalUnits) : null,
         is_active: true,

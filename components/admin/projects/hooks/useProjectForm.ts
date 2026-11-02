@@ -54,22 +54,12 @@ const CATEGORY_MAPPING_EN: Record<string, string> = {
   SERVICES: "Services",
 };
 
-function parseCoordinatesFromGoogleMaps(url: string): { lat: number; lng: number } | null {
-  if (!url) return null;
-  const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (atMatch) {
-    return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
-  }
-  const qMatch = url.match(/[?&](?:q|query)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (qMatch) {
-    return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
-  }
-  const pathMatch = url.match(/\/(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (pathMatch) {
-    return { lat: parseFloat(pathMatch[1]), lng: parseFloat(pathMatch[2]) };
-  }
-  return null;
-}
+import {
+  parseCoordinatesFromUrlSync,
+  isShortenedGoogleMapsUrl,
+  sanitizeGoogleMapsInput,
+} from "@/lib/utils/google-maps-coords";
+import { resolveMapCoordinatesAction } from "@/features/properties/actions/resolve-map-coords";
 
 interface UseProjectFormProps {
   isOpen: boolean;
@@ -284,12 +274,24 @@ export function useProjectForm({
   };
 
   const handleGoogleMapsUrlChange = (url: string) => {
-    setGoogleMapsUrl(url);
+    const cleaned = sanitizeGoogleMapsInput(url) || url;
+    setGoogleMapsUrl(cleaned);
     setIsFormDirty(true);
-    const coords = parseCoordinatesFromGoogleMaps(url);
+    const coords = parseCoordinatesFromUrlSync(cleaned);
     if (coords) {
       setLat(coords.lat.toString());
       setLng(coords.lng.toString());
+      return;
+    }
+    if (cleaned && isShortenedGoogleMapsUrl(cleaned)) {
+      resolveMapCoordinatesAction(cleaned)
+        .then((res) => {
+          if (res.success && res.lat != null && res.lng != null) {
+            setLat(res.lat.toString());
+            setLng(res.lng.toString());
+          }
+        })
+        .catch(() => {});
     }
   };
 
