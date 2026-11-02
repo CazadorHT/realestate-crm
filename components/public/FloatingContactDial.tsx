@@ -1,24 +1,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
-// Removed Lucide icons: Phone, X, Facebook, MessageSquare
 import {
   FaPhone,
   FaTimes,
   FaFacebook,
   FaLine,
+  FaWhatsapp,
+  FaWeixin,
   FaCommentDots,
 } from "react-icons/fa";
-import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { buildLineUrl, buildWhatsAppUrl } from "@/lib/social-links";
 import { cn } from "@/lib/utils";
 
 export function FloatingContactDial() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const settings = useSiteConfig();
   const siteName = settings.site_name || siteConfig.name;
+
+  const line1Url =
+    buildLineUrl(settings.line_url, settings.line_id) || siteConfig.links.line;
+  const line2Url = buildLineUrl(settings.line_url_2, settings.line_id_2);
+  const whatsappUrl = buildWhatsAppUrl(settings.whatsapp_number);
+  const wechatId = settings.wechat_id?.trim() || "";
+
+  const line1Label =
+    settings.line_label?.trim() || t("common.floating.line_chat");
+  const line2Label =
+    settings.line_label_2?.trim() ||
+    (language === "th"
+      ? `LINE สำรอง${settings.line_id_2 ? ` (${settings.line_id_2})` : " (ติดต่อด่วน)"}`
+      : language === "cn"
+        ? "备用 LINE 快捷联系"
+        : language === "ru"
+          ? "Резервный LINE"
+          : "Direct LINE (Quick Chat)");
 
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +56,9 @@ export function FloatingContactDial() {
   useEffect(() => {
     async function fetchContactInfo() {
       try {
-        const { getPublicFloatingAgentsAction } = await import("@/features/properties/actions/fetch-public-property");
+        const { getPublicFloatingAgentsAction } = await import(
+          "@/features/properties/actions/fetch-public-property"
+        );
         const data = await getPublicFloatingAgentsAction();
 
         if (data && data.length > 0) {
@@ -46,8 +68,8 @@ export function FloatingContactDial() {
             agentName: d.nickname
               ? `Agent (${d.nickname})`
               : d.full_name
-              ? `Agent ${d.full_name}`
-              : t("common.floating.agent_fallback", { name: "Agent" }),
+                ? `Agent ${d.full_name}`
+                : t("common.floating.agent_fallback", { name: "Agent" }),
           }));
           setAgents(mappedAgents);
         } else {
@@ -103,7 +125,6 @@ export function FloatingContactDial() {
 
   // Format helper: 0935502143 -> 093-550-2143
   const formatPhone = (phone: string) => {
-    // Clean non-digit characters first if needed, but assuming mostly digits here
     const clean = phone.replace(/\D/g, "");
     if (clean.length === 10) {
       return `${clean.substring(0, 3)}-${clean.substring(
@@ -120,7 +141,7 @@ export function FloatingContactDial() {
         "hidden md:flex flex-col items-end gap-4 transition-all duration-500 transform",
         isVisible
           ? "translate-y-0 opacity-100"
-          : "translate-y-10 opacity-0 pointer-events-none"
+          : "translate-y-10 opacity-0 pointer-events-none",
       )}
     >
       {/* Menu Items (Stacking upwards) */}
@@ -132,14 +153,13 @@ export function FloatingContactDial() {
         }`}
       >
         {/* Agents Phone List (Scrollable Container) */}
-        {/* Phone Group */}
         <div className="flex items-end gap-2">
           {/* Agent List Popover */}
           <div
             className={`flex flex-col gap-2 bg-white p-2 rounded-xl shadow-xl max-h-[220px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent transition-all duration-300 origin-bottom-right ${
               isPhoneListOpen
                 ? "opacity-100 translate-x-0 scale-100"
-                : "opacity-0 translate-x-4 scale-95 pointer-events-none absolute right-16" // adjust positioning to ensure it doesn't take up layout space when hidden or looks correct
+                : "opacity-0 translate-x-4 scale-95 pointer-events-none absolute right-16"
             }`}
           >
             <div className="text-[10px] font-bold text-slate-400 px-3 py-1.5 border-b border-slate-100 sticky top-0 bg-white z-10 whitespace-nowrap">
@@ -187,7 +207,11 @@ export function FloatingContactDial() {
           <button
             onClick={() => setIsPhoneListOpen(!isPhoneListOpen)}
             className="w-10 h-10 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white shrink-0 hover:bg-green-600 hover:scale-110 transition-all duration-200"
-            aria-label={isPhoneListOpen ? t("common.close") : t("common.floating.phone_list") || "View phone list"}
+            aria-label={
+              isPhoneListOpen
+                ? t("common.close")
+                : t("common.floating.phone_list") || "View phone list"
+            }
           >
             {isPhoneListOpen ? (
               <FaTimes className="w-5 h-5" />
@@ -213,19 +237,90 @@ export function FloatingContactDial() {
           </div>
         </a>
 
-        {/* Line */}
+        {/* WhatsApp */}
+        {whatsappUrl && (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2"
+            onClick={() => setIsOpen(false)}
+          >
+            <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              WhatsApp
+            </span>
+            <div className="w-10 h-10 bg-[#25D366] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#20bd5b] hover:scale-110 transition-all duration-200">
+              <FaWhatsapp className="w-5 h-5 text-white" />
+            </div>
+          </a>
+        )}
+
+        {/* WeChat */}
+        {wechatId && (
+          <button
+            type="button"
+            className="group flex items-center gap-2 cursor-pointer"
+            onClick={() => {
+              navigator.clipboard.writeText(wechatId);
+              toast.success(
+                language === "th"
+                  ? `คัดลอก WeChat ID เรียบร้อย (${wechatId})`
+                  : language === "cn"
+                    ? `已复制微信号 (${wechatId})`
+                    : `Copied WeChat ID (${wechatId})`,
+              );
+              setIsOpen(false);
+            }}
+            aria-label={`WeChat: ${wechatId}`}
+          >
+            <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              WeChat: {wechatId}
+            </span>
+            <div className="w-10 h-10 bg-[#07C160] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#06ad56] hover:scale-110 transition-all duration-200">
+              <FaWeixin className="w-5 h-5 text-white" />
+            </div>
+          </button>
+        )}
+
+        {/* Line 2 (Backup / Direct) */}
+        {line2Url && (
+          <a
+            href={line2Url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2"
+            onClick={() => setIsOpen(false)}
+          >
+            <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              {line2Label}
+            </span>
+            <div className="relative w-10 h-10 bg-teal-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-teal-700 hover:scale-110 transition-all duration-200">
+              <FaLine className="w-5 h-5 text-white" />
+              <span className="absolute -top-1 -right-1 text-[9px] font-extrabold w-4 h-4 rounded-full bg-slate-900 text-white flex items-center justify-center leading-none">
+                2
+              </span>
+            </div>
+          </a>
+        )}
+
+        {/* Line 1 (Official) */}
         <a
-          href={settings.line_url || siteConfig.links.line}
+          href={line1Url}
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center gap-2"
           onClick={() => setIsOpen(false)}
         >
           <span className="bg-white px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            {t("common.floating.line_chat")}
+            {line1Label}
           </span>
-          <div className="w-10 h-10 bg-[#06C755] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#05b34c] hover:scale-110 transition-all duration-200">
+          <div className="relative w-10 h-10 bg-[#06C755] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#05b34c] hover:scale-110 transition-all duration-200">
             <FaLine className="w-5 h-5 text-white" />
+            {line2Url && (
+              <span className="absolute -top-1 -right-1 text-[8px] font-extrabold px-1 py-0.5 rounded-full bg-slate-900 text-white leading-none">
+                OA
+              </span>
+            )}
           </div>
         </a>
       </div>

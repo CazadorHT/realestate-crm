@@ -40,7 +40,12 @@ export type SiteSettingKey =
   | "line_url"
   | "tiktok_url"
   | "whatsapp_number"
+  | "wechat_id"
   | "line_id"
+  | "line_url_2"
+  | "line_id_2"
+  | "line_label"
+  | "line_label_2"
   | "logo_light"
   | "logo_dark"
   | "favicon"
@@ -196,7 +201,12 @@ export interface SiteSettings {
   line_url: string;
   tiktok_url: string;
   whatsapp_number?: string;
+  wechat_id?: string;
   line_id: string;
+  line_url_2?: string;
+  line_id_2?: string;
+  line_label?: string;
+  line_label_2?: string;
   logo_light: string;
   logo_dark: string;
   favicon: string;
@@ -267,6 +277,16 @@ export const getSiteSettingsSchema = (isEn: boolean) => z.object({
     .or(z.literal(""))
     .optional(),
   line_id: z.string().max(50),
+  line_url_2: z
+    .string()
+    .url(isEn ? "Invalid URL format" : "รูปแบบ URL ไม่ถูกต้อง")
+    .or(z.literal(""))
+    .optional(),
+  line_id_2: z.string().max(50).optional().or(z.literal("")),
+  line_label: z.string().max(50).optional().or(z.literal("")),
+  line_label_2: z.string().max(50).optional().or(z.literal("")),
+  whatsapp_number: z.string().max(50).optional().or(z.literal("")),
+  wechat_id: z.string().max(50).optional().or(z.literal("")),
   logo_light: z.string().or(z.literal("")).optional(),
   logo_dark: z.string().or(z.literal("")).optional(),
   favicon: z.string().or(z.literal("")).optional(),

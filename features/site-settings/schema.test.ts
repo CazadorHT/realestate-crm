@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { siteSettingsSchema } from './schema';
+import { buildLineUrl, buildWhatsAppUrl } from '@/lib/social-links';
 
 describe('Site Settings Validation (Zod)', () => {
   const validSettings = {
@@ -41,8 +42,32 @@ describe('Site Settings Validation (Zod)', () => {
     const settingsWithEmptyUrl = {
       ...validSettings,
       facebook_url: '',
+      line_url_2: '',
+      line_id_2: '',
+      whatsapp_number: '',
+      wechat_id: '',
     };
     const result = siteSettingsSchema.safeParse(settingsWithEmptyUrl);
     expect(result.success).toBe(true);
+  });
+
+  it('should validate dual LINE, WhatsApp, and WeChat fields', () => {
+    const result = siteSettingsSchema.safeParse({
+      ...validSettings,
+      line_label: 'LINE Official',
+      line_id_2: 'vcc.direct',
+      line_url_2: 'https://line.me/ti/p/~vcc.direct',
+      line_label_2: 'LINE สำรอง',
+      whatsapp_number: '081-234-5678',
+      wechat_id: 'vcc_asset',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('should format LINE and WhatsApp links accurately', () => {
+    expect(buildLineUrl('', 'vcc.direct')).toBe('https://line.me/ti/p/~vcc.direct');
+    expect(buildLineUrl('', '@vccasset')).toBe('https://line.me/R/ti/p/%40vccasset');
+    expect(buildWhatsAppUrl('081-234-5678')).toBe('https://wa.me/66812345678');
+    expect(buildWhatsAppUrl('+66899998888')).toBe('https://wa.me/66899998888');
   });
 });

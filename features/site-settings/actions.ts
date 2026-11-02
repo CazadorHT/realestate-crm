@@ -19,6 +19,7 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { encrypt, decrypt, isEncrypted } from "@/lib/crypto";
 import { sendAdminNotification } from "@/lib/telegram";
 import { mapDbError } from "@/lib/db-error";
+import { logAudit } from "@/lib/audit";
 
 
 /**
@@ -119,8 +120,13 @@ const DEFAULT_SETTINGS: SiteSettings = {
   instagram_url: siteConfig.links.instagram,
   line_url: siteConfig.links.line,
   tiktok_url: siteConfig.links.tiktok,
-  whatsapp_number: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || process.env.META_WHATSAPP_NUMBER || "+66812345678"),
+  whatsapp_number: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || process.env.META_WHATSAPP_NUMBER || ""),
+  wechat_id: "",
   line_id: siteConfig.contact.lineId,
+  line_url_2: "",
+  line_id_2: "",
+  line_label: "",
+  line_label_2: "",
   logo_light: siteConfig.logo,
   logo_dark: siteConfig.logoDark,
   favicon: "/favicon.png",
@@ -237,8 +243,8 @@ async function getSiteSettingsInternal(tenantId: string, forceFresh = false): Pr
       const stringKeys: SiteSettingKey[] = [
         "site_name", "company_name", "site_description",
         "contact_phone", "contact_email", "contact_address",
-        "google_maps_url", "facebook_url", "instagram_url", "line_url", "tiktok_url", "whatsapp_number",
-        "line_id", "logo_light", "logo_dark", "favicon",
+        "google_maps_url", "facebook_url", "instagram_url", "line_url", "line_url_2", "tiktok_url", "whatsapp_number",
+        "line_id", "line_id_2", "line_label", "line_label_2", "wechat_id", "logo_light", "logo_dark", "favicon",
         "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name",
         "facebook_app_id", "brand_card",
         "story_ads_welcome_message", "story_ads_welcome_message_en", "story_ads_welcome_message_cn", "story_ads_welcome_message_ru",
@@ -377,7 +383,7 @@ export async function updateSiteSetting(
     // Validation using partial schema
     const keysToValidate = [
       "contact_email", "google_maps_url", "facebook_url", 
-      "instagram_url", "line_url", "tiktok_url",
+      "instagram_url", "line_url", "line_url_2", "tiktok_url",
       "logo_light", "logo_dark", "favicon",
       "tiktok_auth_token", "google_integration_tokens"
     ];
@@ -412,6 +418,17 @@ export async function updateSiteSetting(
       console.error(`Error updating site setting [${key}]:`, error);
       return { success: false, message: mapDbError(error) };
     }
+
+    await logAudit(ctx, {
+      action: "UPDATE",
+      entity: "SETTING",
+      entityId: key,
+      summary: `อัปเดตการตั้งค่าเว็บไซต์ (${key})`,
+      metadata: {
+        key,
+        updated: SENSITIVE_KEYS.includes(key) ? "[REDACTED]" : value,
+      },
+    });
 
     revalidatePath("/");
     revalidatePath("/protected/settings");
@@ -564,10 +581,21 @@ export async function updateSiteSettings(
       return { success: false, message: mapDbError(error) };
     }
 
+    await logAudit(ctx, {
+      action: "UPDATE",
+      entity: "SETTING",
+      summary: "อัปเดตการตั้งค่าแบรนด์และช่องทางติดต่อเว็บไซต์",
+      metadata: {
+        updated_keys: Object.keys(settings),
+      },
+    });
+
     revalidatePath("/");
     revalidatePath("/protected/settings");
     revalidateTag(`site-settings-${ctx.tenantId || "global"}`, "hours");
     revalidateTag("site-settings", "hours");
+    invalidateSiteSettingsCache(ctx.tenantId || "global");
+    invalidateSiteSettingsCache("global");
 
     const { purgeCloudflareCache } = await import("@/lib/cloudflare");
     purgeCloudflareCache().catch((e) =>

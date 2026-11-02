@@ -9,13 +9,28 @@ import { useState, useEffect } from "react";
 
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { buildLineUrl } from "@/lib/social-links";
 import { m } from "framer-motion";
 
 export function CTASection() {
-  const { t, langPrefix } = useLanguage();
+  const { t, langPrefix, language } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   const settings = useSiteConfig();
   useEffect(() => setIsMounted(true), []);
+
+  const line1Url =
+    buildLineUrl(settings.line_url, settings.line_id) || siteConfig.links.line;
+  const line2Url = buildLineUrl(settings.line_url_2, settings.line_id_2);
+  const line1Label = settings.line_label?.trim() || t("common.contact_line");
+  const line2Label =
+    settings.line_label_2?.trim() ||
+    (language === "th"
+      ? "LINE สำรอง (ติดต่อด่วน)"
+      : language === "cn"
+        ? "备用 LINE 快捷联系"
+        : language === "ru"
+          ? "Резервный LINE"
+          : "Direct LINE");
 
   // Schema.org Action for SEO
   const schemaData = {
@@ -134,19 +149,36 @@ export function CTASection() {
           </Link>
 
           <a
-            href={settings.line_url || siteConfig.links.line}
+            href={line1Url}
             target="_blank"
             rel="noopener noreferrer"
           >
             <Button
               size="lg"
               variant="outline"
-              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 hover:border-green-700 hover:bg-green-600 hover:text-white  text-green-700  border-green-700 transition-all w-full sm:w-auto shadow-xl hover:shadow-2xl hover:scale-105"
+              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 hover:border-green-700 hover:bg-green-600 hover:text-white text-green-700 border-green-700 transition-all w-full sm:w-auto shadow-xl hover:shadow-2xl hover:scale-105"
             >
               <MessageCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-              {t("common.contact_line")}
+              {line1Label}
             </Button>
           </a>
+
+          {line2Url && (
+            <a
+              href={line2Url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 hover:border-teal-700 hover:bg-teal-600 hover:text-white text-teal-700 border-teal-700 transition-all w-full sm:w-auto shadow-xl hover:shadow-2xl hover:scale-105"
+              >
+                <MessageCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                {line2Label}
+              </Button>
+            </a>
+          )}
         </m.div>
 
         {/* Small trust message */}

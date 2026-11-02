@@ -1,15 +1,24 @@
 "use client";
 
 import { Home, Mail, Phone, MapPin } from "lucide-react";
-import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
+import {
+  FaFacebook,
+  FaInstagram,
+  FaLine,
+  FaTiktok,
+  FaWhatsapp,
+  FaWeixin,
+} from "react-icons/fa";
+import { toast } from "sonner";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState, useTransition, Suspense, useEffect } from "react";
+import { useState, useTransition, Suspense, useEffect, type ElementType } from "react";
 import { subscribeToLineAction } from "@/features/leads/public-actions";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { buildLineUrl, buildWhatsAppUrl } from "@/lib/social-links";
 import { getTransitLinesWithStations } from "@/features/public/stations";
 import { cn } from "@/lib/utils";
 
@@ -155,28 +164,84 @@ export function PublicFooter() {
     };
   });
 
-  const socialMedia = [
+  const line1Url =
+    buildLineUrl(settings.line_url, settings.line_id) || siteConfig.links.line;
+  const line2Url = buildLineUrl(settings.line_url_2, settings.line_id_2);
+  const whatsappUrl = buildWhatsAppUrl(settings.whatsapp_number);
+  const wechatId = settings.wechat_id?.trim() || "";
+
+  const socialMedia: {
+    name: string;
+    href?: string;
+    onClick?: () => void;
+    icon: ElementType;
+    color: string;
+    badge?: string;
+  }[] = [
     {
       name: "Facebook",
-      href: "#",
+      href: settings.facebook_url || siteConfig.links.facebook || "#",
       icon: FaFacebook,
       color: "hover:text-[#1877F2]",
     },
     {
-      name: "Line @",
-      href: "#",
+      name: settings.line_label?.trim() || "Line @",
+      href: line1Url || "#",
       icon: FaLine,
       color: "hover:text-[#06C755]",
+      badge: line2Url ? "OA" : undefined,
     },
+    ...(line2Url
+      ? [
+          {
+            name:
+              settings.line_label_2?.trim() ||
+              (language === "th" ? "LINE สำรอง" : "Direct LINE"),
+            href: line2Url,
+            icon: FaLine,
+            color: "hover:text-teal-400",
+            badge: "2",
+          },
+        ]
+      : []),
+    ...(whatsappUrl
+      ? [
+          {
+            name: "WhatsApp",
+            href: whatsappUrl,
+            icon: FaWhatsapp,
+            color: "hover:text-[#25D366]",
+          },
+        ]
+      : []),
+    ...(wechatId
+      ? [
+          {
+            name: `WeChat: ${wechatId}`,
+            onClick: () => {
+              navigator.clipboard.writeText(wechatId);
+              toast.success(
+                language === "th"
+                  ? `คัดลอก WeChat ID เรียบร้อย (${wechatId})`
+                  : language === "cn"
+                    ? `已复制微信号 (${wechatId})`
+                    : `Copied WeChat ID (${wechatId})`,
+              );
+            },
+            icon: FaWeixin,
+            color: "hover:text-[#07C160]",
+          },
+        ]
+      : []),
     {
       name: "Instagram",
-      href: "#",
+      href: settings.instagram_url || siteConfig.links.instagram || "#",
       icon: FaInstagram,
       color: "hover:text-[#E4405F]",
     },
     {
       name: "TikTok",
-      href: "#",
+      href: settings.tiktok_url || siteConfig.links.tiktok || "#",
       icon: FaTiktok,
       color: "hover:text-white",
     },
@@ -330,33 +395,44 @@ export function PublicFooter() {
                 <h4 className="text-sm font-semibold text-white mb-4">
                   {t("footer.follow_us")}
                 </h4>
-                <div className="flex gap-3">
-                  {socialMedia.map((social) => (
-                    <a
-                      key={social.name}
-                      href={
-                        (social.name === "Facebook"
-                          ? settings.facebook_url
-                          : social.name === "Instagram"
-                            ? settings.instagram_url
-                            : social.name === "Line @"
-                              ? settings.line_url
-                              : social.name === "TikTok"
-                                ? settings.tiktok_url
-                                : "") ||
-                        siteConfig.links[
-                          social.name
-                            .toLowerCase()
-                            .split(" ")[0] as keyof typeof siteConfig.links
-                        ] ||
-                        "#"
-                      }
-                      className={`w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:border-slate-600 ${social.color}`}
-                      aria-label={social.name}
-                    >
-                      <social.icon className="w-5 h-5" />
-                    </a>
-                  ))}
+                <div className="flex flex-wrap gap-3">
+                  {socialMedia.map((social) =>
+                    social.onClick ? (
+                      <button
+                        key={social.name}
+                        type="button"
+                        onClick={social.onClick}
+                        title={social.name}
+                        aria-label={social.name}
+                        className={`relative w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:border-slate-600 cursor-pointer ${social.color}`}
+                      >
+                        <social.icon className="w-5 h-5" />
+                      </button>
+                    ) : (
+                      <a
+                        key={social.name}
+                        href={social.href || "#"}
+                        target={
+                          social.href?.startsWith("http") ? "_blank" : undefined
+                        }
+                        rel={
+                          social.href?.startsWith("http")
+                            ? "noopener noreferrer"
+                            : undefined
+                        }
+                        title={social.name}
+                        aria-label={social.name}
+                        className={`relative w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 transition-all duration-300 hover:scale-110 hover:border-slate-600 ${social.color}`}
+                      >
+                        <social.icon className="w-5 h-5" />
+                        {social.badge && (
+                          <span className="absolute -top-1.5 -right-1.5 text-[9px] font-extrabold px-1 py-0.5 rounded-full bg-emerald-600 text-white leading-none">
+                            {social.badge}
+                          </span>
+                        )}
+                      </a>
+                    ),
+                  )}
                 </div>
               </div>
             </div>

@@ -56,9 +56,10 @@ import {
 } from "@/features/site-settings/schema";
 import { SiteAssetUploader } from "./SiteAssetUploader";
 import { cn } from "@/lib/utils";
-import { FaLine } from "react-icons/fa";
+import { FaLine, FaWhatsapp, FaWeixin } from "react-icons/fa";
 import { Eye, EyeOff } from "lucide-react";
 import { FaFacebook } from "react-icons/fa6";
+import { Badge } from "@/components/ui/badge";
 import { siteConfig } from "@/lib/site-config";
 import { useLanguage } from "@/lib/i18n/language-context";
 
@@ -88,6 +89,12 @@ export function SiteConfigPanel() {
       line_url: "",
       tiktok_url: "",
       line_id: "",
+      line_url_2: "",
+      line_id_2: "",
+      line_label: "",
+      line_label_2: "",
+      whatsapp_number: "",
+      wechat_id: "",
       logo_light: "",
       logo_dark: "",
       favicon: "",
@@ -110,8 +117,17 @@ export function SiteConfigPanel() {
       setIsLoading(true);
       try {
         const data = await getSiteSettings();
-        setInitialData(data);
-        form.reset(data as BrandingSettings);
+        const normalized: SiteSettings = {
+          ...data,
+          line_url_2: data.line_url_2 ?? "",
+          line_id_2: data.line_id_2 ?? "",
+          line_label: data.line_label ?? "",
+          line_label_2: data.line_label_2 ?? "",
+          whatsapp_number: data.whatsapp_number ?? "",
+          wechat_id: data.wechat_id ?? "",
+        };
+        setInitialData(normalized);
+        form.reset(normalized as BrandingSettings);
       } catch (error) {
         toast.error(isEn ? "Failed to load settings" : "ไม่สามารถโหลดการตั้งค่าได้");
       } finally {
@@ -657,20 +673,292 @@ export function SiteConfigPanel() {
                       {isEn ? "Social Media" : "โซเชียลมีเดีย (Social Media)"}
                     </CardTitle>
                     <CardDescription>
-                      {isEn ? "Links to company official social channels" : "ลิงก์ไปยังช่องทางโซเชียลต่างๆ ของบริษัท"}
+                      {isEn
+                        ? "Links to company official social channels, dual LINE accounts, WhatsApp & WeChat"
+                        : "ลิงก์ไปยังช่องทางโซเชียลต่างๆ ของบริษัท รองรับการแสดง 2 ไอดีไลน์ พร้อม WhatsApp และ WeChat"}
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+              <CardContent className="p-6 space-y-6">
+                {/* Dual LINE Channels */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaLine className="h-4 w-4 text-[#06C755]" />
+                      <h4 className="text-sm font-bold text-slate-800">
+                        {isEn
+                          ? "LINE Contact Channels (Supports up to 2 IDs)"
+                          : "ช่องทางติดต่อ LINE (รองรับการแสดงพร้อมกัน 2 ไอดี)"}
+                      </h4>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold"
+                    >
+                      {isEn ? "Dual LINE Ready" : "แสดง 2 LINE ได้ทันที"}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* LINE 1: Official */}
+                    <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FaLine className="h-4 w-4 text-[#06C755]" />
+                          <span className="text-sm font-bold text-slate-900">
+                            {isEn ? "LINE 1: Official Account" : "LINE หลัก (Official / OA)"}
+                          </span>
+                        </div>
+                        <Badge className="bg-[#06C755] hover:bg-[#06C755] text-white text-[10px] px-2 py-0.5">
+                          Official
+                        </Badge>
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="line_label"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-slate-600">
+                              {isEn
+                                ? "Display Label (Optional)"
+                                : "ชื่อป้ายกำกับที่แสดง (ไม่บังคับ)"}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder={
+                                  isEn ? "e.g. LINE Official" : "เช่น LINE Official (@vcconnectasset)"
+                                }
+                                className="rounded-xl bg-white"
+                                {...field}
+                                value={field.value ?? ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="line_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-slate-600">
+                              {isEn ? "LINE Official ID" : "ไอดี LINE Official (แสดงเป็นข้อความ)"}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="@vcconnectasset"
+                                className="rounded-xl bg-white"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="line_url"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-slate-600">
+                              {isEn ? "LINE OA Link" : "ลิงก์แอดเพื่อน LINE OA"}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="https://line.me/ti/p/@..."
+                                className="rounded-xl bg-white"
+                                {...field}
+                                value={field.value ?? ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* LINE 2: Backup / Regular Direct LINE */}
+                    <div className="rounded-2xl border border-teal-200/80 bg-teal-50/30 p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FaLine className="h-4 w-4 text-teal-600" />
+                          <span className="text-sm font-bold text-slate-900">
+                            {isEn ? "LINE 2: Direct / Backup LINE" : "LINE สำรอง (ติดต่อด่วน / ไลน์ปกติ)"}
+                          </span>
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className="bg-teal-100 text-teal-800 text-[10px] px-2 py-0.5"
+                        >
+                          {isEn ? "Direct Chat" : "คุยง่าย ไม่ซับซ้อน"}
+                        </Badge>
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="line_label_2"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-slate-600">
+                              {isEn
+                                ? "Display Label (Optional)"
+                                : "ชื่อป้ายกำกับที่แสดง (ไม่บังคับ)"}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder={
+                                  isEn
+                                    ? "e.g. Direct LINE (Quick Chat)"
+                                    : "เช่น LINE สำรอง (ติดต่อด่วน)"
+                                }
+                                className="rounded-xl bg-white"
+                                {...field}
+                                value={field.value ?? ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="line_id_2"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-slate-600">
+                              {isEn
+                                ? "Backup LINE ID (Leave empty to hide)"
+                                : "ไอดี LINE สำรอง (เว้นว่างหากต้องการแสดง LINE เดียว)"}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder={isEn ? "e.g. vcc.direct" : "เช่น vcc.direct"}
+                                className="rounded-xl bg-white"
+                                {...field}
+                                value={field.value ?? ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="line_url_2"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-slate-600">
+                              {isEn
+                                ? "Backup LINE Link (Optional)"
+                                : "ลิงก์ LINE สำรอง (ไม่บังคับ — สร้างจากไอดีให้อัตโนมัติ)"}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="https://line.me/ti/p/~..."
+                                className="rounded-xl bg-white"
+                                {...field}
+                                value={field.value ?? ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* International Messaging: WhatsApp & WeChat */}
+                <div className="pt-4 border-t border-slate-100 space-y-3">
+                  <h4 className="text-sm font-bold text-slate-800">
+                    {isEn
+                      ? "International Messaging (WhatsApp & WeChat)"
+                      : "แอปแชทเพิ่มเติม (WhatsApp & WeChat)"}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="whatsapp_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <FaWhatsapp className="h-4 w-4 text-[#25D366]" />
+                            <FormLabel className="m-0">
+                              {isEn
+                                ? "WhatsApp Number or Link"
+                                : "เบอร์ WhatsApp หรือลิงก์ wa.me"}
+                            </FormLabel>
+                          </div>
+                          <FormControl>
+                            <Input
+                              placeholder={
+                                isEn
+                                  ? "+66812345678 or 081-234-5678"
+                                  : "เช่น 081-234-5678 หรือ +66812345678"
+                              }
+                              className="rounded-xl"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <p className="text-[11px] text-slate-400">
+                            {isEn
+                              ? "Auto-generates clickable wa.me chat link on the website"
+                              : "ใส่เบอร์โทรได้เลย ระบบจะแปลงเป็นลิงก์แชท WhatsApp ให้อัตโนมัติ"}
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="wechat_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <FaWeixin className="h-4 w-4 text-[#07C160]" />
+                            <FormLabel className="m-0">WeChat ID</FormLabel>
+                          </div>
+                          <FormControl>
+                            <Input
+                              placeholder={isEn ? "e.g. vcc_asset" : "เช่น vcc_asset"}
+                              className="rounded-xl"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <p className="text-[11px] text-slate-400">
+                            {isEn
+                              ? "Displayed with one-click copy ID for Chinese/international clients"
+                              : "แสดงไอดีพร้อมปุ่มกดคัดลอกในคลิกเดียวสำหรับลูกค้าต่างชาติ"}
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Official Social Profiles: Facebook, Instagram, TikTok */}
+                <div className="pt-4 border-t border-slate-100 space-y-3">
+                  <h4 className="text-sm font-bold text-slate-800">
+                    {isEn ? "Social Profiles" : "โซเชียลมีเดียทางการ"}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField
                       control={form.control}
                       name="facebook_url"
                       render={({ field }) => (
                         <FormItem>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-1.5">
                             <FaFacebook className="h-4 w-4 text-blue-600" />
                             <FormLabel className="m-0">Facebook URL</FormLabel>
                           </div>
@@ -679,6 +967,7 @@ export function SiteConfigPanel() {
                               placeholder="https://facebook.com/..."
                               className="rounded-xl"
                               {...field}
+                              value={field.value ?? ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -690,7 +979,7 @@ export function SiteConfigPanel() {
                       name="instagram_url"
                       render={({ field }) => (
                         <FormItem>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-1.5">
                             <Instagram className="h-4 w-4 text-pink-600" />
                             <FormLabel className="m-0">Instagram URL</FormLabel>
                           </div>
@@ -699,79 +988,34 @@ export function SiteConfigPanel() {
                               placeholder="https://instagram.com/..."
                               className="rounded-xl"
                               {...field}
+                              value={field.value ?? ""}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-
-                  <div className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="line_url"
+                      name="tiktok_url"
                       render={({ field }) => (
                         <FormItem>
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaLine className="h-4 w-4 text-emerald-600" />
-                            <FormLabel className="m-0">Line OA Link</FormLabel>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <Video className="h-4 w-4 text-slate-900" />
+                            <FormLabel className="m-0">TikTok URL</FormLabel>
                           </div>
                           <FormControl>
                             <Input
-                              placeholder="https://line.me/ti/p/..."
+                              placeholder="https://tiktok.com/@..."
                               className="rounded-xl"
                               {...field}
+                              value={field.value ?? ""}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <div className="flex gap-4">
-                      <FormField
-                        control={form.control}
-                        name="line_id"
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <FaLine className="h-4 w-4 text-emerald-600" />
-                              <FormLabel className="m-0">
-                                {isEn ? "Line ID (Text)" : "Line ID (แสดงเป็นข้อความ)"}
-                              </FormLabel>
-                            </div>
-                            <FormControl>
-                              <Input
-                                placeholder="@lineid"
-                                className="rounded-xl"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="tiktok_url"
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Video className="h-4 w-4 text-slate-900" />
-                              <FormLabel className="m-0">TikTok URL</FormLabel>
-                            </div>
-                            <FormControl>
-                              <Input
-                                placeholder="https://tiktok.com/@..."
-                                className="rounded-xl"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
                   </div>
                 </div>
               </CardContent>
