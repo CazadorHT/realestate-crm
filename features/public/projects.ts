@@ -40,6 +40,8 @@ export interface PublicProject {
   popularAreaCn?: string | null;
   popularAreaRu?: string | null;
   sortOrder: number;
+  updatedAt?: string | null;
+  latestActivityTime?: number;
 }
 
 // ============================================================
@@ -62,7 +64,7 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
           id, name, slug, developer, property_type, province, district, subdistrict, 
           latitude, longitude, year_completed, total_units, description, image_url, 
           gallery_urls, facilities, nearest_station_code, nearest_station_distance, 
-          seo_title, seo_description, sort_order
+          seo_title, seo_description, sort_order, updated_at, created_at
         `)
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
@@ -98,10 +100,10 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
         }
       });
 
-      // ดึงรูปภาพ cover (main_image) ยูนิตแรก และคำนวณ fallback count / min prices ป้องกันเคส Materialized View ยังไม่รีเฟรช
+      // ดึงรูปภาพ cover (main_image) ยูนิตแรก คำนวณ fallback count / min prices และเวลาอัปเดต/ดันประกาศ (bumped_at) ล่าสุด
       const { data: recentProps } = await supabase
         .from("properties")
-        .select("project_id, main_image, price, rental_price, popular_area_en, popular_area_cn, popular_area_ru")
+        .select("project_id, main_image, price, rental_price, updated_at, created_at, bumped_at:meta_data->>bumped_at, popular_area_en, popular_area_cn, popular_area_ru")
         .eq("status", "ACTIVE")
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
@@ -110,11 +112,23 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
       const fallbackCountMap = new Map<string, number>();
       const fallbackPriceMinMap = new Map<string, number>();
       const fallbackRentalMinMap = new Map<string, number>();
+      const latestPropertyUpdateMap = new Map<string, number>();
 
       if (recentProps) {
         for (const p of recentProps) {
           if (p.project_id) {
             fallbackCountMap.set(p.project_id, (fallbackCountMap.get(p.project_id) || 0) + 1);
+            
+            const bumpTime = (p as any).bumped_at ? new Date((p as any).bumped_at).getTime() : 0;
+            const propTime = Math.max(
+              p.updated_at ? new Date(p.updated_at).getTime() : 0,
+              p.created_at ? new Date(p.created_at).getTime() : 0,
+              bumpTime
+            );
+            if (propTime > (latestPropertyUpdateMap.get(p.project_id) || 0)) {
+              latestPropertyUpdateMap.set(p.project_id, propTime);
+            }
+
             if (!propDataMap.has(p.project_id) && p.main_image) {
               propDataMap.set(p.project_id, {
                 main_image: p.main_image,
@@ -146,7 +160,7 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
       });
 
       // 3. แมปโครงสร้างโปรเจกต์ส่งกลับให้หน้าบ้านใช้งาน
-      return projects.map((p: any) => {
+      const mapped = projects.map((p: any) => {
         const stat = statsMap.get(p.id);
         const propData = propDataMap.get(p.id);
         const mvCount = stat ? Number(stat.property_count || 0) : 0;
@@ -191,10 +205,25 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
           popularAreaCn: propData?.popular_area_cn || popAreaI18n?.cn || null,
           popularAreaRu: propData?.popular_area_ru || popAreaI18n?.ru || null,
           sortOrder: p.sort_order ?? 0,
+          updatedAt: p.updated_at || null,
+          latestActivityTime: Math.max(
+            p.updated_at ? new Date(p.updated_at).getTime() : 0,
+            p.created_at ? new Date(p.created_at).getTime() : 0,
+            latestPropertyUpdateMap.get(p.id) || 0
+          ),
         };
       });
+
+      // จัดเรียงโครงการที่เพิ่งอัปเดตทรัพย์ล่าสุด หรือเพิ่งสร้างล่าสุดขึ้นก่อนเสมอ
+      mapped.sort((a, b) => {
+        const timeDiff = (b.latestActivityTime || 0) - (a.latestActivityTime || 0);
+        if (timeDiff !== 0) return timeDiff;
+        return b.propertyCount - a.propertyCount;
+      });
+
+      return mapped;
     },
-    ["public-projects-list-v3"],
+    ["public-projects-list-v4"],
     { revalidate: 31536000, tags: ["projects", "properties", "public-data"] }
   )();
 }

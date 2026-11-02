@@ -288,7 +288,7 @@ export default async function LandingPage(props: { locale?: string } = {}) {
       {/* ABOVE THE FOLD: Static for maximum First Impression & Zero CLS */}
       <div className="relative">
         <HeroSection
-          hasProperties={!!(initialProperties && initialProperties.length > 0)}
+          hasProperties={true}
           locale={language}
         />
       </div>

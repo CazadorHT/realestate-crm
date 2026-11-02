@@ -87,7 +87,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ProjectsHubPage() {
   const { language } = await getServerTranslations();
-  const projects = await getPublicProjects();
+  const allProjects = await getPublicProjects();
+  // แสดงเฉพาะโครงการที่มีห้องว่างพร้อมขาย/เช่าจริง (propertyCount > 0)
+  const projects = allProjects.filter((p) => (p.propertyCount ?? 0) > 0);
 
   const getPageString = (key: string, params?: Record<string, string | number>) => {
     let val = PAGE_LOCALIZATION[key]?.[language] || PAGE_LOCALIZATION[key]?.th || "";

@@ -1,5 +1,8 @@
-import { NextResponse } from "next/server";
-import { getPublicMapPins } from "@/lib/services/map-pins";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getPublicMapPins,
+  invalidateMapPinsMemoryCache,
+} from "@/lib/services/map-pins";
 
 /**
  * Lightweight Full-Inventory Map Pins Endpoint (~20 KB compressed)
@@ -7,8 +10,14 @@ import { getPublicMapPins } from "@/lib/services/map-pins";
  * - Backed by 1-year Next.js Data Cache + Cloudflare Edge Cache
  * - Client filters & clusters in browser memory (0 extra requests on pan/zoom/filter)
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (
+      request.nextUrl.searchParams.get("fresh") === "1" ||
+      process.env.NODE_ENV === "development"
+    ) {
+      invalidateMapPinsMemoryCache();
+    }
     const payload = await getPublicMapPins();
     return NextResponse.json(payload, {
       headers: {

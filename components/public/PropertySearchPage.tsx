@@ -615,7 +615,7 @@ export function PropertySearchPage({
                 ? "地图找房"
                 : language === "ru"
                   ? "На карте"
-                  : "ดูแผนที่ราคา"}
+                  : "ค้นหาจากแผนที่"}
           </span>
         </Link>
       </div>

@@ -14,6 +14,7 @@ import {
   TrainFront,
   ExternalLink,
   Layers,
+  Car,
 } from "lucide-react";
 import { FaAirbnb } from "react-icons/fa6";
 import { PiFireFill } from "react-icons/pi";
@@ -280,60 +281,95 @@ export function MapSlideablePropertyCard({
         </div>
 
         {/* Unit Specs Row */}
-        <div className="flex items-center flex-wrap gap-3 text-xs text-slate-600 font-medium pt-0.5">
-          {current.bedrooms != null && current.bedrooms > 0 && (
-            <span className="inline-flex items-center gap-1">
-              <BedDouble className="w-3.5 h-3.5 text-slate-400" />
-              <span>{current.bedrooms}</span>
-            </span>
-          )}
-          {current.bathrooms != null && current.bathrooms > 0 && (
-            <span className="inline-flex items-center gap-1">
-              <Bath className="w-3.5 h-3.5 text-slate-400" />
-              <span>{current.bathrooms}</span>
-            </span>
-          )}
-          {(current.size_sqm || current.land_size_sqwah) && (
-            <span className="inline-flex items-center gap-1">
-              <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
-              <span>
-                {current.size_sqm
-                  ? `${current.size_sqm} ${
-                      language === "th"
-                        ? "ตร.ม."
-                        : language === "cn"
-                          ? "㎡"
-                          : language === "ru"
-                            ? "м²"
-                            : "sqm"
-                    }`
-                  : `${current.land_size_sqwah} ${
-                      language === "th"
-                        ? "ตร.ว."
-                        : language === "cn"
-                          ? "平方哇"
-                          : language === "ru"
-                            ? "кв.ва"
-                            : "sq.w"
-                    }`}
-              </span>
-            </span>
-          )}
-          {current.floor != null && (
-            <span className="inline-flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5 text-slate-400" />
-              <span>
-                {language === "th"
-                  ? `ชั้น ${current.floor}`
-                  : language === "cn"
-                    ? `${current.floor}层`
-                    : language === "ru"
-                      ? `эт. ${current.floor}`
-                      : `Fl. ${current.floor}`}
-              </span>
-            </span>
-          )}
-        </div>
+        {(() => {
+          const effectiveFloor =
+            current.floor != null
+              ? current.floor
+              : (current.amenities as any)?.floor != null &&
+                  !isNaN(Number((current.amenities as any)?.floor))
+                ? Number((current.amenities as any)?.floor)
+                : null;
+
+          const effectiveParking =
+            current.parking_slots != null
+              ? current.parking_slots
+              : (current.amenities as any)?.parking_slots != null &&
+                  !isNaN(Number((current.amenities as any)?.parking_slots))
+                ? Number((current.amenities as any)?.parking_slots)
+                : null;
+
+          return (
+            <div className="flex items-center flex-wrap gap-3 text-xs text-slate-600 font-medium pt-0.5">
+              {current.bedrooms != null && current.bedrooms > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <BedDouble className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{current.bedrooms}</span>
+                </span>
+              )}
+              {current.bathrooms != null && current.bathrooms > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <Bath className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{current.bathrooms}</span>
+                </span>
+              )}
+              {(current.size_sqm || current.land_size_sqwah) && (
+                <span className="inline-flex items-center gap-1">
+                  <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span>
+                    {current.size_sqm
+                      ? `${current.size_sqm} ${
+                          language === "th"
+                            ? "ตร.ม."
+                            : language === "cn"
+                              ? "㎡"
+                              : language === "ru"
+                                ? "м²"
+                                : "sqm"
+                        }`
+                      : `${current.land_size_sqwah} ${
+                          language === "th"
+                            ? "ตร.ว."
+                            : language === "cn"
+                              ? "平方哇"
+                              : language === "ru"
+                                ? "кв.ва"
+                                : "sq.w"
+                        }`}
+                  </span>
+                </span>
+              )}
+              {effectiveFloor != null && (
+                <span className="inline-flex items-center gap-1">
+                  <Layers className="w-3.5 h-3.5 text-slate-400" />
+                  <span>
+                    {language === "th"
+                      ? `ชั้น ${effectiveFloor}`
+                      : language === "cn"
+                        ? `${effectiveFloor}层`
+                        : language === "ru"
+                          ? `эт. ${effectiveFloor}`
+                          : `Fl. ${effectiveFloor}`}
+                  </span>
+                </span>
+              )}
+              {effectiveParking != null && effectiveParking > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <Car className="w-3.5 h-3.5 text-slate-400" />
+                  <span>
+                    {effectiveParking}{" "}
+                    {language === "th"
+                      ? "คัน"
+                      : language === "cn"
+                        ? "车位"
+                        : language === "ru"
+                          ? "авто"
+                          : "cars"}
+                  </span>
+                </span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Full Price Block (Matches PropertyCardFooter: Normal + Original Strike-Through + Discount % + Airbnb) */}
         <div className="pt-2 border-t border-slate-100">

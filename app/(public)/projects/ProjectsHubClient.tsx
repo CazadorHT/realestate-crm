@@ -22,6 +22,7 @@ import {
   Warehouse,
   Compass,
   Sparkles,
+  Clock,
   HelpCircle
 } from "lucide-react";
 import type { PublicProject } from "@/features/public/projects";
@@ -63,10 +64,16 @@ const CLIENT_LOCALIZATION: Record<string, Record<string, string>> = {
     ru: "Сортировка",
   },
   sort_default: {
-    th: "แนะนำ / เริ่มต้น",
-    en: "Recommended",
-    cn: "推荐",
-    ru: "Рекомендуемые",
+    th: "อัปเดตล่าสุด / แนะนำ",
+    en: "Latest Updated / Recommended",
+    cn: "最新更新 / 推荐",
+    ru: "Последние обновления",
+  },
+  sort_latest: {
+    th: "อัปเดตล่าสุด",
+    en: "Latest Updated",
+    cn: "最新更新",
+    ru: "Новые",
   },
   sort_price_low: {
     th: "ราคาเริ่มต้น: ต่ำ - สูง",
@@ -250,7 +257,7 @@ export function ProjectsHubClient({
   const [selectedProvince, setSelectedProvince] = React.useState<string>("ALL");
   const [selectedArea, setSelectedArea] = React.useState<string>("ALL");
   const [selectedDeveloper, setSelectedDeveloper] = React.useState<string>("ALL");
-  const [sortBy, setSortBy] = React.useState<"DEFAULT" | "PRICE_LOW" | "UNITS_HIGH" | "NAME_AZ">("DEFAULT");
+  const [sortBy, setSortBy] = React.useState<"DEFAULT" | "LATEST" | "PRICE_LOW" | "UNITS_HIGH" | "NAME_AZ">("DEFAULT");
   const [isTypeDialogOpen, setIsTypeDialogOpen] = React.useState(false);
   const [isProvinceDialogOpen, setIsProvinceDialogOpen] = React.useState(false);
   const [isAreaDialogOpen, setIsAreaDialogOpen] = React.useState(false);
@@ -447,7 +454,8 @@ export function ProjectsHubClient({
 
   // Filter & Sort Logic
   const filteredAndSortedProjects = React.useMemo(() => {
-    let result = [...initialProjects];
+    // แสดงเฉพาะโครงการที่มีห้องว่างจริง (propertyCount > 0)
+    let result = initialProjects.filter((p) => (p.propertyCount ?? 0) > 0);
 
     // 1. Search Query
     if (searchQuery.trim()) {
@@ -481,11 +489,16 @@ export function ProjectsHubClient({
     }
 
     // 5. Sorting
-    if (sortBy === "DEFAULT") {
+    if (sortBy === "DEFAULT" || sortBy === "LATEST") {
       result.sort((a, b) => {
-        if (a.sortOrder !== b.sortOrder) {
-          return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+        // Newest updated projects (or projects with newest listing updates) come first!
+        const timeA = a.latestActivityTime || 0;
+        const timeB = b.latestActivityTime || 0;
+        if (timeB !== timeA) {
+          return timeB - timeA;
         }
+
+        // Secondary tie-breaker: property count
         return b.propertyCount - a.propertyCount;
       });
     } else if (sortBy === "PRICE_LOW") {
@@ -586,7 +599,7 @@ export function ProjectsHubClient({
       </section>
 
       {/* Controls Container - Sticky & Refined */}
-      <section className="sticky top-[62px] z-30 w-full bg-white/90 border-b border-slate-200/85 shadow-xs">
+      <section className="sticky top-[62px] z-30 w-full bg-white border-b border-slate-200/85 shadow-xs">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-2.5">
           
           {/* Row 1: Search Bar + Sort Dropdown */}
@@ -621,6 +634,11 @@ export function ProjectsHubClient({
                     label: getPageString("sort_default"),
                     bg: "bg-amber-50 text-amber-600",
                   },
+                  LATEST: {
+                    icon: Clock,
+                    label: getPageString("sort_latest"),
+                    bg: "bg-blue-50 text-blue-600",
+                  },
                   PRICE_LOW: {
                     icon: ArrowDownWideNarrow,
                     label: getPageString("sort_price_low"),
@@ -629,7 +647,7 @@ export function ProjectsHubClient({
                   UNITS_HIGH: {
                     icon: Building2,
                     label: getPageString("sort_units_high"),
-                    bg: "bg-blue-50 text-blue-600",
+                    bg: "bg-indigo-50 text-indigo-600",
                   },
                   NAME_AZ: {
                     icon: ArrowDownAZ,

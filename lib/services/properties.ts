@@ -406,9 +406,8 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         const effectiveSort = options.sort || "NEWEST";
 
         if (effectiveSort === "NEWEST") {
-          query = query
-            .order("meta_data->>bumped_at", { ascending: false, nullsFirst: false })
-            .order("created_at", { ascending: false });
+          // Use indexed updated_at sort (which preserves bumped listings since bump updates updated_at)
+          query = query.order("updated_at", { ascending: false, nullsFirst: false });
         } else if (effectiveSort === "PRICE_ASC") {
           const effectivePriceType = options.priceType || options.listingType;
           if (effectivePriceType === "RENT") {
@@ -428,14 +427,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         } else if (effectiveSort === "AREA_DESC") {
           query = query.order("size_sqm", { ascending: false, nullsFirst: false });
         } else {
-          // Default fallbacks
-          if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal") {
-            query = query.order("updated_at", { ascending: false, nullsFirst: false });
-          } else {
-            query = query
-              .order("meta_data->>bumped_at", { ascending: false, nullsFirst: false })
-              .order("created_at", { ascending: false });
-          }
+          query = query.order("updated_at", { ascending: false, nullsFirst: false });
         }
 
         let { data: propertiesData, error } = await query.limit(itemsPerPage);
@@ -670,7 +662,8 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           const bumpedAt = ((row as any).meta_data?.bumped_at as string) || (row as any).bumped_at || null;
           const bumpTime = bumpedAt ? new Date(bumpedAt).getTime() : 0;
           const createTime = row.created_at ? new Date(row.created_at).getTime() : 0;
-          const effectiveTime = Math.max(bumpTime, createTime);
+          const updateTime = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+          const effectiveTime = Math.max(bumpTime, updateTime, createTime);
 
           return {
             ...cardBase,

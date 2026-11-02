@@ -12,6 +12,8 @@ import {
   ExternalLink,
   LayoutGrid,
   Maximize2,
+  Layers,
+  Car,
   PanelLeftClose,
   PanelLeftOpen,
   RotateCcw,
@@ -175,7 +177,7 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
                     ? "地图找房 · 真实价格"
                     : language === "ru"
                       ? "Поиск недвижимости на карте"
-                      : "สำรวจทรัพย์จากแผนที่ราคา"}
+                      : "สำรวจทรัพย์โดยแผนที่"}
               </h1>
               <p className="text-xs text-slate-500 font-medium">
                 {language === "en"
@@ -470,6 +472,24 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
                             sizes="80px"
                             className="object-cover"
                           />
+                          {unit.listing_type && (
+                            <span
+                              className={cn(
+                                "absolute top-1 left-1 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs text-white leading-none tracking-tight",
+                                unit.listing_type === "RENT"
+                                  ? "bg-blue-600/95"
+                                  : unit.listing_type === "SALE"
+                                    ? "bg-emerald-600/95"
+                                    : "bg-purple-600/95"
+                              )}
+                            >
+                              {unit.listing_type === "RENT"
+                                ? (language === "th" ? "เช่า" : language === "cn" ? "租" : language === "ru" ? "Аренда" : "Rent")
+                                : unit.listing_type === "SALE"
+                                  ? (language === "th" ? "ขาย" : language === "cn" ? "售" : language === "ru" ? "Продажа" : "Sale")
+                                  : (language === "th" ? "ขาย/เช่า" : language === "cn" ? "租售" : language === "ru" ? "Прод/Аренда" : "Sale/Rent")}
+                            </span>
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h4 className="text-xs font-extrabold text-[#1B263B] truncate">
@@ -480,45 +500,130 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
                               {secondarySubtitle}
                             </p>
                           )}
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1">
-                            {unit.bedrooms != null && unit.bedrooms > 0 && (
-                              <span className="inline-flex items-center gap-0.5">
-                                <BedDouble className="w-3 h-3" />
-                                {unit.bedrooms}
-                              </span>
-                            )}
-                            {unit.bathrooms != null && unit.bathrooms > 0 && (
-                              <span className="inline-flex items-center gap-0.5">
-                                <Bath className="w-3 h-3" />
-                                {unit.bathrooms}
-                              </span>
-                            )}
-                            {unit.size_sqm && (
-                              <span className="inline-flex items-center gap-0.5">
-                                <Maximize2 className="w-3 h-3" />
-                                {unit.size_sqm}m²
-                              </span>
-                            )}
-                          </div>
+                          {(() => {
+                            const unitFloor =
+                              unit.floor != null
+                                ? unit.floor
+                                : (unit.amenities as any)?.floor != null &&
+                                    !isNaN(Number((unit.amenities as any)?.floor))
+                                  ? Number((unit.amenities as any)?.floor)
+                                  : null;
+                            const unitParking =
+                              unit.parking_slots != null
+                                ? unit.parking_slots
+                                : (unit.amenities as any)?.parking_slots != null &&
+                                    !isNaN(Number((unit.amenities as any)?.parking_slots))
+                                  ? Number((unit.amenities as any)?.parking_slots)
+                                  : null;
+
+                            return (
+                              <div className="flex items-center flex-wrap gap-2 text-[11px] text-slate-500 mt-1">
+                                {unit.bedrooms != null && unit.bedrooms > 0 && (
+                                  <span className="inline-flex items-center gap-0.5">
+                                    <BedDouble className="w-3 h-3" />
+                                    {unit.bedrooms}
+                                  </span>
+                                )}
+                                {unit.bathrooms != null && unit.bathrooms > 0 && (
+                                  <span className="inline-flex items-center gap-0.5">
+                                    <Bath className="w-3 h-3" />
+                                    {unit.bathrooms}
+                                  </span>
+                                )}
+                                {unit.size_sqm && (
+                                  <span className="inline-flex items-center gap-0.5">
+                                    <Maximize2 className="w-3 h-3" />
+                                    {unit.size_sqm}m²
+                                  </span>
+                                )}
+                                {unitFloor != null && (
+                                  <span className="inline-flex items-center gap-0.5">
+                                    <Layers className="w-3 h-3" />
+                                    {language === "th"
+                                      ? `ชั้น ${unitFloor}`
+                                      : language === "cn"
+                                        ? `${unitFloor}层`
+                                        : language === "ru"
+                                          ? `эт. ${unitFloor}`
+                                          : `Fl. ${unitFloor}`}
+                                  </span>
+                                )}
+                                {unitParking != null && unitParking > 0 && (
+                                  <span className="inline-flex items-center gap-0.5">
+                                    <Car className="w-3 h-3" />
+                                    {unitParking}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
                           <div className="mt-1.5 flex items-center justify-between gap-1">
                             <div className="min-w-0">
-                              {origVal > 0 && (
-                                <span className="text-[10px] text-slate-400 line-through mr-1">
-                                  {formatPrice(origVal, language)}
-                                </span>
+                              {unit.listing_type === "SALE_AND_RENT" &&
+                              prices.salePrice &&
+                              prices.rentalPrice &&
+                              !filters.priceType &&
+                              !filters.listingType ? (
+                                <div className="flex flex-col text-[10px] leading-tight">
+                                  <div className="flex items-center gap-1 truncate">
+                                    <span className="text-[9px] font-bold text-slate-500">
+                                      {language === "th" ? "ขาย" : language === "cn" ? "售" : language === "ru" ? "Прод." : "Sale"}
+                                    </span>
+                                    <span className="font-extrabold text-[#1B263B]">
+                                      {formatPrice(prices.salePrice, language)}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 truncate">
+                                    <span className="text-[9px] font-bold text-blue-600">
+                                      {language === "th" ? "เช่า" : language === "cn" ? "租" : language === "ru" ? "Аренда" : "Rent"}
+                                    </span>
+                                    <span className="font-extrabold text-blue-600">
+                                      {formatPrice(prices.rentalPrice, language)}
+                                    </span>
+                                    <span className="text-[9px] text-slate-400">
+                                      {language === "th" ? "/ด." : language === "cn" ? "/月" : language === "ru" ? "/мес." : "/mo"}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-baseline gap-1 flex-wrap">
+                                  <span className="text-[10px] font-bold text-slate-500 shrink-0">
+                                    {isRentFocus
+                                      ? (language === "th" ? "เช่า" : language === "cn" ? "租" : language === "ru" ? "Аренда" : "Rent")
+                                      : (language === "th" ? "ขาย" : language === "cn" ? "售" : language === "ru" ? "Продажа" : "Sale")}
+                                  </span>
+                                  {origVal > 0 && (
+                                    <span className="text-[10px] text-slate-400 line-through mr-0.5">
+                                      {formatPrice(origVal, language)}
+                                    </span>
+                                  )}
+                                  <span
+                                    className={cn(
+                                      "text-xs font-extrabold",
+                                      origVal > 0
+                                        ? "text-rose-600"
+                                        : isRentFocus
+                                          ? "text-blue-600"
+                                          : "text-[#1B263B]"
+                                    )}
+                                  >
+                                    {displayVal > 0
+                                      ? formatPrice(displayVal, language)
+                                      : t("common.contact_for_price")}
+                                  </span>
+                                  {isRentFocus && displayVal > 0 && (
+                                    <span className="text-[10px] text-slate-500 font-normal">
+                                      {language === "th"
+                                        ? "/ด."
+                                        : language === "cn"
+                                          ? "/月"
+                                          : language === "ru"
+                                            ? "/мес."
+                                            : "/mo"}
+                                    </span>
+                                  )}
+                                </div>
                               )}
-                              <span
-                                className={cn(
-                                  "text-xs font-extrabold",
-                                  origVal > 0
-                                    ? "text-rose-600"
-                                    : "text-[#1B263B]"
-                                )}
-                              >
-                                {displayVal > 0
-                                  ? formatPrice(displayVal, language)
-                                  : t("common.contact_for_price")}
-                              </span>
                             </div>
                             <Link
                               href={detailHref}

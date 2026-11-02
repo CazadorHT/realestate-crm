@@ -105,7 +105,7 @@ export function SearchResultsHeader({
       {/* Full-Screen Explorer Route (/map) carrying all active filters */}
       <Link
         href={mapHref}
-        className="inline-flex ml-2 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50/70 transition-all cursor-pointer"
+        className="inline-flex ml-0 sm:ml-2 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50/70 transition-all cursor-pointer"
       >
         <MapIcon className="w-3.5 h-3.5" />
         <span>{viewLabels.map}</span>

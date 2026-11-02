@@ -127,11 +127,21 @@ export function PublicNav() {
         ? "地图找房"
         : language === "ru"
           ? "На карте"
-          : "แผนที่ราคา";
+          : "ค้นหาจากแผนที่";
+
+  const projectsNavLabel =
+    language === "en"
+      ? "Projects"
+      : language === "cn"
+        ? "楼盘项目"
+        : language === "ru"
+          ? "Проекты"
+          : "โครงการ";
 
   const navigationLinks = [
     { name: t("nav.home"), href: homePath },
-    { name: t("nav.properties"), href: "#latest-properties" },
+    { name: projectsNavLabel, href: `${langPrefix}/projects` },
+    { name: t("nav.properties"), href: `${langPrefix}/properties` },
     { name: mapNavLabel, href: `${langPrefix}/map` },
     { name: t("nav.services"), href: `${langPrefix}/services` },
     { name: t("nav.blog"), href: `${langPrefix}/blog` },
@@ -198,7 +208,7 @@ export function PublicNav() {
 
       {/* Mobile Menu Backdrop (Focus effect) */}
       <div
-        className={`xl:hidden fixed inset-0 bg-black/50 z-90 transition-opacity duration-300 ease-in-out ${
+        className={`xl:hidden fixed inset-0 bg-black/50 z-[90] transition-opacity duration-300 ease-in-out ${
           mobileMenuOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -207,7 +217,7 @@ export function PublicNav() {
       />
 
       <div
-        className={`fixed top-0 w-full z-100 transition-transform duration-300 ease-in-out will-change-transform ${
+        className={`fixed top-0 w-full z-[100] transition-transform duration-300 ease-in-out will-change-transform ${
           isVisible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
@@ -246,7 +256,7 @@ export function PublicNav() {
                       key={link.name}
                       href={link.href}
                       onClick={(e) => handleNavClick(e, link.href as string)}
-                      className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group"
+                      className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm"
                     >
                       {link.name}
                       <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
@@ -255,7 +265,7 @@ export function PublicNav() {
                     <Link
                       key={link.name}
                       href={link.href}
-                      className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group"
+                      className="text-slate-600 hover:text-blue-600 transition-colors font-medium text-sm relative group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm"
                     >
                       {link.name}
                       <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-linear-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
@@ -558,10 +568,10 @@ export function PublicNav() {
 
           {/* Mobile Menu */}
           <div
-            className={`xl:hidden relative z-10 border-t border-slate-200 shadow-lg bg-white overflow-hidden transition-all rounded-b-xl   duration-300 ease-in-out ${
+            className={`xl:hidden relative z-10 border-t border-slate-200 shadow-lg bg-white overflow-y-auto transition-all rounded-b-xl duration-300 ease-in-out ${
               mobileMenuOpen
-                ? "max-h-[600px] opacity-100 "
-                : "max-h-0 opacity-0 border-t-transparent"
+                ? "max-h-[calc(100dvh-4rem)] opacity-100"
+                : "max-h-0 opacity-0 border-t-transparent pointer-events-none"
             }`}
           >
             <div className="px-4 py-4 space-y-3">

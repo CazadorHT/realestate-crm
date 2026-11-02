@@ -16,7 +16,7 @@ export async function generateMetadata(props: {
   const { language } = await getServerTranslations(internalLocale);
   const langPrefix = getLangPrefix(language);
 
-  let title = "ค้นหาคอนโด บ้าน ออฟฟิศ จากแผนที่ราคาจริง | BTS & MRT";
+  let title = "ค้นหาคอนโด บ้าน ออฟฟิศ โดยจากการค้นหาแผนที่จริง | BTS & MRT";
   let description =
     "สำรวจแผนที่ราคาอสังหาริมทรัพย์แบบโต้ตอบ ดูหมุดราคาขาย-เช่าจริงทุกยูนิตใกล้สถานีรถไฟฟ้า BTS / MRT พร้อมกรองทำเลและสไลด์เทียบห้องว่างได้ทันที";
 

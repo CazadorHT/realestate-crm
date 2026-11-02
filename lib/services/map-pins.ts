@@ -19,6 +19,7 @@ export interface SlimMapPin extends PropertyCardProps {
   project_image_url?: string | null;
   project_name_cn?: string | null;
   project_name_ru?: string | null;
+  amenities?: Record<string, any> | null;
 }
 
 export interface MapTransitStation {
@@ -273,6 +274,21 @@ const fetchCachedMapPinsPayload = unstable_cache(
         row.province,
       ].filter(Boolean);
 
+      const parsedFloor =
+        row.floor != null
+          ? Number(row.floor)
+          : amenitiesObj.floor != null && !isNaN(Number(amenitiesObj.floor))
+            ? Number(amenitiesObj.floor)
+            : null;
+
+      const parsedParking =
+        row.parking_slots != null
+          ? Number(row.parking_slots)
+          : amenitiesObj.parking_slots != null &&
+              !isNaN(Number(amenitiesObj.parking_slots))
+            ? Number(amenitiesObj.parking_slots)
+            : null;
+
       pins.push({
         id: row.id,
         slug: row.slug,
@@ -292,8 +308,8 @@ const fetchCachedMapPinsPayload = unstable_cache(
         bathrooms: row.bathrooms ?? null,
         size_sqm: row.size_sqm ?? null,
         land_size_sqwah: row.land_size_sqwah ?? null,
-        parking_slots: row.parking_slots ?? null,
-        floor: row.floor ?? null,
+        parking_slots: parsedParking,
+        floor: parsedFloor,
         province: row.province || null,
         popular_area: row.popular_area || null,
         popular_area_en: row.popular_area_en || areaTrans?.en || null,
@@ -338,6 +354,7 @@ const fetchCachedMapPinsPayload = unstable_cache(
         is_cbd: typeof amenitiesObj.is_cbd === "boolean" ? amenitiesObj.is_cbd : null,
         airbnb_daily_price: amenitiesObj.airbnb_daily_price ?? null,
         airbnb_monthly_price: amenitiesObj.airbnb_monthly_price ?? null,
+        amenities: amenitiesObj,
         nearby_transits: getSafeNearbyTransits(row.nearby_transits),
         latitude: lat,
         longitude: lng,
@@ -413,7 +430,7 @@ const fetchCachedMapPinsPayload = unstable_cache(
       generatedAt: Date.now(),
     };
   },
-  ["public-map-pins-v2"],
+  ["public-map-pins-v3"],
   {
     revalidate: 31536000, // 1 year cache (purged on-demand via revalidatePropertyPublicCache)
     tags: ["properties", "public-data", "public-properties", "projects", "transit-stations"],
