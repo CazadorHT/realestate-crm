@@ -151,8 +151,8 @@ export function TransitToggleButton({
       className={cn(
         "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-md border transition-all cursor-pointer select-none",
         showTransit
-          ? "bg-white text-slate-800 border-emerald-500/50 ring-2 ring-emerald-500/15 hover:bg-emerald-50/40"
-          : "bg-white/90 text-slate-500 border-slate-200 hover:bg-white hover:text-slate-700",
+          ? "bg-white text-slate-800 border-emerald-500/50 ring-2 ring-emerald-500/15 hover:bg-emerald-50"
+          : "bg-white text-slate-500 border-slate-200 hover:bg-white hover:text-slate-700",
         className
       )}
     >

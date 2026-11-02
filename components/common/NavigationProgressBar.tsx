@@ -11,9 +11,9 @@ import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
 export function NavigationProgressBar() {
   return (
     <ProgressBar
-      height="3px"
-      color="#3b82f6"
-      options={{ showSpinner: false, trickleSpeed: 200 }}
+      height="3.5px"
+      color="#2563eb"
+      options={{ showSpinner: true, trickleSpeed: 100 }}
       shallowRouting
     />
   );
