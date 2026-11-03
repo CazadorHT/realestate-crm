@@ -29,6 +29,11 @@ const prompt = localFont({
       style: "normal",
     },
     {
+      path: "../public/fonts/Prompt/Prompt-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
       path: "../public/fonts/Prompt/Prompt-SemiBold.ttf",
       weight: "600",
       style: "normal",
@@ -36,6 +41,11 @@ const prompt = localFont({
     {
       path: "../public/fonts/Prompt/Prompt-Bold.ttf",
       weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Prompt/Prompt-ExtraBold.ttf",
+      weight: "800",
       style: "normal",
     },
   ],
@@ -265,7 +275,7 @@ export default async function RootLayout({
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
       </head>
       <body
-        className={`${prompt.className} ${notoThai.variable} antialiased`}
+        className={`${prompt.className} ${prompt.variable} ${notoThai.variable} antialiased`}
         style={{ scrollbarGutter: "stable" }}
       >
 

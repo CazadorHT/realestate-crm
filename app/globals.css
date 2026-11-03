@@ -533,3 +533,17 @@ body:has([role="dialog"][data-state="open"]) .chatbot-container {
     backdrop-filter: blur(64px); 
   }
 }
+
+/* Ensure MapLibre map and all overlay markers, pills, and popups inherit the project's primary font (Prompt) consistently across PC & Mac */
+.maplibregl-map,
+.maplibregl-marker,
+.maplibregl-popup,
+.maplibregl-ctrl {
+  font-family: var(--font-prompt), var(--font-noto-thai), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.maplibregl-marker button,
+.maplibregl-marker div,
+.maplibregl-marker span {
+  font-family: inherit;
+}

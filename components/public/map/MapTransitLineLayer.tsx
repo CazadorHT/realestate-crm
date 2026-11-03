@@ -374,7 +374,7 @@ export const MapTransitLineLayer = memo(function MapTransitLineLayer({
         offset={stationOffset}
         style={{ zIndex: 30, pointerEvents: "none" }}
       >
-        <div className="pointer-events-none flex items-center select-none animate-in fade-in zoom-in-95 duration-150">
+        <div className="pointer-events-none flex items-center select-none font-sans animate-in fade-in zoom-in-95 duration-150">
           {isLongName ? (
             /* Multi-line badge for long station names (e.g. Airport Rail Link รามคำแหง) */
             <div

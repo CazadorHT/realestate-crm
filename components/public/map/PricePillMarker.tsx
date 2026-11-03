@@ -120,7 +120,7 @@ export const PricePillMarker = memo(function PricePillMarker({
       onMouseLeave={() => onMouseLeave?.()}
       aria-label={`${typeLabel}: ${group.leadPriceLabel}${isMultiUnit ? ` (${countSuffix})` : ""}`}
       className={cn(
-        "group relative inline-flex items-center gap-1.5 min-h-[34px] px-2.5 py-1 rounded-full font-extrabold text-xs tracking-tight transition-all duration-200 select-none cursor-pointer shadow-md border whitespace-nowrap bg-white text-[#1B263B]",
+        "group relative inline-flex items-center gap-1.5 min-h-[34px] px-2.5 py-1 rounded-full font-sans font-extrabold text-xs tracking-tight transition-all duration-200 select-none cursor-pointer shadow-md border whitespace-nowrap bg-white text-[#1B263B]",
         isSelected
           ? `${activeBgClass} scale-110 shadow-xl`
           : isHovered
