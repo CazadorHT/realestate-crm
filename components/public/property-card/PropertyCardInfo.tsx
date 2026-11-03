@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { CheckSquare, Square, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -24,7 +25,8 @@ import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName, PROVINCES } from "@/lib/utils/provinces";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
-import { FaTrainSubway } from "react-icons/fa6";
+import { FaTrainSubway, FaPersonWalking, FaCarSide } from "react-icons/fa6";
+import { computeTransitTravelInfo, getTransitLogo } from "../map/map-price-utils";
 import {
   Tooltip,
   TooltipContent,
@@ -272,6 +274,7 @@ export function PropertyCardInfo({
             dbName: string;
             type: string;
             distance?: number | null;
+            time?: string | number | null;
           }
 
           const candidates: TransitCandidate[] = [];
@@ -293,6 +296,7 @@ export function PropertyCardInfo({
               dbName: property.transit_station_name || "",
               type: property.transit_type,
               distance: property.transit_distance_meters,
+              time: (property as any).transit_time || null,
             });
           }
 
@@ -307,6 +311,7 @@ export function PropertyCardInfo({
                     dbName: t.station_name || "",
                     type: t.type,
                     distance: t.distance_meters,
+                    time: t.time || null,
                   });
                 }
               }
@@ -331,24 +336,6 @@ export function PropertyCardInfo({
             if (t === "SRT_RED" || t === "SRT") return "SRT";
             if (t === "BRT") return "BRT";
             return t;
-          };
-
-          const getTypeBadgeClass = (type?: string | null): string => {
-            const norm = getNormalizedType(type);
-            switch (norm) {
-              case "BTS":
-                return "bg-emerald-600";
-              case "MRT":
-                return "bg-blue-800";
-              case "ARL":
-                return "bg-rose-600";
-              case "SRT":
-                return "bg-red-700";
-              case "BRT":
-                return "bg-teal-600";
-              default:
-                return "bg-slate-500";
-            }
           };
 
           // Prioritize selected station filter if matches any candidate
@@ -377,49 +364,44 @@ export function PropertyCardInfo({
 
           const transitStation = chosen.name;
           const rawTransitType = chosen.type;
-          const transitDistance = chosen.distance;
 
           if (!transitStation) return null;
 
           const transitType = getNormalizedType(rawTransitType);
-          const badgeClass = getTypeBadgeClass(rawTransitType);
 
-          const formatDistance = (meters: number): string => {
-            if (meters >= 1000) {
-              const km = (meters / 1000).toFixed(1).replace(/\.0$/, "");
-              const unit =
-                language === "en"
-                  ? "km"
-                  : language === "cn"
-                    ? "公里"
-                    : language === "ru"
-                      ? "км"
-                      : "กม.";
-              return `${km} ${unit}`;
-            }
-            const unit =
-              language === "en"
-                ? "m"
-                : language === "cn"
-                  ? "米"
-                  : language === "ru"
-                    ? "м"
-                    : "ม.";
-            return `${meters} ${unit}`;
-          };
+          const travel = computeTransitTravelInfo({
+            distanceMeters: chosen.distance,
+            explicitTime: chosen.time,
+            language,
+          });
 
           return (
             <div className="flex items-center gap-1 text-stone-500 min-w-0 mt-0.5 ml-0.5">
               {/* <FaTrainSubway className="h-3 w-3 text-blue-500 shrink-0" /> */}
               <span className="text-[11px] flex items-center gap-1.5 truncate">
-                <span
-                  className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0 ${badgeClass}`}
-                >
-                  {transitType}
-                </span>
-                <span className="truncate font-medium text-stone-600 text-xs">
+                <div className="relative w-4 h-4 shrink-0 flex items-center justify-center">
+                  <Image
+                    src={getTransitLogo(rawTransitType)}
+                    alt={transitType}
+                    width={16}
+                    height={16}
+                    className="object-contain w-4 h-4"
+                  />
+                </div>
+                <span className="truncate font-medium text-stone-700 text-xs">
                   {transitStation.replace("_", " ")}
                 </span>
+                {travel.summaryLabel ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-stone-500 font-medium shrink-0">
+                    <span className="text-stone-300">•</span>
+                    {travel.isWalk ? (
+                      <FaPersonWalking className="w-3 h-3 text-emerald-600 shrink-0" title="เดิน" />
+                    ) : (
+                      <FaCarSide className="w-3 h-3 text-blue-600 shrink-0" title="รถ/วิน" />
+                    )}
+                    <span>{travel.summaryLabel}</span>
+                  </span>
+                ) : null}
               </span>
             </div>
           );

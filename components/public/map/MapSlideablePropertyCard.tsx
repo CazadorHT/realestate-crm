@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -16,13 +16,17 @@ import {
   Layers,
   Car,
 } from "lucide-react";
-import { FaAirbnb } from "react-icons/fa6";
+import { FaAirbnb, FaPersonWalking, FaCarSide, FaTrainSubway } from "react-icons/fa6";
 import { PiFireFill } from "react-icons/pi";
 import { getEffectivePrice } from "@/lib/property-hardened-utils";
 import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import type { MapLocationGroup } from "./useMapClusters";
-import { getPinProjectOrPropertyHeadline } from "./map-price-utils";
+import {
+  computeTransitTravelInfo,
+  getPinProjectOrPropertyHeadline,
+  getTransitLogo,
+} from "./map-price-utils";
 
 const FALLBACK_IMG =
   "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800&auto=format&fit=crop";
@@ -130,6 +134,37 @@ export function MapSlideablePropertyCard({
     (language === "ru" && current.transit_station_name_ru) ||
     current.transit_station_name;
 
+  // Exact user-entered transit distance and time from property details / nearby_transits
+  const travelInfo = useMemo(() => {
+    let explicitDist = current.transit_distance_meters || null;
+    let explicitTime: string | null = null;
+
+    if (Array.isArray(current.nearby_transits)) {
+      const match = (current.nearby_transits as any[]).find((t: any) => {
+        if (!t) return false;
+        const name = (t.station_name || "").trim().toLowerCase();
+        const main = (current.transit_station_name || "").trim().toLowerCase();
+        return main && (name.includes(main) || main.includes(name));
+      });
+      if (match) {
+        if (match.distance_meters != null && match.distance_meters > 0) {
+          explicitDist = Number(match.distance_meters);
+        }
+        if (match.time && typeof match.time === "string" && match.time.trim()) {
+          explicitTime = match.time.trim();
+        }
+      }
+    }
+
+    if (!explicitDist) return null;
+
+    return computeTransitTravelInfo({
+      distanceMeters: explicitDist,
+      explicitTime,
+      language,
+    });
+  }, [current, language]);
+
   return (
     <div
       onClick={(e) => e.stopPropagation()}
@@ -210,42 +245,26 @@ export function MapSlideablePropertyCard({
           </>
         )}
 
-        {/* Bottom Overlay: Transit Badge + Slide Dots */}
-        <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between gap-2">
-          {transitLabel ? (
-            <span className="inline-flex items-center gap-1 bg-white/95 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs truncate max-w-[75%]">
-              <TrainFront className="w-3 h-3 text-blue-600 shrink-0" />
-              <span className="truncate">
-                {transitLabel}
-                {current.transit_distance_meters
-                  ? ` (${current.transit_distance_meters}m)`
-                  : ""}
-              </span>
-            </span>
-          ) : (
-            <span />
-          )}
-
-          {total > 1 && total <= 8 && (
-            <div className="flex items-center gap-1 bg-black/40 px-1.5 py-1 rounded-full">
-              {units.map((u, idx) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setImgError(false);
-                    setIndex(idx);
-                  }}
-                  aria-label={`Unit ${idx + 1}`}
-                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    idx === safeIndex ? "w-3.5 bg-white" : "w-1.5 bg-white/50"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Bottom Overlay: Slide Dots (when multiple units in project) */}
+        {total > 1 && total <= 8 && (
+          <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 bg-black/45 backdrop-blur-xs px-2 py-1 rounded-full z-10">
+            {units.map((u, idx) => (
+              <button
+                key={u.id}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImgError(false);
+                  setIndex(idx);
+                }}
+                aria-label={`Unit ${idx + 1}`}
+                className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                  idx === safeIndex ? "w-3.5 bg-white" : "w-1.5 bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Card Body: Project Name Primary Headline (or Property Title Fallback) */}
@@ -370,6 +389,35 @@ export function MapSlideablePropertyCard({
             </div>
           );
         })()}
+
+        {/* Transit Access Badge with Official Transit Line Logo under Room Specs */}
+        {transitLabel && (
+          <div className="flex items-center gap-1.5">
+            <div className="inline-flex items-center gap-1.5 bg-slate-50/90 text-slate-600 text-[11px] font-medium px-2 py-0.5 rounded-lg border border-slate-200/70 max-w-full">
+              <div className="relative w-3.5 h-3.5 shrink-0 flex items-center justify-center">
+                <Image
+                  src={getTransitLogo(current.transit_type)}
+                  alt={current.transit_type || "Transit"}
+                  width={14}
+                  height={14}
+                  className="object-contain w-3.5 h-3.5"
+                />
+              </div>
+              <span className="text-slate-700 font-semibold truncate">{transitLabel}</span>
+              {travelInfo && travelInfo.summaryLabel ? (
+                <span className="inline-flex items-center gap-1 text-slate-500 font-normal shrink-0 text-[10px]">
+                  <span className="text-slate-300">•</span>
+                  {travelInfo.isWalk ? (
+                    <FaPersonWalking className="w-3 h-3 text-emerald-600 shrink-0" title="เดิน" />
+                  ) : (
+                    <FaCarSide className="w-3 h-3 text-blue-600 shrink-0" title="รถ/วิน" />
+                  )}
+                  <span>{travelInfo.summaryLabel}</span>
+                </span>
+              ) : null}
+            </div>
+          </div>
+        )}
 
         {/* Full Price Block (Matches PropertyCardFooter: Normal + Original Strike-Through + Discount % + Airbnb) */}
         <div className="pt-2 border-t border-slate-100">

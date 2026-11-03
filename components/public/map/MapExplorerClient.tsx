@@ -21,7 +21,10 @@ import {
 import { SearchFilterBar } from "@/components/public/search/SearchFilterBar";
 import { PropertyCard } from "@/components/public/PropertyCard";
 import { PropertyVectorMapLazy } from "./PropertyVectorMapLazy";
-import { getPinProjectOrPropertyHeadline } from "./map-price-utils";
+import {
+  getPinProjectOrPropertyHeadline,
+  haversineDistanceMeters,
+} from "./map-price-utils";
 import { usePropertyFilters } from "@/hooks/search/usePropertyFilters";
 import { usePropertyFiltering } from "@/hooks/search/usePropertyFiltering";
 import { useMapPins } from "@/hooks/search/useMapPins";
@@ -29,7 +32,11 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getEffectivePrice } from "@/lib/property-hardened-utils";
 import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import { cn } from "@/lib/utils";
-import type { MapPinsPayload, SlimMapPin } from "@/lib/services/map-pins";
+import type {
+  MapPinsPayload,
+  MapTransitStation,
+  SlimMapPin,
+} from "@/lib/services/map-pins";
 import type { MapLocationGroup } from "./useMapClusters";
 
 const FALLBACK_IMG =
@@ -96,11 +103,32 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
     useState<boolean>(false);
   const [drawerLimit, setDrawerLimit] = useState<number>(12);
 
+  const [stationRadar, setStationRadar] = useState<{
+    station: MapTransitStation;
+    radiusKm: number;
+  } | null>(null);
+
   const mobileStripRef = useRef<HTMLDivElement | null>(null);
 
   const activeList = useMemo(() => {
-    return searchAsMove ? boundsPins : filteredPins;
-  }, [searchAsMove, boundsPins, filteredPins]);
+    const base = searchAsMove ? boundsPins : filteredPins;
+    if (!stationRadar) return base;
+    const s = stationRadar.station;
+    const maxMeters = stationRadar.radiusKm * 1000;
+    return base
+      .map((p) => {
+        const dist = haversineDistanceMeters(
+          s.latitude,
+          s.longitude,
+          p.latitude,
+          p.longitude
+        );
+        return { pin: p, dist };
+      })
+      .filter((item) => item.dist <= maxMeters)
+      .sort((a, b) => a.dist - b.dist)
+      .map((item) => item.pin);
+  }, [searchAsMove, boundsPins, filteredPins, stationRadar]);
 
   useEffect(() => {
     setDrawerLimit(12);
@@ -216,6 +244,50 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
               </button>
             </div>
           </div>
+
+          {/* Active Station Radar Filter Alert in Drawer */}
+          {stationRadar && (
+            <div className="px-4 py-2 bg-blue-50/80 border-b border-blue-100 flex items-center justify-between gap-2 shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
+                  style={{
+                    backgroundColor:
+                      stationRadar.station.lineColor || "#2563EB",
+                  }}
+                />
+                <div className="text-xs truncate">
+                  <span className="font-bold text-slate-800">
+                    {stationRadar.station.label?.[language] ||
+                      stationRadar.station.label.th ||
+                      stationRadar.station.label.en}
+                  </span>
+                  <span className="text-slate-500 ml-1">
+                    (รัศมี{" "}
+                    {stationRadar.radiusKm >= 1
+                      ? `${stationRadar.radiusKm} กม.`
+                      : `${stationRadar.radiusKm * 1000} ม.`}
+                    )
+                    {" · "}
+                    {language === "th"
+                      ? `${new Set(activeList.map((p) => p.project_id || p.id)).size} โครงการ (${activeList.length} ห้อง)`
+                      : `${new Set(activeList.map((p) => p.project_id || p.id)).size} projects (${activeList.length} units)`}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStationRadar(null)}
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline shrink-0 cursor-pointer"
+              >
+                {language === "th"
+                  ? "ล้าง"
+                  : language === "cn"
+                    ? "清除"
+                    : "Clear"}
+              </button>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
             {activeList.length === 0 ? (
@@ -368,6 +440,8 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
             onSearchAsMoveChange={setSearchAsMove}
             onBoundsPinsChange={setBoundsPins}
             onFallbackToList={() => router.push(gridReturnHref)}
+            stationRadar={stationRadar}
+            onStationRadarChange={setStationRadar}
             className="rounded-none border-0"
           />
 

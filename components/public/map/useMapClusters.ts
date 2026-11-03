@@ -14,6 +14,7 @@ export interface MapLocationGroup {
   unitIds: Set<string>;
   leadPriceLabel: string;
   leadNumericPrice: number;
+  leadListingType: "RENT" | "SALE" | "BOTH" | "POA";
   hasAnyDiscount: boolean;
   hasHotDeal: boolean;
 }
@@ -94,6 +95,20 @@ export function useMapClusters(params: {
       const hasAnyDiscount = priced.some((p) => p.resolved.hasDiscount);
       const hasHotDeal = sortedUnits.some((u) => !!u.is_hot_deal);
 
+      const hasRentUnit = priced.some((p) => p.resolved.mode === "RENT");
+      const hasSaleUnit = priced.some((p) => p.resolved.mode === "SALE");
+
+      let leadListingType: "RENT" | "SALE" | "BOTH" | "POA" = "SALE";
+      if (hasRentUnit && hasSaleUnit) {
+        leadListingType = "BOTH";
+      } else if (leadResolved.mode === "RENT") {
+        leadListingType = "RENT";
+      } else if (leadResolved.mode === "SALE") {
+        leadListingType = "SALE";
+      } else if (leadResolved.mode === "POA") {
+        leadListingType = "POA";
+      }
+
       // Compute centroid coordinate of the group
       const avgLat =
         sortedUnits.reduce((sum, u) => sum + u.latitude, 0) / sortedUnits.length;
@@ -109,6 +124,7 @@ export function useMapClusters(params: {
         unitIds: new Set(sortedUnits.map((u) => u.id)),
         leadPriceLabel: `${leadResolved.displayLabel}${plusSign}`,
         leadNumericPrice: leadResolved.numericValue,
+        leadListingType,
         hasAnyDiscount,
         hasHotDeal,
       });

@@ -8,16 +8,19 @@ import React, {
   useRef,
   useState,
 } from "react";
+import Image from "next/image";
 import Map, {
   GeolocateControl,
   Marker,
   NavigationControl,
+  Source,
+  Layer,
   type MapRef,
   type ViewStateChangeEvent,
 } from "react-map-gl/maplibre";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { AlertTriangle, Check, Compass, Loader2, Maximize2 } from "lucide-react";
+import { AlertTriangle, Check, Compass, Loader2, Maximize2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import type { MapTransitStation, SlimMapPin } from "@/lib/services/map-pins";
@@ -29,6 +32,13 @@ import {
 import { PricePillMarker } from "./PricePillMarker";
 import { MapSlideablePropertyCard } from "./MapSlideablePropertyCard";
 import { MapTransitOverlay, TransitToggleButton } from "./MapTransitOverlay";
+import { MapTransitLineLayer } from "./MapTransitLineLayer";
+import {
+  createGeoJSONCircle,
+  getTransitLogo,
+  getTransitTypeLabel,
+  haversineDistanceMeters,
+} from "./map-price-utils";
 
 // Explicitly bind MapLibre v6 Web Worker to our self-hosted public worker script
 // (Prevents Next.js / Turbopack chunk URL 404 on dynamic `import.meta.url`)
@@ -295,6 +305,12 @@ export interface PropertyVectorMapProps {
   className?: string;
   /** Hide built-in mobile popup when parent renders its own bottom carousel (optional) */
   suppressMobilePopup?: boolean;
+  /** Active transit station radius radar filter */
+  stationRadar?: { station: MapTransitStation; radiusKm: number } | null;
+  /** Callback when user clicks station or changes radius */
+  onStationRadarChange?: (
+    radar: { station: MapTransitStation; radiusKm: number } | null
+  ) => void;
 }
 
 export function PropertyVectorMap({
@@ -315,6 +331,8 @@ export function PropertyVectorMap({
   onFallbackToList,
   className = "",
   suppressMobilePopup = false,
+  stationRadar = null,
+  onStationRadarChange,
 }: PropertyVectorMapProps) {
   const { language } = useLanguage();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -349,6 +367,38 @@ export function PropertyVectorMap({
   const [internalHoverGroupId, setInternalHoverGroupId] = useState<
     string | null
   >(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMarkerMouseEnter = useCallback(
+    (g: MapLocationGroup) => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+      setInternalHoverGroupId(g.groupId);
+      onHoverPropertyId?.(g.units[0]?.id || null);
+    },
+    [onHoverPropertyId]
+  );
+
+  const handleMarkerMouseLeave = useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setInternalHoverGroupId(null);
+      onHoverPropertyId?.(null);
+      hoverTimeoutRef.current = null;
+    }, 120);
+  }, [onHoverPropertyId]);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const { groups, visibleItems, pinsInBounds } = useMapClusters({
     filteredPins,
@@ -410,6 +460,84 @@ export function PropertyVectorMap({
     const found = groups.find((g) => g.unitIds.has(hoveredPropertyId));
     return found ? found.groupId : null;
   }, [groups, hoveredPropertyId]);
+
+  // Active group to draw direct route line to nearest transit station (on Hover only, avoiding collision with open popup card)
+  const activeGuideGroup = useMemo(() => {
+    if (internalHoverGroupId) {
+      return groups.find((g) => g.groupId === internalHoverGroupId) || null;
+    }
+    if (externalHoveredGroupId) {
+      return groups.find((g) => g.groupId === externalHoveredGroupId) || null;
+    }
+    if (focusedPropertyId) {
+      return groups.find((g) => g.unitIds.has(focusedPropertyId)) || null;
+    }
+    return null;
+  }, [internalHoverGroupId, externalHoveredGroupId, focusedPropertyId, groups]);
+
+  // GeoJSON circle polygon for the active station radius radar
+  const radarCircleGeoJSON = useMemo(() => {
+    if (!stationRadar) return null;
+    return createGeoJSONCircle(
+      [stationRadar.station.longitude, stationRadar.station.latitude],
+      stationRadar.radiusKm
+    );
+  }, [stationRadar]);
+
+  const { radarProjectsCount, radarUnitsCount } = useMemo(() => {
+    if (!stationRadar) return { radarProjectsCount: 0, radarUnitsCount: 0 };
+    const s = stationRadar.station;
+    const rM = stationRadar.radiusKm * 1000;
+
+    let projCount = 0;
+    let unitCount = 0;
+
+    for (const g of groups) {
+      const dist = haversineDistanceMeters(
+        s.latitude,
+        s.longitude,
+        g.latitude,
+        g.longitude
+      );
+      if (dist <= rM) {
+        projCount += 1;
+        unitCount += g.units.length;
+      }
+    }
+
+    return { radarProjectsCount: projCount, radarUnitsCount: unitCount };
+  }, [stationRadar, groups]);
+
+  const radarCountText = useMemo(() => {
+    if (radarProjectsCount === 0) {
+      return language === "th"
+        ? "ไม่พบโครงการในรัศมี"
+        : language === "cn"
+          ? "范围内暂无房源"
+          : language === "ru"
+            ? "Нет объектов в радиусе"
+            : "No properties in radius";
+    }
+
+    if (language === "th") {
+      return radarUnitsCount > radarProjectsCount
+        ? `พบ ${radarProjectsCount} โครงการ (${radarUnitsCount} ห้อง)`
+        : `พบ ${radarProjectsCount} โครงการ`;
+    }
+    if (language === "cn") {
+      return radarUnitsCount > radarProjectsCount
+        ? `发现 ${radarProjectsCount} 个项目 (${radarUnitsCount} 套)`
+        : `发现 ${radarProjectsCount} 个项目`;
+    }
+    if (language === "ru") {
+      return radarUnitsCount > radarProjectsCount
+        ? `Найдено ${radarProjectsCount} проектов (${radarUnitsCount} объектов)`
+        : `Найдено ${radarProjectsCount} проектов`;
+    }
+    return radarUnitsCount > radarProjectsCount
+      ? `${radarProjectsCount} projects (${radarUnitsCount} units)`
+      : `${radarProjectsCount} projects`;
+  }, [radarProjectsCount, radarUnitsCount, language]);
 
   // External focused property (e.g. swiping bottom mobile strip in /map)
   useEffect(() => {
@@ -624,6 +752,13 @@ export function PropertyVectorMap({
 
   const handleGroupClick = useCallback(
     (group: MapLocationGroup) => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+      setInternalHoverGroupId(null);
+      onHoverPropertyId?.(null);
+
       setSelectedGroupId(group.groupId);
       setSelectedInitialUnitId(group.units[0]?.id || null);
       onSelectGroup?.(group);
@@ -673,17 +808,21 @@ export function PropertyVectorMap({
     [onSelectGroup]
   );
 
-  const handleStationClick = useCallback((station: MapTransitStation) => {
-    const map = mapRef.current?.getMap();
-    if (map) {
-      map.stop();
-      map.flyTo({
-        center: [station.longitude, station.latitude],
-        zoom: Math.max(map.getZoom(), 14.5),
-        duration: 600,
-      });
-    }
-  }, []);
+  const handleStationClick = useCallback(
+    (station: MapTransitStation) => {
+      onStationRadarChange?.({ station, radiusKm: 1 });
+      const map = mapRef.current?.getMap();
+      if (map) {
+        map.stop();
+        map.flyTo({
+          center: [station.longitude, station.latitude],
+          zoom: 14.5,
+          duration: 600,
+        });
+      }
+    },
+    [onStationRadarChange]
+  );
 
   const handleMove = useCallback(() => {
     const active = selectedGroupRef.current;
@@ -872,6 +1011,80 @@ export function PropertyVectorMap({
           )}
         </div>
 
+        {/* Floating Station Radar Control Pill (Active when clicking a Transit Station) */}
+        {stationRadar && (
+          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-35 pointer-events-auto max-w-[calc(100vw-24px)] animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex flex-wrap items-center gap-2 px-3.5 py-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 text-slate-800">
+              {/* Station Label & Color */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span
+                  className="w-3 h-3 rounded-full shrink-0 shadow-xs"
+                  style={{ backgroundColor: stationRadar.station.lineColor || "#2563EB" }}
+                />
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1">
+                    <span className="font-extrabold text-xs text-slate-900 truncate max-w-[140px] sm:max-w-[200px]">
+                      {stationRadar.station.label?.[language] ||
+                        stationRadar.station.label.th ||
+                        stationRadar.station.label.en}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
+                      ({getTransitTypeLabel(stationRadar.station.transitType || stationRadar.station.slug)})
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-blue-600">
+                    {radarCountText}
+                  </span>
+                </div>
+              </div>
+
+              <div className="h-6 w-px bg-slate-200 shrink-0 mx-0.5" />
+
+              {/* Radius Options */}
+              <div className="flex items-center gap-1 shrink-0">
+                {[
+                  { label: "500 ม.", km: 0.5 },
+                  { label: "1 กม.", km: 1 },
+                  { label: "2 กม.", km: 2 },
+                  { label: "3 กม.", km: 3 },
+                ].map((opt) => {
+                  const isActive = stationRadar.radiusKm === opt.km;
+                  return (
+                    <button
+                      key={opt.km}
+                      type="button"
+                      onClick={() =>
+                        onStationRadarChange?.({
+                          station: stationRadar.station,
+                          radiusKm: opt.km,
+                        })
+                      }
+                      className={cn(
+                        "px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                        isActive
+                          ? "bg-blue-600 text-white shadow-xs"
+                          : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => onStationRadarChange?.(null)}
+                title="ปิดเรดาร์สถานี"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 ml-0.5"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Loading Pill Indicator */}
         {isLoading && (
           <div className="absolute bottom-4 left-4 z-30 inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-900/90 text-white text-xs font-bold shadow-lg">
@@ -930,6 +1143,52 @@ export function PropertyVectorMap({
             trackUserLocation={false}
           />
 
+          {/* Layer 0.5 (z-5): Station Radius Radar Circle (when a station is selected) */}
+          {stationRadar && radarCircleGeoJSON && (
+            <Source id="station-radar-source" type="geojson" data={radarCircleGeoJSON}>
+              {/* High-visibility contrast blue fill that never blends with green grass or yellow roads */}
+              <Layer
+                id="radar-fill"
+                type="fill"
+                paint={{
+                  "fill-color": "#2563EB",
+                  "fill-opacity": 0.12,
+                }}
+              />
+              {/* Outer dark drop-shadow for guaranteed contrast against white streets & light terrain */}
+              <Layer
+                id="radar-shadow"
+                type="line"
+                paint={{
+                  "line-color": "#0F172A",
+                  "line-width": 5.5,
+                  "line-opacity": 0.35,
+                }}
+              />
+              {/* Sharp white contrast ring */}
+              <Layer
+                id="radar-casing"
+                type="line"
+                paint={{
+                  "line-color": "#ffffff",
+                  "line-width": 3.5,
+                  "line-opacity": 0.95,
+                }}
+              />
+              {/* Crisp vivid radar line with clean dash */}
+              <Layer
+                id="radar-stroke"
+                type="line"
+                paint={{
+                  "line-color": "#2563EB",
+                  "line-width": 2.5,
+                  "line-dasharray": [4, 3],
+                  "line-opacity": 1,
+                }}
+              />
+            </Source>
+          )}
+
           {/* Layer 1 (z-10): BTS / MRT / ARL Transit Stations */}
           <MapTransitOverlay
             stations={stations}
@@ -939,6 +1198,14 @@ export function PropertyVectorMap({
             language={language}
             activeStationSlugOrName={activeStationFilter}
             onStationClick={handleStationClick}
+          />
+
+          {/* Layer 1.5 (z-30..42): Interactive Direct Route Line to Nearest Transit Station */}
+          <MapTransitLineLayer
+            activeGroup={activeGuideGroup}
+            stations={stations}
+            language={language}
+            overrideStation={stationRadar?.station}
           />
 
           {/* Layer 2 (z-20..45): Supercluster Bubbles & Smart Price Pill Markers */}
@@ -1004,14 +1271,8 @@ export function PropertyVectorMap({
                   isHovered={isHovered}
                   language={language}
                   onClick={handleGroupClick}
-                  onMouseEnter={(g) => {
-                    setInternalHoverGroupId(g.groupId);
-                    onHoverPropertyId?.(g.units[0]?.id || null);
-                  }}
-                  onMouseLeave={() => {
-                    setInternalHoverGroupId(null);
-                    onHoverPropertyId?.(null);
-                  }}
+                  onMouseEnter={handleMarkerMouseEnter}
+                  onMouseLeave={handleMarkerMouseLeave}
                 />
               </Marker>
             );
