@@ -255,14 +255,26 @@ export const MapTransitLineLayer = memo(function MapTransitLineLayer({
       })
       .then((data) => {
         const coords = data?.coordinates as [number, number][] | undefined;
-        if (Array.isArray(coords) && coords.length > 1) {
+        const routeDist = data?.distanceMeters;
+        const geoDist = transitTarget.geoDistanceMeters;
+
+        // Circuity guard: Reject absurd loop detours
+        const isDetour = Boolean(
+          routeDist &&
+            geoDist &&
+            ((geoDist <= 1000 && (routeDist > geoDist * 1.85 || routeDist - geoDist > 500)) ||
+              (geoDist > 1000 && routeDist > geoDist * 2.3))
+        );
+
+        const direct = [
+          [activeGroup.longitude, activeGroup.latitude],
+          [transitTarget.station.longitude, transitTarget.station.latitude],
+        ] as [number, number][];
+
+        if (Array.isArray(coords) && coords.length > 1 && !isDetour) {
           streetRouteCache.set(routeCacheKey, coords);
           setStreetCoordinates(coords);
         } else {
-          const direct = [
-            [activeGroup.longitude, activeGroup.latitude],
-            [transitTarget.station.longitude, transitTarget.station.latitude],
-          ] as [number, number][];
           streetRouteCache.set(routeCacheKey, direct);
           setStreetCoordinates(direct);
         }
