@@ -20,6 +20,7 @@ import { TenantProvider } from "@/components/providers/TenantProvider";
 import { RealtimeProvider } from "@/components/providers/RealtimeProvider";
 import { ProcessProvider } from "@/components/providers/ProcessProvider";
 import { ProcessMonitor } from "@/components/common/ProcessMonitor";
+import { FloatingQuickActions } from "@/components/dashboard/FloatingQuickActions";
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +94,7 @@ export default async function ProtectedLayout({
               <ErrorBoundary>{children}</ErrorBoundary>
             </main>
             <ProcessMonitor />
+            <FloatingQuickActions />
           </div>
           </div>
           </ProcessProvider>

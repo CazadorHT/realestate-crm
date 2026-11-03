@@ -39,6 +39,7 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { startProgress, stopProgress } from "next-nprogress-bar";
 
 const NAV_LOCALIZATION: Record<string, Record<string, string>> = {
   nav_properties: {
@@ -188,6 +189,9 @@ export function PublicNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobilePropExpanded, setMobilePropExpanded] = useState(true);
   const [mobileAboutExpanded, setMobileAboutExpanded] = useState(false);
+  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
+  const [companyMenuOpen, setCompanyMenuOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [isNavigatingHome, setIsNavigatingHome] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -205,17 +209,58 @@ export function PublicNav() {
     return NAV_LOCALIZATION[key]?.[language] || NAV_LOCALIZATION[key]?.th || "";
   };
 
-  // Reset navigatingHome state whenever pathname changes
+  // Close menus and stop progress on route change
   useEffect(() => {
+    setIsNavigating(false);
     setIsNavigatingHome(false);
+    setMegaMenuOpen(false);
+    setCompanyMenuOpen(false);
+    setMobileMenuOpen(false);
+    try {
+      stopProgress();
+    } catch {}
   }, [pathname]);
 
+  // Fallback timer if navigation gets aborted or delayed
+  useEffect(() => {
+    if (isNavigating) {
+      const timer = setTimeout(() => {
+        setIsNavigating(false);
+        setIsNavigatingHome(false);
+        try {
+          stopProgress();
+        } catch {}
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [isNavigating]);
+
+  const handleNavAction = (href: string) => {
+    setMegaMenuOpen(false);
+    setCompanyMenuOpen(false);
+    setMobileMenuOpen(false);
+
+    if (pathname !== href) {
+      setIsNavigating(true);
+      try {
+        startProgress();
+      } catch {}
+    }
+  };
+
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setMegaMenuOpen(false);
+    setCompanyMenuOpen(false);
+    setMobileMenuOpen(false);
     if (pathname === homePath || pathname === "/") {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
+      setIsNavigating(true);
       setIsNavigatingHome(true);
+      try {
+        startProgress();
+      } catch {}
     }
   };
 
@@ -346,10 +391,16 @@ export function PublicNav() {
         }`}
       >
         <nav
-          className={`border-b border-b-slate-200 transition-all duration-300 ${
+          className={`relative border-b border-b-slate-200 transition-all duration-300 ${
             scrolled ? "bg-white shadow-xs" : "bg-white"
           }`}
         >
+          {/* Top Global Loading Bar on Navigation */}
+          {isNavigating && (
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-blue-100 overflow-hidden z-[120]">
+              <div className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 w-full animate-pulse" />
+            </div>
+          )}
           <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-8 md:px-10 lg:px-12 2xl:px-8">
             <div className="flex justify-between items-center h-16">
               {/* Logo (Acts as Home with Loading Feedback) */}
@@ -387,17 +438,34 @@ export function PublicNav() {
               {/* Desktop Global Luxury Navigation */}
               <div className="hidden lg:flex items-center gap-7">
                 {/* 1. Mega-Menu: Properties */}
-                <div className="relative group py-5">
-                  <Link
-                    href={`${langPrefix}/properties`}
-                    className="inline-flex items-center gap-1.5 text-slate-700 group-hover:text-blue-600 transition-colors font-medium text-sm focus:outline-none"
+                <div
+                  className="relative py-5"
+                  onMouseEnter={() => setMegaMenuOpen(true)}
+                  onMouseLeave={() => setMegaMenuOpen(false)}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setMegaMenuOpen((prev) => !prev)}
+                    className="inline-flex items-center gap-1.5 text-slate-700 hover:text-blue-600 transition-colors font-medium text-sm focus:outline-none cursor-pointer"
                   >
                     <span>{navStr("nav_properties")}</span>
-                    <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 text-slate-400 group-hover:text-blue-600" />
-                  </Link>
+                    <ChevronDown
+                      className={cn(
+                        "w-3.5 h-3.5 transition-transform duration-200 text-slate-400",
+                        megaMenuOpen && "rotate-180 text-blue-600"
+                      )}
+                    />
+                  </button>
 
                   {/* Mega Menu Dropdown Panel */}
-                  <div className="absolute top-full -left-20 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-1.5 group-hover:translate-y-0 transition-all duration-200 ease-out pointer-events-none group-hover:pointer-events-auto z-50">
+                  <div
+                    className={cn(
+                      "absolute top-full -left-20 pt-2 transition-all duration-200 ease-out z-50",
+                      megaMenuOpen
+                        ? "opacity-100 visible translate-y-0 pointer-events-auto"
+                        : "opacity-0 invisible translate-y-1.5 pointer-events-none"
+                    )}
+                  >
                     <div className="w-[680px] p-6 bg-white rounded-2xl shadow-2xl border border-slate-100 grid grid-cols-2 gap-6 ring-1 ring-slate-900/5">
                       {/* Col 1: Explore */}
                       <div className="space-y-3">
@@ -408,6 +476,7 @@ export function PublicNav() {
                           {/* All Properties */}
                           <Link
                             href={`${langPrefix}/properties`}
+                            onClick={() => handleNavAction(`${langPrefix}/properties`)}
                             className="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
                           >
                             <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-indigo-600 group-hover/item:text-white transition-colors">
@@ -424,6 +493,7 @@ export function PublicNav() {
                           {/* Interactive Map */}
                           <Link
                             href={`${langPrefix}/map`}
+                            onClick={() => handleNavAction(`${langPrefix}/map`)}
                             className="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
                           >
                             <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-emerald-600 group-hover/item:text-white transition-colors">
@@ -436,9 +506,11 @@ export function PublicNav() {
                               <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{navStr("nav_map_desc")}</p>
                             </div>
                           </Link>
+
                           {/* Projects */}
                           <Link
                             href={`${langPrefix}/projects`}
+                            onClick={() => handleNavAction(`${langPrefix}/projects`)}
                             className="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
                           >
                             <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-blue-600 group-hover/item:text-white transition-colors">
@@ -464,6 +536,7 @@ export function PublicNav() {
                           {/* Prime CBD */}
                           <Link
                             href={`${langPrefix}/properties/prime-cbd`}
+                            onClick={() => handleNavAction(`${langPrefix}/properties/prime-cbd`)}
                             className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group/item"
                           >
                             <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
@@ -480,6 +553,7 @@ export function PublicNav() {
                           {/* Luxury Villa */}
                           <Link
                             href={`${langPrefix}/properties/luxury-villa`}
+                            onClick={() => handleNavAction(`${langPrefix}/properties/luxury-villa`)}
                             className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group/item"
                           >
                             <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
@@ -496,6 +570,7 @@ export function PublicNav() {
                           {/* Pet Friendly */}
                           <Link
                             href={`${langPrefix}/properties/pet-friendly-condo`}
+                            onClick={() => handleNavAction(`${langPrefix}/properties/pet-friendly-condo`)}
                             className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group/item"
                           >
                             <div className="w-8 h-8 rounded-lg bg-pink-100 text-pink-700 flex items-center justify-center shrink-0 mt-0.5">
@@ -512,6 +587,7 @@ export function PublicNav() {
                           {/* Office */}
                           <Link
                             href={`${langPrefix}/properties/office-for-rent`}
+                            onClick={() => handleNavAction(`${langPrefix}/properties/office-for-rent`)}
                             className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group/item"
                           >
                             <div className="w-8 h-8 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center shrink-0 mt-0.5">
@@ -533,6 +609,7 @@ export function PublicNav() {
                 {/* 2. Services */}
                 <Link
                   href={`${langPrefix}/services`}
+                  onClick={() => handleNavAction(`${langPrefix}/services`)}
                   className="text-slate-700 hover:text-blue-600 transition-colors font-medium text-sm relative group py-5"
                 >
                   {t("nav.services")}
@@ -542,6 +619,7 @@ export function PublicNav() {
                 {/* 3. Blog */}
                 <Link
                   href={`${langPrefix}/blog`}
+                  onClick={() => handleNavAction(`${langPrefix}/blog`)}
                   className="text-slate-700 hover:text-blue-600 transition-colors font-medium text-sm relative group py-5"
                 >
                   {t("nav.blog")}
@@ -549,19 +627,37 @@ export function PublicNav() {
                 </Link>
 
                 {/* 4. Company (About Us) Dropdown */}
-                <div className="relative group py-5">
+                <div
+                  className="relative py-5"
+                  onMouseEnter={() => setCompanyMenuOpen(true)}
+                  onMouseLeave={() => setCompanyMenuOpen(false)}
+                >
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1.5 text-slate-700 group-hover:text-blue-600 transition-colors font-medium text-sm focus:outline-none"
+                    onClick={() => setCompanyMenuOpen((prev) => !prev)}
+                    className="inline-flex items-center gap-1.5 text-slate-700 hover:text-blue-600 transition-colors font-medium text-sm focus:outline-none cursor-pointer"
                   >
                     <span>{navStr("nav_company_group")}</span>
-                    <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 text-slate-400 group-hover:text-blue-600" />
+                    <ChevronDown
+                      className={cn(
+                        "w-3.5 h-3.5 transition-transform duration-200 text-slate-400",
+                        companyMenuOpen && "rotate-180 text-blue-600"
+                      )}
+                    />
                   </button>
 
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-1.5 group-hover:translate-y-0 transition-all duration-200 ease-out pointer-events-none group-hover:pointer-events-auto z-50">
+                  <div
+                    className={cn(
+                      "absolute top-full left-1/2 -translate-x-1/2 pt-2 transition-all duration-200 ease-out z-50",
+                      companyMenuOpen
+                        ? "opacity-100 visible translate-y-0 pointer-events-auto"
+                        : "opacity-0 invisible translate-y-1.5 pointer-events-none"
+                    )}
+                  >
                     <div className="w-[280px] p-2 bg-white rounded-2xl shadow-xl border border-slate-100 space-y-1 ring-1 ring-slate-900/5">
                       <Link
                         href={`${langPrefix}/about`}
+                        onClick={() => handleNavAction(`${langPrefix}/about`)}
                         className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
                       >
                         <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 group-hover/item:bg-blue-600 group-hover/item:text-white transition-colors">
@@ -577,6 +673,7 @@ export function PublicNav() {
 
                       <Link
                         href={`${langPrefix}/contact`}
+                        onClick={() => handleNavAction(`${langPrefix}/contact`)}
                         className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
                       >
                         <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 group-hover/item:bg-emerald-600 group-hover/item:text-white transition-colors">
@@ -689,6 +786,7 @@ export function PublicNav() {
                   {/* Favorites */}
                   <Link
                     href={`${langPrefix}/favorites`}
+                    onClick={() => handleNavAction(`${langPrefix}/favorites`)}
                     className="text-slate-600 hover:text-red-500 hover:bg-red-50/60 transition-colors w-9 h-9 rounded-lg flex items-center justify-center relative group"
                     aria-label="favorites"
                   >
@@ -715,7 +813,10 @@ export function PublicNav() {
                       size="sm"
                       className="cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xs font-semibold text-white px-4 h-9.5 rounded-xl outline-none ring-0 border-0"
                     >
-                      <Link href={`${langPrefix}/deposit`}>
+                      <Link
+                        href={`${langPrefix}/deposit`}
+                        onClick={() => handleNavAction(`${langPrefix}/deposit`)}
+                      >
                         <Plus className="h-4 w-4 mr-1.5" />
                         <span>{navStr("nav_deposit_btn")}</span>
                       </Link>
@@ -895,7 +996,7 @@ export function PublicNav() {
                   <div className="px-3 pb-3 pt-1 space-y-1 bg-white border-t border-slate-100">
                     <Link
                       href={`${langPrefix}/projects`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => handleNavAction(`${langPrefix}/projects`)}
                       className="flex items-center justify-between p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
                     >
                       <span className="flex items-center gap-2.5">
@@ -907,7 +1008,7 @@ export function PublicNav() {
 
                     <Link
                       href={`${langPrefix}/properties`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => handleNavAction(`${langPrefix}/properties`)}
                       className="flex items-center gap-2.5 p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
                     >
                       <Home className="w-3.5 h-3.5 text-indigo-600" />
@@ -916,7 +1017,7 @@ export function PublicNav() {
 
                     <Link
                       href={`${langPrefix}/map`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => handleNavAction(`${langPrefix}/map`)}
                       className="flex items-center gap-2.5 p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
                     >
                       <Compass className="w-3.5 h-3.5 text-emerald-600" />
@@ -929,7 +1030,7 @@ export function PublicNav() {
 
                     <Link
                       href={`${langPrefix}/properties/prime-cbd`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => handleNavAction(`${langPrefix}/properties/prime-cbd`)}
                       className="flex items-center gap-2.5 p-2 rounded-lg text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-800"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-amber-600" />
@@ -938,7 +1039,7 @@ export function PublicNav() {
 
                     <Link
                       href={`${langPrefix}/properties/luxury-villa`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => handleNavAction(`${langPrefix}/properties/luxury-villa`)}
                       className="flex items-center gap-2.5 p-2 rounded-lg text-xs text-slate-700 hover:bg-purple-50 hover:text-purple-800"
                     >
                       <Palmtree className="w-3.5 h-3.5 text-purple-600" />
@@ -947,7 +1048,7 @@ export function PublicNav() {
 
                     <Link
                       href={`${langPrefix}/properties/pet-friendly-condo`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => handleNavAction(`${langPrefix}/properties/pet-friendly-condo`)}
                       className="flex items-center gap-2.5 p-2 rounded-lg text-xs text-slate-700 hover:bg-pink-50 hover:text-pink-800"
                     >
                       <PawPrint className="w-3.5 h-3.5 text-pink-600" />
@@ -956,7 +1057,7 @@ export function PublicNav() {
 
                     <Link
                       href={`${langPrefix}/properties/office-for-rent`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => handleNavAction(`${langPrefix}/properties/office-for-rent`)}
                       className="flex items-center gap-2.5 p-2 rounded-lg text-xs text-slate-700 hover:bg-cyan-50 hover:text-cyan-800"
                     >
                       <Briefcase className="w-3.5 h-3.5 text-cyan-600" />
@@ -969,7 +1070,7 @@ export function PublicNav() {
               {/* Services */}
               <Link
                 href={`${langPrefix}/services`}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => handleNavAction(`${langPrefix}/services`)}
                 className="block p-3.5 text-sm font-bold text-slate-900 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors"
               >
                 {t("nav.services")}
@@ -978,7 +1079,7 @@ export function PublicNav() {
               {/* Blog */}
               <Link
                 href={`${langPrefix}/blog`}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => handleNavAction(`${langPrefix}/blog`)}
                 className="block p-3.5 text-sm font-bold text-slate-900 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors"
               >
                 {t("nav.blog")}
@@ -1006,7 +1107,7 @@ export function PublicNav() {
                   <div className="px-3 pb-3 pt-1 space-y-1 bg-white border-t border-slate-100">
                     <Link
                       href={`${langPrefix}/about`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => handleNavAction(`${langPrefix}/about`)}
                       className="flex items-center gap-2.5 p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
                     >
                       <Info className="w-3.5 h-3.5 text-blue-600" />
@@ -1015,7 +1116,7 @@ export function PublicNav() {
 
                     <Link
                       href={`${langPrefix}/contact`}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => handleNavAction(`${langPrefix}/contact`)}
                       className="flex items-center gap-2.5 p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
                     >
                       <Phone className="w-3.5 h-3.5 text-emerald-600" />
@@ -1037,7 +1138,7 @@ export function PublicNav() {
                 >
                   <Link
                     href={`${langPrefix}/deposit`}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={() => handleNavAction(`${langPrefix}/deposit`)}
                   >
                     <Plus className="h-5 w-5 mr-2" />
                     <span>{navStr("nav_deposit_btn")}</span>

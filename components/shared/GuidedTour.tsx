@@ -58,6 +58,7 @@ export function GuidedTour({
   useEffect(() => {
     setMounted(true);
     const hasSeenTour = localStorage.getItem(storageKey);
+
     if (!hasSeenTour) {
       const timer = setTimeout(() => setCurrentStep(0), autoStartDelay);
       return () => clearTimeout(timer);
@@ -65,6 +66,19 @@ export function GuidedTour({
       setIsCompleted(true);
     }
   }, [storageKey, autoStartDelay]);
+
+  // Listen for global quick-action tour triggers
+  useEffect(() => {
+    const handleStartTour = () => {
+      restartTour();
+    };
+    window.addEventListener("cazador_start_tour", handleStartTour);
+    window.dispatchEvent(new CustomEvent("cazador_tour_registered", { detail: { tourId } }));
+    return () => {
+      window.removeEventListener("cazador_start_tour", handleStartTour);
+      window.dispatchEvent(new CustomEvent("cazador_tour_unregistered", { detail: { tourId } }));
+    };
+  }, [tourId]);
 
   // Detect if any dialog/drawer is open to hide the tutorial button
   useEffect(() => {
@@ -239,24 +253,6 @@ export function GuidedTour({
 
   return createPortal(
     <>
-      {currentStep === -1 &&
-        isCompleted &&
-        showHelpButton &&
-        !isAnyDialogOpen && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={restartTour}
-            style={{ zIndex: 10001 }}
-            className={cn(
-              "hidden lg:flex fixed right-6 sm:right-6 h-10 w-10 sm:h-10 sm:w-10 items-center justify-center rounded-full shadow-xl border border-slate-100 bg-white text-blue-600! hover:scale-110 hover:bg-blue-50 transition-all duration-300 pointer-events-auto",
-              lifted ? "bottom-24" : "bottom-18",
-            )}
-          >
-            <HelpCircle className="h-6 w-6 sm:h-8 sm:w-8" />
-          </Button>
-        )}
-
       {currentStep !== -1 && (
         <div
           className="fixed inset-0 pointer-events-none"
@@ -356,6 +352,7 @@ export function GuidedTour({
                       {step.content}
                     </p>
                   </div>
+
                   <div className="flex items-center justify-between pt-2">
                     <Button
                       variant="ghost"

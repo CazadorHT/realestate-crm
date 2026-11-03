@@ -281,21 +281,25 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
               </div>
             ) : (
               <>
-                {visibleDrawerItems.map((item, idx) => (
-                  <div
-                    key={item.id}
-                    onMouseEnter={() => setHoveredPropertyId(item.id)}
-                    onMouseLeave={() => setHoveredPropertyId(null)}
-                    onClick={() => setFocusedPropertyId(item.id)}
-                    className={cn(
-                      "rounded-3xl transition-shadow duration-200",
-                      hoveredPropertyId === item.id &&
-                        "ring-2 ring-blue-600 shadow-lg"
-                    )}
-                  >
-                    <PropertyCard property={item} priority={idx < 2} />
-                  </div>
-                ))}
+                {visibleDrawerItems.map((item, idx) => {
+                  const isHighlighted =
+                    hoveredPropertyId === item.id ||
+                    focusedPropertyId === item.id;
+                  return (
+                    <div
+                      key={item.id}
+                      onMouseEnter={() => setHoveredPropertyId(item.id)}
+                      onMouseLeave={() => setHoveredPropertyId(null)}
+                      onClick={() => setFocusedPropertyId(item.id)}
+                    >
+                      <PropertyCard
+                        property={item}
+                        priority={idx < 2}
+                        isHighlighted={isHighlighted}
+                      />
+                    </div>
+                  );
+                })}
 
                 {visibleDrawerItems.length < activeList.length && (
                   <button
