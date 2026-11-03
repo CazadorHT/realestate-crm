@@ -1238,7 +1238,7 @@ export function PropertyVectorMap({
                     }}
                     aria-label={`${item.unitCount} properties`}
                     className={cn(
-                      "rounded-full bg-[#1B263B]/95 hover:bg-blue-600 text-white font-sans font-extrabold flex items-center justify-center shadow-lg border-2 border-white ring-4 ring-slate-900/15 transition-transform duration-150 hover:scale-110 cursor-pointer",
+                      "rounded-full bg-[#1B263B]/95 hover:bg-blue-600 text-white font-sans font-bold flex items-center justify-center shadow-lg border-2 border-white ring-4 ring-slate-900/15 transition-transform duration-150 hover:scale-110 cursor-pointer",
                       sizeClass
                     )}
                   >

@@ -29,11 +29,6 @@ const prompt = localFont({
       style: "normal",
     },
     {
-      path: "../public/fonts/Prompt/Prompt-Medium.ttf",
-      weight: "500",
-      style: "normal",
-    },
-    {
       path: "../public/fonts/Prompt/Prompt-SemiBold.ttf",
       weight: "600",
       style: "normal",
@@ -41,11 +36,6 @@ const prompt = localFont({
     {
       path: "../public/fonts/Prompt/Prompt-Bold.ttf",
       weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/Prompt/Prompt-ExtraBold.ttf",
-      weight: "800",
       style: "normal",
     },
   ],

@@ -120,12 +120,12 @@ export const PricePillMarker = memo(function PricePillMarker({
       onMouseLeave={() => onMouseLeave?.()}
       aria-label={`${typeLabel}: ${group.leadPriceLabel}${isMultiUnit ? ` (${countSuffix})` : ""}`}
       className={cn(
-        "group relative inline-flex items-center gap-1.5 min-h-[34px] px-2.5 py-1 rounded-full font-sans font-extrabold text-xs tracking-tight transition-all duration-200 select-none cursor-pointer shadow-md border whitespace-nowrap bg-white text-[#1B263B]",
+        "group relative inline-flex items-center gap-1.5 h-[32px] px-2.5 py-1 rounded-full font-sans font-bold text-xs tracking-tight transition-all duration-150 select-none cursor-pointer shadow-md border whitespace-nowrap bg-white text-[#1B263B] origin-bottom",
         isSelected
-          ? `${activeBgClass} scale-110 shadow-xl`
+          ? `${activeBgClass} scale-105 shadow-xl`
           : isHovered
-            ? `${hoverBgClass} scale-105 shadow-lg`
-            : `${defaultBorderClass} hover:scale-105 hover:shadow-lg`
+            ? `${hoverBgClass} shadow-lg`
+            : `${defaultBorderClass} hover:shadow-lg`
       )}
     >
       {/* Accent Indicator Dot: Green for Sale, Blue for Rent, Purple for Both */}
@@ -143,7 +143,7 @@ export const PricePillMarker = memo(function PricePillMarker({
         )}
       />
 
-      <span>{group.leadPriceLabel}</span>
+      <span className="leading-none flex items-center">{group.leadPriceLabel}</span>
 
       {/* Rose Discount Indicator Dot when original_price / original_rental_price > current price */}
       {group.hasAnyDiscount && (
