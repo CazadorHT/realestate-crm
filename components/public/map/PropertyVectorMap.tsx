@@ -1013,35 +1013,47 @@ export function PropertyVectorMap({
 
         {/* Floating Station Radar Control Pill (Active when clicking a Transit Station) */}
         {stationRadar && (
-          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-35 pointer-events-auto max-w-[calc(100vw-24px)] animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex flex-wrap items-center gap-2 px-3.5 py-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 text-slate-800">
-              {/* Station Label & Color */}
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0 shadow-xs"
-                  style={{ backgroundColor: stationRadar.station.lineColor || "#2563EB" }}
-                />
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1">
-                    <span className="font-extrabold text-xs text-slate-900 truncate max-w-[140px] sm:max-w-[200px]">
-                      {stationRadar.station.label?.[language] ||
-                        stationRadar.station.label.th ||
-                        stationRadar.station.label.en}
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
-                      ({getTransitTypeLabel(stationRadar.station.transitType || stationRadar.station.slug)})
+          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-35 pointer-events-auto w-[calc(100vw-24px)] sm:w-auto max-w-xs sm:max-w-none animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-2 p-3 sm:px-3.5 sm:py-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 text-slate-800">
+              {/* Station Label & Color + Close Button on mobile */}
+              <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 shadow-xs"
+                    style={{ backgroundColor: stationRadar.station.lineColor || "#2563EB" }}
+                  />
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1">
+                      <span className="font-extrabold text-xs text-slate-900 truncate max-w-[150px] sm:max-w-[200px]">
+                        {stationRadar.station.label?.[language] ||
+                          stationRadar.station.label.th ||
+                          stationRadar.station.label.en}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
+                        ({getTransitTypeLabel(stationRadar.station.transitType || stationRadar.station.slug)})
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-semibold text-blue-600">
+                      {radarCountText}
                     </span>
                   </div>
-                  <span className="text-[11px] font-semibold text-blue-600">
-                    {radarCountText}
-                  </span>
                 </div>
+
+                {/* Close Button on mobile */}
+                <button
+                  type="button"
+                  onClick={() => onStationRadarChange?.(null)}
+                  title="ปิดเรดาร์สถานี"
+                  className="sm:hidden p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <div className="h-6 w-px bg-slate-200 shrink-0 mx-0.5" />
+              <div className="hidden sm:block h-6 w-px bg-slate-200 shrink-0 mx-0.5" />
 
-              {/* Radius Options */}
-              <div className="flex items-center gap-1 shrink-0">
+              {/* Radius Options (Grid 2x2 on mobile, flex on desktop) */}
+              <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-1 w-full sm:w-auto">
                 {[
                   { label: "500 ม.", km: 0.5 },
                   { label: "1 กม.", km: 1 },
@@ -1060,7 +1072,7 @@ export function PropertyVectorMap({
                         })
                       }
                       className={cn(
-                        "px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                        "w-full sm:w-auto px-2.5 py-1.5 sm:py-1 rounded-xl text-xs font-bold transition-all cursor-pointer text-center",
                         isActive
                           ? "bg-blue-600 text-white shadow-xs"
                           : "bg-slate-100 hover:bg-slate-200 text-slate-700"
@@ -1072,12 +1084,12 @@ export function PropertyVectorMap({
                 })}
               </div>
 
-              {/* Close Button */}
+              {/* Close Button on desktop */}
               <button
                 type="button"
                 onClick={() => onStationRadarChange?.(null)}
                 title="ปิดเรดาร์สถานี"
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 ml-0.5"
+                className="hidden sm:flex p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 ml-0.5"
               >
                 <X className="w-4 h-4" />
               </button>
