@@ -2,6 +2,7 @@
 
 import React, {
   Component,
+  startTransition,
   useCallback,
   useEffect,
   useMemo,
@@ -385,7 +386,9 @@ export function PropertyVectorMap({
         hoverTimeoutRef.current = null;
       }
       setInternalHoverGroupId(g.groupId);
-      onHoverPropertyId?.(g.units[0]?.id || null);
+      startTransition(() => {
+        onHoverPropertyId?.(g.units[0]?.id || null);
+      });
     },
     [onHoverPropertyId]
   );
@@ -396,9 +399,11 @@ export function PropertyVectorMap({
     }
     hoverTimeoutRef.current = setTimeout(() => {
       setInternalHoverGroupId(null);
-      onHoverPropertyId?.(null);
+      startTransition(() => {
+        onHoverPropertyId?.(null);
+      });
       hoverTimeoutRef.current = null;
-    }, 120);
+    }, 60);
   }, [onHoverPropertyId]);
 
   useEffect(() => {
@@ -483,6 +488,11 @@ export function PropertyVectorMap({
     }
     return null;
   }, [internalHoverGroupId, externalHoveredGroupId, focusedPropertyId, groups]);
+
+  // Spotlight Dimming check: whether any marker is currently active/hovered
+  const hasAnyHover = Boolean(
+    internalHoverGroupId || externalHoveredGroupId || focusedPropertyId
+  );
 
   // GeoJSON circle polygon for the active station radius radar
   const radarCircleGeoJSON = useMemo(() => {
@@ -1247,8 +1257,9 @@ export function PropertyVectorMap({
                     }}
                     aria-label={`${item.unitCount} properties`}
                     className={cn(
-                      "rounded-full bg-[#1B263B]/95 hover:bg-blue-600 text-white font-sans font-bold flex items-center justify-center shadow-lg border-2 border-white ring-4 ring-slate-900/15 transition-transform duration-150 hover:scale-110 cursor-pointer",
-                      sizeClass
+                      "rounded-full bg-[#1B263B]/95 hover:bg-blue-600 text-white font-sans font-bold flex items-center justify-center shadow-lg border-2 border-white ring-4 ring-slate-900/15 transition-all duration-200 hover:scale-110 cursor-pointer",
+                      sizeClass,
+                      hasAnyHover && "opacity-50 hover:opacity-100"
                     )}
                   >
                     {item.unitCount}
@@ -1264,7 +1275,8 @@ export function PropertyVectorMap({
               externalHoveredGroupId === group.groupId ||
               (!!focusedPropertyId && group.unitIds.has(focusedPropertyId));
 
-            const markerZ = isSelected ? 45 : isHovered ? 35 : 20;
+            const isDimmed = hasAnyHover && !isHovered && !isSelected;
+            const markerZ = isSelected ? 45 : isHovered ? 35 : isDimmed ? 15 : 20;
 
             return (
               <Marker
@@ -1278,6 +1290,7 @@ export function PropertyVectorMap({
                   group={group}
                   isSelected={isSelected}
                   isHovered={isHovered}
+                  isDimmed={isDimmed}
                   language={language}
                   onClick={handleGroupClick}
                   onMouseEnter={handleMarkerMouseEnter}

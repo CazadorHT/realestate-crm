@@ -243,53 +243,56 @@ export const MapTransitLineLayer = memo(function MapTransitLineLayer({
     }
 
     const controller = new AbortController();
-    const mode = transitTarget.isWalk ? "walk" : "drive";
-    const start = `${activeGroup.longitude},${activeGroup.latitude}`;
-    const end = `${transitTarget.station.longitude},${transitTarget.station.latitude}`;
-    const url = `/api/public/transit-route?start=${start}&end=${end}&mode=${mode}`;
+    const timer = setTimeout(() => {
+      const mode = transitTarget.isWalk ? "walk" : "drive";
+      const start = `${activeGroup.longitude},${activeGroup.latitude}`;
+      const end = `${transitTarget.station.longitude},${transitTarget.station.latitude}`;
+      const url = `/api/public/transit-route?start=${start}&end=${end}&mode=${mode}`;
 
-    fetch(url, { signal: controller.signal })
-      .then((res) => {
-        if (!res.ok) throw new Error("Transit route calculation failed");
-        return res.json();
-      })
-      .then((data) => {
-        const coords = data?.coordinates as [number, number][] | undefined;
-        const routeDist = data?.distanceMeters;
-        const geoDist = transitTarget.geoDistanceMeters;
+      fetch(url, { signal: controller.signal })
+        .then((res) => {
+          if (!res.ok) throw new Error("Transit route calculation failed");
+          return res.json();
+        })
+        .then((data) => {
+          const coords = data?.coordinates as [number, number][] | undefined;
+          const routeDist = data?.distanceMeters;
+          const geoDist = transitTarget.geoDistanceMeters;
 
-        // Circuity guard: Reject absurd loop detours
-        const isDetour = Boolean(
-          routeDist &&
-            geoDist &&
-            ((geoDist <= 1000 && (routeDist > geoDist * 1.85 || routeDist - geoDist > 500)) ||
-              (geoDist > 1000 && routeDist > geoDist * 2.3))
-        );
+          // Circuity guard: Reject absurd loop detours
+          const isDetour = Boolean(
+            routeDist &&
+              geoDist &&
+              ((geoDist <= 1000 && (routeDist > geoDist * 1.85 || routeDist - geoDist > 500)) ||
+                (geoDist > 1000 && routeDist > geoDist * 2.3))
+          );
 
-        const direct = [
-          [activeGroup.longitude, activeGroup.latitude],
-          [transitTarget.station.longitude, transitTarget.station.latitude],
-        ] as [number, number][];
-
-        if (Array.isArray(coords) && coords.length > 1 && !isDetour) {
-          streetRouteCache.set(routeCacheKey, coords);
-          setStreetCoordinates(coords);
-        } else {
-          streetRouteCache.set(routeCacheKey, direct);
-          setStreetCoordinates(direct);
-        }
-      })
-      .catch((err) => {
-        if (err.name !== "AbortError") {
           const direct = [
             [activeGroup.longitude, activeGroup.latitude],
             [transitTarget.station.longitude, transitTarget.station.latitude],
           ] as [number, number][];
-          setStreetCoordinates(direct);
-        }
-      });
+
+          if (Array.isArray(coords) && coords.length > 1 && !isDetour) {
+            streetRouteCache.set(routeCacheKey, coords);
+            setStreetCoordinates(coords);
+          } else {
+            streetRouteCache.set(routeCacheKey, direct);
+            setStreetCoordinates(direct);
+          }
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            const direct = [
+              [activeGroup.longitude, activeGroup.latitude],
+              [transitTarget.station.longitude, transitTarget.station.latitude],
+            ] as [number, number][];
+            setStreetCoordinates(direct);
+          }
+        });
+    }, 80);
 
     return () => {
+      clearTimeout(timer);
       controller.abort();
     };
   }, [routeCacheKey, transitTarget, activeGroup]);
