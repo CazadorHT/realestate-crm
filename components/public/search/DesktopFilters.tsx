@@ -666,11 +666,17 @@ export function DesktopFilters({
               setArea("ALL");
             }}
           >
-            <SelectTrigger className="h-10! w-full rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all text-xs">
+            <SelectTrigger className="h-10! w-full rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all text-xs text-left">
               <SelectValue placeholder={t("search.province")} />
             </SelectTrigger>
             <SelectContent align="start">
-              <SelectItem value="ALL">{t("search.all_provinces")}</SelectItem>
+              <SelectItem value="ALL">
+                <div className="flex items-center justify-between w-full gap-4">
+                  <span className={province === "ALL" ? "font-medium" : ""}>
+                    {t("search.all_provinces")}
+                  </span>
+                </div>
+              </SelectItem>
               {availableProvinces.map((p) => (
                 <SelectItem
                   key={p.name}
