@@ -101,14 +101,31 @@ describe("map-price-utils", () => {
       const pin = {
         id: "p1",
         title: "ขายด่วน คอนโดหรูใจกลางเมือง",
-        project_name: "Ashton Asoke",
+        title_en: "Urgent sale luxury condo",
+        project_name: "แอชตัน จุฬา-สีลม",
+        projects: {
+          name_th: "แอชตัน จุฬา-สีลม",
+          name_en: "Ashton Chula-Silom",
+        },
         latitude: 13.74,
         longitude: 100.56,
       } as unknown as SlimMapPin;
 
-      const res = getPinProjectOrPropertyHeadline(pin, "th");
-      expect(res.isProjectHeadline).toBe(true);
-      expect(res.primaryTitle).toBe("Ashton Asoke");
+      const resTh = getPinProjectOrPropertyHeadline(pin, "th");
+      expect(resTh.isProjectHeadline).toBe(true);
+      expect(resTh.primaryTitle).toBe("แอชตัน จุฬา-สีลม");
+
+      const resEn = getPinProjectOrPropertyHeadline(pin, "en");
+      expect(resEn.isProjectHeadline).toBe(true);
+      expect(resEn.primaryTitle).toBe("Ashton Chula-Silom");
+
+      const resCn = getPinProjectOrPropertyHeadline(pin, "cn");
+      expect(resCn.isProjectHeadline).toBe(true);
+      expect(resCn.primaryTitle).toBe("Ashton Chula-Silom");
+
+      const resRu = getPinProjectOrPropertyHeadline(pin, "ru");
+      expect(resRu.isProjectHeadline).toBe(true);
+      expect(resRu.primaryTitle).toBe("Ashton Chula-Silom");
     });
 
     it("falls back to listing title when project name is missing", () => {

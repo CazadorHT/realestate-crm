@@ -33,24 +33,46 @@ export const PricePillMarker = memo(function PricePillMarker({
   const projectHeadline = useMemo(() => {
     if (!group?.units || group.units.length === 0) return null;
 
+    const isThai = language === "th";
+
     // 1. Prioritize any unit in the group that has an explicit project name
     for (const unit of group.units) {
       if (!unit) continue;
       const nameTh = unit.projects?.name_th || unit.project_name || null;
       const nameEn = unit.projects?.name_en || null;
+      const nameCn = unit.project_name_cn || null;
+      const nameRu = unit.project_name_ru || null;
 
-      if (nameTh || nameEn) {
-        const isEnglish = language === "en";
-        const primary = isEnglish ? (nameEn || nameTh) : (nameTh || nameEn);
-        const secondary = isEnglish
-          ? (nameTh && nameTh.trim().toLowerCase() !== primary?.trim().toLowerCase() ? nameTh : null)
-          : (nameEn && nameEn.trim().toLowerCase() !== primary?.trim().toLowerCase() ? nameEn : null);
+      if (nameTh || nameEn || nameCn || nameRu) {
+        if (isThai) {
+          // Thai user: Thai primary, English subtitle (if distinct)
+          const primary = nameTh || nameEn;
+          const secondary =
+            nameEn && nameEn.trim().toLowerCase() !== primary?.trim().toLowerCase()
+              ? nameEn
+              : null;
 
-        return {
-          primaryTitle: primary?.trim() || "",
-          englishSubtitle: secondary?.trim() || null,
-          isProject: true,
-        };
+          return {
+            primaryTitle: primary?.trim() || "",
+            englishSubtitle: secondary?.trim() || null,
+            isProject: true,
+          };
+        } else {
+          // Non-Thai user (EN, CN, RU, etc.): strictly show English / international title, NO Thai mixed in!
+          const localized =
+            language === "cn"
+              ? nameCn || nameEn
+              : language === "ru"
+                ? nameRu || nameEn
+                : nameEn;
+          const primary = localized || nameEn || nameTh;
+
+          return {
+            primaryTitle: primary?.trim() || "",
+            englishSubtitle: null,
+            isProject: true,
+          };
+        }
       }
     }
 
@@ -60,15 +82,30 @@ export const PricePillMarker = memo(function PricePillMarker({
     const headline = getPinProjectOrPropertyHeadline(first, language);
     const cleanTitle = (headline.primaryTitle || "").replace(/^[^\w\u0E00-\u0E7F]+/g, "").trim();
 
-    // Check if there is an english title / area to serve as subtitle
-    const enTitle = first.title_en?.replace(/^[^\w\u0E00-\u0E7F]+/g, "").trim() || first.popular_area_en || null;
-    const secondary = enTitle && enTitle.toLowerCase() !== cleanTitle.toLowerCase() ? enTitle : null;
+    if (isThai) {
+      // Check if there is an english title / area to serve as subtitle for Thai users
+      const enTitle = first.title_en?.replace(/^[^\w\u0E00-\u0E7F]+/g, "").trim() || first.popular_area_en || null;
+      const secondary = enTitle && enTitle.toLowerCase() !== cleanTitle.toLowerCase() ? enTitle : null;
 
-    return {
-      primaryTitle: cleanTitle || first.popular_area || first.property_type || "",
-      englishSubtitle: secondary,
-      isProject: false,
-    };
+      return {
+        primaryTitle: cleanTitle || first.popular_area || first.property_type || "",
+        englishSubtitle: secondary,
+        isProject: false,
+      };
+    } else {
+      // Non-Thai user: strictly international title without Thai subtitle
+      const nonThaiTitle =
+        (language === "cn" && first.title_cn) ||
+        (language === "ru" && first.title_ru) ||
+        first.title_en ||
+        cleanTitle;
+
+      return {
+        primaryTitle: (nonThaiTitle || first.popular_area_en || first.property_type || "").replace(/^[^\w\u0E00-\u0E7F]+/g, "").trim(),
+        englishSubtitle: null,
+        isProject: false,
+      };
+    }
   }, [group?.units, language]);
 
   const countSuffix =
