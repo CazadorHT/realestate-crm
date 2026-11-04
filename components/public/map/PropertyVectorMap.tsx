@@ -489,9 +489,12 @@ export function PropertyVectorMap({
     return null;
   }, [internalHoverGroupId, externalHoveredGroupId, focusedPropertyId, groups]);
 
-  // Spotlight Dimming check: whether any marker is currently active/hovered
-  const hasAnyHover = Boolean(
-    internalHoverGroupId || externalHoveredGroupId || focusedPropertyId
+  // Spotlight Dimming check: whether any marker is currently active/hovered or opened/selected
+  const hasAnyFocus = Boolean(
+    internalHoverGroupId ||
+      externalHoveredGroupId ||
+      focusedPropertyId ||
+      selectedGroupId
   );
 
   // GeoJSON circle polygon for the active station radius radar
@@ -1259,7 +1262,7 @@ export function PropertyVectorMap({
                     className={cn(
                       "rounded-full bg-[#1B263B]/95 hover:bg-blue-600 text-white font-sans font-bold flex items-center justify-center shadow-lg border-2 border-white ring-4 ring-slate-900/15 transition-all duration-200 hover:scale-110 cursor-pointer",
                       sizeClass,
-                      hasAnyHover && "opacity-50 hover:opacity-100"
+                      hasAnyFocus && "opacity-50 hover:opacity-100"
                     )}
                   >
                     {item.unitCount}
@@ -1275,7 +1278,7 @@ export function PropertyVectorMap({
               externalHoveredGroupId === group.groupId ||
               (!!focusedPropertyId && group.unitIds.has(focusedPropertyId));
 
-            const isDimmed = hasAnyHover && !isHovered && !isSelected;
+            const isDimmed = hasAnyFocus && !isHovered && !isSelected;
             const markerZ = isSelected ? 45 : isHovered ? 35 : isDimmed ? 15 : 20;
 
             return (
