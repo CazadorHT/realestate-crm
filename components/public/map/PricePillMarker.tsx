@@ -29,17 +29,26 @@ export const PricePillMarker = memo(function PricePillMarker({
   const isMultiUnit = unitCount > 1;
   const listingType = group.leadListingType || "SALE";
 
-  // Authoritative project or property headline resolution for hover tooltip
+  // Authoritative project or property headline resolution with bilingual English subtitle support
   const projectHeadline = useMemo(() => {
     if (!group?.units || group.units.length === 0) return null;
 
     // 1. Prioritize any unit in the group that has an explicit project name
     for (const unit of group.units) {
       if (!unit) continue;
-      const headline = getPinProjectOrPropertyHeadline(unit, language);
-      if (headline.isProjectHeadline && headline.primaryTitle) {
+      const nameTh = unit.projects?.name_th || unit.project_name || null;
+      const nameEn = unit.projects?.name_en || null;
+
+      if (nameTh || nameEn) {
+        const isEnglish = language === "en";
+        const primary = isEnglish ? (nameEn || nameTh) : (nameTh || nameEn);
+        const secondary = isEnglish
+          ? (nameTh && nameTh.trim().toLowerCase() !== primary?.trim().toLowerCase() ? nameTh : null)
+          : (nameEn && nameEn.trim().toLowerCase() !== primary?.trim().toLowerCase() ? nameEn : null);
+
         return {
-          title: headline.primaryTitle,
+          primaryTitle: primary?.trim() || "",
+          englishSubtitle: secondary?.trim() || null,
           isProject: true,
         };
       }
@@ -51,8 +60,13 @@ export const PricePillMarker = memo(function PricePillMarker({
     const headline = getPinProjectOrPropertyHeadline(first, language);
     const cleanTitle = (headline.primaryTitle || "").replace(/^[^\w\u0E00-\u0E7F]+/g, "").trim();
 
+    // Check if there is an english title / area to serve as subtitle
+    const enTitle = first.title_en?.replace(/^[^\w\u0E00-\u0E7F]+/g, "").trim() || first.popular_area_en || null;
+    const secondary = enTitle && enTitle.toLowerCase() !== cleanTitle.toLowerCase() ? enTitle : null;
+
     return {
-      title: cleanTitle || first.popular_area || first.property_type || "",
+      primaryTitle: cleanTitle || first.popular_area || first.property_type || "",
+      englishSubtitle: secondary,
       isProject: false,
     };
   }, [group?.units, language]);
@@ -104,7 +118,7 @@ export const PricePillMarker = memo(function PricePillMarker({
   const isRent = listingType === "RENT";
   const isBoth = listingType === "BOTH";
 
-  const isExpanded = (isHovered || isSelected) && Boolean(projectHeadline?.title);
+  const isExpanded = (isHovered || isSelected) && Boolean(projectHeadline?.primaryTitle);
 
   // Active / Selected / Hovered theme border & text colors
   const activeBorderClass = isBoth
@@ -170,21 +184,34 @@ export const PricePillMarker = memo(function PricePillMarker({
       )}
     >
       {isExpanded ? (
-        /* 2-Line Expanded View on Hover: Line 1 = Icon + Project Name (White BG), Line 2 = Price */
+        /* Multi-Line Expanded View on Hover: Title (TH) + Subtitle (EN) + Divider + Price */
         <>
-          {/* Line 1: Icon + Project Name (White BG, crisp dark slate text) */}
-          <span className="flex items-center gap-1.5 text-slate-900 font-bold text-xs tracking-tight">
-            {projectHeadline?.isProject ? (
-              <Building2 className={cn("w-3.5 h-3.5 shrink-0", iconColorClass)} />
-            ) : (
-              <Home className={cn("w-3.5 h-3.5 shrink-0", iconColorClass)} />
-            )}
-            <span className="truncate max-w-[170px] sm:max-w-[210px]">
-              {projectHeadline?.title}
+          {/* Section 1: Project Title + English Subtitle */}
+          <span className="flex flex-col items-start w-full">
+            {/* Primary Name with Icon */}
+            <span className="flex items-center gap-1.5 text-slate-900 font-bold text-xs tracking-tight">
+              {projectHeadline?.isProject ? (
+                <Building2 className={cn("w-3.5 h-3.5 shrink-0", iconColorClass)} />
+              ) : (
+                <Home className={cn("w-3.5 h-3.5 shrink-0", iconColorClass)} />
+              )}
+              <span className="truncate max-w-[170px] sm:max-w-[220px]">
+                {projectHeadline?.primaryTitle}
+              </span>
             </span>
+
+            {/* Subtitle: English Name (Indented under text, lighter font weight & color) */}
+            {projectHeadline?.englishSubtitle && (
+              <span className="pl-5 text-[11px] font-medium text-slate-500 tracking-tight leading-tight truncate max-w-[170px] sm:max-w-[220px]">
+                {projectHeadline.englishSubtitle}
+              </span>
+            )}
           </span>
 
-          {/* Line 2: Price + Multi-Unit / Discount Badges */}
+          {/* Hairline Divider Line */}
+          <span className="w-full h-px bg-slate-100 my-0.5 block shrink-0" />
+
+          {/* Section 2: Price + Multi-Unit / Discount Badges */}
           <span className="flex items-center justify-between w-full gap-2 pt-0.5">
             <span className={cn("font-extrabold text-xs leading-none", priceColorClass)}>
               {group.leadPriceLabel}
