@@ -372,16 +372,16 @@ export const MapTransitLineLayer = memo(function MapTransitLineLayer({
         latitude={isGeoCoLocated ? activeGroup.latitude : station.latitude}
         anchor={stationAnchor}
         offset={stationOffset}
-        style={{ zIndex: 30, pointerEvents: "none" }}
+        style={{ zIndex: 25, pointerEvents: "none" }}
       >
         <div className="pointer-events-none flex items-center select-none font-sans animate-in fade-in zoom-in-95 duration-150">
           {isLongName ? (
             /* Multi-line badge for long station names (e.g. Airport Rail Link รามคำแหง) */
             <div
-              className="flex flex-col items-start gap-1 px-3 py-1.5 rounded-2xl bg-white text-slate-900 shadow-xl border-2 whitespace-nowrap"
+              className="flex flex-col items-start gap-1 px-3 py-1.5 rounded-2xl bg-white text-slate-900 shadow-xl border-2 whitespace-nowrap max-w-[220px] sm:max-w-[280px]"
               style={{ borderColor: lineColor }}
             >
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 min-w-0 max-w-full">
                 <div className="relative w-4 h-4 shrink-0 flex items-center justify-center">
                   <Image
                     src={getTransitLogo(station.transitType)}
@@ -391,7 +391,7 @@ export const MapTransitLineLayer = memo(function MapTransitLineLayer({
                     className="object-contain w-4 h-4"
                   />
                 </div>
-                <span className="text-slate-900 font-extrabold tracking-tight text-xs">
+                <span className="text-slate-900 font-extrabold tracking-tight text-xs truncate">
                   {transitTypeLabel} {stationLabel}
                 </span>
               </div>
@@ -410,7 +410,7 @@ export const MapTransitLineLayer = memo(function MapTransitLineLayer({
           ) : (
             /* Single-row pill badge for compact station names (e.g. BTS พญาไท) */
             <div
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-slate-900 text-xs font-extrabold shadow-xl border-2 whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-slate-900 text-xs font-extrabold shadow-xl border-2 whitespace-nowrap max-w-[240px] sm:max-w-[300px]"
               style={{ borderColor: lineColor }}
             >
               <div className="relative w-4 h-4 shrink-0 flex items-center justify-center">
@@ -422,7 +422,7 @@ export const MapTransitLineLayer = memo(function MapTransitLineLayer({
                   className="object-contain w-4 h-4"
                 />
               </div>
-              <span className="text-slate-900 font-extrabold tracking-tight">
+              <span className="text-slate-900 font-extrabold tracking-tight truncate">
                 {transitTypeLabel} {stationLabel}
               </span>
               <span className="inline-flex items-center gap-1 text-slate-500 font-semibold text-[11px] shrink-0">
