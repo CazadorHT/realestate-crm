@@ -430,7 +430,7 @@ export function MobileFilters({
     <>
       <div className="xl:hidden flex items-center gap-2.5 my-2">
         <div className="flex-1 min-w-0">
-          <MagicAiSearch keyword={keyword} setKeyword={setKeyword} className="h-12 w-full" />
+          <MagicAiSearch keyword={keyword} setKeyword={setKeyword} className="h-12 p-0 md:p-1.5 pl-3.5 w-full" />
         </div>
         {/* Sort by */}
         <Sheet>

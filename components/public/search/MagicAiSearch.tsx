@@ -451,7 +451,7 @@ export function MagicAiSearch({
     <div ref={containerRef} className="relative group w-full">
       <div
         className={cn(
-          "relative flex items-center bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 pl-3.5 w-full",
+          "relative flex items-center bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 h-10 p-1 pl-3.5 w-full",
           className
         )}
       >
@@ -515,7 +515,7 @@ export function MagicAiSearch({
             type="button"
             onClick={() => handleExecuteSearch()}
             className={cn(
-              "inline-flex items-center justify-center gap-1.5 px-3 h-full sm:rounded-lg font-semibold text-xs transition-all duration-200 cursor-pointer shrink-0 border-0",
+              "inline-flex items-center justify-center gap-1.5 px-3 h-full rounded-lg font-semibold text-xs transition-all duration-200 cursor-pointer shrink-0 border-0",
               inputValue.trim()
                 ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white shadow-xs shadow-blue-500/25 ring-2 ring-indigo-500/20"
                 : "bg-slate-100 hover:bg-slate-200/80 text-slate-500 shadow-none"
