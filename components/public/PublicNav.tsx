@@ -276,15 +276,27 @@ export function PublicNav() {
     };
   }, [mobileMenuOpen]);
 
-  // Synchronize CSS variable with visibility state
+  // Synchronize CSS variable with visibility state and viewport (52px on mobile, 64px on sm+)
   useEffect(() => {
-    const updateNavOffset = (val: number) => {
-      if (currentOffset.current !== val) {
-        document.documentElement.style.setProperty("--nav-offset", `${val}px`);
-        currentOffset.current = val;
+    const updateNavOffset = () => {
+      if (!isVisible) {
+        if (currentOffset.current !== 0) {
+          document.documentElement.style.setProperty("--nav-offset", "0px");
+          currentOffset.current = 0;
+        }
+        return;
+      }
+      const isMobileViewport = typeof window !== "undefined" && window.innerWidth < 640;
+      const targetHeight = isMobileViewport ? 52 : 64;
+      if (currentOffset.current !== targetHeight) {
+        document.documentElement.style.setProperty("--nav-offset", `${targetHeight}px`);
+        currentOffset.current = targetHeight;
       }
     };
-    updateNavOffset(isVisible ? 64 : 0);
+
+    updateNavOffset();
+    window.addEventListener("resize", updateNavOffset, { passive: true });
+    return () => window.removeEventListener("resize", updateNavOffset);
   }, [isVisible]);
 
   function updateFavoriteCount() {
@@ -402,7 +414,7 @@ export function PublicNav() {
             </div>
           )}
           <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-8 md:px-10 lg:px-12 2xl:px-8">
-            <div className="flex justify-between items-center h-16">
+            <div className="flex justify-between items-center my-1 sm:my-0 sm:h-16">
               {/* Logo (Vertically centered, balanced left/right layout) */}
               <div className="shrink-0 flex items-center h-full">
                 <Link
@@ -993,76 +1005,112 @@ export function PublicNav() {
                 </button>
 
                 {mobilePropExpanded && (
-                  <div className="px-3 pb-3 pt-1 space-y-1 bg-white border-t border-slate-100">
-                    <Link
-                      href={`${langPrefix}/projects`}
-                      onClick={() => handleNavAction(`${langPrefix}/projects`)}
-                      className="flex items-center justify-between p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <Building2 className="w-3.5 h-3.5 text-blue-600" />
-                        <span>{navStr("nav_projects")}</span>
-                      </span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">135+</span>
-                    </Link>
+                  <div className="p-3 space-y-3 bg-white border-t border-slate-100">
+                    {/* Top 3 Primary Explore Items (Grid 3 cols) */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <Link
+                        href={`${langPrefix}/projects`}
+                        onClick={() => handleNavAction(`${langPrefix}/projects`)}
+                        className="relative flex flex-col items-center justify-center p-2.5 rounded-xl bg-blue-50/60 hover:bg-blue-100/80 border border-blue-100/90 transition-all text-center group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs mb-1.5 group-hover:scale-105 transition-transform">
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-1">
+                          {navStr("nav_projects")}
+                        </span>
+                        <span className="absolute top-1.5 right-1.5 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-blue-600 text-white shadow-xs">
+                          135+
+                        </span>
+                      </Link>
 
-                    <Link
-                      href={`${langPrefix}/properties`}
-                      onClick={() => handleNavAction(`${langPrefix}/properties`)}
-                      className="flex items-center gap-2.5 p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
-                    >
-                      <Home className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>{navStr("nav_all_props")}</span>
-                    </Link>
+                      <Link
+                        href={`${langPrefix}/properties`}
+                        onClick={() => handleNavAction(`${langPrefix}/properties`)}
+                        className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-indigo-50/60 hover:bg-indigo-100/80 border border-indigo-100/90 transition-all text-center group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs mb-1.5 group-hover:scale-105 transition-transform">
+                          <Home className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-1">
+                          {navStr("nav_all_props")}
+                        </span>
+                      </Link>
 
-                    <Link
-                      href={`${langPrefix}/map`}
-                      onClick={() => handleNavAction(`${langPrefix}/map`)}
-                      className="flex items-center gap-2.5 p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
-                    >
-                      <Compass className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>{navStr("nav_map")}</span>
-                    </Link>
-
-                    <div className="pt-2 pb-1 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-t border-slate-100">
-                      {navStr("nav_curated")}
+                      <Link
+                        href={`${langPrefix}/map`}
+                        onClick={() => handleNavAction(`${langPrefix}/map`)}
+                        className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-emerald-50/60 hover:bg-emerald-100/80 border border-emerald-100/90 transition-all text-center group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs mb-1.5 group-hover:scale-105 transition-transform">
+                          <Compass className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-1">
+                          {navStr("nav_map")}
+                        </span>
+                      </Link>
                     </div>
 
-                    <Link
-                      href={`${langPrefix}/properties/prime-cbd`}
-                      onClick={() => handleNavAction(`${langPrefix}/properties/prime-cbd`)}
-                      className="flex items-center gap-2.5 p-2 rounded-lg text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-800"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                      <span>{navStr("nav_prime_cbd")}</span>
-                    </Link>
+                    {/* Bottom 4 Curated Collections (Grid 2 cols x 2 rows) */}
+                    <div>
+                      <div className="pt-1 pb-1.5 px-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        {navStr("nav_curated")}
+                      </div>
 
-                    <Link
-                      href={`${langPrefix}/properties/luxury-villa`}
-                      onClick={() => handleNavAction(`${langPrefix}/properties/luxury-villa`)}
-                      className="flex items-center gap-2.5 p-2 rounded-lg text-xs text-slate-700 hover:bg-purple-50 hover:text-purple-800"
-                    >
-                      <Palmtree className="w-3.5 h-3.5 text-purple-600" />
-                      <span>{navStr("nav_luxury_villa")}</span>
-                    </Link>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link
+                          href={`${langPrefix}/properties/prime-cbd`}
+                          onClick={() => handleNavAction(`${langPrefix}/properties/prime-cbd`)}
+                          className="flex items-center gap-2 p-2 rounded-xl border border-amber-100/80 bg-amber-50/40 hover:bg-amber-100/60 transition-colors group cursor-pointer"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                            <Sparkles className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-bold text-slate-800 truncate">
+                            {navStr("nav_prime_cbd")}
+                          </span>
+                        </Link>
 
-                    <Link
-                      href={`${langPrefix}/properties/pet-friendly-condo`}
-                      onClick={() => handleNavAction(`${langPrefix}/properties/pet-friendly-condo`)}
-                      className="flex items-center gap-2.5 p-2 rounded-lg text-xs text-slate-700 hover:bg-pink-50 hover:text-pink-800"
-                    >
-                      <PawPrint className="w-3.5 h-3.5 text-pink-600" />
-                      <span>{navStr("nav_pet_friendly")}</span>
-                    </Link>
+                        <Link
+                          href={`${langPrefix}/properties/luxury-villa`}
+                          onClick={() => handleNavAction(`${langPrefix}/properties/luxury-villa`)}
+                          className="flex items-center gap-2 p-2 rounded-xl border border-purple-100/80 bg-purple-50/40 hover:bg-purple-100/60 transition-colors group cursor-pointer"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                            <Palmtree className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-bold text-slate-800 truncate">
+                            {navStr("nav_luxury_villa")}
+                          </span>
+                        </Link>
 
-                    <Link
-                      href={`${langPrefix}/properties/office-for-rent`}
-                      onClick={() => handleNavAction(`${langPrefix}/properties/office-for-rent`)}
-                      className="flex items-center gap-2.5 p-2 rounded-lg text-xs text-slate-700 hover:bg-cyan-50 hover:text-cyan-800"
-                    >
-                      <Briefcase className="w-3.5 h-3.5 text-cyan-600" />
-                      <span>{navStr("nav_office")}</span>
-                    </Link>
+                        <Link
+                          href={`${langPrefix}/properties/pet-friendly-condo`}
+                          onClick={() => handleNavAction(`${langPrefix}/properties/pet-friendly-condo`)}
+                          className="flex items-center gap-2 p-2 rounded-xl border border-pink-100/80 bg-pink-50/40 hover:bg-pink-100/60 transition-colors group cursor-pointer"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-pink-500 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                            <PawPrint className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-bold text-slate-800 truncate">
+                            {navStr("nav_pet_friendly")}
+                          </span>
+                        </Link>
+
+                        <Link
+                          href={`${langPrefix}/properties/office-for-rent`}
+                          onClick={() => handleNavAction(`${langPrefix}/properties/office-for-rent`)}
+                          className="flex items-center gap-2 p-2 rounded-xl border border-cyan-100/80 bg-cyan-50/40 hover:bg-cyan-100/60 transition-colors group cursor-pointer"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-cyan-600 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                            <Briefcase className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-bold text-slate-800 truncate">
+                            {navStr("nav_office")}
+                          </span>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

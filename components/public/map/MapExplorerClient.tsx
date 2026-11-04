@@ -164,7 +164,7 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
   );
 
   return (
-    <div className="h-dvh pt-(--nav-offset,64px) flex flex-col overflow-hidden bg-slate-50">
+    <div className="h-dvh pt-[52px] sm:pt-(--nav-offset,64px) flex flex-col overflow-hidden bg-slate-50">
       {/* Top Filter Bar (100% Shared with /properties) */}
       <div className="shrink-0 z-40 bg-white shadow-xs">
         <SearchFilterBar

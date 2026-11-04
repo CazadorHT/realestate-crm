@@ -428,7 +428,7 @@ export function MobileFilters({
 
   return (
     <>
-      <div className="xl:hidden flex gap-3 my-4">
+      <div className="xl:hidden flex gap-3 my-2">
         <div className="flex-1">
           <MagicAiSearch keyword={keyword} setKeyword={setKeyword} />
         </div>
