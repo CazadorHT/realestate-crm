@@ -177,70 +177,73 @@ export const PricePillMarker = memo(function PricePillMarker({
       onMouseEnter={() => onMouseEnter?.(group)}
       onMouseLeave={() => onMouseLeave?.()}
       aria-label={`${typeLabel}: ${group.leadPriceLabel}${isMultiUnit ? ` (${countSuffix})` : ""}`}
-      className={cn(
-        "group relative font-sans text-xs tracking-tight transition-all duration-150 select-none cursor-pointer whitespace-nowrap origin-bottom",
-        isExpanded
-          ? `flex flex-col items-stretch rounded-2xl shadow-xl border-2 ${activeBorderClass} z-40 animate-in fade-in zoom-in-95 duration-150 bg-white p-0`
-          : `inline-flex items-center gap-1.5 h-[32px] px-2.5 py-1 rounded-full shadow-md border ${defaultBorderClass} hover:shadow-lg bg-white text-[#1B263B] font-bold`
-      )}
+      className="group relative font-sans text-xs tracking-tight transition-all duration-150 select-none cursor-pointer whitespace-nowrap origin-bottom p-0 bg-transparent border-0 outline-none"
     >
       {isExpanded ? (
         /* Two-Tone Multi-Line View on Hover: Top = White Header (TH + EN), Bottom = Dark Brand Footer (Price text-right) */
-        <>
-          {/* Top Section (White BG): Project Title + English Subtitle */}
-          <span className="flex flex-col items-start w-full px-3 pt-2 pb-1.5 bg-white rounded-t-[14px]">
-            {/* Primary Name with Icon */}
-            <span className="flex items-center gap-1.5 text-slate-900 font-bold text-xs tracking-tight">
-              {projectHeadline?.isProject ? (
-                <Building2 className={cn("w-3.5 h-3.5 shrink-0", iconColorClass)} />
-              ) : (
-                <Home className={cn("w-3.5 h-3.5 shrink-0", iconColorClass)} />
-              )}
-              <span className="truncate max-w-[170px] sm:max-w-[220px]">
-                {projectHeadline?.primaryTitle}
-              </span>
-            </span>
-
-            {/* Subtitle: English Name (Indented under text, lighter font weight & color) */}
-            {projectHeadline?.englishSubtitle && (
-              <span className="pl-5 text-[11px] font-medium text-slate-500 tracking-tight leading-tight truncate max-w-[170px] sm:max-w-[220px]">
-                {projectHeadline.englishSubtitle}
-              </span>
-            )}
-          </span>
-
-          {/* Hairline Divider Line between Header & Footer */}
-          <span className="w-full h-px bg-slate-100 block shrink-0" />
-
-          {/* Bottom Section (Dark Brand Color Footer): Type/Units Left + Price Text-Right */}
+        <span className="relative flex flex-col items-center">
+          {/* Main Card with overflow-hidden to guarantee 100% PERFECT curved borders without any clipping or bleeding */}
           <span
             className={cn(
-              "flex items-center justify-between w-full px-3 py-1.5 rounded-b-[14px] gap-3",
-              footerBgClass
+              "flex flex-col items-stretch overflow-hidden rounded-2xl shadow-xl border-2 bg-white z-40 animate-in fade-in zoom-in-95 duration-150",
+              activeBorderClass
             )}
           >
-            {/* Left Info: Unit count or Type label */}
-            {isMultiUnit ? (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none bg-white/20 text-white shrink-0">
-                <Building2 className="w-2.5 h-2.5 shrink-0" />
-                <span>{countSuffix}</span>
+            {/* Top Section (White BG): Project Title + English Subtitle */}
+            <span className="flex flex-col items-start w-full px-3.5 pt-2.5 pb-2 bg-white">
+              {/* Primary Name with Icon */}
+              <span className="flex items-center gap-1.5 text-slate-900 font-bold text-xs tracking-tight">
+                {projectHeadline?.isProject ? (
+                  <Building2 className={cn("w-3.5 h-3.5 shrink-0", iconColorClass)} />
+                ) : (
+                  <Home className={cn("w-3.5 h-3.5 shrink-0", iconColorClass)} />
+                )}
+                <span className="truncate max-w-[170px] sm:max-w-[220px]">
+                  {projectHeadline?.primaryTitle}
+                </span>
               </span>
-            ) : (
-              <span className="text-[10px] font-medium text-white/80 shrink-0">
-                {typeLabel}
-              </span>
-            )}
 
-            {/* Right Info: Price (text-right) + Discount */}
-            <span className="flex items-center gap-1 ml-auto text-right">
-              {group.hasAnyDiscount && (
-                <span
-                  title={discountTooltip}
-                  className="w-1.5 h-1.5 rounded-full shrink-0 bg-rose-300 ring-2 ring-white/60 animate-pulse"
-                />
+              {/* Subtitle: English Name (Indented under text, lighter font weight & color) */}
+              {projectHeadline?.englishSubtitle && (
+                <span className="pl-5 text-[11px] font-medium text-slate-500 tracking-tight leading-tight truncate max-w-[170px] sm:max-w-[220px]">
+                  {projectHeadline.englishSubtitle}
+                </span>
               )}
-              <span className="font-extrabold text-xs text-white leading-none tracking-tight">
-                {group.leadPriceLabel}
+            </span>
+
+            {/* Hairline Divider Line between Header & Footer */}
+            <span className="w-full h-px bg-slate-100 block shrink-0" />
+
+            {/* Bottom Section (Dark Brand Color Footer): Type/Units Left + Price Text-Right */}
+            <span
+              className={cn(
+                "flex items-center justify-between w-full px-3.5 py-1.5 gap-3",
+                footerBgClass
+              )}
+            >
+              {/* Left Info: Unit count or Type label */}
+              {isMultiUnit ? (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none bg-white/20 text-white shrink-0">
+                  <Building2 className="w-2.5 h-2.5 shrink-0" />
+                  <span>{countSuffix}</span>
+                </span>
+              ) : (
+                <span className="text-[10px] font-medium text-white/80 shrink-0">
+                  {typeLabel}
+                </span>
+              )}
+
+              {/* Right Info: Price (text-right) + Discount */}
+              <span className="flex items-center gap-1 ml-auto text-right">
+                {group.hasAnyDiscount && (
+                  <span
+                    title={discountTooltip}
+                    className="w-1.5 h-1.5 rounded-full shrink-0 bg-rose-300 ring-2 ring-white/60 animate-pulse"
+                  />
+                )}
+                <span className="font-extrabold text-xs text-white leading-none tracking-tight">
+                  {group.leadPriceLabel}
+                </span>
               </span>
             </span>
           </span>
@@ -248,53 +251,61 @@ export const PricePillMarker = memo(function PricePillMarker({
           {/* Bottom Pointer Triangle (seamless match with footer color) */}
           <span
             className={cn(
-              "absolute left-1/2 -bottom-1 -translate-x-1/2 w-2.5 h-2.5 rotate-45 transition-colors duration-150",
+              "absolute left-1/2 -bottom-1 -translate-x-1/2 w-2.5 h-2.5 rotate-45 z-30 transition-colors duration-150",
               footerArrowClass
             )}
           />
-        </>
+        </span>
       ) : (
         /* Compact Single-Line View (Normal State) */
-        <>
-          {/* Accent Indicator Dot */}
+        <span className="relative flex flex-col items-center">
           <span
-            title={typeLabel}
-            className={cn("w-2 h-2 rounded-full shrink-0 transition-colors duration-200", dotClass)}
-          />
-
-          <span className="leading-none flex items-center">{group.leadPriceLabel}</span>
-
-          {group.hasAnyDiscount && (
+            className={cn(
+              "inline-flex items-center gap-1.5 h-[32px] px-2.5 py-1 rounded-full shadow-md border bg-white text-[#1B263B] font-bold transition-all duration-150",
+              defaultBorderClass,
+              "hover:shadow-lg"
+            )}
+          >
+            {/* Accent Indicator Dot */}
             <span
-              title={discountTooltip}
-              className="w-1.5 h-1.5 rounded-full shrink-0 bg-rose-500 ring-2 ring-rose-200/70"
+              title={typeLabel}
+              className={cn("w-2 h-2 rounded-full shrink-0 transition-colors duration-200", dotClass)}
             />
-          )}
 
-          {isMultiUnit && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none transition-colors",
-                isBoth
-                  ? "bg-purple-50 text-purple-700 border border-purple-200/80"
-                  : isRent
-                    ? "bg-blue-50 text-blue-700 border border-blue-200/80"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-200/80"
-              )}
-            >
-              <Building2 className="w-2.5 h-2.5 shrink-0" />
-              <span>{countSuffix}</span>
-            </span>
-          )}
+            <span className="leading-none flex items-center">{group.leadPriceLabel}</span>
+
+            {group.hasAnyDiscount && (
+              <span
+                title={discountTooltip}
+                className="w-1.5 h-1.5 rounded-full shrink-0 bg-rose-500 ring-2 ring-rose-200/70"
+              />
+            )}
+
+            {isMultiUnit && (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none transition-colors",
+                  isBoth
+                    ? "bg-purple-50 text-purple-700 border border-purple-200/80"
+                    : isRent
+                      ? "bg-blue-50 text-blue-700 border border-blue-200/80"
+                      : "bg-emerald-50 text-emerald-700 border border-emerald-200/80"
+                )}
+              >
+                <Building2 className="w-2.5 h-2.5 shrink-0" />
+                <span>{countSuffix}</span>
+              </span>
+            )}
+          </span>
 
           {/* Bottom Pointer Triangle */}
           <span
             className={cn(
-              "absolute left-1/2 -bottom-1.5 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-white border-r border-b transition-colors duration-200",
+              "absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 rotate-45 bg-white border-r border-b transition-colors duration-200",
               defaultArrowClass
             )}
           />
-        </>
+        </span>
       )}
     </button>
   );
