@@ -428,9 +428,9 @@ export function MobileFilters({
 
   return (
     <>
-      <div className="xl:hidden flex items-center gap-3 my-2">
-        <div className="flex-1 h-12">
-          <MagicAiSearch keyword={keyword} setKeyword={setKeyword} className="h-12" />
+      <div className="xl:hidden flex items-center gap-2.5 my-2">
+        <div className="flex-1 min-w-0">
+          <MagicAiSearch keyword={keyword} setKeyword={setKeyword} className="h-12 w-full" />
         </div>
         {/* Sort by */}
         <Sheet>

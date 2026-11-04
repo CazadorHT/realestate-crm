@@ -414,7 +414,7 @@ export function PublicNav() {
             </div>
           )}
           <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-8 md:px-10 lg:px-12 2xl:px-8">
-            <div className="flex justify-between items-center my-1 sm:my-0 sm:h-16">
+            <div className="flex justify-between items-center py-1 sm:py-0 sm:h-16">
               {/* Logo (Vertically centered, balanced left/right layout) */}
               <div className="shrink-0 flex items-center h-full">
                 <Link
