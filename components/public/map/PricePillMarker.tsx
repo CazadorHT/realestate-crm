@@ -157,28 +157,32 @@ export const PricePillMarker = memo(function PricePillMarker({
             : `${defaultBorderClass} hover:shadow-lg`
       )}
     >
-      {/* Accent Indicator Dot: Green for Sale, Blue for Rent, Purple for Both */}
-      <span
-        title={typeLabel}
-        className={cn(
-          "w-2 h-2 rounded-full shrink-0 transition-colors duration-200",
-          isSelected || isHovered
-            ? "bg-white ring-2 ring-white/40"
-            : isBoth
+      {/* Accent Indicator Dot: Green for Sale, Blue for Rent, Purple for Both (hidden on hover in favor of project chip) */}
+      {!(isHovered || isSelected) && (
+        <span
+          title={typeLabel}
+          className={cn(
+            "w-2 h-2 rounded-full shrink-0 transition-colors duration-200",
+            isBoth
               ? "bg-purple-500 ring-2 ring-purple-500/25"
               : isRent
                 ? "bg-blue-500 ring-2 ring-blue-500/25"
                 : "bg-emerald-500 ring-2 ring-emerald-500/25"
-        )}
-      />
+          )}
+        />
+      )}
 
-      {/* When Hovered or Selected: Seamlessly display Project Name inside pill (Prevents any overlap with transit badge!) */}
+      {/* When Hovered or Selected: Prominent High-Contrast Project Chip (Distinct Dark Luxury BG) */}
       {(isHovered || isSelected) && projectHeadline?.title && (
-        <span className="flex items-center gap-1.5 shrink-0 max-w-[150px] sm:max-w-[190px] animate-in fade-in duration-150">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 -ml-1 rounded-full bg-slate-950/90 text-white border border-white/25 shadow-xs shrink-0 max-w-[160px] sm:max-w-[210px] animate-in fade-in duration-150">
+          {projectHeadline.isProject ? (
+            <Building2 className="w-3 h-3 text-sky-400 shrink-0" />
+          ) : (
+            <Home className="w-3 h-3 text-emerald-400 shrink-0" />
+          )}
           <span className="truncate font-bold text-xs tracking-tight text-white leading-none">
             {projectHeadline.title}
           </span>
-          <span className="text-white/40 text-[10px] leading-none select-none">•</span>
         </span>
       )}
 
