@@ -130,12 +130,12 @@ export function formatCompactPillAmount(
   const monthSuffix =
     mode === "RENT"
       ? language === "th"
-        ? " / ด."
+        ? " /ด."
         : language === "cn"
-          ? " / 月"
+          ? " /月"
           : language === "ru"
-            ? " / мес"
-            : " / mo"
+            ? " /мес"
+            : " /mo"
       : "";
 
   if (amount >= 1_000_000) {
