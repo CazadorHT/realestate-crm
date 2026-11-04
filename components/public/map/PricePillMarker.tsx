@@ -1,9 +1,10 @@
 "use client";
 
-import React, { memo } from "react";
-import { Building2 } from "lucide-react";
+import React, { memo, useMemo } from "react";
+import { Building2, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MapLocationGroup } from "./useMapClusters";
+import { getPinProjectOrPropertyHeadline } from "./map-price-utils";
 
 interface PricePillMarkerProps {
   group: MapLocationGroup;
@@ -27,6 +28,34 @@ export const PricePillMarker = memo(function PricePillMarker({
   const unitCount = group.units.length;
   const isMultiUnit = unitCount > 1;
   const listingType = group.leadListingType || "SALE";
+
+  // Authoritative project or property headline resolution for hover tooltip
+  const projectHeadline = useMemo(() => {
+    if (!group?.units || group.units.length === 0) return null;
+
+    // 1. Prioritize any unit in the group that has an explicit project name
+    for (const unit of group.units) {
+      if (!unit) continue;
+      const headline = getPinProjectOrPropertyHeadline(unit, language);
+      if (headline.isProjectHeadline && headline.primaryTitle) {
+        return {
+          title: headline.primaryTitle,
+          isProject: true,
+        };
+      }
+    }
+
+    // 2. Fallback for standalone properties (house/land/townhome)
+    const first = group.units[0];
+    if (!first) return null;
+    const headline = getPinProjectOrPropertyHeadline(first, language);
+    const cleanTitle = (headline.primaryTitle || "").replace(/^[^\w\u0E00-\u0E7F]+/g, "").trim();
+
+    return {
+      title: cleanTitle || first.popular_area || first.property_type || "",
+      isProject: false,
+    };
+  }, [group?.units, language]);
 
   const countSuffix =
     language === "th"
@@ -174,6 +203,33 @@ export const PricePillMarker = memo(function PricePillMarker({
         >
           <Building2 className="w-2.5 h-2.5 shrink-0" />
           <span>{countSuffix}</span>
+        </span>
+      )}
+
+      {/* Floating Hover Project Tooltip (Zero-DOM-Warning valid phrasing content) */}
+      {isHovered && !isSelected && projectHeadline?.title && (
+        <span
+          role="tooltip"
+          title={projectHeadline.title}
+          className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 hidden sm:flex flex-col items-center animate-in fade-in zoom-in-95 duration-150 select-none"
+        >
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/95 backdrop-blur-xs text-white text-[11px] font-semibold shadow-xl border border-white/20 whitespace-nowrap leading-none tracking-tight">
+            {projectHeadline.isProject ? (
+              <Building2 className="w-3 h-3 text-blue-400 shrink-0" />
+            ) : (
+              <Home className="w-3 h-3 text-emerald-400 shrink-0" />
+            )}
+            <span className="truncate max-w-[200px] sm:max-w-[240px]">
+              {projectHeadline.title}
+            </span>
+            {isMultiUnit && (
+              <span className="text-[10px] text-slate-300 font-normal shrink-0">
+                ({countSuffix})
+              </span>
+            )}
+          </span>
+          {/* Micro arrow pointing down to price pill */}
+          <span className="w-2 h-2 -mt-1 rotate-45 bg-slate-900 border-r border-b border-white/20 shrink-0" />
         </span>
       )}
 

@@ -4,7 +4,9 @@ import {
   createGeoJSONCircle,
   getTransitTypeLabel,
   haversineDistanceMeters,
+  getPinProjectOrPropertyHeadline,
 } from "../map-price-utils";
+import type { SlimMapPin } from "@/lib/services/map-pins";
 
 describe("map-price-utils", () => {
   it("translates raw transit enums to human-friendly Thai labels", () => {
@@ -90,6 +92,37 @@ describe("map-price-utils", () => {
       });
       expect(walk.isWalk).toBe(true);
       expect(walk.minutes).toBe(18);
+    });
+  });
+
+  describe("getPinProjectOrPropertyHeadline", () => {
+    it("returns authoritative project name when available", () => {
+      const pin = {
+        id: "p1",
+        title: "ขายด่วน คอนโดหรูใจกลางเมือง",
+        project_name: "Ashton Asoke",
+        latitude: 13.74,
+        longitude: 100.56,
+      } as unknown as SlimMapPin;
+
+      const res = getPinProjectOrPropertyHeadline(pin, "th");
+      expect(res.isProjectHeadline).toBe(true);
+      expect(res.primaryTitle).toBe("Ashton Asoke");
+    });
+
+    it("falls back to listing title when project name is missing", () => {
+      const pin = {
+        id: "p2",
+        title: "บ้านเดี่ยว สุขุมวิท 26",
+        project_name: null,
+        popular_area: "พร้อมพงษ์",
+        latitude: 13.73,
+        longitude: 100.57,
+      } as unknown as SlimMapPin;
+
+      const res = getPinProjectOrPropertyHeadline(pin, "th");
+      expect(res.isProjectHeadline).toBe(false);
+      expect(res.primaryTitle).toBe("บ้านเดี่ยว สุขุมวิท 26");
     });
   });
 });
