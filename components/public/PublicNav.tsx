@@ -402,13 +402,13 @@ export function PublicNav() {
             </div>
           )}
           <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-8 md:px-10 lg:px-12 2xl:px-8">
-            <div className="relative flex justify-between items-center h-16">
-              {/* Logo (Centered on mobile, left-aligned on desktop with Loading Feedback) */}
-              <div className="shrink-0 lg:static absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 lg:translate-y-0 lg:translate-x-0 z-10 flex items-center justify-center">
+            <div className="flex justify-between items-center h-16">
+              {/* Logo (Vertically centered, balanced left/right layout) */}
+              <div className="shrink-0 flex items-center h-full">
                 <Link
                   href={homePath}
                   onClick={handleLogoClick}
-                  className="relative inline-flex items-center active:scale-95 transition-transform duration-150 block cursor-pointer group"
+                  className="relative flex items-center active:scale-95 transition-transform duration-150 cursor-pointer group"
                   aria-label="Back to home"
                 >
                   <Image
@@ -417,7 +417,7 @@ export function PublicNav() {
                     width={300}
                     height={86}
                     className={cn(
-                      "h-10 xs:h-11 sm:h-16 w-auto -mx-2 sm:mt-1 object-contain transition-all duration-200",
+                      "h-11 sm:h-14 w-auto object-contain transition-all duration-200",
                       isNavigatingHome ? "opacity-30 blur-[0.5px]" : "group-hover:opacity-95"
                     )}
                     style={{ aspectRatio: "300 / 86" }}
@@ -826,7 +826,7 @@ export function PublicNav() {
               </div>
 
               {/* Mobile Right Controls: Lang + Fav + Hamburger */}
-              <div className="lg:hidden flex items-center gap-1 xs:gap-2 ml-auto z-20">
+              <div className="lg:hidden flex items-center gap-1 xs:gap-2 h-full">
                 {/* Mobile Language Switcher */}
                 {mounted ? (
                   <Sheet>

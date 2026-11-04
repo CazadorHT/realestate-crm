@@ -20,6 +20,7 @@ import { FaAirbnb, FaPersonWalking, FaCarSide, FaTrainSubway } from "react-icons
 import { PiFireFill } from "react-icons/pi";
 import { getEffectivePrice } from "@/lib/property-hardened-utils";
 import { formatPrice, getOfficePrice } from "@/lib/property-utils";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import type { MapLocationGroup } from "./useMapClusters";
 import {
@@ -170,17 +171,20 @@ export function MapSlideablePropertyCard({
       onClick={(e) => e.stopPropagation()}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className={`w-[300px] sm:w-[328px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden text-slate-900 select-none animate-in fade-in zoom-in-95 duration-150 ${className}`}
+      className={cn(
+        "w-[300px] sm:w-[328px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden text-slate-900 select-none animate-in fade-in zoom-in-95 duration-150",
+        className
+      )}
     >
       {/* Dynamic Unit Cover Photo Header */}
-      <div className="relative h-40 sm:h-56 w-full bg-slate-100 overflow-hidden">
+      <div className="relative h-56 sm:h-60 w-full bg-slate-100 overflow-hidden">
         <Image
           key={current.id}
           src={activeCoverSrc}
           alt={primaryTitle}
           fill
           unoptimized
-          sizes="328px"
+          sizes="(max-width: 640px) 100vw, 328px"
           onError={() => setImgError(true)}
           className="object-cover transition-transform duration-300 hover:scale-105"
         />

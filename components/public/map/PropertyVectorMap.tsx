@@ -34,6 +34,14 @@ import { MapSlideablePropertyCard } from "./MapSlideablePropertyCard";
 import { MapTransitOverlay, TransitToggleButton } from "./MapTransitOverlay";
 import { MapTransitLineLayer } from "./MapTransitLineLayer";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
   createGeoJSONCircle,
   getTransitLogo,
   getTransitTypeLabel,
@@ -335,6 +343,7 @@ export function PropertyVectorMap({
   onStationRadarChange,
 }: PropertyVectorMapProps) {
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const popupElRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapRef | null>(null);
@@ -1292,7 +1301,7 @@ export function PropertyVectorMap({
         </Map>
 
         {/* Layer 3 Desktop (>= 640px): Collision-Aware 4-Way Floating Popup (Top / Bottom / Left / Right + Clamped) */}
-        {selectedGroup && smartPopupLayout && (
+        {selectedGroup && smartPopupLayout && !isMobile && (
           <div
             ref={popupElRef}
             style={{
@@ -1340,20 +1349,46 @@ export function PropertyVectorMap({
           </div>
         )}
 
-        {/* Layer 3 Mobile (< 640px): Thumb-Friendly Bottom Docked Slideable Card */}
-        {selectedGroup && !suppressMobilePopup && (
-          <div className="sm:hidden absolute bottom-14 left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-24px)]">
-            <MapSlideablePropertyCard
-              group={selectedGroup}
-              initialUnitId={selectedInitialUnitId}
-              onClose={() => {
-                setSelectedGroupId(null);
-                onSelectGroup?.(null);
-              }}
-              className="w-[calc(100vw-24px)] max-w-[340px]"
-            />
-          </div>
-        )}
+        {/* Layer 3 Mobile: Bottom Sheet Drawer (slides up from bottom like ResponsiveDialog) */}
+        <Drawer
+          open={Boolean(isMobile && selectedGroup && !suppressMobilePopup)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedGroupId(null);
+              onSelectGroup?.(null);
+            }
+          }}
+          shouldScaleBackground={false}
+        >
+          <DrawerContent
+            className="sm:hidden fixed inset-x-0 bottom-0 z-150 max-h-[88vh] bg-white rounded-t-3xl border-t border-slate-200 outline-none overflow-hidden p-0 max-w-lg mx-auto"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => e.preventDefault()}
+          >
+            <DrawerHeader className="sr-only">
+              <DrawerTitle>
+                {selectedGroup?.units[0]?.title || "รายละเอียดโครงการ"}
+              </DrawerTitle>
+              <DrawerDescription>
+                ข้อมูลโครงการและยูนิตห้องพัก
+              </DrawerDescription>
+            </DrawerHeader>
+
+            <div className="overflow-y-auto max-h-[calc(88vh-36px)] overscroll-contain mt-3.5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              {selectedGroup && (
+                <MapSlideablePropertyCard
+                  group={selectedGroup}
+                  initialUnitId={selectedInitialUnitId}
+                  onClose={() => {
+                    setSelectedGroupId(null);
+                    onSelectGroup?.(null);
+                  }}
+                  className="w-full max-w-none border-0 shadow-none rounded-t-2xl overflow-hidden"
+                />
+              )}
+            </div>
+          </DrawerContent>
+        </Drawer>
       </div>
     </MapErrorBoundary>
   );
