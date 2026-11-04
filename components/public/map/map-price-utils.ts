@@ -130,27 +130,27 @@ export function formatCompactPillAmount(
   const monthSuffix =
     mode === "RENT"
       ? language === "th"
-        ? "/ด."
+        ? " / ด."
         : language === "cn"
-          ? "/月"
+          ? " / 月"
           : language === "ru"
-            ? "/мес"
-            : "/mo"
+            ? " / мес"
+            : " / mo"
       : "";
 
   if (amount >= 1_000_000) {
     const m = amount / 1_000_000;
     const rounded = m >= 100 ? Math.round(m) : Number(m.toFixed(m % 1 === 0 ? 0 : 1));
-    return `฿${rounded}M${monthSuffix}`;
+    return `฿ ${rounded}M${monthSuffix}`;
   }
 
   if (amount >= 1_000) {
     const k = amount / 1_000;
     const rounded = Number(k.toFixed(k % 1 === 0 ? 0 : 1));
-    return `฿${rounded}K${monthSuffix}`;
+    return `฿ ${rounded}K${monthSuffix}`;
   }
 
-  return `฿${Math.round(amount).toLocaleString()}${monthSuffix}`;
+  return `฿ ${Math.round(amount).toLocaleString()}${monthSuffix}`;
 }
 
 export function getPinProjectOrPropertyHeadline(

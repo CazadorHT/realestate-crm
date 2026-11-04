@@ -5,6 +5,7 @@ import {
   getTransitTypeLabel,
   haversineDistanceMeters,
   getPinProjectOrPropertyHeadline,
+  formatCompactPillAmount,
 } from "../map-price-utils";
 import type { SlimMapPin } from "@/lib/services/map-pins";
 
@@ -123,6 +124,20 @@ describe("map-price-utils", () => {
       const res = getPinProjectOrPropertyHeadline(pin, "th");
       expect(res.isProjectHeadline).toBe(false);
       expect(res.primaryTitle).toBe("บ้านเดี่ยว สุขุมวิท 26");
+    });
+  });
+
+  describe("formatCompactPillAmount", () => {
+    it("formats rental amount with spaced currency and month suffix", () => {
+      expect(formatCompactPillAmount(17000, "RENT", "th")).toBe("฿ 17K / ด.");
+      expect(formatCompactPillAmount(88000, "RENT", "th")).toBe("฿ 88K / ด.");
+      expect(formatCompactPillAmount(120000, "RENT", "th")).toBe("฿ 120K / ด.");
+      expect(formatCompactPillAmount(17000, "RENT", "en")).toBe("฿ 17K / mo");
+    });
+
+    it("formats sale amount with spaced currency", () => {
+      expect(formatCompactPillAmount(32500000, "SALE", "th")).toBe("฿ 32.5M");
+      expect(formatCompactPillAmount(950000, "SALE", "th")).toBe("฿ 950K");
     });
   });
 });
