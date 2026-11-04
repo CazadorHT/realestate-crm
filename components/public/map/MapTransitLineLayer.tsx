@@ -187,23 +187,23 @@ export const MapTransitLineLayer = memo(function MapTransitLineLayer({
       stationOffset = [0, 8];
     } else if (Math.abs(dLat) > Math.abs(dLng)) {
       if (dLat > 0) {
-        // Station is North -> anchor bottom pushes badge North
+        // Station is North -> anchor bottom pushes badge North with safe buffer
         stationAnchor = "bottom";
-        stationOffset = [0, -6];
+        stationOffset = [0, -14];
       } else {
-        // Station is South -> anchor top pushes badge South
+        // Station is South -> anchor top pushes badge South with safe buffer
         stationAnchor = "top";
-        stationOffset = [0, 6];
+        stationOffset = [0, 14];
       }
     } else {
       if (dLng > 0) {
         // Station is East -> anchor left pushes badge East
         stationAnchor = "left";
-        stationOffset = [6, 0];
+        stationOffset = [12, 0];
       } else {
         // Station is West -> anchor right pushes badge West
         stationAnchor = "right";
-        stationOffset = [-6, 0];
+        stationOffset = [-12, 0];
       }
     }
 
