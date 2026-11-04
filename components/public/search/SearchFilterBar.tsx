@@ -403,7 +403,7 @@ export function SearchFilterBar({
 
   return (
     <div className="bg-white border-b border-slate-100 sticky top-(--nav-offset,64px) z-40 shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-[top] duration-300 ease-in-out">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:pt-4 sm:px-6 lg:px-8">
         <MobileFilters
           keyword={keyword}
           setKeyword={setKeyword}

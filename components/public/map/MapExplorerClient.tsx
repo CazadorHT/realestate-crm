@@ -17,12 +17,14 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   RotateCcw,
+  X,
 } from "lucide-react";
 import { SearchFilterBar } from "@/components/public/search/SearchFilterBar";
 import { PropertyCard } from "@/components/public/PropertyCard";
 import { PropertyVectorMapLazy } from "./PropertyVectorMapLazy";
 import {
   getPinProjectOrPropertyHeadline,
+  getTransitTypeLabel,
   haversineDistanceMeters,
 } from "./map-price-utils";
 import { usePropertyFilters } from "@/hooks/search/usePropertyFilters";
@@ -129,6 +131,24 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
       .sort((a, b) => a.dist - b.dist)
       .map((item) => item.pin);
   }, [searchAsMove, boundsPins, filteredPins, stationRadar]);
+
+  const radarCountText = useMemo(() => {
+    if (!stationRadar) return "";
+    const count = activeList.length;
+    if (count === 0) {
+      return language === "th"
+        ? "ไม่พบทรัพย์ในรัศมี"
+        : language === "cn"
+          ? "范围内暂无房源"
+          : language === "ru"
+            ? "Нет объектов"
+            : "No properties";
+    }
+    if (language === "th") return `พบ ${count} รายการ`;
+    if (language === "cn") return `发现 ${count} 套房源`;
+    if (language === "ru") return `Найдено ${count}`;
+    return `Found ${count}`;
+  }, [stationRadar, activeList.length, language]);
 
   useEffect(() => {
     setDrawerLimit(12);
@@ -448,6 +468,77 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
           {/* Mobile Swipeable Bottom Property Carousel + Return to Grid Pill (Hidden when a pin popup is actively open) */}
           {!activePopupGroup && (
             <div className="lg:hidden absolute bottom-3 left-0 right-0 z-30 pointer-events-none">
+              {/* Station Radar Control Card (Mobile - Grid 4) */}
+              {stationRadar && (
+                <div className="px-3 mb-2 pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 p-3 text-slate-800">
+                    {/* Header: Station Name + Count + Close */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className="w-3 h-3 rounded-full shrink-0 shadow-xs"
+                          style={{ backgroundColor: stationRadar.station.lineColor || "#2563EB" }}
+                        />
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="font-extrabold text-xs text-slate-900 truncate">
+                            {stationRadar.station.label?.[language] ||
+                              stationRadar.station.label.th ||
+                              stationRadar.station.label.en}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-medium shrink-0">
+                            ({getTransitTypeLabel(stationRadar.station.transitType || stationRadar.station.slug)})
+                          </span>
+                          <span className="text-[11px] font-semibold text-blue-600 shrink-0 ml-1">
+                            {radarCountText}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setStationRadar(null)}
+                        className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+                        title="ปิดเรดาร์สถานี"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Radius Options: Grid 4 */}
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[
+                        { label: "500 ม.", km: 0.5 },
+                        { label: "1 กม.", km: 1 },
+                        { label: "2 กม.", km: 2 },
+                        { label: "3 กม.", km: 3 },
+                      ].map((opt) => {
+                        const isActive = stationRadar.radiusKm === opt.km;
+                        return (
+                          <button
+                            key={opt.km}
+                            type="button"
+                            onClick={() =>
+                              setStationRadar({
+                                station: stationRadar.station,
+                                radiusKm: opt.km,
+                              })
+                            }
+                            className={cn(
+                              "py-2 px-1 rounded-xl text-xs font-bold transition-all cursor-pointer text-center",
+                              isActive
+                                ? "bg-blue-600 text-white shadow-xs"
+                                : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                            )}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="px-3 mb-1.5 flex items-center justify-between gap-2">
                 <Link
                   href={gridReturnHref}

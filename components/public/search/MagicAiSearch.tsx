@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Building2, Sparkles, TrainTrack, Compass, X } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { cn } from "@/lib/utils";
 
 import { getDynamicSearchSuggestionsAction, type DynamicSuggestionItem } from "@/features/public/popular-areas";
 
@@ -12,6 +13,7 @@ interface MagicAiSearchProps {
   keyword: string;
   setKeyword: (v: string) => void;
   isLoading?: boolean;
+  className?: string;
 }
 
 interface SuggestionItem {
@@ -158,6 +160,7 @@ export function MagicAiSearch({
   keyword,
   setKeyword,
   isLoading: globalLoading = false,
+  className = "",
 }: MagicAiSearchProps) {
   const { language } = useLanguage();
   const searchId = useId();
@@ -446,7 +449,12 @@ export function MagicAiSearch({
 
   return (
     <div ref={containerRef} className="relative group w-full">
-      <div className="relative flex items-center bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 p-1 pl-3.5">
+      <div
+        className={cn(
+          "relative flex items-center bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 p-1 pl-3.5",
+          className
+        )}
+      >
         {/* [PREMIUM LOADING BAR] */}
         {globalLoading && (
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-indigo-100 overflow-hidden z-50">
@@ -471,7 +479,7 @@ export function MagicAiSearch({
                   ? "Поиск по местоположению, проекту (например: Рядом с Сукхумвит)"
                   : "Search location, project, e.g. Near Sukhumvit, BTS Ari, Oka Haus..."
           }
-          className="border-none shadow-none focus-visible:ring-0 h-9! text-xs bg-transparent w-full font-medium placeholder:text-[12px] placeholder:text-slate-400/80 px-2"
+          className="border-none shadow-none focus-visible:ring-0 h-full text-xs bg-transparent w-full font-medium placeholder:text-[12px] placeholder:text-slate-400/80 px-2"
           value={inputValue}
           onFocus={() => setIsOpen(true)}
           onChange={(e) => {
@@ -487,7 +495,7 @@ export function MagicAiSearch({
           disabled={false}
         />
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 h-full">
           {inputValue && (
             <Button
               size="icon"
@@ -506,11 +514,12 @@ export function MagicAiSearch({
           <button
             type="button"
             onClick={() => handleExecuteSearch()}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition-all duration-200 cursor-pointer shrink-0 ${
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3.5 h-[calc(100%-4px)] min-h-[36px] max-h-10 rounded-lg font-semibold text-xs transition-all duration-200 cursor-pointer shrink-0",
               inputValue.trim()
                 ? "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white shadow-sm shadow-blue-500/25 ring-2 ring-indigo-500/20"
                 : "bg-slate-100/90 hover:bg-slate-200/80 text-slate-400 hover:text-slate-600 border border-slate-200/60 shadow-none"
-            }`}
+            )}
           >
             <Search className={`h-3 w-3 ${inputValue.trim() ? "text-white" : "text-slate-400"}`} />
             <span>{getSearchButtonLabel(language)}</span>
