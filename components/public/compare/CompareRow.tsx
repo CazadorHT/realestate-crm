@@ -410,7 +410,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
       }}
     >
       {/* Sticky Left Label Column */}
-      <div className="sticky left-0 bg-white z-10 px-2 sm:px-3.5 py-2 sm:py-3 text-[11px] sm:text-xs md:text-sm font-semibold text-slate-700 flex flex-col justify-center items-start gap-1 border-r border-slate-100 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]">
+      <div className="sticky left-0 bg-white z-10 px-2 sm:px-3.5 py-2 sm:py-3 text-[11px] sm:text-xs md:text-sm font-semibold text-slate-700 flex flex-col items-start gap-1 border-r border-slate-100 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]">
         <div className="flex items-center gap-1.5 sm:gap-2 w-full">
           <row.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 shrink-0" />
           <span className="leading-tight text-[11px] sm:text-xs font-bold text-slate-800 break-words">

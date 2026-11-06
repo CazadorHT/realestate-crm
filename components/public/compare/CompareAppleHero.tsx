@@ -66,7 +66,7 @@ export function CompareAppleHero({
   return (
     <section className="mb-8">
       {/* Apple-Style Showcase Cards: Horizontal Swipe Slider on Mobile, 4-Cols Grid on Desktop */}
-      <div className="flex lg:grid lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible snap-x snap-mandatory scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 lg:pb-0">
+      <div className="flex lg:grid lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible snap-x snap-mandatory scrollbar-none p-1.5 pb-3.5 lg:p-0 lg:pb-0">
         {properties.map((property) => {
           const title = getCompareDisplayTitle(property, language);
           const salePrice = property.price || property.original_price;

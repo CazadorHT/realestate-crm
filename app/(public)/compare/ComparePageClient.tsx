@@ -15,6 +15,7 @@ import { CompareEmptyState } from "@/components/public/compare/CompareEmptyState
 import { CompareLoadingSkeleton } from "@/components/public/compare/CompareLoadingSkeleton";
 import { CompareTable } from "@/components/public/compare/CompareTable";
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
+import { readCompareIds, removeCompareId } from "@/lib/compare-store";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
@@ -46,6 +47,12 @@ function ComparePageContent() {
 
   useEffect(() => {
     if (!ids) {
+      // 🛡️ Fallback: If URL doesn't have ?ids=..., restore from localStorage (e.g. after language switch or direct navigation)
+      const stored = readCompareIds();
+      if (stored.length > 0) {
+        router.replace(`${langPrefix || ""}/compare?ids=${stored.join(",")}`);
+        return;
+      }
       setProperties([]);
       setIsLoading(false);
       return;
@@ -69,15 +76,18 @@ function ComparePageContent() {
     }
 
     fetchData();
-  }, [ids]);
+  }, [ids, langPrefix, router]);
 
   const handleRemove = (id: string) => {
-    // We update the URL to reflect the removal
+    // Keep localStorage in sync
+    removeCompareId(id);
+
+    // Update the URL to reflect the removal
     const currentIds = ids.split(",").filter((x: string) => x && x !== id);
     if (currentIds.length === 0) {
-      router.push(`${langPrefix}/compare`);
+      router.push(`${langPrefix || ""}/compare`);
     } else {
-      router.push(`${langPrefix}/compare?ids=${currentIds.join(",")}`);
+      router.push(`${langPrefix || ""}/compare?ids=${currentIds.join(",")}`);
     }
   };
 

@@ -92,7 +92,7 @@ export function LanguageProvider({
       // Ignore in private mode
     }
 
-    // If currently on any public route, navigate to the target language URL
+    // If currently on any public route, navigate to the target language URL while preserving query parameters (?ids=..., ?filter=...)
     if (!isCrm) {
       const segments = pathname.split("/").filter(Boolean);
       // Remove any existing language prefix (en, cn, zh, ru)
@@ -101,8 +101,11 @@ export function LanguageProvider({
       }
       const rawPath = segments.length > 0 ? "/" + segments.join("/") : "";
       const targetPrefix = lang === "th" ? "" : lang === "cn" ? "/zh" : `/${lang}`;
-      const targetUrl = (targetPrefix + rawPath) || "/";
-      if (targetUrl !== pathname) {
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      const targetPath = (targetPrefix + rawPath) || "/";
+      const targetUrl = targetPath + search;
+      const currentFullUrl = pathname + search;
+      if (targetUrl !== currentFullUrl) {
         router.push(targetUrl, { scroll: false });
         return;
       }
