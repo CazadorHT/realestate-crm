@@ -69,19 +69,33 @@ export function ComparePropertyHeader({
               {title}
             </Link>
           </h4>
-          <div className="text-[11px] sm:text-xs md:text-sm font-extrabold text-blue-600 mt-0.5 sm:mt-1">
+          {/* Unified Price Labels & Colors */}
+          <div className="mt-1 flex flex-col gap-1 min-w-0">
             {salePrice ? (
-              formatMoney(salePrice, locale)
-            ) : rentPrice ? (
-              <span>
-                {formatMoney(rentPrice, locale)}
-                <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal">
-                  {" "}
-                  {t("compare_page.values.rent_per_month")}
+              <div className="flex items-center gap-1 text-[11px] sm:text-xs md:text-sm font-extrabold text-blue-600 min-w-0">
+                <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+                  {language === "th" ? "ขาย" : language === "cn" ? "售价" : language === "ru" ? "Продажа" : "Sale"}
                 </span>
-              </span>
-            ) : (
-              <span className="text-slate-400 font-normal">-</span>
+                <span className="truncate">{formatMoney(salePrice, locale)}</span>
+              </div>
+            ) : null}
+
+            {rentPrice ? (
+              <div className="flex items-center gap-1 text-[11px] sm:text-xs md:text-sm font-extrabold text-amber-600 min-w-0">
+                <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+                  {language === "th" ? "เช่า" : language === "cn" ? "租金" : language === "ru" ? "Аренда" : "Rent"}
+                </span>
+                <span className="truncate">
+                  {formatMoney(rentPrice, locale)}
+                  <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal">
+                    {" "}{t("compare_page.values.rent_per_month")}
+                  </span>
+                </span>
+              </div>
+            ) : null}
+
+            {!salePrice && !rentPrice && (
+              <span className="text-slate-400 font-normal text-xs">-</span>
             )}
           </div>
         </div>

@@ -131,37 +131,37 @@ export function CompareTable({
       <CompareAppleHero properties={properties} onRemove={onRemove} />
 
       {/* 2. Apple / International Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-2 sm:gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {/* Differences Only Toggle Switch */}
-          <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none shrink-0">
             <input
               type="checkbox"
               checked={showDifferencesOnly}
               onChange={(e) => setShowDifferencesOnly(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 relative" />
-            <span className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
+            <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 relative shrink-0" />
+            <span className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5 whitespace-nowrap">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               <span>{filterLabel}</span>
             </span>
           </label>
 
           <span className="text-xs text-slate-400 hidden sm:inline">|</span>
 
-          <span className="text-xs text-slate-500 font-medium">
+          <span className="text-xs text-slate-500 font-medium hidden sm:inline whitespace-nowrap truncate">
             {compareCountLabel}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {properties.length < 4 && (
             <Link
               href={`${langPrefix || ""}/map`}
-              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 sm:px-3 py-1.5 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5 shrink-0" />
               <span>{addMoreLabel}</span>
             </Link>
           )}
@@ -172,11 +172,11 @@ export function CompareTable({
               clearCompare();
               window.location.href = `${langPrefix || ""}/compare`;
             }}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-rose-600 px-2 py-1.5 rounded-lg transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-rose-600 p-1.5 sm:px-2 sm:py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
             title={t("compare_page.values.clear_all") || "ล้างทั้งหมด"}
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">
+            <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
+            <span className="hidden sm:inline whitespace-nowrap">
               {t("compare_page.values.clear_all") || (language === "th" ? "ล้างทั้งหมด" : "Clear all")}
             </span>
           </button>

@@ -155,18 +155,28 @@ export function CompareAppleHero({
                     "-"}
                 </p>
 
-                {/* Price Display */}
-                <div className="mb-2.5 sm:mb-4 pb-2 sm:pb-3.5 border-b border-slate-100">
+                {/* Price Display with Unified Labels & Colors */}
+                <div className="mb-2.5 sm:mb-4 pb-2 sm:pb-3.5 border-b border-slate-100 flex flex-col gap-1 sm:gap-1.5">
                   {salePrice && (
-                    <div className="text-sm sm:text-lg md:text-xl font-extrabold text-blue-600 tracking-tight leading-tight">
-                      {formatMoney(salePrice, locale)}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+                        {language === "th" ? "ขาย" : language === "cn" ? "售价" : language === "ru" ? "Продажа" : "Sale"}
+                      </span>
+                      <span className="text-sm sm:text-lg md:text-xl font-extrabold text-blue-600 tracking-tight leading-tight">
+                        {formatMoney(salePrice, locale)}
+                      </span>
                     </div>
                   )}
                   {rentPrice && (
-                    <div className="text-xs sm:text-base md:text-lg font-extrabold text-amber-600 tracking-tight leading-tight">
-                      {formatMoney(rentPrice, locale)}
-                      <span className="text-[10px] sm:text-xs text-slate-400 font-normal ml-0.5 sm:ml-1">
-                        {t("compare_page.values.rent_per_month")}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+                        {language === "th" ? "เช่า" : language === "cn" ? "租金" : language === "ru" ? "Аренда" : "Rent"}
+                      </span>
+                      <span className="text-xs sm:text-base md:text-lg font-extrabold text-amber-600 tracking-tight leading-tight">
+                        {formatMoney(rentPrice, locale)}
+                        <span className="text-[10px] sm:text-xs text-slate-400 font-normal ml-0.5 sm:ml-1">
+                          {t("compare_page.values.rent_per_month")}
+                        </span>
                       </span>
                     </div>
                   )}

@@ -322,9 +322,12 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               </span>
             </div>
           )}
-          <div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+              {language === "th" ? "ขาย" : language === "cn" ? "售价" : language === "ru" ? "Продажа" : "Sale"}
+            </span>
             {p.price && p.original_price && p.original_price > p.price && (
-              <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1.5">
+              <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1">
                 {formatMoney(p.original_price, locale)}
               </span>
             )}
@@ -359,11 +362,14 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               </span>
             </div>
           )}
-          <div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+              {language === "th" ? "เช่า" : language === "cn" ? "租金" : language === "ru" ? "Аренда" : "Rent"}
+            </span>
             {p.rental_price &&
               p.original_rental_price &&
               p.original_rental_price > p.rental_price && (
-                <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1.5">
+                <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1">
                   {formatMoney(p.original_rental_price, locale)}
                 </span>
               )}
