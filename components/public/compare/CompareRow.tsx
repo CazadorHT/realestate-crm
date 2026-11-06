@@ -323,7 +323,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
             </div>
           )}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
               {language === "th" ? "ขาย" : language === "cn" ? "售价" : language === "ru" ? "Продажа" : "Sale"}
             </span>
             {p.price && p.original_price && p.original_price > p.price && (
@@ -335,7 +335,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               className={
                 isLowestSale
                   ? "text-emerald-600 font-extrabold text-sm md:text-base"
-                  : "text-blue-600 font-bold text-sm md:text-base"
+                  : "text-amber-600 font-bold text-sm md:text-base"
               }
             >
               {formatMoney(salePrice, locale)}
@@ -363,7 +363,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
             </div>
           )}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
               {language === "th" ? "เช่า" : language === "cn" ? "租金" : language === "ru" ? "Аренда" : "Rent"}
             </span>
             {p.rental_price &&
@@ -377,7 +377,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               className={
                 isLowestRent
                   ? "text-emerald-600 font-extrabold text-sm md:text-base"
-                  : "text-amber-600 font-bold text-sm md:text-base"
+                  : "text-blue-600 font-bold text-sm md:text-base"
               }
             >
               {formatMoney(rentPrice, locale)}{" "}
@@ -406,7 +406,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
         idx % 2 === 0 ? "bg-slate-50/40" : "bg-white"
       }`}
       style={{
-        gridTemplateColumns: `var(--compare-label-w, 105px) repeat(${properties.length}, minmax(130px, 1fr))`,
+        gridTemplateColumns: `var(--compare-label-w, 105px) repeat(${properties.length}, minmax(145px, 1fr))`,
       }}
     >
       {/* Sticky Left Label Column */}
@@ -1043,7 +1043,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                       </div>
 
                       {travel.summaryLabel && (
-                        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-600 font-medium pl-5.5 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-600 font-medium pl-0.5 whitespace-nowrap">
                           {travel.isWalk ? (
                             <FaPersonWalking className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                           ) : (
@@ -1098,7 +1098,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                               </div>
 
                               {itemTravel.summaryLabel && (
-                                <div className="flex items-center gap-1.5 text-[10.5px] text-slate-500 font-medium pl-5 whitespace-nowrap">
+                                <div className="flex items-center gap-1.5 text-[10.5px] text-slate-500 font-medium pl-0.5 whitespace-nowrap">
                                   {itemTravel.isWalk ? (
                                     <FaPersonWalking className="w-3 h-3 text-emerald-600 shrink-0" />
                                   ) : (

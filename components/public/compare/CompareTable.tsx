@@ -189,17 +189,17 @@ export function CompareTable({
           className={cn(
             "border border-slate-200 rounded-2xl md:rounded-3xl bg-white shadow-xs overflow-hidden",
             properties.length === 2
-              ? "min-w-[350px] sm:min-w-[560px] md:min-w-[780px]"
+              ? "min-w-[380px] sm:min-w-[580px] md:min-w-[780px]"
               : properties.length === 3
-                ? "min-w-[500px] sm:min-w-[720px] md:min-w-[900px]"
-                : "min-w-[620px] sm:min-w-[840px] md:min-w-[1020px]"
+                ? "min-w-[540px] sm:min-w-[740px] md:min-w-[920px]"
+                : "min-w-[680px] sm:min-w-[880px] md:min-w-[1040px]"
           )}
         >
           {/* Flush Header Row (แก้ปัญหาข้างบนมันเว้น: ให้แนบชิดขอบบนพอดี ไม่เว้นช่องว่าง) */}
           <div
             className="grid divide-x divide-slate-100 sticky top-0 z-20 bg-white/98 backdrop-blur-md border-b border-slate-200 shadow-2xs rounded-t-2xl md:rounded-t-3xl"
             style={{
-              gridTemplateColumns: `var(--compare-label-w, 105px) repeat(${properties.length}, minmax(130px, 1fr))`,
+              gridTemplateColumns: `var(--compare-label-w, 105px) repeat(${properties.length}, minmax(145px, 1fr))`,
             }}
           >
             <div className="sticky left-0 bg-white z-30 px-2 py-3 sm:px-3.5 sm:py-4 flex flex-col justify-center items-center text-center font-bold text-slate-900 border-r border-slate-100 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)] rounded-tl-2xl md:rounded-tl-3xl">

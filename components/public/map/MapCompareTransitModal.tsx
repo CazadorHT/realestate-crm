@@ -254,7 +254,7 @@ export function MapCompareTransitModal({
                       <span className="text-slate-500">
                         {language === "th" ? "ราคาขาย:" : "Sale Price:"}
                       </span>
-                      <span className="font-extrabold text-blue-600">
+                      <span className="font-extrabold text-amber-600">
                         {prices.salePrice > 0
                           ? formatPrice(prices.salePrice, language)
                           : "-"}
@@ -264,7 +264,7 @@ export function MapCompareTransitModal({
                       <span className="text-slate-500">
                         {language === "th" ? "ราคาเช่า:" : "Rent Price:"}
                       </span>
-                      <span className="font-extrabold text-amber-600">
+                      <span className="font-extrabold text-blue-600">
                         {prices.rentalPrice > 0
                           ? `${formatPrice(prices.rentalPrice, language)}/ด.`
                           : "-"}

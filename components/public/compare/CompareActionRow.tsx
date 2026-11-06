@@ -15,7 +15,7 @@ export function CompareActionRow({ properties }: CompareActionRowProps) {
     <div
       className="grid divide-x divide-slate-100 bg-white border-t border-slate-200"
       style={{
-        gridTemplateColumns: `var(--compare-label-w, 105px) repeat(${properties.length}, minmax(130px, 1fr))`,
+        gridTemplateColumns: `var(--compare-label-w, 105px) repeat(${properties.length}, minmax(145px, 1fr))`,
       }}
     >
       <div className="sticky left-0 bg-white z-10 px-2 sm:px-3.5 py-2 sm:py-3 border-r border-slate-100 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]" />

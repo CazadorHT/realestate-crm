@@ -13,8 +13,9 @@ import {
   Layers,
   Sparkles,
   MapPin,
+  Expand,
 } from "lucide-react";
-import { FaPersonWalking } from "react-icons/fa6";
+import { FaPersonWalking, FaCarSide } from "react-icons/fa6";
 import { CompareProperty } from "./types";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
@@ -64,8 +65,8 @@ export function CompareAppleHero({
 
   return (
     <section className="mb-8">
-      {/* Apple-Style Grid of Property Showcase Cards: 2 cols on mobile, 4 cols on large screen */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-6">
+      {/* Apple-Style Showcase Cards: Horizontal Swipe Slider on Mobile, 4-Cols Grid on Desktop */}
+      <div className="flex lg:grid lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 overflow-x-auto lg:overflow-visible snap-x snap-mandatory scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 lg:pb-0">
         {properties.map((property) => {
           const title = getCompareDisplayTitle(property, language);
           const salePrice = property.price || property.original_price;
@@ -94,7 +95,7 @@ export function CompareAppleHero({
             <div
               key={property.id}
               className={cn(
-                "relative rounded-2xl sm:rounded-3xl p-2.5 sm:p-4 md:p-5 flex flex-col justify-between transition-all duration-300 bg-white border",
+                "relative rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 md:p-5 flex flex-col justify-between transition-all duration-300 bg-white border w-[76vw] xs:w-[280px] sm:w-[320px] lg:w-auto shrink-0 snap-start lg:shrink",
                 isClosest
                   ? "border-emerald-300/80 shadow-lg ring-2 ring-emerald-400/20"
                   : "border-slate-200/90 shadow-sm hover:shadow-md"
@@ -155,24 +156,24 @@ export function CompareAppleHero({
                     "-"}
                 </p>
 
-                {/* Price Display with Unified Labels & Colors */}
+                {/* Price Display with Unified Labels & Colors: เช่า = น้ำเงิน, ขาย = ส้ม */}
                 <div className="mb-2.5 sm:mb-4 pb-2 sm:pb-3.5 border-b border-slate-100 flex flex-col gap-1 sm:gap-1.5">
                   {salePrice && (
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+                      <span className="text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
                         {language === "th" ? "ขาย" : language === "cn" ? "售价" : language === "ru" ? "Продажа" : "Sale"}
                       </span>
-                      <span className="text-sm sm:text-lg md:text-xl font-extrabold text-blue-600 tracking-tight leading-tight">
+                      <span className="text-sm sm:text-lg md:text-xl font-extrabold text-amber-600 tracking-tight leading-tight">
                         {formatMoney(salePrice, locale)}
                       </span>
                     </div>
                   )}
                   {rentPrice && (
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+                      <span className="text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
                         {language === "th" ? "เช่า" : language === "cn" ? "租金" : language === "ru" ? "Аренда" : "Rent"}
                       </span>
-                      <span className="text-xs sm:text-base md:text-lg font-extrabold text-amber-600 tracking-tight leading-tight">
+                      <span className="text-xs sm:text-base md:text-lg font-extrabold text-blue-600 tracking-tight leading-tight">
                         {formatMoney(rentPrice, locale)}
                         <span className="text-[10px] sm:text-xs text-slate-400 font-normal ml-0.5 sm:ml-1">
                           {t("compare_page.values.rent_per_month")}
@@ -187,71 +188,77 @@ export function CompareAppleHero({
                   )}
                 </div>
 
-                {/* Apple-Style Quick Highlights Grid (4 Key Metrics) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 mb-3 sm:mb-4 bg-slate-50/80 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-slate-100">
-                  {/* Metric 1: Transit */}
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">
-                      {t("compare_page.labels.transportation") || "รถไฟฟ้า"}
+                {/* Transit Station & Distance Row */}
+                {transitName && (
+                  <div className="flex items-center gap-1.5 text-xs text-slate-700 min-w-0 mb-2">
+                    <div className="w-4 h-4 shrink-0 flex items-center justify-center">
+                      <Image
+                        src={getTransitLogo(transitType)}
+                        alt={transitType}
+                        width={16}
+                        height={16}
+                        className="object-contain"
+                      />
+                    </div>
+                    <span className="font-semibold text-slate-800 truncate" title={transitName}>
+                      {transitName}
                     </span>
-                    <div className="flex items-center gap-1 mt-0.5 truncate">
-                      <div className="w-3.5 h-3.5 shrink-0 flex items-center justify-center">
-                        <Image
-                          src={getTransitLogo(transitType)}
-                          alt={transitType}
-                          width={14}
-                          height={14}
-                          className="object-contain"
-                        />
-                      </div>
-                      <span className="text-xs font-bold text-slate-800 truncate">
-                        {property.transit_distance_meters
-                          ? property.transit_distance_meters >= 1000
-                            ? `${(property.transit_distance_meters / 1000).toFixed(1).replace(/\.0$/, "")} ${language === "th" ? "กม." : "km"}`
-                            : `${property.transit_distance_meters} ${language === "th" ? "ม." : "m"}`
-                          : transitName || "-"}
+                    {travel.summaryLabel && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium shrink-0">
+                        <span className="text-slate-300">•</span>
+                        {travel.isWalk ? (
+                          <FaPersonWalking className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        ) : (
+                          <FaCarSide className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        )}
+                        <span>{travel.summaryLabel}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Room Specs: Beds, Baths, Sqm & Floor */}
+                <div className="flex items-center gap-3.5 sm:gap-4 text-slate-600 mb-3 sm:mb-4 pt-2 border-t border-slate-100 min-w-0 flex-wrap">
+                  {property.bedrooms ? (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <BedDouble className="w-4 h-4 text-slate-500 stroke-[1.75]" />
+                      <span className="text-sm font-bold text-slate-800">
+                        {property.bedrooms}
                       </span>
                     </div>
-                  </div>
+                  ) : null}
 
-                  {/* Metric 2: Area */}
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">
-                      {t("compare_page.labels.property_size") || "พื้นที่"}
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 mt-0.5 truncate">
-                      {property.size_sqm
-                        ? `${property.size_sqm} ${t("compare_page.values.sqm")}`
-                        : "-"}
-                    </span>
-                  </div>
+                  {property.bathrooms ? (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Bath className="w-4 h-4 text-slate-500 stroke-[1.75]" />
+                      <span className="text-sm font-bold text-slate-800">
+                        {property.bathrooms}
+                      </span>
+                    </div>
+                  ) : null}
 
-                  {/* Metric 3: Bedrooms */}
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">
-                      {t("compare_page.labels.bedrooms") || "ห้องพัก"}
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 mt-0.5 truncate">
-                      {property.bedrooms != null
-                        ? `${property.bedrooms} ${language === "th" ? "นอน" : "bed"}`
-                        : "-"}
-                      {property.bathrooms != null
-                        ? ` • ${property.bathrooms} ${language === "th" ? "น้ำ" : "bath"}`
-                        : ""}
-                    </span>
-                  </div>
+                  {property.size_sqm ? (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Expand className="w-4 h-4 text-slate-500 stroke-[1.75]" />
+                      <span className="text-sm font-bold text-slate-800">
+                        {property.size_sqm}{" "}
+                        <small className="text-[11px] font-normal text-slate-500">
+                          {t("common.sqm_short") || "ตร.ม."}
+                        </small>
+                      </span>
+                    </div>
+                  ) : null}
 
-                  {/* Metric 4: Floor */}
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">
-                      {t("compare_page.labels.floor") || "ชั้น"}
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 mt-0.5 truncate">
-                      {property.floor
-                        ? `${t("compare_page.values.floor_prefix")} ${property.floor}`
-                        : "-"}
-                    </span>
-                  </div>
+                  {property.floor ? (
+                    <div className="flex items-center gap-1 shrink-0 text-slate-400 text-xs ml-auto">
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {t("compare_page.values.floor_prefix") || "ชั้น"}
+                      </span>
+                      <span className="text-xs sm:text-sm font-bold text-slate-700">
+                        {property.floor}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -288,7 +295,7 @@ export function CompareAppleHero({
         {canAddMore && (
           <Link
             href={`${langPrefix || ""}/map`}
-            className="rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-200 hover:border-blue-500 bg-slate-50/50 hover:bg-blue-50/40 p-3 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 text-center transition-all group min-h-[220px] sm:min-h-[320px]"
+            className="rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-200 hover:border-blue-500 bg-slate-50/50 hover:bg-blue-50/40 p-4 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 text-center transition-all group min-h-[280px] sm:min-h-[320px] w-[76vw] xs:w-[280px] sm:w-[320px] lg:w-auto shrink-0 snap-start lg:shrink cursor-pointer"
           >
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white group-hover:bg-blue-600 group-hover:text-white text-slate-500 flex items-center justify-center transition-colors shadow-2xs border border-slate-200 group-hover:border-blue-600">
               <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -306,6 +313,16 @@ export function CompareAppleHero({
           </Link>
         )}
       </div>
+
+      {/* Mobile Swipe Hint */}
+      {properties.length > 1 && (
+        <div className="flex items-center justify-center gap-1.5 mt-2 mb-1 lg:hidden text-slate-400 text-[11px]">
+          <span className="font-medium text-slate-500">
+            {language === "th" ? "เลื่อนสไลด์แนวนอนเพื่อดูโครงการถัดไป" : "Swipe horizontally to compare"}
+          </span>
+          <span className="text-blue-500 font-bold">→</span>
+        </div>
+      )}
     </section>
   );
 }
