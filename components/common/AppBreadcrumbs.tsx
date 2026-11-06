@@ -169,7 +169,7 @@ export function AppBreadcrumbs({
       )}
       
       {/* Desktop (lg+): Full Breadcrumbs with Circular Back Arrow */}
-      <div className="hidden lg:flex items-center gap-3">
+      <div className={cn("hidden lg:flex items-center gap-3", className)}>
         <button
           type="button"
           onClick={handleBack}
@@ -184,7 +184,7 @@ export function AppBreadcrumbs({
         >
           <ArrowLeft className="w-4 h-4 shrink-0" />
         </button>
-        <Breadcrumb items={breadcrumbs} variant={variant} className={className} />
+        <Breadcrumb items={breadcrumbs} variant={variant} />
       </div>
 
       {/* Mobile (< lg): App Native Back Button */}
