@@ -13,6 +13,7 @@ import {
 import { CompareProperty, ComparisonRow } from "./types";
 import { ComparisonSection, COMPARISON_SECTIONS } from "./constants";
 import { ComparePropertyHeader } from "./ComparePropertyHeader";
+import { CompareAppleHero } from "./CompareAppleHero";
 import { CompareRow } from "./CompareRow";
 import { CompareActionRow } from "./CompareActionRow";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -92,8 +93,11 @@ export function CompareTable({
           : "+ Add from map";
 
   return (
-    <div className="space-y-4">
-      {/* Top International-Style Toolbar */}
+    <div className="space-y-6">
+      {/* 1. Apple-Style Product Showcase Hero Area */}
+      <CompareAppleHero properties={properties} onRemove={onRemove} />
+
+      {/* 2. Apple / International Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div className="flex items-center gap-3">
           {/* Differences Only Toggle Switch */}

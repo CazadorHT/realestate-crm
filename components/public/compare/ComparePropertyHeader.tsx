@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { X, ExternalLink, MapPin } from "lucide-react";
+import { X, ExternalLink } from "lucide-react";
 import { CompareProperty } from "./types";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { formatMoney } from "./utils";
-import { getTransitLogo, getTransitTypeLabel } from "../map/map-price-utils";
+
+const FALLBACK_IMG =
+  "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800&auto=format&fit=crop";
 
 interface ComparePropertyHeaderProps {
   property: CompareProperty;
@@ -19,106 +21,78 @@ export function ComparePropertyHeader({
   onRemove,
 }: ComparePropertyHeaderProps) {
   const { t, language, langPrefix } = useLanguage();
-  const title = getLocalizedField<string>(property, "title", language) || "Untitled Property";
+  const title =
+    getLocalizedField<string>(property, "title", language) || "Property";
   const locale =
-    language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : language === "ru" ? "ru-RU" : "en-US";
+    language === "th"
+      ? "th-TH"
+      : language === "cn"
+        ? "zh-CN"
+        : language === "ru"
+          ? "ru-RU"
+          : "en-US";
 
   const salePrice = property.price || property.original_price;
   const rentPrice = property.rental_price || property.original_rental_price;
-  const transitType = property.transit_type || "BTS";
-  const transitName =
-    (language === "en" && property.transit_station_name_en) ||
-    property.transit_station_name ||
-    null;
+  const coverSrc = property.image_url || FALLBACK_IMG;
+  const detailHref = `${langPrefix || ""}/properties/${property.slug || property.id}`;
 
   return (
-    <div className="p-3 sm:p-5 relative group flex flex-col justify-between h-full bg-white">
-      {/* Remove button */}
-      <button
-        onClick={() => onRemove(property.id)}
-        className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-rose-50 text-slate-400 hover:text-rose-600 shadow-xs border border-slate-200/90 rounded-full transition-all z-20 cursor-pointer"
-        title={t("compare_bar.clear") || "Remove"}
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
+    <div className="p-2.5 sm:p-3 relative group flex items-center justify-between gap-2.5 bg-white">
+      {/* Mini Thumbnail */}
+      <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs">
+        <Image
+          src={coverSrc}
+          alt={title}
+          fill
+          sizes="48px"
+          className="object-cover"
+        />
+      </div>
 
-      <div>
-        {/* Cover Image */}
-        <div className="relative aspect-video max-h-[140px] sm:max-h-[160px] rounded-xl overflow-hidden bg-slate-100 mb-2.5 border border-slate-100 shadow-inner group-hover:scale-[1.01] transition-transform duration-300">
-          {property.image_url ? (
-            <Image
-              src={property.image_url}
-              alt={title}
-              fill
-              sizes="(max-width: 768px) 50vw, 33vw"
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">
-              {t("common.no_image")}
-            </div>
-          )}
-
-          {/* Listing type badge */}
-          {property.listing_type && (
-            <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-bold">
-              {property.listing_type}
-            </span>
-          )}
-        </div>
-
-        {/* Title / Project */}
-        <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 line-clamp-2 leading-tight mb-1.5" title={title}>
+      {/* Info: Title & Price */}
+      <div className="min-w-0 flex-1">
+        <h4
+          className="font-extrabold text-xs text-slate-900 line-clamp-1 leading-snug"
+          title={property.project_name || title}
+        >
           {property.project_name || title}
-        </h3>
-
-        {/* Transit Chip if present */}
-        {transitName && (
-          <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-medium max-w-full truncate mb-2">
-            <div className="w-3 h-3 shrink-0 flex items-center justify-center">
-              <Image
-                src={getTransitLogo(transitType)}
-                alt={transitType}
-                width={12}
-                height={12}
-                className="object-contain"
-              />
-            </div>
-            <span className="truncate">
-              {transitName}
-              {property.transit_distance_meters ? ` (${property.transit_distance_meters} ม.)` : ""}
+        </h4>
+        <div className="text-[11px] font-extrabold text-blue-600 truncate mt-0.5">
+          {salePrice ? (
+            formatMoney(salePrice, locale)
+          ) : rentPrice ? (
+            <span>
+              {formatMoney(rentPrice, locale)}
+              <span className="text-[9px] text-slate-400 font-normal">/ด.</span>
             </span>
-          </div>
-        )}
-
-        {/* Price Tag */}
-        <div className="mb-3 space-y-0.5">
-          {salePrice && (
-            <div className="text-xs sm:text-sm font-extrabold text-blue-600 truncate">
-              {formatMoney(salePrice, locale)}
-            </div>
-          )}
-          {rentPrice && (
-            <div className="text-xs sm:text-sm font-extrabold text-amber-600 truncate">
-              {formatMoney(rentPrice, locale)}{" "}
-              <span className="text-[10px] text-slate-400 font-normal">/ด.</span>
-            </div>
-          )}
-          {!salePrice && !rentPrice && (
-            <div className="text-xs text-slate-400">-</div>
+          ) : (
+            <span className="text-slate-400 font-normal">-</span>
           )}
         </div>
       </div>
 
-      {/* CTA Button */}
-      <Link
-        href={`${langPrefix || ""}/properties/${property.slug || property.id}`}
-        target="_blank"
-        className="w-full inline-flex items-center justify-center gap-1 bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs py-2 px-2.5 rounded-xl transition-colors shadow-2xs cursor-pointer"
-      >
-        <span>{t("compare_page.view_details") || "ดูทรัพย์"}</span>
-        <ExternalLink className="w-3 h-3" />
-      </Link>
+      {/* Quick Action & Remove Buttons */}
+      <div className="flex items-center gap-1 shrink-0">
+        <Link
+          href={detailHref}
+          target="_blank"
+          className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900 hover:bg-blue-600 text-white font-bold text-[11px] transition-colors"
+          title="ดูทรัพย์"
+        >
+          <span>{language === "th" ? "ดู" : "View"}</span>
+          <ExternalLink className="w-2.5 h-2.5" />
+        </Link>
+
+        <button
+          type="button"
+          onClick={() => onRemove(property.id)}
+          className="p-1 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+          title={t("compare_bar.clear") || "Remove"}
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
