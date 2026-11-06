@@ -55,6 +55,9 @@ export type CompareProperty = {
   address_line1_en: string | null;
   address_line1_cn: string | null;
   address_line1_ru: string | null;
+  slug?: string | null;
+  project_name?: string | null;
+  pet_friendly?: boolean | null;
 };
 
 export type ComparisonRow = {

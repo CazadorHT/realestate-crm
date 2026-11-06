@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Layers,
   Car,
+  Scale,
 } from "lucide-react";
 import { FaAirbnb, FaPersonWalking, FaCarSide, FaTrainSubway } from "react-icons/fa6";
 import { PiFireFill } from "react-icons/pi";
@@ -22,6 +23,7 @@ import { getEffectivePrice } from "@/lib/property-hardened-utils";
 import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { isInCompare, toggleCompareId } from "@/lib/compare-store";
 import type { MapLocationGroup } from "./useMapClusters";
 import {
   computeTransitTravelInfo,
@@ -36,6 +38,7 @@ interface MapSlideablePropertyCardProps {
   group: MapLocationGroup;
   initialUnitId?: string | null;
   onClose: () => void;
+  onFocusProjectGroup?: (group: MapLocationGroup) => void;
   className?: string;
 }
 
@@ -43,6 +46,7 @@ export function MapSlideablePropertyCard({
   group,
   initialUnitId,
   onClose,
+  onFocusProjectGroup,
   className = "",
 }: MapSlideablePropertyCardProps) {
   const { language, langPrefix, t } = useLanguage();
@@ -58,6 +62,7 @@ export function MapSlideablePropertyCard({
   });
 
   const [imgError, setImgError] = useState(false);
+  const [inCompare, setInCompare] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -72,6 +77,19 @@ export function MapSlideablePropertyCard({
 
   const safeIndex = index >= 0 && index < total ? index : 0;
   const current = units[safeIndex];
+
+  useEffect(() => {
+    if (!current?.id) return;
+    const check = () => setInCompare(isInCompare(current.id));
+    check();
+    window.addEventListener("compare-updated", check);
+    window.addEventListener("storage", check);
+    return () => {
+      window.removeEventListener("compare-updated", check);
+      window.removeEventListener("storage", check);
+    };
+  }, [current?.id]);
+
   if (!current) return null;
 
   const prices = getEffectivePrice(current);
@@ -214,18 +232,46 @@ export function MapSlideablePropertyCard({
           )}
         </div>
 
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          aria-label="Close preview"
-          className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/55 hover:bg-black/80 text-white flex items-center justify-center transition-colors cursor-pointer"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Top-right Compare & Close Controls */}
+        <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleCompareId(current.id);
+            }}
+            className={cn(
+              "h-7 px-2.5 rounded-full backdrop-blur-md flex items-center gap-1 text-[11px] font-bold transition-all cursor-pointer shadow-md",
+              inCompare
+                ? "bg-blue-600 text-white ring-2 ring-white/60"
+                : "bg-black/60 hover:bg-black/80 text-white"
+            )}
+            title={inCompare ? "นำออกจากการเปรียบเทียบ" : "เพิ่มเพื่อเปรียบเทียบโครงการ"}
+          >
+            <Scale className="w-3.5 h-3.5" />
+            <span>
+              {inCompare
+                ? language === "th"
+                  ? "เลือกแล้ว"
+                  : "Selected"
+                : language === "th"
+                  ? "+ เทียบ"
+                  : "+ Compare"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            aria-label="Close preview"
+            className="w-7 h-7 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-colors cursor-pointer shadow-md"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Left / Right Slide Arrows when multiple units exist in this project/location */}
         {total > 1 && (
@@ -573,22 +619,43 @@ export function MapSlideablePropertyCard({
           )}
         </div>
 
-        {/* Action CTA Button */}
-        <Link
-          href={detailHref}
-          className="w-full inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition-colors shadow-xs"
-        >
-          <span>
-            {language === "th"
-              ? "ดูรายละเอียดทรัพย์นี้"
-              : language === "cn"
-                ? "查看房源详情"
-                : language === "ru"
-                  ? "Подробнее об объекте"
-                  : "View Property Details"}
-          </span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Link>
+        {/* Action CTA Buttons */}
+        <div className="flex flex-col gap-1.5 pt-1">
+          {total > 1 && onFocusProjectGroup && (
+            <button
+              type="button"
+              onClick={() => {
+                onFocusProjectGroup(group);
+              }}
+              className="w-full inline-flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs py-2 px-3 rounded-xl border border-blue-200/80 transition-colors cursor-pointer"
+            >
+              <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span>
+                {language === "th"
+                  ? `ดูทั้ง ${total} ยูนิตในโครงการนี้ (ในแผงข้าง)`
+                  : language === "cn"
+                    ? `在侧栏查看全部 ${total} 套房源`
+                    : `View all ${total} units in this building`}
+              </span>
+            </button>
+          )}
+
+          <Link
+            href={detailHref}
+            className="w-full inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition-colors shadow-xs"
+          >
+            <span>
+              {language === "th"
+                ? "ดูรายละเอียดทรัพย์นี้"
+                : language === "cn"
+                  ? "查看房源详情"
+                  : language === "ru"
+                    ? "Подробнее об объекте"
+                    : "View Property Details"}
+            </span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
     </div>
   );

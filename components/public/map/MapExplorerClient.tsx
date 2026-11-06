@@ -18,10 +18,14 @@ import {
   PanelLeftOpen,
   RotateCcw,
   X,
+  Building2,
 } from "lucide-react";
 import { SearchFilterBar } from "@/components/public/search/SearchFilterBar";
 import { PropertyCard } from "@/components/public/PropertyCard";
 import { PropertyVectorMapLazy } from "./PropertyVectorMapLazy";
+import { MapCompareDock } from "./MapCompareDock";
+import { MapCompareTransitModal } from "./MapCompareTransitModal";
+import { readCompareIds, removeCompareId } from "@/lib/compare-store";
 import {
   getPinProjectOrPropertyHeadline,
   getTransitTypeLabel,
@@ -99,6 +103,23 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
   const [focusedPropertyId, setFocusedPropertyId] = useState<string | null>(
     null
   );
+  const [focusedProjectGroup, setFocusedProjectGroup] =
+    useState<MapLocationGroup | null>(null);
+  const [isTransitCompareOpen, setIsTransitCompareOpen] =
+    useState<boolean>(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setCompareIds(readCompareIds());
+    const onUpdate = () => setCompareIds(readCompareIds());
+    window.addEventListener("compare-updated", onUpdate);
+    window.addEventListener("storage", onUpdate);
+    return () => {
+      window.removeEventListener("compare-updated", onUpdate);
+      window.removeEventListener("storage", onUpdate);
+    };
+  }, []);
+
   const [activePopupGroup, setActivePopupGroup] =
     useState<MapLocationGroup | null>(null);
   const [mobileStripCollapsed, setMobileStripCollapsed] =
@@ -112,7 +133,16 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
 
   const mobileStripRef = useRef<HTMLDivElement | null>(null);
 
+  // Clear focused project when global filter search changes
+  useEffect(() => {
+    setFocusedProjectGroup(null);
+  }, [filters.queryString]);
+
   const activeList = useMemo(() => {
+    // If user clicked "View all units in this project", prioritize this project group
+    if (focusedProjectGroup) {
+      return focusedProjectGroup.units;
+    }
     const base = searchAsMove ? boundsPins : filteredPins;
     if (!stationRadar) return base;
     const s = stationRadar.station;
@@ -130,7 +160,7 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
       .filter((item) => item.dist <= maxMeters)
       .sort((a, b) => a.dist - b.dist)
       .map((item) => item.pin);
-  }, [searchAsMove, boundsPins, filteredPins, stationRadar]);
+  }, [focusedProjectGroup, searchAsMove, boundsPins, filteredPins, stationRadar]);
 
   const radarCountText = useMemo(() => {
     if (!stationRadar) return "";
@@ -309,6 +339,38 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
             </div>
           )}
 
+          {/* Active Focused Project Group Filter Banner in Drawer (แก้จุดอ่อน: กัน User งงว่าทรัพย์อื่นหายไปไหน) */}
+          {focusedProjectGroup && (
+            <div className="px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between gap-2 shrink-0 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-slate-900 truncate">
+                    {focusedProjectGroup.units[0]?.projects?.name_th ||
+                      focusedProjectGroup.units[0]?.project_name ||
+                      focusedProjectGroup.units[0]?.title}
+                  </div>
+                  <div className="text-[11px] text-blue-600 font-medium">
+                    {language === "th"
+                      ? `กำลังแสดงเฉพาะโครงการนี้ (${activeList.length} ยูนิต)`
+                      : `Showing this project only (${activeList.length} units)`}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFocusedProjectGroup(null)}
+                className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 transition-colors shrink-0 shadow-2xs cursor-pointer"
+                title="ยกเลิกการกรองโครงการ"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>{language === "th" ? "ดูทั้งหมด" : "Show all"}</span>
+              </button>
+            </div>
+          )}
+
           <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
             {activeList.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center my-4">
@@ -454,6 +516,8 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
             hoveredPropertyId={hoveredPropertyId}
             onHoverPropertyId={setHoveredPropertyId}
             focusedPropertyId={focusedPropertyId}
+            focusedGroupId={focusedProjectGroup?.groupId}
+            onFocusProjectGroup={setFocusedProjectGroup}
             onSelectGroup={setActivePopupGroup}
             enableSearchAsMove
             searchAsMove={searchAsMove}
@@ -463,6 +527,26 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
             stationRadar={stationRadar}
             onStationRadarChange={setStationRadar}
             className="rounded-none border-0"
+          />
+
+          {/* Floating Compare Dock (Multi-select Comparison on Map) */}
+          <MapCompareDock
+            pins={pins}
+            language={language}
+            langPrefix={langPrefix}
+            onOpenQuickCompare={() => setIsTransitCompareOpen(true)}
+            className={mobileStripCollapsed || activePopupGroup ? "bottom-4" : "bottom-4 lg:bottom-4"}
+          />
+
+          {/* Side-by-side Transit & Value Comparison Modal */}
+          <MapCompareTransitModal
+            open={isTransitCompareOpen}
+            onOpenChange={setIsTransitCompareOpen}
+            pins={pins}
+            compareIds={compareIds}
+            language={language}
+            langPrefix={langPrefix}
+            onRemoveId={(id) => removeCompareId(id)}
           />
 
           {/* Mobile Swipeable Bottom Property Carousel + Return to Grid Pill (Hidden when a pin popup is actively open) */}

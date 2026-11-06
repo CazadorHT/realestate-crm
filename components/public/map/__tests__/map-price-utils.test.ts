@@ -146,10 +146,10 @@ describe("map-price-utils", () => {
 
   describe("formatCompactPillAmount", () => {
     it("formats rental amount with spaced currency and month suffix", () => {
-      expect(formatCompactPillAmount(17000, "RENT", "th")).toBe("฿ 17K / ด.");
-      expect(formatCompactPillAmount(88000, "RENT", "th")).toBe("฿ 88K / ด.");
-      expect(formatCompactPillAmount(120000, "RENT", "th")).toBe("฿ 120K / ด.");
-      expect(formatCompactPillAmount(17000, "RENT", "en")).toBe("฿ 17K / mo");
+      expect(formatCompactPillAmount(17000, "RENT", "th")).toBe("฿ 17K /ด.");
+      expect(formatCompactPillAmount(88000, "RENT", "th")).toBe("฿ 88K /ด.");
+      expect(formatCompactPillAmount(120000, "RENT", "th")).toBe("฿ 120K /ด.");
+      expect(formatCompactPillAmount(17000, "RENT", "en")).toBe("฿ 17K /mo");
     });
 
     it("formats sale amount with spaced currency", () => {

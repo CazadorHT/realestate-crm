@@ -298,6 +298,10 @@ export interface PropertyVectorMapProps {
   onHoverPropertyId?: (id: string | null) => void;
   /** Externally controlled selected property ID (optional, e.g. mobile carousel sync) */
   focusedPropertyId?: string | null;
+  /** Group ID externally focused (e.g. from left drawer project filter) */
+  focusedGroupId?: string | null;
+  /** Callback when user clicks "View all units in this project" */
+  onFocusProjectGroup?: (group: MapLocationGroup) => void;
   /** Callback when a group or unit is selected on the map */
   onSelectGroup?: (group: MapLocationGroup | null) => void;
   /** Whether "Search as map moves" toggle is shown */
@@ -332,6 +336,8 @@ export function PropertyVectorMap({
   hoveredPropertyId = null,
   onHoverPropertyId,
   focusedPropertyId = null,
+  focusedGroupId = null,
+  onFocusProjectGroup,
   onSelectGroup,
   enableSearchAsMove = false,
   searchAsMove = false,
@@ -494,6 +500,7 @@ export function PropertyVectorMap({
     internalHoverGroupId ||
       externalHoveredGroupId ||
       focusedPropertyId ||
+      focusedGroupId ||
       selectedGroupId
   );
 
@@ -1272,7 +1279,8 @@ export function PropertyVectorMap({
             }
 
             const { group } = item;
-            const isSelected = selectedGroup?.groupId === group.groupId;
+            const isGroupFocused = focusedGroupId ? group.groupId === focusedGroupId : false;
+            const isSelected = selectedGroup?.groupId === group.groupId || isGroupFocused;
             const isHovered =
               internalHoverGroupId === group.groupId ||
               externalHoveredGroupId === group.groupId ||
@@ -1348,6 +1356,7 @@ export function PropertyVectorMap({
                 setSelectedGroupId(null);
                 onSelectGroup?.(null);
               }}
+              onFocusProjectGroup={onFocusProjectGroup}
               className="relative z-20 max-h-[inherit] overflow-y-auto"
             />
           </div>
@@ -1387,6 +1396,7 @@ export function PropertyVectorMap({
                     setSelectedGroupId(null);
                     onSelectGroup?.(null);
                   }}
+                  onFocusProjectGroup={onFocusProjectGroup}
                   className="w-full max-w-none border-0 shadow-none rounded-t-2xl overflow-hidden"
                 />
               )}

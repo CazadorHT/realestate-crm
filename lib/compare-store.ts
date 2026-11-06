@@ -23,6 +23,21 @@ export function toggleCompareId(id: string): string[] {
   return next;
 }
 
+export function isInCompare(id: string): boolean {
+  if (typeof window === "undefined") return false;
+  return readCompareIds().includes(id);
+}
+
+export function addCompareId(id: string): string[] {
+  if (typeof window === "undefined") return [];
+  const cur = readCompareIds();
+  if (cur.includes(id)) return cur;
+  const next = [...cur, id].slice(0, MAX);
+  localStorage.setItem(KEY, JSON.stringify(next));
+  window.dispatchEvent(new Event("compare-updated"));
+  return next;
+}
+
 export function removeCompareId(id: string) {
   if (typeof window === "undefined") return;
   const cur = readCompareIds();

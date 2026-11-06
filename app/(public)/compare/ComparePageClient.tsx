@@ -10,7 +10,7 @@ import { SectionBackground } from "@/components/public/SectionBackground";
 
 // New modular components
 import { CompareProperty } from "@/components/public/compare/types";
-import { COMPARISON_ROWS } from "@/components/public/compare/constants";
+import { COMPARISON_SECTIONS } from "@/components/public/compare/constants";
 import { CompareEmptyState } from "@/components/public/compare/CompareEmptyState";
 import { CompareLoadingSkeleton } from "@/components/public/compare/CompareLoadingSkeleton";
 import { CompareTable } from "@/components/public/compare/CompareTable";
@@ -39,7 +39,7 @@ function ComparePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const ids = searchParams.get("ids") ?? "";
-  const { t, langPrefix } = useLanguage();
+  const { t, language, langPrefix } = useLanguage();
 
   const [properties, setProperties] = useState<CompareProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,8 +91,21 @@ function ComparePageContent() {
             { label: t("breadcrumb.home"), href: langPrefix || "/" },
             { label: t("compare_page.title"), href: `${langPrefix}/compare` },
           ]}
-          className="mb-6"
+          className="mb-4"
         />
+
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1B263B] tracking-tight">
+              {t("compare_page.title") || "เปรียบเทียบอสังหาริมทรัพย์"}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              {language === "th"
+                ? "เปรียบเทียบระยะทางรถไฟฟ้า ราคา ขนาดห้อง และสิ่งอำนวยความสะดวกเคียงข้างกัน"
+                : "Compare transit proximity, pricing, layouts, and amenities side-by-side"}
+            </p>
+          </div>
+        </div>
 
         {isLoading ? (
           <CompareLoadingSkeleton count={3} />
@@ -101,7 +114,7 @@ function ComparePageContent() {
         ) : (
           <CompareTable
             properties={properties}
-            rows={COMPARISON_ROWS}
+            sections={COMPARISON_SECTIONS}
             onRemove={handleRemove}
           />
         )}

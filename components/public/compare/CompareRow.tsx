@@ -1,6 +1,8 @@
 "use client";
 
-import { ShieldCheck, MapPin, Check } from "lucide-react";
+import { ShieldCheck, MapPin, Check, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { FaPersonWalking, FaCarSide } from "react-icons/fa6";
 import { CompareProperty, ComparisonRow } from "./types";
 import { formatMoney, getListingTypeKey, isPetFriendly } from "./utils";
 import { getProvinceName } from "@/lib/utils/provinces";
@@ -13,9 +15,10 @@ import {
   TRANSIT_TYPE_STYLES,
   TransitType,
 } from "@/features/properties/labels";
+import { getTransitLogo, computeTransitTravelInfo } from "../map/map-price-utils";
 import DOMPurify from "isomorphic-dompurify";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface CompareRowProps {
   row: ComparisonRow;
@@ -28,6 +31,17 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const locale =
     language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : language === "ru" ? "ru-RU" : "en-US";
+
+  // Minimum transit distance among compared properties to badge the winner
+  const minTransitDist = useMemo(() => {
+    let min = Infinity;
+    for (const p of properties) {
+      if (typeof p.transit_distance_meters === "number" && p.transit_distance_meters > 0) {
+        if (p.transit_distance_meters < min) min = p.transit_distance_meters;
+      }
+    }
+    return min < Infinity ? min : null;
+  }, [properties]);
 
   function CompareLocationCell({
     property,
@@ -145,7 +159,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
         gridTemplateColumns: `160px repeat(${properties.length}, 1fr)`,
       }}
     >
-      <div className="p-2 md:p-4 text-xs md:text-sm font-semibold text-slate-600 flex flex-col items-start gap-1 md:gap-2">
+      <div className="sticky left-0 bg-white/95 backdrop-blur-xs z-10 p-2 md:p-4 text-xs md:text-sm font-semibold text-slate-700 flex flex-col items-start gap-1 md:gap-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.06)]">
         <div className="flex items-center gap-1.5 md:gap-2 w-full">
           <row.icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-slate-400 shrink-0" />
           <span className="leading-tight">
@@ -372,29 +386,73 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                   p.transit_station_name_ru) ? (
                   <div className="flex flex-col items-start gap-1">
                     {(() => {
-                      const type = p.transit_type as TransitType;
+                      const isClosest =
+                        minTransitDist !== null &&
+                        p.transit_distance_meters === minTransitDist &&
+                        properties.length > 1;
+
+                      const travel = computeTransitTravelInfo({
+                        distanceMeters: p.transit_distance_meters ?? null,
+                        language,
+                      });
+
+                      const transitType = p.transit_type as TransitType;
                       const style =
-                        TRANSIT_TYPE_STYLES[type] || TRANSIT_TYPE_STYLES.OTHER;
+                        TRANSIT_TYPE_STYLES[transitType] || TRANSIT_TYPE_STYLES.OTHER;
+
                       return (
-                        <span
-                          className={`inline-flex px-2 py-0.5 rounded text-md font-bold border shadow-sm uppercase ${style.bg} ${style.text} border-slate-100`}
-                        >
-                          {(TRANSIT_TYPE_LABELS[type] as any)?.[language] || (TRANSIT_TYPE_LABELS[type] as any)?.th || type}{" "}
-                          {getLocalizedField<string>(
-                            p,
-                            "transit_station_name",
-                            language,
+                        <div className="flex flex-col gap-1 items-start">
+                          {isClosest && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full mb-0.5 shadow-2xs">
+                              <Sparkles className="w-3 h-3 text-emerald-600 fill-emerald-600" />
+                              <span>{language === "th" ? "ใกล้รถไฟฟ้าที่สุด" : "Closest to transit"}</span>
+                            </span>
                           )}
-                        </span>
+
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <div className="w-4 h-4 shrink-0 flex items-center justify-center">
+                              <Image
+                                src={getTransitLogo(p.transit_type)}
+                                alt={p.transit_type || "Transit"}
+                                width={16}
+                                height={16}
+                                className="object-contain"
+                              />
+                            </div>
+                            <span
+                              className={`inline-flex px-1.5 py-0.5 rounded text-xs font-bold border ${style.bg} ${style.text} border-slate-100 uppercase`}
+                            >
+                              {(TRANSIT_TYPE_LABELS[transitType] as any)?.[language] ||
+                                (TRANSIT_TYPE_LABELS[transitType] as any)?.th ||
+                                transitType}
+                            </span>
+                            <span className="font-bold text-xs md:text-sm text-slate-800">
+                              {getLocalizedField<string>(
+                                p,
+                                "transit_station_name",
+                                language
+                              )}
+                            </span>
+                          </div>
+
+                          {travel.summaryLabel && (
+                            <div className="flex items-center gap-1 text-xs text-slate-600 font-medium pl-5">
+                              {travel.isWalk ? (
+                                <FaPersonWalking className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              ) : (
+                                <FaCarSide className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              )}
+                              <span>{travel.summaryLabel}</span>
+                              {p.transit_distance_meters && (
+                                <span className="text-slate-400">
+                                  ({p.transit_distance_meters} ม.)
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       );
                     })()}
-                    {p.transit_distance_meters && (
-                      <span className="text-md text-slate-500 pl-1">
-                        {t("compare_page.values.distance_meters", {
-                          distance: p.transit_distance_meters,
-                        })}
-                      </span>
-                    )}
                   </div>
                 ) : null}
 
