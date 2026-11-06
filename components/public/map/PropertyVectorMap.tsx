@@ -320,6 +320,8 @@ export interface PropertyVectorMapProps {
   suppressMobilePopup?: boolean;
   /** Active transit station radius radar filter */
   stationRadar?: { station: MapTransitStation; radiusKm: number } | null;
+  /** Property IDs currently selected in compare dock */
+  compareIds?: string[];
   /** Callback when user clicks station or changes radius */
   onStationRadarChange?: (
     radar: { station: MapTransitStation; radiusKm: number } | null
@@ -348,6 +350,7 @@ export function PropertyVectorMap({
   suppressMobilePopup = false,
   stationRadar = null,
   onStationRadarChange,
+  compareIds = [],
 }: PropertyVectorMapProps) {
   const { language } = useLanguage();
   const isMobile = useIsMobile();
@@ -1287,7 +1290,16 @@ export function PropertyVectorMap({
               (!!focusedPropertyId && group.unitIds.has(focusedPropertyId));
 
             const isDimmed = hasAnyFocus && !isHovered && !isSelected;
-            const markerZ = isSelected ? 45 : isHovered ? 35 : isDimmed ? 15 : 20;
+            const isCompared = Boolean(
+              compareIds &&
+              compareIds.length > 0 &&
+              group.units.some(
+                (u) =>
+                  compareIds.includes(u.id) ||
+                  (u.slug && compareIds.includes(u.slug))
+              )
+            );
+            const markerZ = isSelected ? 45 : isHovered ? 35 : isCompared ? 30 : isDimmed ? 15 : 20;
 
             return (
               <Marker
@@ -1302,6 +1314,7 @@ export function PropertyVectorMap({
                   isSelected={isSelected}
                   isHovered={isHovered}
                   isDimmed={isDimmed}
+                  isCompared={isCompared}
                   language={language}
                   onClick={handleGroupClick}
                   onMouseEnter={handleMarkerMouseEnter}

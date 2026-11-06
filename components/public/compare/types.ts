@@ -1,5 +1,8 @@
 export type CompareProperty = {
   id: string;
+  slug?: string | null;
+  project_name?: string | null;
+  project_id?: string | null;
   title: string;
   title_en: string | null;
   title_cn: string | null;
@@ -15,11 +18,34 @@ export type CompareProperty = {
   bathrooms: number | null;
   location: string | null;
   description: string | null;
+  description_en?: string | null;
+  description_cn?: string | null;
+  description_ru?: string | null;
   province: string | null;
   size_sqm: number | null;
   land_size_sqwah: number | null;
   floor: number | null;
+  total_floors?: number | null;
   parking_slots: number | null;
+  ceiling_height?: number | null;
+  direction?: string | null;
+  orientation?: string | null;
+  facing_north?: boolean | null;
+  facing_south?: boolean | null;
+  facing_east?: boolean | null;
+  facing_west?: boolean | null;
+  furnishing_status?: string | null;
+  is_fully_furnished?: boolean | null;
+  is_bare_shell?: boolean | null;
+  is_pet_friendly?: boolean | null;
+  pet_friendly?: boolean | null;
+  is_foreigner_quota?: boolean | null;
+  is_tax_registered?: boolean | null;
+  allow_airbnb?: boolean | null;
+  min_contract_months?: number | null;
+  price_per_sqm?: number | null;
+  common_fee?: number | null;
+  amenities?: Record<string, any> | null;
   updated_at: string;
   meta_keywords: string[] | null;
   verified: boolean | null;
@@ -29,6 +55,7 @@ export type CompareProperty = {
     name_en: string | null;
     name_cn: string | null;
     name_ru: string | null;
+    icon_key: string;
   }>;
   district: string | null;
   district_en: string | null;
@@ -55,9 +82,10 @@ export type CompareProperty = {
   address_line1_en: string | null;
   address_line1_cn: string | null;
   address_line1_ru: string | null;
-  slug?: string | null;
-  project_name?: string | null;
-  pet_friendly?: boolean | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  project_name_th?: string | null;
+  project_name_en?: string | null;
 };
 
 export type ComparisonRow = {

@@ -11,6 +11,7 @@ interface PricePillMarkerProps {
   isSelected: boolean;
   isHovered: boolean;
   isDimmed?: boolean;
+  isCompared?: boolean;
   language: string;
   onClick: (group: MapLocationGroup) => void;
   onMouseEnter?: (group: MapLocationGroup) => void;
@@ -22,6 +23,7 @@ export const PricePillMarker = memo(function PricePillMarker({
   isSelected,
   isHovered,
   isDimmed = false,
+  isCompared = false,
   language,
   onClick,
   onMouseEnter,
@@ -172,6 +174,19 @@ export const PricePillMarker = memo(function PricePillMarker({
       ? "bg-blue-600 border-r border-b border-blue-600"
       : "bg-emerald-600 border-r border-b border-emerald-600";
 
+  // Compared state colors ("แค่เปลี่ยนสีให้เข้มขึ้นเฉยๆ"): Rich, solid deeper brand color
+  const comparedPillClass = isBoth
+    ? "bg-purple-700 text-white border-purple-800 shadow-lg ring-2 ring-purple-400/50"
+    : isRent
+      ? "bg-blue-700 text-white border-blue-800 shadow-lg ring-2 ring-blue-400/50"
+      : "bg-emerald-700 text-white border-emerald-800 shadow-lg ring-2 ring-emerald-400/50";
+
+  const comparedArrowClass = isBoth
+    ? "bg-purple-700 border-r border-b border-purple-800"
+    : isRent
+      ? "bg-blue-700 border-r border-b border-blue-800"
+      : "bg-emerald-700 border-r border-b border-emerald-800";
+
   // Default normal border & subtle tint
   const defaultBorderClass = isBoth
     ? "border-purple-200/90 hover:border-purple-500"
@@ -247,7 +262,9 @@ export const PricePillMarker = memo(function PricePillMarker({
             "inline-flex items-center gap-1.5 h-[32px] px-2.5 py-1 rounded-full border font-bold transition-all duration-150 ease-out transform-gpu will-change-transform",
             isActive
               ? activePillClass
-              : cn("bg-white text-[#1B263B] shadow-md hover:shadow-lg", defaultBorderClass)
+              : isCompared
+                ? comparedPillClass
+                : cn("bg-white text-[#1B263B] shadow-md hover:shadow-lg", defaultBorderClass)
           )}
         >
           {/* Accent Indicator Dot */}
@@ -255,7 +272,7 @@ export const PricePillMarker = memo(function PricePillMarker({
             title={typeLabel}
             className={cn(
               "w-2 h-2 rounded-full shrink-0 transition-colors duration-150",
-              isActive ? "bg-white ring-2 ring-white/40" : dotClass
+              isActive || isCompared ? "bg-white ring-2 ring-white/40" : dotClass
             )}
           />
 
@@ -266,7 +283,7 @@ export const PricePillMarker = memo(function PricePillMarker({
               title={discountTooltip}
               className={cn(
                 "w-1.5 h-1.5 rounded-full shrink-0",
-                isActive ? "bg-rose-300 ring-2 ring-white/60 animate-pulse" : "bg-rose-500 ring-2 ring-rose-200/70"
+                isActive || isCompared ? "bg-rose-300 ring-2 ring-white/60 animate-pulse" : "bg-rose-500 ring-2 ring-rose-200/70"
               )}
             />
           )}
@@ -275,7 +292,7 @@ export const PricePillMarker = memo(function PricePillMarker({
             <span
               className={cn(
                 "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none transition-colors",
-                isActive
+                isActive || isCompared
                   ? "bg-white/20 text-white"
                   : isBoth
                     ? "bg-purple-50 text-purple-700 border border-purple-200/80"
@@ -294,7 +311,7 @@ export const PricePillMarker = memo(function PricePillMarker({
         <span
           className={cn(
             "absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 rotate-45 border-r border-b transition-colors duration-150",
-            isActive ? activeArrowClass : cn("bg-white", defaultArrowClass)
+            isActive ? activeArrowClass : isCompared ? comparedArrowClass : cn("bg-white", defaultArrowClass)
           )}
         />
       </span>

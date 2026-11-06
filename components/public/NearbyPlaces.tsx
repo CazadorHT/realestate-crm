@@ -21,6 +21,7 @@ import { useEffect } from "react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { computeTransitTravelInfo } from "./map/map-price-utils";
 
 export interface NearbyPlaceItem {
   category: string;
@@ -179,20 +180,24 @@ export function NearbyPlaces({
               </div>
               <ul className="">
                 {items.map((item, i) => {
-                  // --- ส่วนที่แก้ไข: แปลงค่าระยะทางก่อนแสดงผล ---
-                  // ลองรับทั้ง key: distance_meters (ถ้า DB เก็บชื่อนี้) หรือ distance
-                  const rawDistanceMeters = Number(
-                    (item as any).distance_meters !== undefined 
-                      ? (item as any).distance_meters 
-                      : item.distance
-                  );
-                  
-                  // แปลงเป็นกิโลเมตร (ถ้าใน DB คุณเก็บเป็นเมตร)
-                  // ถ้าระบบคุณเก็บค่า Nearby เป็น กิโลเมตรอยู่แล้ว ให้ลบ / 1000 ออก
-                  const distanceKm = !isNaN(rawDistanceMeters) && rawDistanceMeters > 0 
-                    ? rawDistanceMeters / 1000 
-                    : null;
-                  // ---------------------------------------------
+                  const rawDistance = (item as any).distance_meters !== undefined ? (item as any).distance_meters : item.distance;
+                  const distNum =
+                    typeof rawDistance === "number" && rawDistance > 0
+                      ? rawDistance
+                      : parseFloat(String(rawDistance || "").replace(/[^0-9.]/g, ""));
+                  const distanceKm = !isNaN(distNum) && distNum > 0 ? distNum / 1000 : null;
+
+                  const travel = computeTransitTravelInfo({
+                    distanceMeters: !isNaN(distNum) && distNum > 0 ? distNum : null,
+                    explicitTime: item.time,
+                    language,
+                  });
+
+                  const timeDisplay = item.time
+                    ? String(item.time).includes("นาที") || String(item.time).includes("min")
+                      ? String(item.time)
+                      : `${item.time} ${t("common.minutes_short")}`
+                    : travel.summaryLabel;
 
                   return (
                     <li
@@ -203,15 +208,14 @@ export function NearbyPlaces({
                         {getLocaleValue(item, "name", language)}
                       </span>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {/* ใช้ distanceKm ที่คำนวณแล้ว */}
                         {distanceKm !== null && (
                           <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-blue-200 group-hover/item:text-blue-600 transition-colors">
                             {formatDistance(distanceKm)}
                           </span>
                         )}
-                        {item.time && (
+                        {timeDisplay && (
                           <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-blue-200 group-hover/item:text-blue-600 transition-colors">
-                            {item.time} {t("common.minutes_short")}
+                            {timeDisplay}
                           </span>
                         )}
                       </div>
@@ -239,10 +243,26 @@ export function NearbyPlaces({
                   TRANSIT_TYPE_STYLES[
                     transit.type as keyof typeof TRANSIT_TYPE_STYLES
                   ] || TRANSIT_TYPE_STYLES.OTHER;
-                const rawDistanceMeters = Number(transit.distance_meters);
-                const distanceKm = !isNaN(rawDistanceMeters) && rawDistanceMeters > 0
-                 ? rawDistanceMeters / 1000
+                const rawTransitDist = transit.distance_meters !== undefined ? transit.distance_meters : (transit as any).distance;
+                const transitDistNum =
+                  typeof rawTransitDist === "number" && rawTransitDist > 0
+                    ? rawTransitDist
+                    : parseFloat(String(rawTransitDist || "").replace(/[^0-9.]/g, ""));
+                const distanceKm = !isNaN(transitDistNum) && transitDistNum > 0
+                  ? transitDistNum / 1000
                   : null;
+
+                const transitTravel = computeTransitTravelInfo({
+                  distanceMeters: !isNaN(transitDistNum) && transitDistNum > 0 ? transitDistNum : null,
+                  explicitTime: transit.time,
+                  language,
+                });
+
+                const transitTimeDisplay = transit.time
+                  ? String(transit.time).includes("นาที") || String(transit.time).includes("min")
+                    ? String(transit.time)
+                    : `${transit.time} ${t("common.minutes_short")}`
+                  : transitTravel.summaryLabel;
 
                 const type = (transit.type || "").toUpperCase();
                 const stationNameEn = getLocaleValue(transit, "station_name", "en");
@@ -290,9 +310,9 @@ export function NearbyPlaces({
                           
                         </span>
                       )}
-                      {transit.time && (
+                      {transitTimeDisplay && (
                         <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-blue-200 group-hover/item:text-blue-600 transition-colors">
-                          {transit.time} {t("common.minutes_short")}
+                          {transitTimeDisplay}
                         </span>
                       )}
                     </div>

@@ -508,3 +508,61 @@ export function computeTransitTravelInfo({
   };
 }
 
+/**
+ * Robustly detects or normalizes transit type (BTS, MRT, ARL, SRT_RED, etc.)
+ * from raw DB strings or station names. Returns null if unknown, NEVER returns 'OTHER'.
+ */
+export function detectTransitType(
+  rawType?: string | null,
+  stationName?: string | null
+): "BTS" | "MRT" | "ARL" | "SRT_RED" | "GOLD" | "BRT" | null {
+  const t = rawType ? rawType.toUpperCase().trim() : "";
+  if (t && t !== "OTHER") {
+    if (t.startsWith("MRT")) return "MRT";
+    if (t.startsWith("BTS")) return "BTS";
+    if (t.startsWith("ARL")) return "ARL";
+    if (t.startsWith("SRT")) return "SRT_RED";
+    if (t.startsWith("BRT")) return "BRT";
+    if (t === "GOLD") return "GOLD";
+  }
+
+  if (!stationName) return null;
+  const name = stationName.toLowerCase().trim();
+
+  // Known ARL (Airport Rail Link) stations
+  const arlKeywords = ["arl", "airport", "แอร์พอร์ต", "สุวรรณภูมิ", "รามคำแหง", "หัวหมาก", "บ้านทับช้าง", "ลาดกระบัง"];
+  if (arlKeywords.some((k) => name.includes(k))) return "ARL";
+
+  // Known MRT stations (Blue, Purple, Yellow, Pink, Orange)
+  const mrtKeywords = [
+    "mrt", "เอ็มอาร์ที", "ศูนย์วัฒนธรรม", "พระราม 9", "พระรามเก้า", "ห้วยขวาง", "สุทธิสาร", 
+    "รัชดา", "ลาดพร้าว", "พหลโยธิน", "สวนจตุจักร", "กำแพงเพชร", "บางซื่อ", "เตาปูน", 
+    "บางโพ", "บางอ้อ", "บางพลัด", "สิรินธร", "บางยี่ขัน", "บางขุนนนท์", "ไฟฉาย", 
+    "จรัญ", "ท่าพระ", "อิสรภาพ", "สนามไชย", "สามยอด", "วัดมังกร", "หัวลำโพง", 
+    "สามย่าน", "สีลม", "ลุมพินี", "คลองเตย", "ศูนย์การประชุมแห่งชาติสิริกิติ์", 
+    "สุขุมวิท", "เพชรบุรี", "หลักสอง", "บางแค", "ภาษีเจริญ", "เพชรเกษม", "บางหว้า",
+    "เตาปูน", "บางซ่อน", "วงศ์สว่าง", "แยกติวานนท์", "กระทรวงสาธารณสุข", "ศูนย์ราชการนนทบุรี",
+    "ศรีรัช", "แจ้งวัฒนะ", "เมืองทอง", "วัชรพล", "มีนบุรี", "รามอินทรา"
+  ];
+  if (mrtKeywords.some((k) => name.includes(k))) return "MRT";
+
+  // Known SRT Red line stations
+  const srtKeywords = ["srt", "สายสีแดง", "รังสิต", "ดอนเมือง", "การเคหะ", "หลักสี่", "ทุ่งสองห้อง", "บางเขน", "วัดเสมียนนารี", "ตลิ่งชัน"];
+  if (srtKeywords.some((k) => name.includes(k))) return "SRT_RED";
+
+  // Known BTS Skytrain stations
+  const btsKeywords = [
+    "bts", "บีทีเอส", "สยาม", "ชิดลม", "เพลินจิต", "นานา", "อโศก", "พร้อมพงษ์", "ทองหล่อ", 
+    "เอกมัย", "พระโขนง", "อ่อนนุช", "บางจาก", "ปุณณวิถี", "อุดมสุข", "บางนา", "แบริ่ง", 
+    "สำโรง", "ปูเจ้า", "ช้างเอราวัณ", "โรงเรียนนายเรือ", "ปากน้ำ", "ศรีนครินทร์", "แพรกษา", 
+    "สายลวด", "เคหะ", "หมอชิต", "สะพานควาย", "อารีย์", "สนามเป้า", "อนุสาวรีย์", "พญาไท", 
+    "ราชเทวี", "สนามกีฬาแห่งชาติ", "ราชดำริ", "ศาลาแดง", "ช่องนนทรี", "เซนต์หลุยส์", 
+    "สุรศักดิ์", "สะพานตากสิน", "กรุงธนบุรี", "วงเวียนใหญ่", "โพธิ์นิมิตร", "ตลาดพลู", 
+    "วุฒากาศ", "ห้าแยกลาดพร้าว", "พหลโยธิน 24", "รัชโยธิน", "เสนานิคม", "มหาวิทยาลัยเกษตรศาสตร์", 
+    "กรมป่าไม้", "บางบัว", "กรมทหารราบที่ 11", "วัดพระศรีมหาธาตุ", "คูคต"
+  ];
+  if (btsKeywords.some((k) => name.includes(k))) return "BTS";
+
+  return null;
+}
+

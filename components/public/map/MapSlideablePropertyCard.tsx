@@ -16,6 +16,7 @@ import {
   Layers,
   Car,
   Scale,
+  Heart,
 } from "lucide-react";
 import { FaAirbnb, FaPersonWalking, FaCarSide, FaTrainSubway } from "react-icons/fa6";
 import { PiFireFill } from "react-icons/pi";
@@ -24,6 +25,7 @@ import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { isInCompare, toggleCompareId } from "@/lib/compare-store";
+import { isFavorite, toggleFavoriteId } from "@/lib/favorite-store";
 import type { MapLocationGroup } from "./useMapClusters";
 import {
   computeTransitTravelInfo,
@@ -63,6 +65,7 @@ export function MapSlideablePropertyCard({
 
   const [imgError, setImgError] = useState(false);
   const [inCompare, setInCompare] = useState(false);
+  const [favorited, setFavorited] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -87,6 +90,18 @@ export function MapSlideablePropertyCard({
     return () => {
       window.removeEventListener("compare-updated", check);
       window.removeEventListener("storage", check);
+    };
+  }, [current?.id]);
+
+  useEffect(() => {
+    if (!current?.id) return;
+    const checkFav = () => setFavorited(isFavorite(current.id));
+    checkFav();
+    window.addEventListener("favorite-updated", checkFav);
+    window.addEventListener("storage", checkFav);
+    return () => {
+      window.removeEventListener("favorite-updated", checkFav);
+      window.removeEventListener("storage", checkFav);
     };
   }, [current?.id]);
 
@@ -232,8 +247,41 @@ export function MapSlideablePropertyCard({
           )}
         </div>
 
-        {/* Top-right Compare & Close Controls */}
+        {/* Top-right Favorite, Compare & Close Controls */}
         <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5">
+          {/* Favorite Heart Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavoriteId(current.id);
+            }}
+            className={cn(
+              "w-7 h-7 rounded-full backdrop-blur-md flex items-center justify-center transition-all cursor-pointer shadow-md",
+              favorited
+                ? "bg-rose-500 text-white shadow-rose-500/30 scale-105"
+                : "bg-black/60 hover:bg-black/80 text-white"
+            )}
+            title={
+              favorited
+                ? language === "th"
+                  ? "ยกเลิกบันทึกที่ชอบ"
+                  : "Remove from favorites"
+                : language === "th"
+                  ? "บันทึกที่ชอบ"
+                  : "Save to favorites"
+            }
+            aria-label="Favorite button"
+          >
+            <Heart
+              className={cn(
+                "w-3.5 h-3.5 transition-transform duration-200",
+                favorited ? "fill-white text-white scale-110" : "text-white"
+              )}
+            />
+          </button>
+
+          {/* Compare Button */}
           <button
             type="button"
             onClick={(e) => {

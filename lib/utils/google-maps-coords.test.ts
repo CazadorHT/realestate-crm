@@ -84,15 +84,15 @@ describe("google-maps-coords & map-price-utils", () => {
       longitude: 100.5608,
     };
 
-    // Default / SALE mode -> shows ฿8.5M + discount
+    // Default / SALE mode -> shows ฿ 8.5M + discount
     const saleResolved = resolvePinPrice(basePin, "ALL", "th");
-    expect(saleResolved.displayLabel).toBe("฿8.5M");
+    expect(saleResolved.displayLabel).toBe("฿ 8.5M");
     expect(saleResolved.hasDiscount).toBe(true);
     expect(saleResolved.discountPercent).toBe(15);
 
-    // RENT filter mode -> switches pill to ฿35K/ด. + rental discount!
+    // RENT filter mode -> switches pill to ฿ 35K /ด. + rental discount!
     const rentResolved = resolvePinPrice(basePin, "RENT", "th");
-    expect(rentResolved.displayLabel).toBe("฿35K/ด.");
+    expect(rentResolved.displayLabel).toBe("฿ 35K /ด.");
     expect(rentResolved.hasDiscount).toBe(true);
     expect(rentResolved.originalNumericValue).toBe(42_000);
 
@@ -113,7 +113,7 @@ describe("google-maps-coords & map-price-utils", () => {
     };
     const officeResolved = resolvePinPrice(officePin, "ALL", "en");
     expect(officeResolved.numericValue).toBe(180_000);
-    expect(officeResolved.displayLabel).toBe("฿180K/mo");
+    expect(officeResolved.displayLabel).toBe("฿ 180K /mo");
 
     // Zero price -> POA / สอบถามราคา (never ฿0)
     const poaPin: SlimMapPin = {

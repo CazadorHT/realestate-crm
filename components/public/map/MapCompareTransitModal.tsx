@@ -29,6 +29,7 @@ import {
   getTransitTypeLabel,
   computeTransitTravelInfo,
   formatCompactPillAmount,
+  detectTransitType,
 } from "./map-price-utils";
 import { getEffectivePrice } from "@/lib/property-hardened-utils";
 import { formatPrice } from "@/lib/property-utils";
@@ -100,31 +101,31 @@ export function MapCompareTransitModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-2xl">
-        <DialogHeader className="mb-4">
+        <DialogHeader className="mb-3 sm:mb-4 pr-8 sm:pr-10">
           <div className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
               <Zap className="w-4 h-4 fill-blue-600" />
             </span>
             <div>
-              <DialogTitle className="text-base sm:text-lg font-extrabold text-slate-900">
+              <DialogTitle className="text-sm sm:text-lg font-extrabold text-slate-900 leading-tight">
                 {modalTitle}
               </DialogTitle>
-              <DialogDescription className="text-xs text-slate-500">
+              <DialogDescription className="text-[11px] sm:text-xs text-slate-500 line-clamp-1 sm:line-clamp-none">
                 {modalSubtitle}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        {/* Comparison Cards Grid */}
+        {/* Comparison Cards Grid: 2 columns on mobile, up to 4 on larger screens */}
         <div
           className={cn(
-            "grid gap-3 sm:gap-4",
+            "grid gap-2 sm:gap-4",
             selectedPins.length === 2
-              ? "grid-cols-1 sm:grid-cols-2"
+              ? "grid-cols-2"
               : selectedPins.length === 3
-                ? "grid-cols-1 sm:grid-cols-3"
-                : "grid-cols-1 sm:grid-cols-2 md:grid-cols-4"
+                ? "grid-cols-2 sm:grid-cols-3"
+                : "grid-cols-2 md:grid-cols-4"
           )}
         >
           {selectedPins.map((pin) => {
@@ -141,11 +142,12 @@ export function MapCompareTransitModal({
               language,
             });
 
-            const transitType = pin.transit_type || "BTS";
             const stationName =
               (language === "en" && pin.transit_station_name_en) ||
               pin.transit_station_name ||
               null;
+            const detectedTransit = detectTransitType(pin.transit_type, stationName);
+            const transitType = detectedTransit || (pin.transit_type && pin.transit_type !== "OTHER" ? pin.transit_type : "BTS");
 
             const coverSrc = pin.image_url || pin.project_image_url || FALLBACK_IMG;
             const detailHref = `${langPrefix || ""}/properties/${pin.slug || pin.id}`;
@@ -154,7 +156,7 @@ export function MapCompareTransitModal({
               <div
                 key={pin.id}
                 className={cn(
-                  "relative rounded-2xl border p-3 flex flex-col justify-between transition-all duration-200 bg-white",
+                  "relative rounded-xl sm:rounded-2xl border p-2 sm:p-3 flex flex-col justify-between transition-all duration-200 bg-white",
                   isClosest
                     ? "border-emerald-400 ring-2 ring-emerald-400/20 shadow-md bg-emerald-50/20"
                     : "border-slate-200 shadow-2xs hover:border-slate-300"
@@ -164,26 +166,26 @@ export function MapCompareTransitModal({
                 <button
                   type="button"
                   onClick={() => onRemoveId(pin.id)}
-                  className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white flex items-center justify-center cursor-pointer transition-colors"
+                  className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white flex items-center justify-center cursor-pointer transition-colors"
                   title="ลบออก"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </button>
 
                 {/* Top: Image & Badge */}
                 <div>
-                  <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-100 mb-2.5">
+                  <div className="relative aspect-[16/10] sm:aspect-video w-full rounded-lg sm:rounded-xl overflow-hidden bg-slate-100 mb-2">
                     <Image
                       src={coverSrc}
                       alt={primaryTitle}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 640px) 100vw, 240px"
+                      sizes="(max-width: 640px) 50vw, 240px"
                     />
 
                     {isClosest && (
-                      <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-emerald-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs">
-                        <Sparkles className="w-3 h-3 fill-white" />
+                      <span className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-10 inline-flex items-center gap-1 bg-emerald-600 text-white text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full shadow-xs">
+                        <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" />
                         <span>
                           {language === "th"
                             ? "ใกล้รถไฟฟ้าที่สุด"
@@ -196,11 +198,11 @@ export function MapCompareTransitModal({
                   </div>
 
                   {/* Title & Subtitle */}
-                  <h4 className="font-extrabold text-sm text-slate-900 line-clamp-1 leading-tight">
+                  <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 line-clamp-1 leading-tight">
                     {primaryTitle}
                   </h4>
                   {secondarySubtitle && (
-                    <p className="text-[11px] text-slate-500 line-clamp-1 mb-2">
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 line-clamp-1 mb-1.5">
                       {secondarySubtitle}
                     </p>
                   )}
@@ -208,14 +210,14 @@ export function MapCompareTransitModal({
                   {/* TRANSIT CARD SECTION (Key comparison value) */}
                   <div
                     className={cn(
-                      "mt-2 p-2.5 rounded-xl border flex flex-col gap-1.5",
+                      "mt-1.5 p-2 sm:p-2.5 rounded-lg sm:rounded-xl border flex flex-col gap-1",
                       isClosest
                         ? "bg-emerald-50/80 border-emerald-200"
                         : "bg-slate-50 border-slate-100"
                     )}
                   >
                     <div className="flex items-center gap-1.5">
-                      <div className="w-4 h-4 shrink-0 flex items-center justify-center">
+                      <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 flex items-center justify-center">
                         <Image
                           src={getTransitLogo(transitType)}
                           alt={transitType}
@@ -224,38 +226,30 @@ export function MapCompareTransitModal({
                           className="object-contain"
                         />
                       </div>
-                      <span className="text-xs font-bold text-slate-800 truncate">
+                      <span className="text-[11px] sm:text-xs font-bold text-slate-800 truncate">
                         {stationName
                           ? `${getTransitTypeLabel(transitType)} ${stationName}`
                           : getTransitTypeLabel(transitType)}
                       </span>
                     </div>
 
-                    <div className="flex items-baseline justify-between pt-0.5">
-                      <div className="flex items-center gap-1 text-slate-700 font-bold text-sm">
-                        {travelInfo.isWalk ? (
-                          <FaPersonWalking className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        ) : (
-                          <FaCarSide className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                        )}
-                        <span>
-                          {travelInfo.summaryLabel ||
-                            (pin.transit_distance_meters
-                              ? `${pin.transit_distance_meters} ม.`
-                              : "-")}
-                        </span>
-                      </div>
-
-                      {typeof pin.transit_distance_meters === "number" && (
-                        <span className="text-[11px] font-semibold text-slate-500">
-                          {pin.transit_distance_meters} ม.
-                        </span>
+                    <div className="flex items-center gap-1.5 pt-0.5 text-slate-700 font-bold text-xs sm:text-sm">
+                      {travelInfo.isWalk ? (
+                        <FaPersonWalking className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <FaCarSide className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                       )}
+                      <span>
+                        {travelInfo.summaryLabel ||
+                          (pin.transit_distance_meters
+                            ? `${pin.transit_distance_meters} ม.`
+                            : "-")}
+                      </span>
                     </div>
                   </div>
 
                   {/* Pricing Breakdown */}
-                  <div className="mt-3 py-2 border-y border-slate-100 space-y-1 text-xs">
+                  <div className="mt-2 py-1.5 sm:py-2 border-y border-slate-100 space-y-0.5 sm:space-y-1 text-[11px] sm:text-xs">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500">
                         {language === "th" ? "ราคาขาย:" : "Sale Price:"}
@@ -279,7 +273,7 @@ export function MapCompareTransitModal({
                   </div>
 
                   {/* Room Specs */}
-                  <div className="mt-2.5 flex items-center justify-between text-[11px] text-slate-600 px-1">
+                  <div className="mt-2 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-600 px-0.5">
                     {pin.bedrooms != null && (
                       <span className="flex items-center gap-1">
                         <BedDouble className="w-3 h-3 text-slate-400" />
@@ -305,7 +299,7 @@ export function MapCompareTransitModal({
                 <Link
                   href={detailHref}
                   target="_blank"
-                  className="mt-3.5 w-full inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition-colors cursor-pointer"
+                  className="mt-2.5 sm:mt-3.5 w-full inline-flex items-center justify-center gap-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg sm:rounded-xl bg-slate-900 hover:bg-black text-white text-[11px] sm:text-xs font-bold transition-colors cursor-pointer"
                 >
                   <span>{language === "th" ? "ดูห้องนี้" : "View Unit"}</span>
                   <ExternalLink className="w-3 h-3" />

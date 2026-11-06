@@ -526,6 +526,7 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
             onFallbackToList={() => router.push(gridReturnHref)}
             stationRadar={stationRadar}
             onStationRadarChange={setStationRadar}
+            compareIds={compareIds}
             className="rounded-none border-0"
           />
 
@@ -535,7 +536,11 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
             language={language}
             langPrefix={langPrefix}
             onOpenQuickCompare={() => setIsTransitCompareOpen(true)}
-            className={mobileStripCollapsed || activePopupGroup ? "bottom-4" : "bottom-4 lg:bottom-4"}
+            className={
+              mobileStripCollapsed || activePopupGroup || mobileCarouselItems.length === 0
+                ? "bottom-16 sm:bottom-6 lg:bottom-6"
+                : "bottom-[205px] sm:bottom-[210px] lg:bottom-6"
+            }
           />
 
           {/* Side-by-side Transit & Value Comparison Modal */}

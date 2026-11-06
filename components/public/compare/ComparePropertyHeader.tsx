@@ -5,8 +5,7 @@ import Link from "next/link";
 import { X, ExternalLink } from "lucide-react";
 import { CompareProperty } from "./types";
 import { useLanguage } from "@/components/providers/LanguageProvider";
-import { getLocalizedField } from "@/lib/i18n";
-import { formatMoney } from "./utils";
+import { formatMoney, getCompareDisplayTitle } from "./utils";
 
 const FALLBACK_IMG =
   "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800&auto=format&fit=crop";
@@ -21,8 +20,7 @@ export function ComparePropertyHeader({
   onRemove,
 }: ComparePropertyHeaderProps) {
   const { t, language, langPrefix } = useLanguage();
-  const title =
-    getLocalizedField<string>(property, "title", language) || "Property";
+  const title = getCompareDisplayTitle(property, language);
   const locale =
     language === "th"
       ? "th-TH"
@@ -38,60 +36,65 @@ export function ComparePropertyHeader({
   const detailHref = `${langPrefix || ""}/properties/${property.slug || property.id}`;
 
   return (
-    <div className="p-2.5 sm:p-3 relative group flex items-center justify-between gap-2.5 bg-white">
-      {/* Mini Thumbnail */}
-      <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs">
+    <div className="p-2 sm:p-3.5 md:p-4 relative group flex flex-col bg-white h-full justify-between gap-1.5 sm:gap-2.5">
+      {/* Large Property Image Preview */}
+      <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-lg sm:rounded-xl overflow-hidden bg-slate-100 border border-slate-200/90 shadow-2xs group/img">
         <Image
           src={coverSrc}
           alt={title}
           fill
-          sizes="48px"
-          className="object-cover"
+          sizes="(max-width: 768px) 50vw, 25vw"
+          className="object-cover group-hover/img:scale-105 transition-transform duration-300"
         />
-      </div>
 
-      {/* Info: Title & Price */}
-      <div className="min-w-0 flex-1">
-        <h4
-          className="font-extrabold text-xs text-slate-900 line-clamp-1 leading-snug"
-          title={property.project_name || title}
-        >
-          {property.project_name || title}
-        </h4>
-        <div className="text-[11px] font-extrabold text-blue-600 truncate mt-0.5">
-          {salePrice ? (
-            formatMoney(salePrice, locale)
-          ) : rentPrice ? (
-            <span>
-              {formatMoney(rentPrice, locale)}
-              <span className="text-[9px] text-slate-400 font-normal">/ด.</span>
-            </span>
-          ) : (
-            <span className="text-slate-400 font-normal">-</span>
-          )}
-        </div>
-      </div>
-
-      {/* Quick Action & Remove Buttons */}
-      <div className="flex items-center gap-1 shrink-0">
-        <Link
-          href={detailHref}
-          target="_blank"
-          className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900 hover:bg-blue-600 text-white font-bold text-[11px] transition-colors"
-          title="ดูทรัพย์"
-        >
-          <span>{language === "th" ? "ดู" : "View"}</span>
-          <ExternalLink className="w-2.5 h-2.5" />
-        </Link>
-
+        {/* Floating Remove Button */}
         <button
           type="button"
           onClick={() => onRemove(property.id)}
-          className="p-1 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+          className="absolute top-1 sm:top-2 right-1 sm:right-2 p-1 sm:p-1.5 rounded-full bg-slate-900/75 hover:bg-rose-600 text-white backdrop-blur-xs transition-colors cursor-pointer shadow-md z-10"
           title={t("compare_bar.clear") || "Remove"}
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
         </button>
+      </div>
+
+      {/* Info: Title & Price & Quick Action */}
+      <div className="flex flex-col gap-1 sm:gap-1.5 flex-1 justify-between">
+        <div>
+          <h4
+            className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-900 line-clamp-2 leading-snug hover:text-blue-600 transition-colors"
+            title={title}
+          >
+            <Link href={detailHref} target="_blank">
+              {title}
+            </Link>
+          </h4>
+          <div className="text-[11px] sm:text-xs md:text-sm font-extrabold text-blue-600 mt-0.5 sm:mt-1">
+            {salePrice ? (
+              formatMoney(salePrice, locale)
+            ) : rentPrice ? (
+              <span>
+                {formatMoney(rentPrice, locale)}
+                <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal">
+                  {" "}
+                  {t("compare_page.values.rent_per_month")}
+                </span>
+              </span>
+            ) : (
+              <span className="text-slate-400 font-normal">-</span>
+            )}
+          </div>
+        </div>
+
+        {/* View Details Link */}
+        <Link
+          href={detailHref}
+          target="_blank"
+          className="inline-flex items-center justify-center gap-1 w-full py-1 sm:py-1.5 px-1.5 sm:px-3 rounded-md sm:rounded-lg bg-slate-900 hover:bg-blue-600 text-white font-bold text-[10px] sm:text-xs transition-colors shadow-2xs mt-1"
+        >
+          <span>{language === "th" ? "ดูข้อมูล" : language === "cn" ? "查看详情" : language === "ru" ? "Подробнее" : "View"}</span>
+          <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+        </Link>
       </div>
     </div>
   );

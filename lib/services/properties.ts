@@ -17,6 +17,7 @@ import { detectSearchIntent } from "../search-config";
 import { AREA_PARENT_MAP } from "@/lib/utils/area-hierarchy";
 import { isCbdProperty } from "@/lib/property-utils";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
+import { parseCoordinatesFromUrlSync } from "@/lib/utils/google-maps-coords";
 
 // 🚀 Fast Memory Cache for Public Search Facets (1-hour TTL) for zero database egress across search queries
 const facetsMemoryCache = new Map<string, { data: any; timestamp: number }>();
@@ -143,7 +144,7 @@ const PUBLIC_DETAIL_COLUMNS = `
   size_sqm, land_size_sqwah, parking_slots, floor, created_at, updated_at,
   listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru, province, district, subdistrict,
   address_line1, address_line1_en, address_line1_cn, address_line1_ru,
-  nearby_transits, is_hot_deal,
+  nearby_transits, nearby_places, is_hot_deal, transit_info,
   near_transit, transit_type, transit_station_name,
   transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
   google_maps_link, is_fully_furnished, is_bare_shell,
@@ -207,9 +208,9 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         const normalizedProvince = normalizeProvinceInput(options.province);
         const effectiveProvince = (normalizedProvince && normalizedProvince !== "ALL") ? normalizedProvince : undefined;
 
-        let query = supabase
-          .from("properties")
-          .select(PUBLIC_LIST_COLUMNS)
+        const selectColumns = (options.ids && options.ids.length > 0) ? PUBLIC_DETAIL_COLUMNS : PUBLIC_LIST_COLUMNS;
+        let query = (supabase.from("properties") as any)
+          .select(selectColumns)
           .eq("status", "ACTIVE")
           .is("deleted_at", null);
 
@@ -430,7 +431,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           query = query.order("updated_at", { ascending: false, nullsFirst: false });
         }
 
-        let { data: propertiesData, error } = await query.limit(itemsPerPage);
+        let { data: propertiesData, error } = (await query.limit(itemsPerPage)) as { data: any[] | null; error: any };
         
         // 🛡️ [RESILIENCE] If unindexed JSON sort times out (error 57014), fallback to indexed updated_at sort (which preserves bumped listings)
         if (error && (error.code === "57014" || error.message?.includes("statement timeout"))) {
@@ -612,12 +613,12 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
               .filter((id: string | null): id is string => !!id),
           ),
         );
-        const projectMap = new Map<string, { name_th: string | null; name_en: string | null; slug: string | null }>();
+        const projectMap = new Map<string, { name_th: string | null; name_en: string | null; slug: string | null; latitude: number | null; longitude: number | null }>();
 
         if (projectIds.length > 0) {
           const { data: projectsData } = await supabase
             .from("projects")
-            .select("id, name, slug")
+            .select("id, name, slug, latitude, longitude")
             .in("id", projectIds);
           (projectsData || []).forEach((p: any) => {
             if (p.id) {
@@ -625,10 +626,23 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
               const nameObj = p.name;
               const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
               const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
-              projectMap.set(p.id, { name_th: nameTh, name_en: nameEn, slug: p.slug || null });
+              projectMap.set(p.id, {
+                name_th: nameTh,
+                name_en: nameEn,
+                slug: p.slug || null,
+                latitude: typeof p.latitude === "number" ? p.latitude : p.latitude ? parseFloat(p.latitude) : null,
+                longitude: typeof p.longitude === "number" ? p.longitude : p.longitude ? parseFloat(p.longitude) : null,
+              });
             }
           });
         }
+
+        const safeParseJson = (val: unknown) => {
+          if (typeof val === "string") {
+            try { return JSON.parse(val); } catch { return []; }
+          }
+          return val;
+        };
 
         const finalProperties = (propertiesData as unknown as PropertyRow[] ?? []).map((row: PropertyRow) => {
           const trans = areaTranslationsMap.get(row.popular_area || "");
@@ -638,6 +652,57 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             : row.projects || null;
           const finalProjectName = projectsObj?.name_th || projectsObj?.name_en || row.project_name || null;
           const finalProjectSlug = projectInfo?.slug || (row as any).project_slug || null;
+
+          const rawPlaces = safeParseJson(row.nearby_places);
+          const transitInfo = safeParseJson((row as any).transit_info);
+          const transitPlaces = safeParseJson(transitInfo?.places);
+          const candidatePlaces = Array.isArray(rawPlaces) && rawPlaces.length > 0
+            ? rawPlaces
+            : Array.isArray(transitPlaces) && transitPlaces.length > 0
+              ? transitPlaces
+              : [];
+
+          const rawTransits = safeParseJson(row.nearby_transits);
+          const transitList = safeParseJson(transitInfo?.transits || transitInfo?.nearby_transits);
+          const candidateTransits = Array.isArray(rawTransits) && rawTransits.length > 0
+            ? rawTransits
+            : Array.isArray(transitList) && transitList.length > 0
+              ? transitList
+              : [];
+
+          let effectiveTransitStationName = row.transit_station_name;
+          let effectiveTransitStationNameEn = row.transit_station_name_en;
+          let effectiveTransitStationNameCn = row.transit_station_name_cn;
+          let effectiveTransitStationNameRu = row.transit_station_name_ru;
+          let effectiveTransitType = row.transit_type;
+          let effectiveTransitDistance = row.transit_distance_meters;
+          let effectiveNearTransit = row.near_transit;
+
+          if ((!effectiveTransitStationName || !effectiveTransitDistance) && candidateTransits.length > 0) {
+            const sortedCandidates = [...candidateTransits]
+              .filter((t: any) => t && (t.station_name || t.name))
+              .sort((a: any, b: any) => {
+                const distA = typeof a.distance_meters === "number" ? a.distance_meters : 999999;
+                const distB = typeof b.distance_meters === "number" ? b.distance_meters : 999999;
+                return distA - distB;
+              });
+
+            if (sortedCandidates[0]) {
+              const c = sortedCandidates[0];
+              effectiveTransitStationName = c.station_name || c.name;
+              effectiveTransitStationNameEn = c.station_name_en || c.name_en || null;
+              effectiveTransitStationNameCn = c.station_name_cn || c.name_cn || null;
+              effectiveTransitStationNameRu = c.station_name_ru || c.name_ru || null;
+              effectiveTransitType = c.type || c.transit_type || "BTS";
+              effectiveTransitDistance = typeof c.distance_meters === "number" ? c.distance_meters : null;
+              effectiveNearTransit = true;
+            }
+          }
+
+          let parsedCoords: { lat: number; lng: number } | null = null;
+          if (row.google_maps_link) {
+            parsedCoords = parseCoordinatesFromUrlSync(row.google_maps_link);
+          }
 
           const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
           
@@ -669,6 +734,8 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             ...cardBase,
             bumped_at: bumpedAt,
             project_name: finalProjectName,
+            project_name_th: projectsObj?.name_th || null,
+            project_name_en: projectsObj?.name_en || null,
             project_slug: finalProjectSlug,
             projects: projectsObj,
             popular_area_slug: trans?.slug ?? null,
@@ -679,14 +746,23 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             image_url: getCoverImage(finalImages),
             images: finalImages,
             location: buildLocation(row),
-            features: (row.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f).slice(0, 10),
+            features: (row.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f),
             verified: row.verified === true ? true : row.verified === false ? false : undefined,
             allow_airbnb: !!(row.amenities as any)?.allow_airbnb,
             airbnb_daily_price: (row.amenities as any)?.airbnb_daily_price ?? null,
             airbnb_monthly_price: (row.amenities as any)?.airbnb_monthly_price ?? null,
             airbnb_min_contract: (row.amenities as any)?.airbnb_min_contract ?? null,
-            nearby_places: [],
-            nearby_transits: getSafeNearbyTransits(row.nearby_transits),
+            near_transit: effectiveNearTransit,
+            transit_type: effectiveTransitType,
+            transit_station_name: effectiveTransitStationName,
+            transit_station_name_en: effectiveTransitStationNameEn,
+            transit_station_name_cn: effectiveTransitStationNameCn,
+            transit_station_name_ru: effectiveTransitStationNameRu,
+            transit_distance_meters: effectiveTransitDistance,
+            nearby_places: getSafeNearbyPlaces(candidatePlaces),
+            nearby_transits: getSafeNearbyTransits(candidateTransits),
+            latitude: projectInfo?.latitude ?? parsedCoords?.lat ?? null,
+            longitude: projectInfo?.longitude ?? parsedCoords?.lng ?? null,
           };
         });
 
