@@ -238,7 +238,14 @@ export function MapSlideablePropertyCard({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
+              const willAdd = !inCompare;
               toggleCompareId(current.id);
+              // Auto-close card so user can easily browse the next project on the map
+              if (willAdd) {
+                setTimeout(() => {
+                  onClose();
+                }, 180);
+              }
             }}
             className={cn(
               "h-7 px-2.5 rounded-full backdrop-blur-md flex items-center gap-1 text-[11px] font-bold transition-all cursor-pointer shadow-md",
