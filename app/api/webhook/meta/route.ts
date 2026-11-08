@@ -14,7 +14,10 @@ import {
   sendMetaCarousel,
   sendMetaMessage,
   sendMetaQuickReplies,
+  fetchInstagramPostCover,
+  MetaGenericCard,
 } from "@/lib/meta";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { saveOmniMessage } from "@/lib/line"; // reuse same util since it's generic enough
 import { redis } from "@/lib/redis";
 import { getSiteSettings } from "@/features/site-settings/actions";
@@ -206,6 +209,77 @@ function getStoryAdButtons(lang: "th" | "en" | "cn" | "ru" = "th"): SocialButton
 }
 
 const DEFAULT_STORY_AD_BUTTONS = getStoryAdButtons("th");
+
+/**
+ * Interactive Quick Action Buttons for Property Posts (Multi-language)
+ * Meta limit: Max 3 buttons, Title max 20 chars
+ */
+function getPropertyActionButtons(
+  propertyData: any,
+  lang: "th" | "en" | "cn" | "ru" = "th"
+): SocialButton[] {
+  const siteUrl = getPublicSiteUrl();
+  const propertyUrl = `${siteUrl}/properties/${propertyData.slug || propertyData.id}`;
+  const bookingPayload = propertyData.id
+    ? `ACTION_BOOK_PROPERTY_${propertyData.id}`
+    : "ACTION_BOOK_VIEWING";
+
+  if (lang === "en") {
+    return [
+      { title: "🌐 View Details", type: "web_url", url: propertyUrl },
+      { title: "🏠 Available Units", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+      { title: "💬 Chat / Book Tour", type: "postback", payload: bookingPayload },
+    ];
+  }
+  if (lang === "cn") {
+    return [
+      { title: "🌐 查看详情", type: "web_url", url: propertyUrl },
+      { title: "🏠 查看其他房源", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+      { title: "💬 预约看房/客服", type: "postback", payload: bookingPayload },
+    ];
+  }
+  if (lang === "ru") {
+    return [
+      { title: "🌐 Подробнее", type: "web_url", url: propertyUrl },
+      { title: "🏠 Другие варианты", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+      { title: "💬 Чат / Просмотр", type: "postback", payload: bookingPayload },
+    ];
+  }
+
+  return [
+    { title: "🌐 ดูรายละเอียด", type: "web_url", url: propertyUrl },
+    { title: "🏠 ดูห้องว่างอื่นๆ", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+    { title: "💬 คุยแอดมิน / นัดชม", type: "postback", payload: bookingPayload },
+  ];
+}
+
+/**
+ * Helper to get the Instagram post cover image (with 7-day Redis caching)
+ */
+async function getCachedInstagramPostCover(
+  mediaId: string,
+  targetOptions?: any,
+): Promise<string | null> {
+  if (!mediaId) return null;
+  if (redis) {
+    try {
+      const cached = await redis.get<string>(`ig_post_cover:${mediaId}`);
+      if (cached) return cached;
+    } catch (e) {
+      console.warn("[Meta Webhook] Redis get ig_post_cover error:", e);
+    }
+  }
+
+  const coverUrl = await fetchInstagramPostCover(mediaId, targetOptions);
+  if (coverUrl && redis) {
+    try {
+      await redis.set(`ig_post_cover:${mediaId}`, coverUrl, { ex: 86400 * 7 });
+    } catch (e) {
+      console.warn("[Meta Webhook] Redis set ig_post_cover error:", e);
+    }
+  }
+  return coverUrl;
+}
 
 /**
  * Zod Schemas for Meta Webhook Validation
@@ -2182,6 +2256,10 @@ async function handleKeywordAutomation(
 
   // 3. Property Lookup (Optional - only if we have a postId)
   let propertyData: any = null;
+  let priceText = "";
+  let detailsSummary = "";
+  let projectName = "";
+
   if (postId) {
     propertyData = await lookupPropertyByPostId(postId);
   }
@@ -2228,7 +2306,7 @@ async function handleKeywordAutomation(
     const tBaht = lang === "th" ? "บาท" : lang === "en" ? "THB" : lang === "ru" ? "ТНВ" : "泰铢";
     const tPerMonth = lang === "th" ? "/เดือน" : lang === "en" ? "/mo" : lang === "ru" ? "/мес" : "/月";
 
-    let priceText = "";
+    priceText = "";
     if (propertyData.listing_type === "SALE_AND_RENT") {
       const parts = [];
       if (propertyData.price) parts.push(`${tSale} ${propertyData.price.toLocaleString()} ${tBaht}`);
@@ -2305,14 +2383,14 @@ async function handleKeywordAutomation(
         : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : lang === "ru" ? "Цена продажи по запросу" : "Contact for Sale");
     }
 
-    const link = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
+    const link = `${getPublicSiteUrl()}/properties/${propertyData.slug || propertyData.id}`;
     const primaryAgent = propertyData.property_agents?.[0]?.profiles;
 
     const amenities = (propertyData as any).property_features?.map((f: any) => `- ${f.features?.name}`).filter(Boolean).join("\n") || "-";
     const nearbyPlaces = (propertyData.nearby_places as any[])?.map((p: any) => `- ${p.name} (${p.distance || ""})`).slice(0, 5).join("\n") || "-";
     const nearbyTransits = (propertyData.nearby_transits as any[])?.map((p: any) => `- ${p.name} (${p.distance || ""})`).join("\n") || "-";
 
-    const detailsSummary = [
+    detailsSummary = [
       propertyData.bedrooms ? (lang === "th" ? `${propertyData.bedrooms} ห้องนอน` : lang === "en" ? `${propertyData.bedrooms} Bed` : lang === "ru" ? `${propertyData.bedrooms} Спальни` : `${propertyData.bedrooms} 卧室`) : null,
       propertyData.bathrooms ? (lang === "th" ? `${propertyData.bathrooms} ห้องน้ำ` : lang === "en" ? `${propertyData.bathrooms} Bath` : lang === "ru" ? `${propertyData.bathrooms} Ванные` : `${propertyData.bathrooms} 浴室`) : null,
       propertyData.size_sqm ? `${propertyData.size_sqm} ${lang === "th" ? "ตร.ม." : lang === "en" ? "sq.m." : lang === "cn" ? "平米" : lang === "ru" ? "кв.м." : "Sq.m."}` : null,
@@ -2366,7 +2444,7 @@ async function handleKeywordAutomation(
         : null,
     ].filter(Boolean).join(" | ") || "-";
 
-    let projectName = "";
+    projectName = "";
     if (propertyData.project) {
       projectName = getLocaleValue(propertyData.project, "name", lang);
     } else if (propertyData.address_info) {
@@ -2374,16 +2452,20 @@ async function handleKeywordAutomation(
       projectName = addr[lang] || addr["en"] || addr["th"] || "";
     }
 
-    const dynamicValues = {
+    const dynamicValuesDM = {
       priceTag, priceText, originalPriceText, salePrice, rentPrice,
       originalSalePrice, originalRentPrice, detailsSummary, amenities,
-      nearbyPlaces, nearbyTransits, link: platform === "INSTAGRAM" ? "" : link, primaryAgent,
+      nearbyPlaces, nearbyTransits, link, primaryAgent,
       projectName
     };
+    const dynamicValuesPublic = {
+      ...dynamicValuesDM,
+      link: platform === "INSTAGRAM" ? "" : link,
+    };
 
-    dmContent = replaceTemplateTags(dmContent, propertyData, dynamicValues, lang);
+    dmContent = replaceTemplateTags(dmContent, propertyData, dynamicValuesDM, lang);
     if (publicReply) {
-      publicReply = replaceTemplateTags(publicReply, propertyData, dynamicValues, lang);
+      publicReply = replaceTemplateTags(publicReply, propertyData, dynamicValuesPublic, lang);
     }
   } else {
     // Fallback: When no specific post/property is linked (e.g. user typed keyword directly in DM)
@@ -2436,39 +2518,99 @@ async function handleKeywordAutomation(
   }
 
   // Resolve Buttons to attach
-  const buttonsToAttach: SocialButton[] = (match.buttons && match.buttons.length > 0)
-    ? match.buttons
-    : (settings.story_ads_buttons_enabled !== false ? DEFAULT_STORY_AD_BUTTONS : []);
+  let buttonsToAttach: SocialButton[] = [];
+  if (match.buttons && match.buttons.length > 0) {
+    buttonsToAttach = match.buttons;
+  } else if (propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
+    buttonsToAttach = getPropertyActionButtons(propertyData, lang);
+  } else if (settings.story_ads_buttons_enabled !== false) {
+    buttonsToAttach = (settings.story_ads_custom_buttons && settings.story_ads_custom_buttons.length > 0)
+      ? settings.story_ads_custom_buttons.slice(0, 3)
+      : getStoryAdButtons(lang);
+  }
+
+  // Resolve Cover Image for Card (prioritize the actual IG post image, then CRM property image)
+  let coverImageUrl: string | null = null;
+  if (platform === "INSTAGRAM" && postId) {
+    coverImageUrl = await getCachedInstagramPostCover(postId, targetOptions);
+  }
+  if (!coverImageUrl && propertyData) {
+    if (propertyData.main_image) {
+      coverImageUrl = propertyData.main_image.startsWith("http")
+        ? propertyData.main_image
+        : getPublicImageUrl(propertyData.main_image);
+    } else if (propertyData.images) {
+      const imgList = Array.isArray(propertyData.images)
+        ? propertyData.images
+        : typeof propertyData.images === "string"
+          ? (() => { try { return JSON.parse(propertyData.images); } catch { return []; } })()
+          : [];
+      if (imgList.length > 0 && typeof imgList[0] === "string" && imgList[0].startsWith("http")) {
+        coverImageUrl = imgList[0];
+      }
+    }
+  }
+
+  // Build Generic Card if cover image is available
+  let cardElement: MetaGenericCard | undefined = undefined;
+  if (coverImageUrl && propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
+    const tListingType = lang === "th"
+      ? (propertyData.listing_type === "RENT" ? "ให้เช่า" : propertyData.listing_type === "SALE" ? "ขาย" : "ขาย/เช่า")
+      : lang === "cn"
+        ? (propertyData.listing_type === "RENT" ? "出租" : propertyData.listing_type === "SALE" ? "出售" : "租售")
+        : lang === "ru"
+          ? (propertyData.listing_type === "RENT" ? "Аренда" : propertyData.listing_type === "SALE" ? "Продажа" : "Аренда/Продажа")
+          : (propertyData.listing_type === "RENT" ? "Rent" : propertyData.listing_type === "SALE" ? "Sale" : "Sale/Rent");
+
+    const cardTitle = `[${tListingType}] ${projectName || propertyData.title || "รายละเอียดทรัพย์"}`.trim().substring(0, 80);
+    const cardSubtitle = priceText ? `${priceText} | ${detailsSummary}`.substring(0, 80) : detailsSummary.substring(0, 80);
+
+    cardElement = {
+      title: cardTitle,
+      subtitle: cardSubtitle,
+      image_url: coverImageUrl,
+      buttons: buttonsToAttach,
+    };
+  }
 
   // 5. Send Private Reply (DM)
   let dmRes;
   if (isDirectDM && senderId) {
-    if (buttonsToAttach.length > 0) {
+    if (cardElement) {
+      dmRes = await sendMetaMessage(senderId, dmContent, platform, buttonsToAttach, targetOptions, cardElement);
+      if (!dmRes.success) {
+        console.warn(`[Meta Webhook] Direct DM generic card failed, falling back to button template:`, dmRes.error);
+        dmRes = await sendMetaMessage(senderId, dmContent, platform, buttonsToAttach, targetOptions);
+      }
+    } else if (buttonsToAttach.length > 0) {
       dmRes = await sendMetaMessage(senderId, dmContent, platform, buttonsToAttach, targetOptions);
-    } else if (propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
-      const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
-      const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
-      const contentWithLink = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
-      dmRes = await sendMetaMessage(senderId, contentWithLink, platform, undefined, targetOptions);
     } else {
       dmRes = await sendMetaMessage(senderId, dmContent, platform, undefined, targetOptions);
     }
   } else {
-    if (buttonsToAttach.length > 0) {
-      dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, buttonsToAttach, targetOptions);
-    } else if (propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
-      const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
-      const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
-      dmRes = await sendPrivateReply(commentId, dmContent, platform, buttonUrl, buttonTitle, undefined, targetOptions);
-      
-      // Fallback: If button template fails, send as plain text
+    if (cardElement) {
+      dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, buttonsToAttach, targetOptions, cardElement);
       if (!dmRes.success) {
-        console.warn(`[Meta Webhook] Button template failed, falling back to plain text DM:`, dmRes.error);
-        const fallbackContent = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
-        dmRes = await sendPrivateReply(commentId, fallbackContent, platform, undefined, undefined, undefined, targetOptions);
+        console.warn(`[Meta Webhook] Private reply generic card failed, falling back to button template:`, dmRes.error);
+        dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, buttonsToAttach, targetOptions);
       }
+    } else if (buttonsToAttach.length > 0) {
+      dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, buttonsToAttach, targetOptions);
     } else {
       dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, undefined, targetOptions);
+    }
+  }
+
+  // Fallback: If both card and button template fail, send as plain text
+  if (!dmRes.success) {
+    console.warn(`[Meta Webhook] DM template failed, falling back to plain text DM:`, dmRes.error);
+    const fallbackUrl = propertyData ? `${getPublicSiteUrl()}/properties/${propertyData.slug || propertyData.id}` : "";
+    const fallbackTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
+    const fallbackContent = fallbackUrl ? `${dmContent}\n\n${fallbackTitle}: ${fallbackUrl}` : dmContent;
+    if (isDirectDM && senderId) {
+      dmRes = await sendMetaMessage(senderId, fallbackContent, platform, undefined, targetOptions);
+    } else {
+      dmRes = await sendPrivateReply(commentId, fallbackContent, platform, undefined, undefined, undefined, targetOptions);
     }
   }
 

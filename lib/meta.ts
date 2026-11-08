@@ -85,6 +85,13 @@ export async function getMetaUserProfile(
   }
 }
 
+export interface MetaGenericCard {
+  title: string;
+  subtitle?: string;
+  image_url: string;
+  buttons?: SocialButton[];
+}
+
 /**
  * Send message to Messenger or Instagram psid
  */
@@ -94,6 +101,7 @@ export async function sendMetaMessage(
   platform: MetaPlatform,
   buttons?: SocialButton[],
   targetOptions?: MetaAccountTargetOptions,
+  cardElement?: MetaGenericCard,
 ): Promise<MetaApiResponse> {
   const token = await getActiveToken(targetOptions);
   if (!token)
@@ -107,7 +115,40 @@ export async function sendMetaMessage(
     
     let messageObj: any = { text: content };
 
-    if (buttons && buttons.length > 0) {
+    if (cardElement && cardElement.image_url) {
+      const cardButtons = (cardElement.buttons || buttons || []).slice(0, 3).map(btn => {
+        if (btn.type === "web_url") {
+          return {
+            type: "web_url",
+            url: btn.url,
+            title: btn.title.substring(0, 20),
+          };
+        } else {
+          return {
+            type: "postback",
+            title: btn.title.substring(0, 20),
+            payload: btn.payload || btn.title,
+          };
+        }
+      });
+
+      messageObj = {
+        attachment: {
+          type: "template",
+          payload: {
+            template_type: "generic",
+            elements: [
+              {
+                title: cardElement.title.substring(0, 80),
+                ...(cardElement.subtitle ? { subtitle: cardElement.subtitle.substring(0, 80) } : {}),
+                image_url: cardElement.image_url,
+                ...(cardButtons.length > 0 ? { buttons: cardButtons } : {}),
+              },
+            ],
+          },
+        },
+      };
+    } else if (buttons && buttons.length > 0) {
       messageObj = {
         attachment: {
           type: "template",
@@ -510,6 +551,7 @@ export async function sendPrivateReply(
   buttonTitle?: string,
   customButtons?: SocialButton[],
   targetOptions?: MetaAccountTargetOptions,
+  cardElement?: MetaGenericCard,
 ): Promise<MetaApiResponse> {
   const token = await getActiveToken(targetOptions);
   if (!token)
@@ -523,7 +565,43 @@ export async function sendPrivateReply(
       // Both FB and IG Private Replies use the me/messages endpoint with comment_id in recipient
       url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
       
-      if (customButtons && customButtons.length > 0) {
+      if (cardElement && cardElement.image_url) {
+        const cardButtons = (cardElement.buttons || customButtons || []).slice(0, 3).map(btn => {
+          if (btn.type === "web_url") {
+            return {
+              type: "web_url",
+              url: btn.url,
+              title: btn.title.substring(0, 20)
+            };
+          } else {
+            return {
+              type: "postback",
+              title: btn.title.substring(0, 20),
+              payload: btn.payload || btn.title
+            };
+          }
+        });
+
+        body = {
+          recipient: { comment_id: commentId },
+          message: {
+            attachment: {
+              type: "template",
+              payload: {
+                template_type: "generic",
+                elements: [
+                  {
+                    title: cardElement.title.substring(0, 80),
+                    ...(cardElement.subtitle ? { subtitle: cardElement.subtitle.substring(0, 80) } : {}),
+                    image_url: cardElement.image_url,
+                    ...(cardButtons.length > 0 ? { buttons: cardButtons } : {}),
+                  }
+                ]
+              }
+            }
+          }
+        };
+      } else if (customButtons && customButtons.length > 0) {
         body = {
           recipient: { comment_id: commentId },
           message: {
@@ -1009,5 +1087,40 @@ export async function postToMetaPage(
       success: false,
       error: `เกิดข้อผิดพลาดในการโพสต์: ${err.message}`,
     };
+  }
+}
+
+/**
+ * Fetch the cover image URL from an Instagram post (single photo, carousel, or reel)
+ */
+export async function fetchInstagramPostCover(
+  mediaId: string,
+  targetOptions?: MetaAccountTargetOptions
+): Promise<string | null> {
+  if (!mediaId) return null;
+  const token = await getActiveToken(targetOptions);
+  if (!token) return null;
+
+  try {
+    const url = `${metaConfig.graphApiUrl}/${mediaId}?fields=id,media_type,media_url,thumbnail_url,children{media_url,thumbnail_url}&access_token=${token}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn(`[meta.ts] Failed to fetch IG media ${mediaId}:`, errText);
+      return null;
+    }
+
+    const data = await res.json();
+    if (data.media_type === "CAROUSEL_ALBUM" && data.children?.data?.length > 0) {
+      const firstChild = data.children.data[0];
+      return firstChild.media_url || firstChild.thumbnail_url || null;
+    }
+    if (data.media_type === "VIDEO") {
+      return data.thumbnail_url || data.media_url || null;
+    }
+    return data.media_url || null;
+  } catch (err: any) {
+    console.error(`[meta.ts] Error in fetchInstagramPostCover:`, err.message);
+    return null;
   }
 }

@@ -56,6 +56,8 @@ export type PropertyCardProps = {
   popular_area_ru?: string | null;
   popular_area_slug?: string | null;
   project_name?: string | null;
+  project_name_th?: string | null;
+  project_name_en?: string | null;
   project_slug?: string | null;
   projects?: {
     name_th?: string | null;

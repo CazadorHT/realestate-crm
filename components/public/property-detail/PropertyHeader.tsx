@@ -461,22 +461,33 @@ export function PropertyHeader({
                         property.property_type?.toLowerCase() || "other";
                       const ProjectIcon =
                         PROPERTY_TYPE_ICONS[typeKey] || Building2;
-                      const projectName = getLocaleValue(
-                        property.project,
-                        "name",
-                        language,
-                      );
+                      const projectObj = property.project as any;
+                      const nameEn = projectObj?.name_en || null;
+                      const nameTh = projectObj?.name_th || null;
+                      const projectName = (language === "cn" || language === "ru")
+                        ? getLocaleValue(property.project, "name", language) || nameEn || nameTh
+                        : nameEn || nameTh || getLocaleValue(property.project, "name", language);
+
+                      const projectTooltip = (() => {
+                        if (language === "th") {
+                          const th = nameTh?.trim();
+                          const en = nameEn?.trim();
+                          if (th && en && th.toLowerCase() !== en.toLowerCase()) {
+                            return `ดูโครงการ ${th}\n(${en})`;
+                          }
+                          return `ดูโครงการ ${th || en || projectName}`;
+                        }
+                        if (language === "cn") return `查看项目 ${projectName}`;
+                        if (language === "ru") return `Посмотреть проект ${projectName}`;
+                        return `View Project ${nameEn || projectName}`;
+                      })();
 
                       return (
                         <div className="mb-2 lg:mb-3">
                           <Link
                             href={`${langPrefix}/projects/${property.project.slug}`}
                             className="group/proj h-9 lg:h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
-                            title={
-                              t("property.view_project", {
-                                project: projectName,
-                              }) || `ดูโครงการ ${projectName}`
-                            }
+                            title={projectTooltip}
                           >
                             <div className="flex items-center gap-2">
                               <ProjectIcon className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />

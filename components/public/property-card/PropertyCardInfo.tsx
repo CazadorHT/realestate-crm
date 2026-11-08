@@ -88,13 +88,15 @@ export function PropertyCardInfo({
   const localizedTitle = getLocaleValue(property, "title", language);
 
   const projectsObj = (property as any).projects;
+  const nameEn = projectsObj?.name_en || (property as any).project_name_en || null;
+  const nameTh = projectsObj?.name_th || (property as any).project_name_th || (property as any).project_name || null;
+
+  // แสดงผลชื่อโครงการ: เลือกภาษาอังกฤษเป็นหลัก (ถ้าไม่มี fallback เป็นไทย หรือตาม locale ภาษาอื่น)
   const projectName = projectsObj
-    ? language !== "th"
-      ? getLocaleValue(projectsObj, "name", language) ||
-        projectsObj.name_en ||
-        projectsObj.name_th
-      : projectsObj.name_th || projectsObj.name_en
-    : (property as any).project_name || null;
+    ? (language === "cn" || language === "ru")
+      ? getLocaleValue(projectsObj, "name", language) || projectsObj.name_en || projectsObj.name_th
+      : projectsObj.name_en || projectsObj.name_th
+    : (property as any).project_name_en || (property as any).project_name || null;
   const projectSlug =
     projectsObj?.slug || (property as any).project_slug || null;
 
@@ -155,14 +157,48 @@ export function PropertyCardInfo({
         {/* Row 1: Project Link (ถ้ามี) */}
         {projectName &&
           (() => {
-            const projectTooltip =
-              language === "en"
-                ? `View Project ${projectName}`
-                : language === "cn"
-                  ? `查看项目 ${projectName}`
-                  : language === "ru"
-                    ? `Посмотреть проект ${projectName}`
-                    : `ดูโครงการ ${projectName}`;
+            const projectTooltipContent = (() => {
+              if (language === "th") {
+                const th = nameTh?.trim();
+                const en = nameEn?.trim();
+                if (th && en && th.toLowerCase() !== en.toLowerCase()) {
+                  return (
+                    <div className="flex flex-col gap-0.5 text-left py-0.5">
+                      <div className="font-semibold text-white leading-snug">
+                        ดูโครงการ {th}
+                      </div>
+                      <div className="text-[11px] text-slate-300 font-normal leading-snug">
+                        {en}
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="text-left py-0.5 leading-snug">
+                    ดูโครงการ {th || en || projectName}
+                  </div>
+                );
+              }
+              if (language === "cn") {
+                return (
+                  <div className="text-left py-0.5 leading-snug">
+                    查看项目 {projectName}
+                  </div>
+                );
+              }
+              if (language === "ru") {
+                return (
+                  <div className="text-left py-0.5 leading-snug">
+                    Посмотреть проект {projectName}
+                  </div>
+                );
+              }
+              return (
+                <div className="text-left py-0.5 leading-snug">
+                  View Project {nameEn || projectName}
+                </div>
+              );
+            })();
 
             return (
               <div className="flex items-center min-w-0">
@@ -188,12 +224,13 @@ export function PropertyCardInfo({
                       <ChevronRight className="w-3 h-3 text-blue-400 group-hover/proj:text-blue-600 group-hover/proj:translate-x-1 shrink-0 transition-all duration-300 ease-out" />
                     </Link>
                   </TooltipTrigger>
-                              <TooltipContent
-                    side="right"
-                    sideOffset={8}
-                    className="bg-slate-800 text-white border border-slate-700 text-xs font-medium px-2.5 py-1 rounded-lg shadow-md z-50 pointer-events-none"
+                  <TooltipContent
+                    side="top"
+                    sideOffset={6}
+                    align="start"
+                    className="bg-slate-900 text-white border border-slate-700 text-xs px-3 py-1.5 rounded-lg shadow-2xl z-50 pointer-events-none w-max max-w-[360px] break-normal"
                   >
-                    {projectTooltip}
+                    {projectTooltipContent}
                   </TooltipContent>
                 </Tooltip>
               </div>
