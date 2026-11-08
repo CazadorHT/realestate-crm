@@ -19,7 +19,10 @@ export function HeroRightWidget({ hasProperties = true }: HeroRightWidgetProps) 
   const handleTabChange = (tab: "wizard" | "map") => {
     setActiveTab(tab);
     if (tab === "map" && !hasMountedMap) {
-      setHasMountedMap(true);
+      // Defer mounting map by 1 frame so the button sliding animation begins instantly without any hitch
+      requestAnimationFrame(() => {
+        setHasMountedMap(true);
+      });
     }
   };
 
@@ -40,34 +43,55 @@ export function HeroRightWidget({ hasProperties = true }: HeroRightWidgetProps) 
   return (
     <div className="w-full flex flex-col gap-2.5">
       {/* Sleek Pill Switcher */}
-      <div className="flex items-center p-1 bg-slate-900/80 backdrop-blur-md rounded-2xl border border-white/15 shadow-xl w-full">
-        <button
-          type="button"
-          onClick={() => handleTabChange("wizard")}
-          className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer select-none",
-            activeTab === "wizard"
-              ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          )}
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-          <span className="truncate">{smartMatchLabel}</span>
-        </button>
+      <div className="flex items-center p-1 sm:p-1.5 bg-white/90 backdrop-blur-md rounded-2xl border border-white/80 shadow-lg shadow-black/10 w-full">
+        <div className="relative grid grid-cols-2 w-full">
+          {/* Sliding Indicator (100% Pure CSS GPU Compositor - Zero JS overhead, silky 120fps) */}
+          <div
+            aria-hidden="true"
+            className={cn(
+              "absolute inset-y-0 left-0 w-1/2 bg-linear-to-r from-blue-600 to-indigo-600 rounded-xl shadow-md shadow-blue-500/25 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none will-change-transform",
+              activeTab === "map" ? "translate-x-full" : "translate-x-0"
+            )}
+          />
 
-        <button
-          type="button"
-          onClick={() => handleTabChange("map")}
-          className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer select-none",
-            activeTab === "map"
-              ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25"
-              : "text-slate-300 hover:text-white hover:bg-white/5"
-          )}
-        >
-          <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-          <span className="truncate">{mapLabel}</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => handleTabChange("wizard")}
+            className={cn(
+              "relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-colors duration-200 cursor-pointer select-none",
+              activeTab === "wizard"
+                ? "text-white"
+                : "text-slate-600 hover:text-blue-600"
+            )}
+          >
+            <Sparkles
+              className={cn(
+                "w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-colors duration-200",
+                activeTab === "wizard" ? "text-amber-300" : "text-amber-500"
+              )}
+            />
+            <span className="truncate">{smartMatchLabel}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange("map")}
+            className={cn(
+              "relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-colors duration-200 cursor-pointer select-none",
+              activeTab === "map"
+                ? "text-white"
+                : "text-slate-600 hover:text-blue-600"
+            )}
+          >
+            <MapPin
+              className={cn(
+                "w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-colors duration-200",
+                activeTab === "map" ? "text-emerald-300" : "text-emerald-600"
+              )}
+            />
+            <span className="truncate">{mapLabel}</span>
+          </button>
+        </div>
       </div>
 
       {/* Widget Container */}
@@ -105,13 +129,27 @@ export function HeroRightWidget({ hasProperties = true }: HeroRightWidgetProps) 
           }
         >
           {/* Preserve Wizard state when switching back and forth */}
-          <div className={activeTab === "wizard" ? "block" : "hidden"}>
+          <div
+            className={cn(
+              "transition-opacity duration-200 ease-out",
+              activeTab === "wizard"
+                ? "opacity-100 block animate-in fade-in-50 duration-200"
+                : "hidden"
+            )}
+          >
             <SmartMatchWizard />
           </div>
 
           {/* Lazy mount map only on first interaction, and preserve when switching */}
           {hasMountedMap && (
-            <div className={activeTab === "map" ? "block" : "hidden"}>
+            <div
+              className={cn(
+                "transition-opacity duration-200 ease-out",
+                activeTab === "map"
+                  ? "opacity-100 block animate-in fade-in-50 duration-200"
+                  : "hidden"
+              )}
+            >
               <HeroMiniMapWidget />
             </div>
           )}

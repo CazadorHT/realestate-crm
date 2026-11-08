@@ -28,14 +28,14 @@ export function HeroLeftContent({
         showSmartMatch ? "lg:col-span-8" : "w-full mx-auto"
       }`}
     >
-      {/* Premium Glass Badge */}
+      {/* Premium Light Badge */}
       <div
-        className={`inline-flex items-center gap-2 sm:gap-2.5 bg-white/15 text-white/80 px-3 sm:px-5 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm md:text-base font-semibold border border-white/25 shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-200 hover:text-white hover:bg-white/20 ${
+        className={`inline-flex items-center gap-2 sm:gap-2.5 bg-white/90 backdrop-blur-md text-slate-800 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold border border-white shadow-lg shadow-black/10 transition-all duration-200 hover:bg-white ${
           !showSmartMatch ? "mx-auto" : "md:mx-0"
         }`}
       >
-        <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-blue-400" />
-        <span className="font-semibold tracking-tight">
+        <TrendingUp className="h-4 w-4 text-blue-600 shrink-0" />
+        <span className="tracking-tight text-slate-800">
           {t("common.verified_100") || "ตรวจสอบแล้ว 100%"}
         </span>
       </div>

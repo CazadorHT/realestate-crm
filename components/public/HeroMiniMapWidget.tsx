@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Map } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useMapPins } from "@/hooks/search/useMapPins";
 import { PropertyVectorMapLazy } from "@/components/public/map/PropertyVectorMapLazy";
@@ -49,10 +49,11 @@ export function HeroMiniMapWidget() {
         <Link
           href={`${langPrefix}/map`}
           prefetch={false}
-          className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 active:scale-95 transition-all duration-150 cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 active:scale-95 transition-all duration-150 cursor-pointer"
         >
+          <Map className="w-3.5 h-3.5 shrink-0" />
           <span>{fullMapLabel}</span>
-          <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
+          <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />
         </Link>
       </div>
     </div>
