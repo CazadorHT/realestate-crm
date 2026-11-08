@@ -1948,6 +1948,8 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     .replace(/{{agent_name}}/g, primaryAgent?.nickname || primaryAgent?.full_name || "")
     .replace(/{{agent_phone}}/g, primaryAgent?.phone || "")
     .replace(/{{agent_line}}/g, primaryAgent?.line_id || "")
+    .replace(/{{agent_whatsapp}}/g, primaryAgent?.whatsapp || "")
+    .replace(/{{agent_wechat}}/g, primaryAgent?.wechat || "")
     .replace(/{{project_name}}/g, projectName || "");
 
   let cleanResult = resultText.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
@@ -2262,6 +2264,9 @@ async function handleKeywordAutomation(
 
   if (postId) {
     propertyData = await lookupPropertyByPostId(postId);
+    if (propertyData?.id && senderId) {
+      await safeRedisSet(`lead_recent_property:${senderId}`, propertyData.id, 86400 * 7);
+    }
   }
 
   // 4. Prepare Message Content
@@ -2960,6 +2965,125 @@ async function resolvePropertyTitle(propertyId?: string): Promise<string> {
 }
 
 /**
+ * Helper: Resolve effective contact info using Smart Dynamic Fallback:
+ * 1. Assigned agent of property (from property_agents -> profiles)
+ * 2. Primary admin staff profile (from profiles where role = 'ADMIN')
+ * 3. Central Brand Settings (site_settings)
+ */
+async function resolveEffectiveContact(
+  propertyId?: string | null,
+  senderId?: string | null,
+  leadId?: string | null,
+): Promise<{
+  phone: string;
+  whatsapp: string | null;
+  wechat: string | null;
+  lineId: string;
+  lineUrl?: string;
+  agentName?: string | null;
+}> {
+  const supabase = createAdminClient() as any;
+  const settings = await getSiteSettings();
+
+  let resolvedPropId = propertyId;
+  if (!resolvedPropId && senderId) {
+    const cachedProp = await safeRedisGet(`lead_recent_property:${senderId}`);
+    if (cachedProp) {
+      resolvedPropId = cachedProp;
+    }
+  }
+
+  if (!resolvedPropId && leadId) {
+    try {
+      const { data: leadRow } = await supabase
+        .from("crm_leads_v3")
+        .select("utm_data")
+        .eq("id", leadId)
+        .maybeSingle();
+      const utmPropertyId = (leadRow?.utm_data as any)?.property_id;
+      if (utmPropertyId) {
+        resolvedPropId = utmPropertyId;
+      }
+    } catch {}
+  }
+
+  let agentProfile: any = null;
+
+  // 1. Try to find assigned agent of the property
+  if (resolvedPropId) {
+    try {
+      const { data: propAgents } = await supabase
+        .from("property_agents")
+        .select("agent_id")
+        .eq("property_id", resolvedPropId)
+        .limit(1);
+
+      const agentId = propAgents?.[0]?.agent_id;
+      if (agentId) {
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("id, full_name, nickname, phone, line_id, whatsapp_id, whatsapp_user_id, wechat_id, wechat_user_id")
+          .eq("id", agentId)
+          .maybeSingle();
+        if (p) agentProfile = p;
+      }
+    } catch (e) {
+      console.warn("[Meta Webhook] Error fetching property agent profile:", e);
+    }
+  }
+
+  // 2. If no agent assigned or no property context, check primary ADMIN profile
+  if (!agentProfile) {
+    try {
+      const { data: adminProfile } = await supabase
+        .from("profiles")
+        .select("id, full_name, nickname, phone, line_id, whatsapp_id, whatsapp_user_id, wechat_id, wechat_user_id")
+        .eq("role", "ADMIN")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (adminProfile) {
+        agentProfile = adminProfile;
+      }
+    } catch (e) {
+      console.warn("[Meta Webhook] Error fetching fallback admin profile:", e);
+    }
+  }
+
+  // Phone: Agent -> Site Settings -> Fallback
+  const rawPhone = agentProfile?.phone || settings.contact_phone || "092-860-0829";
+  const phone = (decrypt(rawPhone) || rawPhone).trim();
+
+  // WhatsApp: Agent -> Site Settings -> null (Strictly filter dummy +66812345678)
+  let rawWa = agentProfile?.whatsapp_user_id || agentProfile?.whatsapp_id || settings.whatsapp_number || "";
+  rawWa = decrypt(rawWa) || rawWa;
+  const whatsapp = (rawWa && rawWa !== "+66812345678" && rawWa.trim()) ? rawWa.trim() : null;
+
+  // WeChat: Agent -> Site Settings -> null
+  let rawWechat = agentProfile?.wechat_user_id || agentProfile?.wechat_id || settings.wechat_id || "";
+  rawWechat = decrypt(rawWechat) || rawWechat;
+  const wechat = (rawWechat && rawWechat.trim()) ? rawWechat.trim() : null;
+
+  // LINE: Agent -> Site Settings -> default
+  let rawLine = agentProfile?.line_id || settings.line_id || "@811slazm";
+  rawLine = (decrypt(rawLine) || rawLine).trim();
+  const lineId = rawLine.replace(/^@/, "");
+  const lineUrl = settings.line_url || (lineId ? `https://line.me/R/ti/p/@${lineId}` : undefined);
+
+  const rawName = agentProfile?.nickname || agentProfile?.full_name || null;
+  const agentName = rawName ? (decrypt(rawName) || rawName).trim() : null;
+
+  return {
+    phone,
+    whatsapp,
+    wechat,
+    lineId,
+    lineUrl,
+    agentName,
+  };
+}
+
+/**
  * Handle Postback Actions (Button clicks in Messenger / Instagram DM)
  */
 async function handleMetaPostback(
@@ -3012,11 +3136,16 @@ async function handleMetaPostback(
 
   const settings = await getSiteSettings();
   const siteUrl = getPublicSiteUrl();
-  const contactPhone = settings.contact_phone || "02-xxx-xxxx";
-  const lineId = settings.line_id || "vccasset";
+
+  let propertyId: string | null = null;
+  if (payload.startsWith("ACTION_BOOK_PROPERTY_")) {
+    propertyId = payload.replace("ACTION_BOOK_PROPERTY_", "");
+  } else if (payload.startsWith("ACTION_TALK_ADMIN_PROPERTY_")) {
+    propertyId = payload.replace("ACTION_TALK_ADMIN_PROPERTY_", "");
+  }
 
   if (payload === "ACTION_BOOK_VIEWING" || payload.startsWith("ACTION_BOOK_PROPERTY_")) {
-    const propertyId = payload.startsWith("ACTION_BOOK_PROPERTY_") ? payload.replace("ACTION_BOOK_PROPERTY_", "") : null;
+    const effectiveContact = await resolveEffectiveContact(propertyId, senderId, leadId);
     const bookingUrl = propertyId ? `${siteUrl}/properties/${propertyId}?book=true` : `${siteUrl}/contact?purpose=viewing`;
 
     let replyText = "ยินดีเลยค่ะ! 📅 สามารถเลือกวันและเวลาที่สะดวกนัดชมห้องจริงได้ผ่านลิงก์ด้านล่างนี้ หรือแจ้งวัน/เวลาที่สะดวกไว้ในแชทนี้ได้เลยนะคะ เดี๋ยวแอดมินประสานงานเตรียมเปิดห้องให้ทันทีค่ะ ✨";
@@ -3045,7 +3174,7 @@ async function handleMetaPostback(
       },
     ];
 
-    const waPhone = settings.whatsapp_number || settings.contact_phone;
+    const waPhone = effectiveContact.whatsapp || effectiveContact.phone;
     const waUrl = buildWhatsAppUrl(waPhone, `Hello VC Connect Asset, I would like to schedule a viewing for property ref: ${propertyId || 'viewing'}`);
     if (waUrl) {
       buttons.push({
@@ -3058,7 +3187,7 @@ async function handleMetaPostback(
     buttons.push({
       title: btnAdminTitle,
       type: "postback",
-      payload: "ACTION_TALK_ADMIN",
+      payload: propertyId ? `ACTION_TALK_ADMIN_PROPERTY_${propertyId}` : "ACTION_TALK_ADMIN",
     });
 
     await sendMetaMessage(senderId, replyText, source, buttons);
@@ -3072,7 +3201,8 @@ async function handleMetaPostback(
         `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
         `📱 แพลตฟอร์ม: ${source}\n` +
         (propDetails.title ? `🏠 ทรัพย์ที่สนใจ: <b>${propDetails.title}</b>\n` : "") +
-        (propDetails.url ? `🔗 <b>ลิงก์ทรัพย์:</b> <a href="${propDetails.url}">${propDetails.url}</a>\n\n` : "\n") +
+        (propDetails.url ? `🔗 <b>ลิงก์ทรัพย์:</b> <a href="${propDetails.url}">${propDetails.url}</a>\n` : "") +
+        (effectiveContact.agentName ? `👤 เจ้าหน้าที่ผู้ดูแล: <b>${effectiveContact.agentName}</b>\n\n` : "\n") +
         `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`
       );
     } catch (e) {
@@ -3089,20 +3219,41 @@ async function handleMetaPostback(
     }
     await sendMetaMessage(senderId, browseText, source);
     await sendFeaturedPropertiesCarousel(senderId, source, lang);
-  } else if (payload === "ACTION_TALK_ADMIN") {
-    const waPhone = settings.whatsapp_number || settings.contact_phone;
-    const waDisplay = waPhone ? `\n💬 WhatsApp: ${waPhone}` : "";
-    let contactText = `รับทราบเลยค่ะ! 😊 แอดมินและเจ้าหน้าที่กำลังเตรียมข้อมูลเพื่อดูแลคุณโดยตรงนะคะ\n\n💬 ช่องทางติดต่อด่วน:\n📱 โทร: ${contactPhone}${waDisplay}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nหรือพิมพ์ข้อความทิ้งไว้ในแชทนี้ได้เลยนะคะ ✨`;
+  } else if (payload === "ACTION_TALK_ADMIN" || payload.startsWith("ACTION_TALK_ADMIN_PROPERTY_")) {
+    const effectiveContact = await resolveEffectiveContact(propertyId, senderId, leadId);
+
+    const waDisplay = effectiveContact.whatsapp ? `\n💬 WhatsApp: ${effectiveContact.whatsapp}` : "";
+    const wechatDisplay = effectiveContact.wechat ? `\n💬 WeChat: ${effectiveContact.wechat}` : "";
+
+    const hasSpecificAgent = effectiveContact.agentName &&
+      !effectiveContact.agentName.toLowerCase().includes("asset") &&
+      !effectiveContact.agentName.toLowerCase().includes("vcc");
+
+    const greetingTh = hasSpecificAgent
+      ? `รับทราบเลยค่ะ! 😊 คุณ${effectiveContact.agentName} และแอดมินกำลังเตรียมข้อมูลเพื่อดูแลคุณโดยตรงนะคะ`
+      : `รับทราบเลยค่ะ! 😊 แอดมินและเจ้าหน้าที่กำลังเตรียมข้อมูลเพื่อดูแลคุณโดยตรงนะคะ`;
+
+    let contactText = `${greetingTh}\n\n💬 ช่องทางติดต่อด่วน:\n📱 โทร: ${effectiveContact.phone}${waDisplay}${wechatDisplay}\n🟢 LINE: @${effectiveContact.lineId}\n\nหรือพิมพ์ข้อความทิ้งไว้ในแชทนี้ได้เลยนะคะ ✨`;
     let btnLineTitle = "🟢 แอด LINE สอบถาม";
 
     if (lang === "en") {
-      contactText = `Got it! 😊 Our property consultant is getting ready to assist you.\n\n💬 Direct Contacts:\n📱 Phone: ${contactPhone}${waDisplay}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nOr simply leave your message right here! ✨`;
+      const greetingEn = hasSpecificAgent
+        ? `Got it! 😊 ${effectiveContact.agentName} and our team are getting ready to assist you.`
+        : `Got it! 😊 Our property consultant is getting ready to assist you.`;
+      contactText = `${greetingEn}\n\n💬 Direct Contacts:\n📱 Phone: ${effectiveContact.phone}${waDisplay}${wechatDisplay}\n🟢 LINE: @${effectiveContact.lineId}\n\nOr simply leave your message right here! ✨`;
       btnLineTitle = "🟢 Chat on LINE";
     } else if (lang === "cn") {
-      contactText = `收到！😊 我们的专业客服正在为您准备资料。\n\n💬 快捷联系方式：\n📱 电话：${contactPhone}${waDisplay}\n🟢 LINE：@${lineId.replace(/^@/, "")}\n\n您也可以直接在此留言！✨`;
+      const cnWechatDisplay = effectiveContact.wechat ? `\n💬 微信 (WeChat): ${effectiveContact.wechat}` : "";
+      const greetingCn = hasSpecificAgent
+        ? `收到！😊 您的专属顾问 ${effectiveContact.agentName} 正在为您准备资料。`
+        : `收到！😊 我们的专业客服正在为您准备资料。`;
+      contactText = `${greetingCn}\n\n💬 快捷联系方式：\n📱 电话：${effectiveContact.phone}${waDisplay}${cnWechatDisplay}\n🟢 LINE：@${effectiveContact.lineId}\n\n您也可以直接在此留言！✨`;
       btnLineTitle = "🟢 添加 LINE 咨询";
     } else if (lang === "ru") {
-      contactText = `Принято! 😊 Наш консультант уже готовит информацию для вас.\n\n💬 Прямые контакты:\n📱 Тел: ${contactPhone}${waDisplay}\n🟢 LINE: @${lineId.replace(/^@/, "")}\n\nИли просто напишите ваш вопрос прямо здесь! ✨`;
+      const greetingRu = hasSpecificAgent
+        ? `Принято! 😊 Консультант ${effectiveContact.agentName} уже готовит информацию для вас.`
+        : `Принято! 😊 Наш консультант уже готовит информацию для вас.`;
+      contactText = `${greetingRu}\n\n💬 Прямые контакты:\n📱 Тел: ${effectiveContact.phone}${waDisplay}${wechatDisplay}\n🟢 LINE: @${effectiveContact.lineId}\n\nИли просто напишите ваш вопрос прямо здесь! ✨`;
       btnLineTitle = "🟢 Написать в LINE";
     }
     
@@ -3132,20 +3283,22 @@ async function handleMetaPostback(
     }
 
     const buttons: SocialButton[] = [];
-    const waUrl = buildWhatsAppUrl(waPhone, "Hello VC Connect Asset, I would like to speak with a consultant.");
-    if (waUrl) {
-      buttons.push({
-        title: "💬 WhatsApp",
-        type: "web_url",
-        url: waUrl,
-      });
+    if (effectiveContact.whatsapp) {
+      const waUrl = buildWhatsAppUrl(effectiveContact.whatsapp, "Hello VC Connect Asset, I would like to speak with a consultant.");
+      if (waUrl) {
+        buttons.push({
+          title: "💬 WhatsApp",
+          type: "web_url",
+          url: waUrl,
+        });
+      }
     }
 
-    if (settings.line_url || lineId) {
+    if (effectiveContact.lineUrl || effectiveContact.lineId) {
       buttons.push({
         title: btnLineTitle,
         type: "web_url",
-        url: settings.line_url || `https://line.me/R/ti/p/@${lineId.replace(/^@/, "")}`,
+        url: effectiveContact.lineUrl || `https://line.me/R/ti/p/@${effectiveContact.lineId}`,
       });
     }
 
@@ -3154,10 +3307,14 @@ async function handleMetaPostback(
     // Send Urgent Telegram Notification to agents
     try {
       const leadInfo = await resolveLeadInfo(leadId, senderId);
+      const propDetails = await resolvePropertyDetails(propertyId || undefined);
       await sendAdminNotification(
         `🚨 <b>[CRM Urgent] ลูกค้าต้องการคุยกับแอดมิน/เจ้าหน้าที่</b>\n\n` +
         `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
         `📱 แพลตฟอร์ม: ${source}\n` +
+        (propDetails.title ? `🏠 ทรัพย์ที่สนใจ: <b>${propDetails.title}</b>\n` : "") +
+        (propDetails.url ? `🔗 <b>ลิงก์ทรัพย์:</b> <a href="${propDetails.url}">${propDetails.url}</a>\n` : "") +
+        (effectiveContact.agentName ? `👤 เจ้าหน้าที่ผู้ดูแล: <b>${effectiveContact.agentName}</b>\n` : "") +
         `👉 เข้าตรวจสอบกล่องข้อความ ${source} และดูแลลูกค้าได้ทันที!\n` +
         `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`
       );
@@ -5504,7 +5661,7 @@ async function lookupPropertyByPostId(postId: string) {
       if (pa.agent_id) {
         const { data: staffProfile } = await supabase
           .from("profiles")
-          .select("full_name, nickname, phone, line_id")
+          .select("full_name, nickname, phone, line_id, whatsapp_id, whatsapp_user_id, wechat_id, wechat_user_id")
           .eq("id", pa.agent_id)
           .maybeSingle();
 
@@ -5516,6 +5673,8 @@ async function lookupPropertyByPostId(postId: string) {
             nickname: decrypt(profiles?.nickname) || staffProfile.nickname || profiles?.nickname || "",
             phone: decrypt(profiles?.phone) || staffProfile.phone || profiles?.phone || "",
             line_id: decrypt(profiles?.line_id) || staffProfile.line_id || profiles?.line_id || "",
+            whatsapp: staffProfile.whatsapp_user_id || staffProfile.whatsapp_id || "",
+            wechat: staffProfile.wechat_user_id || staffProfile.wechat_id || "",
           };
         } else if (pa.profiles) {
           const profiles = pa.profiles as any;
@@ -5525,6 +5684,8 @@ async function lookupPropertyByPostId(postId: string) {
             nickname: decrypt(profiles.nickname) || "",
             phone: decrypt(profiles.phone) || "",
             line_id: decrypt(profiles.line_id) || "",
+            whatsapp: "",
+            wechat: "",
           };
         }
       }
