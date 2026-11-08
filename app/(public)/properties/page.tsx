@@ -13,6 +13,7 @@ import { ScrollToProperties } from "@/components/public/ScrollToProperties";
 import { MdOutlinePets } from "react-icons/md";
 import { FaBuilding } from "react-icons/fa6";
 import { CategoryNavigationCards } from "@/components/public/CategoryNavigationCards";
+import { ExploreMapBanner } from "@/components/public/search/ExploreMapBanner";
 import { FeaturedStoryCarousel } from "@/components/public/FeaturedStoryCarousel";
 import { PropertiesHeroBanner } from "@/components/public/PropertiesHeroBanner";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
@@ -331,6 +332,8 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
         </section>
 
         <CategoryNavigationCards language={language} />
+
+        <ExploreMapBanner language={language} />
 
         <div id="properties-list-section" >
           <PropertySearchPage initialProperties={initialData.properties} initialFacets={initialData.facets} />
