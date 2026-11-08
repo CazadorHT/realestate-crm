@@ -185,7 +185,7 @@ export function FeaturedProjectsSection({
           
           <Link
             href={`${langPrefix}/projects`}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white text-xs font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105"
+            className="inline-flex justify-center items-center gap-2 px-8 py-3 bg-linear-to-r h-12 from-blue-600 to-purple-600 text-white sm:text-sm font-bold rounded-2xl hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105"
           >
             <span>{getPageString("view_all")}</span>
             <ArrowRight className="w-4 h-4" />

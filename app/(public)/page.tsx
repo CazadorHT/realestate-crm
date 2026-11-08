@@ -57,6 +57,11 @@ const TransitStationsSection = dynamic(
   { loading: () => <SectionSkeleton /> }
 );
 
+const HomeMapDiscoverySection = dynamic(
+  () => import("@/components/public/HomeMapDiscoverySection").then((mod) => mod.HomeMapDiscoverySection),
+  { loading: () => <SectionSkeleton /> }
+);
+
 const FeaturedProjectsSection = dynamic(
   () => import("@/components/public/FeaturedProjectsSection").then((mod) => mod.FeaturedProjectsSection),
   { loading: () => <SectionSkeleton /> }
@@ -325,6 +330,9 @@ export default async function LandingPage(props: { locale?: string } = {}) {
       {transitLines && transitLines.length > 0 && (
         <TransitStationsSection lines={transitLines} language={language} />
       )}
+
+      {/* INTERACTIVE MAP DISCOVERY */}
+      <HomeMapDiscoverySection language={language} />
 
       {/* FEATURED PROJECTS CAROUSEL */}
       {(() => {
