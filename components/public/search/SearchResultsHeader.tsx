@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Columns2, LayoutGrid, Map as MapIcon } from "lucide-react";
+import { ArrowUpRight, Columns2, LayoutGrid, Map as MapIcon } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +67,7 @@ export function SearchResultsHeader({
     <div
       role="tablist"
       aria-label="Property view mode"
-      className="inline-flex items-center p-1 rounded-xl bg-white border border-slate-200/90 shadow-xs shrink-0"
+      className="inline-flex items-center p-1 rounded-xl bg-white border border-slate-200/90 shadow-sm shrink-0"
     >
       <button
         type="button"
@@ -75,9 +75,9 @@ export function SearchResultsHeader({
         aria-selected={viewMode === "grid"}
         onClick={() => onViewModeChange("grid")}
         className={cn(
-          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+          "inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer",
           viewMode === "grid"
-            ? "bg-[#1B263B] text-white shadow-xs"
+            ? "bg-slate-900 text-white shadow-xs"
             : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
         )}
       >
@@ -92,9 +92,9 @@ export function SearchResultsHeader({
         aria-selected={viewMode === "split"}
         onClick={() => onViewModeChange("split")}
         className={cn(
-          "hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+          "hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer",
           viewMode === "split"
-            ? "bg-[#1B263B] text-white shadow-xs"
+            ? "bg-slate-900 text-white shadow-xs"
             : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
         )}
       >
@@ -102,13 +102,17 @@ export function SearchResultsHeader({
         <span>{viewLabels.split}</span>
       </button>
 
+      {/* Subtle Divider between In-Page Views & Fullscreen Map Route */}
+      <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
+
       {/* Full-Screen Explorer Route (/map) carrying all active filters */}
       <Link
         href={mapHref}
-        className="inline-flex ml-0 sm:ml-2 items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50/70 transition-all cursor-pointer"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50/80 transition-all cursor-pointer"
       >
-        <MapIcon className="w-3.5 h-3.5" />
+        <MapIcon className="w-3.5 h-3.5 shrink-0" />
         <span>{viewLabels.map}</span>
+        <ArrowUpRight className="w-3 h-3 stroke-[2.5] shrink-0" />
       </Link>
     </div>
   ) : null;
