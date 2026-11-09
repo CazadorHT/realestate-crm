@@ -2,13 +2,15 @@
 
 import { MapPin } from "lucide-react";
 import { LuMap } from "react-icons/lu";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { parseBilingualProjectName } from "@/lib/utils/project-name-utils";
 
 interface ProjectLocationMapCardProps {
   googleMapsUrl?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   projectName?: string;
-  language: string;
+  language?: string;
 }
 
 // Helper to extract location query from various Google Maps URL formats
@@ -42,18 +44,26 @@ export function ProjectLocationMapCard({
   latitude,
   longitude,
   projectName,
-  language,
+  language: propLanguage,
 }: ProjectLocationMapCardProps) {
+  const { language: ctxLanguage } = useLanguage();
+  const language = ctxLanguage || propLanguage || "th";
+
+  const parsedName = projectName ? parseBilingualProjectName(projectName) : null;
+  const resolvedProjectName = parsedName
+    ? (language === "th" ? (parsedName.cleanTh || parsedName.cleanEn) : (parsedName.cleanEn || parsedName.cleanTh))
+    : projectName;
+
   const query = googleMapsUrl
     ? extractQuery(googleMapsUrl)
     : latitude && longitude
       ? `${latitude},${longitude}`
-      : projectName || null;
+      : resolvedProjectName || null;
 
   if (!query && !googleMapsUrl) return null;
 
   const embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(query || "")}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-  const externalLink = googleMapsUrl || (latitude && longitude ? `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(projectName || "")}`);
+  const externalLink = googleMapsUrl || (latitude && longitude ? `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(resolvedProjectName || "")}`);
 
   const sectionTitle = language === "en" ? "Project Location Map" : language === "cn" ? "项目地图位置" : language === "ru" ? "Карта проекта" : "แผนที่ตั้งโครงการ";
   const openMapsText = language === "en" ? "Open in Google Maps" : language === "cn" ? "在谷歌地图中打开" : language === "ru" ? "Открыть в Google Maps" : "ดูใน Google Maps";
@@ -68,39 +78,35 @@ export function ProjectLocationMapCard({
       </h3>
       
       {/* Map iframe container with grayscale hover effect matching PropertyMapClient */}
-      <div className="w-full h-[260px] md:h-[320px] bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative group">
+      <div className="relative aspect-4/3 w-full rounded-2xl overflow-hidden border border-slate-200/80 shadow-2xs group/map">
         {embedSrc ? (
           <iframe
+            src={embedSrc}
             width="100%"
             height="100%"
-            frameBorder="0"
-            scrolling="no"
-            marginHeight={0}
-            marginWidth={0}
-            src={embedSrc}
+            style={{ border: 0 }}
+            allowFullScreen={false}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            sandbox="allow-scripts allow-same-origin allow-popups"
-            className="grayscale-[0.2] contrast-[1.1] hover:grayscale-0 transition-all duration-700"
-            title="Project Location"
+            className="w-full h-full grayscale-[15%] group-hover/map:grayscale-0 transition-all duration-500"
+            title={resolvedProjectName ? `Map for ${resolvedProjectName}` : "Project Location"}
           />
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 space-y-2">
-            <MapPin className="h-10 w-10 text-slate-300" />
-            <p className="text-sm">{noDataText}</p>
+          <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-400 text-xs">
+            {noDataText}
           </div>
         )}
       </div>
 
-      {/* Centered Capsule Button matching PropertyMapClient */}
-      <div className="flex justify-center pt-1">
+      {/* External Link CTA */}
+      <div className="pt-1">
         <a
           href={externalLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-6 py-2.5 rounded-full text-sm font-semibold transition-all border border-slate-200 shadow-xs hover:shadow-md cursor-pointer group"
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100/70 text-blue-700 text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-[0.98]"
         >
-          <MapPin className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
+          <MapPin className="w-4 h-4 text-blue-600" />
           <span>{openMapsText}</span>
         </a>
       </div>

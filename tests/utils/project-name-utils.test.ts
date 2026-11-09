@@ -46,9 +46,17 @@ describe("parseBilingualProjectName Unit Tests", () => {
   });
 
   it("should handle null or empty inputs gracefully", () => {
-    expect(parseBilingualProjectName(null)).toEqual({ cleanTh: "", cleanEn: null });
-    expect(parseBilingualProjectName(undefined)).toEqual({ cleanTh: "", cleanEn: null });
-    expect(parseBilingualProjectName("")).toEqual({ cleanTh: "", cleanEn: null });
+    expect(parseBilingualProjectName(null)).toEqual({ cleanTh: "", cleanEn: null, hasEnglishLine: false });
+    expect(parseBilingualProjectName(undefined)).toEqual({ cleanTh: "", cleanEn: null, hasEnglishLine: false });
+    expect(parseBilingualProjectName("")).toEqual({ cleanTh: "", cleanEn: null, hasEnglishLine: false });
+  });
+
+  it("should safely handle object inputs { th, en } without throwing a.trim error", () => {
+    const objectInput = { th: "มัณฑนา 2 บางนา กม.7", en: "Mantana 2 Bangna Km.7" };
+    const result = parseBilingualProjectName(objectInput);
+    expect(result.cleanTh).toBe("มัณฑนา 2 บางนา กม.7");
+    expect(result.cleanEn).toBe("Mantana 2 Bangna Km.7");
+    expect(result.hasEnglishLine).toBe(true);
   });
 
   describe("Business Rule: Multi-Language Project Name Selection", () => {

@@ -502,7 +502,7 @@ export function PropertyHeader({
                                   {displayProjectName}
                                 </span>
                                 {hasEnglishLine && (
-                                  <span className="text-[11px] font-medium text-slate-400 group-hover/proj:text-blue-100 transition-colors leading-tight mt-0.5">
+                                  <span className="text-[11px] font-medium text-slate-600 group-hover/proj:text-blue-100 transition-colors leading-tight mt-0.5">
                                     {cleanEn}
                                   </span>
                                 )}

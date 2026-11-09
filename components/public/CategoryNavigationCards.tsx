@@ -171,7 +171,7 @@ export function CategoryNavigationCards({
   ];
 
   return (
-    <section className="max-w-screen-2xl mx-auto px-5 md:px-6 lg:px-8 mb-14 mt-6">
+    <section className="max-w-screen-2xl mx-auto px-5 md:px-6 lg:px-8 mb-6 mt-6">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {cards.map((card, idx) => (
           <m.div

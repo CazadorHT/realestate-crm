@@ -106,11 +106,11 @@ export function SimilarPropertiesClient({
   return (
     <section className="py-8 md:py-12 border-t border-slate-100">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6 md:mb-8">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-3.5 sm:gap-4 mb-6 md:mb-8">
         <div>
           <h2 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-2.5 rounded-r-xl font-bold text-slate-900 flex items-center gap-2">
-            <MdMapsHomeWork className="w-5 h-5 text-blue-600" />{" "}
-            {getSectionTitle()}
+            <MdMapsHomeWork className="w-5 h-5 text-blue-600 shrink-0" />{" "}
+            <span>{getSectionTitle()}</span>
           </h2>
           <p className="text-slate-500 text-sm mt-2 pl-4">
             {getSectionSubtitle()}
@@ -119,9 +119,9 @@ export function SimilarPropertiesClient({
 
         <Link
           href={viewAllHref}
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 group self-start md:self-auto shrink-0"
+          className="inline-flex items-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-blue-600 hover:text-white bg-blue-50/80 hover:bg-blue-600 border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 group shrink-0 self-end sm:self-auto"
         >
-          {t("similar_properties.view_all")}{" "}
+          <span>{t("similar_properties.view_all")}</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>

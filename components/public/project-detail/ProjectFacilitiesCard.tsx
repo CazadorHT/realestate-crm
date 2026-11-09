@@ -1,9 +1,12 @@
+"use client";
+
 import { LayoutGrid, CheckCircle } from "lucide-react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getProjectDetailString } from "./project-detail-i18n";
 
 interface ProjectFacilitiesCardProps {
   facilities: string[];
-  language: string;
-  getString: (key: string) => string;
+  language?: string;
 }
 
 const FACILITIES_TRANSLATION: Record<string, Record<string, string>> = {
@@ -24,7 +27,7 @@ const FACILITIES_TRANSLATION: Record<string, Record<string, string>> = {
   "river_view": { th: "วิวแม่น้ำ", en: "River View", cn: "江景", ru: "Вид на реку" },
   "sea_view": { th: "วิวทะเล", en: "Sea View", cn: "海景", ru: "Вид на море" },
   "pet_area": { th: "โซนสัตว์เลี้ยง", en: "Pet Friendly Area", cn: "宠物活动区", ru: "Зона для питомцев" },
-  "ev_charger": { th: "จุดชาร์จรถยนต์ไฟฟ้า", en: "EV Charging Station", cn: "电动车充电站", ru: "Зарядкаสำหรับรถยนต์ไฟฟ้า" },
+  "ev_charger": { th: "จุดชาร์จรถยนต์ไฟฟ้า", en: "EV Charging Station", cn: "电动车充电站", ru: "Зарядка для электромобилей" },
   "shuttle": { th: "บริการรถรับส่ง", en: "Shuttle Service", cn: "接驳车服务", ru: "Трансфер" },
   "concierge": { th: "พนักงานต้อนรับ", en: "Concierge Service", cn: "礼宾服务", ru: "Консьерж-сервис" },
   "rooftop": { th: "สวนชั้นดาดฟ้า", en: "Rooftop Garden", cn: "屋顶花园", ru: "Сад на крыше" },
@@ -48,10 +51,6 @@ function normalizeFacilityKey(fac: string): string {
   if (clean.includes("สมุด") || clean.includes("library") || clean.includes("co-working") || clean.includes("working")) return "library";
   if (clean.includes("ล็อบบี้") || clean.includes("lobby")) return "lobby";
   if (clean.includes("ลิฟต์") || clean.includes("elevator") || clean.includes("ลิฟท์")) return "elevator";
-  if (clean.includes("คลับ") || clean.includes("เลานจ์") || clean.includes("clubhouse") || clean.includes("lounge")) return "lounge";
-  if (clean.includes("วิวเมือง") || clean.includes("city view")) return "city_view";
-  if (clean.includes("วิวแม่น้ำ") || clean.includes("river view")) return "river_view";
-  if (clean.includes("วิวทะเล") || clean.includes("sea view")) return "sea_view";
   if (clean.includes("สัตว์") || clean.includes("pet")) return "pet_area";
   if (clean.includes("ชาร์จ") || clean.includes("ev charge") || clean.includes("ev charger")) return "ev_charger";
   if (clean.includes("รับส่ง") || clean.includes("shuttle")) return "shuttle";
@@ -66,9 +65,15 @@ function normalizeFacilityKey(fac: string): string {
 
 export function ProjectFacilitiesCard({
   facilities,
-  language,
-  getString,
+  language: propLanguage,
 }: ProjectFacilitiesCardProps) {
+  const { language: ctxLanguage } = useLanguage();
+  const language = ctxLanguage || propLanguage || "th";
+
+  const getString = (key: string) => {
+    return getProjectDetailString(key, language);
+  };
+
   if (!facilities || facilities.length === 0) return null;
 
   const uniqueLabels = Array.from(
@@ -76,7 +81,7 @@ export function ProjectFacilitiesCard({
       facilities.map((fac) => {
         const cleanedKey = normalizeFacilityKey(fac);
         const trans = FACILITIES_TRANSLATION[cleanedKey] || { th: fac, en: fac };
-        return trans[language as keyof typeof trans] || trans.th;
+        return trans[language as keyof typeof trans] || (language !== "th" ? (trans.en || trans.th) : trans.th);
       })
     )
   );

@@ -262,6 +262,7 @@ export default async function PublicPropertyDetailPage(props: {
               cn: data.popular_area_cn,
               ru: data.popular_area_ru,
             }}
+            size="lg"
             className="px-0! mb-0"
           />
         </div>

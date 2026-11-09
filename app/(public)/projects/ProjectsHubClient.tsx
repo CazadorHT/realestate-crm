@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import type { PublicProject } from "@/features/public/projects";
 import { getProvinceName, translateLocation } from "@/lib/utils/provinces";
+import { parseBilingualProjectName } from "@/lib/utils/project-name-utils";
 import {
   Select,
   SelectContent,
@@ -1101,7 +1102,11 @@ export function ProjectsHubClient({
           >
             <AnimatePresence mode="popLayout">
               {filteredAndSortedProjects.map((project) => {
-                const nameText = (language === "th" ? project.name.th : (project.name.en || project.name.th)) || project.name.th;
+                const { cleanTh, cleanEn, hasEnglishLine } = parseBilingualProjectName(
+                  project.name?.th,
+                  project.name?.en
+                );
+                const nameText = language === "th" ? (cleanTh || cleanEn) : (cleanEn || cleanTh);
                 const hasSale = project.priceMin != null;
                 const hasRent = project.rentalMin != null;
                 
@@ -1141,7 +1146,7 @@ export function ProjectsHubClient({
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={project.imageUrl}
-                            alt={nameText}
+                            alt={nameText || "Project"}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
@@ -1174,12 +1179,19 @@ export function ProjectsHubClient({
                           )}
                         </div>
 
-                        <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                          {nameText}
-                        </h3>
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                            {nameText}
+                          </h3>
+                          {language === "th" && hasEnglishLine && cleanEn && (
+                            <p className="text-xs text-slate-600 font-medium line-clamp-1 mt-0.5">
+                              {cleanEn}
+                            </p>
+                          )}
+                        </div>
 
                         {project.developer && (
-                          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                          <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
                             <span className="font-semibold text-slate-505">{getPageString("developer")}:</span> {project.developer}
                           </p>
                         )}

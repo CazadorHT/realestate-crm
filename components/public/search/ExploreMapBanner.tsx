@@ -15,6 +15,7 @@ interface ExploreMapBannerProps {
   subtitle?: string;
   cta?: string;
   className?: string;
+  size?: "default" | "lg";
 }
 
 export function ExploreMapBanner({
@@ -26,6 +27,7 @@ export function ExploreMapBanner({
   subtitle,
   cta,
   className,
+  size = "default",
 }: ExploreMapBannerProps) {
   const { language: contextLanguage, langPrefix } = useLanguage();
   const language = contextLanguage || propLanguage || "th";
@@ -115,7 +117,12 @@ export function ExploreMapBanner({
       <Link
         href={mapHref}
         prefetch={false}
-        className="group cursor-pointer relative overflow-hidden rounded-2xl sm:rounded-3xl border border-blue-500/20 hover:border-blue-500/50 bg-linear-to-br from-blue-50/70 via-blue-100/30 to-sky-50/20 p-3.5 sm:py-3.5 sm:px-6 md:py-4 md:px-7 shadow-sm hover:shadow-xl hover:shadow-blue-500/15 transition-all duration-300 flex items-center justify-between w-full gap-3 sm:gap-4"
+        className={cn(
+          "group cursor-pointer relative overflow-hidden rounded-2xl sm:rounded-3xl border border-blue-500/20 hover:border-blue-500/50 bg-linear-to-br from-blue-50/70 via-blue-100/30 to-sky-50/20 shadow-sm hover:shadow-xl hover:shadow-blue-500/15 transition-all duration-300 flex items-center justify-between w-full gap-3 sm:gap-5",
+          size === "lg"
+            ? "min-h-[116px] sm:min-h-[142px] md:min-h-[150px] p-4 sm:py-5 sm:px-7 md:py-6 md:px-8"
+            : "p-3.5 sm:py-3.5 sm:px-6 md:py-4 md:px-7"
+        )}
       >
         {/* Decorative Corner Glow */}
         <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-blue-500/15 blur-2xl group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
@@ -206,18 +213,33 @@ export function ExploreMapBanner({
         {/* Left: Icon Box + Typography */}
         <div className="flex items-center gap-3 sm:gap-4 relative z-10 min-w-0 flex-1">
           {/* Rounded Icon Box (Matches Category Cards) */}
-          <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center shadow-xs shrink-0 transition-transform duration-300 group-hover:scale-110">
-            <Compass className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+          <div
+            className={cn(
+              "rounded-2xl bg-blue-500/20 flex items-center justify-center shadow-xs shrink-0 transition-transform duration-300 group-hover:scale-110",
+              size === "lg" ? "hidden w-11 h-11 sm:w-13 sm:h-13 md:w-14 md:h-14" : "w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12"
+            )}
+          >
+            <Compass className={cn("text-blue-600", size === "lg" ? "h-6 w-6 sm:h-7 sm:w-7" : "h-5 w-5 sm:h-6 sm:w-6")} />
           </div>
 
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm sm:text-lg font-semibold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+            <h3
+              className={cn(
+                "line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors",
+                size === "lg" ? "text-lg md:text-xl font-bold text-slate-900" : "text-sm sm:text-lg font-semibold text-slate-800"
+              )}
+            >
               {displayTitle}
             </h3>
-            <p className="text-[11px] sm:text-xs text-slate-500 truncate mt-0.5 hidden xs:block">
+            <p className={cn("text-slate-500 truncate hidden xs:block", size === "lg" ? "text-xs sm:text-sm mt-1" : "text-[11px] sm:text-xs mt-0.5")}>
               {displaySubtitle}
             </p>
-            <div className="text-[11px] sm:text-xs font-bold text-blue-600 inline-flex items-center gap-1 group-hover:translate-x-1.5 transition-transform mt-0.5 sm:mt-1">
+            <div
+              className={cn(
+                "font-bold text-blue-600 inline-flex items-center gap-1 group-hover:translate-x-1.5 transition-transform",
+                size === "lg" ? "text-xs sm:text-sm mt-1.5" : "text-[11px] sm:text-xs mt-0.5 sm:mt-1"
+              )}
+            >
               <span>{displayCta}</span>
               <span>→</span>
             </div>
@@ -225,13 +247,18 @@ export function ExploreMapBanner({
         </div>
 
         {/* Right: 3D Illustration Image */}
-        <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 shrink-0 -mr-1 sm:-mr-2 z-10 flex items-center justify-center -my-3 sm:-my-4">
+        <div
+          className={cn(
+            "relative shrink-0 -mr-1 sm:-mr-2 z-10 flex items-center justify-center pointer-events-none",
+            size === "lg" ? "w-24 h-24 sm:w-28 sm:h-28 md:w-34 md:h-34 -my-4 sm:-my-5" : "w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 -my-3 sm:-my-4"
+          )}
+        >
           <Image
             src="/images/map-3d-explorer.webp"
             alt={typeof displayTitle === "string" ? displayTitle : "Explore on map"}
             fill
-            sizes="(max-width: 768px) 100px, 150px"
-            className="object-contain drop-shadow-xl group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 ease-out pointer-events-none"
+            sizes="(max-width: 768px) 120px, 180px"
+            className="object-contain drop-shadow-xl group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 ease-out"
           />
         </div>
       </Link>

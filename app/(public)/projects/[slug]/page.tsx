@@ -10,11 +10,11 @@ import { getProjectBySlug, getPropertiesInProject, getAllProjectSlugs, getRelate
 const getProjectBySlugCached = cache(getProjectBySlug);
 import { getPopularAreas } from "@/features/public/areas";
 import { ProjectPropertiesClient } from "@/components/public/ProjectPropertiesClient";
-import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
 import { ProjectHero } from "@/components/public/project-detail/ProjectHero";
 import { ProjectAboutCard } from "@/components/public/project-detail/ProjectAboutCard";
 import { ProjectFacilitiesCard } from "@/components/public/project-detail/ProjectFacilitiesCard";
 import { ProjectLocationMapCard } from "@/components/public/project-detail/ProjectLocationMapCard";
+import { RelatedProjectsSection } from "@/components/public/project-detail/RelatedProjectsSection";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 import { CategoryNavigationCards } from "@/components/public/CategoryNavigationCards";
 
@@ -202,7 +202,6 @@ export default async function ProjectDetailPage(
         project={project}
         language={language}
         nameText={nameText}
-        getString={getString}
       />
 
       {/* Main Content Area */}
@@ -223,13 +222,11 @@ export default async function ProjectDetailPage(
             project={project}
             language={language}
             nameText={nameText}
-            getString={getString}
           />
 
           <ProjectFacilitiesCard
             facilities={project.facilities}
             language={language}
-            getString={getString}
           />
 
           <ProjectLocationMapCard
@@ -244,24 +241,10 @@ export default async function ProjectDetailPage(
       </div>
 
       {/* Related Projects Section */}
-      {relatedProjects.length > 0 && (
-        <div className="max-w-screen-2xl mx-auto px-5 md:px-8 pb-8">
-          <section className="space-y-6 pt-10 border-t border-slate-200/60">
-            <div className="flex items-center gap-2.5">
-              <Building2 className="w-5 h-5 text-indigo-500" />
-              <h2 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight">
-                {getString("related_projects")}
-              </h2>
-            </div>
-            <AreaProjectsCarousel
-              projects={relatedProjects}
-              language={language}
-              viewDetailsLabel={getString("view_project")}
-              unitsLabel={getString("units")}
-            />
-          </section>
-        </div>
-      )}
+      <RelatedProjectsSection
+        projects={relatedProjects}
+        language={language}
+      />
 
       {/* Category Navigation Cards */}
       <CategoryNavigationCards language={language} />

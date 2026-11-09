@@ -324,7 +324,7 @@ export function FeaturedProjectsSection({
                           {nameText}
                         </h3>
                         {hasEnglishLine && (
-                          <p className="text-xs text-slate-400 font-medium line-clamp-1 mt-0.5">
+                          <p className="text-xs text-slate-600 font-medium line-clamp-1 mt-0.5">
                             {cleanEn}
                           </p>
                         )}

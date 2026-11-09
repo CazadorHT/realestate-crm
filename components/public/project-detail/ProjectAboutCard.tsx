@@ -1,20 +1,41 @@
+"use client";
+
 /* eslint-disable @next/next/no-img-element */
 import { Building2 } from "lucide-react";
 import { getDistrictName } from "@/lib/utils/provinces";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { parseBilingualProjectName } from "@/lib/utils/project-name-utils";
+import { getProjectDetailString } from "./project-detail-i18n";
 
 interface ProjectAboutCardProps {
   project: any;
-  language: string;
-  nameText: string;
-  getString: (key: string, params?: Record<string, string | number>) => string;
+  language?: string;
+  nameText?: string;
 }
 
 export function ProjectAboutCard({
   project,
-  language,
-  nameText,
-  getString,
+  language: propLanguage,
+  nameText: propNameText,
 }: ProjectAboutCardProps) {
+  const { language: ctxLanguage } = useLanguage();
+  const language = ctxLanguage || propLanguage || "th";
+
+  const getString = (key: string, params?: Record<string, string | number>) => {
+    return getProjectDetailString(key, language, params);
+  };
+
+  // กฎ: แต่ชื่อโครงการ หากนอกเหนือจาก th ให้ใช้ eng กับภาษาอื่นหมด
+  const rawTh = typeof project.name === "object" ? project.name.th : project.name;
+  const rawEn = typeof project.name === "object" ? project.name.en : undefined;
+  const { cleanTh, cleanEn } = parseBilingualProjectName(rawTh, rawEn);
+
+  const displayProjectName = language === "th"
+    ? (cleanTh || cleanEn)
+    : (project.name?.[language] || cleanEn || cleanTh);
+
+  const hasEnglishLine = language === "th" && cleanEn && cleanEn.trim() !== (cleanTh || "").trim();
+
   const getTransitLogoInfo = (code: string) => {
     const c = code.toUpperCase();
     if (c.startsWith("BTS")) {
@@ -69,7 +90,7 @@ export function ProjectAboutCard({
 
   const descObj = project.description;
   const localizedDesc = descObj
-    ? (descObj[language as keyof typeof descObj] || descObj.th || "")
+    ? (descObj[language as keyof typeof descObj] || (language !== "th" ? (descObj.en || descObj.th) : descObj.th) || "")
     : "";
 
   const stationsList = (() => {
@@ -82,19 +103,30 @@ export function ProjectAboutCard({
     }).filter((s: any) => s.code);
   })();
 
+  const awayLabel = getString("away");
+
   return (
     <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-xs space-y-6">
-      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
-        <Building2 className="w-5 h-5 text-blue-500" />
-        <span>{getString("about_project", { name: nameText })}</span>
-      </h3>
+      <div className="border-b border-slate-100 pb-3">
+        <h3 className="text-lg font-bold text-slate-900 flex items-start gap-2">
+          <Building2 className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+          <div className="flex flex-col">
+            <span>{getString("about_project", { name: displayProjectName })}</span>
+            {hasEnglishLine && (
+              <span className="text-xs font-semibold text-slate-600 mt-0.5">
+                {cleanEn}
+              </span>
+            )}
+          </div>
+        </h3>
+      </div>
 
       {/* Description */}
       <div className="text-slate-600 text-sm leading-relaxed prose prose-slate">
         {localizedDesc ? (
           <div dangerouslySetInnerHTML={{ __html: localizedDesc }} />
         ) : (
-          <p>{getString("no_desc", { name: nameText, district: project.district ? getDistrictName(project.district, language) : "" })}</p>
+          <p>{getString("no_desc", { name: displayProjectName, district: project.district ? getDistrictName(project.district, language) : "" })}</p>
         )}
       </div>
 
@@ -129,7 +161,7 @@ export function ProjectAboutCard({
                     </span>
                     {formattedDistance && (
                       <span className="text-[11px] text-slate-500 font-medium mt-0.5 block leading-none">
-                        {formattedDistance} away
+                        {formattedDistance} {awayLabel}
                       </span>
                     )}
                   </div>

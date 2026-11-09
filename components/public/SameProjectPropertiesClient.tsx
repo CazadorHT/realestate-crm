@@ -113,7 +113,7 @@ export function SameProjectPropertiesClient({
 
   return (
     <section className="py-8 md:py-10 border-t border-slate-100">
-      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6 md:mb-8">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-3.5 sm:gap-4 mb-6 md:mb-8">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
@@ -132,7 +132,7 @@ export function SameProjectPropertiesClient({
 
               {/* Line 2 (เฉพาะภาษาไทยเท่านั้น ที่มี ภาษา eng อยู่อีกบรรทัดด้วย และไม่ซ้ำกับบรรทัดแรก) */}
               {language === "th" && cleanEn && cleanEn.trim() !== (cleanTh || "").trim() && (
-                <span className="text-xs sm:text-sm font-semibold text-slate-400 mt-0.5">
+                <span className="text-xs sm:text-sm font-semibold text-slate-600 mt-0.5">
                   {cleanEn}
                 </span>
               )}
@@ -146,7 +146,7 @@ export function SameProjectPropertiesClient({
         {displayProjectName && (
           <Link
             href={viewAllHref}
-            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group self-start md:self-auto shrink-0 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-indigo-600 hover:text-white bg-indigo-50/80 hover:bg-indigo-600 border border-indigo-200/80 hover:border-indigo-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 group shrink-0 self-end sm:self-auto"
           >
             <span>
               {language === "en"
