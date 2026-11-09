@@ -48,6 +48,7 @@ import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName, PROVINCES } from "@/lib/utils/provinces";
 import { useAddressLocalization } from "@/hooks/useAddressLocalization";
 import { getUnitSpecialFeatures } from "./helpers/badge-helpers";
+import { parseBilingualProjectName } from "@/lib/utils/project-name-utils";
 import { PropertyPricingSection } from "./PropertyPricingSection";
 
 interface PropertyHeaderProps {
@@ -462,40 +463,52 @@ export function PropertyHeader({
                       const ProjectIcon =
                         PROPERTY_TYPE_ICONS[typeKey] || Building2;
                       const projectObj = property.project as any;
-                      const nameEn = projectObj?.name_en || null;
-                      const nameTh = projectObj?.name_th || null;
-                      const projectName = (language === "cn" || language === "ru")
-                        ? getLocaleValue(property.project, "name", language) || nameEn || nameTh
-                        : nameEn || nameTh || getLocaleValue(property.project, "name", language);
+                      const rawTh = projectObj?.name_th || (typeof projectObj?.name === "object" ? projectObj.name?.th : null) || (typeof projectObj?.name === "string" ? projectObj.name : null);
+                      const rawEn = projectObj?.name_en || (typeof projectObj?.name === "object" ? projectObj.name?.en : null) || null;
+                      const { cleanTh, cleanEn } = parseBilingualProjectName(rawTh, rawEn);
+
+                      // หากภาษาเว็บเป็นไทย ให้เอาชื่อโครงการ eng มาแสดงด้วย กรณีภาษาเว็บเปนไทยเท่านั้น นอกนั้นแสดงปกติเหมือนเดิม
+                      const displayProjectName = language === "th"
+                        ? (cleanTh || cleanEn)
+                        : (language === "cn" || language === "ru"
+                            ? getLocaleValue(property.project, "name", language) || cleanEn || cleanTh
+                            : cleanEn || cleanTh || getLocaleValue(property.project, "name", language));
+
+                      const hasEnglishLine = language === "th" && cleanEn && cleanEn.trim() !== (cleanTh || "").trim();
 
                       const projectTooltip = (() => {
                         if (language === "th") {
-                          const th = nameTh?.trim();
-                          const en = nameEn?.trim();
-                          if (th && en && th.toLowerCase() !== en.toLowerCase()) {
-                            return `ดูโครงการ ${th}\n(${en})`;
+                          if (hasEnglishLine) {
+                            return `ดูโครงการ ${cleanTh}\n(${cleanEn})`;
                           }
-                          return `ดูโครงการ ${th || en || projectName}`;
+                          return `ดูโครงการ ${displayProjectName}`;
                         }
-                        if (language === "cn") return `查看项目 ${projectName}`;
-                        if (language === "ru") return `Посмотреть проект ${projectName}`;
-                        return `View Project ${nameEn || projectName}`;
+                        if (language === "cn") return `查看项目 ${displayProjectName}`;
+                        if (language === "ru") return `Посмотреть проект ${displayProjectName}`;
+                        return `View Project ${displayProjectName}`;
                       })();
 
                       return (
                         <div className="mb-2 lg:mb-3">
                           <Link
                             href={`${langPrefix}/projects/${property.project.slug}`}
-                            className="group/proj h-9 lg:h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
+                            className="group/proj h-auto min-h-9 lg:min-h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
                             title={projectTooltip}
                           >
                             <div className="flex items-center gap-2">
                               <ProjectIcon className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
-                              <span className="font-semibold">
-                                {projectName}
-                              </span>
+                              <div className="flex flex-col text-left">
+                                <span className="font-semibold leading-tight">
+                                  {displayProjectName}
+                                </span>
+                                {hasEnglishLine && (
+                                  <span className="text-[11px] font-medium text-slate-400 group-hover/proj:text-blue-100 transition-colors leading-tight mt-0.5">
+                                    {cleanEn}
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            <ChevronRight className="w-3.5 h-3.5 text-blue-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform" />
+                            <ChevronRight className="w-3.5 h-3.5 text-blue-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform ml-1.5" />
                           </Link>
                         </div>
                       );

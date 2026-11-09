@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MapPin, ChevronLeft, ChevronRight, Compass } from "lucide-react";
 import { m } from "framer-motion";
 import { getLangPrefix } from "@/lib/i18n";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 // ============================================================
 // Types
@@ -12,7 +13,7 @@ import { getLangPrefix } from "@/lib/i18n";
 
 interface NearbyArea {
   id: string;
-  name: { th: string; en: string };
+  name: { th: string; en: string; cn?: string; ru?: string };
   slug: string;
   imageUrl: string | null;
   province: string | null;
@@ -20,9 +21,12 @@ interface NearbyArea {
 
 interface NearbyAreasSectionProps {
   areas: NearbyArea[];
-  language: string;
+  language?: string;
+  locationArea?: string | null;
+  locationAreaDict?: { th?: string | null; en?: string | null; cn?: string | null; ru?: string | null } | null;
   /** Optional override heading — falls back to built-in i18n */
-  title?: string;
+  title?: React.ReactNode;
+  subtitle?: string;
   /** When true the section renders without its own py/bg/border-t wrapper */
   embedded?: boolean;
 }
@@ -35,6 +39,8 @@ const I18N: Record<string, Record<string, string>> = {
   title:    { th: "ย่านแนะนำที่น่าสนใจ",  en: "Recommended Nearby Areas",    cn: "推荐周边区域",  ru: "Рекомендуемые районы"  },
   subtitle: { th: "สำรวจทำเลใกล้เคียงที่มีโครงการและอสังหาริมทรัพย์น่าสนใจ", en: "Explore nearby areas with great properties", cn: "探索附近的热门区域", ru: "Откройте интересные районы рядом" },
   bangkok:  { th: "กรุงเทพฯ",             en: "Bangkok",                     cn: "曼谷",         ru: "Бангкок"               },
+  phuket:   { th: "ภูเก็ต",               en: "Phuket",                      cn: "普吉岛",       ru: "Пхукет"                },
+  chonburi: { th: "ชลบุรี",               en: "Chonburi",                    cn: "春武里",       ru: "Чонбури"               },
 };
 
 // ============================================================
@@ -43,8 +49,15 @@ const I18N: Record<string, Record<string, string>> = {
 
 function getProvinceName(province: string | null, language: string): string {
   if (!province) return "";
-  if (province === "กรุงเทพมหานคร" || province === "Bangkok") {
+  const pNorm = province.trim().toLowerCase();
+  if (pNorm === "กรุงเทพมหานคร" || pNorm === "bangkok") {
     return I18N.bangkok[language] || I18N.bangkok.th;
+  }
+  if (pNorm === "ภูเก็ต" || pNorm === "phuket") {
+    return I18N.phuket[language] || I18N.phuket.th;
+  }
+  if (pNorm === "ชลบุรี" || pNorm === "chonburi" || pNorm === "chon buri") {
+    return I18N.chonburi[language] || I18N.chonburi.th;
   }
   return province;
 }
@@ -53,14 +66,65 @@ function getProvinceName(province: string | null, language: string): string {
 // Main Component
 // ============================================================
 
-export function NearbyAreasSection({ areas, language, title, embedded }: NearbyAreasSectionProps) {
+export function NearbyAreasSection({
+  areas,
+  language: propLanguage,
+  locationArea,
+  locationAreaDict,
+  title,
+  subtitle,
+  embedded,
+}: NearbyAreasSectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft]   = useState(false);
   const [showRight, setShowRight] = useState(true);
-  const langPrefix = getLangPrefix(language);
+
+  const { language: contextLanguage, langPrefix: contextPrefix } = useLanguage();
+  const language = contextLanguage || propLanguage || "th";
+  const langPrefix = contextPrefix || getLangPrefix(language);
+
+  // Dynamic location translation in current language
+  const localizedLocation = (() => {
+    if (locationAreaDict) {
+      if (language === "th") return locationAreaDict.th || locationArea;
+      if (language === "cn") return locationAreaDict.cn || locationAreaDict.en || locationAreaDict.th || locationArea;
+      if (language === "ru") return locationAreaDict.ru || locationAreaDict.en || locationAreaDict.th || locationArea;
+      return locationAreaDict.en || locationAreaDict.th || locationArea;
+    }
+    return locationArea || "";
+  })();
+
+  const gradientLocation = localizedLocation ? (
+    <span className="bg-linear-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent font-extrabold">
+      {localizedLocation}
+    </span>
+  ) : null;
+
+  const dynamicTitle = localizedLocation ? (
+    language === "en" ? (
+      <>Explore Neighborhoods near {gradientLocation}</>
+    ) : language === "cn" ? (
+      <>{gradientLocation} 周边热门商圈</>
+    ) : language === "ru" ? (
+      <>Районы рядом с {gradientLocation}</>
+    ) : (
+      <>ย่านทำเลใกล้เคียง {gradientLocation}</>
+    )
+  ) : null;
+
+  const dynamicSubtitle = localizedLocation
+    ? language === "en"
+      ? `Discover top lifestyle and residential zones around ${localizedLocation}`
+      : language === "cn"
+        ? `探索 ${localizedLocation} 周边拥有优质楼盘与热门房源的生活商圈`
+        : language === "ru"
+          ? `Исследуйте интересные жилые зоны и районы рядом с ${localizedLocation}`
+          : `สำรวจทำเลใกล้เคียงที่มีโครงการและอสังหาริมทรัพย์น่าสนใจรอบย่าน ${localizedLocation}`
+    : null;
 
   const t = (k: string) => I18N[k]?.[language] || I18N[k]?.en || "";
-  const headingText = title ?? t("title");
+  const headingText = title ?? dynamicTitle ?? t("title");
+  const subText = subtitle ?? dynamicSubtitle ?? t("subtitle");
 
   /* ── scroll tracking ── */
   const checkLimits = () => {
@@ -100,7 +164,7 @@ export function NearbyAreasSection({ areas, language, title, embedded }: NearbyA
           <h2 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight">
             {headingText}
           </h2>
-          {!embedded && <p className="text-xs text-slate-400 mt-0.5">{t("subtitle")}</p>}
+          <p className="text-xs text-slate-500 mt-0.5">{subText}</p>
         </div>
       </div>
 
@@ -178,7 +242,7 @@ export function NearbyAreasSection({ areas, language, title, embedded }: NearbyA
                   {/* Text */}
                   <div className="absolute bottom-3 left-3 right-3 text-left">
                     <span className="block text-sm font-bold text-white tracking-tight drop-shadow-xs line-clamp-1">
-                      {item.name[language as keyof typeof item.name] || item.name.th}
+                      {item.name[language as keyof typeof item.name] || (language !== "th" ? (item.name.en || item.name.th) : item.name.th)}
                     </span>
                     <span className="block text-xs text-slate-300 mt-0.5 truncate">
                       {getProvinceName(item.province, language)}

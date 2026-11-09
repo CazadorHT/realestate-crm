@@ -4,18 +4,81 @@ import Link from "next/link";
 import Image from "next/image";
 import { Compass } from "lucide-react";
 import { useLanguage, type Language } from "@/components/providers/LanguageProvider";
+import { cn } from "@/lib/utils";
 
 interface ExploreMapBannerProps {
   language?: Language;
+  href?: string;
+  locationArea?: string | null;
+  locationAreaDict?: { th?: string | null; en?: string | null; cn?: string | null; ru?: string | null } | null;
+  title?: React.ReactNode;
+  subtitle?: string;
+  cta?: string;
+  className?: string;
 }
 
-export function ExploreMapBanner({ language: propLanguage }: ExploreMapBannerProps) {
+export function ExploreMapBanner({
+  language: propLanguage,
+  href,
+  locationArea,
+  locationAreaDict,
+  title,
+  subtitle,
+  cta,
+  className,
+}: ExploreMapBannerProps) {
   const { language: contextLanguage, langPrefix } = useLanguage();
   const language = contextLanguage || propLanguage || "th";
 
-  const mapHref = `${langPrefix || ""}/map`;
+  // Resolve location dynamically in current language
+  const localizedAreaName = (() => {
+    if (locationAreaDict) {
+      if (language === "th") return locationAreaDict.th || locationArea;
+      if (language === "cn") return locationAreaDict.cn || locationAreaDict.en || locationAreaDict.th || locationArea;
+      if (language === "ru") return locationAreaDict.ru || locationAreaDict.en || locationAreaDict.th || locationArea;
+      return locationAreaDict.en || locationAreaDict.th || locationArea;
+    }
+    return locationArea || "";
+  })();
 
-  const content = {
+  const gradientLocation = localizedAreaName ? (
+    <span className="bg-linear-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent font-extrabold">
+      {localizedAreaName}
+    </span>
+  ) : null;
+
+  const mapHref = href || (locationArea ? `${langPrefix || ""}/map?popular_area=${encodeURIComponent(locationAreaDict?.th || locationArea || "")}` : `${langPrefix || ""}/map`);
+
+  const dynamicLocationContent = localizedAreaName
+    ? {
+        th: {
+          title: <>สำรวจทรัพย์ทำเล {gradientLocation} บนแผนที่</>,
+          subtitle: `ดูโครงการคอนโดและบ้านทั้งหมดรอบๆ ${localizedAreaName} พร้อมดูหมุดราคาจริงบนแผนที่`,
+          cta: `ดูทรัพย์รอบ ${localizedAreaName} บนแผนที่`,
+        },
+        en: {
+          title: <>Explore Properties in {gradientLocation} on Map</>,
+          subtitle: `Discover all condos and houses around ${localizedAreaName} with interactive price pins`,
+          cta: `View in ${localizedAreaName}`,
+        },
+        cn: {
+          title: <>在地图上探索 {gradientLocation} 房源</>,
+          subtitle: `直观查看 ${localizedAreaName} 周边全部楼盘位置与真实价格分布`,
+          cta: `查看 ${localizedAreaName} 地图`,
+        },
+        ru: {
+          title: <>Объекты в районе {gradientLocation} на карте</>,
+          subtitle: `Смотрите все квартиры и дома вокруг ${localizedAreaName} на интерактивной карте`,
+          cta: `Смотреть ${localizedAreaName}`,
+        },
+      }[language] || {
+        title: <>สำรวจทรัพย์ทำเล {gradientLocation} บนแผนที่</>,
+        subtitle: `ดูโครงการคอนโดและบ้านทั้งหมดรอบๆ ${localizedAreaName} พร้อมดูหมุดราคาจริงบนแผนที่`,
+        cta: `ดูทรัพย์รอบ ${localizedAreaName} บนแผนที่`,
+      }
+    : null;
+
+  const defaultContent = {
     th: {
       title: "ค้นหาตามทำเลบนแผนที่",
       subtitle: "สำรวจคอนโด บ้านเดี่ยว และออฟฟิศใกล้รถไฟฟ้า BTS/MRT พร้อมดูตำแหน่งจริงบนแผนที่",
@@ -42,8 +105,13 @@ export function ExploreMapBanner({ language: propLanguage }: ExploreMapBannerPro
     cta: "ดูบนแผนที่ทั้งหมด",
   };
 
+  const activeContent = dynamicLocationContent || defaultContent;
+  const displayTitle = title || activeContent.title;
+  const displaySubtitle = subtitle || activeContent.subtitle;
+  const displayCta = cta || activeContent.cta;
+
   return (
-    <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 mb-8 sm:mb-10">
+    <section className={cn("max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-10", className)}>
       <Link
         href={mapHref}
         prefetch={false}
@@ -144,13 +212,13 @@ export function ExploreMapBanner({ language: propLanguage }: ExploreMapBannerPro
 
           <div className="min-w-0 flex-1">
             <h3 className="text-xs sm:text-base md:text-lg font-bold text-slate-800 leading-snug group-hover:text-blue-600 transition-colors truncate">
-              {content.title}
+              {displayTitle}
             </h3>
             <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-1 mt-0.5 hidden xs:block sm:block">
-              {content.subtitle}
+              {displaySubtitle}
             </p>
             <div className="text-[11px] sm:text-xs font-bold text-blue-600 inline-flex items-center gap-1 group-hover:translate-x-1.5 transition-transform mt-0.5 sm:mt-1">
-              <span>{content.cta}</span>
+              <span>{displayCta}</span>
               <span>→</span>
             </div>
           </div>
@@ -160,7 +228,7 @@ export function ExploreMapBanner({ language: propLanguage }: ExploreMapBannerPro
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 shrink-0 -mr-1 sm:-mr-2 z-10 flex items-center justify-center -my-3 sm:-my-4">
           <Image
             src="/images/map-3d-explorer.webp"
-            alt={content.title}
+            alt={typeof displayTitle === "string" ? displayTitle : "Explore on map"}
             fill
             sizes="(max-width: 768px) 100px, 150px"
             className="object-contain drop-shadow-xl group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 ease-out pointer-events-none"

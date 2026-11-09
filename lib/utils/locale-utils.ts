@@ -22,7 +22,7 @@ export interface LocalizedValueV3 {
  * @param locale The current user locale ('th', 'en', 'cn')
  * @returns The localized string or fallback to default
  */
-const LOCALE_DICTIONARY_FALLBACKS: Record<string, Record<string, string>> = {
+export const LOCALE_DICTIONARY_FALLBACKS: Record<string, Record<string, string>> = {
   "อ่างอาบน้ำ": { en: "Bathtub", cn: "浴缸", ru: "Ванна" },
   "คลับเฮ้าส์": { en: "Clubhouse", cn: "会所", ru: "Клубный дом" },
   "คลับเฮ้าส์ / เลานจ์": { en: "Clubhouse / Lounge", cn: "会所 / 休息室", ru: "Клубный дом / Лаундж" },
@@ -224,4 +224,20 @@ export function getLocaleValue(
   }
 
   return baseValue;
+}
+
+/**
+ * Universal helper to localize popular area names using DB / Master Dictionary
+ */
+export function getLocalizedAreaName(areaName?: string | null, language: string = "th"): string {
+  if (!areaName) return "";
+  const trimmed = areaName.trim();
+  if (language === "th") return trimmed;
+  const dict = LOCALE_DICTIONARY_FALLBACKS[trimmed];
+  if (dict) {
+    if (language === "cn" && dict.cn) return dict.cn;
+    if (language === "ru" && dict.ru) return dict.ru;
+    if (dict.en) return dict.en;
+  }
+  return trimmed;
 }

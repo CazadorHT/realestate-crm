@@ -3,6 +3,8 @@ import { unstable_cache } from "next/cache";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getPopularAreasLookupMap } from "./popular-areas";
+import { getNearbyNeighborhoods } from "@/lib/utils/nearby-areas";
+import { LOCALE_DICTIONARY_FALLBACKS } from "@/lib/utils/locale-utils";
 import type { PublicPropertyNearStation } from "./stations";
 
 // ============================================================
@@ -413,7 +415,7 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
       // 2. Fetch candidate areas
       const { data, error } = await supabase
         .from("popular_areas_v3")
-        .select("id, name, slug, image_url, province")
+        .select("id, name, name_th, name_en, name_cn, name_ru, slug, image_url, province")
         .eq("is_active", true)
         .order("sort_order")
         .limit(200);
@@ -425,15 +427,25 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
         if (result.length >= limit) break;
 
         const nameObj = (item.name as Record<string, string> | null) || {};
-        const nameTh = (nameObj.th || "").trim();
+        const nameTh = (item.name_th || nameObj.th || (typeof item.name === "string" ? item.name : "")).trim();
 
         if (!activeAreaNames.has(nameTh)) continue;
 
         const imageUrl = item.image_url || areaImageMap.get(nameTh) || null;
+        const dict = LOCALE_DICTIONARY_FALLBACKS[nameTh] || {};
+
+        const nameEn = (item.name_en || nameObj.en || dict.en || nameTh).trim();
+        const nameCn = (item.name_cn || nameObj.cn || dict.cn || nameEn).trim();
+        const nameRu = (item.name_ru || nameObj.ru || dict.ru || nameEn).trim();
 
         result.push({
           id: item.id,
-          name: { th: nameTh, en: nameObj.en || "" },
+          name: {
+            th: nameTh,
+            en: nameEn,
+            cn: nameCn,
+            ru: nameRu,
+          },
           slug: item.slug || "",
           imageUrl: getPublicImageUrl(imageUrl) || null,
           province: item.province,
@@ -444,6 +456,43 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
     ["public-popular-areas", String(limit)],
     { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
   )();
+}
+
+/**
+ * Fetch visual popular area cards surrounding a specific property (Strictly same province)
+ */
+export async function getNearbyAreasForProperty(
+  popularArea?: string | null,
+  province?: string | null,
+  limit: number = 8
+): Promise<any[]> {
+  const allAreas = await getPopularAreas(100);
+  const nearbyList = getNearbyNeighborhoods(popularArea, province, 10);
+  const targetAreaNames = new Set(
+    nearbyList.map((n) => n.name.trim().toLowerCase())
+  );
+  const normProvince = province?.trim().toLowerCase();
+  const currentAreaName = (popularArea || "").trim().toLowerCase();
+
+  const exactNearby: any[] = [];
+  const sameProvinceExtra: any[] = [];
+
+  for (const item of allAreas) {
+    const thName = (item.name?.th || "").trim().toLowerCase();
+    const enName = (item.name?.en || "").trim().toLowerCase();
+
+    // Skip the current property's exact area
+    if (thName === currentAreaName || enName === currentAreaName) continue;
+
+    if (targetAreaNames.has(thName) || targetAreaNames.has(enName)) {
+      exactNearby.push(item);
+    } else if (normProvince && item.province?.trim().toLowerCase() === normProvince) {
+      sameProvinceExtra.push(item);
+    }
+  }
+
+  const combined = [...exactNearby, ...sameProvinceExtra];
+  return combined.slice(0, limit);
 }
 
 export async function getRelatedAreas(excludeId: string, limit = 50): Promise<any[]> {
@@ -475,7 +524,7 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
       // 2. Fetch candidate areas (excluding current)
       const { data, error } = await supabase
         .from("popular_areas_v3")
-        .select("id, name, slug, image_url, province")
+        .select("id, name, name_th, name_en, name_cn, name_ru, slug, image_url, province")
         .eq("is_active", true)
         .neq("id", excludeId)
         .order("sort_order")
@@ -488,15 +537,25 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
         if (result.length >= limit) break;
 
         const nameObj = (item.name as Record<string, string> | null) || {};
-        const nameTh = (nameObj.th || "").trim();
+        const nameTh = (item.name_th || nameObj.th || (typeof item.name === "string" ? item.name : "")).trim();
 
         if (!activeAreaNames.has(nameTh)) continue;
 
         const imageUrl = item.image_url || areaImageMap.get(nameTh) || null;
+        const dict = LOCALE_DICTIONARY_FALLBACKS[nameTh] || {};
+
+        const nameEn = (item.name_en || nameObj.en || dict.en || nameTh).trim();
+        const nameCn = (item.name_cn || nameObj.cn || dict.cn || nameEn).trim();
+        const nameRu = (item.name_ru || nameObj.ru || dict.ru || nameEn).trim();
 
         result.push({
           id: item.id,
-          name: { th: nameTh, en: nameObj.en || "" },
+          name: {
+            th: nameTh,
+            en: nameEn,
+            cn: nameCn,
+            ru: nameRu,
+          },
           slug: item.slug || "",
           imageUrl: getPublicImageUrl(imageUrl) || null,
           province: item.province,

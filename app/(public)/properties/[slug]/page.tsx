@@ -29,6 +29,11 @@ import { AgentSidebar } from "@/components/public/AgentSidebar";
 import { PropertySuitability } from "@/components/public/PropertySuitability";
 import { NearbyPlaces } from "@/components/public/NearbyPlaces";
 import { MobilePropertyActions } from "@/components/public/MobilePropertyActions";
+import { ExploreMapBanner } from "@/components/public/search/ExploreMapBanner";
+import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
+import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
+import { getRelatedProjects } from "@/features/public/projects";
+import { getNearbyAreasForProperty } from "@/features/public/areas";
 import {
   MapSkeleton,
   SimilarPropertiesSkeleton,
@@ -43,6 +48,11 @@ const RecentPropertyTracker = dynamic(() =>
 const SimilarPropertiesSection = dynamic(() =>
   import("@/components/public/SimilarPropertiesSection").then(
     (mod) => mod.SimilarPropertiesSection,
+  ),
+);
+const SameProjectPropertiesSection = dynamic(() =>
+  import("@/components/public/SameProjectPropertiesSection").then(
+    (mod) => mod.SameProjectPropertiesSection,
   ),
 );
 const GTMPropertyPageView = dynamic(() =>
@@ -83,6 +93,18 @@ export default async function PublicPropertyDetailPage(props: {
 
   // 2. SEO & Schema Generation
   const seo = generatePropertySEO(data, language);
+
+  // 3. Parallel Discovery Fetch (Related Projects & Nearby Areas)
+  const [relatedProjects, nearbyAreas] = await Promise.all([
+    getRelatedProjects(
+      data.project_id || data.id,
+      data.district,
+      data.province,
+      8,
+      data.popular_area
+    ),
+    getNearbyAreasForProperty(data.popular_area, data.province, 8),
+  ]);
 
   return (
     <main className="min-h-screen bg-white pb-24 lg:pb-20 font-sans">
@@ -182,7 +204,6 @@ export default async function PublicPropertyDetailPage(props: {
                   propertyId={data.id}
                   propertyTitle={data.title}
                   googleMapsLink={data.google_maps_link}
-                  language={language as any}
                 />
               </Suspense>
             </div>
@@ -223,7 +244,6 @@ export default async function PublicPropertyDetailPage(props: {
                     propertyId={data.id}
                     propertyTitle={data.title}
                     googleMapsLink={data.google_maps_link}
-                    language={language as any}
                     compact={true}
                   />
                 </Suspense>
@@ -232,11 +252,65 @@ export default async function PublicPropertyDetailPage(props: {
           </aside>
         </div>
 
+        {/* Contextual Map Exploration Banner (Pro Feature: Location-Aware & Multilingual) */}
+        <div className="mt-6 mb-8 sm:mt-10 sm:mb-12">
+          <ExploreMapBanner
+            locationArea={data.popular_area || data.district || data.province || ""}
+            locationAreaDict={{
+              th: data.popular_area,
+              en: data.popular_area_en,
+              cn: data.popular_area_cn,
+              ru: data.popular_area_ru,
+            }}
+            className="px-0! mb-0"
+          />
+        </div>
+
+        {/* 🏢 Same Project Sibling Units Section (Located directly under ExploreMapBanner) */}
+        {data.project_id && (
+          <Suspense fallback={<SimilarPropertiesSkeleton />}>
+            <SameProjectPropertiesSection
+              currentPropertyId={data.id}
+              projectId={data.project_id}
+              projectName={
+                data.project_name ||
+                (typeof data.project?.name === "string"
+                  ? data.project.name
+                  : data.project?.name?.th || data.project?.name?.en) ||
+                undefined
+              }
+              projectNameEn={
+                (typeof data.project?.name === "object" ? data.project?.name?.en : null) ||
+                data.project_name_en ||
+                undefined
+              }
+              projectSlug={data.project?.slug || undefined}
+              propertyType={data.property_type || undefined}
+              compareData={{
+                price:
+                  data.listing_type === "RENT" ? data.rental_price : data.price,
+                size: data.size_sqm,
+                date: data.created_at,
+              }}
+            />
+          </Suspense>
+        )}
+
         <Suspense fallback={<SimilarPropertiesSkeleton />}>
           <SimilarPropertiesSection
             currentPropertyId={data.id}
             propertyType={data.property_type}
             province={data.province || undefined}
+            popularArea={data.popular_area || undefined}
+            popularAreaEn={data.popular_area_en || undefined}
+            popularAreaCn={data.popular_area_cn || undefined}
+            popularAreaRu={data.popular_area_ru || undefined}
+            district={data.district || undefined}
+            subdistrict={data.subdistrict || undefined}
+            projectId={data.project_id || undefined}
+            projectName={data.project_name || (typeof data.project?.name === "string" ? data.project.name : data.project?.name?.th || data.project?.name?.en) || undefined}
+            projectNameEn={(typeof data.project?.name === "object" ? data.project?.name?.en : null) || data.project_name_en || undefined}
+            listingType={data.listing_type || undefined}
             compareData={{
               price:
                 data.listing_type === "RENT" ? data.rental_price : data.price,
@@ -245,6 +319,40 @@ export default async function PublicPropertyDetailPage(props: {
             }}
           />
         </Suspense>
+
+        {/* 🏢 Nearby Projects Carousel (Like Image 4: โครงการอื่นๆ ที่น่าสนใจใกล้เคียง) */}
+        {relatedProjects.length > 0 && (
+          <section className="py-8 md:py-10 border-t border-slate-100">
+            <AreaProjectsCarousel
+              projects={relatedProjects}
+              locationArea={data.popular_area || data.district || data.province || ""}
+              locationAreaDict={{
+                th: data.popular_area,
+                en: data.popular_area_en,
+                cn: data.popular_area_cn,
+                ru: data.popular_area_ru,
+              }}
+              propertyType={data.property_type}
+            />
+          </section>
+        )}
+
+        {/* 🧭 Nearby Neighborhoods Cards (Like Image 3: ย่านทำเลใกล้เคียง) */}
+        {nearbyAreas.length > 0 && (
+          <div className="pt-2 pb-6">
+            <NearbyAreasSection
+              areas={nearbyAreas}
+              locationArea={data.popular_area || data.district || data.province || ""}
+              locationAreaDict={{
+                th: data.popular_area,
+                en: data.popular_area_en,
+                cn: data.popular_area_cn,
+                ru: data.popular_area_ru,
+              }}
+              embedded={true}
+            />
+          </div>
+        )}
       </div>
 
       <MobilePropertyActions

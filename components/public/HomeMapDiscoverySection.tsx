@@ -103,7 +103,7 @@ function matchesPropertyType(pinPropertyType: string | undefined | null, selecte
 
 export function HomeMapDiscoverySection({ language: propLang }: HomeMapDiscoverySectionProps) {
   const { language: ctxLang, langPrefix } = useLanguage();
-  const language = propLang || ctxLang || "th";
+  const language = ctxLang || propLang || "th";
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
@@ -329,7 +329,7 @@ export function HomeMapDiscoverySection({ language: propLang }: HomeMapDiscovery
   }, [language]);
 
   const fullMapButtonText = useMemo(() => {
-    if (language === "cn") return "เปิดแผนที่แบบเต็มหน้าจอ";
+    if (language === "cn") return "打开全景地图";
     if (language === "ru") return "Открыть карту на весь экран";
     if (language === "en") return "Open Fullscreen Map";
     return "เปิดแผนที่แบบเต็มหน้าจอ";
@@ -377,8 +377,24 @@ export function HomeMapDiscoverySection({ language: propLang }: HomeMapDiscovery
         <ResponsiveDialog
           open={isTypeDialogOpen}
           onOpenChange={setIsTypeDialogOpen}
-          title={language === "th" ? "เลือกประเภทอสังหาริมทรัพย์" : "Select Property Type"}
-          description={language === "th" ? "เลือกประเภทที่ต้องการแสดงหมุดราคาบนแผนที่" : "Filter properties displayed on map"}
+          title={
+            language === "th"
+              ? "เลือกประเภทอสังหาริมทรัพย์"
+              : language === "cn"
+                ? "选择物业类型"
+                : language === "ru"
+                  ? "Выберите тип недвижимости"
+                  : "Select Property Type"
+          }
+          description={
+            language === "th"
+              ? "เลือกประเภทที่ต้องการแสดงหมุดราคาบนแผนที่"
+              : language === "cn"
+                ? "选择要在地图上显示价格图钉的物业类型"
+                : language === "ru"
+                  ? "Выберите тип недвижимости для отображения цен на карте"
+                  : "Filter properties displayed on map"
+          }
           trigger={
             <button
               type="button"
@@ -507,13 +523,25 @@ export function HomeMapDiscoverySection({ language: propLang }: HomeMapDiscovery
                 setIsAreaDialogOpen(open);
                 if (!open) setAreaSearchQuery("");
               }}
-              title={language === "th" ? "เลือกทำเล / ย่านยอดนิยม" : "Select Location"}
+              title={
+                language === "th"
+                  ? "เลือกทำเล / ย่านยอดนิยม"
+                  : language === "cn"
+                    ? "选择热门地段 / 商圈"
+                    : language === "ru"
+                      ? "Выберите популярный район"
+                      : "Select Location"
+              }
               description={
                 language === "th"
                   ? selectedType === "ALL"
                     ? `เลือกทำเลที่ต้องการสำรวจบนแผนที่ (ทั้งหมด ${allAreas.length} ทำเล)`
                     : `ทำเลที่มี${currentTypeLabel}บนแผนที่ (ทั้งหมด ${allAreas.length} ทำเล)`
-                  : `Explore locations with ${currentTypeLabel} on the map`
+                  : language === "cn"
+                    ? `在地图上探索 ${currentTypeLabel} 的热门地段（共 ${allAreas.length} 个）`
+                    : language === "ru"
+                      ? `Исследуйте районы с объектами (${currentTypeLabel}) на карте (всего ${allAreas.length})`
+                      : `Explore locations with ${currentTypeLabel} on the map (${allAreas.length} locations)`
               }
               trigger={
                 <button
@@ -571,7 +599,13 @@ export function HomeMapDiscoverySection({ language: propLang }: HomeMapDiscovery
                       <Layers className="w-4 h-4" />
                     </div>
                     <span className="text-xs sm:text-sm">
-                      {language === "th" ? "ทุกทำเล (แสดงทั้งหมดบนแผนที่)" : "All Locations (Show all)"}
+                      {language === "th"
+                        ? "ทุกทำเล (แสดงทั้งหมดบนแผนที่)"
+                        : language === "cn"
+                          ? "所有地段 (在地图上显示全部)"
+                          : language === "ru"
+                            ? "Все районы (Показать все на карте)"
+                            : "All Locations (Show all)"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -636,7 +670,13 @@ export function HomeMapDiscoverySection({ language: propLang }: HomeMapDiscovery
                     })
                   ) : (
                     <div className="col-span-full py-8 text-center text-xs text-slate-400">
-                      {language === "th" ? "ไม่พบทำเลที่ตรงกับคำค้นหา" : "No locations found"}
+                      {language === "th"
+                        ? "ไม่พบทำเลที่ตรงกับคำค้นหา"
+                        : language === "cn"
+                          ? "未找到匹配的地段"
+                          : language === "ru"
+                            ? "Районы не найдены"
+                            : "No locations found"}
                     </div>
                   )}
                 </div>
@@ -662,7 +702,13 @@ export function HomeMapDiscoverySection({ language: propLang }: HomeMapDiscovery
           <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-slate-50 text-slate-400">
             <Compass className="w-8 h-8 animate-spin text-blue-500" />
             <span className="text-xs font-semibold text-slate-500">
-              {language === "th" ? "กำลังเตรียมแผนที่..." : "Loading Map..."}
+              {language === "th"
+                ? "กำลังเตรียมแผนที่..."
+                : language === "cn"
+                  ? "正在加载地图..."
+                  : language === "ru"
+                    ? "Загрузка карты..."
+                    : "Loading Map..."}
             </span>
           </div>
         )}

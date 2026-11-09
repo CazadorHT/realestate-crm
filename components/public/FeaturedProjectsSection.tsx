@@ -9,6 +9,7 @@ import type { PublicProject } from "@/features/public/projects";
 import { SectionBackground } from "./SectionBackground";
 import { getProvinceName, getDistrictName, translateLocation } from "@/lib/utils/provinces";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { parseBilingualProjectName } from "@/lib/utils/project-name-utils";
 
 interface FeaturedProjectsSectionProps {
   projects: PublicProject[];
@@ -226,10 +227,15 @@ export function FeaturedProjectsSection({
             className="flex gap-6 overflow-x-auto pb-6 scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {projects.map((proj, index) => {
-              const nameText = 
-                proj.name[language as keyof typeof proj.name] || 
-                proj.name.en || 
-                proj.name.th;
+              const rawTh = typeof proj.name === "object" ? proj.name.th : (proj.name as any);
+              const rawEn = typeof proj.name === "object" ? proj.name.en : undefined;
+              const { cleanTh, cleanEn } = parseBilingualProjectName(rawTh, rawEn);
+
+              const nameText = language === "th"
+                ? (cleanTh || cleanEn)
+                : (proj.name[language as keyof typeof proj.name] || cleanEn || cleanTh);
+
+              const hasEnglishLine = language === "th" && cleanEn && cleanEn.trim() !== (cleanTh || "").trim();
 
               const hasSale = proj.priceMin != null;
               const hasRent = proj.rentalMin != null;
@@ -282,7 +288,7 @@ export function FeaturedProjectsSection({
                       {proj.imageUrl ? (
                         <Image
                           src={proj.imageUrl}
-                          alt={nameText}
+                          alt={nameText || "Project"}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className={`object-cover group-hover:scale-105 transition-all duration-600 ease-out ${
@@ -314,11 +320,16 @@ export function FeaturedProjectsSection({
                     {/* Project Info */}
                     <div className="p-5 flex-1 flex flex-col justify-between text-left">
                       <div>
-                        <h3 className="font-extrabold text-slate-800 text-base group-hover:text-blue-600 transition-colors line-clamp-1">
+                        <h3 className="font-extrabold text-slate-800 text-base group-hover:text-blue-600 transition-colors line-clamp-1 leading-snug">
                           {nameText}
                         </h3>
+                        {hasEnglishLine && (
+                          <p className="text-xs text-slate-400 font-medium line-clamp-1 mt-0.5">
+                            {cleanEn}
+                          </p>
+                        )}
                         {proj.developer && (
-                          <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                          <p className="text-xs text-slate-500 mt-1 font-medium">
                             {getPageString("developer")}: {proj.developer}
                           </p>
                         )}

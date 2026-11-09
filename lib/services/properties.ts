@@ -171,6 +171,7 @@ function buildLocation(row: PropertyRow) {
 export interface GetPropertiesOptions {
   q?: string;
   ids?: string[];
+  projectId?: string;
   filter?: "hot_deals" | "all";
   limit?: number;
   province?: string;
@@ -222,6 +223,14 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         if (effectiveProvince) {
           query = query.eq("province", effectiveProvince);
+        }
+
+        if (options.projectId) {
+          query = query.eq("project_id", options.projectId);
+        }
+
+        if (options.district) {
+          query = query.ilike("district", `%${options.district}%`);
         }
         const targetArea = options.area || options.popular_area;
         if (targetArea && targetArea !== "ALL") {

@@ -16,6 +16,7 @@ import type {
 } from "../types/v3";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import { getPopularAreasLookupMap } from "@/features/public/popular-areas";
+import { parseBilingualProjectName } from "@/lib/utils/project-name-utils";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -259,18 +260,34 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
   }
 
   let popularAreaSlug: string | null = null;
+  let areaLookupRecord: any = null;
   const areaNameName = address.popular_area;
   if (areaNameName) {
     const trimmedArea = areaNameName.trim().toLowerCase();
     try {
       const lookupMap = await getPopularAreasLookupMap();
-      popularAreaSlug = lookupMap[trimmedArea]?.slug || null;
+      areaLookupRecord = lookupMap[trimmedArea] || null;
+      popularAreaSlug = areaLookupRecord?.slug || null;
     } catch (err) {
       console.error("Error looking up popular area slug in fetch-public-property:", err);
     }
   }
 
-  const rawProject = rawData.project as unknown as { id: string; slug: string; name: string } | null;
+  const rawProject = rawData.project as unknown as { id: string; slug: string; name: any } | null;
+  const rawProjTh =
+    (typeof rawProject?.name === "string"
+      ? rawProject.name
+      : (rawProject?.name as any)?.th || (rawProject?.name as any)?.en) ||
+    (details?.meta_data as any)?.project_name ||
+    null;
+  const rawProjEn =
+    (typeof rawProject?.name === "object" ? (rawProject?.name as any)?.en : null) ||
+    (details?.meta_data as any)?.project_name_en ||
+    null;
+  const { cleanTh: parsedProjTh, cleanEn: parsedProjEn } = parseBilingualProjectName(
+    rawProjTh,
+    rawProjEn
+  );
 
   const data: PropertyDetail = {
     id: rawData.id,
@@ -281,6 +298,8 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
       slug: rawProject.slug,
       name: rawProject.name,
     } : null,
+    project_name: parsedProjTh || rawProjTh,
+    project_name_en: parsedProjEn || rawProjEn,
     status: rawData.status,
     listing_type: mappedListingType as ListingType,
     property_type: mappedPropertyType as PropertyType,
@@ -302,9 +321,9 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     halls: amenities.halls || null,
     dining_rooms: amenities.dining_rooms || null,
     min_contract_months: pricing.min_contract_months || null,
-    province: rawData.province,
-    district: rawData.district,
-    subdistrict: rawData.subdistrict,
+    province: address.province || (rawData as any).province || null,
+    district: address.district || (rawData as any).district || null,
+    subdistrict: address.subdistrict || (rawData as any).subdistrict || null,
     // Support both `google_maps_link` and legacy `maps_link` keys
     google_maps_link: (address.google_maps_link || (address as any).maps_link) || null,
     is_hot_deal: !!rawData.is_hot_deal,
@@ -378,9 +397,9 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     description_ru: sanitizeString(details?.description?.ru) || null,
 
     popular_area: address.popular_area || rawData.district,
-    popular_area_en: address.popular_area_en || null,
-    popular_area_cn: address.popular_area_cn || null,
-    popular_area_ru: address.popular_area_ru || null,
+    popular_area_en: address.popular_area_en || areaLookupRecord?.en || null,
+    popular_area_cn: address.popular_area_cn || areaLookupRecord?.cn || null,
+    popular_area_ru: address.popular_area_ru || areaLookupRecord?.ru || null,
     popular_area_slug: popularAreaSlug,
 
     subdistrict_en: address.subdistrict_en || null,

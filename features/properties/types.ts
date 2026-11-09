@@ -288,6 +288,8 @@ export interface PropertyDetail {
 
   // Relations
   project_id?: string | null;
+  project_name?: string | null;
+  project_name_en?: string | null;
   project?: {
     id: string;
     slug: string;

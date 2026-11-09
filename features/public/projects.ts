@@ -456,28 +456,64 @@ export async function getRelatedProjects(
   projectId: string,
   district: string | null,
   province: string | null,
-  limit = 4
+  limit = 4,
+  popularArea?: string | null
 ): Promise<PublicProject[]> {
   const allProjects = await getPublicProjects();
   
   // 1. Filter out the current project
   let pool = allProjects.filter(p => p.id !== projectId);
-  
-  // 2. Try to find projects in the same district
-  let related = pool.filter(p => p.district === district);
-  
-  // 3. If not enough, fill with other projects in the same province
-  if (related.length < limit && province) {
-    const extraInProvince = pool.filter(p => p.district !== district && p.province === province);
-    related = [...related, ...extraInProvince];
+
+  const normProvince = province?.trim().toLowerCase();
+  if (normProvince) {
+    // Keep strictly within same province (Bangkok stays in Bangkok/vicinity, Phuket stays in Phuket)
+    const bangkokMetro = ["กรุงเทพมหานคร", "สมุทรปราการ", "นนทบุรี", "ปทุมธานี", "bangkok"];
+    if (bangkokMetro.includes(normProvince)) {
+      pool = pool.filter(p => p.province && bangkokMetro.includes(p.province.trim().toLowerCase()));
+    } else {
+      pool = pool.filter(p => p.province && p.province.trim().toLowerCase() === normProvince);
+    }
+  }
+
+  const collected: PublicProject[] = [];
+  const seenIds = new Set<string>();
+
+  // 2. Try to find projects in the same popular area
+  if (popularArea) {
+    const areaLower = popularArea.trim().toLowerCase();
+    pool.forEach(p => {
+      const matchName = (p.name?.th || "").toLowerCase().includes(areaLower) ||
+        (p.name?.en || "").toLowerCase().includes(areaLower);
+      const matchDistrict = (p.district || "").toLowerCase().includes(areaLower) ||
+        (p.subdistrict || "").toLowerCase().includes(areaLower);
+      if (matchName || matchDistrict) {
+        if (!seenIds.has(p.id) && collected.length < limit) {
+          seenIds.add(p.id);
+          collected.push(p);
+        }
+      }
+    });
   }
   
-  // 4. If still not enough, fill with any other active projects
-  if (related.length < limit) {
-    const ids = new Set(related.map(r => r.id));
-    const extra = pool.filter(p => !ids.has(p.id));
-    related = [...related, ...extra];
+  // 3. Try to find projects in the same district
+  if (collected.length < limit && district) {
+    pool.forEach(p => {
+      if (p.district === district && !seenIds.has(p.id) && collected.length < limit) {
+        seenIds.add(p.id);
+        collected.push(p);
+      }
+    });
   }
   
-  return related.slice(0, limit);
+  // 4. Fill with remaining projects in the same pool (strictly same province)
+  if (collected.length < limit) {
+    pool.forEach(p => {
+      if (!seenIds.has(p.id) && collected.length < limit) {
+        seenIds.add(p.id);
+        collected.push(p);
+      }
+    });
+  }
+  
+  return collected.slice(0, limit);
 }
