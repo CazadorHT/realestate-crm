@@ -2,6 +2,8 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { invalidateDashboardMetricsCache } from "@/features/dashboard/queries/stats";
+import { invalidateExecutiveAISummaryCache } from "@/features/dashboard/queries/executive-ai-summary-action";
 import { createSafeAction } from "@/lib/actions/safe-action";
 import { leadFormSchema, leadActivitySchema } from "./types";
 import type {
@@ -157,6 +159,8 @@ export const createLeadAction = createSafeAction(
 
     revalidatePath("/protected/leads");
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
 
@@ -304,6 +308,8 @@ export const updateLeadAction = createSafeAction(
     revalidatePath("/protected/leads");
     revalidatePath(`/protected/leads/${id}`);
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     return { id };
   },
 );
@@ -349,6 +355,8 @@ export const deleteLeadAction = createSafeAction(
 
     revalidatePath("/protected/leads");
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
     return { success: true };
@@ -571,6 +579,8 @@ export const updateLeadStageAction = createSafeAction(
 
     revalidatePath("/protected/leads");
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     return { success: true };
   },
 );
@@ -1185,6 +1195,8 @@ export const transferLeadAction = createSafeAction(
     revalidatePath("/protected/leads");
     revalidatePath(`/protected/leads/${id}`);
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
 

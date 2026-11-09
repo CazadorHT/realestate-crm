@@ -66,6 +66,14 @@ async function calculateDateRange(range?: string) {
   };
 }
 
+// 🚀 High-speed In-Memory Cache for Dashboard Queries (until invalidated by CRUD or after 30 min)
+const dashboardMetricsMemoryCache = new Map<string, { data: any; timestamp: number }>();
+const DASHBOARD_METRICS_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+export function invalidateDashboardMetricsCache() {
+  dashboardMetricsMemoryCache.clear();
+}
+
 export async function getDashboardStats({
   tenantId,
   agentId,
@@ -87,6 +95,13 @@ export async function getDashboardStats({
     let activeTenantId = (view === "branch" && targetId && targetId.toUpperCase() !== "ALL") 
       ? targetId 
       : (!tenantId || tenantId.toUpperCase() === "ALL" ? null : tenantId);
+
+    const cacheKey = `stats-${activeTenantId || "ALL"}-${agentId || "ALL"}-${view}-${targetId || "ALL"}-${range}`;
+    const now = Date.now();
+    const cached = dashboardMetricsMemoryCache.get(cacheKey);
+    if (cached && now - cached.timestamp < DASHBOARD_METRICS_TTL_MS) {
+      return cached.data;
+    }
 
     let myTenantIds: string[] = [];
 
@@ -179,7 +194,7 @@ export async function getDashboardStats({
     const totalCommission = (commissionDeals || []).reduce((sum: number, d: any) => sum + (Number(d.amount_total ?? d.amount) || 0), 0);
     const dealsWon = (commissionDeals || []).length;
 
-    return {
+    const statsResult: DashboardStats = {
       revenueThisMonth: companyNetRevenue,
       revenueChange: "+0%",
       leadsThisMonth: leadsCurrent || 0,
@@ -193,6 +208,9 @@ export async function getDashboardStats({
       dealsTarget: 10,
       totalCommission,
     };
+    if (dashboardMetricsMemoryCache.size > 500) dashboardMetricsMemoryCache.clear();
+    dashboardMetricsMemoryCache.set(cacheKey, { data: statsResult, timestamp: now });
+    return statsResult;
   } catch (error) {
     console.error("getDashboardStats Error:", error);
     return {
@@ -229,6 +247,13 @@ export async function getRevenueChartData(args: DashboardQueryArgs): Promise<Rev
     let activeTenantId = (args.view === "branch" && args.targetId && args.targetId.toUpperCase() !== "ALL") 
       ? args.targetId 
       : (!args.tenantId || args.tenantId.toUpperCase() === "ALL" ? null : args.tenantId);
+
+    const cacheKey = `rev-${activeTenantId || "ALL"}-${args.agentId || "ALL"}-${args.view || "company"}-${args.targetId || "ALL"}-${args.range || "month"}`;
+    const cacheNow = Date.now();
+    const cached = dashboardMetricsMemoryCache.get(cacheKey);
+    if (cached && cacheNow - cached.timestamp < DASHBOARD_METRICS_TTL_MS) {
+      return cached.data;
+    }
 
     let myTenantIds: string[] = [];
 
@@ -339,7 +364,10 @@ export async function getRevenueChartData(args: DashboardQueryArgs): Promise<Rev
       }
     });
 
-    return sortedLabels.map(name => ({ name, total: grouped.get(name) || 0 }));
+    const revenueResult = sortedLabels.map(name => ({ name, total: grouped.get(name) || 0 }));
+    if (dashboardMetricsMemoryCache.size > 500) dashboardMetricsMemoryCache.clear();
+    dashboardMetricsMemoryCache.set(cacheKey, { data: revenueResult, timestamp: cacheNow });
+    return revenueResult;
   } catch (error) { console.error("getRevenueChartData Error:", error); return []; }
 }
 
@@ -361,6 +389,13 @@ export async function getFunnelStats(args: DashboardQueryArgs): Promise<FunnelDa
     let activeTenantId = (args.view === "branch" && args.targetId && args.targetId.toUpperCase() !== "ALL") 
       ? args.targetId 
       : (!args.tenantId || args.tenantId.toUpperCase() === "ALL" ? null : args.tenantId);
+
+    const cacheKey = `funnel-${activeTenantId || "ALL"}-${args.agentId || "ALL"}-${args.view || "company"}-${args.targetId || "ALL"}-${args.range || "month"}`;
+    const cacheNow = Date.now();
+    const cached = dashboardMetricsMemoryCache.get(cacheKey);
+    if (cached && cacheNow - cached.timestamp < DASHBOARD_METRICS_TTL_MS) {
+      return cached.data;
+    }
 
     let myTenantIds: string[] = [];
 
@@ -435,13 +470,16 @@ export async function getFunnelStats(args: DashboardQueryArgs): Promise<FunnelDa
     // Add successfully won deals to CLOSED count
     counts.CLOSED += (deals || []).length;
 
-    return [
+    const funnelResult = [
       { step: "Lead", count: counts.NEW + counts.CONTACTED + counts.VIEWED + counts.NEGOTIATING + counts.CLOSED, fill: "#94a3b8" },
       { step: "Contacted", count: counts.CONTACTED + counts.VIEWED + counts.NEGOTIATING + counts.CLOSED, fill: "#60a5fa" },
       { step: "Viewed", count: counts.VIEWED + counts.NEGOTIATING + counts.CLOSED, fill: "#818cf8" },
       { step: "Negotiating", count: counts.NEGOTIATING + counts.CLOSED, fill: "#f472b6" },
       { step: "Closed", count: counts.CLOSED, fill: "#4ade80" },
     ];
+    if (dashboardMetricsMemoryCache.size > 500) dashboardMetricsMemoryCache.clear();
+    dashboardMetricsMemoryCache.set(cacheKey, { data: funnelResult, timestamp: cacheNow });
+    return funnelResult;
   } catch (error) { console.error("getFunnelStats Error:", error); return []; }
 }
 
@@ -456,6 +494,13 @@ export async function getPipelineStats(args: DashboardQueryArgs): Promise<Pipeli
     let activeTenantId = (args.view === "branch" && args.targetId && args.targetId.toUpperCase() !== "ALL") 
       ? args.targetId 
       : (!args.tenantId || args.tenantId.toUpperCase() === "ALL" ? null : args.tenantId);
+
+    const cacheKey = `pipeline-${activeTenantId || "ALL"}-${args.agentId || "ALL"}-${args.view || "company"}-${args.targetId || "ALL"}-${args.range || "month"}`;
+    const cacheNow = Date.now();
+    const cached = dashboardMetricsMemoryCache.get(cacheKey);
+    if (cached && cacheNow - cached.timestamp < DASHBOARD_METRICS_TTL_MS) {
+      return cached.data;
+    }
 
     let myTenantIds: string[] = [];
 
@@ -551,12 +596,15 @@ export async function getPipelineStats(args: DashboardQueryArgs): Promise<Pipeli
       else if (p.status === 1) counts.ACTIVE++;
     });
 
-    return [
+    const pipelineResult = [
       { stage: "ACTIVE", count: counts.ACTIVE, color: "bg-blue-500", label: "ประกาศขาย" },
       { stage: "OFFER", count: counts.UNDER_OFFER, color: "bg-orange-500", label: "มีข้อเสนอ" },
       { stage: "RESERVED", count: counts.RESERVED, color: "bg-purple-500", label: "จองแล้ว" },
       { stage: "SOLD", count: counts.SOLD, color: "bg-emerald-500", label: "ปิดการขาย" },
     ];
+    if (dashboardMetricsMemoryCache.size > 500) dashboardMetricsMemoryCache.clear();
+    dashboardMetricsMemoryCache.set(cacheKey, { data: pipelineResult, timestamp: cacheNow });
+    return pipelineResult;
   } catch (error) { console.error("getPipelineStats Error:", error); return []; }
 }
 

@@ -226,7 +226,7 @@ export function AdvancedFilters({
 
   // Live filter count calculation mirroring actual search query logic
   const liveFilteredCount = useMemo(() => {
-    if (!filterMetadata || filterMetadata.length === 0) return 0;
+    if (!filterMetadata || filterMetadata.length === 0) return totalCount;
     return filterMetadata.filter((p: any) => {
       // 1. Status
       if (filters.status !== "ALL" && p.status !== filters.status) return false;
@@ -409,7 +409,7 @@ export function AdvancedFilters({
                         : "bg-slate-100 text-slate-600"
                     }`}
                   >
-                    {filterMetadata.length}
+                    {filterMetadata.length > 0 ? filterMetadata.length : totalCount}
                   </span>
                 </button>
                 {LISTING_TYPE_ORDER.map((t) => {
@@ -505,7 +505,7 @@ export function AdvancedFilters({
                         : "bg-slate-100 text-slate-600"
                     }`}
                   >
-                    {filterMetadata.length}
+                    {filterMetadata.length > 0 ? filterMetadata.length : totalCount}
                   </span>
                 </button>
                 {PROPERTY_TYPE_ORDER.map((t) => {
@@ -1251,7 +1251,7 @@ export function AdvancedFilters({
                         : "bg-slate-100 text-slate-600"
                     }`}
                   >
-                    {filterMetadata.length}
+                    {filterMetadata.length > 0 ? filterMetadata.length : totalCount}
                   </span>
                 </button>
                 {PROPERTY_STATUS_ORDER.map((s) => {

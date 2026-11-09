@@ -23,6 +23,7 @@ import { exportPropertiesAction } from "@/features/properties/export-action";
 import { downloadBase64File, MIME_TYPES } from "@/lib/download-utils";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getPropertiesFilterMetadataAction } from "@/features/properties/actions/filter-metadata";
 
 type Filters = {
   q: string;
@@ -72,21 +73,52 @@ interface PropertyFiltersProps {
   totalCount: number;
   filterMetadata?: any[];
   isMultiTenant?: boolean;
+  initialStatusCounts?: Record<string, number>;
+  initialTypeCounts?: Record<string, number>;
+  allBranches?: string;
 }
 
 export function PropertyFilters({
   totalCount,
   filterMetadata = [],
   isMultiTenant = false,
+  initialStatusCounts,
+  initialTypeCounts,
+  allBranches,
 }: PropertyFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguage();
   const isEn = language === "en";
   const [open, setOpen] = useState(false);
+  const [metadata, setMetadata] = useState<any[]>(filterMetadata);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isInitialMount = useRef(true);
+  const prevBranchRef = useRef(allBranches);
+
+  // Sync / reset metadata only when allBranches toggle changes
+  useEffect(() => {
+    if (prevBranchRef.current !== allBranches) {
+      prevBranchRef.current = allBranches;
+      setMetadata([]);
+    }
+  }, [allBranches]);
+
+  // ⚡ Lazy load metadata only when user explicitly opens the Advanced Filters modal
+  const handleOpenFilterChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen && metadata.length === 0 && !isLoadingMetadata) {
+      setIsLoadingMetadata(true);
+      getPropertiesFilterMetadataAction(allBranches)
+        .then((data) => {
+          if (Array.isArray(data)) setMetadata(data);
+        })
+        .catch((err) => console.error("Failed to load filter metadata:", err))
+        .finally(() => setIsLoadingMetadata(false));
+    }
+  };
 
   const handleExportAllWithFilters = async () => {
     const processId = startProcess(isEn ? "Exporting to Excel..." : "กำลังส่งออกข้อมูล Excel", { type: "EXPORT" });
@@ -184,26 +216,33 @@ export function PropertyFilters({
   }, [filters]);
 
   const { statusCounts, typeCounts } = useMemo(() => {
-    const statusCounts: Record<string, number> = {};
-    const typeCounts: Record<string, number> = {};
+    if (metadata && metadata.length > 0) {
+      const statusCounts: Record<string, number> = {};
+      const typeCounts: Record<string, number> = {};
 
-    filterMetadata.forEach((p: any) => {
-      const pType = (p.property_type || p.type) as string;
-      if (pType) {
-        typeCounts[pType] = (typeCounts[pType] || 0) + 1;
-      }
+      metadata.forEach((p: any) => {
+        const pType = (p.property_type || p.type) as string;
+        if (pType) {
+          typeCounts[pType] = (typeCounts[pType] || 0) + 1;
+        }
 
-      if (p.status) {
-        statusCounts[p.status] = (statusCounts[p.status] || 0) + 1;
-      }
-    });
+        if (p.status) {
+          statusCounts[p.status] = (statusCounts[p.status] || 0) + 1;
+        }
+      });
 
-    return { statusCounts, typeCounts };
-  }, [filterMetadata]);
+      return { statusCounts, typeCounts };
+    }
+
+    return {
+      statusCounts: initialStatusCounts || {},
+      typeCounts: initialTypeCounts || {},
+    };
+  }, [metadata, initialStatusCounts, initialTypeCounts]);
 
   const resolvedTotalCount =
-    filterMetadata && filterMetadata.length > 0
-      ? filterMetadata.length
+    metadata && metadata.length > 0
+      ? metadata.length
       : totalCount;
 
   useEffect(() => {
@@ -471,14 +510,14 @@ export function PropertyFilters({
             <div className="flex-1 sm:flex-initial">
               <AdvancedFilters
                 open={open}
-                setOpen={setOpen}
+                setOpen={handleOpenFilterChange}
                 filters={filters}
                 setFilters={setFilters}
                 applyFilters={applyFilters}
                 clearFilters={clearFilters}
                 activeFilterCount={activeFilterCount}
-                totalCount={totalCount}
-                filterMetadata={filterMetadata}
+                totalCount={resolvedTotalCount}
+                filterMetadata={metadata}
               />
             </div>
             <div className="shrink-0">
@@ -554,14 +593,14 @@ export function PropertyFilters({
           <AdvancedFilters
             id="tour-property-advanced-filters"
             open={open}
-            setOpen={setOpen}
+            setOpen={handleOpenFilterChange}
             filters={filters}
             setFilters={setFilters}
             applyFilters={applyFilters}
             clearFilters={clearFilters}
             activeFilterCount={activeFilterCount}
-            totalCount={totalCount}
-            filterMetadata={filterMetadata}
+            totalCount={resolvedTotalCount}
+            filterMetadata={metadata}
           />
           {isMultiTenant && (
             <div

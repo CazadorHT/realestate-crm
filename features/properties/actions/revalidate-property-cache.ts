@@ -1,6 +1,10 @@
 import { revalidateTag, revalidatePath } from "next/cache";
 import { purgeCloudflareCache } from "@/lib/cloudflare";
 import { invalidateMapPinsMemoryCache } from "@/lib/services/map-pins-memory";
+import { invalidateDashboardStatsCache } from "@/features/properties/queries/stats";
+import { invalidateFilterMetadataCache } from "./filter-metadata";
+import { invalidateDashboardMetricsCache } from "@/features/dashboard/queries/stats";
+import { invalidateExecutiveAISummaryCache } from "@/features/dashboard/queries/executive-ai-summary-action";
 
 /**
  * 🌐 Complete list of static public property listing pages across all 4 supported locales:
@@ -81,6 +85,10 @@ export interface PropertyCacheRevalidateOptions {
  */
 export async function revalidatePropertyPublicCache(options?: PropertyCacheRevalidateOptions) {
   invalidateMapPinsMemoryCache();
+  invalidateDashboardStatsCache();
+  invalidateFilterMetadataCache();
+  invalidateDashboardMetricsCache();
+  invalidateExecutiveAISummaryCache();
   const paths = [...PROPERTY_PUBLIC_PATHS];
 
   if (options?.slug) {

@@ -14,6 +14,7 @@ import {
   Share2,
   Copy,
   CheckCircle2,
+  RotateCw,
 } from "lucide-react";
 import {
   getExecutiveWeeklyAISummaryAction,
@@ -60,10 +61,10 @@ export function ExecutiveAISummary({
     agentId: currentAgentId,
   };
 
-  const fetchSummary = async (showToast = false) => {
+  const fetchSummary = async (showToast = false, forceRefresh = false) => {
     setLoading(true);
     try {
-      const result = await getExecutiveWeeklyAISummaryAction({ tenantId, filters, language });
+      const result = await getExecutiveWeeklyAISummaryAction({ tenantId, filters, language, forceRefresh });
       setData(result);
 
       if (showToast) {
@@ -124,6 +125,23 @@ export function ExecutiveAISummary({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => fetchSummary(true, true)}
+                  disabled={loading}
+                  className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                >
+                  <RotateCw size={15} className={cn(loading && "animate-spin text-indigo-600")} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-slate-900 text-white border-slate-800">
+                <p className="font-bold">{isEn ? "Refresh AI Analysis" : "รีเฟรชวิเคราะห์ด้วย AI"}</p>
+                <p className="text-[10px] opacity-70">{isEn ? "Run fresh analysis with latest data" : "คำนวณบทวิเคราะห์ใหม่จากข้อมูลล่าสุด"}</p>
+              </TooltipContent>
+            </Tooltip>
             {data && (
               <Tooltip>
                 <TooltipTrigger asChild>

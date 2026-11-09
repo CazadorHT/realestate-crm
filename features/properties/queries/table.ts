@@ -452,7 +452,7 @@ export const getPropertiesTableData = cache(async (params: {
     .filter((p) => p.status === "SOLD" || p.status === "RENTED")
     .map((p) => p.id);
 
-  const [imagesResult, leadsResult, closedLeadsResult, filterMetadataResult] =
+  const [imagesResult, leadsResult, closedLeadsResult] =
     await Promise.all([
       supabase
         .from("property_images")
@@ -482,27 +482,6 @@ export const getPropertiesTableData = cache(async (params: {
             .in("status", [...CLOSED_DEAL_STATUSES])
             .order("updated_at", { ascending: false })
         : Promise.resolve({ data: [] }),
-
-      (async () => {
-        // [PERFORMANCE HARDENING] Fetch ONLY columns needed for Filter Counts
-        // This restores the UI logic while keeping the payload as small as possible.
-        let q = supabase
-          .from("properties")
-          .select("status, property_type, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, province, district, popular_area, near_transit, is_pet_friendly, is_fully_furnished, requires_ai_review, assigned_to")
-          .is("deleted_at", null);
-
-        if (isMultiTenant) {
-          if (allBranches === "true" || tenantId === "ALL" || !tenantId) {
-            // All
-          } else {
-            q = q.eq("tenant_id", tenantId);
-          }
-        }
-        if (params.assignedToMe === "true" && user?.id) {
-          q = q.eq("assigned_to", user.id);
-        }
-        return q;
-      })(),
     ]);
 
   const bestImageMap = new Map<string, string>();
@@ -618,6 +597,6 @@ export const getPropertiesTableData = cache(async (params: {
   return {
     tableData,
     count: count || 0,
-    filterMetadata: (filterMetadataResult.data as unknown as Partial<TableQueryResult>[]) || [],
+    filterMetadata: [],
   };
 });

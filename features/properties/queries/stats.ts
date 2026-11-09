@@ -4,6 +4,14 @@ import { getScopedRevenueClient } from "@/features/deals/logic/scoped-client";
 import { PropertyStats } from "./types";
 import { cache } from "react";
 
+// 🚀 In-Memory Cache for Dashboard Stats (60s TTL) to prevent Supabase Free-Tier Egress & CPU exhaustion
+const statsMemoryCache = new Map<string, { stats: PropertyStats; timestamp: number }>();
+const STATS_CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+export function invalidateDashboardStatsCache() {
+  statsMemoryCache.clear();
+}
+
 export const getPropertiesDashboardStatsQuery = cache(async (
   allBranches?: string,
 ): Promise<PropertyStats> => {
@@ -13,8 +21,15 @@ export const getPropertiesDashboardStatsQuery = cache(async (
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
 
-  const buildBaseQuery = () => {
-    let q = supabase.from("properties").select("id", { count: "exact" }).is("deleted_at", null);
+  const cacheKey = `${role}-${tenantId || "default"}-${allBranches || "false"}`;
+  const now = Date.now();
+  const cached = statsMemoryCache.get(cacheKey);
+  if (cached && now - cached.timestamp < STATS_CACHE_TTL_MS) {
+    return cached.stats;
+  }
+
+  const buildBaseQuery = (columns = "id", options?: { count?: "exact" | "planned" | "estimated"; head?: boolean }) => {
+    let q = supabase.from("properties").select(columns, options).is("deleted_at", null);
     if (isMultiTenant) {
       const isSuperAdmin = role === "ADMIN";
       const wantsAllBranches = allBranches === "true" || tenantId === "ALL" || !tenantId;
@@ -25,30 +40,21 @@ export const getPropertiesDashboardStatsQuery = cache(async (
     return q;
   };
 
-  // [OPTIMIZATION] Parallel Aggregated Counts to avoid fetching all rows
+  // [FREE-TIER HARDENED] 3 lean queries instead of 7 heavy roundtrips
   const [
-    { count: total },
-    { count: active },
-    { count: soldOrRented },
     { count: aiReviewCount },
-    { data: statusStatsRaw },
-    { data: typeStatsRaw },
+    { data: statusAndTypeRaw },
     { data: financialDataRaw }
   ] = await Promise.all([
-    buildBaseQuery(),
-    buildBaseQuery().eq("status", "ACTIVE"),
-    buildBaseQuery().in("status", ["SOLD", "RENTED"]),
-    buildBaseQuery().eq("requires_ai_review", true),
-    // Status distribution
-    buildBaseQuery().select("status"), 
-    // Type distribution
-    buildBaseQuery().select("property_type"),
-    // Financial aggregation (Still need some rows for complex commission logic, but limited to ACTIVE/SOLD/RENTED)
-    buildBaseQuery().select("status, price, rental_price, original_price, original_rental_price, listing_type, commission_sale_percentage, commission_rent_months, co_agent_sale_commission_percent").in("status", ["ACTIVE", "SOLD", "RENTED"])
+    // Head query for zero egress
+    buildBaseQuery("id", { count: "exact", head: true }).eq("requires_ai_review", true),
+    // Consolidated status & property_type query
+    buildBaseQuery("status, property_type"),
+    // Financial aggregation (limited to ACTIVE/SOLD/RENTED)
+    buildBaseQuery("status, price, rental_price, original_price, original_rental_price, listing_type, commission_sale_percentage, commission_rent_months, co_agent_sale_commission_percent").in("status", ["ACTIVE", "SOLD", "RENTED"])
   ]);
 
-  const statusStats = statusStatsRaw as { status: string | null }[] | null;
-  const typeStats = typeStatsRaw as { property_type: string | null }[] | null;
+  const statusAndType = statusAndTypeRaw as { status: string | null; property_type: string | null }[] | null;
   const financialData = financialDataRaw as { 
     status: string | null; 
     price: number | null; 
@@ -60,6 +66,24 @@ export const getPropertiesDashboardStatsQuery = cache(async (
     commission_rent_months: number | null;
     co_agent_sale_commission_percent: number | null;
   }[] | null;
+
+  // Single-pass distribution & counts
+  const typeMap = new Map<string, number>();
+  const statusMap = new Map<string, number>();
+  let totalCount = 0;
+  let activeCount = 0;
+  let soldOrRentedCount = 0;
+
+  statusAndType?.forEach((p) => {
+    totalCount++;
+    const s = p.status || "Unknown";
+    statusMap.set(s, (statusMap.get(s) || 0) + 1);
+    if (s === "ACTIVE") activeCount++;
+    if (s === "SOLD" || s === "RENTED") soldOrRentedCount++;
+
+    const t = p.property_type || "Unknown";
+    typeMap.set(t, (typeMap.get(t) || 0) + 1);
+  });
 
   // Financial calculations
   let totalValue = 0;
@@ -115,23 +139,10 @@ export const getPropertiesDashboardStatsQuery = cache(async (
     }
   });
 
-  // Distribution maps
-  const typeMap = new Map<string, number>();
-  typeStats?.forEach((p) => {
-    const t = p.property_type || "Unknown";
-    typeMap.set(t, (typeMap.get(t) || 0) + 1);
-  });
-  
-  const statusMap = new Map<string, number>();
-  statusStats?.forEach((p) => {
-    const s = p.status || "Unknown";
-    statusMap.set(s, (statusMap.get(s) || 0) + 1);
-  });
-
-  return {
-    total: total || 0,
-    available: active || 0,
-    soldOrRented: soldOrRented || 0,
+  const result: PropertyStats = {
+    total: totalCount,
+    available: activeCount,
+    soldOrRented: soldOrRentedCount,
     totalValue,
     totalSaleCommission,
     totalRentCommission,
@@ -142,6 +153,10 @@ export const getPropertiesDashboardStatsQuery = cache(async (
     byStatus: Array.from(statusMap.entries()).map(([name, value]) => ({ name, value })),
     aiReviewCount: aiReviewCount || 0,
   };
+
+  if (statsMemoryCache.size > 100) statsMemoryCache.clear();
+  statsMemoryCache.set(cacheKey, { stats: result, timestamp: now });
+  return result;
 });
 
 /**
@@ -216,6 +231,7 @@ export async function getAiReviewCountQuery(allBranches?: string): Promise<numbe
 
   const { count } = await query;
   const total = count || 0;
+  if (aiReviewMemoryCache.size > 100) aiReviewMemoryCache.clear();
   aiReviewMemoryCache.set(cacheKey, { count: total, timestamp: now });
   return total;
 }

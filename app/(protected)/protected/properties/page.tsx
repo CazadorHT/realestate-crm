@@ -139,8 +139,8 @@ export default async function PropertiesPage({
 /** 🚀 PERFORMANCE WRAPPERS (Streaming Pattern) */
 
 async function PropertiesHeaderWrapper({ params }: { params: any }) {
-  const count = await getPropertiesFastCountQuery(params.allBranches);
-  return <PropertiesHeader count={count} />;
+  const stats = await getPropertiesDashboardStatsQuery(params.allBranches);
+  return <PropertiesHeader count={stats.total} />;
 }
 
 async function DashboardWrapper({ allBranches }: { allBranches?: string }) {
@@ -169,16 +169,27 @@ async function TableWrapper({
 }) {
   const supabase = await createClient();
   
-  // Parallel fetch: Table data AND Tenant Name (if applicable)
-  const [tableResult, tenantResult] = await Promise.all([
+  // Parallel fetch: Table data AND Tenant Name (if applicable) AND Stats (Instant memoized cache)
+  const [tableResult, tenantResult, stats] = await Promise.all([
     getPropertiesTableData(params),
     tenantId
       ? supabase.from("tenants").select("name").eq("id", tenantId).single()
       : Promise.resolve({ data: null }),
+    getPropertiesDashboardStatsQuery(params.allBranches),
   ]);
 
-  const { tableData, count, filterMetadata } = tableResult;
+  const { tableData, count } = tableResult;
   const currentTenantName = tenantResult.data?.name || null;
+
+  const statusCounts: Record<string, number> = {};
+  stats.byStatus?.forEach(({ name, value }) => {
+    statusCounts[name] = value;
+  });
+
+  const typeCounts: Record<string, number> = {};
+  stats.byType?.forEach(({ name, value }) => {
+    typeCounts[name] = value;
+  });
 
   const hasActiveFilters = Object.entries(params).some(([key, value]) => {
     if (key === 'page') return false;
@@ -199,7 +210,9 @@ async function TableWrapper({
     <>
       <PropertyFilters
         totalCount={count}
-        filterMetadata={filterMetadata}
+        initialStatusCounts={statusCounts}
+        initialTypeCounts={typeCounts}
+        allBranches={params.allBranches}
         isMultiTenant={isMultiTenant}
       />
       {tableData.length === 0 ? (

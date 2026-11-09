@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { invalidateDashboardMetricsCache } from "@/features/dashboard/queries/stats";
+import { invalidateExecutiveAISummaryCache } from "@/features/dashboard/queries/executive-ai-summary-action";
 import { addMonths } from "date-fns";
 import {
   requireAuthContext,
@@ -283,8 +285,12 @@ export async function createDealAction(input: CreateDealInput) {
     // 💰 Sync to financial ledger for dashboard stats
     await syncDealToLedger(adminSupabase, data.id, tenantId);
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     return { success: true, message: "สร้างดีลสำเร็จ", data };
   } catch (error: unknown) {
     if (error && typeof error === "object" && (("name" in error && (error as { name: string }).name === "AuthzError") || ("code" in error && (error as { code: string }).code === "AUTHZ_ERROR"))) {
@@ -459,8 +465,12 @@ export async function updateDealAction(input: UpdateDealInput) {
     // 💰 Sync to financial ledger for dashboard stats (re-syncs after any deal update)
     await syncDealToLedger(adminSupabase, validated.id, tenantId);
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     return { success: true, message: "อัปเดตดีลสำเร็จ" };
   } catch (error: unknown) {
     if (error && typeof error === "object" && (("name" in error && (error as { name: string }).name === "AuthzError") || ("code" in error && (error as { code: string }).code === "AUTHZ_ERROR"))) {
@@ -530,8 +540,12 @@ export async function deleteDealAction(dealId: string, leadId: string) {
     revalidatePath(`/protected/leads/${leadId}`);
     revalidatePath("/protected/deals");
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
 
     return { success: true, message: "ลบดีลสำเร็จและปรับปรุงสต็อกคืนเรียบร้อย" };
   } catch (error: unknown) {
@@ -783,6 +797,8 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     // 💰 Re-sync ledger now that commissions (and co-agent splits) are updated
     await syncDealToLedger(adminSupabase, dealId, tenantId);
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     return { success: true, message: "คำนวณค่าคอมมิชชั่นและออกใบแจ้งหนี้สำเร็จ" };
   } catch (error: unknown) {
     console.error("Calculate Commissions Error:", error);
@@ -898,6 +914,8 @@ export async function updateDealCommissionsAction(
     // 💰 Re-sync ledger after manual commission adjustment (co-agent deduction may have changed)
     await syncDealToLedger(adminSupabase, dealId, tenantId);
     revalidateTag("dashboard-stats", "seconds");
+    invalidateDashboardMetricsCache();
+    invalidateExecutiveAISummaryCache();
     return { success: true, message: "บันทึกการปรับปรุงค่าคอมมิชชั่นสำเร็จ" };
   } catch (error: unknown) {
     console.error("Update Commissions Error:", error);

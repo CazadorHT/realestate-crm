@@ -17,10 +17,19 @@ export interface AISummaryResult {
   isSample?: boolean;
 }
 
+// 🚀 In-memory cache for Executive AI Summary (until invalidated by CRUD or after 6 hours)
+const aiSummaryMemoryCache = new Map<string, { result: AISummaryResult; timestamp: number }>();
+const AI_SUMMARY_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+export async function invalidateExecutiveAISummaryCache() {
+  aiSummaryMemoryCache.clear();
+}
+
 export async function getExecutiveWeeklyAISummaryAction({
   tenantId,
   filters,
   language = "th",
+  forceRefresh = false,
 }: {
   tenantId?: string | null;
   filters?: {
@@ -29,8 +38,19 @@ export async function getExecutiveWeeklyAISummaryAction({
     agentId?: string | null;
   };
   language?: string;
+  forceRefresh?: boolean;
 }): Promise<AISummaryResult> {
   const isEn = language === "en";
+  const cacheKey = `${tenantId || "default"}-${filters?.branchId || "ALL"}-${filters?.teamId || "ALL"}-${filters?.agentId || "ALL"}-${language}`;
+  const now = Date.now();
+
+  if (!forceRefresh) {
+    const cached = aiSummaryMemoryCache.get(cacheKey);
+    if (cached && now - cached.timestamp < AI_SUMMARY_CACHE_TTL_MS) {
+      return cached.result;
+    }
+  }
+
   try {
     const supabase = await createClient();
     const monthAgo = new Date();
@@ -117,7 +137,7 @@ export async function getExecutiveWeeklyAISummaryAction({
 
     // If no data, return a mock sample
     if (totalLeads === 0 && deals.length === 0) {
-      return {
+      const sampleResult: AISummaryResult = {
         summary: isEn
           ? "📊 [Simulated Sample Data - No live transactions recorded yet]\n\nOver the past 30 days, your real estate business has generated 45 new prospective leads, with 12 identified as high-intent Hot Leads with high closing probability.\n\nYour sales team successfully closed 5 transactions, representing solid momentum for this period.\n\n💡 Strategic AI Insights:\n- Facebook Ads delivered the highest volume of qualified inquiries. Consider scaling marketing budget here.\n- Sales agents should prioritize immediate follow-up on the 12 hot leads to maximize conversion before month-end."
           : "📊 [ข้อมูลตัวอย่างจำลอง - เนื่องจากคุณยังไม่มีข้อมูลจริงในระบบ]\n\nในรอบ 30 วันที่ผ่านมา ภาพรวมธุรกิจมีทิศทางที่เติบโตอย่างน่าสนใจ โดยเราได้ Lead ใหม่เข้ามาถึง 45 ราย ซึ่งในจำนวนนี้เป็น Hot Lead ที่ระบบประเมินว่ามีโอกาสปิดการขายสูงถึง 12 ราย\n\nในฝั่งของทีมขาย สามารถปิดดีลได้สำเร็จแล้ว 5 ดีล ซึ่งเป็นสัญญาณบวกของเดือนนี้\n\n💡 คำแนะนำเชิงกลยุทธ์จาก AI:\n- แพลตฟอร์ม Facebook ใช้งานได้ผลดีเยี่ยม นำลีดเข้ามาได้มากที่สุด ควรพิจารณาเพิ่มงบโฆษณาในส่วนนี้\n- ทีมเซลส์ควรให้ความสำคัญและเร่งเจรจากับกลุ่ม Hot Lead ทั้ง 12 ราย เพื่อเพิ่มยอดปิดการขายก่อนสิ้นเดือน",
@@ -129,6 +149,8 @@ export async function getExecutiveWeeklyAISummaryAction({
         },
         isSample: true,
       };
+      aiSummaryMemoryCache.set(cacheKey, { result: sampleResult, timestamp: now });
+      return sampleResult;
     }
 
     // 2. AI Generate Summary
@@ -172,7 +194,7 @@ export async function getExecutiveWeeklyAISummaryAction({
 
     const result = await generateText(prompt, "gemini-flash-lite-latest");
 
-    return {
+    const finalOutput: AISummaryResult = {
       summary: result.text || (isEn ? "Unable to generate summary at this time." : "ไม่สามารถสรุปข้อมูลได้ในขณะนี้"),
       stats: {
         totalLeads,
@@ -181,6 +203,9 @@ export async function getExecutiveWeeklyAISummaryAction({
         topSource,
       },
     };
+    if (aiSummaryMemoryCache.size > 200) aiSummaryMemoryCache.clear();
+    aiSummaryMemoryCache.set(cacheKey, { result: finalOutput, timestamp: now });
+    return finalOutput;
   } catch (error) {
     console.error("getExecutiveWeeklyAISummaryAction Error:", error);
     return {
