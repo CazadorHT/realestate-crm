@@ -51,7 +51,7 @@ export default function Loading() {
         </div>
 
         {/* Gallery Skeleton: order-1 on mobile, order-2 on desktop */}
-        <div className="order-1 lg:order-2 pt-16 lg:pt-0">
+        <div className="order-1 lg:order-2 pt-(--nav-offset,52px) sm:pt-(--nav-offset,64px) lg:pt-0 transition-[padding-top] duration-300 ease-in-out">
           <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto mt-0 lg:mt-8">
             <section className="mb-2 lg:mb-10 animate-pulse">
               {/* Mobile/Tablet Gallery (-mx-4 replaced with -mx-9 to match PropertyGallery) */}

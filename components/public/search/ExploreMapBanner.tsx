@@ -211,7 +211,7 @@ export function ExploreMapBanner({
           </div>
 
           <div className="min-w-0 flex-1">
-            <h3 className="text-xs sm:text-base md:text-lg font-bold text-slate-800 leading-snug group-hover:text-blue-600 transition-colors truncate">
+            <h3 className="text-sm sm:text-lg font-semibold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
               {displayTitle}
             </h3>
             <p className="text-[11px] sm:text-xs text-slate-500 truncate mt-0.5 hidden xs:block">

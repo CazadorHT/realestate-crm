@@ -49,7 +49,7 @@ export function PropertyCardFooter({
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
                 {t("common.sale")}
               </span>
-              <div className="text-base sm:text-xl font-extrabold text-[#1B263B]">
+              <div className="text-xl font-extrabold text-[#1B263B]">
                 {prices.salePrice > 0
                   ? formatPrice(prices.salePrice, language)
                   : t("common.contact_for_price")}
@@ -63,7 +63,7 @@ export function PropertyCardFooter({
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
                 {t("common.rent")}
               </span>
-              <div className="text-base sm:text-xl font-extrabold text-[#1B263B] flex items-baseline gap-1">
+              <div className="text-xl sm:text-xl font-extrabold text-[#1B263B] flex items-baseline gap-1">
                 {prices.rentalPrice > 0 ? (
                   <>
                     {formatPrice(prices.rentalPrice, language)}
@@ -115,7 +115,7 @@ export function PropertyCardFooter({
           {/* Date */}
           <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
             <Clock className="w-3 h-3" />
-            <span className="min-w-[60px]">
+            <span className="">
               {mounted && property.updated_at
                 ? getRelativeDateString(property.updated_at, language)
                 : "-"}
@@ -138,7 +138,7 @@ export function PropertyCardFooter({
               </span>
               {prices.hasSaleDiscount ? (
                 <div className="flex flex-col">
-                  <div className="text-base sm:text-xl xl:text-xl font-bold text-rose-600">
+                  <div className="text-xl font-bold text-rose-600">
                     {formatPrice(prices.salePrice, language)}
                   </div>
                   <div className="flex items-center gap-1">
@@ -151,7 +151,7 @@ export function PropertyCardFooter({
                   </div>
                 </div>
               ) : (
-                <div className="text-base sm:text-xl xl:text-xl font-bold text-slate-900">
+                <div className="text-xl font-bold text-slate-900">
                   {prices.salePrice > 0
                     ? formatPrice(prices.salePrice, language)
                     : t("common.contact_for_price")}
@@ -166,7 +166,7 @@ export function PropertyCardFooter({
               </span>
               {prices.hasRentalDiscount ? (
                 <div className="flex flex-col">
-                  <div className="text-base sm:text-xl xl:text-xl font-bold text-rose-600">
+                  <div className="text-xl font-bold text-rose-600">
                     {formatPrice(prices.rentalPrice, language)}
                     <span className="text-[10px] text-slate-500 font-normal ml-0.5">
                       {t("common.per_month_short")}
@@ -183,7 +183,7 @@ export function PropertyCardFooter({
                 </div>
               ) : (
                 <div className="flex flex-wrap items-baseline">
-                  <div className="text-base sm:text-xl xl:text-xl font-bold text-slate-900">
+                  <div className="text-xl font-bold text-slate-900">
                     {prices.rentalPrice > 0
                       ? formatPrice(prices.rentalPrice, language)
                       : t("common.contact_for_price")}
@@ -204,7 +204,7 @@ export function PropertyCardFooter({
                   ? t("common.rent_price")
                   : t("common.sale_price")}
               </div>
-              <div className="text-base sm:text-xl xl:text-xl font-bold text-[#1B263B] flex flex-wrap items-baseline gap-1 md:gap-2">
+              <div className="text-xl font-bold text-[#1B263B] flex flex-wrap items-baseline gap-1 md:gap-2">
                 {(property.listing_type === "SALE" && prices.hasSaleDiscount) || 
                  (property.listing_type === "RENT" && prices.hasRentalDiscount) ? (
                   <div className="flex flex-col">
@@ -217,7 +217,7 @@ export function PropertyCardFooter({
                       </span>
                     </div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-base md:text-xl font-bold text-rose-600">
+                      <span className="text-xl font-bold text-rose-600">
                         {formatPrice(
                           property.listing_type === "SALE" ? prices.salePrice : prices.rentalPrice,
                           language,
@@ -256,7 +256,7 @@ export function PropertyCardFooter({
                   <FaAirbnb className="w-4 h-4 shrink-0 text-[#FF5A5F]" />
                   <span>Airbnb</span>
                 </div>
-                <div className="text-base lg:text-md xl:text-xl font-extrabold text-[#FF5A5F] flex items-baseline justify-end gap-0.5">
+                <div className="text-xl font-extrabold text-[#FF5A5F] flex items-baseline justify-end gap-0.5">
                   {formatPrice(property.airbnb_daily_price, language)}
                   <span className="text-[10px] md:text-xs text-slate-500 font-normal">
                     {t("common.per_day_short")}
