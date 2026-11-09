@@ -207,42 +207,46 @@ export function AreaProjectsCarousel({
       )}
 
       <div className="relative group/carousel w-full">
-      {/* Left Faded Overlay */}
-      {showLeftArrow && (
-        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10 transition-opacity duration-300 hidden md:block" />
-      )}
+        {/* ── Left fade + arrow ── */}
+        <div
+          className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 z-10 transition-opacity duration-300"
+          style={{
+            background: "linear-gradient(to right, white 10%, transparent)",
+            opacity: showLeftArrow ? 1 : 0,
+          }}
+        />
+        {showLeftArrow && (
+          <button
+            onClick={() => scroll("left")}
+            className="absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:border-indigo-100 active:scale-95 transition-all"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        )}
 
-      {/* Right Faded Overlay */}
-      {showRightArrow && (
-        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10 transition-opacity duration-300 hidden md:block" />
-      )}
-
-      {/* Left Arrow Button */}
-      {showLeftArrow && (
-        <button
-          onClick={() => scroll("left")}
-          className="absolute -left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 hover:text-indigo-650 hover:border-indigo-100 active:scale-95 transition-all z-20 cursor-pointer hidden md:flex"
-          aria-label="Scroll left"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-      )}
-
-      {/* Right Arrow Button */}
-      {showRightArrow && (
-        <button
-          onClick={() => scroll("right")}
-          className="absolute -right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-700 hover:text-indigo-650 hover:border-indigo-100 active:scale-95 transition-all z-20 cursor-pointer hidden md:flex"
-          aria-label="Scroll right"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
-      )}
+        {/* ── Right fade + arrow ── */}
+        <div
+          className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 z-10 transition-opacity duration-300"
+          style={{
+            background: "linear-gradient(to left, white 10%, transparent)",
+            opacity: showRightArrow ? 1 : 0,
+          }}
+        />
+        {showRightArrow && (
+          <button
+            onClick={() => scroll("right")}
+            className="absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white border border-slate-200 shadow-md hover:shadow-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:border-indigo-100 active:scale-95 transition-all"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        )}
 
       {/* Scrollable Container */}
       <div
         ref={scrollRef}
-        className="flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-3 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {projects.map((proj) => {
           const typeLabel = getProjectPropertyTypeLabel(proj.propertyType, language);
@@ -261,7 +265,7 @@ export function AreaProjectsCarousel({
             <Link
               key={proj.id}
               href={`${langPrefix}/projects/${proj.slug}`}
-              className="group bg-white rounded-3xl overflow-hidden border border-slate-200/60 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 flex flex-col shrink-0 w-72 md:w-80 snap-start"
+              className="group bg-white rounded-2xl overflow-hidden border border-slate-200/60 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 flex flex-col shrink-0 w-44 sm:w-70 snap-start"
             >
               {/* Project Cover Image */}
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
@@ -277,13 +281,13 @@ export function AreaProjectsCarousel({
                 )}
 
                 {/* Unit Count Badge (คงไว้เฉพาะจำนวนยูนิต เอา badge ประเภททรัพย์บนภาพออกตามสั่ง) */}
-                <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full border border-slate-100 text-[10px] font-bold text-indigo-600 shadow-xs">
+                <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 bg-white/95 backdrop-blur-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-slate-100 text-[9px] sm:text-[10px] font-bold text-indigo-600 shadow-xs">
                   {proj.propertyCount} {unitsLabel}
                 </div>
               </div>
 
               {/* Project Details */}
-              <div className="p-4 flex-1 flex flex-col justify-between text-left space-y-2">
+              <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between text-left space-y-2">
                 <div>
                   {/* Line 1: Primary Project Name (สำหรับภาษาอื่นใช้ eng ทั้งหมด) */}
                   <h3 className="font-extrabold text-slate-800 text-sm group-hover:text-indigo-600 transition-colors line-clamp-1 leading-snug">
