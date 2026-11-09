@@ -142,7 +142,7 @@ export default async function PublicPropertyDetailPage(props: {
         </div>
 
         {/* Gallery: order-1 on mobile, order-2 on desktop */}
-        <div className="order-1 lg:order-2 pt-(--nav-offset,52px) sm:pt-(--nav-offset,64px) lg:pt-0 transition-[padding-top] duration-300 ease-in-out">
+        <div className="order-1 lg:order-2 pt-[52px] sm:pt-16 lg:pt-0">
           <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8 mt-0 lg:mt-8">
             <section className="mb-0">
               <PropertyGallery
