@@ -182,29 +182,29 @@ function verifyMetaSignature(rawBody: string, signatureHeader: string | null): b
 function getStoryAdButtons(lang: "th" | "en" | "cn" | "ru" = "th"): SocialButton[] {
   if (lang === "en") {
     return [
-      { title: "📅 Book Viewing", type: "postback", payload: "ACTION_BOOK_VIEWING" },
-      { title: "🏠 Available Units", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
-      { title: "💬 Chat with Staff", type: "postback", payload: "ACTION_TALK_ADMIN" },
+      { title: "📅 Book Viewing", type: "postback", payload: "ACTION_BOOK_VIEWING_LANG_en" },
+      { title: "🏠 Available Units", type: "postback", payload: "ACTION_BROWSE_ROOMS_LANG_en" },
+      { title: "💬 Chat with Staff", type: "postback", payload: "ACTION_TALK_ADMIN_LANG_en" },
     ];
   }
   if (lang === "cn") {
     return [
-      { title: "📅 预约看房", type: "postback", payload: "ACTION_BOOK_VIEWING" },
-      { title: "🏠 查看房源", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
-      { title: "💬 联系客服", type: "postback", payload: "ACTION_TALK_ADMIN" },
+      { title: "📅 预约看房", type: "postback", payload: "ACTION_BOOK_VIEWING_LANG_cn" },
+      { title: "🏠 查看房源", type: "postback", payload: "ACTION_BROWSE_ROOMS_LANG_cn" },
+      { title: "💬 联系客服", type: "postback", payload: "ACTION_TALK_ADMIN_LANG_cn" },
     ];
   }
   if (lang === "ru") {
     return [
-      { title: "📅 На просмотр", type: "postback", payload: "ACTION_BOOK_VIEWING" },
-      { title: "🏠 Все квартиры", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
-      { title: "💬 Менеджер", type: "postback", payload: "ACTION_TALK_ADMIN" },
+      { title: "📅 На просмотр", type: "postback", payload: "ACTION_BOOK_VIEWING_LANG_ru" },
+      { title: "🏠 Все квартиры", type: "postback", payload: "ACTION_BROWSE_ROOMS_LANG_ru" },
+      { title: "💬 Менеджер", type: "postback", payload: "ACTION_TALK_ADMIN_LANG_ru" },
     ];
   }
   return [
-    { title: "📅 นัดดูห้องจริง", type: "postback", payload: "ACTION_BOOK_VIEWING" },
-    { title: "🏠 ห้องว่าง/ราคา", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
-    { title: "💬 คุยกับแอดมิน", type: "postback", payload: "ACTION_TALK_ADMIN" },
+    { title: "📅 นัดดูห้องจริง", type: "postback", payload: "ACTION_BOOK_VIEWING_LANG_th" },
+    { title: "🏠 ห้องว่าง/ราคา", type: "postback", payload: "ACTION_BROWSE_ROOMS_LANG_th" },
+    { title: "💬 คุยกับแอดมิน", type: "postback", payload: "ACTION_TALK_ADMIN_LANG_th" },
   ];
 }
 
@@ -221,34 +221,35 @@ function getPropertyActionButtons(
   const siteUrl = getPublicSiteUrl();
   const propertyUrl = `${siteUrl}/properties/${propertyData.slug || propertyData.id}`;
   const bookingPayload = propertyData.id
-    ? `ACTION_BOOK_PROPERTY_${propertyData.id}`
-    : "ACTION_BOOK_VIEWING";
+    ? `ACTION_BOOK_PROPERTY_${propertyData.id}_LANG_${lang}`
+    : `ACTION_BOOK_VIEWING_LANG_${lang}`;
+  const browsePayload = `ACTION_BROWSE_ROOMS_LANG_${lang}`;
 
   if (lang === "en") {
     return [
       { title: "🌐 View Details", type: "web_url", url: propertyUrl },
-      { title: "🏠 Available Units", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+      { title: "🏠 Available Units", type: "postback", payload: browsePayload },
       { title: "💬 Chat / Book Tour", type: "postback", payload: bookingPayload },
     ];
   }
   if (lang === "cn") {
     return [
       { title: "🌐 查看详情", type: "web_url", url: propertyUrl },
-      { title: "🏠 查看其他房源", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+      { title: "🏠 查看其他房源", type: "postback", payload: browsePayload },
       { title: "💬 预约看房/客服", type: "postback", payload: bookingPayload },
     ];
   }
   if (lang === "ru") {
     return [
       { title: "🌐 Подробнее", type: "web_url", url: propertyUrl },
-      { title: "🏠 Другие варианты", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+      { title: "🏠 Другие варианты", type: "postback", payload: browsePayload },
       { title: "💬 Чат / Просмотр", type: "postback", payload: bookingPayload },
     ];
   }
 
   return [
     { title: "🌐 ดูรายละเอียด", type: "web_url", url: propertyUrl },
-    { title: "🏠 ดูห้องว่างอื่นๆ", type: "postback", payload: "ACTION_BROWSE_ROOMS" },
+    { title: "🏠 ดูห้องว่างอื่นๆ", type: "postback", payload: browsePayload },
     { title: "💬 คุยแอดมิน / นัดชม", type: "postback", payload: bookingPayload },
   ];
 }
@@ -1386,7 +1387,19 @@ async function handleMetaMessage(event: any, source: MetaPlatform, traceId?: str
     }
 
     // 2.6 Fallback: Story Ads Welcome Flow or Smart AI Property Assistant
-    const detectedLang = detectLanguage(text || "");
+    let detectedLang = detectLanguage(text || "");
+    if (senderId) {
+      const cachedLang = await safeRedisGet(`user_preferred_lang:${senderId}`);
+      if (cachedLang && ["th", "en", "cn", "ru"].includes(cachedLang)) {
+        const hasExplicitNewLang =
+          (/[ก-ฮ]/.test(text) && cachedLang !== "th") ||
+          (/[\u4e00-\u9fa5]/.test(text) && cachedLang !== "cn") ||
+          (/[а-яА-Я]/.test(text) && cachedLang !== "ru");
+        if (!hasExplicitNewLang) {
+          detectedLang = cachedLang as "th" | "en" | "cn" | "ru";
+        }
+      }
+    }
     if (!handled && (isStoryReply || settings.direct_dm_reply_enabled)) {
       const isGreetingOrAdInquiry =
         isStoryReply ||
@@ -2055,6 +2068,11 @@ async function handleKeywordAutomation(
     lang = detectLanguage(match.dm_content || "") || "th";
   }
 
+  // Persist detected language for sender in Redis (30 days) so subsequent actions remember it
+  if (senderId && lang) {
+    await safeRedisSet(`user_preferred_lang:${senderId}`, lang, 86400 * 30);
+  }
+
   // 1.1 Same-Post Anti-Spam & Dedup Protection (กันลูกค้าพิมซ้ำโพสต์เดิม)
   if (redis && senderId && postId && !isDirectDM) {
     // A. Rapid comment spam protection (< 3 minutes)
@@ -2293,13 +2311,14 @@ async function handleKeywordAutomation(
         ? "ห้องนี้มีผู้ทำสัญญาเช่า/ซื้อเรียบร้อยแล้วค่ะ ✨ แต่เรายังมีห้องว่างตำแหน่งสวยในโครงการเดียวกันหรือทำเลใกล้เคียง แอดมินขอแนะนำห้องด้านล่างนี้นะคะ 👇"
         : "This property has been rented/sold! ✨ However, we have other available units in the same project/location below for you 👇";
 
+      const dynamicStoryButtons = getStoryAdButtons(lang);
       if (isDirectDM && senderId) {
-        await sendMetaMessage(senderId, soldNotice, platform, DEFAULT_STORY_AD_BUTTONS);
-        await sendAlternativePropertiesCarousel(senderId, platform, propertyData.project_id, propertyData.id);
+        await sendMetaMessage(senderId, soldNotice, platform, dynamicStoryButtons);
+        await sendAlternativePropertiesCarousel(senderId, platform, propertyData.project_id, propertyData.id, lang);
       } else {
-        await sendPrivateReply(commentId, soldNotice, platform, undefined, undefined, DEFAULT_STORY_AD_BUTTONS);
+        await sendPrivateReply(commentId, soldNotice, platform, undefined, undefined, dynamicStoryButtons);
         if (senderId) {
-          await sendAlternativePropertiesCarousel(senderId, platform, propertyData.project_id, propertyData.id);
+          await sendAlternativePropertiesCarousel(senderId, platform, propertyData.project_id, propertyData.id, lang);
         }
       }
       return true;
@@ -2855,7 +2874,7 @@ async function sendFeaturedPropertiesCarousel(
           {
             type: "postback",
             title: tBookBtn,
-            payload: `ACTION_BOOK_PROPERTY_${prop.id}`,
+            payload: `ACTION_BOOK_PROPERTY_${prop.id}_LANG_${lang}`,
           }
         ],
       };
@@ -3093,16 +3112,26 @@ async function handleMetaPostback(
   leadId?: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
 ) {
-  // Resolve effective language from Redis or Identity if not explicitly provided
-  let effectiveLang: "th" | "en" | "cn" | "ru" = lang;
-  if (senderId) {
+  // Extract explicit language from payload if tagged (e.g. ACTION_BROWSE_ROOMS_LANG_en)
+  let explicitLang: "th" | "en" | "cn" | "ru" | null = null;
+  const langMatch = payload.match(/_LANG_([a-z]{2})/i);
+  if (langMatch && ["th", "en", "cn", "ru"].includes(langMatch[1].toLowerCase())) {
+    explicitLang = langMatch[1].toLowerCase() as "th" | "en" | "cn" | "ru";
+  }
+
+  // Strip _LANG_xx from payload for clean condition matching
+  const cleanPayload = payload.replace(/_LANG_[a-z]{2}/gi, "");
+
+  // Resolve effective language from Payload -> Redis -> Lead -> Identity -> default
+  let effectiveLang: "th" | "en" | "cn" | "ru" = explicitLang || lang;
+  if (!explicitLang && senderId) {
     const cachedLang = await safeRedisGet(`user_preferred_lang:${senderId}`);
     if (cachedLang && ["th", "en", "cn", "ru"].includes(cachedLang)) {
       effectiveLang = cachedLang as "th" | "en" | "cn" | "ru";
     }
   }
 
-  if (leadId) {
+  if (!explicitLang && leadId) {
     try {
       const supabase = createAdminClient() as any;
       const { data: leadRow } = await supabase
@@ -3134,17 +3163,48 @@ async function handleMetaPostback(
 
   lang = effectiveLang;
 
+  // Persist resolved effective language into Redis (30 days) and Lead preferences
+  if (senderId) {
+    await safeRedisSet(`user_preferred_lang:${senderId}`, lang, 86400 * 30);
+  }
+  if (leadId) {
+    try {
+      const supabase = createAdminClient() as any;
+      const { data: leadRow } = await supabase
+        .from("crm_leads_v3")
+        .select("utm_data")
+        .eq("id", leadId)
+        .maybeSingle();
+      const currentUtmData = (leadRow?.utm_data as Record<string, any>) || {};
+      const currentPrefs = (currentUtmData.preferences as Record<string, any>) || {};
+      if (currentPrefs.preferred_lang !== lang) {
+        await supabase
+          .from("crm_leads_v3")
+          .update({
+            utm_data: {
+              ...currentUtmData,
+              preferences: {
+                ...currentPrefs,
+                preferred_lang: lang,
+              },
+            },
+          })
+          .eq("id", leadId);
+      }
+    } catch {}
+  }
+
   const settings = await getSiteSettings();
   const siteUrl = getPublicSiteUrl();
 
   let propertyId: string | null = null;
-  if (payload.startsWith("ACTION_BOOK_PROPERTY_")) {
-    propertyId = payload.replace("ACTION_BOOK_PROPERTY_", "");
-  } else if (payload.startsWith("ACTION_TALK_ADMIN_PROPERTY_")) {
-    propertyId = payload.replace("ACTION_TALK_ADMIN_PROPERTY_", "");
+  if (cleanPayload.startsWith("ACTION_BOOK_PROPERTY_")) {
+    propertyId = cleanPayload.replace("ACTION_BOOK_PROPERTY_", "");
+  } else if (cleanPayload.startsWith("ACTION_TALK_ADMIN_PROPERTY_")) {
+    propertyId = cleanPayload.replace("ACTION_TALK_ADMIN_PROPERTY_", "");
   }
 
-  if (payload === "ACTION_BOOK_VIEWING" || payload.startsWith("ACTION_BOOK_PROPERTY_")) {
+  if (cleanPayload === "ACTION_BOOK_VIEWING" || cleanPayload.startsWith("ACTION_BOOK_PROPERTY_")) {
     const effectiveContact = await resolveEffectiveContact(propertyId, senderId, leadId);
     const bookingUrl = propertyId ? `${siteUrl}/properties/${propertyId}?book=true` : `${siteUrl}/contact?purpose=viewing`;
 
@@ -3187,7 +3247,9 @@ async function handleMetaPostback(
     buttons.push({
       title: btnAdminTitle,
       type: "postback",
-      payload: propertyId ? `ACTION_TALK_ADMIN_PROPERTY_${propertyId}` : "ACTION_TALK_ADMIN",
+      payload: propertyId
+        ? `ACTION_TALK_ADMIN_PROPERTY_${propertyId}_LANG_${lang}`
+        : `ACTION_TALK_ADMIN_LANG_${lang}`,
     });
 
     await sendMetaMessage(senderId, replyText, source, buttons);
@@ -3208,7 +3270,7 @@ async function handleMetaPostback(
     } catch (e) {
       console.error("[Meta Webhook] Error sending telegram notification:", e);
     }
-  } else if (payload === "ACTION_BROWSE_ROOMS") {
+  } else if (cleanPayload === "ACTION_BROWSE_ROOMS") {
     let browseText = "แอดมินรวบรวมรายการห้องว่างและดีลสุดพิเศษมาให้ชมด้านล่างนี้ค่ะ 👇 สนใจห้องไหนคลิกดูรูปและรายละเอียดเพิ่มเติมได้เลยนะคะ ✨";
     if (lang === "en") {
       browseText = "Here are our featured available properties and special deals 👇 Click to view photos and full details ✨";
@@ -3219,7 +3281,7 @@ async function handleMetaPostback(
     }
     await sendMetaMessage(senderId, browseText, source);
     await sendFeaturedPropertiesCarousel(senderId, source, lang);
-  } else if (payload === "ACTION_TALK_ADMIN" || payload.startsWith("ACTION_TALK_ADMIN_PROPERTY_")) {
+  } else if (cleanPayload === "ACTION_TALK_ADMIN" || cleanPayload.startsWith("ACTION_TALK_ADMIN_PROPERTY_")) {
     const effectiveContact = await resolveEffectiveContact(propertyId, senderId, leadId);
 
     const waDisplay = effectiveContact.whatsapp ? `\n💬 WhatsApp: ${effectiveContact.whatsapp}` : "";
@@ -5524,7 +5586,7 @@ async function sendAlternativePropertiesCarousel(
           {
             type: "postback",
             title: tBookBtn,
-            payload: `ACTION_BOOK_PROPERTY_${prop.id}`,
+            payload: `ACTION_BOOK_PROPERTY_${prop.id}_LANG_${lang}`,
           }
         ],
       };
@@ -5585,12 +5647,14 @@ Never make up facts not provided in context.`;
       {
         title: btnBook,
         type: "postback",
-        payload: propertyData?.id ? `ACTION_BOOK_PROPERTY_${propertyData.id}` : "ACTION_BOOK_VIEWING",
+        payload: propertyData?.id
+          ? `ACTION_BOOK_PROPERTY_${propertyData.id}_LANG_${lang}`
+          : `ACTION_BOOK_VIEWING_LANG_${lang}`,
       },
       {
         title: btnAdmin,
         type: "postback",
-        payload: "ACTION_TALK_ADMIN",
+        payload: `ACTION_TALK_ADMIN_LANG_${lang}`,
       }
     ];
 
