@@ -3000,6 +3000,7 @@ async function resolveEffectiveContact(
   lineId: string;
   lineUrl?: string;
   agentName?: string | null;
+  telegramId?: string | null;
 }> {
   const supabase = createAdminClient() as any;
   const settings = await getSiteSettings();
@@ -3041,7 +3042,7 @@ async function resolveEffectiveContact(
       if (agentId) {
         const { data: p } = await supabase
           .from("profiles")
-          .select("id, full_name, nickname, phone, line_id, whatsapp_id, whatsapp_user_id, wechat_id, wechat_user_id")
+          .select("id, full_name, nickname, phone, line_id, whatsapp_id, whatsapp_user_id, wechat_id, wechat_user_id, telegram_id")
           .eq("id", agentId)
           .maybeSingle();
         if (p) agentProfile = p;
@@ -3056,7 +3057,7 @@ async function resolveEffectiveContact(
     try {
       const { data: adminProfile } = await supabase
         .from("profiles")
-        .select("id, full_name, nickname, phone, line_id, whatsapp_id, whatsapp_user_id, wechat_id, wechat_user_id")
+        .select("id, full_name, nickname, phone, line_id, whatsapp_id, whatsapp_user_id, wechat_id, wechat_user_id, telegram_id")
         .eq("role", "ADMIN")
         .order("created_at", { ascending: true })
         .limit(1)
@@ -3092,6 +3093,9 @@ async function resolveEffectiveContact(
   const rawName = agentProfile?.nickname || agentProfile?.full_name || null;
   const agentName = rawName ? (decrypt(rawName) || rawName).trim() : null;
 
+  const rawTg = agentProfile?.telegram_id || null;
+  const telegramId = rawTg ? (decrypt(rawTg) || rawTg).trim() : null;
+
   return {
     phone,
     whatsapp,
@@ -3099,6 +3103,7 @@ async function resolveEffectiveContact(
     lineId,
     lineUrl,
     agentName,
+    telegramId,
   };
 }
 
@@ -3258,15 +3263,19 @@ async function handleMetaPostback(
     try {
       const leadInfo = await resolveLeadInfo(leadId, senderId);
       const propDetails = await resolvePropertyDetails(propertyId || undefined);
-      await sendAdminNotification(
+      const bookingAlertMsg =
         `📅 <b>[Lead Alert] ลูกค้าขอนัดดูห้องจริง (${source})</b>\n\n` +
         `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
         `📱 แพลตฟอร์ม: ${source}\n` +
         (propDetails.title ? `🏠 ทรัพย์ที่สนใจ: <b>${propDetails.title}</b>\n` : "") +
         (propDetails.url ? `🔗 <b>ลิงก์ทรัพย์:</b> <a href="${propDetails.url}">${propDetails.url}</a>\n` : "") +
         (effectiveContact.agentName ? `👤 เจ้าหน้าที่ผู้ดูแล: <b>${effectiveContact.agentName}</b>\n\n` : "\n") +
-        `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`
-      );
+        `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`;
+
+      await sendAdminNotification(bookingAlertMsg);
+      if (effectiveContact.telegramId && effectiveContact.telegramId !== process.env.TELEGRAM_ADMIN_GROUP_ID) {
+        await sendAdminNotification(bookingAlertMsg, { chatId: effectiveContact.telegramId });
+      }
     } catch (e) {
       console.error("[Meta Webhook] Error sending telegram notification:", e);
     }
@@ -3371,7 +3380,7 @@ async function handleMetaPostback(
     try {
       const leadInfo = await resolveLeadInfo(leadId, senderId);
       const propDetails = await resolvePropertyDetails(propertyId || undefined);
-      await sendAdminNotification(
+      const urgentAlertMsg =
         `🚨 <b>[CRM Urgent] ลูกค้าต้องการคุยกับแอดมิน/เจ้าหน้าที่</b>\n\n` +
         `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
         `📱 แพลตฟอร์ม: ${source}\n` +
@@ -3379,8 +3388,12 @@ async function handleMetaPostback(
         (propDetails.url ? `🔗 <b>ลิงก์ทรัพย์:</b> <a href="${propDetails.url}">${propDetails.url}</a>\n` : "") +
         (effectiveContact.agentName ? `👤 เจ้าหน้าที่ผู้ดูแล: <b>${effectiveContact.agentName}</b>\n` : "") +
         `👉 เข้าตรวจสอบกล่องข้อความ ${source} และดูแลลูกค้าได้ทันที!\n` +
-        `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`
-      );
+        `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`;
+
+      await sendAdminNotification(urgentAlertMsg);
+      if (effectiveContact.telegramId && effectiveContact.telegramId !== process.env.TELEGRAM_ADMIN_GROUP_ID) {
+        await sendAdminNotification(urgentAlertMsg, { chatId: effectiveContact.telegramId });
+      }
     } catch (e) {
       console.error("[Meta Webhook] Error sending telegram notification:", e);
     }
