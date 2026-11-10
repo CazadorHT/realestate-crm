@@ -21,7 +21,6 @@ try {
     const buf = fs.readFileSync(fontPath);
     // Convert Node Buffer -> ArrayBuffer view expected by ImageResponse fonts
     cachedFont = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-    console.log(`[OG Font] Loaded local font from ${fontPath}`);
   }
 } catch (e) {
   console.error("OG Font load error:", e);

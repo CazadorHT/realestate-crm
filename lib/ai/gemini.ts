@@ -15,8 +15,6 @@ const getApiKeys = () => {
   
   if (allKeys.length === 0) {
     console.error("❌ [Gemini AI] No API keys found! Please set GEMINI_API_KEY or GOOGLE_API_KEY in .env");
-  } else {
-    console.log(`✅ [Gemini AI] Loaded ${allKeys.length} API keys for rotation`);
   }
   
   return allKeys as string[];

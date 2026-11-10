@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { FastChatMatchModal } from "@/features/smart-match/components/FastChatMatchModal";
 
 interface PropertiesHeaderProps {
   count: number;
@@ -58,6 +59,8 @@ export function PropertiesHeader({ count }: PropertiesHeaderProps) {
               className="data-[state=checked]:bg-green-400"
             />
           </div>
+
+          <FastChatMatchModal />
 
           <Button
             asChild

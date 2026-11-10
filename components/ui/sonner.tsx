@@ -198,6 +198,55 @@ function translateToastMessage(message: unknown): unknown {
   return message;
 }
 
+// 🛡️ Global Toast Deduplication & Throttling ("แบบสากล")
+// ป้องกันการแจ้งเตือนข้อความซ้ำจากการกระทำหลายครั้งติดๆ กัน (เช่น การอัปโหลดหลายไฟล์พร้อมกัน, การกดปุ่มซ้ำ)
+const DEDUP_COOLDOWN_MS = 2000; // 2 วินาที cooldown สำหรับข้อความเดียวกัน
+const recentToastTimestamps = new Map<string, number>();
+
+function getToastDeduplicationKey(type: string, message: any, data?: any): string {
+  let msgStr = "";
+  if (typeof message === "string") {
+    msgStr = message.trim();
+  } else if (typeof message === "number") {
+    msgStr = String(message);
+  } else if (message && typeof message === "object") {
+    try {
+      msgStr = JSON.stringify(message);
+    } catch {
+      msgStr = String(message);
+    }
+  }
+  const descStr = typeof data?.description === "string" ? `:${data.description.trim()}` : "";
+  return `${type}:${msgStr}${descStr}`;
+}
+
+function shouldThrottleToast(key: string, explicitId?: string | number): boolean {
+  // หากผู้พัฒนาส่ง id มาเอง (เช่น สำหรับ loading -> success promise chain) ไม่ทำการ throttle
+  if (explicitId !== undefined && explicitId !== null) {
+    return false;
+  }
+
+  const now = Date.now();
+  const lastTime = recentToastTimestamps.get(key) || 0;
+
+  if (now - lastTime < DEDUP_COOLDOWN_MS) {
+    return true; // ข้อความเดิมซ้ำกันในช่วง cooldown: ไม่ออก toast ซ้ำ
+  }
+
+  recentToastTimestamps.set(key, now);
+
+  // ทำความสะอาด map ไม่ให้กิน memory เมื่อมีรายการสะสมเกิน 100 รายการ
+  if (recentToastTimestamps.size > 100) {
+    for (const [k, time] of recentToastTimestamps.entries()) {
+      if (now - time > 10000) {
+        recentToastTimestamps.delete(k);
+      }
+    }
+  }
+
+  return false;
+}
+
 let isInterceptorInstalled = false;
 
 function installToastInterceptor() {
@@ -208,22 +257,35 @@ function installToastInterceptor() {
   const originalSuccess = toast.success.bind(toast);
   const originalInfo = toast.info.bind(toast);
   const originalWarning = toast.warning.bind(toast);
+  const originalMessage = toast.message ? toast.message.bind(toast) : undefined;
 
-  toast.error = (message: any, data?: any) => {
-    return originalError(translateToastMessage(message) as any, data);
+  const createInterceptedToastFn = (type: string, originalFn: Function) => {
+    return (message: any, data?: any) => {
+      const translated = translateToastMessage(message);
+      const key = getToastDeduplicationKey(type, translated, data);
+
+      if (shouldThrottleToast(key, data?.id)) {
+        return data?.id ?? `dedup-${key}`;
+      }
+
+      // กำหนด deterministic ID เมื่อไม่ได้ส่ง id มา เพื่อให้ Sonner อัปเดต toast เดิมแทนที่จะขึ้นการ์ดซ้ำ
+      const finalData = data?.id ? data : { ...data, id: `dedup-${key}` };
+      return originalFn(translated as any, finalData);
+    };
   };
 
-  toast.success = (message: any, data?: any) => {
-    return originalSuccess(translateToastMessage(message) as any, data);
-  };
+  toast.error = createInterceptedToastFn("error", originalError) as any;
+  toast.success = createInterceptedToastFn("success", originalSuccess) as any;
+  toast.info = createInterceptedToastFn("info", originalInfo) as any;
+  toast.warning = createInterceptedToastFn("warning", originalWarning) as any;
+  if (originalMessage) {
+    toast.message = createInterceptedToastFn("message", originalMessage) as any;
+  }
+}
 
-  toast.info = (message: any, data?: any) => {
-    return originalInfo(translateToastMessage(message) as any, data);
-  };
-
-  toast.warning = (message: any, data?: any) => {
-    return originalWarning(translateToastMessage(message) as any, data);
-  };
+// ติดตั้งทันทีใน browser context
+if (typeof window !== "undefined") {
+  installToastInterceptor();
 }
 
 const Toaster = ({ ...props }: ToasterProps) => {
@@ -234,7 +296,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme="light"
-      className="toaster group bottom-24! sm:bottom-8!"
+      position="top-right"
+      offset={{ top: "4.75rem", right: "1.5rem" }}
+      mobileOffset={{ top: "4.5rem", left: "1rem", right: "1rem" }}
+      className="toaster group"
       closeButton
       icons={{
         success: <CircleCheckIcon className="size-4" />,

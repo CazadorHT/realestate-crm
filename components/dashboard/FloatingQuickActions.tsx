@@ -190,8 +190,8 @@ export function FloatingQuickActions() {
       className={cn(
         "fixed z-[120] transition-all duration-300 pointer-events-auto",
         isDocked
-          ? "right-0 bottom-24 lg:bottom-12"
-          : "right-4 sm:right-6 bottom-24 lg:bottom-10"
+          ? "right-0 bottom-40 lg:bottom-24"
+          : "right-4 sm:right-6 bottom-40 lg:bottom-24"
       )}
     >
       {/* 🚀 EXPANDED QUICK ACTIONS MENU */}

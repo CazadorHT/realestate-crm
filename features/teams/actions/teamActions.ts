@@ -58,9 +58,6 @@ export async function getTeamsAction() {
 
     const { data, error } = await query.order("created_at", { ascending: false });
 
-    // --- Diagnostic Logs ---
-    console.log(`[getTeamsAction] TenantID: ${tId}, Success: ${!error}, DataCount: ${data?.length || 0}`);
-
     if (error) {
       console.error("TRACE [getTeamsAction]:", JSON.stringify(error, null, 2));
       return { 
@@ -215,7 +212,6 @@ export async function getTeamMembersAction(teamId: string) {
       };
     }));
 
-    console.log(`[getTeamMembersAction] Success, Members: ${formatted.length}`);
     return { success: true, data: formatted };
   } catch (error) {
     return { success: false, message: "Server error fetching members" };
