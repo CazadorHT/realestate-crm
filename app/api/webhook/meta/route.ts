@@ -26,7 +26,7 @@ import { z } from "zod";
 import { MetaPlatform, MetaWebhookBody } from "@/types/meta";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName, normalizeProvinceInput, translateLocation } from "@/lib/utils/provinces";
-import { sendAdminNotification } from "@/lib/telegram";
+import { sendAdminNotification, sendAdminPhoto } from "@/lib/telegram";
 
 // ==========================================
 // RESILIENCE & CACHE HELPERS
@@ -2575,6 +2575,10 @@ async function handleKeywordAutomation(
     }
   }
 
+  if (coverImageUrl && senderId) {
+    await safeRedisSet(`lead_recent_cover:${senderId}`, coverImageUrl, 86400 * 7);
+  }
+
   // Build Generic Card if cover image is available
   let cardElement: MetaGenericCard | undefined = undefined;
   if (coverImageUrl && propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
@@ -2955,15 +2959,15 @@ function getProjectOrPropertyTitle(prop: any, lang: string = "th"): string {
 }
 
 /**
- * Helper: Resolve Property Title & Link for readable Telegram Alerts
+ * Helper: Resolve Property Title, Link, and Image for readable Telegram Alerts
  */
-async function resolvePropertyDetails(propertyId?: string): Promise<{ title: string; url?: string }> {
+async function resolvePropertyDetails(propertyId?: string): Promise<{ title: string; url?: string; imageUrl?: string }> {
   if (!propertyId) return { title: "" };
   try {
     const supabase = createAdminClient() as any;
     const { data: prop } = await supabase
       .from("properties")
-      .select("id, slug, title, title_en, project:projects(name)")
+      .select("id, slug, title, title_en, main_image, images, project:projects(name)")
       .eq("id", propertyId)
       .maybeSingle();
     if (prop) {
@@ -2972,7 +2976,20 @@ async function resolvePropertyDetails(propertyId?: string): Promise<{ title: str
         ? process.env.NEXT_PUBLIC_SITE_URL
         : "https://vccasset.com";
       const url = `${baseUrl}/properties/${prop.slug || prop.id}`;
-      return { title, url };
+
+      let imageUrl: string | undefined = undefined;
+      if (prop.main_image) {
+        imageUrl = prop.main_image.startsWith("http")
+          ? prop.main_image
+          : getPublicImageUrl(prop.main_image);
+      } else if (prop.images) {
+        const imgList = parsePropertyImages(prop.images);
+        if (imgList.length > 0 && imgList[0].startsWith("http")) {
+          imageUrl = imgList[0];
+        }
+      }
+
+      return { title, url, imageUrl };
     }
   } catch (e) {}
   return { title: propertyId };
@@ -2981,6 +2998,27 @@ async function resolvePropertyDetails(propertyId?: string): Promise<{ title: str
 async function resolvePropertyTitle(propertyId?: string): Promise<string> {
   const details = await resolvePropertyDetails(propertyId);
   return details.title;
+}
+
+/**
+ * Helper: Send Telegram Alert with Property Photo if available (with fallback to text)
+ */
+async function sendTelegramLeadAlert(
+  message: string,
+  photoUrl?: string | null,
+  personalChatId?: string | null,
+) {
+  if (photoUrl) {
+    await sendAdminPhoto(photoUrl, message);
+    if (personalChatId && personalChatId !== process.env.TELEGRAM_ADMIN_GROUP_ID) {
+      await sendAdminPhoto(photoUrl, message, { chatId: personalChatId }).catch(() => {});
+    }
+  } else {
+    await sendAdminNotification(message);
+    if (personalChatId && personalChatId !== process.env.TELEGRAM_ADMIN_GROUP_ID) {
+      await sendAdminNotification(message, { chatId: personalChatId }).catch(() => {});
+    }
+  }
 }
 
 /**
@@ -3263,6 +3301,8 @@ async function handleMetaPostback(
     try {
       const leadInfo = await resolveLeadInfo(leadId, senderId);
       const propDetails = await resolvePropertyDetails(propertyId || undefined);
+      const photoUrl = propDetails.imageUrl || (senderId ? await safeRedisGet(`lead_recent_cover:${senderId}`) : null);
+
       const bookingAlertMsg =
         `📅 <b>[Lead Alert] ลูกค้าขอนัดดูห้องจริง (${source})</b>\n\n` +
         `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
@@ -3272,10 +3312,7 @@ async function handleMetaPostback(
         (effectiveContact.agentName ? `👤 เจ้าหน้าที่ผู้ดูแล: <b>${effectiveContact.agentName}</b>\n\n` : "\n") +
         `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`;
 
-      await sendAdminNotification(bookingAlertMsg);
-      if (effectiveContact.telegramId && effectiveContact.telegramId !== process.env.TELEGRAM_ADMIN_GROUP_ID) {
-        await sendAdminNotification(bookingAlertMsg, { chatId: effectiveContact.telegramId });
-      }
+      await sendTelegramLeadAlert(bookingAlertMsg, photoUrl, effectiveContact.telegramId);
     } catch (e) {
       console.error("[Meta Webhook] Error sending telegram notification:", e);
     }
@@ -3380,6 +3417,8 @@ async function handleMetaPostback(
     try {
       const leadInfo = await resolveLeadInfo(leadId, senderId);
       const propDetails = await resolvePropertyDetails(propertyId || undefined);
+      const photoUrl = propDetails.imageUrl || (senderId ? await safeRedisGet(`lead_recent_cover:${senderId}`) : null);
+
       const urgentAlertMsg =
         `🚨 <b>[CRM Urgent] ลูกค้าต้องการคุยกับแอดมิน/เจ้าหน้าที่</b>\n\n` +
         `👤 <b>ชื่อลูกค้า:</b> <b>${leadInfo.name}</b> (ID: <code>${leadInfo.leadId}</code>)\n` +
@@ -3390,10 +3429,7 @@ async function handleMetaPostback(
         `👉 เข้าตรวจสอบกล่องข้อความ ${source} และดูแลลูกค้าได้ทันที!\n` +
         `👉 <a href="${siteUrl}/protected/admin/leads">เปิดดู Lead ใน CRM</a>`;
 
-      await sendAdminNotification(urgentAlertMsg);
-      if (effectiveContact.telegramId && effectiveContact.telegramId !== process.env.TELEGRAM_ADMIN_GROUP_ID) {
-        await sendAdminNotification(urgentAlertMsg, { chatId: effectiveContact.telegramId });
-      }
+      await sendTelegramLeadAlert(urgentAlertMsg, photoUrl, effectiveContact.telegramId);
     } catch (e) {
       console.error("[Meta Webhook] Error sending telegram notification:", e);
     }
