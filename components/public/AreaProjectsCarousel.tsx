@@ -307,7 +307,7 @@ export function AreaProjectsCarousel({
                     {proj.developer && (
                       <>
                         <span className="text-slate-300">•</span>
-                        <span className="text-slate-500 truncate">{proj.developer}</span>
+                        <span className="text-slate-500 line-clamp-1 truncate">{proj.developer}</span>
                       </>
                     )}
                   </p>
