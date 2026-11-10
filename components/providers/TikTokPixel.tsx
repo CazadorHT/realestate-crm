@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Script from "next/script";
 
 declare global {
@@ -16,7 +16,6 @@ const TIKTOK_PIXEL_ID =
 
 export function TikTokPixel() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const isFirstRender = useRef(true);
 
   // Track pageviews on SPA navigation (after initial script load)
@@ -29,7 +28,7 @@ export function TikTokPixel() {
     if (typeof window !== "undefined" && window.ttq) {
       window.ttq.page();
     }
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   if (!TIKTOK_PIXEL_ID) return null;
 
