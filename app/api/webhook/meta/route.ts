@@ -3271,13 +3271,14 @@ async function handleMetaPostback(
       console.error("[Meta Webhook] Error sending telegram notification:", e);
     }
   } else if (cleanPayload === "ACTION_BROWSE_ROOMS") {
-    let browseText = "แอดมินรวบรวมรายการห้องว่างและดีลสุดพิเศษมาให้ชมด้านล่างนี้ค่ะ 👇 สนใจห้องไหนคลิกดูรูปและรายละเอียดเพิ่มเติมได้เลยนะคะ ✨";
+    const browseUrl = `${siteUrl}/properties`;
+    let browseText = `แอดมินรวบรวมรายการห้องว่างและดีลสุดพิเศษมาให้ชมด้านล่างนี้ค่ะ 👇\n🔗 หรือดูห้องว่างทั้งหมดได้ที่: ${browseUrl}\n\nสนใจห้องไหนคลิกดูรูปและรายละเอียดเพิ่มเติมได้เลยนะคะ ✨`;
     if (lang === "en") {
-      browseText = "Here are our featured available properties and special deals 👇 Click to view photos and full details ✨";
+      browseText = `Here are our featured available properties and special deals 👇\n🔗 Or browse all available units at: ${browseUrl}\n\nClick to view photos and full details ✨`;
     } else if (lang === "cn") {
-      browseText = "这里是我们的精选房源与最新优惠 👇 点击查看照片与详细信息 ✨";
+      browseText = `这里是我们的精选房源与最新优惠 👇\n🔗 或在网站浏览所有房源: ${browseUrl}\n\n点击查看照片与详细信息 ✨`;
     } else if (lang === "ru") {
-      browseText = "Вот наши лучшие предложения и специальные цены 👇 Нажмите, чтобы посмотреть фото и подробности ✨";
+      browseText = `Вот наши лучшие предложения и специальные цены 👇\n🔗 Или посмотрите все варианты на сайте: ${browseUrl}\n\nНажмите, чтобы посмотреть фото и подробности ✨`;
     }
     await sendMetaMessage(senderId, browseText, source);
     await sendFeaturedPropertiesCarousel(senderId, source, lang);
