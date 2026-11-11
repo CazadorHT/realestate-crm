@@ -423,7 +423,7 @@ export default async function PrimeCbdPage(props: {
               },
               a: {
                 en: "Prime Core CBD encompasses Sukhumvit (Chidlom, Ploenchit, Asoke, Phrom Phong, Thonglor), Sathorn, and Silom. New CBD highlights Rama 9 and Ratchada with rapid business and infrastructure growth.",
-                cn: "核心CBD包括素坤逸核心段（奇隆、奔集、阿索克、澎蓬、通罗）、沙吞和是隆。新CBD主要指拉玛九与拉差达商圈，汇聚众多500强企业总部及高尚公寓。",
+                cn: "核心CBD包括素坤逸核心段（奇隆、奔集、阿速、澎蓬、通罗）、沙吞和是隆。新CBD主要指拉玛九与拉差达商圈，汇聚众多500强企业总部及高尚公寓。",
                 ru: "Главный деловой центр (Prime CBD) включает Сукхумвит (Плоенчит, Асок, Промпонг, Тонглор), Саторн и Силом. Новый деловой центр (New CBD) охватывает Рама 9 и Ратчада.",
                 th: "ย่าน Core CBD ได้แก่ สุขุมวิท (ชิดลม, เพลินจิต, อโศก, พร้อมพงษ์, ทองหล่อ), สาทร, สีลม และวิทยุ ส่วน New CBD ได้แก่ พระราม 9 และรัชดาภิเษก ซึ่งเป็นศูนย์กลางธุรกิจแห่งใหม่และมีอาคารสำนักงานชั้นนำ",
               },

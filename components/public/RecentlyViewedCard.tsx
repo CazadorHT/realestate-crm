@@ -7,6 +7,7 @@ import { getProvinceName } from "@/lib/utils/provinces";
 import { getTypeColor, formatPrice as utilFormatPrice } from "@/lib/property-utils";
 import { FavoriteButton } from "@/components/public/FavoriteButton";
 import { getCardPrice } from "./RecentlyViewedUtils";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { m } from "framer-motion";
 
 interface RecentlyViewedCardProps {
@@ -41,7 +42,7 @@ export function RecentlyViewedCard({
       <div className="relative h-36 md:h-44 bg-slate-100 overflow-hidden">
         {item.image_url ? (
           <Image
-            src={item.image_url}
+            src={getPublicImageUrl(item.image_url)}
             alt={getLocaleValue(item, "title", language)}
             fill
             sizes="300px"

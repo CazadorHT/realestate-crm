@@ -64,9 +64,11 @@ export function MapSlideablePropertyCard({
   });
 
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [inCompare, setInCompare] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
+  const loadedCacheRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (initialUnitId) {
@@ -76,10 +78,49 @@ export function MapSlideablePropertyCard({
       setIndex(0);
     }
     setImgError(false);
+    setImgLoaded(false);
   }, [group.groupId, initialUnitId, units]);
 
   const safeIndex = index >= 0 && index < total ? index : 0;
   const current = units[safeIndex];
+
+  // Dynamic cover image for the active slide unit -> fallback to project cover -> fallback placeholder
+  const activeCoverSrc = imgError
+    ? current?.project_image_url || FALLBACK_IMG
+    : current?.image_url || current?.project_image_url || FALLBACK_IMG;
+
+  // Reset error state only when unit changes
+  useEffect(() => {
+    setImgError(false);
+  }, [current?.id]);
+
+  // Sync loading state immediately if image is already cached/preloaded
+  useEffect(() => {
+    if (activeCoverSrc && loadedCacheRef.current.has(activeCoverSrc)) {
+      setImgLoaded(true);
+    } else {
+      setImgLoaded(false);
+    }
+  }, [current?.id, activeCoverSrc]);
+
+  // Preload next and previous slide images into browser cache for instant slide switching
+  useEffect(() => {
+    if (typeof window === "undefined" || total <= 1) return;
+    const nextIdx = (safeIndex + 1) % total;
+    const prevIdx = (safeIndex - 1 + total) % total;
+    const candidates = [
+      units[nextIdx]?.image_url || units[nextIdx]?.project_image_url,
+      units[prevIdx]?.image_url || units[prevIdx]?.project_image_url,
+    ].filter(Boolean) as string[];
+
+    candidates.forEach((src) => {
+      const img = new window.Image();
+      img.onload = () => {
+        loadedCacheRef.current.add(src);
+      };
+      img.src = src;
+    });
+  }, [safeIndex, units, total]);
 
   useEffect(() => {
     if (!current?.id) return;
@@ -125,10 +166,6 @@ export function MapSlideablePropertyCard({
   const { primaryTitle, secondarySubtitle, isProjectHeadline } =
     getPinProjectOrPropertyHeadline(current, language);
 
-  // Dynamic cover image for the active slide unit -> fallback to project cover -> fallback placeholder
-  const activeCoverSrc = imgError
-    ? current.project_image_url || FALLBACK_IMG
-    : current.image_url || current.project_image_url || FALLBACK_IMG;
 
   const detailHref = `${langPrefix || ""}/properties/${current.slug || current.id}`;
   const projectHref = current.project_slug
@@ -210,16 +247,32 @@ export function MapSlideablePropertyCard({
       )}
     >
       {/* Dynamic Unit Cover Photo Header */}
-      <div className="relative h-56 sm:h-60 w-full bg-slate-100 overflow-hidden">
+      <div className="relative h-56 sm:h-60 w-full bg-slate-200/70 overflow-hidden">
+        {/* Shimmer placeholder while image is fetching/decoding */}
+        {!imgLoaded && !imgError && (
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse pointer-events-none" />
+        )}
+
         <Image
-          key={current.id}
+          key={`${current.id}-${imgError ? "err" : "ok"}`}
           src={activeCoverSrc}
           alt={primaryTitle}
           fill
+          priority
           unoptimized
           sizes="(max-width: 640px) 100vw, 328px"
-          onError={() => setImgError(true)}
-          className="object-cover transition-transform duration-300 hover:scale-105"
+          onLoad={() => {
+            if (activeCoverSrc) loadedCacheRef.current.add(activeCoverSrc);
+            setImgLoaded(true);
+          }}
+          onError={() => {
+            setImgError(true);
+            setImgLoaded(true);
+          }}
+          className={cn(
+            "object-cover transition-all duration-300 hover:scale-105",
+            imgLoaded ? "opacity-100 blur-0" : "opacity-0 blur-xs"
+          )}
         />
 
         <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/10 to-black/25 pointer-events-none" />

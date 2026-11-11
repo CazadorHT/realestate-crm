@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X, ExternalLink } from "lucide-react";
@@ -32,7 +33,12 @@ export function ComparePropertyHeader({
 
   const salePrice = property.price || property.original_price;
   const rentPrice = property.rental_price || property.original_rental_price;
-  const coverSrc = property.image_url || FALLBACK_IMG;
+  const [coverSrc, setCoverSrc] = useState(() => property.image_url || FALLBACK_IMG);
+
+  useEffect(() => {
+    setCoverSrc(property.image_url || FALLBACK_IMG);
+  }, [property.image_url]);
+
   const detailHref = `${langPrefix || ""}/properties/${property.slug || property.id}`;
 
   return (
@@ -43,7 +49,9 @@ export function ComparePropertyHeader({
           src={coverSrc}
           alt={title}
           fill
+          priority
           sizes="(max-width: 768px) 50vw, 25vw"
+          onError={() => setCoverSrc(FALLBACK_IMG)}
           className="object-cover group-hover/img:scale-105 transition-transform duration-300"
         />
 

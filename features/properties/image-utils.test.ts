@@ -30,4 +30,16 @@ describe("image-utils - getThumbnailUrl", () => {
       "https://cdn.vccasset.com/storage/v1/object/public/property-images/photo-thumb.webp?t=123456"
     );
   });
+
+  it("should not append -thumb.webp to external third-party webp URLs (e.g. Unsplash, Freepik)", () => {
+    const unsplashWebp = "https://images.unsplash.com/photo-1560518883.webp?auto=format";
+    expect(getThumbnailUrl(unsplashWebp)).toBe(unsplashWebp);
+
+    const externalWebp = "https://cdn.livinginsider.com/assets/banner.webp";
+    expect(getThumbnailUrl(externalWebp)).toBe(externalWebp);
+  });
+
+  it("should return empty string for whitespace strings", () => {
+    expect(getThumbnailUrl("   ")).toBe("");
+  });
 });

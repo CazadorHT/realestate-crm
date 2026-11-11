@@ -39,7 +39,7 @@ export function PublicFooter() {
   const isPropertyDetail = normalizedPath.startsWith("/properties/") && !normalizedPath.endsWith("/properties");
 
   const [rawStations, setRawStations] = useState<DisplayStation[]>([
-    { slug: "bts-asok", label: { th: "อโศก", en: "Asok", cn: "阿索克", ru: "Асок" }, prefix: "BTS" },
+    { slug: "bts-asok", label: { th: "อโศก", en: "Asok", cn: "阿速", ru: "Асок" }, prefix: "BTS" },
     { slug: "bts-thong-lo", label: { th: "ทองหล่อ", en: "Thong Lo", cn: "通罗", ru: "Тонгло" }, prefix: "BTS" },
     { slug: "bts-ari", label: { th: "อารีย์", en: "Ari", cn: "阿里", ru: "Ари" }, prefix: "BTS" },
     { slug: "mrt-phra-ram-9", label: { th: "พระราม 9", en: "Phra Ram 9", cn: "拉玛九", ru: "Рама 9" }, prefix: "MRT" },

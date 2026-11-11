@@ -3671,7 +3671,7 @@ const BANGKOK_ZONE_CATALOG = [
     key: "sukhumvit_asoke_thonglor",
     label_th: "สุขุมวิท / อโศก / ทองหล่อ",
     label_en: "Sukhumvit / Asoke / Thonglor",
-    label_cn: "素坤逸 / 阿索克 / 通罗",
+    label_cn: "素坤逸 / 阿速 / 通罗",
     label_ru: "Сукхумвит / Асок / Тонглор",
     keywords: [
       "sukhumvit", "สุขุมวิท", "thonglor", "thong lo", "ทองหล่อ", "ekkamai", "ekamai", "เอกมัย",

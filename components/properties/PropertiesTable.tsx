@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useTransition } from "react";
+import React, { useMemo, useState, useEffect, useTransition } from "react";
 import Image from "next/image";
 import {
   Table,
@@ -89,6 +89,8 @@ import { FaLine, FaTiktok, FaFacebook } from "react-icons/fa";
 import { RiInstagramFill } from "react-icons/ri";
 import { downloadBase64File, MIME_TYPES } from "@/lib/download-utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { parseBilingualProjectName } from "@/lib/utils/project-name-utils";
+import { getThumbnailUrl } from "@/features/properties/image-utils";
 
 interface PropertiesTableProps {
   data: PropertyTableData[];
@@ -119,6 +121,99 @@ function getPriceChangeInfo(price: number | null, originalPrice: number | null) 
   if (!price || !originalPrice || originalPrice <= price) return null;
   const pct = Math.round(((originalPrice - price) / originalPrice) * 100);
   return { pct, diff: originalPrice - price };
+}
+
+/** 🖼️ Optimized Desktop Table Thumbnail — Uses 600px thumb with original fallback */
+export function TableThumbnailImage({
+  src,
+  alt,
+  className = "object-cover transition-transform duration-300 group-hover/image:scale-110",
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) {
+  const [currentSrc, setCurrentSrc] = useState(() => getThumbnailUrl(src));
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setCurrentSrc(getThumbnailUrl(src));
+    setFailed(false);
+  }, [src]);
+
+  if (failed) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-slate-100">
+        <ImageIcon className="h-5 w-5 text-slate-300" />
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={currentSrc}
+      alt={alt}
+      fill
+      sizes="80px"
+      onError={() => {
+        if (currentSrc !== src) {
+          // Fallback from missing thumbnail to original image
+          setCurrentSrc(src);
+        } else {
+          // If original also fails (broken image URL)
+          setFailed(true);
+        }
+      }}
+      className={className}
+    />
+  );
+}
+
+/** 📱 Optimized Mobile Card Thumbnail — Uses 600px thumb with lazy decode and original fallback */
+export function MobileThumbnailImage({
+  src,
+  alt,
+  className = "h-full w-full object-cover transition-transform duration-700 group-hover:scale-110",
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) {
+  const [currentSrc, setCurrentSrc] = useState(() => getThumbnailUrl(src));
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setCurrentSrc(getThumbnailUrl(src));
+    setFailed(false);
+  }, [src]);
+
+  if (failed) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-slate-100">
+        <ImageIcon className="h-10 w-10 text-slate-300" />
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={currentSrc}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      onError={() => {
+        if (currentSrc !== src) {
+          // Fallback from missing thumbnail to original image
+          setCurrentSrc(src);
+        } else {
+          // If original also fails (broken image URL)
+          setFailed(true);
+        }
+      }}
+      className={className}
+    />
+  );
 }
 
 function SortableHead({
@@ -637,12 +732,9 @@ export function PropertiesTable({
                           <Dialog>
                             <DialogTrigger asChild>
                               <div className="w-full h-full overflow-hidden relative">
-                                <Image
+                                <TableThumbnailImage
                                   src={property.image_url}
                                   alt={property.title || "Property"}
-                                  fill
-                                  sizes="80px"
-                                  className="object-cover transition-transform duration-300 group-hover/image:scale-110"
                                 />
                               </div>
                             </DialogTrigger>
@@ -714,12 +806,37 @@ export function PropertiesTable({
                             {property.title || (isEn ? "Untitled" : "ไม่ระบุชื่อ")}
                           </span>
                         </div>
-                        {property.project_name ? (
-                          <div className="flex items-center gap-1 text-[11.5px] font-bold text-indigo-600 line-clamp-1 leading-tight">
-                            <Building2 className="h-3 w-3 shrink-0 text-indigo-500" />
-                            <span className="truncate">{property.project_name}</span>
-                          </div>
-                        ) : null}
+                        {property.project_name || property.project_name_en ? (() => {
+                          const { cleanTh, cleanEn, hasEnglishLine } = parseBilingualProjectName(
+                            property.project_name,
+                            property.project_name_en
+                          );
+                          const primaryName = isEn
+                            ? (cleanEn || cleanTh || property.project_name || property.project_name_en)
+                            : (cleanTh || property.project_name || cleanEn);
+                          const secondaryName = isEn
+                            ? (cleanEn && cleanTh && cleanTh.toLowerCase() !== cleanEn.toLowerCase() ? cleanTh : null)
+                            : (hasEnglishLine && cleanEn ? cleanEn : null);
+
+                          const fullTooltip = (secondaryName ? `${primaryName} (${secondaryName})` : primaryName) || undefined;
+
+                          return (
+                            <div
+                              className="flex items-center gap-1 text-[11.5px] font-bold text-indigo-600 line-clamp-1 leading-tight"
+                              title={fullTooltip}
+                            >
+                              <Building2 className="h-3 w-3 shrink-0 text-indigo-500" />
+                              <span className="truncate">
+                                <span>{primaryName}</span>
+                                {secondaryName && (
+                                  <span className="font-normal text-slate-400 ml-1">
+                                    ({secondaryName})
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          );
+                        })() : null}
                         <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
                           {[
                             getDistrictName(property.popular_area || "", isEn ? "en" : "th"),
@@ -1130,10 +1247,9 @@ export function PropertiesTable({
                     </div>
                   )}
                   {property.image_url ? (
-                    <img
+                    <MobileThumbnailImage
                       src={property.image_url}
                       alt={property.title}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center bg-slate-100">

@@ -126,6 +126,17 @@ export function getThumbnailUrl(
   // If already a thumbnail, return as-is
   if (publicUrl.includes("-thumb.webp")) return publicUrl;
 
+  // Only apply -thumb.webp to internal Supabase/CDN storage assets (prevent breaking external WebP URLs)
+  const isInternalStorage =
+    publicUrl.includes("cdn.vccasset.com") ||
+    publicUrl.includes(".supabase.co") ||
+    publicUrl.includes("/storage/v1/object/public/") ||
+    !publicUrl.startsWith("http");
+
+  if (!isInternalStorage) {
+    return publicUrl;
+  }
+
   // If webp format, append -thumb
   if (publicUrl.includes(".webp")) {
     return publicUrl.replace(/\.webp($|\?)/i, "-thumb.webp$1");

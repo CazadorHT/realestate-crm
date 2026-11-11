@@ -32,7 +32,7 @@ export function OfficeForRentFeatureCards({ initialLanguage }: OfficeForRentFeat
             {language === "en"
               ? "Office spaces in premium business hubs like Sathorn, Silom, Asoke, and Ratchada near BTS/MRT stations."
               : language === "cn"
-              ? "位于沙吞、席隆、阿索克和拉差达等高端商业枢纽的写字楼，邻近 BTS/MRT 轨道交通站。"
+              ? "位于沙吞、是隆、阿速和拉差达等高端商业枢纽的写字楼，邻近 BTS/MRT 轨道交通站。"
               : language === "ru"
               ? "Офисы в престижных деловых центрах, таких как Саторн, Силом, Асок и Рачада, рядом со станциями BTS/MRT."
               : "ออฟฟิศให้เช่าในย่านธุรกิจหลัก เช่น สาทร, สีลม, อโศก, รัชดาภิเษก ติดรถไฟฟ้า BTS/MRT เดินทางสะดวกพนักงานแฮปปี้"}

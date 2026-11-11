@@ -656,7 +656,30 @@ export async function bulkTranslatePopularAreasAction(
     const modelName = aiConfig.blog_generator_model || "gemini-flash-lite-latest";
 
     const prompt = `
-      Translate location names in Thailand from Thai to English, Chinese, and Russian.
+      You are an expert real estate localization specialist for Thailand properties.
+      Translate the given Thai location/popular area names to English, Chinese (Simplified), and Russian.
+
+      CRITICAL CHINESE (Simplified) TRANSLATION CONVENTIONS:
+      - Use standard Thai real estate, BTS/MRT station, and local Chinese community names:
+        * อโศก (Asok/Asoke) -> "阿速"
+        * อ่อนนุช (On Nut) -> "安努"
+        * บางนา (Bangna) -> "邦纳"
+        * ห้วยขวาง (Huai Khwang) -> "辉煌"
+        * พระราม 9 (Rama 9) -> "拉玛九"
+        * เพลินจิต (Ploenchit) -> "奔集"
+        * เอกมัย (Ekkamai) -> "亿甲迈"
+        * พร้อมพงษ์ (Phrom Phong) -> "澎蓬"
+        * ราชพฤกษ์ (Ratchaphruek) -> "拉差普鲁" (NEVER translate as "皇家田")
+        * แจ้งวัฒนะ (Chaengwattana) -> "强瓦塔纳" (NEVER translate as "暖武里")
+        * กรุงเทพกรีฑา (Krungthep Kreetha) -> "曼谷格里塔" (NEVER translate as "空客" or "空堤")
+        * พุทธมณฑล (Phutthamonthon) -> "普陀蒙通" (NEVER translate as "佛统")
+        * แบริ่ง (Bearing) -> "培林" (NEVER translate as "轴承")
+        * เกษตร (Kaset) -> "农业大学"
+        * สะพานสูง (Saphan Sung) -> "沙攀松" (NEVER translate as "高桥")
+        * ศรีนครินทร์ (Srinakarin) -> "诗纳卡琳"
+        * พัฒนาการ (Phatthanakan) -> "帕塔纳干"
+      - Never translate location names literally. Always transliterate or use customary names.
+
       Names: ${JSON.stringify(limitedItems.map((a: { id: string; name: Json }) => ({ id: a.id, name: ((a.name as Record<string, unknown> | null)?.th as string) || "" })))}
       Return strict JSON Array of objects: [{ "id": "uuid", "name_en": "...", "name_cn": "...", "name_ru": "..." }]
       Do not include any markers or explanation.

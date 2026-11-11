@@ -588,6 +588,14 @@ export const getPropertiesTableData = cache(async (params: {
         }
         return null;
       })(),
+      project_name_en: (() => {
+        if (!p.projects?.name) return null;
+        if (typeof p.projects.name === "string") return null;
+        if (typeof p.projects.name === "object") {
+          return (p.projects.name as any).en || null;
+        }
+        return null;
+      })(),
       province: p.province,
       district: p.district,
       subdistrict: p.subdistrict,

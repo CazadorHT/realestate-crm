@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -29,6 +29,32 @@ import { cn } from "@/lib/utils";
 
 const FALLBACK_IMG =
   "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800&auto=format&fit=crop";
+
+function AppleHeroImage({
+  src,
+  alt,
+}: {
+  src?: string | null;
+  alt: string;
+}) {
+  const [imgSrc, setImgSrc] = useState(() => src || FALLBACK_IMG);
+
+  useEffect(() => {
+    setImgSrc(src || FALLBACK_IMG);
+  }, [src]);
+
+  return (
+    <Image
+      src={imgSrc}
+      alt={alt}
+      fill
+      priority
+      sizes="(max-width: 640px) 100vw, 320px"
+      onError={() => setImgSrc(FALLBACK_IMG)}
+      className="object-cover transition-transform duration-500 group-hover:scale-105"
+    />
+  );
+}
 
 interface CompareAppleHeroProps {
   properties: CompareProperty[];
@@ -114,12 +140,9 @@ export function CompareAppleHero({
               <div>
                 {/* Elevated Image Container with subtle reflection/shadow */}
                 <div className="relative aspect-[16/10] sm:aspect-[4/3] w-full rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 mb-2.5 sm:mb-4 border border-slate-100 group">
-                  <Image
-                    src={coverSrc}
+                  <AppleHeroImage
+                    src={property.image_url}
                     alt={title}
-                    fill
-                    sizes="(max-width: 640px) 100vw, 320px"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
 
                   {/* Closest transit winner badge */}
