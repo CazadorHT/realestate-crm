@@ -9,12 +9,20 @@ Sentry.init({
   environment: process.env.NODE_ENV,
   enabled: process.env.NODE_ENV === "production", // 🛡️ แยกโลก Dev/Prod ไม่ให้เปลือง Quota
 
-  // 🛡️ Double Validation: กันเหนียวอีกชั้นด้วยการเช็ค Hostname
+  // 🛡️ Double Validation: กันเหนียวอีกชั้นด้วยการเช็ค Hostname และกรอง Error Storm
   beforeSend(event) {
     if (typeof window !== "undefined" && 
         (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
       return null; // 🚫 ไม่ส่งข้อมูลถ้าเป็นเครื่อง Dev
     }
+
+    // 🛡️ สกัดกั้น Error Storm จาก In-App Webview (TikTok / Facebook) แบบ 100%
+    // หากมี Error ซ้ำรัวๆ จาก parentNode หรือ Hydration จะตัดทิ้งทันที ไม่ให้ส่งไปเปลืองโควตาเด็ดขาด
+    const exceptionText = event.exception?.values?.map((v) => `${v.type || ""} ${v.value || ""}`).join(" ") || "";
+    if (/parentNode|hydration/i.test(exceptionText)) {
+      return null;
+    }
+
     return event;
   },
 
@@ -28,6 +36,8 @@ Sentry.init({
     /There was an error while hydrating/i,
     /Text content does not match server-rendered HTML/i,
     /Minified React error #(418|423|425)/,
+    /Cannot read propert(y|ies) of (null|undefined) \(reading 'parentNode'\)/i,
+    /null is not an object \(evaluating '.*\.parentNode'\)/i,
     "ResizeObserver loop completed with undelivered notifications.",
     "ResizeObserver loop limit exceeded",
     "Load failed",
