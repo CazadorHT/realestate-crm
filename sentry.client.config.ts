@@ -18,19 +18,12 @@ Sentry.init({
     return event;
   },
 
-  // Add optional integrations for additional features
-  integrations: [
-    Sentry.replayIntegration(),
-  ],
-
   // 💸 ประหยัด Quota: เก็บ Performance แค่ 5% พอให้เห็นคอขวด
   tracesSampleRate: 0.05, 
 
-  // 💸 ประหยัด Quota: เก็บวิดีโอ Replay สุ่มแค่ 1% ของคนทั่วไป
-  replaysSessionSampleRate: 0.01, 
-
-  // 🔥 ลดความหนาแน่นของ payload ตอนเกิด crash storm เพื่อไม่ให้ tunnel ถูกอัดจนล้น
-  replaysOnErrorSampleRate: 0.01, 
+  // 🚫 ปิด Session Replay ถาวรเพื่อประหยัดขนาด JS Bundle (~60-80KB) และไม่กินโควตา 50 ครั้ง/เดือน
+  replaysSessionSampleRate: 0, 
+  replaysOnErrorSampleRate: 0, 
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
