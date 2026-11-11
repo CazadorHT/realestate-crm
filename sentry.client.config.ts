@@ -21,6 +21,20 @@ Sentry.init({
   // 💸 ประหยัด Quota: เก็บ Performance แค่ 5% พอให้เห็นคอขวด
   tracesSampleRate: 0.05, 
 
+  // 🔇 กรองขยะที่ไม่ใช่บั๊กของระบบ (เช่น TikTok/Facebook Webview ฉีด Script, Hydration Mismatch, เน็ตผู้ใช้หลุด)
+  // เพื่อไม่ให้เปลืองโควตา 5K Errors และไม่ส่งอีเมลเตือนพร่ำเพรื่อ
+  ignoreErrors: [
+    /Hydration failed/i,
+    /There was an error while hydrating/i,
+    /Text content does not match server-rendered HTML/i,
+    /Minified React error #(418|423|425)/,
+    "ResizeObserver loop completed with undelivered notifications.",
+    "ResizeObserver loop limit exceeded",
+    "Load failed",
+    "Failed to fetch",
+    "NetworkError when attempting to fetch resource.",
+  ],
+
   // 🚫 ปิด Session Replay ถาวรเพื่อประหยัดขนาด JS Bundle (~60-80KB) และไม่กินโควตา 50 ครั้ง/เดือน
   replaysSessionSampleRate: 0, 
   replaysOnErrorSampleRate: 0, 

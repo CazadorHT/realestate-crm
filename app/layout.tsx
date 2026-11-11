@@ -267,6 +267,7 @@ export default async function RootLayout({
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
       </head>
       <body
+        suppressHydrationWarning
         className={`${prompt.className} ${prompt.variable} ${notoThai.variable} antialiased`}
         style={{ scrollbarGutter: "stable" }}
       >
