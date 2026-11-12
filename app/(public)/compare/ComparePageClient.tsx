@@ -21,12 +21,28 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export default function ComparePageClient() {
   const { t } = useLanguage();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-slate-50 pb-12 md:pb-20 pt-20 md:pt-24 flex items-center justify-center">
+        <div className="animate-pulse text-slate-400">
+          {t("compare_page.loading") || "กำลังโหลด..."}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Suspense
       fallback={
         <div className="min-h-screen bg-slate-50 pb-12 md:pb-20 pt-20 md:pt-24 flex items-center justify-center">
           <div className="animate-pulse text-slate-400">
-            {t("compare_page.loading")}
+            {t("compare_page.loading") || "กำลังโหลด..."}
           </div>
         </div>
       }
