@@ -28,6 +28,12 @@ describe("Public Data - Popular Areas (เทสโหดๆ แบบไม่�
 
   describe("getPublicProvincesAction", () => {
     it("should fetch unique provinces and map display names correctly", async () => {
+      mockSupabase.mockTableResult("properties_details", [
+        { province: "กรุงเทพมหานคร" },
+        { province: "ภูเก็ต" },
+        { province: "กรุงเทพมหานคร" }, // Duplicate
+        { province: "เชียงใหม่" },
+      ]);
       mockSupabase.mockTableResult("properties", [
         { province: "กรุงเทพมหานคร" },
         { province: "ภูเก็ต" },
@@ -45,6 +51,7 @@ describe("Public Data - Popular Areas (เทสโหดๆ แบบไม่�
     });
 
     it("should handle error and return empty array", async () => {
+      mockSupabase.mockTableError("properties_details", new Error("DB_ERROR"));
       mockSupabase.mockTableError("properties", new Error("DB_ERROR"));
 
       const provinces = await getPublicProvincesAction();

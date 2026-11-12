@@ -99,7 +99,7 @@ function ComparePageContent() {
         <AppBreadcrumbs
           items={[
             { label: t("breadcrumb.home"), href: langPrefix || "/" },
-            { label: t("compare_page.title"), href: `${langPrefix}/compare` },
+            { label: t("compare_page.title"), href: `${langPrefix || ""}/compare` },
           ]}
           className="mb-4"
         />
