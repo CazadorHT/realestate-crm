@@ -30,10 +30,9 @@ export const getPublicProvincesAction = unstable_cache(
     try {
       const client = createPublicClient();
       const { data: provData } = await client
-        .from("properties")
-        .select("province")
-        .eq("status", "ACTIVE")
-        .not("province", "is", null);
+        .from("properties_details")
+        .select("province:address_info->>province")
+        .not("address_info->>province", "is", null);
 
       const uniqueThai = Array.from(
         new Set((provData || []).map((p: any) => p.province).filter(Boolean)),

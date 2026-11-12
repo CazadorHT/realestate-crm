@@ -438,9 +438,9 @@ export async function getProvincePropertyCountsAction(): Promise<Record<string, 
       async () => {
         const supabase = createPublicClient();
         const { data, error } = await supabase
-          .from("properties")
-          .select("province")
-          .is("deleted_at", null);
+          .from("properties_details")
+          .select("province:address_info->>province")
+          .not("address_info->>province", "is", null);
 
         if (error) {
           console.error("Error fetching province property counts:", error);
