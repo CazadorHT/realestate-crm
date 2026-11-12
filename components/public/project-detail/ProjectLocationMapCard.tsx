@@ -19,6 +19,15 @@ function extractQuery(url: string | null) {
   if (!url.startsWith("http")) return url;
 
   try {
+    if (
+      url.includes("maps.app.goo.gl") ||
+      url.includes("goo.gl/maps") ||
+      url.includes("goo.gl/") ||
+      url.includes("share.google")
+    ) {
+      return null;
+    }
+
     const urlObj = new URL(url);
     const daddr = urlObj.searchParams.get("daddr") || urlObj.searchParams.get("destination");
     if (daddr) return daddr;
@@ -34,7 +43,7 @@ function extractQuery(url: string | null) {
       return decodeURIComponent(placeMatch[1]).replace(/\+/g, " ");
 
     return url;
-  } catch (e) {
+  } catch {
     return url;
   }
 }
@@ -54,10 +63,16 @@ export function ProjectLocationMapCard({
     ? (language === "th" ? (parsedName.cleanTh || parsedName.cleanEn) : (parsedName.cleanEn || parsedName.cleanTh))
     : projectName;
 
-  const query = googleMapsUrl
-    ? extractQuery(googleMapsUrl)
-    : latitude && longitude
-      ? `${latitude},${longitude}`
+  const hasCoords =
+    typeof latitude === "number" &&
+    typeof longitude === "number" &&
+    !isNaN(latitude) &&
+    !isNaN(longitude);
+
+  const query = hasCoords
+    ? `${latitude},${longitude}`
+    : googleMapsUrl
+      ? extractQuery(googleMapsUrl)
       : resolvedProjectName || null;
 
   if (!query && !googleMapsUrl) return null;

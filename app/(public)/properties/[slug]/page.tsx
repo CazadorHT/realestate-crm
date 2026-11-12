@@ -204,6 +204,8 @@ export default async function PublicPropertyDetailPage(props: {
                   propertyId={data.id}
                   propertyTitle={data.title}
                   googleMapsLink={data.google_maps_link}
+                  latitude={data.latitude}
+                  longitude={data.longitude}
                 />
               </Suspense>
             </div>
@@ -244,6 +246,8 @@ export default async function PublicPropertyDetailPage(props: {
                     propertyId={data.id}
                     propertyTitle={data.title}
                     googleMapsLink={data.google_maps_link}
+                    latitude={data.latitude}
+                    longitude={data.longitude}
                     compact={true}
                   />
                 </Suspense>

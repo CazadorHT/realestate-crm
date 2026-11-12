@@ -11,6 +11,8 @@ import { type Language } from "@/lib/i18n";
 
 interface PropertyMapClientProps {
   googleMapsLink: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   propertyId?: string;
   propertyTitle?: string;
   language?: Language;
@@ -20,6 +22,8 @@ interface PropertyMapClientProps {
 
 export function PropertyMapClient({
   googleMapsLink,
+  latitude,
+  longitude,
   propertyId,
   propertyTitle,
   language: customLanguage,
@@ -35,6 +39,16 @@ export function PropertyMapClient({
     if (!url.startsWith("http")) return url;
 
     try {
+      // Shortened links cannot be embedded directly via URL string without redirect
+      if (
+        url.includes("maps.app.goo.gl") ||
+        url.includes("goo.gl/maps") ||
+        url.includes("goo.gl/") ||
+        url.includes("share.google")
+      ) {
+        return null;
+      }
+
       const urlObj = new URL(url);
       const daddr = urlObj.searchParams.get("daddr") || urlObj.searchParams.get("destination");
       if (daddr) return daddr;
@@ -50,7 +64,7 @@ export function PropertyMapClient({
         return decodeURIComponent(placeMatch[1]).replace(/\+/g, " ");
 
       return url;
-    } catch (e) {
+    } catch {
       return url;
     }
   };
@@ -62,17 +76,32 @@ export function PropertyMapClient({
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
 
+  const hasCoordinates =
+    typeof latitude === "number" &&
+    typeof longitude === "number" &&
+    !isNaN(latitude) &&
+    !isNaN(longitude);
+
+  const externalMapUrl =
+    googleMapsLink ||
+    (hasCoordinates
+      ? `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
+      : null);
+
   useEffect(() => {
     try {
       pushToDataLayer(GTM_EVENTS.VIEW_MAP, { 
-        has_link: !!googleMapsLink,
+        has_link: !!(googleMapsLink || hasCoordinates),
         item_id: propertyId,
         item_name: propertyTitle,
       });
     } catch (e) {}
-  }, [googleMapsLink, propertyId, propertyTitle]);
+  }, [googleMapsLink, hasCoordinates, propertyId, propertyTitle]);
 
-  const locationQuery = extractQuery(googleMapsLink);
+  const locationQuery = hasCoordinates
+    ? `${latitude},${longitude}`
+    : extractQuery(googleMapsLink);
+
   const embedUrl = locationQuery
     ? `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`
     : null;
@@ -93,7 +122,7 @@ export function PropertyMapClient({
             compact ? "h-[220px] md:h-[240px]" : "h-[300px] md:h-[450px]"
           }`}
         >
-          {googleMapsLink && embedUrl ? (
+          {embedUrl ? (
             <iframe
               width="100%"
               height="100%"
@@ -116,16 +145,16 @@ export function PropertyMapClient({
           )}
         </div>
 
-        {googleMapsLink && (
+        {externalMapUrl && (
           <div className="flex justify-center">
             <a
-              href={googleMapsLink}
+              href={externalMapUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
                 try {
                   pushToDataLayer(GTM_EVENTS.CLICK_MAP_EXTERNAL, { 
-                    url: googleMapsLink,
+                    url: externalMapUrl,
                     item_id: propertyId,
                     item_name: propertyTitle,
                   });

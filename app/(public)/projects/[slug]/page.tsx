@@ -118,11 +118,16 @@ async function resolveGoogleMapsLink(url: string | null) {
       const res = await fetch(url, {
         method: "HEAD",
         redirect: "follow",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml",
+        },
+        signal: AbortSignal.timeout(2000),
         next: { revalidate: 86400 },
       });
       return res.url;
-    } catch (e) {
-      console.warn("Could not resolve shortened Google Maps link:", url);
+    } catch {
       return url;
     }
   }
@@ -142,7 +147,15 @@ export default async function ProjectDetailPage(
   const { language } = await getServerTranslations();
   const nameText = project.name[language as keyof typeof project.name] || project.name.en || project.name.th;
   
-  const resolvedGoogleMapsUrl = await resolveGoogleMapsLink(project.googleMapsUrl || null);
+  const hasProjectCoords =
+    typeof project.latitude === "number" &&
+    typeof project.longitude === "number" &&
+    !isNaN(project.latitude) &&
+    !isNaN(project.longitude);
+
+  const resolvedGoogleMapsUrl = hasProjectCoords
+    ? project.googleMapsUrl
+    : await resolveGoogleMapsLink(project.googleMapsUrl || null);
   const { properties, total } = await getPropertiesInProject(project.id, { limit: 12 });
   const relatedProjects = await getRelatedProjects(project.id, project.district, project.province);
   const nearbyAreas = await getPopularAreas(50);

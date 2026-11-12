@@ -49,7 +49,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     is_hot_deal, is_exclusive, verified, created_at, updated_at,
     created_by, project_id,
     project:projects!properties_core_project_id_fkey (
-      id, slug, name
+      id, slug, name, latitude, longitude
     ),
     details:properties_details!property_id (
       title, description, address_info, amenities, transit_info, pricing_details, meta_data
@@ -191,6 +191,9 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
       province_cn?: string;
       province_ru?: string;
       google_maps_link?: string;
+      maps_link?: string;
+      latitude?: number | null;
+      longitude?: number | null;
     };
     amenities: PropertyAmenitiesV3;
     pricing_details: PropertyPricingV3;
@@ -326,6 +329,18 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     subdistrict: address.subdistrict || (rawData as any).subdistrict || null,
     // Support both `google_maps_link` and legacy `maps_link` keys
     google_maps_link: (address.google_maps_link || (address as any).maps_link) || null,
+    // Prioritize coordinates extracted directly from property's own pasted maps link.
+    // If property has its own map link, never fallback to potentially inaccurate auto-generated project coords.
+    latitude: typeof address.latitude === "number"
+      ? address.latitude
+      : (!(address.google_maps_link || (address as any).maps_link) && typeof (rawData.project as any)?.latitude === "number"
+        ? (rawData.project as any).latitude
+        : null),
+    longitude: typeof address.longitude === "number"
+      ? address.longitude
+      : (!(address.google_maps_link || (address as any).maps_link) && typeof (rawData.project as any)?.longitude === "number"
+        ? (rawData.project as any).longitude
+        : null),
     is_hot_deal: !!rawData.is_hot_deal,
     is_pet_friendly: !!amenities.is_pet_friendly,
     is_exclusive: !!rawData.is_exclusive,

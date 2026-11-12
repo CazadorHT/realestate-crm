@@ -197,6 +197,8 @@ export interface PropertyDetail {
   district: string | null;
   subdistrict: string | null;
   google_maps_link: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   is_hot_deal: boolean | null;
   is_pet_friendly: boolean | null;
   is_exclusive: boolean | null;

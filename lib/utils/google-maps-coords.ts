@@ -252,9 +252,15 @@ export async function resolveAndExtractCoordinates(
 
   let resolvedUrl = cleaned;
   try {
+    const BROWSER_HEADERS = {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      Accept: "text/html,application/xhtml+xml",
+    };
     const headRes = await fetch(cleaned, {
       method: "HEAD",
       redirect: "follow",
+      headers: BROWSER_HEADERS,
       signal: AbortSignal.timeout(timeoutMs),
     });
     if (headRes.url && headRes.url !== cleaned) {
@@ -264,6 +270,7 @@ export async function resolveAndExtractCoordinates(
       const getRes = await fetch(cleaned, {
         method: "GET",
         redirect: "follow",
+        headers: BROWSER_HEADERS,
         signal: AbortSignal.timeout(timeoutMs),
       });
       if (getRes.url) {

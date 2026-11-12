@@ -64,6 +64,8 @@ export interface PropertyAddressV3 {
   popular_area?: { th?: string; en?: string; cn?: string; ru?: string } | string | null;
   popular_area_id?: string | null;
   google_maps_link?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   address_line1?: string | null;
   address_line1_en?: string | null;
   postal_code?: string | null;
