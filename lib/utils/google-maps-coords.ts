@@ -257,13 +257,17 @@ export async function resolveAndExtractCoordinates(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       Accept: "text/html,application/xhtml+xml",
     };
+    // Fast path: use redirect "manual" to grab 301/302 Location header in < 600ms without trailing hang
     const headRes = await fetch(cleaned, {
       method: "HEAD",
-      redirect: "follow",
+      redirect: "manual",
       headers: BROWSER_HEADERS,
       signal: AbortSignal.timeout(timeoutMs),
     });
-    if (headRes.url && headRes.url !== cleaned) {
+    const loc = headRes.headers.get("location");
+    if (loc) {
+      resolvedUrl = loc;
+    } else if (headRes.url && headRes.url !== cleaned) {
       resolvedUrl = headRes.url;
     }
     if (!parseCoordinatesFromUrlSync(resolvedUrl)) {
