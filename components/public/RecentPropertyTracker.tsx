@@ -5,6 +5,9 @@ import { addRecentProperty } from "@/lib/recent-properties";
 import { incrementPropertyView } from "@/features/properties/actions";
 import { updateAIScore, trackPropertyPreference } from "@/lib/analytics-utils";
 
+const BOT_REGEX =
+  /bot|spider|crawl|slurp|lighthouse|google|bing|yandex|duckduckbot|baiduspider|skypeuripreview|facebookexternalhit|twitterbot|linkedinbot|embedly|quora|pinterest|slackbot|redditbot|applebot|whatsapp|telegrambot/i;
+
 export function RecentPropertyTracker({
   property,
 }: {
@@ -43,8 +46,19 @@ export function RecentPropertyTracker({
 }) {
   useEffect(() => {
     addRecentProperty(property);
-    // Fire and forget view increment
-    incrementPropertyView(property.id);
+
+    // Client-side guard: Never trigger Server Action POST requests for search crawlers/bots
+    if (typeof navigator !== "undefined" && BOT_REGEX.test(navigator.userAgent)) {
+      return;
+    }
+
+    // Session deduplication: Only count view once per session per property to avoid duplicate POSTs
+    const sessionKey = `viewed_${property.id}`;
+    if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(sessionKey)) {
+      sessionStorage.setItem(sessionKey, "1");
+      incrementPropertyView(property.id);
+    }
+
     updateAIScore(5);
 
     // Track preference for AI matching

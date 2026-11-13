@@ -17,6 +17,9 @@ import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import { buildLineUrl, buildWhatsAppUrl } from "@/lib/social-links";
 import { cn } from "@/lib/utils";
 
+// Client module cache to prevent repeated network requests across page navigations
+let cachedFloatingAgents: any[] | null = null;
+
 export function FloatingContactDial() {
   const { t, language } = useLanguage();
   const settings = useSiteConfig();
@@ -56,13 +59,17 @@ export function FloatingContactDial() {
   useEffect(() => {
     async function fetchContactInfo() {
       try {
-        const { getPublicFloatingAgentsAction } = await import(
-          "@/features/properties/actions/fetch-public-property"
-        );
-        const data = await getPublicFloatingAgentsAction();
+        let data = cachedFloatingAgents;
+        if (!data) {
+          const res = await fetch("/api/public/floating-agents");
+          if (res.ok) {
+            data = await res.json();
+            cachedFloatingAgents = data;
+          }
+        }
 
         if (data && data.length > 0) {
-          const mappedAgents = data.map((d) => ({
+          const mappedAgents = data.map((d: any) => ({
             id: d.id,
             phone: d.phone || "08x-xxx-xxxx",
             agentName: d.nickname

@@ -40,22 +40,22 @@ export function FloatingActionMenu() {
   useEffect(() => {
     async function fetchAgents() {
       try {
-        const { getPublicFloatingAgentsAction } = await import("@/features/properties/actions/fetch-public-property");
-        const data = await getPublicFloatingAgentsAction();
-
-        if (data) {
-          // valid fields are automatically typed
-          const mappedAgents: AgentProfile[] = data.map((p) => ({
-            id: p.id,
-            full_name: p.full_name || "Unknown Agent",
-            avatar_url: p.avatar_url,
-            phone: p.phone,
-            line_id: p.line_id,
-            facebook_url: p.facebook_url,
-            whatsapp_id: p.whatsapp_id,
-            wechat_id: p.wechat_id,
-          }));
-          setAgents(mappedAgents);
+        const res = await fetch("/api/public/floating-agents");
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            const mappedAgents: AgentProfile[] = data.map((p: any) => ({
+              id: p.id,
+              full_name: p.full_name || "Unknown Agent",
+              avatar_url: p.avatar_url,
+              phone: p.phone,
+              line_id: p.line_id,
+              facebook_url: p.facebook_url,
+              whatsapp_id: p.whatsapp_id,
+              wechat_id: p.wechat_id,
+            }));
+            setAgents(mappedAgents);
+          }
         }
       } catch (err) {
         console.error("Failed to load agents", err);
