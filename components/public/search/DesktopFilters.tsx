@@ -93,6 +93,7 @@ interface DesktopFiltersProps {
   priceCounts: Map<string, number>;
   setMinPrice: (v: string) => void;
   setMaxPrice: (v: string) => void;
+  priceType?: string;
   setPriceType?: (v: string) => void;
   currentSizeOption: any;
   sizeOptions: any[];
@@ -228,6 +229,7 @@ export function DesktopFilters({
   priceCounts,
   setMinPrice,
   setMaxPrice,
+  priceType,
   setPriceType,
   currentSizeOption,
   sizeOptions,
@@ -838,21 +840,27 @@ export function DesktopFilters({
           flatPriceOptions={flatPriceOptions}
           priceOptions={priceOptions}
           priceCounts={priceCounts}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          listingType={listingType}
+          priceType={priceType}
           setMinPrice={setMinPrice}
           setMaxPrice={setMaxPrice}
           setPriceType={setPriceType}
           placeholder={t("search.price_range")}
-          className="w-[180px]"
+          className="w-[200px]"
         />
 
         <AreaSizeSelect
           currentSizeOption={currentSizeOption}
           sizeOptions={sizeOptions}
           sizeCounts={sizeCounts}
+          minSize={minSize}
+          maxSize={maxSize}
           setMinSize={setMinSize}
           setMaxSize={setMaxSize}
           placeholder={t("search.area_size") || "ขนาดพื้นที่"}
-          className="w-[170px]"
+          className="w-[190px]"
         />
 
         <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-sm h-10">

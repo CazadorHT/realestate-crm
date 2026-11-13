@@ -39,6 +39,31 @@ function generateDocumentNumber(templateType: string, ownerId: string): string {
   return `${prefix}-${shortId}${ts}`;
 }
 
+/** 
+ * Format project name according to document language:
+ * - If language is 'th': shows Thai + English in parenthesis (e.g. "ศุภาลัย เวอแรนด้า รามคำแหง (Supalai Veranda Ramkhamhaeng)")
+ * - If language is 'en', 'cn', 'ru': shows English name only (e.g. "Supalai Veranda Ramkhamhaeng")
+ */
+function formatProjectName(name: any, lang: string = "th"): string {
+  if (!name) return "";
+  if (typeof name === "string") return name.trim();
+  const th = (name.th || "").trim();
+  const en = (name.en || "").trim();
+
+  // If document language is international (en, cn/zh, ru), return English name only
+  if (lang !== "th") {
+    return en || th;
+  }
+
+  // If document language is Thai, return Thai with English in parenthesis
+  if (th && en) {
+    if (th.toLowerCase() === en.toLowerCase()) return th;
+    if (th.includes(en) || th.includes(`(${en})`)) return th;
+    return `${th} (${en})`;
+  }
+  return th || en || "";
+}
+
 // Schema for document additional data (shared overrides)
 const additionalDataSchema = z
   .object({
@@ -232,8 +257,18 @@ export async function generateDocumentFromTemplateAction(
       contextData.property = localizeObject(property, lang);
       if (property.project) {
         const rawProj = property.project as any;
-        const nameVal = rawProj.name ? (rawProj.name[lang] || rawProj.name.en || rawProj.name.th || "") : "";
-        contextData.project = { name: nameVal };
+        const formattedName = formatProjectName(rawProj.name, lang);
+        const nameVal = formattedName || (rawProj.name ? (rawProj.name[lang] || rawProj.name.en || rawProj.name.th || "") : "");
+        contextData.project = {
+          name: nameVal,
+          full_name: formattedName,
+          name_th: rawProj.name?.th || "",
+          name_en: rawProj.name?.en || "",
+        };
+        if (formattedName) {
+          contextData.property.title = formattedName;
+          contextData.property.project_name = formattedName;
+        }
       }
     } else if (ownerType === "DEAL") {
       const { data: dealData, error: dError } = await supabase
@@ -311,8 +346,18 @@ export async function generateDocumentFromTemplateAction(
       contextData.property = localizeObject(deal.property, lang);
       if (deal.property && deal.property.project) {
         const rawProj = deal.property.project as any;
-        const nameVal = rawProj.name ? (rawProj.name[lang] || rawProj.name.en || rawProj.name.th || "") : "";
-        contextData.project = { name: nameVal };
+        const formattedName = formatProjectName(rawProj.name, lang);
+        const nameVal = formattedName || (rawProj.name ? (rawProj.name[lang] || rawProj.name.en || rawProj.name.th || "") : "");
+        contextData.project = {
+          name: nameVal,
+          full_name: formattedName,
+          name_th: rawProj.name?.th || "",
+          name_en: rawProj.name?.en || "",
+        };
+        if (formattedName) {
+          contextData.property.title = formattedName;
+          contextData.property.project_name = formattedName;
+        }
       }
 
       // Add formatted values based on deal type
@@ -656,9 +701,9 @@ export async function generateDocumentFromTemplateAction(
     const slipLabel = lang === "th" ? "หลักฐานการโอนเงิน" : "Payment Record (Transfer)";
     if (contextData.slip_url && contextData.slip_url.startsWith("data:")) {
       contextData.slip_html = `
-      <div style="text-align: center; margin: 10px 0; page-break-inside: avoid;">
-        <p style="font-size: 11px; color: #666; margin-bottom: 5px;">${slipLabel}</p>
-        <img src="${contextData.slip_url}" style="max-height: 80mm; max-width: 100mm; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2px; object-fit: contain;" alt="Transfer Slip">
+      <div class="slip-container" style="text-align: center; margin: 8px 0; page-break-inside: avoid;">
+        <p style="font-size: 11px; color: #666; margin: 0 0 4px 0;">${slipLabel}</p>
+        <img class="slip-image" src="${contextData.slip_url}" style="max-height: 75mm; max-width: 110mm; border: 1px solid #e2e8f0; border-radius: 6px; padding: 2px; object-fit: contain;" alt="Transfer Slip">
       </div>`;
     } else {
       contextData.slip_html = "";
@@ -713,7 +758,10 @@ export async function generateDocumentFromTemplateAction(
     if (!template.content || template.content.trim() === "") {
       throw new Error("ต้นแบบสัญญาไม่มีเนื้อหา (Template content is empty)");
     }
-    const generatedContent = replacePlaceholders(template.content, contextData);
+    let generatedContent = replacePlaceholders(template.content, contextData);
+
+    // Strip legacy embedded page/print styles from template content so master print styles take precedence
+    generatedContent = generatedContent.replace(/<style[^>]*>[\s\S]*?(?:@page|\.page|@media\s+print)[\s\S]*?<\/style>/gi, "");
 
     // 4. Save as Document Record
     const timestamp = new Date().getTime();
@@ -735,7 +783,7 @@ export async function generateDocumentFromTemplateAction(
 <head>
 <meta charset="UTF-8">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap');
   
   :root {
     --primary-color: #0c4a6e;
@@ -744,44 +792,71 @@ export async function generateDocumentFromTemplateAction(
 
   * { box-sizing: border-box; }
 
-  body { 
-    font-family: 'Sarabun', sans-serif; 
+  @page {
+    size: A4;
+    margin: 6mm 10mm 15mm 10mm;
+  }
+
+  html, body { 
+    font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
     line-height: 1.4; 
     color: #1e293b; 
     margin: 0;
     padding: 0;
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
     background-color: #f1f5f9;
   }
 
-  /* A4 Page Setup - Automatic Scaling */
+  /* Screen View - A4 paper preview */
   .page {
     width: 210mm;
     min-height: 297mm;
-    padding: 10mm;
-    margin: 10mm auto;
+    padding: 6mm 10mm 15mm 10mm;
+    margin: 20px auto;
     background: white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     position: relative;
-    overflow: hidden;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
   }
 
+  /* Print View - Uses @page margin: 6mm 10mm 15mm 10mm, full width/height utilization */
   @media print {
-    body { background: none; margin: 0; padding: 0; }
+    html, body { 
+      background: white !important; 
+      background-color: white !important;
+      margin: 0 !important; 
+      padding: 0 !important; 
+      width: 100% !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
     .page {
-      margin: 0;
-      box-shadow: none;
-      width: 210mm;
-      height: 297mm;
-      padding: 10mm;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      min-height: initial !important;
+      box-shadow: none !important;
+      border: none !important;
+      overflow: visible !important;
+      display: flex !important;
+      flex-direction: column !important;
     }
-    @page {
-      size: A4;
-      margin: 0;
+    .content-wrapper {
+      width: 100% !important;
+      height: auto !important;
+      min-height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
     }
-    .no-print { display: none; }
+    .no-print { 
+      display: none !important; 
+    }
   }
 
   h1, h2, h3 { color: var(--primary-color); text-align: center; margin: 0 0 10px 0; }
@@ -791,7 +866,7 @@ export async function generateDocumentFromTemplateAction(
 
   .slip-container {
     text-align: center;
-    margin: 10px 0;
+    margin: 8px 0;
     page-break-inside: avoid;
     flex-grow: 0;
     flex-shrink: 1;
@@ -799,24 +874,24 @@ export async function generateDocumentFromTemplateAction(
   }
   
   .slip-image {
-    max-height: 80mm; /* Reduced size to fit better with text */
-    max-width: 100mm;
+    max-height: 75mm;
+    max-width: 110mm;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 6px;
     padding: 2px;
     object-fit: contain;
   }
 
-  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
-  th, td { border: 1px solid var(--border-color); padding: 6px 10px; text-align: left; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
+  th, td { border: 1px solid var(--border-color); padding: 5px 8px; text-align: left; }
   th { background-color: #f8fafc; font-weight: bold; }
   
-  /* Helper for "auto" text scaling if it's too much content */
   .content-wrapper {
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    width: 100%;
   }
 </style>
 </head>
@@ -951,13 +1026,27 @@ export async function generateDocxDocumentFromTemplateAction(
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
         .from("properties")
-        .select("id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price, tenant_id")
+        .select("id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price, tenant_id, project_id, project:project_id(id, name)")
         .eq("id", ownerId)
         .single();
       if (pError) throw new Error(mapDbError(pError));
       if (!property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
       ownerTenantId = property.tenant_id;
       contextData.property = localizeObject(property, lang);
+      if (property.project) {
+        const rawProj = property.project as any;
+        const formattedName = formatProjectName(rawProj.name, lang);
+        contextData.project = {
+          name: formattedName || (rawProj.name ? (rawProj.name[lang] || rawProj.name.en || rawProj.name.th || "") : ""),
+          full_name: formattedName,
+          name_th: rawProj.name?.th || "",
+          name_en: rawProj.name?.en || "",
+        };
+        if (formattedName) {
+          contextData.property.title = formattedName;
+          contextData.property.project_name = formattedName;
+        }
+      }
     } else if (ownerType === "DEAL") {
       const { data: dealData, error: dError } = await supabase
         .from("crm_deals_v3")
@@ -982,7 +1071,9 @@ export async function generateDocxDocumentFromTemplateAction(
             title_cn,
             title_ru,
             price,
-            rental_price
+            rental_price,
+            project_id,
+            project:project_id(id, name)
           )
         `)
         .eq("id", ownerId)
@@ -1014,13 +1105,28 @@ export async function generateDocxDocumentFromTemplateAction(
           price: propRaw.price,
           rental_price: propRaw.rental_price,
           original_price: propRaw.price,
-          original_rental_price: propRaw.rental_price
+          original_rental_price: propRaw.rental_price,
+          project: propRaw.project ? propRaw.project : null
         } : null
       };
 
       contextData.deal = localizeObject(deal, lang);
       contextData.lead = localizeObject(deal.lead, lang);
       contextData.property = localizeObject(deal.property, lang);
+      if (deal.property && deal.property.project) {
+        const rawProj = deal.property.project as any;
+        const formattedName = formatProjectName(rawProj.name, lang);
+        contextData.project = {
+          name: formattedName || (rawProj.name ? (rawProj.name[lang] || rawProj.name.en || rawProj.name.th || "") : ""),
+          full_name: formattedName,
+          name_th: rawProj.name?.th || "",
+          name_en: rawProj.name?.en || "",
+        };
+        if (formattedName) {
+          contextData.property.title = formattedName;
+          contextData.property.project_name = formattedName;
+        }
+      }
 
       if (deal && contextData.property) {
         const isRent = deal.deal_type === "RENT";

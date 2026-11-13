@@ -497,7 +497,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             p_listing_type: options.listingType || undefined
           };
 
-          const cacheKey = `facets-v3-${JSON.stringify(rpcParams)}`;
+          const cacheKey = `facets-v4-${JSON.stringify(rpcParams)}`;
           const now = Date.now();
           const cachedMemoryFacets = facetsMemoryCache.get(cacheKey);
 
@@ -506,8 +506,90 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           } else {
             const getCachedFacets = unstable_cache(
               async () => {
-                const { data: facetData } = await supabase.rpc("get_public_property_facets_v2", rpcParams);
-                return facetData;
+                const [{ data: facetData }, { data: priceProps }] = await Promise.all([
+                  supabase.rpc("get_public_property_facets_v2", rpcParams),
+                  (() => {
+                    let q = (supabase.from("properties") as any)
+                      .select("price, rental_price, listing_type, property_type, province, size_sqm")
+                      .eq("status", "ACTIVE")
+                      .is("deleted_at", null);
+                    if (effectiveProvince) q = q.eq("province", effectiveProvince);
+                    if (options.propertyType && options.propertyType !== "ALL") {
+                      if (options.propertyType.includes(",")) {
+                        q = q.in("property_type", options.propertyType.split(","));
+                      } else {
+                        q = q.eq("property_type", options.propertyType);
+                      }
+                    }
+                    return q;
+                  })(),
+                ]);
+
+                const facetsObj = ((facetData as any) || {}) as Record<string, any>;
+                if (priceProps && priceProps.length > 0) {
+                  const computedPrices: Record<string, number> = {
+                    "0-15000-RENT": 0,
+                    "15000-20000-RENT": 0,
+                    "20000-30000-RENT": 0,
+                    "30000-45000-RENT": 0,
+                    "45000-70000-RENT": 0,
+                    "70000-100000-RENT": 0,
+                    "100000--RENT": 0,
+                    "0-2000000-SALE": 0,
+                    "2000000-5000000-SALE": 0,
+                    "5000000-10000000-SALE": 0,
+                    "10000000-20000000-SALE": 0,
+                    "20000000--SALE": 0,
+                  };
+
+                  priceProps.forEach((p: any) => {
+                    const isRent = p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT";
+                    const isSale = p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT";
+                    const rPrice = Number(p.rental_price) || 0;
+                    const sPrice = Number(p.price) || 0;
+
+                    if (isRent && rPrice > 0) {
+                      if (rPrice <= 15000) computedPrices["0-15000-RENT"]++;
+                      else if (rPrice <= 20000) computedPrices["15000-20000-RENT"]++;
+                      else if (rPrice <= 30000) computedPrices["20000-30000-RENT"]++;
+                      else if (rPrice <= 45000) computedPrices["30000-45000-RENT"]++;
+                      else if (rPrice <= 70000) computedPrices["45000-70000-RENT"]++;
+                      else if (rPrice <= 100000) computedPrices["70000-100000-RENT"]++;
+                      else computedPrices["100000--RENT"]++;
+                    }
+
+                    if (isSale && sPrice > 0) {
+                      if (sPrice <= 2000000) computedPrices["0-2000000-SALE"]++;
+                      else if (sPrice <= 5000000) computedPrices["2000000-5000000-SALE"]++;
+                      else if (sPrice <= 10000000) computedPrices["5000000-10000000-SALE"]++;
+                      else if (sPrice <= 20000000) computedPrices["10000000-20000000-SALE"]++;
+                      else computedPrices["20000000--SALE"]++;
+                    }
+                  });
+
+                  const computedSizes: Record<string, number> = {
+                    "0-30": 0,
+                    "30-50": 0,
+                    "50-100": 0,
+                    "100-200": 0,
+                    "200-": 0,
+                  };
+
+                  priceProps.forEach((p: any) => {
+                    const size = Number(p.size_sqm) || 0;
+                    if (size > 0) {
+                      if (size <= 30) computedSizes["0-30"]++;
+                      else if (size <= 50) computedSizes["30-50"]++;
+                      else if (size <= 100) computedSizes["50-100"]++;
+                      else if (size <= 200) computedSizes["100-200"]++;
+                      else computedSizes["200-"]++;
+                    }
+                  });
+
+                  facetsObj.availablePrices = computedPrices;
+                  facetsObj.availableSizes = computedSizes;
+                }
+                return facetsObj;
               },
               [cacheKey],
               {

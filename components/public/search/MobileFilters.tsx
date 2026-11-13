@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { MobileFilterSheet } from "./MobileFilterSheet";
+import { PriceRangeSelect } from "./PriceRangeSelect";
+import { AreaSizeSelect } from "./AreaSizeSelect";
 import { MagicAiSearch } from "./MagicAiSearch";
 import { formatStationLabel } from "@/lib/property-utils";
 import { buildAreaHierarchy } from "@/lib/utils/area-hierarchy";
@@ -109,11 +111,15 @@ interface MobileFiltersProps {
   flatPriceOptions: any[];
   priceOptions: any[];
   priceCounts: Map<string, number>;
+  minPrice?: string;
+  maxPrice?: string;
   setMinPrice: (v: string) => void;
   setMaxPrice: (v: string) => void;
   currentSizeOption: any;
   sizeOptions: any[];
   sizeCounts: Map<string, number>;
+  minSize?: string;
+  maxSize?: string;
   setMinSize: (v: string) => void;
   setMaxSize: (v: string) => void;
   bedrooms: string;
@@ -192,11 +198,15 @@ export function MobileFilters({
   flatPriceOptions,
   priceOptions,
   priceCounts,
+  minPrice,
+  maxPrice,
   setMinPrice,
   setMaxPrice,
   currentSizeOption,
   sizeOptions,
   sizeCounts,
+  minSize,
+  maxSize,
   setMinSize,
   setMaxSize,
   bedrooms,
@@ -1268,81 +1278,43 @@ export function MobileFilters({
                         </div>
                       </div>
 
-                      <div className="space-y-3">
-                        <label className="text-sm font-medium text-slate-900 ">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-900">
                           {t("search.price_range")}
                         </label>
-                        <MobileFilterSheet
-                          title={t("search.price_range")}
+                        <PriceRangeSelect
+                          currentPriceOption={currentPriceOption}
+                          flatPriceOptions={flatPriceOptions}
+                          priceOptions={priceOptions}
+                          priceCounts={priceCounts}
+                          minPrice={minPrice}
+                          maxPrice={maxPrice}
+                          listingType={listingType}
+                          priceType={priceType}
+                          setMinPrice={setMinPrice}
+                          setMaxPrice={setMaxPrice}
+                          setPriceType={setPriceType}
                           placeholder={t("search.price_range")}
-                          icon={CircleDollarSign}
-                          iconColor="text-emerald-500"
-                          value={`${currentPriceOption.min}-${currentPriceOption.max}-${currentPriceOption.type || "ALL"}`}
-                          options={priceOptions.map((opt) => {
-                            if (opt.isGroup) {
-                              return {
-                                label: opt.label,
-                                isGroup: true,
-                                options: opt.options.map((subOpt: any) => ({
-                                  id: `${subOpt.min}-${subOpt.max}-${subOpt.type || "ALL"}`,
-                                  label: subOpt.label,
-                                  count:
-                                    priceCounts.get(
-                                      `${subOpt.min}-${subOpt.max}-${subOpt.type || "ALL"}`,
-                                    ) || 0,
-                                })),
-                              };
-                            }
-                            const id = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
-                            return {
-                              id,
-                              label: opt.label,
-                              count:
-                                opt.min || opt.max
-                                  ? priceCounts.get(id) || 0
-                                  : null,
-                            };
-                          })}
-                          selectedLabel={currentPriceOption.label}
-                          onSelect={(val) => {
-                            const [min, max, type] = val.split("-");
-                            setMinPrice(min);
-                            setMaxPrice(max);
-                            if (setPriceType)
-                              setPriceType(type && type !== "ALL" ? type : "");
-                          }}
                           className="w-full"
+                          isMobile
                         />
                       </div>
 
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">
                           {t("search.area_size")}
                         </label>
-                        <MobileFilterSheet
-                          title={t("search.area_size")}
+                        <AreaSizeSelect
+                          currentSizeOption={currentSizeOption}
+                          sizeOptions={sizeOptions}
+                          sizeCounts={sizeCounts}
+                          minSize={minSize}
+                          maxSize={maxSize}
+                          setMinSize={setMinSize}
+                          setMaxSize={setMaxSize}
                           placeholder={t("search.area_size") || "ขนาดพื้นที่"}
-                          icon={Maximize2}
-                          iconColor="text-blue-500"
-                          value={`${currentSizeOption.min}-${currentSizeOption.max}`}
-                          options={sizeOptions.map((opt) => {
-                            const id = `${opt.min}-${opt.max}`;
-                            return {
-                              id,
-                              label: opt.label,
-                              count:
-                                opt.min || opt.max
-                                  ? sizeCounts.get(id) || 0
-                                  : null,
-                            };
-                          })}
-                          selectedLabel={currentSizeOption.label}
-                          onSelect={(val) => {
-                            const [min, max] = val.split("-");
-                            setMinSize(min);
-                            setMaxSize(max);
-                          }}
                           className="w-full"
+                          isMobile
                         />
                       </div>
 

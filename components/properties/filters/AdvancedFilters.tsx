@@ -117,7 +117,7 @@ export function AdvancedFilters({
     const areasMap = new Map<string, number>();
 
     const salePriceCounts = [0, 0, 0, 0];
-    const rentPriceCounts = [0, 0, 0, 0];
+    const rentPriceCounts = [0, 0, 0, 0, 0, 0];
     const bedroomCounts: Record<string, number> = {
       "1": 0,
       "2": 0,
@@ -173,9 +173,11 @@ export function AdvancedFilters({
       const rPrice = Number(p.rental_price || p.original_rental_price || 0);
       if (rPrice > 0) {
         if (rPrice <= 15000) rentPriceCounts[0]++;
-        else if (rPrice <= 50000) rentPriceCounts[1]++;
-        else if (rPrice <= 150000) rentPriceCounts[2]++;
-        else rentPriceCounts[3]++;
+        else if (rPrice <= 20000) rentPriceCounts[1]++;
+        else if (rPrice <= 30000) rentPriceCounts[2]++;
+        else if (rPrice <= 45000) rentPriceCounts[3]++;
+        else if (rPrice <= 70000) rentPriceCounts[4]++;
+        else rentPriceCounts[5]++;
       }
 
       if (p.bedrooms) {
@@ -690,23 +692,33 @@ export function AdvancedFilters({
                       ? "Rent Price Presets (THB / mo)"
                       : "ช่วงราคาเช่าด่วน (บาท / เดือน)"}
                   </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {[
                       { min: "0", max: "15000", label: "< 15,000" },
                       {
                         min: "15000",
-                        max: "50000",
-                        label: isEn ? "15K - 50K" : "1.5 - 5 หมื่น",
+                        max: "20000",
+                        label: isEn ? "15K - 20K" : "1.5 - 2 หมื่น",
                       },
                       {
-                        min: "50000",
-                        max: "150000",
-                        label: isEn ? "50K - 150K" : "5 หมื่น - 1.5 แสน",
+                        min: "20000",
+                        max: "30000",
+                        label: isEn ? "20K - 30K 🔥" : "2 - 3 หมื่น 🔥",
                       },
                       {
-                        min: "150000",
+                        min: "30000",
+                        max: "45000",
+                        label: isEn ? "30K - 45K" : "3 - 4.5 หมื่น",
+                      },
+                      {
+                        min: "45000",
+                        max: "70000",
+                        label: isEn ? "45K - 70K" : "4.5 - 7 หมื่น",
+                      },
+                      {
+                        min: "70000",
                         max: "",
-                        label: isEn ? "> 150K" : "> 1.5 แสน",
+                        label: isEn ? "> 70K" : "> 7 หมื่น",
                       },
                     ].map((preset, idx) => {
                       const count = rentPriceCounts[idx] || 0;

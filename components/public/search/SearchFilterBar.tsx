@@ -167,11 +167,12 @@ export function SearchFilterBar({
     
     const rentOptions = [
       { label: `< 15,000`, min: "0", max: "15000", type: "RENT" },
-      { label: `15,000 - 50,000`, min: "15000", max: "50000", type: "RENT" },
-      { label: `50,000 - 100,000`, min: "50000", max: "100000", type: "RENT" },
-      { label: `100,000 - 150,000`, min: "100000", max: "150000", type: "RENT" },
-      { label: `150,000 - 250,000`, min: "150000", max: "250000", type: "RENT" },
-      { label: `> 250,000`, min: "250000", max: "", type: "RENT" },
+      { label: `15,000 - 20,000`, min: "15000", max: "20000", type: "RENT" },
+      { label: `20,000 - 30,000`, min: "20000", max: "30000", type: "RENT" },
+      { label: `30,000 - 45,000`, min: "30000", max: "45000", type: "RENT" },
+      { label: `45,000 - 70,000`, min: "45000", max: "70000", type: "RENT" },
+      { label: `70,000 - 100,000`, min: "70000", max: "100000", type: "RENT" },
+      { label: `> 100,000`, min: "100000", max: "", type: "RENT" },
     ];
     
     const saleOptions = [
@@ -207,6 +208,7 @@ export function SearchFilterBar({
     const counts = new Map<string, number>();
     const opts = flatPriceOptions.filter((o: any) => o.min !== "" || o.max !== "");
 
+    // 1. Populate from availablePrices if present
     if (availablePrices && Object.keys(availablePrices).length > 0) {
       opts.forEach((opt: any) => {
         const key = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
@@ -214,38 +216,46 @@ export function SearchFilterBar({
           counts.set(key, availablePrices[key]);
         }
       });
+    }
+
+    // 2. If all options are covered, return counts
+    const allCovered = opts.every((opt: any) => counts.has(`${opt.min}-${opt.max}-${opt.type || "ALL"}`));
+    if (allCovered && counts.size > 0) {
       return counts;
     }
 
-    if (!properties || !matchesFilters) return counts;
-    
-    properties.forEach((p: any) => {
-      // Apply all filters EXCEPT price
-      if (!matchesFilters(p, ["price"])) return;
-      
-      const salePrice = p.price || p.original_price || 0;
-      const rentPrice = p.rental_price || p.original_rental_price || 0;
-      
-      opts.forEach((opt: any) => {
-        const min = opt.min ? parseFloat(opt.min) : 0;
-        const max = opt.max ? parseFloat(opt.max) : Infinity;
-        const key = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
-        
-        let matches = false;
-        if (opt.type === "RENT") {
-          matches = rentPrice > 0 && rentPrice >= min && rentPrice <= max;
-        } else if (opt.type === "SALE") {
-          matches = salePrice > 0 && salePrice >= min && salePrice <= max;
-        } else {
-          matches = (salePrice > 0 && salePrice >= min && salePrice <= max) ||
-                    (rentPrice > 0 && rentPrice >= min && rentPrice <= max);
-        }
-        
-        if (matches) {
-          counts.set(key, (counts.get(key) || 0) + 1);
-        }
+    // 3. Fallback or fill in missing from properties dataset
+    if (properties && properties.length > 0) {
+      properties.forEach((p: any) => {
+        if (matchesFilters && !matchesFilters(p, ["price"])) return;
+
+        const salePrice = p.price || p.original_price || 0;
+        const rentPrice = p.rental_price || p.original_rental_price || 0;
+
+        opts.forEach((opt: any) => {
+          const key = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
+          if (counts.has(key)) return; // Already has server facet count
+
+          const min = opt.min ? parseFloat(opt.min) : 0;
+          const max = opt.max ? parseFloat(opt.max) : Infinity;
+
+          let matches = false;
+          if (opt.type === "RENT") {
+            matches = rentPrice > 0 && rentPrice >= min && rentPrice <= max;
+          } else if (opt.type === "SALE") {
+            matches = salePrice > 0 && salePrice >= min && salePrice <= max;
+          } else {
+            matches = (salePrice > 0 && salePrice >= min && salePrice <= max) ||
+                      (rentPrice > 0 && rentPrice >= min && rentPrice <= max);
+          }
+
+          if (matches) {
+            counts.set(key, (counts.get(key) || 0) + 1);
+          }
+        });
       });
-    });
+    }
+
     return counts;
   }, [properties, matchesFilters, flatPriceOptions, availablePrices]);
 
@@ -270,6 +280,7 @@ export function SearchFilterBar({
     const counts = new Map<string, number>();
     const opts = sizeOptions.filter((o) => o.min !== "" || o.max !== "");
 
+    // 1. Populate from availableSizes if present
     if (availableSizes && Object.keys(availableSizes).length > 0) {
       opts.forEach((opt) => {
         const key = `${opt.min}-${opt.max}`;
@@ -277,41 +288,101 @@ export function SearchFilterBar({
           counts.set(key, availableSizes[key]);
         }
       });
+    }
+
+    const allCovered = opts.every((opt) => counts.has(`${opt.min}-${opt.max}`));
+    if (allCovered && counts.size > 0) {
       return counts;
     }
 
-    if (!properties || !matchesFilters) return counts;
+    // 2. Fallback or fill in missing from properties dataset
+    if (properties && properties.length > 0) {
+      properties.forEach((p: any) => {
+        if (matchesFilters && !matchesFilters(p, ["size"])) return;
 
-    properties.forEach((p: any) => {
-      // Apply all filters EXCEPT size
-      if (!matchesFilters(p, ["size"])) return;
+        const size = p.size_sqm || 0;
 
-      const size = p.size_sqm || 0;
+        opts.forEach((opt) => {
+          const key = `${opt.min}-${opt.max}`;
+          if (counts.has(key)) return;
 
-      opts.forEach((opt) => {
-        const min = opt.min ? parseFloat(opt.min) : 0;
-        const max = opt.max ? parseFloat(opt.max) : Infinity;
-        const key = `${opt.min}-${opt.max}`;
+          const min = opt.min ? parseFloat(opt.min) : 0;
+          const max = opt.max ? parseFloat(opt.max) : Infinity;
 
-        if (size >= min && size <= max) {
-          counts.set(key, (counts.get(key) || 0) + 1);
-        }
+          if (size > 0 && size >= min && size <= max) {
+            counts.set(key, (counts.get(key) || 0) + 1);
+          }
+        });
       });
-    });
+    }
+
     return counts;
   }, [properties, matchesFilters, sizeOptions, availableSizes]);
 
-  const currentPriceOption =
-    flatPriceOptions.find(
+  const currentPriceOption = useMemo(() => {
+    const found = flatPriceOptions.find(
       (o: any) =>
         o.min === minPrice &&
         o.max === maxPrice &&
         (!priceType || priceType === "ALL" || o.type === priceType)
-    ) || flatPriceOptions[0];
-  const currentSizeOption =
-    sizeOptions.find(
+    );
+    if (found) return found;
+
+    if ((minPrice && minPrice !== "0") || (maxPrice && maxPrice !== "")) {
+      const minVal = minPrice && minPrice !== "0" ? parseInt(minPrice, 10).toLocaleString() : "";
+      const maxVal = maxPrice ? parseInt(maxPrice, 10).toLocaleString() : "";
+
+      let label = "";
+      if (minVal && maxVal) {
+        label = `฿${minVal} - ฿${maxVal}`;
+      } else if (minVal) {
+        label = `> ฿${minVal}`;
+      } else if (maxVal) {
+        label = `< ฿${maxVal}`;
+      }
+
+      return {
+        label,
+        min: minPrice,
+        max: maxPrice,
+        type: priceType || (listingType === "RENT" ? "RENT" : listingType === "SALE" ? "SALE" : "ALL"),
+        isCustom: true,
+      };
+    }
+
+    return flatPriceOptions[0];
+  }, [flatPriceOptions, minPrice, maxPrice, priceType, listingType]);
+
+  const currentSizeOption = useMemo(() => {
+    const found = sizeOptions.find(
       (o: { min: string; max: string }) => o.min === minSize && o.max === maxSize
-    ) || sizeOptions[0];
+    );
+    if (found) return found;
+
+    if ((minSize && minSize !== "0") || (maxSize && maxSize !== "")) {
+      const sqm = language === "en" ? "sqm" : language === "cn" ? "平米" : language === "ru" ? "м²" : "ตร.ม.";
+      const minVal = minSize && minSize !== "0" ? minSize : "";
+      const maxVal = maxSize ? maxSize : "";
+
+      let label = "";
+      if (minVal && maxVal) {
+        label = `${minVal} - ${maxVal} ${sqm}`;
+      } else if (minVal) {
+        label = `> ${minVal} ${sqm}`;
+      } else if (maxVal) {
+        label = `< ${maxVal} ${sqm}`;
+      }
+
+      return {
+        label,
+        min: minSize,
+        max: maxSize,
+        isCustom: true,
+      };
+    }
+
+    return sizeOptions[0];
+  }, [sizeOptions, minSize, maxSize, language]);
 
   const [debouncedKeyword, setDebouncedKeyword] = useState(keyword);
 
@@ -439,11 +510,15 @@ export function SearchFilterBar({
           flatPriceOptions={flatPriceOptions}
           priceOptions={priceOptions}
           priceCounts={priceCounts}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
           setMinPrice={setMinPrice}
           setMaxPrice={setMaxPrice}
           currentSizeOption={currentSizeOption}
           sizeOptions={sizeOptions}
           sizeCounts={sizeCounts}
+          minSize={minSize}
+          maxSize={maxSize}
           setMinSize={setMinSize}
           setMaxSize={setMaxSize}
           bedrooms={bedrooms}
@@ -489,12 +564,15 @@ export function SearchFilterBar({
           flatPriceOptions={flatPriceOptions}
           priceOptions={priceOptions}
           priceCounts={priceCounts}
+          priceType={priceType}
+          setPriceType={setPriceType}
           setMinPrice={setMinPrice}
           setMaxPrice={setMaxPrice}
-          setPriceType={setPriceType}
           currentSizeOption={currentSizeOption}
           sizeOptions={sizeOptions}
           sizeCounts={sizeCounts}
+          minSize={minSize}
+          maxSize={maxSize}
           setMinSize={setMinSize}
           setMaxSize={setMaxSize}
           bedrooms={bedrooms}
@@ -539,8 +617,6 @@ export function SearchFilterBar({
           getLocaleValue={getLocaleValue}
           minPrice={minPrice}
           maxPrice={maxPrice}
-          minSize={minSize}
-          maxSize={maxSize}
           setBulkFilters={setBulkFilters}
         />
       </div>

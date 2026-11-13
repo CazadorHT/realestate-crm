@@ -818,23 +818,37 @@ export function PropertiesTable({
                             ? (cleanEn && cleanTh && cleanTh.toLowerCase() !== cleanEn.toLowerCase() ? cleanTh : null)
                             : (hasEnglishLine && cleanEn ? cleanEn : null);
 
-                          const fullTooltip = (secondaryName ? `${primaryName} (${secondaryName})` : primaryName) || undefined;
-
                           return (
-                            <div
-                              className="flex items-center gap-1 text-[11.5px] font-bold text-indigo-600 line-clamp-1 leading-tight"
-                              title={fullTooltip}
-                            >
-                              <Building2 className="h-3 w-3 shrink-0 text-indigo-500" />
-                              <span className="truncate">
-                                <span>{primaryName}</span>
-                                {secondaryName && (
-                                  <span className="font-normal text-slate-400 ml-1">
-                                    ({secondaryName})
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div
+                                  className="flex items-center gap-1 text-[11.5px] font-bold text-indigo-600 line-clamp-1 leading-tight max-w-[310px] overflow-hidden w-fit cursor-default"
+                                >
+                                  <Building2 className="h-3 w-3 shrink-0 text-indigo-500" />
+                                  <span className="truncate">
+                                    <span>{primaryName}</span>
+                                    {secondaryName && (
+                                      <span className="font-normal text-slate-400 ml-1">
+                                        ({secondaryName})
+                                      </span>
+                                    )}
                                   </span>
-                                )}
-                              </span>
-                            </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                className="bg-slate-900 text-white border-slate-800 px-3 py-1.5 text-xs rounded-lg shadow-xl max-w-sm pointer-events-none"
+                              >
+                                <div className="flex flex-col gap-0.5 text-left">
+                                  <span className="font-semibold text-white">{primaryName}</span>
+                                  {secondaryName && (
+                                    <span className="text-[11px] text-slate-300 font-normal">
+                                      {secondaryName}
+                                    </span>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
                           );
                         })() : null}
                         <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
@@ -965,10 +979,29 @@ export function PropertiesTable({
                   </TableCell>
 
                   {/* UPDATED */}
-                  <TableCell className="px-2">
-                    <div className="text-[11px] text-slate-500 whitespace-nowrap opacity-80" title={new Date(property.updated_at).toLocaleString(isEn ? "en-US" : "th-TH")}>
-                      {formatDistanceToNowThai(property.updated_at, isEn)}
-                    </div>
+                  <TableCell className="w-[100px] max-w-[100px] px-2">
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="text-[11px] text-slate-500 opacity-80 truncate max-w-[95px] cursor-default">
+                            {formatDistanceToNowThai(property.updated_at, isEn)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 px-2.5 py-1.5 text-xs rounded-lg shadow-xl whitespace-nowrap pointer-events-none">
+                          <div className="flex flex-col gap-0.5 text-center">
+                            <span className="font-semibold text-white">
+                              {formatDistanceToNowThai(property.updated_at, isEn)}
+                            </span>
+                            <span className="text-[10.5px] text-slate-300">
+                              {new Date(property.updated_at).toLocaleString(isEn ? "en-US" : "th-TH", {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              })}
+                            </span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </TableCell>
 
                   {/* BUYER / TENANT / AGENT */}
