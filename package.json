@@ -90,7 +90,6 @@
     "fuzzball": "^2.2.3",
     "grammy": "^1.42.0",
     "inngest": "^4.2.5",
-    "isomorphic-dompurify": "^2.36.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.471.2",
     "maplibre-gl": "^6.16.0",

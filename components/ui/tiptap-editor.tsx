@@ -18,7 +18,7 @@ import {
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
 import { useCallback, useEffect } from "react";
-import DOMPurify from "isomorphic-dompurify";
+import DOMPurify from "dompurify";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 interface TipTapEditorProps {
