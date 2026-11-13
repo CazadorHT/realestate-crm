@@ -130,7 +130,19 @@ export function DocumentsGrid({
     const map = new Map<string, DocumentGroup>();
 
     for (const doc of documents) {
-      const key = `${doc.owner_type || "OTHER"}_${doc.owner_id || "NONE"}`;
+      let key = `${doc.owner_type || "OTHER"}_${doc.owner_id || "NONE"}`;
+      // Group together documents that belong to the same lead + project/property
+      if (doc.owner_type === "DEAL" && doc.deal) {
+        const leadKey = doc.deal.lead?.id || doc.deal.lead?.full_name || (doc.deal as any).lead_id;
+        const projectKey =
+          doc.deal.property?.project_name ||
+          doc.deal.property?.project_name_en ||
+          doc.deal.property?.title ||
+          (doc.deal as any).property_id;
+        if (leadKey && projectKey) {
+          key = `DEAL_${leadKey}_${projectKey}`;
+        }
+      }
       if (!map.has(key)) {
         map.set(key, {
           key,

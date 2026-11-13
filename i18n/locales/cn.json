@@ -1408,7 +1408,16 @@
     "search_ref_placeholder": "输入搜索客户名称或房产...",
     "upload_slip_label": "上传转账凭证 (Slip)",
     "slip_upload_hint": "支持 JPG, PNG (最大 5MB) - 图片将自动出现在文档中",
-    "generate_btn": "确认并生成文件"
+    "generate_btn": "确认并生成文件",
+    "invoice": "发票",
+    "billed_to": "账单发往",
+    "bedrooms": "卧室",
+    "bathrooms": "浴室",
+    "size": "面积",
+    "sqm": "平方米",
+    "size_sqm": "面积 (平方米)",
+    "bed": "卧",
+    "bath": "卫"
   },
   "support": {
     "title": "帮助与支持",

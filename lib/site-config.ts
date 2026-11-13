@@ -65,9 +65,9 @@ export const siteConfig = {
   },
   contact: {
     email: "vcconnect.asset@gmail.com",
-    phone: "02-096-2588",
+    phone: "092-860-0829",
     lineId: "@vcconnectasset",
-    address: "20th Floor, G Tower, Ratchadaphisek Road, Huai Khwang Subdistrict, Huai Khwang District, Bangkok 10310",
+    address: "123 Rama 9 Road, Huai Khwang Subdistrict, Huai Khwang District, Bangkok 10310",
   },
   companySignature: "/images/branding/vcc-asset/png/logo-dark.png",
   companyStamp: "/images/branding/vcc-asset/png/logo-dark.png",

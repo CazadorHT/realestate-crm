@@ -1383,6 +1383,9 @@
     "line_user_id_help": "Used for bot notifications. Type /id in the bot to find this value."
   },
   "documents": {
+    "invoice": "Invoice",
+    "billed_to": "Billed To",
+    "receipt": "Receipt",
     "rent_receipt": "Rent Receipt",
     "reservation_form": "Reservation Form",
     "date": "Date",
@@ -1395,7 +1398,7 @@
     "total": "Total",
     "payment_method": "Payment Method",
     "bank": "Bank",
-    "account_no": "Account No.",
+    "account_no": "Account No",
     "account_name": "Account Name",
     "customer_signature": "Customer Signature",
     "authorized_signature": "Authorized Signature",
@@ -1418,7 +1421,9 @@
     "generate_btn": "Confirm & Generate",
     "bedrooms": "Bedrooms",
     "bathrooms": "Bathrooms",
-    "size_sqm": "Size (Sqm)",
+    "size": "Size",
+    "sqm": "Sq.m.",
+    "size_sqm": "Size (Sq.m.)",
     "bed": "Bed",
     "bath": "Bath"
   },

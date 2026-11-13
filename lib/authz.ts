@@ -286,3 +286,62 @@ export function authzFail(err: unknown): { success: false; message: string } {
   }
   return { success: false, message: mapDbError(err) };
 }
+
+/**
+ * 🏢 Resolves a concrete tenant ID for mutating operations (CREATE/INSERT)
+ * when contextTenantId is undefined (e.g. user selected "ALL" cross-branch view).
+ */
+export async function resolveTenantId(
+  supabase: SupabaseClient<Database> | any,
+  userId: string,
+  contextTenantId?: string,
+  branchId?: string,
+): Promise<string> {
+  if (contextTenantId && contextTenantId !== "ALL" && contextTenantId !== "SYSTEM") {
+    return contextTenantId;
+  }
+
+  // 1. Resolve from branch selection if provided
+  if (branchId) {
+    const { data: branch } = await supabase
+      .from("branches_v3")
+      .select("tenant_id")
+      .eq("id", branchId)
+      .maybeSingle();
+    if (branch?.tenant_id) {
+      return branch.tenant_id;
+    }
+  }
+
+  // 2. Fallback to user membership in tenant_members_v3
+  const { data: member } = await supabase
+    .from("tenant_members_v3")
+    .select("tenant_id")
+    .eq("identity_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (member?.tenant_id) {
+    return member.tenant_id;
+  }
+
+  // 3. Fallback to system default tenant
+  const config = await getSystemConfig();
+  if (config.default_tenant_id) {
+    return config.default_tenant_id;
+  }
+
+  // 4. Fallback to first registered tenant in the system
+  const { data: fallbackTenant } = await supabase
+    .from("tenants_v3")
+    .select("id")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (fallbackTenant?.id) {
+    return fallbackTenant.id;
+  }
+
+  throw new Error("Tenant ID is required but missing");
+}

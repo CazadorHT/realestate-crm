@@ -41,7 +41,9 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Sparkles,
 } from "lucide-react";
+import { QuickDocumentForm } from "./QuickDocumentForm";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -77,6 +79,9 @@ export function TemplateDialog({
   const isEn = currentLang === "en";
 
   const [open, setOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"standard" | "quick">(
+    initialOwnerId ? "standard" : "quick",
+  );
   const [loading, setLoading] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
@@ -622,184 +627,251 @@ export function TemplateDialog({
         }
         title={
           <div className="w-full">
-            {/* Stepper Indicator */}
-            <div className="pb-4 px-4 pt-2">
-              <div className="flex items-center justify-between relative px-2">
-                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -translate-y-1/2 z-0" />
-                {[1, 2, 3, 4, 5, 6].map((s) => (
-                  <div
-                    key={s}
-                    className={cn(
-                      "relative z-10  w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300",
-                      currentStep === s
-                        ? "bg-blue-600 text-white scale-110 shadow-lg shadow-blue-200"
-                        : currentStep > s
-                          ? "bg-emerald-500 text-white"
-                          : "bg-white border-2 border-slate-100 text-slate-400",
-                    )}
-                  >
-                    {currentStep > s ? "✓" : s}
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-between mt-2 text-center">
-                <span
-                  className={cn(
-                    "text-[9px] font-bold uppercase tracking-wider truncate",
-                    currentStep >= 1 ? "text-blue-600" : "text-slate-450",
-                  )}
-                >
-                  {isEn ? "Source" : "แหล่งข้อมูล"}
-                </span>
-                <span
-                  className={cn(
-                    "text-[9px] font-bold uppercase tracking-wider truncate",
-                    currentStep >= 2 ? "text-blue-600" : "text-slate-450",
-                  )}
-                >
-                  {isEn ? "Template" : "ต้นแบบ"}
-                </span>
-                <span
-                  className={cn(
-                    "text-[9px] font-bold uppercase tracking-wider truncate",
-                    currentStep >= 3 ? "text-blue-600" : "text-slate-450",
-                  )}
-                >
-                  {isEn ? "Payment" : "การชำระเงิน"}
-                </span>
-                <span
-                  className={cn(
-                    "text-[9px] font-bold uppercase tracking-wider truncate",
-                    currentStep >= 4 ? "text-blue-600" : "text-slate-450",
-                  )}
-                >
-                  {isEn ? "Tenant Info" : "ข้อมูลผู้เช่า"}
-                </span>
-                <span
-                  className={cn(
-                    "text-[9px] font-bold uppercase tracking-wider truncate",
-                    currentStep >= 5 ? "text-blue-600" : "text-slate-450",
-                  )}
-                >
-                  {isEn ? "Taxes" : "คำนวณภาษี"}
-                </span>
-                <span
-                  className={cn(
-                    "text-[9px] font-bold uppercase tracking-wider truncate",
-                    currentStep >= 6 ? "text-blue-600" : "text-slate-450",
-                  )}
-                >
-                  {isEn ? "Review" : "ตรวจสอบ"}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-3">
+            {/* Mode Switcher Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
                   <Wand2 className="h-5 w-5" />
                 </div>
-                <span className="text-base font-semibold text-slate-900 tracking-tight">
-                  {isEn ? "Automatic Document Generator" : "สร้างเอกสารอัตโนมัติ"}
-                </span>
+                <div>
+                  <span className="text-base font-semibold text-slate-900 tracking-tight block">
+                    {isEn ? "Document Generator" : "สร้างเอกสารอัตโนมัติ"}
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    {dialogMode === "quick"
+                      ? isEn
+                        ? "Fast 1-page form for instant reservation & receipts"
+                        : "กรอกข้อมูลด่วน 1 หน้า สำหรับออกใบจองและใบเสร็จทันที"
+                      : isEn
+                        ? "Step-by-step wizard from existing CRM records"
+                        : "สร้างเอกสารทีละขั้นตอนโดยเลือกจากข้อมูลเดิมในระบบ"}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-100 rounded-full text-xs font-medium text-slate-500">
-                <span>
-                  {isEn
-                    ? `Step ${currentStep} of ${totalSteps}`
-                    : `ขั้นตอน ${currentStep} จาก ${totalSteps}`}
-                </span>
-                <div className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
-              </div>
-            </div>
-            {/* Progress bar in header */}
-            <div className="w-full bg-slate-100 h-1 rounded-full mt-2.5 overflow-hidden">
-              <div
-                className="bg-blue-600 h-full rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-              />
-            </div>
-          </div>
-        }
-        description={
-          isEn
-            ? "Select template and required data. System will generate document instantly."
-            : "เลือกต้นแบบและข้อมูลที่ต้องการ ระบบจะสร้างไฟล์เอกสารให้ทันที"
-        }
-        footer={
-          <div className="flex flex-row gap-3 w-full shrink-0 pt-4 px-6 pb-6 border-t border-slate-50 bg-slate-50/30">
-            <Button
-              variant="ghost"
-              type="button"
-              onClick={() => {
-                if (currentStep === (initialOwnerId ? 2 : 1)) {
-                  setOpen(false);
-                } else {
-                  setCurrentStep((prev) => Math.max(prev - 1, 1));
-                }
-              }}
-              className="flex-1 h-12 rounded-xl font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100/50 active:scale-[0.98] transition-all"
-            >
-              {currentStep === (initialOwnerId ? 2 : 1)
-                ? isEn
-                  ? "Cancel"
-                  : "ยกเลิก"
-                : isEn
-                  ? "Back"
-                  : "ย้อนกลับ"}
-            </Button>
 
-            {currentStep < totalSteps ? (
-              <Button
-                type="button"
-                onClick={() => {
-                  if (currentStep === 1 && !activeOwnerId && !initialOwnerId) {
-                    toast.error(
-                      isEn
-                        ? "Please select recipient before proceeding"
-                        : "กรุณาเลือกผู้รับเอกสารก่อนไปขั้นตอนถัดไป",
-                    );
-                    return;
-                  }
-                  if (
-                    currentStep === 2 &&
-                    templateSource === "standard" &&
-                    !selectedTemplateId
-                  ) {
-                    toast.error(
-                      isEn
-                        ? "Please select template before proceeding"
-                        : "กรุณาเลือกต้นแบบสัญญาก่อนไปขั้นตอนถัดไป",
-                    );
-                    return;
-                  }
-                  setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-                }}
-                className="flex-2 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-xl shadow-blue-100 transition-all active:scale-[0.98]"
-              >
-                {isEn ? "Next" : "ถัดไป"}
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={handleGenerate}
-                disabled={loading}
-                className="flex-2 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-xl shadow-blue-100 transition-all active:scale-[0.98] disabled:opacity-70"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>{isEn ? "Generating Document..." : "กำลังสร้างเอกสาร..."}</span>
+              <div className="flex items-center p-1 bg-slate-100 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setDialogMode("quick")}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
+                    dialogMode === "quick"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700",
+                  )}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {isEn ? "Quick Mode" : "กรอกด่วน"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDialogMode("standard")}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
+                    dialogMode === "standard"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700",
+                  )}
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  {isEn ? "From CRM" : "เลือกจากระบบ"}
+                </button>
+              </div>
+            </div>
+
+            {/* Stepper Indicator (Standard Mode Only) */}
+            {dialogMode === "standard" && (
+              <>
+                <div className="pb-4 px-4 pt-4">
+                  <div className="flex items-center justify-between relative px-2">
+                    <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -translate-y-1/2 z-0" />
+                    {[1, 2, 3, 4, 5, 6].map((s) => (
+                      <div
+                        key={s}
+                        className={cn(
+                          "relative z-10  w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300",
+                          currentStep === s
+                            ? "bg-blue-600 text-white scale-110 shadow-lg shadow-blue-200"
+                            : currentStep > s
+                              ? "bg-emerald-500 text-white"
+                              : "bg-white border-2 border-slate-100 text-slate-400",
+                        )}
+                      >
+                        {currentStep > s ? "✓" : s}
+                      </div>
+                    ))}
                   </div>
-                ) : (
-                  isEn ? "Confirm & Generate" : "ยืนยันและสร้างเอกสาร"
-                )}
-              </Button>
+                  <div className="flex justify-between mt-2 text-center">
+                    <span
+                      className={cn(
+                        "text-[9px] font-bold uppercase tracking-wider truncate",
+                        currentStep >= 1 ? "text-blue-600" : "text-slate-450",
+                      )}
+                    >
+                      {isEn ? "Source" : "แหล่งข้อมูล"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[9px] font-bold uppercase tracking-wider truncate",
+                        currentStep >= 2 ? "text-blue-600" : "text-slate-450",
+                      )}
+                    >
+                      {isEn ? "Template" : "ต้นแบบ"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[9px] font-bold uppercase tracking-wider truncate",
+                        currentStep >= 3 ? "text-blue-600" : "text-slate-450",
+                      )}
+                    >
+                      {isEn ? "Payment" : "การชำระเงิน"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[9px] font-bold uppercase tracking-wider truncate",
+                        currentStep >= 4 ? "text-blue-600" : "text-slate-450",
+                      )}
+                    >
+                      {isEn ? "Tenant Info" : "ข้อมูลผู้เช่า"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[9px] font-bold uppercase tracking-wider truncate",
+                        currentStep >= 5 ? "text-blue-600" : "text-slate-450",
+                      )}
+                    >
+                      {isEn ? "Taxes" : "คำนวณภาษี"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[9px] font-bold uppercase tracking-wider truncate",
+                        currentStep >= 6 ? "text-blue-600" : "text-slate-450",
+                      )}
+                    >
+                      {isEn ? "Review" : "ตรวจสอบ"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between w-full px-2">
+                  <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-100 rounded-full text-xs font-medium text-slate-500">
+                    <span>
+                      {isEn
+                        ? `Step ${currentStep} of ${totalSteps}`
+                        : `ขั้นตอน ${currentStep} จาก ${totalSteps}`}
+                    </span>
+                    <div className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
+                  </div>
+                </div>
+                {/* Progress bar in header */}
+                <div className="w-full bg-slate-100 h-1 rounded-full mt-2.5 overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                    style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                  />
+                </div>
+              </>
             )}
           </div>
         }
+        description={
+          dialogMode === "quick"
+            ? null
+            : isEn
+              ? "Select template and required data. System will generate document instantly."
+              : "เลือกต้นแบบและข้อมูลที่ต้องการ ระบบจะสร้างไฟล์เอกสารให้ทันที"
+        }
+        footer={
+          dialogMode === "quick" ? null : (
+            <div className="flex flex-row gap-3 w-full shrink-0 pt-4 px-6 pb-6 border-t border-slate-50 bg-slate-50/30">
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={() => {
+                  if (currentStep === (initialOwnerId ? 2 : 1)) {
+                    setOpen(false);
+                  } else {
+                    setCurrentStep((prev) => Math.max(prev - 1, 1));
+                  }
+                }}
+                className="flex-1 h-12 rounded-xl font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100/50 active:scale-[0.98] transition-all"
+              >
+                {currentStep === (initialOwnerId ? 2 : 1)
+                  ? isEn
+                    ? "Cancel"
+                    : "ยกเลิก"
+                  : isEn
+                    ? "Back"
+                    : "ย้อนกลับ"}
+              </Button>
+
+              {currentStep < totalSteps ? (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (currentStep === 1 && !activeOwnerId && !initialOwnerId) {
+                      toast.error(
+                        isEn
+                          ? "Please select recipient before proceeding"
+                          : "กรุณาเลือกผู้รับเอกสารก่อนไปขั้นตอนถัดไป",
+                      );
+                      return;
+                    }
+                    if (
+                      currentStep === 2 &&
+                      templateSource === "standard" &&
+                      !selectedTemplateId
+                    ) {
+                      toast.error(
+                        isEn
+                          ? "Please select template before proceeding"
+                          : "กรุณาเลือกต้นแบบสัญญาก่อนไปขั้นตอนถัดไป",
+                      );
+                      return;
+                    }
+                    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+                  }}
+                  className="flex-2 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-xl shadow-blue-100 transition-all active:scale-[0.98]"
+                >
+                  {isEn ? "Next" : "ถัดไป"}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={loading}
+                  className="flex-2 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-xl shadow-blue-100 transition-all active:scale-[0.98] disabled:opacity-70"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>{isEn ? "Generating Document..." : "กำลังสร้างเอกสาร..."}</span>
+                    </div>
+                  ) : (
+                    isEn ? "Confirm & Generate" : "ยืนยันและสร้างเอกสาร"
+                  )}
+                </Button>
+              )}
+            </div>
+          )
+        }
       >
-        <div className="py-2 space-y-6">
+        {dialogMode === "quick" ? (
+          <div className="px-6 py-2">
+            <QuickDocumentForm
+              templates={templates}
+              initialTemplateId={selectedTemplateId}
+              isEn={isEn}
+              onSuccess={() => {
+                setOpen(false);
+                if (onGenerateComplete) onGenerateComplete();
+                router.refresh();
+              }}
+              onCancel={() => setOpen(false)}
+            />
+          </div>
+        ) : (
+          <div className="py-2 space-y-6">
           {/* Step 1: Owner Selection */}
           {currentStep === 1 && !initialOwnerId && (
             <div className="space-y-4 p-5 mx-6 rounded-3xl border border-slate-100 bg-slate-50/50 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1393,6 +1465,7 @@ export function TemplateDialog({
             </div>
           )}
         </div>
+        )}
       </ResponsiveDialog>
 
       {/* Bank Selector Dialog */}

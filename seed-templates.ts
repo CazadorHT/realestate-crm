@@ -88,8 +88,8 @@ async function seedTemplates() {
   }
 </style>
 
-<div class="content-wrapper">
-  <div style="display: flex; flex-direction: column; min-height: 100%;">
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 100%;">
+  <div style="display: flex; flex-direction: column;">
     <!-- Header -->
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
       <tr>
@@ -102,7 +102,7 @@ async function seedTemplates() {
         </td>
         <td style="width: 50%; text-align: right; vertical-align: top; border: none;">
           <div style="font-size: 10px; color: #999; margin-bottom: 3px;">Original</div>
-          <div style="font-size: 22px; font-weight: bold; color: #4f46e5; margin-bottom: 8px;">{{t.reservation_form}}</div>
+          <div style="font-size: 22px; font-weight: bold; color: #4f46e5; margin-bottom: 8px;">{{document_title || t.reservation_form}}</div>
           <table style="width: 100%; font-size: 11px; margin: 0; border-collapse: collapse;">
             <tr style="border: none;">
               <td style="text-align: right; color: #666; padding-right: 8px; border: none;">{{t.date}}</td>
@@ -121,13 +121,12 @@ async function seedTemplates() {
       </tr>
     </table>
 
-    <h3 style="text-align: center; color: #4338ca; border-bottom: 2px solid #e0e7ff; padding-bottom: 4px; margin-bottom: 10px; font-size: 15px;">{{t.reservation_form}}</h3>
+    <h3 style="text-align: center; color: #4338ca; border-bottom: 2px solid #e0e7ff; padding-bottom: 4px; margin-bottom: 10px; font-size: 15px;">{{document_title || t.reservation_form}}</h3>
 
     <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px;">
       <div style="width: 45%; line-height: 1.4;">
-        <span style="color: #666;">{{t.reserved_by}}:</span> <span style="font-weight: bold;">{{lead.full_name}}</span><br>
-        <span style="color: #666;">{{t.phone}}:</span> <span>{{lead.phone}}</span><br>
-        <span style="color: #666;">Line ID:</span> <span>{{lead.line_id}}</span>
+        <span style="color: #666;">{{t.reserved_by}}:</span> <span style="font-weight: bold;">{{lead.full_name}}</span>
+        {{lead.contact_info_html}}
         {{lead.identity_info}}
       </div>
       <div style="width: 52%; padding: 8px 10px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; line-height: 1.35;">
@@ -138,7 +137,7 @@ async function seedTemplates() {
           <strong>{{t.unit}}:</strong> {{property.unit_number || property.unit || "-"}}<br>
           <strong>{{t.bedrooms}}:</strong> {{property.bedrooms || "0"}} {{t.bed}} | 
           <strong>{{t.bathrooms}}:</strong> {{property.bathrooms || "0"}} {{t.bath}} | 
-          <strong>{{t.size_sqm}}:</strong> {{property.size_sqm || "-"}}
+          <strong>{{t.size || "Size"}}:</strong> {{property.size_sqm || "-"}} {{t.sqm || "Sq.m."}}
         </div>
       </div>
     </div>
@@ -147,43 +146,43 @@ async function seedTemplates() {
     {{financial_table_html}}
 
     <!-- Bank & Payment Detail -->
-    <div style="margin-bottom: 8px; padding: 6px 12px; border: 1px solid #c7d2fe; border-radius: 6px; background-color: #eff6ff; font-size: 11px; page-break-inside: avoid;">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 8px;">
+    <div style="width: 100%; box-sizing: border-box; margin: 8px 0 10px 0; padding: 7px 14px; border: 1px solid #c7d2fe; border-radius: 6px; background-color: #eff6ff; font-size: 11px; page-break-inside: avoid;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
         <div><span style="color: #666;">{{t.bank}}:</span> <strong>{{bank_name}}</strong></div>
         <div><span style="color: #666;">{{t.account_no}}:</span> <strong>{{bank_account_no}}</strong></div>
-        <div><span style="color: #666;">{{t.account_name}}:</span> <strong>{{account_name}}</strong></div>
+        <div><span style="color: #666;">{{t.account_name}}:</span> <strong>{{account_name}}</strong>{{payee_role_badge}}</div>
         <div><span style="color: #666;">{{t.payment_method}}:</span> <strong>{{payment_method}}</strong></div>
       </div>
     </div>
 
     <!-- Transfer Slip (conditional) -->
     {{slip_html}}
+  </div>
 
-    <div style="margin-top: auto;">
-      <!-- Terms -->
-      <div style="font-size: 10px; color: #666; line-height: 1.35; margin-bottom: 10px; padding: 6px 10px; background-color: #fff9f0; border-radius: 6px; page-break-inside: avoid;">
-        <strong style="color: #d97706;">{{t.terms_conditions}}:</strong>
-        <ol style="margin: 3px 0 0 15px; padding: 0;">
-          <li>{{terms_deposit}}</li>
-          <li>{{terms_sign_by}} <strong>{{deal.contract_due_date}}</strong></li>
-          <li>{{terms_payment_transfer}}</li>
-        </ol>
+  <div style="margin-top: auto; padding-top: 10px; page-break-inside: avoid;">
+    <!-- Terms -->
+    <div style="font-size: 10px; color: #666; line-height: 1.35; margin-bottom: 10px; padding: 6px 10px; background-color: #fff9f0; border-radius: 6px; page-break-inside: avoid;">
+      <strong style="color: #d97706;">{{t.terms_conditions}}:</strong>
+      <ol style="margin: 3px 0 0 15px; padding: 0;">
+        <li>{{terms_deposit}}</li>
+        <li>{{terms_sign_by}} <strong>{{deal.contract_due_date}}</strong></li>
+        <li>{{terms_payment_transfer}}</li>
+      </ol>
+    </div>
+
+    <!-- Signatures -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; page-break-inside: avoid;">
+      <div style="text-align: center; width: 30%;">
+        <div style="border-bottom: 1px solid #333; height: 22px; margin-bottom: 4px;"></div>
+        <div style="font-size: 10px;">{{t.customer_signature}}</div>
       </div>
-
-      <!-- Signatures -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; page-break-inside: avoid;">
-        <div style="text-align: center; width: 30%;">
-          <div style="border-bottom: 1px solid #333; height: 22px; margin-bottom: 4px;"></div>
-          <div style="font-size: 10px;">{{t.customer_signature}}</div>
-        </div>
-        <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
-          <img src="{{config.logo}}" style="height: 42px; object-fit: contain; margin-bottom: 4px;" alt="Company">
-          <div style="font-size: 9px; color: #999;">{{config.company}}</div>
-        </div>
-        <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
-          <div style="border-bottom: 1px solid #333; width: 100%; height: 22px; margin-bottom: 4px;"></div>
-          <div style="font-size: 10px;">{{t.agent_signature}}</div>
-        </div>
+      <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
+        <img src="{{config.logo}}" style="height: 42px; object-fit: contain; margin-bottom: 4px;" alt="Company">
+        <div style="font-size: 9px; color: #999;">{{config.company}}</div>
+      </div>
+      <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
+        <div style="border-bottom: 1px solid #333; width: 100%; height: 22px; margin-bottom: 4px;"></div>
+        <div style="font-size: 10px;">{{t.agent_signature}}</div>
       </div>
     </div>
   </div>
@@ -191,8 +190,8 @@ async function seedTemplates() {
 `.trim(),
     },
     {
-      name: "ใบเสร็จค่าเช่า (Rent Receipt)",
-      description: "แบบฟอร์มใบเสร็จรับเงินค่าเช่าและค่ามัดจำ ดึงข้อมูลจากดีลและลูกค้า",
+      name: "ใบเสร็จค่าเช่า / ใบเสร็จรับเงิน (Rent Receipt / Receipt)",
+      description: "แบบฟอร์มใบเสร็จรับเงินค่าเช่า ค่ามัดจำ ประกันสัตว์เลี้ยง คีย์การ์ด และค่าบริการต่างๆ",
       type: "RENT_RECEIPT" as const,
       content: `
 <style>
@@ -272,8 +271,8 @@ async function seedTemplates() {
   }
 </style>
 
-<div class="content-wrapper">
-  <div style="display: flex; flex-direction: column; min-height: 100%;">
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 100%;">
+  <div style="display: flex; flex-direction: column;">
     <!-- Header -->
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
       <tr>
@@ -286,7 +285,7 @@ async function seedTemplates() {
         </td>
         <td style="width: 50%; text-align: right; vertical-align: top; border: none;">
           <div style="font-size: 10px; color: #999; margin-bottom: 3px;">Original</div>
-          <div style="font-size: 22px; font-weight: bold; color: #10b981; margin-bottom: 8px;">{{t.rent_receipt}}</div>
+          <div style="font-size: 22px; font-weight: bold; color: #10b981; margin-bottom: 8px;">{{document_title || t.rent_receipt}}</div>
           <table style="width: 100%; font-size: 11px; margin: 0; border-collapse: collapse;">
             <tr style="border: none;">
               <td style="text-align: right; color: #666; padding-right: 8px; border: none;">{{t.date}}</td>
@@ -305,13 +304,12 @@ async function seedTemplates() {
       </tr>
     </table>
 
-    <h3 style="text-align: center; color: #059669; border-bottom: 2px solid #a7f3d0; padding-bottom: 4px; margin-bottom: 10px; font-size: 15px;">{{t.rent_receipt}}</h3>
+    <h3 style="text-align: center; color: #059669; border-bottom: 2px solid #a7f3d0; padding-bottom: 4px; margin-bottom: 10px; font-size: 15px;">{{document_title || t.rent_receipt}}</h3>
 
     <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px;">
       <div style="width: 45%; line-height: 1.4;">
-        <span style="color: #666;">{{t.client}}:</span> <span style="font-weight: bold;">{{lead.full_name}}</span><br>
-        <span style="color: #666;">{{t.phone}}:</span> <span>{{lead.phone}}</span><br>
-        <span style="color: #666;">Line ID:</span> <span>{{lead.line_id}}</span>
+        <span style="color: #666;">{{t.client}}:</span> <span style="font-weight: bold;">{{lead.full_name}}</span>
+        {{lead.contact_info_html}}
         {{lead.identity_info}}
       </div>
       <div style="width: 52%; padding: 8px 10px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; line-height: 1.35;">
@@ -322,7 +320,7 @@ async function seedTemplates() {
           <strong>{{t.unit}}:</strong> {{property.unit_number || property.unit || "-"}}<br>
           <strong>{{t.bedrooms}}:</strong> {{property.bedrooms || "0"}} {{t.bed}} | 
           <strong>{{t.bathrooms}}:</strong> {{property.bathrooms || "0"}} {{t.bath}} | 
-          <strong>{{t.size_sqm}}:</strong> {{property.size_sqm || "-"}}
+          <strong>{{t.size || "Size"}}:</strong> {{property.size_sqm || "-"}} {{t.sqm || "Sq.m."}}
         </div>
       </div>
     </div>
@@ -331,33 +329,215 @@ async function seedTemplates() {
     {{financial_table_html}}
 
     <!-- Bank & Payment Detail -->
-    <div style="margin-bottom: 8px; padding: 6px 12px; border: 1px solid #a7f3d0; border-radius: 6px; background-color: #ecfdf5; font-size: 11px; page-break-inside: avoid;">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 8px;">
+    <div style="width: 100%; box-sizing: border-box; margin: 8px 0 10px 0; padding: 7px 14px; border: 1px solid #a7f3d0; border-radius: 6px; background-color: #ecfdf5; font-size: 11px; page-break-inside: avoid;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
         <div><span style="color: #666;">{{t.bank}}:</span> <strong>{{bank_name}}</strong></div>
         <div><span style="color: #666;">{{t.account_no}}:</span> <strong>{{bank_account_no}}</strong></div>
-        <div><span style="color: #666;">{{t.account_name}}:</span> <strong>{{account_name}}</strong></div>
+        <div><span style="color: #666;">{{t.account_name}}:</span> <strong>{{account_name}}</strong>{{payee_role_badge}}</div>
         <div><span style="color: #666;">{{t.payment_method}}:</span> <strong>{{payment_method}}</strong></div>
       </div>
     </div>
 
     <!-- Transfer Slip (conditional) -->
     {{slip_html}}
+  </div>
 
-    <div style="margin-top: auto;">
-      <!-- Signatures -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; page-break-inside: avoid;">
-        <div style="text-align: center; width: 30%;">
-          <div style="border-bottom: 1px solid #333; height: 22px; margin-bottom: 4px;"></div>
-          <div style="font-size: 10px;">{{t.customer_signature}}</div>
+  <div style="margin-top: auto; padding-top: 10px; page-break-inside: avoid;">
+    <!-- Signatures -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; page-break-inside: avoid;">
+      <div style="text-align: center; width: 30%;">
+        <div style="border-bottom: 1px solid #333; height: 22px; margin-bottom: 4px;"></div>
+        <div style="font-size: 10px;">{{t.customer_signature}}</div>
+      </div>
+      <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
+        <img src="{{config.logo}}" style="height: 42px; object-fit: contain; margin-bottom: 4px;" alt="Company">
+        <div style="font-size: 9px; color: #999;">{{config.company}}</div>
+      </div>
+      <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
+        <div style="border-bottom: 1px solid #333; width: 100%; height: 22px; margin-bottom: 4px;"></div>
+        <div style="font-size: 10px;">{{t.authorized_signature}}</div>
+      </div>
+    </div>
+  </div>
+</div>
+`.trim(),
+    },
+    {
+      name: "ใบแจ้งหนี้ (Invoice)",
+      description: "แบบฟอร์มใบแจ้งหนี้ / ใบเรียกเก็บเงิน สำหรับค่าเช่า ค่ามัดจำ และค่าบริการต่างๆ",
+      type: "INVOICE" as const,
+      content: `
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+  
+  :root {
+    --primary-color: #4f46e5;
+    --border-color: #e2e8f0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body { 
+    font-family: 'Sarabun', sans-serif; 
+    line-height: 1.4; 
+    color: #1e293b; 
+    margin: 0; 
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    background-color: #f1f5f9;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 6mm 10mm 15mm 10mm;
+    margin: 20px auto;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @page {
+    size: A4;
+    margin: 6mm 10mm 15mm 10mm;
+  }
+
+  @media print {
+    body { 
+      background: white !important; 
+      margin: 0 !important; 
+      padding: 0 !important; 
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .page {
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      border: none !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      min-height: initial !important;
+      overflow: visible !important;
+    }
+    .no-print { display: none !important; }
+  }
+
+  h1, h2, h3 { color: var(--primary-color); text-align: center; margin: 0 0 10px 0; }
+  
+  img { max-width: 100%; height: auto; }
+
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
+  th, td { border: 1px solid var(--border-color); padding: 5px 8px; text-align: left; }
+  th { background-color: #f8fafc; font-weight: bold; }
+  
+  .content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+  }
+</style>
+
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 100%;">
+  <div style="display: flex; flex-direction: column;">
+    <!-- Header -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+      <tr>
+        <td style="width: 50%; vertical-align: top; border: none;">
+          <img src="{{config.logo}}" alt="Logo" style="height: 55px; margin-bottom: 8px; object-fit: contain;">
+          <div style="font-size: 11px; color: #666; line-height: 1.3;">
+            <strong>{{config.company}}</strong><br>
+            {{config.contact.address}}
+          </div>
+        </td>
+        <td style="width: 50%; text-align: right; vertical-align: top; border: none;">
+          <div style="font-size: 10px; color: #999; margin-bottom: 3px;">Original</div>
+          <div style="font-size: 22px; font-weight: bold; color: #4f46e5; margin-bottom: 8px;">{{document_title || t.invoice || 'Invoice'}}</div>
+          <table style="width: 100%; font-size: 11px; margin: 0; border-collapse: collapse;">
+            <tr style="border: none;">
+              <td style="text-align: right; color: #666; padding-right: 8px; border: none;">{{t.date}}</td>
+              <td style="text-align: left; font-weight: bold; border: none;">{{date.today}}</td>
+            </tr>
+            <tr style="border: none;">
+              <td style="text-align: right; color: #666; padding-right: 8px; border: none;">ID</td>
+              <td style="text-align: left; font-weight: bold; border: none;">{{document_number}}</td>
+            </tr>
+            <tr style="border: none;">
+              <td style="text-align: right; color: #666; padding-right: 8px; border: none;">Project</td>
+              <td style="text-align: left; font-weight: bold; border: none; color: #4f46e5;">{{project.name}}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <h3 style="text-align: center; color: #4338ca; border-bottom: 2px solid #e0e7ff; padding-bottom: 4px; margin-bottom: 10px; font-size: 15px;">{{document_title || t.invoice || 'Invoice'}}</h3>
+
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px;">
+      <div style="width: 45%; line-height: 1.4;">
+        <span style="color: #666;">{{t.billed_to || t.reserved_by}}:</span> <span style="font-weight: bold;">{{lead.full_name}}</span>
+        {{lead.contact_info_html}}
+        {{lead.identity_info}}
+      </div>
+      <div style="width: 52%; padding: 8px 10px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; line-height: 1.35;">
+        <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">{{t.property_details}}</div>
+        <div style="font-size: 12px; font-weight: bold; color: #0c4a6e; margin-bottom: 3px;">{{project.full_name || project.name || property.title}}</div>
+        <div style="font-size: 11px; color: #475569;">
+          <strong>{{t.floor}}:</strong> {{property.floor || "-"}} | 
+          <strong>{{t.unit}}:</strong> {{property.unit_number || property.unit || "-"}}<br>
+          <strong>{{t.bedrooms}}:</strong> {{property.bedrooms || "0"}} {{t.bed}} | 
+          <strong>{{t.bathrooms}}:</strong> {{property.bathrooms || "0"}} {{t.bath}} | 
+          <strong>{{t.size || "Size"}}:</strong> {{property.size_sqm || "-"}} {{t.sqm || "Sq.m."}}
         </div>
-        <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
-          <img src="{{config.logo}}" style="height: 42px; object-fit: contain; margin-bottom: 4px;" alt="Company">
-          <div style="font-size: 9px; color: #999;">{{config.company}}</div>
-        </div>
-        <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
-          <div style="border-bottom: 1px solid #333; width: 100%; height: 22px; margin-bottom: 4px;"></div>
-          <div style="font-size: 10px;">{{t.authorized_signature}}</div>
-        </div>
+      </div>
+    </div>
+
+    <!-- Financial Table -->
+    {{financial_table_html}}
+
+    <!-- Bank & Payment Detail -->
+    <div style="width: 100%; box-sizing: border-box; margin: 8px 0 10px 0; padding: 7px 14px; border: 1px solid #c7d2fe; border-radius: 6px; background-color: #eff6ff; font-size: 11px; page-break-inside: avoid;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div><span style="color: #666;">{{t.bank}}:</span> <strong>{{bank_name}}</strong></div>
+        <div><span style="color: #666;">{{t.account_no}}:</span> <strong>{{bank_account_no}}</strong></div>
+        <div><span style="color: #666;">{{t.account_name}}:</span> <strong>{{account_name}}</strong>{{payee_role_badge}}</div>
+        <div><span style="color: #666;">{{t.payment_method}}:</span> <strong>{{payment_method}}</strong></div>
+      </div>
+    </div>
+
+    <!-- Transfer Slip (conditional) -->
+    {{slip_html}}
+  </div>
+
+  <div style="margin-top: auto; padding-top: 10px; page-break-inside: avoid;">
+    <!-- Terms -->
+    <div style="font-size: 10px; color: #666; line-height: 1.35; margin-bottom: 10px; padding: 6px 10px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; page-break-inside: avoid;">
+      <strong style="color: #4338ca;">{{t.terms_conditions || 'Payment Terms'}}:</strong>
+      <div style="margin-top: 2px;">
+        1. {{t.terms_payment_transfer || 'Payment Method: Transfer (Please keep the transfer slip)'}}<br>
+        2. {{terms_sign_by || 'Please complete payment by'}} <strong>{{contract_due_date || date.today}}</strong>
+      </div>
+    </div>
+
+    <!-- Signatures -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; page-break-inside: avoid;">
+      <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
+        <div style="border-bottom: 1px solid #333; width: 100%; height: 22px; margin-bottom: 4px;"></div>
+        <div style="font-size: 10px;">{{t.customer_signature}}</div>
+      </div>
+      <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
+        <img src="{{config.logo}}" alt="Logo Stamp" style="height: 38px; margin-bottom: 3px; object-fit: contain;">
+        <div style="font-size: 9px; color: #888;">{{config.company}}</div>
+      </div>
+      <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
+        <div style="border-bottom: 1px solid #333; width: 100%; height: 22px; margin-bottom: 4px;"></div>
+        <div style="font-size: 10px;">{{t.authorized_signature}}</div>
       </div>
     </div>
   </div>

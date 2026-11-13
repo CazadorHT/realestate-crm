@@ -14,6 +14,7 @@ import {
 import { createDocumentRecordAction } from "./actions";
 import { revalidatePath } from "next/cache";
 import { siteConfig } from "@/lib/site-config";
+import { getSiteSettings } from "@/features/site-settings/actions";
 import fs from "fs";
 import path from "path";
 import PizZip from "pizzip";
@@ -31,6 +32,7 @@ function generateDocumentNumber(templateType: string, ownerId: string): string {
     SALE_CONTRACT: "SC",
     LEASE_CONTRACT: "LC",
     RENT_RECEIPT: "RC",
+    INVOICE: "INV",
   };
   const prefix = prefixMap[templateType] || "DOC";
   // Take 6 chars from owner ID (remove dashes) for uniqueness
@@ -64,18 +66,60 @@ function formatProjectName(name: any, lang: string = "th"): string {
   return th || en || "";
 }
 
+const BANK_NAME_TRANSLATIONS: Record<string, { th: string; en: string }> = {
+  "ธนาคารกรุงไทย": { th: "ธนาคารกรุงไทย", en: "Krungthai Bank" },
+  "ธนาคารกสิกรไทย": { th: "ธนาคารกสิกรไทย", en: "Kasikornbank" },
+  "ธนาคารไทยพาณิชย์": { th: "ธนาคารไทยพาณิชย์", en: "Siam Commercial Bank" },
+  "ธนาคารกรุงเทพ": { th: "ธนาคารกรุงเทพ", en: "Bangkok Bank" },
+  "ธนาคารกรุงศรีอยุธยา": { th: "ธนาคารกรุงศรีอยุธยา", en: "Bank of Ayudhya" },
+  "ธนาคารทหารไทยธนชาต": { th: "ธนาคารทหารไทยธนชาต", en: "TMBThanachart Bank" },
+  "ธนาคารออมสิน": { th: "ธนาคารออมสิน", en: "Government Savings Bank" },
+  "ธนาคารยูโอบี": { th: "ธนาคารยูโอบี", en: "UOB Bank" },
+  "ธนาคารเกียรตินาคินภัทร": { th: "ธนาคารเกียรตินาคินภัทร", en: "Kiatnakin Phatra Bank" },
+  "ธนาคารซีไอเอ็มบี ไทย": { th: "ธนาคารซีไอเอ็มบี ไทย", en: "CIMB Thai Bank" },
+  "ธนาคารทิสโก้": { th: "ธนาคารทิสโก้", en: "Tisco Bank" },
+  "ธนาคารแลนด์ แอนด์ เฮ้าส์": { th: "ธนาคารแลนด์ แอนด์ เฮ้าส์", en: "Land and Houses Bank" },
+  "กรุงไทย": { th: "ธนาคารกรุงไทย", en: "Krungthai Bank" },
+  "กสิกรไทย": { th: "ธนาคารกสิกรไทย", en: "Kasikornbank" },
+  "ไทยพาณิชย์": { th: "ธนาคารไทยพาณิชย์", en: "Siam Commercial Bank" },
+  "กรุงเทพ": { th: "ธนาคารกรุงเทพ", en: "Bangkok Bank" },
+  "กรุงศรี": { th: "ธนาคารกรุงศรีอยุธยา", en: "Bank of Ayudhya" },
+  "ttb": { th: "ธนาคารทหารไทยธนชาต", en: "TMBThanachart Bank" },
+  "uob": { th: "ธนาคารยูโอบี", en: "UOB Bank" },
+};
+
+function formatBankNameForLang(bankName: string, lang: string = "th"): string {
+  if (!bankName) return "";
+  const trimmed = bankName.trim();
+  for (const [key, val] of Object.entries(BANK_NAME_TRANSLATIONS)) {
+    if (
+      key.toLowerCase() === trimmed.toLowerCase() ||
+      val.th.toLowerCase() === trimmed.toLowerCase() ||
+      val.en.toLowerCase() === trimmed.toLowerCase()
+    ) {
+      return lang === "th" ? val.th : val.en;
+    }
+  }
+  return trimmed;
+}
+
 // Schema for document additional data (shared overrides)
 const additionalDataSchema = z
   .object({
     language: z.enum(["th", "en", "cn", "ru"]).optional().default("th"),
     client_name_override: z.string().optional(),
+    client_phone_override: z.string().optional(),
     client_email_override: z.string().email().optional().or(z.literal("")),
     client_line_override: z.string().optional(),
     client_whatsapp_override: z.string().optional(),
     client_wechat_override: z.string().optional(),
+    items: z.array(z.any()).optional(),
+    bank_name: z.string().optional(),
+    bank_account_no: z.string().optional(),
     payment_period: z.string().optional(),
     payment_method: z.string().optional(),
     account_name: z.string().optional(),
+    payee_role: z.string().optional(),
     slip_url: z.string().optional(),
     reservation_fee: z.string().optional(),
     booking_amount: z.string().optional(),
@@ -156,6 +200,37 @@ async function getImageBase64(
   return imageUrl;
 }
 
+/** Helper to build dynamic document branding config from DB site_settings with siteConfig fallback */
+async function getDocumentConfig() {
+  const siteSettings = await getSiteSettings({ bypassCache: true }).catch(() => null);
+
+  const baseConfig = {
+    ...siteConfig,
+    company: siteSettings?.company_name || siteSettings?.site_name || siteConfig.company,
+    logo: siteSettings?.logo_light || siteConfig.logo,
+    contact: {
+      ...siteConfig.contact,
+      email: siteSettings?.contact_email || siteConfig.contact.email,
+      phone: siteSettings?.contact_phone || siteConfig.contact.phone,
+      address: siteSettings?.contact_address || siteConfig.contact.address,
+      lineId: siteSettings?.line_id || siteConfig.contact.lineId,
+    },
+  };
+
+  const [logoB64, signatureB64, stampB64] = await Promise.all([
+    getImageBase64(baseConfig.logo),
+    getImageBase64(baseConfig.companySignature),
+    getImageBase64(baseConfig.companyStamp),
+  ]);
+
+  return {
+    ...baseConfig,
+    logo: logoB64,
+    companySignature: signatureB64,
+    companyStamp: stampB64,
+  };
+}
+
 export async function generateDocumentFromTemplateAction(
   templateId: string,
   ownerId: string,
@@ -190,19 +265,8 @@ export async function generateDocumentFromTemplateAction(
       : "th";
     const translations = await getTranslations(lang);
 
-    // Base64 process for config images (Logo, Signature, Stamp)
-    const config = { ...siteConfig };
-
-    // Process config images in parallel
-    const [logoB64, signatureB64, stampB64] = await Promise.all([
-      getImageBase64(config.logo),
-      getImageBase64(config.companySignature),
-      getImageBase64(config.companyStamp),
-    ]);
-
-    config.logo = logoB64;
-    config.companySignature = signatureB64;
-    config.companyStamp = stampB64;
+    // Dynamic config from DB site_settings (address, phone, email, company, logo)
+    const config = await getDocumentConfig();
 
     let contextData: Record<string, any> = {
       date: {
@@ -437,21 +501,28 @@ export async function generateDocumentFromTemplateAction(
       contextData.contract = localizeObject(contract, lang);
     }
 
-    // Populate identity info if any nationality, passport or id card are provided
+    // Populate contact & identity info (hide if not specified)
     if (contextData.lead) {
-      // Phone fallback
-      if (!contextData.lead.phone || contextData.lead.phone.trim() === "") {
-        contextData.lead.phone = lang === "th" ? "(ไม่ได้ระบุ)" : "(Not specified)";
+      const rawPhone = (validData.client_phone_override || contextData.lead.phone || "").replace(/\(ไม่ได้ระบุ\)|\(Not specified\)/g, "").trim();
+      const rawLine = (validData.client_line_override || contextData.lead.line_id || "").replace(/\(ไม่ได้ระบุ\)|\(Not specified\)/g, "").trim();
+
+      let contactInfo = "";
+      if (rawPhone) {
+        contactInfo += `<br><span style="color: #666;">${translations.phone || (lang === "th" ? "เบอร์โทรศัพท์" : "Phone")}:</span> <span>${rawPhone}</span>`;
       }
-      if (!contextData.lead.line_id || contextData.lead.line_id.trim() === "") {
-        contextData.lead.line_id = lang === "th" ? "(ไม่ได้ระบุ)" : "(Not specified)";
+      if (rawLine) {
+        contactInfo += `<br><span style="color: #666;">Line ID:</span> <span>${rawLine}</span>`;
       }
+      contextData.lead.contact_info_html = contactInfo;
+      contextData.lead.phone = rawPhone;
+      contextData.lead.line_id = rawLine;
+
       let identityInfo = "";
       if (validData.client_id_card) {
-        identityInfo += `<br><span style="color: #666;">${lang === "th" ? "เลขบัตรประชาชน" : "ID Card No."}:</span> <span>${validData.client_id_card}</span>`;
+        identityInfo += `<br><span style="color: #666;">${lang === "th" ? "เลขบัตรประชาชน" : "ID Card No"}:</span> <span>${validData.client_id_card}</span>`;
       }
       if (validData.client_passport) {
-        identityInfo += `<br><span style="color: #666;">${lang === "th" ? "เลขที่พาสปอร์ต" : "Passport No."}:</span> <span>${validData.client_passport}</span>`;
+        identityInfo += `<br><span style="color: #666;">${lang === "th" ? "เลขที่พาสปอร์ต" : "Passport No"}:</span> <span>${validData.client_passport}</span>`;
       }
       if (validData.client_nationality) {
         identityInfo += `<br><span style="color: #666;">${lang === "th" ? "สัญชาติ" : "Nationality"}:</span> <span>${validData.client_nationality}</span>`;
@@ -463,6 +534,14 @@ export async function generateDocumentFromTemplateAction(
     }
 
     // Build financial_table_html block — professional table layout with VAT and WHT support
+    const customItems: Array<{
+      description: string;
+      quantity?: number;
+      unit_price?: number;
+      total?: number;
+    }> = Array.isArray(validData.items) && validData.items.length > 0 ? validData.items : [];
+    const hasCustomItems = customItems.length > 0;
+
     const rawResFee = validData.reservation_fee || "";
     const resFeeNum = parseFloat(rawResFee.replace(/,/g, "")) || 0;
 
@@ -488,9 +567,17 @@ export async function generateDocumentFromTemplateAction(
 
     // Calculate taxable base (Including Security Deposit in the tax base)
     let taxableBase = 0;
-    if (hasRent) taxableBase += rentPrice;
-    if (hasReservation) taxableBase += resFeeNum;
-    if (hasSecurityDeposit) taxableBase += secDepNum;
+    if (hasCustomItems) {
+      customItems.forEach((it) => {
+        const qty = Number(it.quantity) || 1;
+        const uPrice = Number(it.unit_price) || 0;
+        taxableBase += qty * uPrice;
+      });
+    } else {
+      if (hasRent) taxableBase += rentPrice;
+      if (hasReservation) taxableBase += resFeeNum;
+      if (hasSecurityDeposit) taxableBase += secDepNum;
+    }
 
     // Calculate tax breakdown
     let grossAmount = taxableBase;
@@ -568,39 +655,70 @@ export async function generateDocumentFromTemplateAction(
     let rowNum = 0;
     let tableRows = "";
 
-    if (hasRent) {
-      rowNum++;
-      tableRows += `
-        <tr>
-          <td style="text-align: center; width: 40px;">${rowNum}</td>
-          <td>${rentLabel}</td>
-          <td style="text-align: center; width: 70px;">1</td>
-          <td style="text-align: right; width: 110px;">${formatCurrency(displayRentPrice)}</td>
-          <td style="text-align: right; width: 110px;">${formatCurrency(displayRentPrice)}</td>
-        </tr>`;
+    if (hasCustomItems) {
+      customItems.forEach((it) => {
+        rowNum++;
+        const qty = Number(it.quantity) || 1;
+        const uPrice = (Number(it.unit_price) || 0) * scaleFactor;
+        const itemTotal = qty * uPrice;
+        tableRows += `
+          <tr style="height: 28px;">
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; width: 40px;">${rowNum}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px;">${it.description}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; width: 70px;">${qty}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; width: 110px;">${formatCurrency(uPrice)}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; width: 110px;">${formatCurrency(itemTotal)}</td>
+          </tr>`;
+      });
+    } else {
+      if (hasRent) {
+        rowNum++;
+        tableRows += `
+          <tr style="height: 28px;">
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; width: 40px;">${rowNum}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px;">${rentLabel}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; width: 70px;">1</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; width: 110px;">${formatCurrency(displayRentPrice)}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; width: 110px;">${formatCurrency(displayRentPrice)}</td>
+          </tr>`;
+      }
+
+      if (hasReservation) {
+        rowNum++;
+        tableRows += `
+          <tr style="height: 28px;">
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; width: 40px;">${rowNum}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px;">${reservationLabel}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; width: 70px;">1</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; width: 110px;">${formatCurrency(displayResFee)}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; width: 110px;">${formatCurrency(displayResFee)}</td>
+          </tr>`;
+      }
+
+      if (hasSecurityDeposit) {
+        rowNum++;
+        tableRows += `
+          <tr style="height: 28px;">
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; width: 40px;">${rowNum}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px;">${securityLabel}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; width: 70px;">1</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; width: 110px;">${formatCurrency(displaySecDep)}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; width: 110px;">${formatCurrency(displaySecDep)}</td>
+          </tr>`;
+      }
     }
 
-    if (hasReservation) {
-      rowNum++;
+    // Ensure table looks balanced by padding with blank rows (minimum 5 rows total, e.g. 1 item + 4 blank rows)
+    const minRows = 5;
+    const emptyRowsCount = Math.max(0, minRows - rowNum);
+    for (let i = 0; i < emptyRowsCount; i++) {
       tableRows += `
-        <tr>
-          <td style="text-align: center; width: 40px;">${rowNum}</td>
-          <td>${reservationLabel}</td>
-          <td style="text-align: center; width: 70px;">1</td>
-          <td style="text-align: right; width: 110px;">${formatCurrency(displayResFee)}</td>
-          <td style="text-align: right; width: 110px;">${formatCurrency(displayResFee)}</td>
-        </tr>`;
-    }
-
-    if (hasSecurityDeposit) {
-      rowNum++;
-      tableRows += `
-        <tr>
-          <td style="text-align: center;">${rowNum}</td>
-          <td>${securityLabel}</td>
-          <td style="text-align: center;">1</td>
-          <td style="text-align: right;">${formatCurrency(displaySecDep)}</td>
-          <td style="text-align: right;">${formatCurrency(displaySecDep)}</td>
+        <tr style="height: 28px;">
+          <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; color: transparent;">&nbsp;</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px 8px;">&nbsp;</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center;">&nbsp;</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right;">&nbsp;</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right;">&nbsp;</td>
         </tr>`;
     }
 
@@ -729,8 +847,17 @@ export async function generateDocumentFromTemplateAction(
     contextData.payment_period =
       validData.payment_period || contextData.deal?.payment_period || "";
     contextData.payment_method = validData.payment_method || "Transfer";
+    contextData.bank_name = formatBankNameForLang(validData.bank_name || "", lang);
     contextData.account_name = validData.account_name || "";
     contextData.bank_account_name = validData.account_name || "";
+    contextData.payee_role = validData.payee_role || "";
+
+    if (validData.payee_role) {
+      if (!contextData.account_name.includes(validData.payee_role)) {
+        contextData.account_name = `${contextData.account_name} (${validData.payee_role})`;
+        contextData.bank_account_name = contextData.account_name;
+      }
+    }
 
     if (contextData.lead) {
       if (validData.client_passport) contextData.lead.passport = validData.client_passport;
@@ -743,7 +870,8 @@ export async function generateDocumentFromTemplateAction(
 
     // Add translation terms from locale — use translations from locale files only
     contextData.terms_deposit = translations.terms_deposit || "Reservation deposit part of contract fee.";
-    contextData.terms_sign_by = translations.terms_sign_by || "Sign contract by:";
+    const rawSignBy = (translations.terms_sign_by || "Sign contract by").replace(/[:：\s]+$/, "");
+    contextData.terms_sign_by = `${rawSignBy}:`;
     contextData.terms_payment_transfer = translations.terms_payment_transfer || "Payment Method: Transfer (Please keep the transfer slip)";
 
     // Generate document number based on template type
@@ -759,6 +887,11 @@ export async function generateDocumentFromTemplateAction(
       throw new Error("ต้นแบบสัญญาไม่มีเนื้อหา (Template content is empty)");
     }
     let generatedContent = replacePlaceholders(template.content, contextData);
+
+    // Clean up empty phone and Line ID lines completely if they were empty or Not specified
+    generatedContent = generatedContent.replace(/<span style="color: #666;">[^<]*(?:Phone|เบอร์โทรศัพท์)[^<]*<\/span>:\s*<span>(?:\(Not specified\)|\(ไม่ได้ระบุ\)|)<\/span>(?:<br\s*\/?>)?/gi, "");
+    generatedContent = generatedContent.replace(/<span style="color: #666;">Line ID:<\/span>\s*<span>(?:\(Not specified\)|\(ไม่ได้ระบุ\)|)<\/span>(?:<br\s*\/?>)?/gi, "");
+    generatedContent = generatedContent.replace(/::/g, ":");
 
     // Strip legacy embedded page/print styles from template content so master print styles take precedence
     generatedContent = generatedContent.replace(/<style[^>]*>[\s\S]*?(?:@page|\.page|@media\s+print)[\s\S]*?<\/style>/gi, "");
@@ -838,8 +971,7 @@ export async function generateDocumentFromTemplateAction(
       padding: 0 !important;
       width: 100% !important;
       max-width: 100% !important;
-      height: auto !important;
-      min-height: initial !important;
+      min-height: calc(297mm - 21mm) !important;
       box-shadow: none !important;
       border: none !important;
       overflow: visible !important;
@@ -848,7 +980,7 @@ export async function generateDocumentFromTemplateAction(
     }
     .content-wrapper {
       width: 100% !important;
-      height: auto !important;
+      flex: 1 !important;
       min-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
@@ -892,6 +1024,7 @@ export async function generateDocumentFromTemplateAction(
     flex-direction: column;
     justify-content: space-between;
     width: 100%;
+    min-height: 100%;
   }
 </style>
 </head>
@@ -987,11 +1120,14 @@ export async function generateDocxDocumentFromTemplateAction(
     const lang = (validData.language === "th" || validData.language === "en" || validData.language === "cn" || validData.language === "ru")
       ? validData.language
       : "th";
-    const translations = await getTranslations(lang);
+    const [translations, config] = await Promise.all([
+      getTranslations(lang),
+      getDocumentConfig(),
+    ]);
 
     let contextData: Record<string, any> = {
       date: { today: formatDate(new Date(), lang) },
-      config: siteConfig,
+      config: config,
       t: translations,
       lang: lang,
     };
@@ -1268,8 +1404,17 @@ export async function generateDocxDocumentFromTemplateAction(
     contextData.payment_period =
       validData.payment_period || contextData.deal?.payment_period || "";
     contextData.payment_method = validData.payment_method || "Transfer";
+    contextData.bank_name = formatBankNameForLang(validData.bank_name || "", lang);
     contextData.account_name = validData.account_name || "";
     contextData.bank_account_name = validData.account_name || "";
+    contextData.payee_role = validData.payee_role || "";
+
+    if (validData.payee_role) {
+      if (!contextData.account_name.includes(validData.payee_role)) {
+        contextData.account_name = `${contextData.account_name} (${validData.payee_role})`;
+        contextData.bank_account_name = contextData.account_name;
+      }
+    }
 
     if (contextData.lead) {
       if (validData.client_passport) contextData.lead.passport = validData.client_passport;
@@ -1282,7 +1427,8 @@ export async function generateDocxDocumentFromTemplateAction(
 
     // Add translation terms from locale — use translations from locale files only
     contextData.terms_deposit = translations.terms_deposit || "Reservation deposit part of contract fee.";
-    contextData.terms_sign_by = translations.terms_sign_by || "Sign contract by:";
+    const rawSignBy = (translations.terms_sign_by || "Sign contract by").replace(/[:：\s]+$/, "");
+    contextData.terms_sign_by = `${rawSignBy}:`;
     contextData.terms_payment_transfer = translations.terms_payment_transfer || "Payment Method: Transfer (Please keep the transfer slip)";
 
     // 3. Process the DOCX with docxtemplater

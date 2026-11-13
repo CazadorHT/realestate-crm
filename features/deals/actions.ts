@@ -6,6 +6,7 @@ import { invalidateExecutiveAISummaryCache } from "@/features/dashboard/queries/
 import { addMonths } from "date-fns";
 import {
   requireAuthContext,
+  resolveTenantId,
   assertAuthenticated,
   assertStaff,
   authzFail,
@@ -175,7 +176,7 @@ export async function createDealAction(input: CreateDealInput) {
 
     const adminSupabase = createAdminClient();
 
-    // Fallback: If user is in "ALL" view, resolve tenantId from the selected property
+    // Fallback: If user is in "ALL" view, resolve tenantId from the selected property or membership/system
     let tenantId = userTenantId;
     if (!tenantId && validated.property_id) {
       const { data: propData } = await adminSupabase
@@ -186,6 +187,10 @@ export async function createDealAction(input: CreateDealInput) {
       if (propData?.tenant_id) {
         tenantId = propData.tenant_id;
       }
+    }
+
+    if (!tenantId) {
+      tenantId = await resolveTenantId(adminSupabase, user.id, userTenantId);
     }
 
     if (!tenantId) throw new Error("Tenant ID is required but missing");

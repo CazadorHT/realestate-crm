@@ -14,6 +14,7 @@ export const DocumentTypeEnum = z.enum([
   "OTHER",
   "RESERVATION_DOCUMENT",
   "RENT_RECEIPT",
+  "INVOICE",
   "SLIP",
 ]);
 
@@ -26,7 +27,8 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
   TITLE_DEED: "โฉนดที่ดิน",
   OTHER: "อื่นๆ",
   RESERVATION_DOCUMENT: "ใบจองทรัพย์",
-  RENT_RECEIPT: "ใบเสร็จค่าเช่า",
+  RENT_RECEIPT: "ใบเสร็จรับเงิน",
+  INVOICE: "ใบแจ้งหนี้",
   SLIP: "หลักฐานการโอนเงิน",
 };
 
@@ -39,7 +41,8 @@ export const DOC_TYPE_LABELS_EN: Record<string, string> = {
   TITLE_DEED: "Title Deed",
   OTHER: "Other",
   RESERVATION_DOCUMENT: "Reservation Form",
-  RENT_RECEIPT: "Rent Receipt",
+  RENT_RECEIPT: "Receipt",
+  INVOICE: "Invoice",
   SLIP: "Payment Slip",
 };
 

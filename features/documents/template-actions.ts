@@ -40,8 +40,9 @@ export async function getTemplatesAction() {
     const weights: Record<string, number> = {
       RESERVATION_DOCUMENT: 1,
       RENT_RECEIPT: 2,
-      LEASE_CONTRACT: 3,
-      SALE_CONTRACT: 4,
+      INVOICE: 3,
+      LEASE_CONTRACT: 4,
+      SALE_CONTRACT: 5,
     };
     const wA = weights[a.type] || 99;
     const wB = weights[b.type] || 99;

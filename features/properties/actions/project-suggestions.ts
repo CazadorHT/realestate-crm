@@ -3,6 +3,9 @@ import { requireAuthContext } from "@/lib/authz";
 
 export interface ProjectSuggestion {
   id: string;
+  name?: { th?: string; en?: string } | any;
+  name_th?: string;
+  name_en?: string;
   address_line1: string;
   address_line1_en?: string;
   subdistrict: string;
@@ -68,6 +71,9 @@ export async function getProjectSuggestions(search: string, limit: number = 10):
 
       return {
         id: item.id,
+        name: nameObj,
+        name_th: nameObj.th || "",
+        name_en: nameObj.en || "",
         address_line1: nameObj.th || nameObj.en || item.slug,
         address_line1_en: nameObj.en || nameObj.th || item.slug,
         subdistrict: item.subdistrict || "",
