@@ -7,7 +7,51 @@ import { Search, MapPin, Building2, Sparkles, TrainTrack, Compass, X } from "luc
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 
-import { getDynamicSearchSuggestionsAction, type DynamicSuggestionItem } from "@/features/public/popular-areas";
+let cachedSuggestions: SuggestionItem[] | null = null;
+let fetchSuggestionsPromise: Promise<SuggestionItem[]> | null = null;
+
+async function fetchSuggestions(): Promise<SuggestionItem[]> {
+  if (cachedSuggestions) return cachedSuggestions;
+  if (fetchSuggestionsPromise) return fetchSuggestionsPromise;
+
+  if (
+    typeof navigator !== "undefined" &&
+    /bot|googlebot|crawler|spider|robot|crawling|slurp|bingbot|yandex|baiduspider|duckduckbot/i.test(
+      navigator.userAgent
+    )
+  ) {
+    return [];
+  }
+
+  fetchSuggestionsPromise = fetch("/api/public/search-suggestions")
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to load search suggestions");
+      return res.json();
+    })
+    .then((dynamicItems: any[]) => {
+      if (!Array.isArray(dynamicItems)) return [];
+      const map = new Map<string, SuggestionItem>();
+      for (const item of dynamicItems) {
+        const rawText = item?.text;
+        const txt =
+          typeof rawText === "string"
+            ? rawText
+            : (rawText as any)?.th || (rawText as any)?.en || (rawText ? String(rawText) : "");
+        if (txt && txt !== "[object Object]" && txt.trim()) {
+          map.set(txt.toLowerCase().trim(), { ...item, text: txt.trim() });
+        }
+      }
+      cachedSuggestions = Array.from(map.values());
+      return cachedSuggestions;
+    })
+    .catch((err) => {
+      console.warn("Failed to load dynamic suggestions:", err);
+      fetchSuggestionsPromise = null;
+      return [];
+    });
+
+  return fetchSuggestionsPromise;
+}
 
 interface MagicAiSearchProps {
   keyword: string;
@@ -166,8 +210,18 @@ export function MagicAiSearch({
   const searchId = useId();
   const [inputValue, setInputValue] = useState(keyword);
   const [isOpen, setIsOpen] = useState(false);
-  const [allSuggestions, setAllSuggestions] = useState<SuggestionItem[]>(DEFAULT_SUGGESTIONS);
+  const [allSuggestions, setAllSuggestions] = useState<SuggestionItem[]>(
+    () => cachedSuggestions || DEFAULT_SUGGESTIONS
+  );
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const loadSuggestions = useCallback(() => {
+    fetchSuggestions().then((dynamicItems) => {
+      if (dynamicItems && dynamicItems.length > 0) {
+        setAllSuggestions(dynamicItems);
+      }
+    });
+  }, []);
 
   const getSuggestionDisplayText = useCallback((item: SuggestionItem, lang: string) => {
     if (item.translations) {
@@ -177,27 +231,6 @@ export function MagicAiSearch({
       if (lang === "th" && item.translations.th) return item.translations.th;
     }
     return item.text;
-  }, []);
-
-  // Fetch verified suggestions from DB (strictly only projects, transits, areas with active properties)
-  useEffect(() => {
-    getDynamicSearchSuggestionsAction()
-      .then((dynamicItems) => {
-        if (dynamicItems && dynamicItems.length > 0) {
-          const map = new Map<string, SuggestionItem>();
-          for (const item of dynamicItems) {
-            const rawText = item?.text;
-            const txt = typeof rawText === "string" 
-              ? rawText 
-              : (rawText as any)?.th || (rawText as any)?.en || (rawText ? String(rawText) : "");
-            if (txt && txt !== "[object Object]" && txt.trim()) {
-              map.set(txt.toLowerCase().trim(), { ...item, text: txt.trim() });
-            }
-          }
-          setAllSuggestions(Array.from(map.values()));
-        }
-      })
-      .catch((e) => console.warn("Failed to load dynamic suggestions:", e));
   }, []);
 
   // Sync internal state if external keyword changes (e.g. clear filters)
@@ -481,10 +514,14 @@ export function MagicAiSearch({
           }
           className="border-none shadow-none focus-visible:ring-0 h-full text-xs bg-transparent flex-1 min-w-0 font-medium placeholder:text-[12px] placeholder:text-slate-400/80 px-2"
           value={inputValue}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            setIsOpen(true);
+            loadSuggestions();
+          }}
           onChange={(e) => {
             setInputValue(e.target.value);
             setIsOpen(true);
+            loadSuggestions();
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
