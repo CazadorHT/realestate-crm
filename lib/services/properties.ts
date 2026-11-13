@@ -291,9 +291,21 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           const min = Number(options.minPrice) || 0;
           const max = Number(options.maxPrice) || 2000000000;
           if (effectivePriceType === "RENT") {
-            query = query.gte("rental_price", min).lte("rental_price", max);
+            query = query
+              .neq("listing_type", "SALE")
+              .gt("rental_price", 0)
+              .gte("rental_price", min)
+              .lte("rental_price", max);
+          } else if (effectivePriceType === "SALE") {
+            query = query
+              .neq("listing_type", "RENT")
+              .gt("price", 0)
+              .gte("price", min)
+              .lte("price", max);
           } else {
-            query = query.gte("price", min).lte("price", max);
+            query = query.or(
+              `and(listing_type.neq.RENT,price.gt.0,price.gte.${min},price.lte.${max}),and(listing_type.neq.SALE,rental_price.gt.0,rental_price.gte.${min},rental_price.lte.${max})`
+            );
           }
         }
 

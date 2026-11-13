@@ -256,9 +256,21 @@ export function usePropertyFiltering(
         const rent = p.rental_price || p.original_rental_price || 0;
         const effectiveIntent = priceType || listingType;
         let matchesPrice = false;
-        if (effectiveIntent === "RENT") { if (rent >= min && rent <= max) matchesPrice = true; }
-        else if (effectiveIntent === "SALE") { if (price >= min && price <= max) matchesPrice = true; }
-        else if ((price >= min && price <= max) || (rent >= min && rent <= max)) matchesPrice = true;
+        if (effectiveIntent === "RENT") {
+          if (p.listing_type !== "SALE" && rent > 0 && rent >= min && rent <= max) {
+            matchesPrice = true;
+          }
+        } else if (effectiveIntent === "SALE") {
+          if (p.listing_type !== "RENT" && price > 0 && price >= min && price <= max) {
+            matchesPrice = true;
+          }
+        } else {
+          const matchesSale = p.listing_type !== "RENT" && price > 0 && price >= min && price <= max;
+          const matchesRent = p.listing_type !== "SALE" && rent > 0 && rent >= min && rent <= max;
+          if (matchesSale || matchesRent) {
+            matchesPrice = true;
+          }
+        }
         if (!matchesPrice) return false;
       }
     }
