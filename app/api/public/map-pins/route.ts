@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(payload, {
       headers: {
         "Cache-Control":
-          "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+          "public, max-age=3600, s-maxage=2592000, stale-while-revalidate=31536000",
       },
     });
   } catch (error) {

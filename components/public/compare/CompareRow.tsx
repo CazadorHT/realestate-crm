@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import {
   ShieldCheck,
@@ -22,7 +22,6 @@ import {
   PawPrint,
 } from "lucide-react";
 import { FaPersonWalking, FaCarSide, FaAirbnb } from "react-icons/fa6";
-import DOMPurify from "isomorphic-dompurify";
 import { CompareProperty, ComparisonRow } from "./types";
 import {
   formatMoney,
@@ -147,6 +146,33 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
             .join(", ") || "-"}
         </span>
       </div>
+    );
+  }
+
+  function CompareDescriptionCell({
+    text,
+    isExpanded,
+  }: {
+    text: string;
+    isExpanded: boolean;
+  }) {
+    const [sanitized, setSanitized] = useState<string>(text);
+
+    useEffect(() => {
+      if (!text) return;
+      // Client-side only sanitization to avoid jsdom/SSR Node.js ESM crash
+      import("dompurify").then((module) => {
+        setSanitized(module.default.sanitize(text));
+      });
+    }, [text]);
+
+    return (
+      <div
+        className={`${
+          isExpanded ? "" : "line-clamp-6"
+        } text-xs text-slate-600 prose prose-slate prose-compact max-w-none transition-all duration-300 leading-relaxed`}
+        dangerouslySetInnerHTML={{ __html: sanitized }}
+      />
     );
   }
 
@@ -935,17 +961,13 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                 renderFallback()
               )
             ) : row.key === "description" ? (
-              <div
-                className={`${
-                  isExpanded ? "" : "line-clamp-6"
-                } text-xs text-slate-600 prose prose-slate prose-compact max-w-none transition-all duration-300 leading-relaxed`}
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(
-                    getLocalizedField<string>(p, "description", language) ||
-                      p.description ||
-                      "-"
-                  ),
-                }}
+              <CompareDescriptionCell
+                text={
+                  getLocalizedField<string>(p, "description", language) ||
+                  p.description ||
+                  "-"
+                }
+                isExpanded={isExpanded}
               />
             ) : row.key === "property_type" ? (
               p.property_type ? (
