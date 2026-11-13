@@ -122,16 +122,21 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
     property: CompareProperty;
     language: any;
   }) {
+    const locDistrict = getLocaleValue(property, "district", language) || property.district;
+    const locSubdistrict = getLocaleValue(property, "subdistrict", language) || property.subdistrict;
+    const locProvince = getLocaleValue(property, "province", language) || property.province;
+
     const { localized } = useAddressLocalization(
-      property.province,
-      property.district,
-      property.subdistrict
+      locProvince,
+      locDistrict,
+      locSubdistrict,
+      language
     );
 
     const displayProvince =
-      getProvinceName(property.province || "", language) || localized.province;
-    const displayDistrict = localized.district || property.district;
-    const displaySubdistrict = localized.subdistrict || property.subdistrict;
+      getProvinceName(locProvince || "", language) || localized.province;
+    const displayDistrict = localized.district || locDistrict;
+    const displaySubdistrict = localized.subdistrict || locSubdistrict;
 
     return (
       <div className="flex flex-col gap-0.5">

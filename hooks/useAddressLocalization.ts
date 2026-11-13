@@ -36,6 +36,20 @@ export function useAddressLocalization(
 
     if (!provinceTh && !districtTh && !subdistrictTh) return;
 
+    // Helper to check if string contains Thai characters
+    const hasThai = (str?: string | null) => Boolean(str && /[\u0E00-\u0E7F]/.test(str));
+
+    // Fast-path: If district and subdistrict are already non-Thai (e.g. English/Chinese from DB),
+    // skip network calls completely to eliminate bandwidth leaks!
+    if (!hasThai(districtTh) && !hasThai(subdistrictTh)) {
+      setLocalized({
+        province: getProvinceName(provinceTh || "", language) || provinceTh || undefined,
+        district: districtTh || undefined,
+        subdistrict: subdistrictTh || undefined,
+      });
+      return;
+    }
+
     let mounted = true;
 
     const resolveAddress = async () => {

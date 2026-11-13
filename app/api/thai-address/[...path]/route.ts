@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// In-memory module cache to eliminate redundant processing within lambda instances
+const memoryCache = new Map<string, any>();
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -17,11 +20,22 @@ export async function GET(
     );
   }
 
+  // Fast path: serve from module memory if already loaded
+  if (memoryCache.has(fileName)) {
+    return NextResponse.json(memoryCache.get(fileName), {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=31536000",
+      },
+    });
+  }
+
   const GITHUB_RAW_URL = `https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/v2/${fileName}`;
 
   try {
     const response = await fetch(GITHUB_RAW_URL, {
-      next: { revalidate: 31536000 }, // 1 year cache
+      // Keep revalidation long; stripping redundant fields ensures payload stays under 2MB
+      next: { revalidate: 31536000 },
     });
 
     if (!response.ok) {
@@ -33,27 +47,40 @@ export async function GET(
 
     let data = await response.json();
 
-    // Resilient Normalization: Ensure name_th and name_en always exist even if upstream schema evolves
+    // Minify & normalize: Strip timestamps, null lat/long, and metadata to fit comfortably under 2MB
     if (Array.isArray(data)) {
-      data = data.map((item: any) => {
-        if (item && typeof item === "object") {
-          return {
-            ...item,
-            name_th: item.name_th ?? (typeof item.name === "object" ? item.name?.th : item.name) ?? "",
-            name_en: item.name_en ?? (typeof item.name === "object" ? item.name?.en : "") ?? "",
-          };
-        }
-        return item;
-      });
+      if (fileName === "sub_district.json") {
+        data = data.map((item: any) => ({
+          id: item.id,
+          zip_code: item.zip_code,
+          name_th: item.name_th ?? (typeof item.name === "object" ? item.name?.th : item.name) ?? "",
+          name_en: item.name_en ?? (typeof item.name === "object" ? item.name?.en : "") ?? "",
+          district_id: item.district_id,
+        }));
+      } else if (fileName === "district.json") {
+        data = data.map((item: any) => ({
+          id: item.id,
+          name_th: item.name_th ?? (typeof item.name === "object" ? item.name?.th : item.name) ?? "",
+          name_en: item.name_en ?? (typeof item.name === "object" ? item.name?.en : "") ?? "",
+          province_id: item.province_id,
+        }));
+      } else if (fileName === "province.json") {
+        data = data.map((item: any) => ({
+          id: item.id,
+          name_th: item.name_th ?? (typeof item.name === "object" ? item.name?.th : item.name) ?? "",
+          name_en: item.name_en ?? (typeof item.name === "object" ? item.name?.en : "") ?? "",
+          geography_id: item.geography_id,
+        }));
+      }
     }
 
-    // Return with Cache headers
-    // s-maxage=3600 (shared cache/CDN - 1 hour)
-    // stale-while-revalidate=86400 (if stale, serve old content while updating in bg - 1 day)
+    memoryCache.set(fileName, data);
+
+    // Return with aggressive Cache headers (30 days CDN / browser cache)
     return NextResponse.json(data, {
       status: 200,
       headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        "Cache-Control": "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=31536000",
       },
     });
   } catch (error) {
