@@ -21,7 +21,7 @@ export interface CompressionResult {
 }
 
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxSizeMB: 1.5, // Generous cap prevents browser-image-compression from aggressively cutting resolution
+  maxSizeMB: 0.5, // 500 KB cap prevents large image leaks while keeping crisp quality
   maxWidthOrHeight: 1920, // Full HD resolution for crisp details on retina & desktop displays
   useWebWorker: true,
   fileType: "image/webp",
