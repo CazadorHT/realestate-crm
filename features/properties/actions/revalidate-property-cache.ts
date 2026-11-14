@@ -56,6 +56,8 @@ export const PROPERTY_PUBLIC_PATHS = [
   "/api/public/properties",
   "/api/public/map-pins",
   "/api/public/popular-areas",
+  "/api/public/search-suggestions",
+  "/api/public/floating-agents",
   "/api/syndication/feed/meta",
   "/api/syndication/feed/facebook",
 ];
