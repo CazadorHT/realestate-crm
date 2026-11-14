@@ -223,6 +223,64 @@ export function MagicAiSearch({
     });
   }, []);
 
+  const getSuggestionDisplayInfo = useCallback((item: SuggestionItem, lang: string, currentInput: string) => {
+    const q = currentInput.trim().toLowerCase();
+    const th = item.translations?.th || item.text;
+    const en = item.translations?.en || "";
+    const hasDifferentEn = Boolean(en && en.toLowerCase() !== th.toLowerCase());
+
+    const isInputEnglish = Boolean(q && /^[a-z0-9\s\-_,&().'/]+$/i.test(q));
+    const matchesEn = Boolean(q && en && en.toLowerCase().includes(q));
+    const preferEn = matchesEn || (isInputEnglish && hasDifferentEn);
+
+    if (lang === "th") {
+      if (preferEn) {
+        return {
+          primary: en || th,
+          secondary: hasDifferentEn ? th : null,
+          valueToSelect: en || th,
+        };
+      }
+      return {
+        primary: th,
+        secondary: hasDifferentEn ? en : null,
+        valueToSelect: th,
+      };
+    }
+
+    if (lang === "en") {
+      return {
+        primary: en || th,
+        secondary: null,
+        valueToSelect: en || th,
+      };
+    }
+
+    if (lang === "cn") {
+      const cn = item.translations?.cn || en || th;
+      return {
+        primary: cn,
+        secondary: null,
+        valueToSelect: cn,
+      };
+    }
+
+    if (lang === "ru") {
+      const ru = item.translations?.ru || en || th;
+      return {
+        primary: ru,
+        secondary: null,
+        valueToSelect: ru,
+      };
+    }
+
+    return {
+      primary: item.text,
+      secondary: null,
+      valueToSelect: item.text,
+    };
+  }, []);
+
   const getSuggestionDisplayText = useCallback((item: SuggestionItem, lang: string) => {
     if (item.translations) {
       if (lang === "en" && item.translations.en) return item.translations.en;
@@ -345,8 +403,8 @@ export function MagicAiSearch({
     const deduplicatedSuggestions: SuggestionItem[] = [];
 
     for (const item of rawList) {
-      const displayTitle = getSuggestionDisplayText(item, language).toLowerCase().trim();
-      const dedupKey = `${displayTitle}::${item.label}`;
+      const info = getSuggestionDisplayInfo(item, language, inputValue);
+      const dedupKey = `${info.primary.toLowerCase().trim()}::${item.label}`;
       if (!seenDisplayKeys.has(dedupKey)) {
         seenDisplayKeys.add(dedupKey);
         deduplicatedSuggestions.push(item);
@@ -354,12 +412,12 @@ export function MagicAiSearch({
     }
 
     return deduplicatedSuggestions.slice(0, 25);
-  }, [allSuggestions, inputValue, language, getSuggestionDisplayText]);
+  }, [allSuggestions, inputValue, language, getSuggestionDisplayInfo]);
 
-  const handleSelectSuggestion = (item: SuggestionItem) => {
-    const localizedText = getSuggestionDisplayText(item, language);
-    setInputValue(localizedText);
-    handleExecuteSearch(localizedText);
+  const handleSelectSuggestion = (item: SuggestionItem, selectedText?: string) => {
+    const textToUse = selectedText || getSuggestionDisplayText(item, language);
+    setInputValue(textToUse);
+    handleExecuteSearch(textToUse);
   };
 
   const getIcon = (type: SuggestionItem["type"], label: string) => {
@@ -574,19 +632,30 @@ export function MagicAiSearch({
 
           <div className="max-h-[340px] overflow-y-auto overscroll-contain pr-0.5 space-y-0.5">
             {filteredSuggestions.map((item: SuggestionItem, idx: number) => {
-              const displayTitle = getSuggestionDisplayText(item, language);
+              const info = getSuggestionDisplayInfo(item, language, inputValue);
               return (
                 <button
                   key={`${item.text}-${item.type}-${idx}`}
                   type="button"
                   className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl hover:bg-indigo-50/70 text-slate-700 hover:text-indigo-900 transition-all text-left font-medium group/item"
-                  onClick={() => handleSelectSuggestion(item)}
+                  onClick={() => handleSelectSuggestion(item, info.valueToSelect)}
                 >
-                  <div className="flex items-center gap-2.5 truncate mr-2">
+                  <div className="flex items-center gap-2.5 min-w-0 mr-2 flex-1">
                     {getIcon(item.type, item.label)}
-                    <span className="truncate group-hover/item:font-semibold">
-                      {displayTitle}
-                    </span>
+                    {language === "th" && info.secondary ? (
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs truncate font-medium text-slate-800 group-hover/item:font-semibold group-hover/item:text-indigo-950 leading-tight">
+                          {info.primary}
+                        </span>
+                        <span className="text-[11px] text-slate-400 group-hover/item:text-indigo-600/80 truncate leading-tight mt-0.5 font-normal">
+                          {info.secondary}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="truncate text-xs font-medium text-slate-800 group-hover/item:font-semibold group-hover/item:text-indigo-950">
+                        {info.primary}
+                      </span>
+                    )}
                   </div>
                   <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold transition-colors shrink-0 ${getBadgeStyle(item.type, item.label)}`}>
                     {getLocalizedBadge(item.label, language)}

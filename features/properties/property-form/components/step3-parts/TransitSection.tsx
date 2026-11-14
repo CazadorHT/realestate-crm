@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Label } from "@/components/ui/label";
+import { DEFAULT_TRANSIT_TYPES } from "@/features/properties/labels";
 
 // Util function for parsing numbers
 const parseNumber = (s: string) => {
@@ -144,9 +145,9 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
   const isEn = language === "en";
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
-  const [transitTypes, setTransitTypes] = React.useState<MasterDataTransitType[]>([]);
+  const [transitTypes, setTransitTypes] = React.useState<MasterDataTransitType[]>(DEFAULT_TRANSIT_TYPES);
   const [transitStations, setTransitStations] = React.useState<MasterDataTransitStation[]>([]);
-  const [isLoadingTypes, setIsLoadingTypes] = React.useState(true);
+  const [isLoadingTypes, setIsLoadingTypes] = React.useState(false);
 
   // Inline Modal State
   const [isTransitModalOpen, setIsTransitModalOpen] = React.useState(false);
@@ -179,7 +180,10 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
     let isMounted = true;
     getTransitTypesAction().then((data) => {
       if (isMounted) {
-        setTransitTypes(data.filter(t => t.code !== "EXPRESSWAY" && t.code !== "MAIN_ROAD"));
+        const filtered = data.filter(t => t.code !== "EXPRESSWAY" && t.code !== "MAIN_ROAD");
+        if (filtered.length > 0) {
+          setTransitTypes(filtered);
+        }
         setIsLoadingTypes(false);
       }
     }).catch(() => {
@@ -378,67 +382,38 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                             }
                           >
                             <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
-                              {transitTypes.length > 0 ? (
-                                transitTypes.map((t) => {
-                                  const isSelected = field.value === t.code;
-                                  return (
-                                    <button
-                                      key={t.code}
-                                      type="button"
-                                      onClick={() => {
-                                        field.onChange(t.code);
-                                        setOpenIndex(null);
-                                      }}
-                                      className={cn(
-                                        "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
-                                        isSelected
-                                          ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                          : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                                      )}
-                                    >
-                                      <div className="flex items-center gap-2.5">
-                                        <div
-                                          className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50"
-                                          style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
-                                        />
-                                        <span className="text-xs font-bold">{t.label[isEn ? "en" : "th"] || t.label.th}</span>
+                              {(transitTypes.length > 0 ? transitTypes : DEFAULT_TRANSIT_TYPES).map((t) => {
+                                const isSelected = field.value === t.code;
+                                return (
+                                  <button
+                                    key={t.code}
+                                    type="button"
+                                    onClick={() => {
+                                      field.onChange(t.code);
+                                      setOpenIndex(null);
+                                    }}
+                                    className={cn(
+                                      "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                      isSelected
+                                        ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                        : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-2.5">
+                                      <div
+                                        className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50"
+                                        style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
+                                      />
+                                      <span className="text-xs font-bold">{t.label[isEn ? "en" : "th"] || t.label.th}</span>
+                                    </div>
+                                    {isSelected && (
+                                      <div className="bg-blue-600 rounded-full p-1 text-white">
+                                        <Check className="h-3 w-3" />
                                       </div>
-                                      {isSelected && (
-                                        <div className="bg-blue-600 rounded-full p-1 text-white">
-                                          <Check className="h-3 w-3" />
-                                        </div>
-                                      )}
-                                    </button>
-                                  );
-                                })
-                              ) : (
-                                ["BTS", "MRT", "ARL"].map((code) => {
-                                  const isSelected = field.value === code;
-                                  return (
-                                    <button
-                                      key={code}
-                                      type="button"
-                                      onClick={() => {
-                                        field.onChange(code);
-                                        setOpenIndex(null);
-                                      }}
-                                      className={cn(
-                                        "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
-                                        isSelected
-                                          ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                          : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                                      )}
-                                    >
-                                      <span className="text-xs font-bold">{code}</span>
-                                      {isSelected && (
-                                        <div className="bg-blue-600 rounded-full p-1 text-white">
-                                          <Check className="h-3 w-3" />
-                                        </div>
-                                      )}
-                                    </button>
-                                  );
-                                })
-                              )}
+                                    )}
+                                  </button>
+                                );
+                              })}
                               <div className="pt-2 border-t border-slate-100 mt-2">
                                 <Button
                                   type="button"
@@ -477,29 +452,21 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-white rounded-xl shadow-lg border-slate-200">
-                              {transitTypes.length > 0 ? (
-                                transitTypes.map((t) => (
-                                  <SelectItem
-                                    key={t.code}
-                                    value={t.code}
-                                    className="font-medium py-2.5 text-sm cursor-pointer hover:bg-slate-50"
-                                  >
-                                    <div className="flex items-center gap-2.5">
-                                      <div 
-                                        className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50" 
-                                        style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
-                                      />
-                                      <span className="flex-1">{t.label[isEn ? "en" : "th"] || t.label.th}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))
-                              ) : (
-                                ["BTS", "MRT", "ARL"].map((code) => (
-                                  <SelectItem key={code} value={code} className="py-2.5">
-                                    {code}
-                                  </SelectItem>
-                                ))
-                              )}
+                              {(transitTypes.length > 0 ? transitTypes : DEFAULT_TRANSIT_TYPES).map((t) => (
+                                <SelectItem
+                                  key={t.code}
+                                  value={t.code}
+                                  className="font-medium py-2.5 text-sm cursor-pointer hover:bg-slate-50"
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <div 
+                                      className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50" 
+                                      style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
+                                    />
+                                    <span className="flex-1">{t.label[isEn ? "en" : "th"] || t.label.th}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
                               <div className="p-1 border-t border-slate-100 mt-1">
                                 <Button
                                   type="button"

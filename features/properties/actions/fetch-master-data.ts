@@ -6,6 +6,7 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { mapDbError } from "@/lib/db-error";
 
 import { unstable_cache, revalidateTag, revalidatePath } from "next/cache";
+import { DEFAULT_TRANSIT_TYPES } from "@/features/properties/labels";
 
 export interface MasterDataTransitType {
   code: string;
@@ -28,34 +29,39 @@ export interface MasterDataTransitType {
 export async function getTransitTypesAction(): Promise<MasterDataTransitType[]> {
   return unstable_cache(
     async () => {
-      const supabase = createPublicClient();
-      
-      const { data, error } = await supabase
-        .from("ref_master_data")
-        .select("code, label, metadata")
-        .eq("type", "TRANSIT_TYPE")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
+      try {
+        const supabase = createPublicClient();
+        
+        const { data, error } = await supabase
+          .from("ref_master_data")
+          .select("code, label, metadata")
+          .eq("type", "TRANSIT_TYPE")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true });
 
-      if (error) {
-        console.error("Error fetching transit types:", error);
-        return [];
+        if (error || !data || data.length === 0) {
+          if (error) console.error("Error fetching transit types:", error);
+          return DEFAULT_TRANSIT_TYPES;
+        }
+
+        type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
+
+        return (data as MasterDataRow[]).map((item: MasterDataRow) => ({
+          code: item.code,
+          label: (item.label as MasterDataTransitType["label"]) || { 
+            th: item.code, 
+            en: item.code, 
+            cn: item.code, 
+            ru: item.code 
+          },
+          metadata: item.metadata as MasterDataTransitType["metadata"]
+        }));
+      } catch (err) {
+        console.error("Exception in getTransitTypesAction:", err);
+        return DEFAULT_TRANSIT_TYPES;
       }
-
-      type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
-
-      return (data as MasterDataRow[] || []).map((item: MasterDataRow) => ({
-        code: item.code,
-        label: (item.label as MasterDataTransitType["label"]) || { 
-          th: item.code, 
-          en: item.code, 
-          cn: item.code, 
-          ru: item.code 
-        },
-        metadata: item.metadata as MasterDataTransitType["metadata"]
-      }));
     },
-    ["transit-types-master-data"],
+    ["transit-types-master-data-v2"],
     { revalidate: 31536000, tags: ["master-data", "transit-types"] }
   )();
 }

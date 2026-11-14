@@ -9,6 +9,7 @@ import {
   sanitizeGoogleMapsInput,
   isWithinThailandBounds,
 } from "@/lib/utils/google-maps-coords";
+import { FACILITY_SYNONYMS } from "@/features/properties/labels";
 
 export interface ProjectAdminItem {
   id?: string;
@@ -319,19 +320,30 @@ export async function generateAIProjectDataAction(projectName: string) {
     const { generateText } = await import("@/lib/ai/gemini");
 
     // Fetch stations as reference
-    const { data: stationsRaw } = await ctx.supabase
-      .from("ref_master_data")
-      .select("code, label")
-      .eq("type", "TRANSIT_STATION")
-      .eq("is_active", true);
+    const [stationsRes, featsRes] = await Promise.all([
+      ctx.supabase
+        .from("ref_master_data")
+        .select("code, label")
+        .eq("type", "TRANSIT_STATION")
+        .eq("is_active", true),
+      ctx.supabase
+        .from("features")
+        .select("id, name, name_en")
+        .order("name")
+    ]);
 
-    const stationList = (stationsRaw || []).map((s: any) => ({
+    const stationsRaw = stationsRes.data || [];
+    const dbFeatsRaw = featsRes.data || [];
+
+    const stationList = stationsRaw.map((s: any) => ({
       code: s.code,
       nameTh: s.label?.th || "",
       nameEn: s.label?.en || ""
     }));
 
     const stationsText = stationList.map(s => `${s.code} (${s.nameTh}/${s.nameEn})`).join(", ");
+    const allowedFacilityNames = dbFeatsRaw.map((f: any) => f.name).filter(Boolean);
+    const facilitiesListText = allowedFacilityNames.slice(0, 30).join('", "');
 
     const prompt = `
 You are an expert real estate data analyst specializing in Thailand properties.
@@ -351,7 +363,7 @@ Provide all details in a strictly valid JSON format. Follow this JSON schema exa
   "googleMapsUrl": "Google Maps place link if known, or a search link like https://www.google.com/maps/place/13.6791,100.6125",
   "latitude": 13.6791, // Decimal latitude
   "longitude": 100.6125, // Decimal longitude
-  "facilities": ["สระว่ายน้ำ", "ฟิตเนส", "ระบบรักษาความปลอดภัย 24 ชม."], // Select list of standard facilities matching the project
+  "facilities": ["Select standard shared facilities strictly from this official list: \"${facilitiesListText}\""],
   "nearestStationCode": "Find 2 to 4 nearby transit stations from the reference list below (can be different lines like BTS, MRT, ARL, SRT Red). Return them as a comma-separated list of code and distance in meters, e.g. 'BTS_UDOM_SUK:750,BTS_BANG_NA:1200,MRT_YELLOW_SI_IAM:2100'",
   "nearestStationDistance": 750, // Distance to the absolute closest station in meters (integer)
   "descriptionTh": "คำบรรยายโครงการรายละเอียดสั้นๆ เป็นภาษาไทย (HTML support, e.g., <p>, <ul>, <li>)",
@@ -392,6 +404,47 @@ Return ONLY the raw JSON string. Do not include markdown code block syntax (like
 
     const cleanJson = response.text.replace(/```json/g, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(cleanJson);
+
+    // Normalize AI generated facilities to match official feature names
+    if (parsed && Array.isArray(parsed.facilities)) {
+      const normalizedFacilities = new Set<string>();
+      for (const item of parsed.facilities) {
+        if (typeof item !== "string") continue;
+        const cleanItem = item.trim().toLowerCase();
+
+        // 1. Direct match with dbFeatsRaw
+        const direct = dbFeatsRaw.find((f: any) => 
+          (f.name && f.name.toLowerCase() === cleanItem) ||
+          (f.name_en && f.name_en.toLowerCase() === cleanItem)
+        );
+        if (direct) {
+          normalizedFacilities.add(direct.name);
+          continue;
+        }
+
+        // 2. Synonym match with dbFeatsRaw
+        let foundSyn = false;
+        for (const feat of dbFeatsRaw) {
+          const featTh = (feat.name || "").toLowerCase();
+          const featEn = (feat.name_en || "").toLowerCase();
+          for (const [, keywords] of Object.entries(FACILITY_SYNONYMS)) {
+            const facMatched = keywords.some(k => cleanItem.includes(k.toLowerCase()));
+            const featMatched = keywords.some(k => featTh.includes(k.toLowerCase()) || featEn.includes(k.toLowerCase()));
+            if (facMatched && featMatched) {
+              normalizedFacilities.add(feat.name);
+              foundSyn = true;
+              break;
+            }
+          }
+          if (foundSyn) break;
+        }
+
+        if (!foundSyn) {
+          normalizedFacilities.add(item.trim());
+        }
+      }
+      parsed.facilities = Array.from(normalizedFacilities);
+    }
 
     return { success: true, data: parsed };
   } catch (err: any) {
@@ -495,23 +548,6 @@ async function resolveTenantId(
 
   throw new Error("Unauthorized: Tenant ID is required but missing");
 }
-
-const FACILITY_SYNONYMS: Record<string, string[]> = {
-  pool: ["สระว่ายน้ำ", "swimming pool", "pool", "สระส่วนกลาง", "สระ"],
-  fitness: ["ฟิตเนส", "fitness", "gym", "โรงยิม", "ห้องออกกำลังกาย", "ออกกำลังกาย"],
-  security: ["ระบบรักษาความปลอดภัย", "รปภ", "security", "รักษาความปลอดภัย", "24/7", "24 ชม."],
-  cctv: ["กล้องวงจรปิด", "cctv", "วงจรปิด"],
-  parking: ["ที่จอดรถ", "parking", "car park", "จอดรถ"],
-  elevator: ["ลิฟต์", "ลิฟต์โดยสาร", "elevator", "lift"],
-  keycard: ["คีย์การ์ด", "keycard", "key card", "เข้า-ออกด้วยคีย์การ์ด", "access card"],
-  garden: ["สวน", "สวนหย่อม", "garden", "สวนส่วนกลาง", "สวนดาดฟ้า", "park"],
-  library: ["ห้องสมุด", "library", "co-working", "coworking"],
-  playground: ["สนามเด็กเล่น", "playground"],
-  sauna: ["ซาวน่า", "sauna", "ห้องอบไอน้ำ", "steam"],
-  lobby: ["ล็อบบี้", "lobby", "reception", "แผนกต้อนรับ"],
-  clubhouse: ["คลับเฮ้าส์", "clubhouse", "club house", "เลานจ์", "lounge"],
-  ev: ["ev charger", "ev charging", "ชาร์จรถยนต์ไฟฟ้า", "จุดชาร์จ", "รถยนต์ไฟฟ้า"],
-};
 
 /**
  * Fetch default features for a project by checking associated properties in the project

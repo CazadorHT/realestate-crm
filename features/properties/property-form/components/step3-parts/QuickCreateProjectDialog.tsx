@@ -201,7 +201,9 @@ export function QuickCreateProjectDialog({
 
   // Handle maps URL change — parse coords for payload but don't show in UI
   const handleGoogleMapsUrlChange = (url: string) => {
-    setGoogleMapsUrl(url);
+    const cleaned = sanitizeGoogleMapsInput(url);
+    // If the input was messy copy-paste containing a full URL, auto-clean it
+    setGoogleMapsUrl(cleaned || url);
   };
 
   // Run AI auto-fill
@@ -258,6 +260,29 @@ export function QuickCreateProjectDialog({
 
     setIsSaving(true);
     try {
+      const cleanUserUrl = sanitizeGoogleMapsInput(googleMapsUrl) || googleMapsUrl.trim();
+      const cleanAiUrl = sanitizeGoogleMapsInput(aiData?.googleMapsUrl) || aiData?.googleMapsUrl?.trim();
+      const isUsingAiUrl = !!(cleanUserUrl && cleanAiUrl && cleanUserUrl === cleanAiUrl);
+
+      const syncCoords = cleanUserUrl ? parseCoordinatesFromUrlSync(cleanUserUrl) : null;
+      let finalLat: number | null = null;
+      let finalLng: number | null = null;
+
+      if (syncCoords) {
+        finalLat = syncCoords.lat;
+        finalLng = syncCoords.lng;
+      } else if (isUsingAiUrl || (!cleanUserUrl && cleanAiUrl)) {
+        // Only fallback to AI coords if the user kept AI URL or left it empty
+        if (aiData?.latitude && aiData?.longitude) {
+          finalLat = Number(aiData.latitude);
+          finalLng = Number(aiData.longitude);
+        }
+      }
+      // If user typed/pasted a custom link (e.g. maps.app.goo.gl/...), finalLat & finalLng remain null
+      // so upsertProjectAction will follow redirects and resolve the exact pin coordinates!
+
+      const finalMapsUrl = cleanUserUrl || cleanAiUrl || null;
+
       const payload: any = {
         name: { th: nameTh.trim(), en: nameEn.trim() },
         slug: generatedSlug,
@@ -266,15 +291,9 @@ export function QuickCreateProjectDialog({
         province: cleanAddressWord(province) || "กรุงเทพมหานคร",
         district: cleanAddressWord(district) || null,
         subdistrict: cleanAddressWord(subdistrict) || null,
-        ...(() => {
-          const coords = parseCoordinatesFromUrlSync(googleMapsUrl);
-          if (coords) return { latitude: coords.lat, longitude: coords.lng };
-          if (aiData?.latitude && aiData?.longitude) {
-            return { latitude: Number(aiData.latitude), longitude: Number(aiData.longitude) };
-          }
-          return { latitude: null, longitude: null };
-        })(),
-        google_maps_url: sanitizeGoogleMapsInput(googleMapsUrl) || googleMapsUrl.trim() || aiData?.googleMapsUrl || null,
+        latitude: finalLat,
+        longitude: finalLng,
+        google_maps_url: finalMapsUrl,
         year_completed: yearCompleted.trim() ? Number(yearCompleted) : null,
         total_units: totalUnits.trim() ? Number(totalUnits) : null,
         is_active: true,
@@ -310,7 +329,7 @@ export function QuickCreateProjectDialog({
           province: cleanAddressWord(province),
           district: cleanAddressWord(district),
           subdistrict: cleanAddressWord(subdistrict),
-          googleMapsUrl: googleMapsUrl.trim() || aiData?.googleMapsUrl || undefined,
+          googleMapsUrl: finalMapsUrl || undefined,
           facilities: aiData?.facilities || [],
         });
         onClose(false);
@@ -538,6 +557,12 @@ export function QuickCreateProjectDialog({
               <Input 
                 value={googleMapsUrl} 
                 onChange={(e) => handleGoogleMapsUrlChange(e.target.value)} 
+                onBlur={(e) => {
+                  const cleaned = sanitizeGoogleMapsInput(e.target.value);
+                  if (cleaned && cleaned !== e.target.value) {
+                    setGoogleMapsUrl(cleaned);
+                  }
+                }}
                 placeholder={isEn ? "Paste Google Maps link e.g. https://maps.app.goo.gl/..." : "วางลิงก์ Google Maps เช่น https://maps.app.goo.gl/..."} 
                 className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />

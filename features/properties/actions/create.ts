@@ -64,9 +64,6 @@ async function syncProjectAddress(supabase: any, projectId: string | null | unde
     if (values.subdistrict && project.subdistrict !== values.subdistrict) {
       updates.subdistrict = values.subdistrict;
     }
-    if (values.postal_code && project.postal_code !== values.postal_code) {
-      updates.postal_code = values.postal_code;
-    }
 
     // Sync project name translations if missing
     const currentName = (project.name as any) || {};
@@ -97,12 +94,15 @@ async function syncProjectAddress(supabase: any, projectId: string | null | unde
     // Sync google maps link and update coordinates (auto-resolves shortened maps.app.goo.gl links)
     const cleanMapsLink = sanitizeGoogleMapsInput(values.google_maps_link);
     if (cleanMapsLink) {
+      const isAiFallbackUrl = !project.google_maps_url || /\/maps\/place\/-?\d+\.\d+,-?\d+\.\d+/.test(project.google_maps_url);
       const linkChanged = project.google_maps_url !== cleanMapsLink;
       const missingCoords = project.latitude == null || project.longitude == null;
-      if (linkChanged && !project.google_maps_url) {
+      const shouldUpdateProjectUrl = linkChanged && isAiFallbackUrl;
+
+      if (shouldUpdateProjectUrl) {
         updates.google_maps_url = cleanMapsLink;
       }
-      if (missingCoords || (linkChanged && !project.google_maps_url)) {
+      if (missingCoords || shouldUpdateProjectUrl) {
         const coords = await resolveAndExtractCoordinates(cleanMapsLink);
         if (coords) {
           updates.latitude = coords.lat;

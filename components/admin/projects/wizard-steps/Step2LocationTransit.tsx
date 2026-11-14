@@ -254,7 +254,7 @@ export function Step2LocationTransit({
                             {isEn ? (labelEn || labelTh) : labelTh}
                           </span>
                           <span className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">
-                            {isEn ? `(${code})` : (labelEn ? `${labelEn} (${code})` : code)}
+                            {isEn ? (logoInfo.lineName || labelTh) : [labelEn, logoInfo.lineName].filter(Boolean).join(" • ")}
                           </span>
                         </div>
                       </div>

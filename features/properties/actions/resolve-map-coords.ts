@@ -22,7 +22,7 @@ export async function resolveMapCoordinatesAction(rawInput: string): Promise<{
     const cleanUrl = sanitizeGoogleMapsInput(rawInput);
     if (!cleanUrl) return { success: false, cleanUrl: null };
 
-    const extracted = await resolveAndExtractCoordinates(cleanUrl, 3000);
+    const extracted = await resolveAndExtractCoordinates(cleanUrl, 1800);
     if (!extracted) {
       return { success: false, cleanUrl };
     }

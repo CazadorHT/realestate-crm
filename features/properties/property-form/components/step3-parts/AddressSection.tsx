@@ -98,8 +98,10 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     lat?: number;
     lng?: number;
   }>({ state: "idle" });
+  const verifySeqRef = React.useRef(0);
 
   const verifyMapLink = React.useCallback(async (rawVal: string) => {
+    const seq = ++verifySeqRef.current;
     const cleaned = sanitizeGoogleMapsInput(rawVal);
     if (!cleaned) {
       setMapCoordStatus({ state: "idle" });
@@ -115,10 +117,26 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     }
     if (isShortenedGoogleMapsUrl(cleaned)) {
       setMapCoordStatus({ state: "resolving" });
-      const res = await resolveMapCoordinatesAction(cleaned);
-      if (res.success && res.lat != null && res.lng != null) {
-        setMapCoordStatus({ state: "ok", lat: res.lat, lng: res.lng });
-      } else {
+
+      // Client safety fallback: never let UI hang in "resolving" state if network stalls
+      const safetyTimer = setTimeout(() => {
+        if (verifySeqRef.current === seq) {
+          setMapCoordStatus((prev) => (prev.state === "resolving" ? { state: "invalid" } : prev));
+        }
+      }, 2500);
+
+      try {
+        const res = await resolveMapCoordinatesAction(cleaned);
+        if (verifySeqRef.current !== seq) return;
+        clearTimeout(safetyTimer);
+        if (res.success && res.lat != null && res.lng != null) {
+          setMapCoordStatus({ state: "ok", lat: res.lat, lng: res.lng });
+        } else {
+          setMapCoordStatus({ state: "invalid" });
+        }
+      } catch {
+        if (verifySeqRef.current !== seq) return;
+        clearTimeout(safetyTimer);
         setMapCoordStatus({ state: "invalid" });
       }
       return;
@@ -904,6 +922,25 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <Input
                     {...field}
                     value={field.value ?? ""}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      const val = e.target.value;
+                      const cleaned = sanitizeGoogleMapsInput(val);
+                      if (!cleaned) {
+                        setMapCoordStatus({ state: "idle" });
+                        return;
+                      }
+                      const syncCoords = parseCoordinatesFromUrlSync(cleaned);
+                      if (syncCoords) {
+                        setMapCoordStatus({ state: "ok", lat: syncCoords.lat, lng: syncCoords.lng });
+                      }
+                    }}
+                    onPaste={(e) => {
+                      const pasted = e.clipboardData.getData("text");
+                      if (pasted) {
+                        setTimeout(() => verifyMapLink(pasted), 30);
+                      }
+                    }}
                     onBlur={(e) => {
                       field.onBlur();
                       verifyMapLink(e.target.value);
@@ -916,8 +953,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
                 ) : mapCoordStatus.state === "resolving" ? (
                   <p className="text-[10px] text-blue-600 mt-1 flex items-center gap-1 font-medium">
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" />
                     <span>{isEn ? "Resolving pin coordinates..." : "กำลังตรวจสอบพิกัดจากลิงก์..."}</span>
+                    <span className="text-slate-400 font-normal">({isEn ? "can proceed" : "สามารถทำขั้นตอนถัดไปได้ทันที"})</span>
                   </p>
                 ) : mapCoordStatus.state === "ok" ? (
                   <p className="text-[10px] text-emerald-600 mt-1 font-semibold">

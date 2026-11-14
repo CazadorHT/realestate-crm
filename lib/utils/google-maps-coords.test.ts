@@ -61,6 +61,16 @@ describe("google-maps-coords & map-price-utils", () => {
     expect(parseCoordinatesFromUrlSync("https://maps.google.com/?q=0,0")).toBeNull();
   });
 
+  it("unwraps Google consent redirect URLs and parses embedded coordinates instantly", () => {
+    const consentUrl =
+      "https://consent.google.com/m?continue=https%3A%2F%2Fwww.google.com%2Fmaps%2Fplace%2F%4013.7747818%2C100.6034188%2C17z%2Fdata%3D%213m1%214b1%214m6%213m5%211s0x0%218m2%213d13.7747818%214d100.6034188&gl=TH&m=0";
+    const parsed = parseCoordinatesFromUrlSync(consentUrl);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.lat).toBeCloseTo(13.7747818, 5);
+    expect(parsed?.lng).toBeCloseTo(100.6034188, 5);
+    expect(parsed?.source).toBe("exact_pin");
+  });
+
   it("resolves all price variables (normal, original discount, rent switch, office sqm, POA)", () => {
     const basePin: SlimMapPin = {
       id: "unit-1",

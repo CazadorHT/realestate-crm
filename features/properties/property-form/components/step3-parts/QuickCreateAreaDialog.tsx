@@ -42,19 +42,7 @@ export function QuickCreateAreaDialog({
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync default values when opening
-  React.useEffect(() => {
-    if (open) {
-      if (defaultProvince) setProvince(defaultProvince);
-      if (defaultAreaName) {
-        setNameTh(defaultAreaName);
-        // Auto translate if Thai name is provided
-        handleAutoTranslate(defaultAreaName);
-      }
-    }
-  }, [open, defaultProvince, defaultAreaName]);
-
-  const handleAutoTranslate = async (textToTranslate?: string) => {
+  const handleAutoTranslate = React.useCallback(async (textToTranslate?: string) => {
     const text = textToTranslate || nameTh;
     if (!text || !text.trim()) {
       toast.error(isEn ? "Please enter Thai area name first" : "กรุณากรอกชื่อทำเลภาษาไทยก่อนครับ");
@@ -68,12 +56,24 @@ export function QuickCreateAreaDialog({
       if (res.cn) setNameCn(res.cn);
       if (res.ru) setNameRu(res.ru);
       toast.success(isEn ? "AI translated area into 4 languages ✨" : "AI แปลภาษาทำเลครบทั้ง 4 ภาษาเรียบร้อยแล้ว ✨");
-    } catch (err) {
+    } catch {
       toast.error(isEn ? "Translation failed" : "เกิดข้อผิดพลาดในการแปลภาษา");
     } finally {
       setIsTranslating(false);
     }
-  };
+  }, [isEn, nameTh]);
+
+  // Sync default values when opening
+  React.useEffect(() => {
+    if (open) {
+      if (defaultProvince) setProvince(defaultProvince);
+      if (defaultAreaName) {
+        setNameTh(defaultAreaName);
+        // Auto translate if Thai name is provided
+        handleAutoTranslate(defaultAreaName);
+      }
+    }
+  }, [open, defaultProvince, defaultAreaName, handleAutoTranslate]);
 
   const handleSave = async () => {
     if (!nameTh || !nameTh.trim()) {

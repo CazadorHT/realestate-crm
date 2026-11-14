@@ -267,6 +267,81 @@ export const TRANSIT_TYPE_STYLES: Record<TransitType, { bg: string; text: string
   OTHER: { bg: "bg-slate-50", text: "text-slate-700", icon: "text-slate-500" },
 };
 
+export const DEFAULT_TRANSIT_TYPES = [
+  {
+    code: "BTS",
+    label: { th: "BTS (สายสีเขียว)", en: "BTS Skytrain", cn: "曼谷大众运输系统 (BTS)", ru: "Надземное метро BTS" },
+    metadata: { color: "#22c55e", bg_color: "bg-green-500" }
+  },
+  {
+    code: "MRT",
+    label: { th: "MRT (สายสีน้ำเงิน)", en: "MRT Blue Line", cn: "曼谷地铁蓝线", ru: "Метро MRT (Синяя линия)" },
+    metadata: { color: "#3b82f6", bg_color: "bg-blue-600" }
+  },
+  {
+    code: "MRT_PURPLE",
+    label: { th: "MRT (สายสีม่วง)", en: "MRT Purple Line", cn: "曼谷地铁紫线", ru: "Метро MRT (Фиолетовая линия)" },
+    metadata: { color: "#a855f7", bg_color: "bg-purple-600" }
+  },
+  {
+    code: "MRT_YELLOW",
+    label: { th: "MRT (สายสีเหลือง)", en: "MRT Yellow Line", cn: "曼谷地铁黄线", ru: "Метро MRT (Желтая линия)" },
+    metadata: { color: "#eab308", bg_color: "bg-yellow-400" }
+  },
+  {
+    code: "MRT_PINK",
+    label: { th: "MRT (สายสีชมพู)", en: "MRT Pink Line", cn: "曼谷地铁粉红线", ru: "Метро MRT (Розовая линия)" },
+    metadata: { color: "#ec4899", bg_color: "bg-pink-400" }
+  },
+  {
+    code: "ARL",
+    label: { th: "Airport Rail Link", en: "Airport Rail Link", cn: "机场快铁 (ARL)", ru: "Аэроэкспресс ARL" },
+    metadata: { color: "#ef4444", bg_color: "bg-red-900" }
+  },
+  {
+    code: "SRT_RED",
+    label: { th: "รถไฟฟ้าสายสีแดง", en: "SRT Red Line", cn: "泰国国家铁路红线", ru: "Красная линия SRT" },
+    metadata: { color: "#f43f5e", bg_color: "bg-red-600" }
+  },
+  {
+    code: "GOLD",
+    label: { th: "MRT (สายสีทอง)", en: "Gold Line", cn: "金线", ru: "Золотая линия" },
+    metadata: { color: "#d97706", bg_color: "bg-amber-600" }
+  },
+  {
+    code: "BRT",
+    label: { th: "รถโดยสารด่วนพิเศษ BRT", en: "BRT Bus", cn: "快速公交系统 BRT", ru: "Автобус BRT" },
+    metadata: { color: "#06b6d4", bg_color: "bg-yellow-600" }
+  },
+  {
+    code: "MRT_ORANGE",
+    label: { th: "MRT (สายสีส้ม)", en: "MRT Orange Line", cn: "曼谷地铁 MRT (橙线)", ru: "Метро MRT (Оранжевая линия)" },
+    metadata: { color: "#ff961f", bg_color: "bg-orange-500" }
+  },
+  {
+    code: "OTHER",
+    label: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" },
+    metadata: { color: "#64748b", bg_color: "bg-slate-500" }
+  }
+];
+
+export const FACILITY_SYNONYMS: Record<string, string[]> = {
+  pool: ["สระว่ายน้ำ", "swimming pool", "pool", "สระส่วนกลาง", "สระ"],
+  fitness: ["ฟิตเนส", "fitness", "gym", "โรงยิม", "ห้องออกกำลังกาย", "ออกกำลังกาย"],
+  security: ["ระบบรักษาความปลอดภัย", "รปภ", "security", "รักษาความปลอดภัย", "24/7", "24 ชม."],
+  cctv: ["กล้องวงจรปิด", "cctv", "วงจรปิด"],
+  parking: ["ที่จอดรถ", "parking", "car park", "จอดรถ"],
+  elevator: ["ลิฟต์", "ลิฟต์โดยสาร", "elevator", "lift"],
+  keycard: ["คีย์การ์ด", "keycard", "key card", "เข้า-ออกด้วยคีย์การ์ด", "access card"],
+  garden: ["สวน", "สวนหย่อม", "garden", "สวนส่วนกลาง", "สวนดาดฟ้า", "park"],
+  library: ["ห้องสมุด", "library", "co-working", "coworking"],
+  playground: ["สนามเด็กเล่น", "playground"],
+  sauna: ["ซาวน่า", "sauna", "ห้องอบไอน้ำ", "steam"],
+  lobby: ["ล็อบบี้", "lobby", "reception", "แผนกต้อนรับ"],
+  clubhouse: ["คลับเฮ้าส์", "clubhouse", "club house", "เลานจ์", "lounge"],
+  ev: ["ev charger", "ev charging", "ชาร์จรถยนต์ไฟฟ้า", "จุดชาร์จ", "รถยนต์ไฟฟ้า"],
+};
+
 export const NEARBY_PLACE_CATEGORIES = [
   { value: "School", label: "โรงเรียน / มหาวิทยาลัย" }, { value: "Mall", label: "ห้างสรรพสินค้า / ตลาด" }, { value: "Hospital", label: "โรงพยาบาล" }, { value: "Airport", label: "สนามบิน" }, { value: "Transport", label: "ทางด่วน" }, { value: "Park", label: "สวนสาธารณะ" }, { value: "Office", label: "สถานที่ทำงาน" }, { value: "Other", label: "อื่นๆ" }
 ] as const;

@@ -8,6 +8,7 @@ import {
   generateAIProjectDataAction,
   type ProjectAdminItem
 } from "@/features/properties/actions/projects";
+import { FACILITY_SYNONYMS } from "@/features/properties/labels";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 const CATEGORY_MAPPING_TH: Record<string, string> = {
@@ -67,6 +68,50 @@ interface UseProjectFormProps {
   dbFeatures: any[];
   onClose: (open: boolean) => void;
   onSaveSuccess: () => void;
+}
+
+function normalizeFacilitiesWithDb(rawList: any[], dbFeats: any[]): string[] {
+  if (!rawList || !Array.isArray(rawList)) return [];
+  const normalized = new Set<string>();
+
+  rawList.forEach((item) => {
+    if (typeof item !== "string") return;
+    const cleanItem = item.trim().toLowerCase();
+
+    // 1. Direct match with dbFeatures
+    const directMatch = (dbFeats || []).find((f: any) =>
+      (f.name && f.name.toLowerCase() === cleanItem) ||
+      (f.name_en && f.name_en.toLowerCase() === cleanItem) ||
+      f.id === item
+    );
+    if (directMatch) {
+      normalized.add(directMatch.name);
+      return;
+    }
+
+    // 2. Synonym match with dbFeatures
+    let foundSynonym = false;
+    for (const feat of (dbFeats || [])) {
+      const featTh = (feat.name || "").toLowerCase();
+      const featEn = (feat.name_en || "").toLowerCase();
+      for (const [, keywords] of Object.entries(FACILITY_SYNONYMS)) {
+        const facMatched = keywords.some(k => cleanItem.includes(k.toLowerCase()));
+        const featMatched = keywords.some(k => featTh.includes(k.toLowerCase()) || featEn.includes(k.toLowerCase()));
+        if (facMatched && featMatched) {
+          normalized.add(feat.name);
+          foundSynonym = true;
+          break;
+        }
+      }
+      if (foundSynonym) break;
+    }
+
+    if (!foundSynonym) {
+      normalized.add(item.trim());
+    }
+  });
+
+  return Array.from(normalized);
 }
 
 export function useProjectForm({
@@ -149,16 +194,16 @@ export function useProjectForm({
         setSeoDescTh(project.seo_description?.th || "");
         setSeoDescEn(project.seo_description?.en || "");
 
-        setSelectedFacilities(project.facilities || []);
+        setSelectedFacilities(normalizeFacilitiesWithDb(project.facilities || [], dbFeatures));
         setNearestStation(project.nearest_station_code || "");
         setStationDistance(project.nearest_station_distance?.toString() || "");
         setIsActive(project.is_active);
         setSortOrder(project.sort_order.toString());
         setFormStep(1);
 
-        const initialMapsLink = project.latitude && project.longitude
+        const initialMapsLink = project.google_maps_url || (project.latitude && project.longitude
           ? `https://www.google.com/maps/place/${project.latitude},${project.longitude}`
-          : "";
+          : "");
         setGoogleMapsUrl(initialMapsLink);
 
         const rawStationCodeStr = project.nearest_station_code || "";
@@ -320,7 +365,7 @@ export function useProjectForm({
         if (d.googleMapsUrl) setGoogleMapsUrl(d.googleMapsUrl);
         if (d.latitude) setLat(d.latitude.toString());
         if (d.longitude) setLng(d.longitude.toString());
-        if (d.facilities) setSelectedFacilities(d.facilities);
+        if (d.facilities) setSelectedFacilities(normalizeFacilitiesWithDb(d.facilities, dbFeatures));
         if (d.nearestStationCode) {
           setNearestStation(d.nearestStationCode);
           const parts = d.nearestStationCode.split(",").map((s: string) => s.trim()).filter(Boolean);
@@ -406,6 +451,7 @@ export function useProjectForm({
         subdistrict: subdistrict.trim() || null,
         latitude: lat.trim() ? Number(lat) : null,
         longitude: lng.trim() ? Number(lng) : null,
+        google_maps_url: sanitizeGoogleMapsInput(googleMapsUrl) || googleMapsUrl.trim() || null,
         year_completed: yearCompleted.trim() ? Number(yearCompleted) : null,
         total_units: totalUnits.trim() ? Number(totalUnits) : null,
         image_url: imageUrl.trim() || null,
