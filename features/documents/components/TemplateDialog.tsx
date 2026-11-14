@@ -1170,15 +1170,22 @@ export function TemplateDialog({
                               <div className="flex-1 min-w-0">
                                 <p
                                   className={cn(
-                                    "font-semibold text-sm truncate",
+                                    "font-semibold text-sm truncate flex items-center gap-1.5",
                                     selectedTemplateId === t.id
                                       ? "text-blue-900"
                                       : "text-slate-700",
                                   )}
                                 >
-                                  {isEn && t.type && DOC_TYPE_LABELS_EN[t.type]
-                                    ? DOC_TYPE_LABELS_EN[t.type]
-                                    : t.name}
+                                  <span>
+                                    {isEn && t.type && DOC_TYPE_LABELS_EN[t.type]
+                                      ? DOC_TYPE_LABELS_EN[t.type]
+                                      : t.name}
+                                  </span>
+                                  {(t.type === "LEASE_CONTRACT" || t.type === "SALE_CONTRACT") && (
+                                    <span className="text-[10px] text-amber-700 bg-amber-100/90 border border-amber-200 px-1.5 py-0.5 rounded-md font-normal shrink-0">
+                                      {isEn ? "Incomplete" : "ยังไม่สมบูรณ์"}
+                                    </span>
+                                  )}
                                 </p>
                                 <p className="text-[10px] text-slate-400 font-medium">
                                   {isEn ? "Type:" : "ประเภท:"} {isEn && t.type && DOC_TYPE_LABELS_EN[t.type] ? DOC_TYPE_LABELS_EN[t.type] : (t.type || "General")}

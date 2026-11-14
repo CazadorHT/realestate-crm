@@ -798,6 +798,12 @@ export function QuickDocumentForm({
         <div className="flex flex-wrap gap-2">
           {templates.map((tpl) => {
             const active = selectedTemplateId === tpl.id;
+            const isIncomplete =
+              tpl.type === "LEASE_CONTRACT" ||
+              tpl.type === "SALE_CONTRACT" ||
+              tpl.name?.includes("ยังไม่สมบูรณ์") ||
+              tpl.name?.includes("Incomplete");
+
             return (
               <button
                 key={tpl.id}
@@ -807,10 +813,21 @@ export function QuickDocumentForm({
                   "h-9 px-3.5 rounded-xl border text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none",
                   active
                     ? "bg-blue-600 border-blue-600 text-white font-semibold shadow-xs shadow-blue-500/20"
-                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300",
+                    : isIncomplete
+                      ? "bg-amber-50/50 border-amber-200 text-amber-800 hover:bg-amber-100 hover:border-amber-300"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300",
                 )}
               >
-                <FileText className={cn("h-3.5 w-3.5", active ? "text-white" : "text-blue-600")} />
+                <FileText
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    active
+                      ? "text-white"
+                      : isIncomplete
+                        ? "text-amber-600"
+                        : "text-blue-600",
+                  )}
+                />
                 <span>{tpl.name || tpl.type}</span>
               </button>
             );
