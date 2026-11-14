@@ -124,15 +124,23 @@ export function parseCoordinatesFromUrlSync(
       if (isWithinThailandBounds(lat, lng)) {
         return { lat, lng, source: "search_or_query", cleanInputUrl: cleaned };
       }
+      // Auto-correct if user/search swapped lng, lat
+      if (isWithinThailandBounds(lng, lat)) {
+        return { lat: lng, lng: lat, source: "search_or_query", cleanInputUrl: cleaned };
+      }
     }
 
-    // 3. Raw "lat, lng" input
+    // 3. Raw "lat, lng" input (e.g. "13.7359, 100.5676" or swapped "100.5676, 13.7359")
     const rawCoord = candidate.match(/^(-?\d+\.\d+),\s*\+?(-?\d+\.\d+)$/);
     if (rawCoord) {
       const lat = parseFloat(rawCoord[1]);
       const lng = parseFloat(rawCoord[2]);
       if (isWithinThailandBounds(lat, lng)) {
         return { lat, lng, source: "raw_coord", cleanInputUrl: cleaned };
+      }
+      // Auto-correct swapped latitude/longitude within Thailand bounds
+      if (isWithinThailandBounds(lng, lat)) {
+        return { lat: lng, lng: lat, source: "raw_coord", cleanInputUrl: cleaned };
       }
     }
 
@@ -250,9 +258,14 @@ function decodeThailandPlusCode(
   return null;
 }
 
+// In-memory LRU-like cache for resolved shortlinks
+// Eliminates repetitive Google HTTP roundtrips, reducing egress to 0 on duplicate lookups
+const SHORTLINK_CACHE = new Map<string, { data: ExtractedMapCoordinates | null; expires: number }>();
+
 /**
  * Server-side short-link resolver + coordinate extractor with strict fail-safe timeout.
  * - Multi-hop HEAD follow (up to 3 hops) completes in < 400ms for 301/302 redirects
+ * - In-memory cache eliminates egress on repeated lookups
  * - Automatically unwraps consent.google.com and redirection query params
  * - Never throws: returns null on timeout, network failure, non-map URL, or out-of-Thailand coordinates.
  */
@@ -267,6 +280,12 @@ export async function resolveAndExtractCoordinates(
   if (!isShortenedGoogleMapsUrl(cleaned)) {
     const direct = parseCoordinatesFromUrlSync(cleaned);
     return direct ? { ...direct, resolvedUrl: cleaned } : null;
+  }
+
+  // Check in-memory shortlink cache first (0ms latency & 0 egress)
+  const cached = SHORTLINK_CACHE.get(cleaned);
+  if (cached && cached.expires > Date.now()) {
+    return cached.data;
   }
 
   if (!cleaned.startsWith("http")) return null;
@@ -284,11 +303,13 @@ export async function resolveAndExtractCoordinates(
     for (let hop = 0; hop < 3; hop++) {
       const parsedDirect = parseCoordinatesFromUrlSync(currentUrl);
       if (parsedDirect) {
-        return {
+        const result = {
           ...parsedDirect,
           cleanInputUrl: cleaned,
           resolvedUrl: currentUrl,
         };
+        cacheShortlinkResult(cleaned, result);
+        return result;
       }
 
       const headRes = await fetch(currentUrl, {
@@ -312,11 +333,13 @@ export async function resolveAndExtractCoordinates(
     // Check if HEAD hops resolved the URL to coordinates
     const parsedAfterHead = parseCoordinatesFromUrlSync(currentUrl);
     if (parsedAfterHead) {
-      return {
+      const result = {
         ...parsedAfterHead,
         cleanInputUrl: cleaned,
         resolvedUrl: currentUrl,
       };
+      cacheShortlinkResult(cleaned, result);
+      return result;
     }
 
     // Fallback: If HEAD didn't yield coordinates, attempt a fast GET with remaining time
@@ -333,16 +356,32 @@ export async function resolveAndExtractCoordinates(
     const finalUrl = unwrapGoogleRedirect(getRes.url || currentUrl);
     const parsedGet = parseCoordinatesFromUrlSync(finalUrl);
     if (parsedGet) {
-      return {
+      const result = {
         ...parsedGet,
         cleanInputUrl: cleaned,
         resolvedUrl: finalUrl,
       };
+      cacheShortlinkResult(cleaned, result);
+      return result;
     }
   } catch {
     // Strict fail-safe: never block property/project save if Google redirect times out
+    cacheShortlinkResult(cleaned, null, 120 * 1000); // Cache failure for 2 mins
     return null;
   }
 
+  cacheShortlinkResult(cleaned, null, 120 * 1000);
   return null;
+}
+
+function cacheShortlinkResult(
+  key: string,
+  data: ExtractedMapCoordinates | null,
+  ttlMs: number = 24 * 60 * 60 * 1000
+) {
+  SHORTLINK_CACHE.set(key, { data, expires: Date.now() + ttlMs });
+  if (SHORTLINK_CACHE.size > 1000) {
+    const oldestKey = SHORTLINK_CACHE.keys().next().value;
+    if (oldestKey) SHORTLINK_CACHE.delete(oldestKey);
+  }
 }

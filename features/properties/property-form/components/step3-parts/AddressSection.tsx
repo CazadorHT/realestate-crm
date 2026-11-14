@@ -99,11 +99,12 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     lng?: number;
   }>({ state: "idle" });
   const verifySeqRef = React.useRef(0);
+  const lastVerifiedValRef = React.useRef("");
 
   const verifyMapLink = React.useCallback(async (rawVal: string) => {
-    const seq = ++verifySeqRef.current;
     const cleaned = sanitizeGoogleMapsInput(rawVal);
     if (!cleaned) {
+      lastVerifiedValRef.current = "";
       setMapCoordStatus({ state: "idle" });
       return;
     }
@@ -112,9 +113,18 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     }
     const syncCoords = parseCoordinatesFromUrlSync(cleaned);
     if (syncCoords) {
+      lastVerifiedValRef.current = cleaned;
       setMapCoordStatus({ state: "ok", lat: syncCoords.lat, lng: syncCoords.lng });
       return;
     }
+
+    // Skip duplicate server action calls if paste and blur fired back-to-back for the exact same input
+    if (lastVerifiedValRef.current === cleaned && mapCoordStatus.state !== "resolving") {
+      return;
+    }
+    lastVerifiedValRef.current = cleaned;
+
+    const seq = ++verifySeqRef.current;
     if (isShortenedGoogleMapsUrl(cleaned)) {
       setMapCoordStatus({ state: "resolving" });
 
