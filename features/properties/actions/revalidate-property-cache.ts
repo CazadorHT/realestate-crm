@@ -34,6 +34,16 @@ export const PROPERTY_PUBLIC_PATHS = [
   "/en/projects",
   "/zh/projects",
   "/ru/projects",
+  // Transit & Station Hub
+  "/near-station",
+  "/en/near-station",
+  "/zh/near-station",
+  "/ru/near-station",
+  // Search Hub
+  "/search",
+  "/en/search",
+  "/zh/search",
+  "/ru/search",
   // Category Landing Pages
   "/properties/prime-cbd",
   "/en/properties/prime-cbd",
@@ -78,6 +88,7 @@ export const PROPERTY_CACHE_TAGS = [
 export interface PropertyCacheRevalidateOptions {
   slug?: string | null;
   oldSlug?: string | null;
+  projectSlug?: string | null;
 }
 
 /**
@@ -108,6 +119,15 @@ export async function revalidatePropertyPublicCache(options?: PropertyCacheReval
       `/en/properties/${options.oldSlug}`,
       `/zh/properties/${options.oldSlug}`,
       `/ru/properties/${options.oldSlug}`
+    );
+  }
+
+  if (options?.projectSlug) {
+    paths.push(
+      `/projects/${options.projectSlug}`,
+      `/en/projects/${options.projectSlug}`,
+      `/zh/projects/${options.projectSlug}`,
+      `/ru/projects/${options.projectSlug}`
     );
   }
 
