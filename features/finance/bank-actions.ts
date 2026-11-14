@@ -10,10 +10,17 @@ async function getIsEn(): Promise<boolean> {
   return lang === "en";
 }
 
+let cachedBanksData: { timestamp: number; data: any[] } | null = null;
+const BANKS_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
 /**
- * 🏦 Fetch active standard banks
+ * 🏦 Fetch active standard banks (Cached for fast retrieval & zero DB load)
  */
 export async function getBanksAction() {
+  if (cachedBanksData && Date.now() - cachedBanksData.timestamp < BANKS_CACHE_TTL) {
+    return { success: true, data: cachedBanksData.data };
+  }
+
   const isEn = await getIsEn();
   try {
     const { supabase } = await requireAuthContext();
@@ -33,7 +40,13 @@ export async function getBanksAction() {
         .order("name_th", { ascending: true });
 
       if (refError) throw refError;
-      return { success: true, data: refData.map((b, i) => ({ id: i, ...b, is_active: true })) };
+      const fallbackData = refData.map((b, i) => ({ id: i, ...b, is_active: true }));
+      cachedBanksData = { timestamp: Date.now(), data: fallbackData };
+      return { success: true, data: fallbackData };
+    }
+
+    if (data) {
+      cachedBanksData = { timestamp: Date.now(), data };
     }
     return { success: true, data };
   } catch (error: unknown) {
@@ -100,6 +113,7 @@ export async function createBankAction(data: {
 
     if (error) throw error;
 
+    cachedBanksData = null;
     revalidatePath("/protected/finance/banks");
     return { success: true, data: inserted };
   } catch (error: unknown) {
@@ -145,6 +159,7 @@ export async function updateBankAction(
 
     if (error) throw error;
 
+    cachedBanksData = null;
     revalidatePath("/protected/finance/banks");
     return { success: true, data: updated };
   } catch (error: unknown) {
@@ -172,6 +187,7 @@ export async function deleteBankAction(id: string | number) {
 
     if (error) throw error;
 
+    cachedBanksData = null;
     revalidatePath("/protected/finance/banks");
     return { 
       success: true, 

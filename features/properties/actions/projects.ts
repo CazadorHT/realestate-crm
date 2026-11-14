@@ -201,7 +201,14 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
       projectData.location = `POINT(${resolvedLng} ${resolvedLat})`;
     }
 
+    let oldProjectSlug: string | null = null;
     if (input.id) {
+      const { data: existingProject } = await ctx.supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", input.id)
+        .maybeSingle();
+      oldProjectSlug = existingProject?.slug || null;
       projectData.id = input.id;
     }
 
@@ -228,11 +235,17 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
 
     await refreshProjectStatsView(ctx.supabase, input.slug);
     const { revalidatePropertyPublicCache } = await import("./revalidate-property-cache");
-    await revalidatePropertyPublicCache();
+    await revalidatePropertyPublicCache({ 
+      projectSlug: input.slug,
+      oldProjectSlug: oldProjectSlug && oldProjectSlug !== input.slug ? oldProjectSlug : undefined,
+    });
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/protected/admin/projects");
     if (input.slug) {
       revalidatePath(`/projects/${input.slug}`);
+    }
+    if (oldProjectSlug && oldProjectSlug !== input.slug) {
+      revalidatePath(`/projects/${oldProjectSlug}`);
     }
 
     return { success: true, message: "บันทึกข้อมูลโครงการสำเร็จ ✨", id: data.id };
@@ -249,6 +262,13 @@ export async function deleteProjectAction(id: string) {
   try {
     const ctx = await requireAuthContext();
     assertAdminOrManager(ctx.role);
+
+    // Fetch project slug prior to deletion for targeted Cloudflare edge cache purge
+    const { data: targetProject } = await ctx.supabase
+      .from("projects")
+      .select("slug")
+      .eq("id", id)
+      .maybeSingle();
 
     const { error } = await ctx.supabase
       .from("projects")
@@ -273,8 +293,13 @@ export async function deleteProjectAction(id: string) {
     revalidatePath("/protected/admin/projects");
     revalidatePath("/projects");
     revalidatePath("/");
+    if (targetProject?.slug) {
+      revalidatePath(`/projects/${targetProject.slug}`);
+    }
 
     await refreshProjectStatsView(ctx.supabase);
+    const { revalidatePropertyPublicCache } = await import("./revalidate-property-cache");
+    await revalidatePropertyPublicCache({ projectSlug: targetProject?.slug });
 
     return { success: true, message: "ลบข้อมูลโครงการสำเร็จ 🗑️" };
   } catch (err: any) {
@@ -418,6 +443,8 @@ export async function reorderProjectsAction(ids: string[], offset: number = 0) {
     revalidatePath("/");
 
     await refreshProjectStatsView(ctx.supabase);
+    const { revalidatePropertyPublicCache } = await import("./revalidate-property-cache");
+    await revalidatePropertyPublicCache();
 
     return { success: true, message: "ปรับลำดับโครงการสำเร็จ 🔄" };
   } catch (error: any) {
@@ -469,6 +496,23 @@ async function resolveTenantId(
   throw new Error("Unauthorized: Tenant ID is required but missing");
 }
 
+const FACILITY_SYNONYMS: Record<string, string[]> = {
+  pool: ["สระว่ายน้ำ", "swimming pool", "pool", "สระส่วนกลาง", "สระ"],
+  fitness: ["ฟิตเนส", "fitness", "gym", "โรงยิม", "ห้องออกกำลังกาย", "ออกกำลังกาย"],
+  security: ["ระบบรักษาความปลอดภัย", "รปภ", "security", "รักษาความปลอดภัย", "24/7", "24 ชม."],
+  cctv: ["กล้องวงจรปิด", "cctv", "วงจรปิด"],
+  parking: ["ที่จอดรถ", "parking", "car park", "จอดรถ"],
+  elevator: ["ลิฟต์", "ลิฟต์โดยสาร", "elevator", "lift"],
+  keycard: ["คีย์การ์ด", "keycard", "key card", "เข้า-ออกด้วยคีย์การ์ด", "access card"],
+  garden: ["สวน", "สวนหย่อม", "garden", "สวนส่วนกลาง", "สวนดาดฟ้า", "park"],
+  library: ["ห้องสมุด", "library", "co-working", "coworking"],
+  playground: ["สนามเด็กเล่น", "playground"],
+  sauna: ["ซาวน่า", "sauna", "ห้องอบไอน้ำ", "steam"],
+  lobby: ["ล็อบบี้", "lobby", "reception", "แผนกต้อนรับ"],
+  clubhouse: ["คลับเฮ้าส์", "clubhouse", "club house", "เลานจ์", "lounge"],
+  ev: ["ev charger", "ev charging", "ชาร์จรถยนต์ไฟฟ้า", "จุดชาร์จ", "รถยนต์ไฟฟ้า"],
+};
+
 /**
  * Fetch default features for a project by checking associated properties in the project
  */
@@ -489,44 +533,95 @@ export async function getProjectDefaultFeaturesAction(projectId: string): Promis
       // Fetch feature database to match names or keywords
       const { data: allFeatures } = await ctx.supabase
         .from("features")
-        .select("id, name");
+        .select("id, name, name_en, category");
 
       if (allFeatures && allFeatures.length > 0) {
         for (const facText of project.facilities) {
           if (typeof facText !== "string") continue;
           const cleanFac = facText.trim().toLowerCase();
+
           for (const feat of allFeatures) {
-            const featName = feat.name.trim().toLowerCase();
-            if (featName.includes(cleanFac) || cleanFac.includes(featName)) {
+            const featTh = (feat.name || "").trim().toLowerCase();
+            const featEn = (feat.name_en || "").trim().toLowerCase();
+
+            // 🚫 GUARD: Project facilities are SHARED building amenities.
+            // NEVER auto-select private in-unit features or views!
+            // e.g., "สระว่ายน้ำส่วนตัว", "ลิฟต์ส่วนตัว", "สวนส่วนตัว", "วิวสระว่ายน้ำ"
+            const isPrivateOrView =
+              featTh.includes("ส่วนตัว") ||
+              featTh.includes("วิว") ||
+              featEn.includes("private") ||
+              featEn.includes("view");
+
+            const facExplicitlyPrivate =
+              cleanFac.includes("ส่วนตัว") || cleanFac.includes("private");
+
+            if (isPrivateOrView && !facExplicitlyPrivate) {
+              continue;
+            }
+
+            // Direct substring matching
+            if (
+              (featTh && (cleanFac.includes(featTh) || featTh.includes(cleanFac))) ||
+              (featEn && (cleanFac.includes(featEn) || featEn.includes(cleanFac)))
+            ) {
               featureSet.add(feat.id);
+              continue;
+            }
+
+            // Synonym matching
+            for (const [, keywords] of Object.entries(FACILITY_SYNONYMS)) {
+              const facMatched = keywords.some(k => cleanFac.includes(k.toLowerCase()));
+              const featMatched = keywords.some(k => featTh.includes(k.toLowerCase()) || featEn.includes(k.toLowerCase()));
+              if (facMatched && featMatched) {
+                featureSet.add(feat.id);
+              }
             }
           }
         }
       }
     }
 
-    // 2. Fetch recent properties in this project to get their feature_ids as fallback or addition
-    const { data: props, error } = await ctx.supabase
-      .from("properties_core")
-      .select(`
-        id,
-        updated_at,
-        property_features (
-          feature_id
-        )
-      `)
-      .eq("project_id", projectId)
-      .is("deleted_at", null)
-      .order("updated_at", { ascending: false })
-      .limit(10);
+    // 2. Fallback: only if project has NO facilities at all, inspect recent properties
+    if (featureSet.size === 0) {
+      const { data: props, error } = await ctx.supabase
+        .from("properties_core")
+        .select(`
+          id,
+          updated_at,
+          property_features (
+            feature_id,
+            features ( id, name, name_en, category )
+          )
+        `)
+        .eq("project_id", projectId)
+        .is("deleted_at", null)
+        .order("updated_at", { ascending: false })
+        .limit(5);
 
-    if (!error && props && props.length > 0) {
-      for (const p of props) {
-        const pfList = (p as any).property_features;
-        if (Array.isArray(pfList) && pfList.length > 0) {
-          for (const item of pfList) {
-            if (item.feature_id) {
-              featureSet.add(item.feature_id);
+      if (!error && props && props.length > 0) {
+        for (const p of props) {
+          const pfList = (p as any).property_features;
+          if (Array.isArray(pfList) && pfList.length > 0) {
+            for (const item of pfList) {
+              const f = item.features;
+              if (f) {
+                const fTh = (f.name || "").toLowerCase();
+                const fEn = (f.name_en || "").toLowerCase();
+                if (
+                  fTh.includes("ส่วนตัว") ||
+                  fEn.includes("private") ||
+                  fTh.includes("วิว") ||
+                  fEn.includes("view") ||
+                  f.category === "UNIT" ||
+                  f.category === "INTERIOR"
+                ) {
+                  continue;
+                }
+              }
+              if (item.feature_id) {
+                featureSet.add(item.feature_id);
+              }
             }
           }
         }

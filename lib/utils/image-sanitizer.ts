@@ -59,8 +59,16 @@ export async function sanitizeAndCompressImage(
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Convert to JPEG
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        // Convert to WebP (30-50% smaller than JPEG), fallback to JPEG if unsupported
+        let mimeType = "image/webp";
+        let ext = ".webp";
+        let dataUrl = canvas.toDataURL("image/webp", quality);
+
+        if (!dataUrl.startsWith("data:image/webp")) {
+          mimeType = "image/jpeg";
+          ext = ".jpg";
+          dataUrl = canvas.toDataURL("image/jpeg", quality);
+        }
 
         canvas.toBlob(
           (blob) => {
@@ -68,12 +76,13 @@ export async function sanitizeAndCompressImage(
               return reject(new Error("Failed to generate image blob"));
             }
 
-            const cleanFileName = file.name
-              .replace(/\.[^/.]+$/, "")
-              .replace(/[^a-zA-Z0-9_-]/g, "_") + ".jpg";
+            const cleanFileName =
+              file.name
+                .replace(/\.[^/.]+$/, "")
+                .replace(/[^a-zA-Z0-9_-]/g, "_") + ext;
 
             const compressedFile = new File([blob], cleanFileName, {
-              type: "image/jpeg",
+              type: mimeType,
               lastModified: Date.now(),
             });
 
@@ -86,7 +95,7 @@ export async function sanitizeAndCompressImage(
               compressedSize: compressedFile.size,
             });
           },
-          "image/jpeg",
+          mimeType,
           quality,
         );
       };

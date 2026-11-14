@@ -735,6 +735,9 @@ Here is a list of features available in our database:
 ${featureListStr}
 
 Please analyze the title and description and match the features that are explicitly mentioned or strongly implied to be present at this property.
+CRITICAL RULE:
+- Do NOT match "สระว่ายน้ำส่วนตัว" (Private Pool) unless the text explicitly says the unit itself has a private pool (not a shared pool or pool view). For standard condo/project pools, match "สระว่ายน้ำ" (Swimming Pool) instead.
+- Do NOT match "ลิฟต์ส่วนตัว" (Private Lift) unless explicitly stated as private in-unit lift.
 Return a JSON array of strings containing the IDs of the matched features.
 Example return: ["id-1", "id-2"]
 

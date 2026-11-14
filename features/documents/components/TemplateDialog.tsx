@@ -361,9 +361,9 @@ export function TemplateDialog({
       try {
         const { compressImage } = await import("@/lib/image-compression");
         const result = await compressImage(file, {
-          maxSizeMB: 0.5, // Target size under 500KB
+          maxSizeMB: 0.3, // Target size under 300KB
           maxWidthOrHeight: 1200, // Optimize width/height for readable slips
-          fileType: "image/jpeg",
+          fileType: "image/webp",
         });
 
         setSlipFile(result.compressedFile);

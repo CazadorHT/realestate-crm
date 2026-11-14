@@ -44,6 +44,7 @@ interface QuickCreateProjectDialogProps {
   defaultProvince: string;
   defaultDistrict: string;
   defaultSubdistrict: string;
+  defaultPropertyType?: string;
   onCreated: (project: { 
     id: string; 
     nameTh: string; 
@@ -52,6 +53,7 @@ interface QuickCreateProjectDialogProps {
     district?: string;
     subdistrict?: string;
     googleMapsUrl?: string;
+    facilities?: string[];
   }) => void;
 }
 
@@ -68,6 +70,7 @@ export function QuickCreateProjectDialog({
   defaultProvince,
   defaultDistrict,
   defaultSubdistrict,
+  defaultPropertyType,
   onCreated,
 }: QuickCreateProjectDialogProps) {
   const { language } = useLanguage();
@@ -79,7 +82,13 @@ export function QuickCreateProjectDialog({
   const [nameTh, setNameTh] = React.useState("");
   const [nameEn, setNameEn] = React.useState("");
   const [developer, setDeveloper] = React.useState("");
-  const [propertyType, setPropertyType] = React.useState("1");
+  const [propertyType, setPropertyType] = React.useState(defaultPropertyType || "1");
+
+  React.useEffect(() => {
+    if (defaultPropertyType) {
+      setPropertyType(defaultPropertyType);
+    }
+  }, [defaultPropertyType]);
   const [province, setProvince] = React.useState("");
   const [district, setDistrict] = React.useState("");
   const [subdistrict, setSubdistrict] = React.useState("");
@@ -218,7 +227,10 @@ export function QuickCreateProjectDialog({
         if (d.province) setProvince(cleanAddressWord(d.province));
         if (d.district) setDistrict(cleanAddressWord(d.district));
         if (d.subdistrict) setSubdistrict(cleanAddressWord(d.subdistrict));
-        // Google Maps URL — ให้ user กรอกเอง ไม่ให้ AI override
+        // Auto-fill Google Maps URL if empty so coordinates & pins are ready
+        if (!googleMapsUrl.trim() && d.googleMapsUrl) {
+          setGoogleMapsUrl(d.googleMapsUrl);
+        }
         setAiData(d);
         toast.success(isEn ? "AI auto-fill completed! ✨" : "AI กรอกข้อมูลโครงการสำเร็จเสร็จสิ้น! ✨", { id: toastId });
       } else {
@@ -256,9 +268,13 @@ export function QuickCreateProjectDialog({
         subdistrict: cleanAddressWord(subdistrict) || null,
         ...(() => {
           const coords = parseCoordinatesFromUrlSync(googleMapsUrl);
-          return coords ? { latitude: coords.lat, longitude: coords.lng } : { latitude: null, longitude: null };
+          if (coords) return { latitude: coords.lat, longitude: coords.lng };
+          if (aiData?.latitude && aiData?.longitude) {
+            return { latitude: Number(aiData.latitude), longitude: Number(aiData.longitude) };
+          }
+          return { latitude: null, longitude: null };
         })(),
-        google_maps_url: sanitizeGoogleMapsInput(googleMapsUrl) || googleMapsUrl.trim() || null,
+        google_maps_url: sanitizeGoogleMapsInput(googleMapsUrl) || googleMapsUrl.trim() || aiData?.googleMapsUrl || null,
         year_completed: yearCompleted.trim() ? Number(yearCompleted) : null,
         total_units: totalUnits.trim() ? Number(totalUnits) : null,
         is_active: true,
@@ -294,7 +310,8 @@ export function QuickCreateProjectDialog({
           province: cleanAddressWord(province),
           district: cleanAddressWord(district),
           subdistrict: cleanAddressWord(subdistrict),
-          googleMapsUrl: googleMapsUrl.trim() || undefined,
+          googleMapsUrl: googleMapsUrl.trim() || aiData?.googleMapsUrl || undefined,
+          facilities: aiData?.facilities || [],
         });
         onClose(false);
       } else {

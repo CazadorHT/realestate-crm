@@ -226,8 +226,8 @@ function Step5FeaturesComponent() {
     const matchedIds = features
       .filter((f) => {
         const nameLower = f.name.toLowerCase();
-        // ถ้าเป็นคอนโด ไม่เลือก "สระว่ายน้ำส่วนตัว" หรือ "สระส่วนตัว"
-        if (type === "condo" && (nameLower.includes("ส่วนตัว") || nameLower.includes("private"))) {
+        // ไม่เลือกสิ่งอำนวยความสะดวกที่เป็นแบบ "ส่วนตัว" หรือ "private" สำหรับค่าเริ่มต้นทั่วไป
+        if (nameLower.includes("ส่วนตัว") || nameLower.includes("private")) {
           return false;
         }
         return matchers.some((keyword) => nameLower.includes(keyword.toLowerCase()));

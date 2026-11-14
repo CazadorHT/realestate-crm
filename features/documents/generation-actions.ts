@@ -10,6 +10,7 @@ import {
   localizeObject,
   amountToThaiWords,
   amountToEnglishWords,
+  formatPhoneWithDashes,
 } from "./template-engine";
 import { createDocumentRecordAction } from "./actions";
 import { revalidatePath } from "next/cache";
@@ -130,6 +131,7 @@ const additionalDataSchema = z
     client_nationality: z.string().optional(),
     unit_number_override: z.string().optional(),
     floor_override: z.string().optional(),
+    project_name_override: z.string().optional(),
     vat_rate: z.string().optional(),
     withholding_tax_rate: z.string().optional(),
     tax_calculation_method: z.enum(["none", "include", "exclude"]).optional().default("none"),
@@ -503,7 +505,11 @@ export async function generateDocumentFromTemplateAction(
 
     // Populate contact & identity info (hide if not specified)
     if (contextData.lead) {
-      const rawPhone = (validData.client_phone_override || contextData.lead.phone || "").replace(/\(ไม่ได้ระบุ\)|\(Not specified\)/g, "").trim();
+      const rawPhone = formatPhoneWithDashes(
+        (validData.client_phone_override || contextData.lead.phone || "")
+          .replace(/\(ไม่ได้ระบุ\)|\(Not specified\)/g, "")
+          .trim()
+      );
       const rawLine = (validData.client_line_override || contextData.lead.line_id || "").replace(/\(ไม่ได้ระบุ\)|\(Not specified\)/g, "").trim();
 
       let contactInfo = "";
@@ -800,6 +806,23 @@ export async function generateDocumentFromTemplateAction(
       }
       if (validData.floor_override) {
         contextData.property.floor = validData.floor_override;
+      }
+      if (validData.bedrooms_override !== undefined && validData.bedrooms_override !== null) {
+        contextData.property.bedrooms = validData.bedrooms_override;
+      }
+      if (validData.bathrooms_override !== undefined && validData.bathrooms_override !== null) {
+        contextData.property.bathrooms = validData.bathrooms_override;
+      }
+      if (validData.size_sqm_override !== undefined && validData.size_sqm_override !== null) {
+        contextData.property.size_sqm = validData.size_sqm_override;
+        contextData.property.floor_area = validData.size_sqm_override;
+      }
+      if (validData.project_name_override) {
+        contextData.property.title = validData.project_name_override;
+        contextData.property.project_name = validData.project_name_override;
+        if (!contextData.project) contextData.project = {};
+        contextData.project.name = validData.project_name_override;
+        contextData.project.full_name = validData.project_name_override;
       }
     }
 

@@ -31,7 +31,7 @@ export async function deletePropertyAction(formData: FormData) {
     // 0) โหลดเจ้าของทรัพย์เพื่อเช็คสิทธิ (owner/admin) โดยดึงข้อมูลโดยตรงก่อน เพื่อเช็คข้ามสาขาแบบปลอดภัยได้
     const { data: property, error: propErr } = await supabase
       .from("properties_core")
-      .select("id, created_by, tenant_id, slug")
+      .select("id, created_by, tenant_id, slug, project_id")
       .eq("id", id)
       .single();
 
@@ -157,7 +157,17 @@ export async function deletePropertyAction(formData: FormData) {
 
     revalidatePath("/protected/properties");
     await refreshProjectStatsView(supabase);
-    await revalidatePropertyPublicCache({ slug: property?.slug });
+
+    let projectSlug: string | null = null;
+    if (property?.project_id) {
+      const { data: proj } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", property.project_id)
+        .maybeSingle();
+      projectSlug = proj?.slug || null;
+    }
+    await revalidatePropertyPublicCache({ slug: property?.slug, projectSlug });
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePropertyAction → error:", error);

@@ -6,6 +6,7 @@ import {
   createQuickDocumentAction,
   findExistingLeadAction,
   searchProjectsForQuickDocAction,
+  getExistingPropertiesByProjectAction,
 } from "../quick-document-actions";
 import { getBanksAction } from "@/features/finance/bank-actions";
 import { sanitizeAndCompressImage } from "@/lib/utils/image-sanitizer";
@@ -14,6 +15,7 @@ import { createDocumentRecordAction } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -204,11 +206,16 @@ export function QuickDocumentForm({
 
   const getProjectDisplayName = (proj: any, lang: "th" | "en" | "cn" | "ru") => {
     if (!proj) return "";
-    const th = proj.name?.th || proj.name_th || proj.address_line1 || "";
-    const en = proj.name?.en || proj.name_en || proj.address_line1_en || "";
+    const th = (proj.name?.th || proj.name_th || proj.address_line1 || "").trim();
+    const en = (proj.name?.en || proj.name_en || proj.address_line1_en || "").trim();
     if (lang === "th") {
+      // For Thai documents: pull both Thai and English in parenthesis if both exist
+      if (th && en && th.toLowerCase() !== en.toLowerCase()) {
+        return `${th} (${en})`;
+      }
       return th || en;
     }
+    // For English, Chinese, Russian: show English name as primary
     return en || th;
   };
 
@@ -363,6 +370,11 @@ export function QuickDocumentForm({
   const [bathrooms, setBathrooms] = useState<number>(1);
   const [sizeSqm, setSizeSqm] = useState<string>("");
 
+  // Existing properties in this project & Save as Property toggle
+  const [existingUnits, setExistingUnits] = useState<any[]>([]);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const [saveAsProperty, setSaveAsProperty] = useState(false);
+
   // 4. Financial Table
   const [financialItems, setFinancialItems] = useState<
     Array<{ description: string; quantity: number; unit_price: number }>
@@ -422,19 +434,32 @@ export function QuickDocumentForm({
     }
   };
 
-  // Smart Search Lead by Phone (Debounced 350ms)
+  // Smart Search Lead by Phone or Name (Debounced 350ms)
   useEffect(() => {
-    if (!clientPhone || clientPhone.trim().length < 3) {
+    const cleanDigits = clientPhone.replace(/\D/g, "");
+    const cleanName = clientName.trim();
+
+    // Optimize Postgres & Egress: For phone search require >= 6 digits; for name require >= 3 chars
+    if (clientPhone.trim()) {
+      if (cleanDigits.length < 6) {
+        setMatchedLead(null);
+        return;
+      }
+    } else if (cleanName.length < 3) {
       setMatchedLead(null);
       return;
     }
 
+    const term = clientPhone.trim() || clientName.trim();
+
     const timer = setTimeout(async () => {
       setIsSearchingLead(true);
       try {
-        const res = await findExistingLeadAction(clientPhone);
+        const res = await findExistingLeadAction(term);
         if (res.success && res.leads && res.leads.length > 0) {
-          setMatchedLead(res.leads[0]);
+          const match = res.leads[0];
+          setMatchedLead(match);
+          setSelectedLeadId(match.id);
         } else {
           setMatchedLead(null);
         }
@@ -446,7 +471,7 @@ export function QuickDocumentForm({
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [clientPhone]);
+  }, [clientPhone, clientName]);
 
   const applyMatchedLead = () => {
     if (!matchedLead) return;
@@ -506,13 +531,45 @@ export function QuickDocumentForm({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelectProject = (proj: any) => {
+  const handleSelectProject = async (proj: any) => {
     setSelectedProjectId(proj.id);
     setSelectedProject(proj);
     const pName = getProjectDisplayName(proj, language);
     setSelectedProjectName(pName);
     setProjectSearch(pName);
     setShowProjectDropdown(false);
+    setSelectedPropertyId(null);
+
+    // Fetch existing units for this project in CRM
+    try {
+      const res = await getExistingPropertiesByProjectAction(proj.id);
+      if (res.success && res.data) {
+        setExistingUnits(res.data);
+      } else {
+        setExistingUnits([]);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch project units:", err);
+      setExistingUnits([]);
+    }
+  };
+
+  const handleSelectExistingUnit = (unit: any) => {
+    setSelectedPropertyId(unit.id);
+    if (unit.unit_number) setUnitNumber(unit.unit_number);
+    if (unit.floor) setFloor(unit.floor);
+    if (unit.bedrooms !== null) setBedrooms(unit.bedrooms);
+    if (unit.bathrooms !== null) setBathrooms(unit.bathrooms);
+    if (unit.size_sqm !== null) setSizeSqm(String(unit.size_sqm));
+    if (unit.rent_price && unit.rent_price > 0) {
+      setFinancialItems((prev) => {
+        const copy = [...prev];
+        if (copy.length > 0 && copy[0].unit_price === 10000) {
+          copy[0] = { ...copy[0], unit_price: unit.rent_price };
+        }
+        return copy;
+      });
+    }
   };
 
   // Financial calculations
@@ -636,6 +693,7 @@ export function QuickDocumentForm({
             nationality: clientNationality.trim() || null,
           },
           property: {
+            property_id: selectedPropertyId,
             project_id: isCustomProject ? null : selectedProjectId,
             project_name: finalProjName,
             unit_number: unitNumber.trim() || null,
@@ -645,6 +703,7 @@ export function QuickDocumentForm({
             bathrooms,
             rental_price: calculateTotal(),
             listing_type: "RENT",
+            save_as_property: saveAsProperty,
           },
           financials: {
             items: financialItems.map((it) => ({
@@ -845,6 +904,8 @@ export function QuickDocumentForm({
               {isEn ? "Phone Number" : "เบอร์โทรศัพท์ (มีระบบค้นหาอัตโนมัติ)"}
             </Label>
             <Input
+              type="tel"
+              name="phone"
               value={clientPhone}
               onChange={(e) => setClientPhone(e.target.value)}
               placeholder="08X-XXX-XXXX"
@@ -1033,6 +1094,54 @@ export function QuickDocumentForm({
             </div>
           </div>
 
+          {/* Quick Select: Existing Units in this Project */}
+          {!isCustomProject && existingUnits.length > 0 && (
+            <div className="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
+              <div className="flex items-center justify-between text-xs text-indigo-900">
+                <span className="font-semibold flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+                  {isEn
+                    ? `Found ${existingUnits.length} listing(s) in this project:`
+                    : `มี ${existingUnits.length} ห้องในโครงการนี้ที่มีอยู่ในพอร์ต:`}
+                </span>
+                {selectedPropertyId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedPropertyId(null);
+                      setUnitNumber("");
+                      setFloor("");
+                    }}
+                    className="text-[11px] text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                  >
+                    {isEn ? "+ Different Unit / Clear" : "+ กรอกเป็นห้องอื่น"}
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {existingUnits.map((u) => {
+                  const isSelected = selectedPropertyId === u.id;
+                  const label = `${u.unit_number ? `ห้อง ${u.unit_number}` : "ยูนิต"}${u.floor ? ` (ชั้น ${u.floor})` : ""}${u.bedrooms ? ` • ${u.bedrooms}นอน` : ""}`;
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => handleSelectExistingUnit(u)}
+                      className={cn(
+                        "px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer font-medium",
+                        isSelected
+                          ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                          : "bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-white"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Unit, Floor, Specs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="space-y-1">
@@ -1041,7 +1150,10 @@ export function QuickDocumentForm({
               </Label>
               <Input
                 value={unitNumber}
-                onChange={(e) => setUnitNumber(e.target.value)}
+                onChange={(e) => {
+                  setUnitNumber(e.target.value);
+                  if (selectedPropertyId) setSelectedPropertyId(null);
+                }}
                 placeholder="เช่น 22/22"
                 className="h-9 rounded-xl border-slate-200"
               />
@@ -1092,6 +1204,34 @@ export function QuickDocumentForm({
                 className="h-9 rounded-xl border-slate-200"
               />
             </div>
+          </div>
+
+          {/* Toggle: Save as new property listing in CRM */}
+          <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="save_as_property"
+                checked={saveAsProperty}
+                onCheckedChange={(checked) => setSaveAsProperty(!!checked)}
+              />
+              <Label
+                htmlFor="save_as_property"
+                className="text-xs text-slate-700 cursor-pointer select-none font-medium"
+              >
+                {isEn
+                  ? "Save this room as a new property listing in CRM"
+                  : "บันทึกห้องนี้เป็นทรัพย์ใหม่ในระบบ (หน้าจัดการทรัพย์สิน)"}
+              </Label>
+            </div>
+            <span className="text-[11px] text-slate-400 pl-6 sm:pl-0">
+              {saveAsProperty
+                ? isEn
+                  ? "✓ Will create a draft listing in properties"
+                  : "✓ จะสร้างเป็นทรัพย์ฉบับร่างในพอร์ต"
+                : isEn
+                  ? "Quick doc only (won't clutter inventory)"
+                  : "ออกเอกสารด่วนเท่านั้น (ไม่เพิ่มแถวในตารางทรัพย์)"}
+            </span>
           </div>
         </div>
       </div>

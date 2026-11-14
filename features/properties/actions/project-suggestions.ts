@@ -19,7 +19,19 @@ export interface ProjectSuggestion {
   longitude?: number;
 }
 
+// In-memory cache for fast, zero-database lookup on repeated project searches
+const projectSuggestionsCache = new Map<string, { timestamp: number; data: ProjectSuggestion[] }>();
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
 export async function getProjectSuggestions(search: string, limit: number = 10): Promise<ProjectSuggestion[]> {
+  const cleanSearch = (search || "").toLowerCase().trim();
+  const cacheKey = `${cleanSearch}_${limit}`;
+
+  const cached = projectSuggestionsCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
@@ -63,7 +75,7 @@ export async function getProjectSuggestions(search: string, limit: number = 10):
 
     if (!data) return [];
 
-    return data.map((item: any) => {
+    const mapped: ProjectSuggestion[] = data.map((item: any) => {
       const nameObj = item.name || {};
       const mapsLink = item.latitude && item.longitude 
         ? `https://www.google.com/maps/place/${item.latitude},${item.longitude}` 
@@ -87,6 +99,14 @@ export async function getProjectSuggestions(search: string, limit: number = 10):
         longitude: item.longitude || undefined,
       };
     });
+
+    // Save in cache (keep cache size <= 100 entries to prevent memory bloating)
+    if (projectSuggestionsCache.size > 100) {
+      projectSuggestionsCache.clear();
+    }
+    projectSuggestionsCache.set(cacheKey, { timestamp: Date.now(), data: mapped });
+
+    return mapped;
   } catch (error) {
     console.error("[getProjectSuggestions] Exception:", error);
     return [];

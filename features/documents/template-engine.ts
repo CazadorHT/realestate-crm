@@ -205,3 +205,23 @@ export function formatDate(
 export function formatDateThai(dateStr: string | Date | null | undefined) {
   return formatDate(dateStr, "th");
 }
+
+/**
+ * Format phone number with standard dashes:
+ * 10-digit mobile: 081-234-5678
+ * 9-digit landline: 02-123-4567
+ */
+export function formatPhoneWithDashes(val: string): string {
+  if (!val) return "";
+  const trimmed = val.trim();
+  if (trimmed.includes("-")) return trimmed;
+
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  if (digits.length === 9) {
+    return `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5)}`;
+  }
+  return trimmed;
+}

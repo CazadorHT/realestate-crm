@@ -950,6 +950,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
         defaultProvince={watchedProvince}
         defaultDistrict={watchedDistrict}
         defaultSubdistrict={watchedSubdistrict}
+        defaultPropertyType={form.watch("property_type")?.toString()}
         onCreated={(proj) => {
           form.setValue("address_line1", proj.nameTh || proj.nameEn, { shouldValidate: true, shouldDirty: true });
           if (proj.nameEn) {
@@ -1001,6 +1002,26 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
 
           if (proj.googleMapsUrl) {
             form.setValue("google_maps_link", proj.googleMapsUrl, { shouldValidate: true, shouldDirty: true });
+            verifyMapLink(proj.googleMapsUrl);
+          }
+
+          // 🚀 Auto-sync AI generated project facilities to Step 5 (feature_ids)
+          if (proj.id) {
+            getProjectDefaultFeaturesAction(proj.id).then((res) => {
+              if (res.success && res.featureIds && res.featureIds.length > 0) {
+                const currentFeatures = new Set<string>(form.getValues("feature_ids") || []);
+                res.featureIds.forEach((id) => currentFeatures.add(id));
+                form.setValue("feature_ids", Array.from(currentFeatures), {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+                toast.success(
+                  isEn 
+                    ? `Synced ${res.featureIds.length} project facilities to Step 5 ✨` 
+                    : `ซิงค์สิ่งอำนวยความสะดวกจากโครงการ (${res.featureIds.length} รายการ) ไปที่ Step 5 สำเร็จ ✨`
+                );
+              }
+            });
           }
         }}
       />

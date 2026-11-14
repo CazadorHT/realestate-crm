@@ -581,7 +581,17 @@ export async function createPropertyAction(
     );
     revalidatePath("/protected/properties");
     await refreshProjectStatsView(supabase);
-    await revalidatePropertyPublicCache({ slug: seoData.slug });
+
+    let projectSlug: string | null = null;
+    if (safeValues.project_id) {
+      const { data: proj } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", safeValues.project_id)
+        .maybeSingle();
+      projectSlug = proj?.slug || null;
+    }
+    await revalidatePropertyPublicCache({ slug: seoData.slug, projectSlug });
 
     // 🚀 Step 6: Background Job (Non-blocking)
     await (inngest.send({
@@ -807,7 +817,17 @@ export async function duplicatePropertyAction(
 
     revalidatePath("/protected/properties");
     await refreshProjectStatsView(supabase);
-    await revalidatePropertyPublicCache();
+
+    let duplicateProjectSlug: string | null = null;
+    if (core.project_id) {
+      const { data: proj } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", core.project_id)
+        .maybeSingle();
+      duplicateProjectSlug = proj?.slug || null;
+    }
+    await revalidatePropertyPublicCache({ slug: uniqueSlug, projectSlug: duplicateProjectSlug });
 
     // 🚀 Step 4.5: Background Job (Non-blocking)
     await (inngest.send({

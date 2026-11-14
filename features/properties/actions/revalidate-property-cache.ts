@@ -80,6 +80,7 @@ export const PROPERTY_CACHE_TAGS = [
   "meta-catalog-feed",
   "popular-areas",
   "projects",
+  "project-slugs",
   "dashboard-stats",
   "dashboard-charts",
   "dashboard-performance",
@@ -89,6 +90,18 @@ export interface PropertyCacheRevalidateOptions {
   slug?: string | null;
   oldSlug?: string | null;
   projectSlug?: string | null;
+  oldProjectSlug?: string | null;
+}
+
+function cleanPathSegment(segment?: string | null): string | null {
+  if (!segment) return null;
+  const trimmed = segment.trim().replace(/^\/+|\/+$/g, "");
+  if (!trimmed) return null;
+  try {
+    return encodeURI(decodeURI(trimmed));
+  } catch {
+    return trimmed;
+  }
 }
 
 /**
@@ -104,30 +117,44 @@ export async function revalidatePropertyPublicCache(options?: PropertyCacheReval
   invalidateExecutiveAISummaryCache();
   const paths = [...PROPERTY_PUBLIC_PATHS];
 
-  if (options?.slug) {
+  const slug = cleanPathSegment(options?.slug);
+  const oldSlug = cleanPathSegment(options?.oldSlug);
+  const projectSlug = cleanPathSegment(options?.projectSlug);
+  const oldProjectSlug = cleanPathSegment(options?.oldProjectSlug);
+
+  if (slug) {
     paths.push(
-      `/properties/${options.slug}`,
-      `/en/properties/${options.slug}`,
-      `/zh/properties/${options.slug}`,
-      `/ru/properties/${options.slug}`
+      `/properties/${slug}`,
+      `/en/properties/${slug}`,
+      `/zh/properties/${slug}`,
+      `/ru/properties/${slug}`
     );
   }
 
-  if (options?.oldSlug && options.oldSlug !== options?.slug) {
+  if (oldSlug && oldSlug !== slug) {
     paths.push(
-      `/properties/${options.oldSlug}`,
-      `/en/properties/${options.oldSlug}`,
-      `/zh/properties/${options.oldSlug}`,
-      `/ru/properties/${options.oldSlug}`
+      `/properties/${oldSlug}`,
+      `/en/properties/${oldSlug}`,
+      `/zh/properties/${oldSlug}`,
+      `/ru/properties/${oldSlug}`
     );
   }
 
-  if (options?.projectSlug) {
+  if (projectSlug) {
     paths.push(
-      `/projects/${options.projectSlug}`,
-      `/en/projects/${options.projectSlug}`,
-      `/zh/projects/${options.projectSlug}`,
-      `/ru/projects/${options.projectSlug}`
+      `/projects/${projectSlug}`,
+      `/en/projects/${projectSlug}`,
+      `/zh/projects/${projectSlug}`,
+      `/ru/projects/${projectSlug}`
+    );
+  }
+
+  if (oldProjectSlug && oldProjectSlug !== projectSlug) {
+    paths.push(
+      `/projects/${oldProjectSlug}`,
+      `/en/projects/${oldProjectSlug}`,
+      `/zh/projects/${oldProjectSlug}`,
+      `/ru/projects/${oldProjectSlug}`
     );
   }
 
@@ -144,6 +171,22 @@ export async function revalidatePropertyPublicCache(options?: PropertyCacheReval
   for (const tag of PROPERTY_CACHE_TAGS) {
     try {
       revalidateTag(tag, "max");
+    } catch {
+      // Silent catch
+    }
+  }
+
+  if (projectSlug) {
+    try {
+      revalidateTag(`project-${projectSlug}`, "max");
+    } catch {
+      // Silent catch
+    }
+  }
+
+  if (oldProjectSlug && oldProjectSlug !== projectSlug) {
+    try {
+      revalidateTag(`project-${oldProjectSlug}`, "max");
     } catch {
       // Silent catch
     }

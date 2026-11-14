@@ -19,7 +19,7 @@ export async function softDeleteProperty(id: string) {
     const { supabase, tenantId, role } = ctx;
 
     // 🛡️ SECURITY LOCK 1: Always check boundary if scoped, otherwise fetch first
-    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to, slug").eq("id", id);
+    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to, slug, project_id").eq("id", id);
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
     }
@@ -108,7 +108,17 @@ export async function softDeleteProperty(id: string) {
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
     await refreshProjectStatsView(supabase);
-    await revalidatePropertyPublicCache({ slug: prop.slug });
+
+    let projectSlug: string | null = null;
+    if (prop.project_id) {
+      const { data: proj } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", prop.project_id)
+        .maybeSingle();
+      projectSlug = proj?.slug || null;
+    }
+    await revalidatePropertyPublicCache({ slug: prop.slug, projectSlug });
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -124,7 +134,7 @@ export async function restoreProperty(id: string) {
     const { supabase, tenantId, role } = ctx;
 
     // Fetch the property first to verify access if tenantId is undefined
-    let query = supabase.from("properties_core").select("tenant_id, created_by, assigned_to, slug").eq("id", id);
+    let query = supabase.from("properties_core").select("tenant_id, created_by, assigned_to, slug, project_id").eq("id", id);
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
     }
@@ -186,7 +196,17 @@ export async function restoreProperty(id: string) {
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
     await refreshProjectStatsView(supabase);
-    await revalidatePropertyPublicCache({ slug: prop.slug });
+
+    let projectSlug: string | null = null;
+    if (prop.project_id) {
+      const { data: proj } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", prop.project_id)
+        .maybeSingle();
+      projectSlug = proj?.slug || null;
+    }
+    await revalidatePropertyPublicCache({ slug: prop.slug, projectSlug });
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -202,7 +222,7 @@ export async function permanentDeleteProperty(id: string) {
     const ctx = await requireAuthContext();
     const { supabase, tenantId, role } = ctx;
 
-    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to, slug").eq("id", id);
+    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to, slug, project_id").eq("id", id);
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
     }
@@ -274,7 +294,17 @@ export async function permanentDeleteProperty(id: string) {
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
     await refreshProjectStatsView(supabase);
-    await revalidatePropertyPublicCache({ slug: prop.slug });
+
+    let projectSlug: string | null = null;
+    if (prop.project_id) {
+      const { data: proj } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", prop.project_id)
+        .maybeSingle();
+      projectSlug = proj?.slug || null;
+    }
+    await revalidatePropertyPublicCache({ slug: prop.slug, projectSlug });
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };

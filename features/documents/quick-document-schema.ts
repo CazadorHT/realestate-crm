@@ -14,7 +14,7 @@ export const quickDocumentPayloadSchema = z.object({
 
   // Client Details
   client: z.object({
-    lead_id: z.string().uuid().optional().nullable(),
+    lead_id: z.string().uuid().optional().nullable().or(z.literal("")),
     full_name: z.string().min(1, "กรุณาระบุชื่อลูกค้า"),
     phone: z.string().optional().nullable(),
     email: z.string().email().optional().nullable().or(z.literal("")),
@@ -26,8 +26,8 @@ export const quickDocumentPayloadSchema = z.object({
 
   // Property Details
   property: z.object({
-    property_id: z.string().uuid().optional().nullable(),
-    project_id: z.string().uuid().optional().nullable(),
+    property_id: z.string().uuid().optional().nullable().or(z.literal("")),
+    project_id: z.string().uuid().optional().nullable().or(z.literal("")),
     project_name: z.string().min(1, "กรุณาระบุชื่อโครงการหรือทรัพย์สิน"),
     unit_number: z.string().optional().nullable(),
     floor: z.string().optional().nullable(),
@@ -37,6 +37,7 @@ export const quickDocumentPayloadSchema = z.object({
     rental_price: z.coerce.number().optional().nullable(),
     sale_price: z.coerce.number().optional().nullable(),
     listing_type: z.enum(["RENT", "SALE"]).default("RENT"),
+    save_as_property: z.boolean().optional().default(false),
   }),
 
   // Financials
@@ -60,6 +61,7 @@ export const quickDocumentPayloadSchema = z.object({
   terms_conditions: z.array(z.string()).optional().nullable(),
 });
 
-export type QuickDocumentPayload = z.infer<typeof quickDocumentPayloadSchema>;
+export type QuickDocumentPayload = z.input<typeof quickDocumentPayloadSchema>;
+export type QuickDocumentPayloadOutput = z.output<typeof quickDocumentPayloadSchema>;
 export type QuickDocumentFinancialItem = z.infer<typeof quickDocumentFinancialItemSchema>;
 

@@ -5,8 +5,29 @@ import {
   amountToEnglishWords, 
   localizeObject,
   formatCurrency,
-  formatDate
+  formatDate,
+  formatPhoneWithDashes,
 } from './template-engine';
+
+describe('formatPhoneWithDashes', () => {
+  it('should format 10-digit mobile numbers with dashes', () => {
+    expect(formatPhoneWithDashes('0925401358')).toBe('092-540-1358');
+    expect(formatPhoneWithDashes('0812345678')).toBe('081-234-5678');
+  });
+
+  it('should format 9-digit landline numbers with dashes', () => {
+    expect(formatPhoneWithDashes('021234567')).toBe('02-123-4567');
+  });
+
+  it('should preserve already formatted numbers with dashes', () => {
+    expect(formatPhoneWithDashes('092-540-1358')).toBe('092-540-1358');
+  });
+
+  it('should handle empty or whitespace strings safely', () => {
+    expect(formatPhoneWithDashes('')).toBe('');
+    expect(formatPhoneWithDashes('   ')).toBe('');
+  });
+});
 
 describe('Document Template Engine - replacePlaceholders', () => {
   it('should replace simple placeholders', () => {

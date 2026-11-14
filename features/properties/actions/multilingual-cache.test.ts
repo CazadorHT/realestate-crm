@@ -214,4 +214,77 @@ describe('Multilingual Property Cache Revalidation Test', () => {
     expect(purgedUrls).toContain('/zh/properties/exclusive-penthouse');
     expect(purgedUrls).toContain('/ru/properties/exclusive-penthouse');
   });
+
+  it('should purge multilingual project detail pages when projectSlug is provided', async () => {
+    const { revalidatePropertyPublicCache } = await import('./revalidate-property-cache');
+
+    await revalidatePropertyPublicCache({ projectSlug: 'the-line-sukhumvit' });
+
+    const revalidatedPaths = revalidatePathMock.mock.calls.map(c => c[0]);
+    expect(revalidatedPaths).toContain('/projects/the-line-sukhumvit');
+    expect(revalidatedPaths).toContain('/en/projects/the-line-sukhumvit');
+    expect(revalidatedPaths).toContain('/zh/projects/the-line-sukhumvit');
+    expect(revalidatedPaths).toContain('/ru/projects/the-line-sukhumvit');
+
+    const purgedUrls = purgeCloudflareCacheMock.mock.calls.flatMap(c => c[0]);
+    expect(purgedUrls).toContain('/projects/the-line-sukhumvit');
+    expect(purgedUrls).toContain('/en/projects/the-line-sukhumvit');
+    expect(purgedUrls).toContain('/zh/projects/the-line-sukhumvit');
+    expect(purgedUrls).toContain('/ru/projects/the-line-sukhumvit');
+  });
+
+  it('Edge Case: handles dirty slugs (whitespace, slashes, null/empty) safely', async () => {
+    const { revalidatePropertyPublicCache } = await import('./revalidate-property-cache');
+    revalidatePathMock.mockClear();
+    purgeCloudflareCacheMock.mockClear();
+
+    // Passing whitespace, leading/trailing slashes, null/undefined
+    await revalidatePropertyPublicCache({
+      slug: '  /dirty-property-slug/  ',
+      projectSlug: '   ',
+      oldSlug: null,
+      oldProjectSlug: undefined,
+    });
+
+    const revalidatedPaths = revalidatePathMock.mock.calls.map(c => c[0]);
+    expect(revalidatedPaths).toContain('/properties/dirty-property-slug');
+    expect(revalidatedPaths).toContain('/en/properties/dirty-property-slug');
+    // Blank projectSlug must NOT create invalid paths like '/projects/' or '/projects/   '
+    expect(revalidatedPaths).not.toContain('/projects/');
+    expect(revalidatedPaths).not.toContain('/projects/   ');
+  });
+
+  it('Edge Case: handles project reassignment (purges both old project and new project)', async () => {
+    const { revalidatePropertyPublicCache } = await import('./revalidate-property-cache');
+    revalidatePathMock.mockClear();
+    purgeCloudflareCacheMock.mockClear();
+
+    // User moved property from old-condo-a to new-condo-b
+    await revalidatePropertyPublicCache({
+      slug: 'unit-101',
+      projectSlug: 'new-condo-b',
+      oldProjectSlug: 'old-condo-a',
+    });
+
+    const purgedUrls = purgeCloudflareCacheMock.mock.calls.flatMap(c => c[0]);
+    expect(purgedUrls).toContain('/projects/new-condo-b');
+    expect(purgedUrls).toContain('/en/projects/new-condo-b');
+    expect(purgedUrls).toContain('/projects/old-condo-a');
+    expect(purgedUrls).toContain('/en/projects/old-condo-a');
+  });
+
+  it('Edge Case: safely encodes Unicode/Thai characters in slug for Cloudflare URL purge', async () => {
+    const { revalidatePropertyPublicCache } = await import('./revalidate-property-cache');
+    revalidatePathMock.mockClear();
+    purgeCloudflareCacheMock.mockClear();
+
+    await revalidatePropertyPublicCache({
+      slug: 'บ้านเดี่ยว-สุขุมวิท',
+    });
+
+    const purgedUrls = purgeCloudflareCacheMock.mock.calls.flatMap(c => c[0]);
+    const encodedThaiSlug = encodeURI('บ้านเดี่ยว-สุขุมวิท');
+    expect(purgedUrls).toContain(`/properties/${encodedThaiSlug}`);
+    expect(purgedUrls).toContain(`/en/properties/${encodedThaiSlug}`);
+  });
 });

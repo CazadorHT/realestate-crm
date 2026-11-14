@@ -718,7 +718,36 @@ export async function updatePropertyAction(
 
     revalidatePath("/protected/properties");
     await refreshProjectStatsView(supabase);
-    await revalidatePropertyPublicCache({ slug: seoData.slug, oldSlug: data.slug });
+
+    const oldProjectId = (data as any)?.project_id;
+    const newProjectId = safeValues.project_id;
+    let projectSlug: string | null = null;
+    let oldProjectSlug: string | null = null;
+
+    if (newProjectId) {
+      const { data: proj } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", newProjectId)
+        .maybeSingle();
+      projectSlug = proj?.slug || null;
+    }
+
+    if (oldProjectId && oldProjectId !== newProjectId) {
+      const { data: oldProj } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", oldProjectId)
+        .maybeSingle();
+      oldProjectSlug = oldProj?.slug || null;
+    }
+
+    await revalidatePropertyPublicCache({ 
+      slug: seoData.slug, 
+      oldSlug: data.slug, 
+      projectSlug,
+      oldProjectSlug,
+    });
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {
@@ -744,7 +773,7 @@ export async function updatePropertyStatusAction(input: {
     const { data: existing, error: fetchErr } = await supabase
       .from("properties_core")
       .select(`
-        id, slug, tenant_id, status, created_by, assigned_to,
+        id, slug, tenant_id, status, created_by, assigned_to, project_id,
         properties_details ( title, meta_data )
       `)
       .eq("id", input.id)
@@ -832,7 +861,17 @@ export async function updatePropertyStatusAction(input: {
 
     revalidatePath("/protected/properties");
     await refreshProjectStatsView(supabase);
-    await revalidatePropertyPublicCache({ slug: existing.slug });
+
+    let statusProjectSlug: string | null = null;
+    if (existing.project_id) {
+      const { data: proj } = await supabase
+        .from("projects")
+        .select("slug")
+        .eq("id", existing.project_id)
+        .maybeSingle();
+      statusProjectSlug = proj?.slug || null;
+    }
+    await revalidatePropertyPublicCache({ slug: existing.slug, projectSlug: statusProjectSlug });
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (err) {
     return { success: false, message: mapDbError(err) };
