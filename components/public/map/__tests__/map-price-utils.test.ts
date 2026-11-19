@@ -6,6 +6,7 @@ import {
   haversineDistanceMeters,
   getPinProjectOrPropertyHeadline,
   formatCompactPillAmount,
+  resolvePinPrice,
 } from "../map-price-utils";
 import type { SlimMapPin } from "@/lib/services/map-pins";
 
@@ -152,9 +153,49 @@ describe("map-price-utils", () => {
       expect(formatCompactPillAmount(17000, "RENT", "en")).toBe("฿ 17K /mo");
     });
 
+    it("formats rental amount without suffix when omitSuffix is true", () => {
+      expect(formatCompactPillAmount(15000, "RENT", "th", true)).toBe("฿ 15K");
+      expect(formatCompactPillAmount(25000, "RENT", "en", true)).toBe("฿ 25K");
+    });
+
     it("formats sale amount with spaced currency", () => {
       expect(formatCompactPillAmount(32500000, "SALE", "th")).toBe("฿ 32.5M");
       expect(formatCompactPillAmount(950000, "SALE", "th")).toBe("฿ 950K");
+    });
+  });
+
+  describe("resolvePinPrice dual label", () => {
+    it("resolves dual label for SALE_AND_RENT unit when filter is ALL", () => {
+      const pin = {
+        id: "p-both",
+        listing_type: "SALE_AND_RENT",
+        price: 3590000,
+        rental_price: 15000,
+        latitude: 13.75,
+        longitude: 100.55,
+      } as unknown as SlimMapPin;
+
+      const res = resolvePinPrice(pin, "ALL", "th");
+      expect(res.mode).toBe("BOTH");
+      expect(res.dualLabel).toBe("฿ 15K | ฿ 3.6M");
+      expect(res.displayLabel).toBe("฿ 15K | ฿ 3.6M");
+      expect(res.rentNumericValue).toBe(15000);
+      expect(res.saleNumericValue).toBe(3590000);
+    });
+
+    it("respects RENT filter even for dual listing", () => {
+      const pin = {
+        id: "p-both",
+        listing_type: "SALE_AND_RENT",
+        price: 3590000,
+        rental_price: 15000,
+        latitude: 13.75,
+        longitude: 100.55,
+      } as unknown as SlimMapPin;
+
+      const res = resolvePinPrice(pin, "RENT", "th");
+      expect(res.mode).toBe("RENT");
+      expect(res.displayLabel).toBe("฿ 15K /ด.");
     });
   });
 });

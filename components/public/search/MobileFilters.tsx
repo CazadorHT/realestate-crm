@@ -1396,7 +1396,13 @@ export function MobileFilters({
                                   ? "flex-[1.4]"
                                   : "flex-1",
                                 listingType === opt.val
-                                  ? "bg-blue-600 text-white shadow-md shadow-blue-50/50"
+                                  ? opt.val === "SALE"
+                                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                                    : opt.val === "RENT"
+                                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                                    : opt.val === "SALE_AND_RENT"
+                                    ? "bg-purple-600 text-white shadow-md shadow-purple-500/20"
+                                    : "bg-slate-700 text-white shadow-md shadow-slate-700/20"
                                   : "text-slate-500 hover:text-slate-900",
                               )}
                             >
@@ -1404,10 +1410,10 @@ export function MobileFilters({
                               {availableListingTypes[opt.val] > 0 && (
                                 <span
                                   className={cn(
-                                    "text-[11px] font-semibold px-1.5 py-0.5 rounded-full transition-all",
+                                    "text-[11px] font-semibold px-1.5 py-0.2 rounded-full transition-all",
                                     listingType === opt.val
                                       ? "bg-white/20 text-white"
-                                      : "bg-emerald-50 text-emerald-600",
+                                      : "bg-blue-50 text-blue-600 border border-blue-200/60",
                                   )}
                                 >
                                   {availableListingTypes[opt.val]}

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Supercluster, { type PointFeature } from "supercluster";
 import type { SlimMapPin } from "@/lib/services/map-pins";
-import { resolvePinPrice } from "./map-price-utils";
+import { resolvePinPrice, formatCompactPillAmount } from "./map-price-utils";
 
 export interface MapLocationGroup {
   groupId: string;
@@ -90,23 +90,85 @@ export function useMapClusters(params: {
       const sortedUnits = priced.map((p) => p.unit);
       const leadResolved = priced[0].resolved;
       const isMulti = sortedUnits.length > 1;
-      const plusSign = isMulti && leadResolved.numericValue > 0 ? "+" : "";
 
       const hasAnyDiscount = priced.some((p) => p.resolved.hasDiscount);
       const hasHotDeal = sortedUnits.some((u) => !!u.is_hot_deal);
 
-      const hasRentUnit = priced.some((p) => p.resolved.mode === "RENT");
-      const hasSaleUnit = priced.some((p) => p.resolved.mode === "SALE");
+      const filterUpper = (activeListingFilter || "ALL").toUpperCase();
+
+      const hasRentUnit = priced.some(
+        (p) =>
+          p.resolved.mode === "RENT" ||
+          p.resolved.mode === "BOTH" ||
+          (p.unit.rental_price != null && p.unit.rental_price > 0) ||
+          p.unit.listing_type === "RENT" ||
+          p.unit.listing_type === "SALE_AND_RENT"
+      );
+      const hasSaleUnit = priced.some(
+        (p) =>
+          p.resolved.mode === "SALE" ||
+          p.resolved.mode === "BOTH" ||
+          (p.unit.price != null && p.unit.price > 0) ||
+          p.unit.listing_type === "SALE" ||
+          p.unit.listing_type === "SALE_AND_RENT"
+      );
 
       let leadListingType: "RENT" | "SALE" | "BOTH" | "POA" = "SALE";
-      if (hasRentUnit && hasSaleUnit) {
-        leadListingType = "BOTH";
-      } else if (leadResolved.mode === "RENT") {
+      if (filterUpper === "RENT") {
         leadListingType = "RENT";
-      } else if (leadResolved.mode === "SALE") {
+      } else if (filterUpper === "SALE") {
         leadListingType = "SALE";
-      } else if (leadResolved.mode === "POA") {
-        leadListingType = "POA";
+      } else {
+        if (hasRentUnit && hasSaleUnit) {
+          leadListingType = "BOTH";
+        } else if (hasRentUnit) {
+          leadListingType = "RENT";
+        } else if (hasSaleUnit) {
+          leadListingType = "SALE";
+        } else if (leadResolved.mode === "POA") {
+          leadListingType = "POA";
+        }
+      }
+
+      let leadPriceLabel: string;
+      let leadNumericPrice: number;
+
+      if (leadListingType === "BOTH") {
+        if (isMulti) {
+          // โครงการที่มีหลายห้อง: เอาราคาเช่าเริ่มต้นขึ้นก่อน พร้อมเครื่องหมาย "+"
+          const rentVals = priced
+            .map((p) => {
+              if (p.resolved.rentNumericValue && p.resolved.rentNumericValue > 0) {
+                return p.resolved.rentNumericValue;
+              }
+              if (p.resolved.mode === "RENT" && p.resolved.numericValue > 0) {
+                return p.resolved.numericValue;
+              }
+              if (p.unit.rental_price && p.unit.rental_price > 0) {
+                return p.unit.rental_price;
+              }
+              return 0;
+            })
+            .filter((v) => v > 0);
+
+          const lowestRent = rentVals.length > 0 ? Math.min(...rentVals) : 0;
+          if (lowestRent > 0) {
+            const rentShort = formatCompactPillAmount(lowestRent, "RENT", language, true);
+            leadPriceLabel = `${rentShort}+`;
+            leadNumericPrice = lowestRent;
+          } else {
+            leadPriceLabel = `${leadResolved.displayLabel}+`;
+            leadNumericPrice = leadResolved.numericValue;
+          }
+        } else {
+          // โครงการที่มีห้องเดียวและเป็นทั้งขายและเช่า: แสดงทั้งสองราคา เช่น "฿ 15K | ฿ 3.6M"
+          leadPriceLabel = leadResolved.dualLabel || leadResolved.displayLabel;
+          leadNumericPrice = leadResolved.rentNumericValue || leadResolved.numericValue;
+        }
+      } else {
+        const plusSign = isMulti && leadResolved.numericValue > 0 ? "+" : "";
+        leadPriceLabel = `${leadResolved.displayLabel}${plusSign}`;
+        leadNumericPrice = leadResolved.numericValue;
       }
 
       // Compute centroid coordinate of the group
@@ -122,8 +184,8 @@ export function useMapClusters(params: {
         projectId: sortedUnits[0].project_id || null,
         units: sortedUnits,
         unitIds: new Set(sortedUnits.map((u) => u.id)),
-        leadPriceLabel: `${leadResolved.displayLabel}${plusSign}`,
-        leadNumericPrice: leadResolved.numericValue,
+        leadPriceLabel,
+        leadNumericPrice,
         leadListingType,
         hasAnyDiscount,
         hasHotDeal,

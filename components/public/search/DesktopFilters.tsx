@@ -801,22 +801,22 @@ export function DesktopFilters({
               {
                 val: "ALL",
                 label: t("common.all"),
-                active: "bg-slate-600 border-slate-600",
+                active: "bg-slate-700 border-slate-700",
               },
               {
                 val: "SALE",
                 label: t("search.buy"),
-                active: "bg-green-600 border-green-600",
+                active: "bg-emerald-600 border-emerald-600",
               },
               {
                 val: "RENT",
                 label: t("search.rent"),
-                active: "bg-orange-600 border-orange-600",
+                active: "bg-blue-600 border-blue-600",
               },
               {
                 val: "SALE_AND_RENT",
                 label: t("search.rent_buy"),
-                active: "bg-blue-600 border-blue-600",
+                active: "bg-purple-600 border-purple-600",
               },
             ].map((opt) => {
               const count = availableListingTypes[opt.val] || 0;

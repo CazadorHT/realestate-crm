@@ -5,10 +5,13 @@ import type { SlimMapPin } from "@/lib/services/map-pins";
 export interface ResolvedPinPrice {
   displayLabel: string;
   numericValue: number;
-  mode: "SALE" | "RENT" | "POA";
+  mode: "SALE" | "RENT" | "POA" | "BOTH";
   hasDiscount: boolean;
   discountPercent: number;
   originalNumericValue: number;
+  rentNumericValue?: number;
+  saleNumericValue?: number;
+  dualLabel?: string;
 }
 
 /**
@@ -41,6 +44,30 @@ export function resolvePinPrice(
 
   // Decide whether to show RENT or SALE on the pill based on active filter & listing_type
   const filterUpper = (activeListingFilter || "ALL").toUpperCase();
+
+  // If looking at ALL or SALE_AND_RENT, and this unit is available for BOTH Sale & Rent:
+  if (
+    (filterUpper === "ALL" || filterUpper === "SALE_AND_RENT") &&
+    (pin.listing_type === "SALE_AND_RENT" || (saleVal > 0 && rentVal > 0))
+  ) {
+    if (saleVal > 0 && rentVal > 0) {
+      const rentShort = formatCompactPillAmount(rentVal, "RENT", language, true);
+      const saleShort = formatCompactPillAmount(saleVal, "SALE", language, false);
+      const dualLabel = `${rentShort} | ${saleShort}`;
+      return {
+        displayLabel: dualLabel,
+        numericValue: rentVal,
+        mode: "BOTH",
+        hasDiscount: effective.hasRentalDiscount || effective.hasSaleDiscount,
+        discountPercent: Math.max(effective.rentalDiscountPercent, effective.saleDiscountPercent),
+        originalNumericValue: effective.originalRentalPrice || effective.originalPrice,
+        rentNumericValue: rentVal,
+        saleNumericValue: saleVal,
+        dualLabel,
+      };
+    }
+  }
+
   let preferRent = false;
 
   if (filterUpper === "RENT") {
@@ -54,7 +81,7 @@ export function resolvePinPrice(
     } else if (pin.listing_type === "SALE") {
       preferRent = false;
     } else {
-      // SALE_AND_RENT: prefer sale price if > 0, else rent price
+      // Fallback: prefer sale price if > 0, else rent price
       preferRent = saleVal <= 0 && rentVal > 0;
     }
   }
@@ -125,10 +152,11 @@ export function resolvePinPrice(
 export function formatCompactPillAmount(
   amount: number,
   mode: "SALE" | "RENT",
-  language: string = "th"
+  language: string = "th",
+  omitSuffix: boolean = false
 ): string {
   const monthSuffix =
-    mode === "RENT"
+    mode === "RENT" && !omitSuffix
       ? language === "th"
         ? " /ด."
         : language === "cn"
