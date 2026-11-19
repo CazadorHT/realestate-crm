@@ -298,14 +298,20 @@ export function MobileFilters({
 }: MobileFiltersProps) {
   const [trainTypeFilter, setTrainTypeFilter] = useState<string>("ALL");
 
-  const sortedAvailableAreas = useMemo(() => {
-    return buildAreaHierarchy(availableAreas, language, getLocaleValue);
-  }, [availableAreas, language, getLocaleValue]);
-
   const selectedAreaList = useMemo(() => {
     if (!area || area === "ALL") return [];
     return area.split(",").map((s) => s.trim()).filter(Boolean);
   }, [area]);
+
+  const sortedAvailableAreas = useMemo(() => {
+    const hierarchy = buildAreaHierarchy(availableAreas, language, getLocaleValue);
+    return hierarchy.filter((item: any) => {
+      const isSelected =
+        selectedAreaList.includes(item.name) ||
+        (item.children && item.children.some((c: any) => selectedAreaList.includes(c.name)));
+      return item.totalCount > 0 || isSelected;
+    });
+  }, [availableAreas, language, getLocaleValue, selectedAreaList]);
 
   const hasActivePrice = Boolean(
     (minPrice && minPrice !== "0" && minPrice !== "") ||
@@ -434,8 +440,9 @@ export function MobileFilters({
         ...s,
         count: countsMap.get(s.name) || 0,
       }))
+      .filter((s) => s.count > 0 || transitStation === s.name)
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  }, [availableStations, allStations]);
+  }, [availableStations, allStations, transitStation]);
 
   const filteredStations = useMemo(() => {
     return mergedStations.filter((station) => {
@@ -1062,6 +1069,7 @@ export function MobileFilters({
                             {t("search.all_provinces")}
                           </button>
                           {availableProvinces
+                            .filter((p) => p.count > 0 || province === p.name)
                             .slice(
                               0,
                               showAllProvincesMobile

@@ -339,8 +339,15 @@ export function DesktopFilters({
   };
 
   const sortedAvailableAreas = useMemo(() => {
-    return buildAreaHierarchy(availableAreas, language, getLocaleValue);
-  }, [availableAreas, language, getLocaleValue]);
+    const hierarchy = buildAreaHierarchy(availableAreas, language, getLocaleValue);
+    // Hide areas with 0 listings unless selected
+    return hierarchy.filter((item: any) => {
+      const isSelected =
+        selectedAreaList.includes(item.name) ||
+        (item.children && item.children.some((c: any) => selectedAreaList.includes(c.name)));
+      return item.totalCount > 0 || isSelected;
+    });
+  }, [availableAreas, language, getLocaleValue, selectedAreaList]);
 
   const { row1Areas, row2Areas } = useMemo(() => {
     const r1: any[] = [];
@@ -706,31 +713,33 @@ export function DesktopFilters({
                   </span>
                 </div>
               </SelectItem>
-              {availableProvinces.map((p) => {
-                const isDisabled = p.count === 0;
-                return (
-                  <SelectItem
-                    key={p.name}
-                    value={p.name}
-                    disabled={isDisabled}
-                  >
-                    <div className="flex items-center justify-between w-full gap-4">
-                      <span className={isDisabled ? "text-slate-400" : "text-slate-700"}>
-                        {getProvinceName(p.name, language)}
-                      </span>
-                      <span
-                        className={`text-[11px] px-1.5 py-0.2 rounded-full font-semibold ${
-                          isDisabled
-                            ? "bg-slate-100 text-slate-400"
-                            : "bg-blue-50 text-blue-600 border border-blue-200/60"
-                        }`}
-                      >
-                        {p.count}
-                      </span>
-                    </div>
-                  </SelectItem>
-                );
-              })}
+              {availableProvinces
+                .filter((p) => p.count > 0 || province === p.name)
+                .map((p) => {
+                  const isDisabled = p.count === 0;
+                  return (
+                    <SelectItem
+                      key={p.name}
+                      value={p.name}
+                      disabled={isDisabled}
+                    >
+                      <div className="flex items-center justify-between w-full gap-4">
+                        <span className={isDisabled ? "text-slate-400" : "text-slate-700"}>
+                          {getProvinceName(p.name, language)}
+                        </span>
+                        <span
+                          className={`text-[11px] px-1.5 py-0.2 rounded-full font-semibold ${
+                            isDisabled
+                              ? "bg-slate-100 text-slate-400"
+                              : "bg-blue-50 text-blue-600 border border-blue-200/60"
+                          }`}
+                        >
+                          {p.count}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
             </SelectContent>
           </Select>
         </div>

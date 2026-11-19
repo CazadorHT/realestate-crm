@@ -132,11 +132,14 @@ export function StationSearchSelect({
     const filteredList = list.filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD");
     const countsMap = new Map(availableStations.map((s) => [s.name, s.count]));
 
-    return filteredList.map((s) => ({
-      ...s,
-      count: countsMap.get(s.name) || 0,
-    })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  }, [availableStations, allStations]);
+    return filteredList
+      .map((s) => ({
+        ...s,
+        count: countsMap.get(s.name) || 0,
+      }))
+      .filter((s) => s.count > 0 || transitStation === s.name)
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }, [availableStations, allStations, transitStation]);
 
   // Filter stations by train type tab and text query
   const filteredStations = React.useMemo(() => {
