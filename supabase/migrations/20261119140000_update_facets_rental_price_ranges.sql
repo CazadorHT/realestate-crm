@@ -83,12 +83,12 @@ BEGIN
 
         -- 7 rental ranges matching frontend SearchFilterBar
         '0-15000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price > 0 AND rental_price <= 15000),
-        '15000-20000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price > 15000 AND rental_price <= 20000),
-        '20000-30000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price > 20000 AND rental_price <= 30000),
-        '30000-45000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price > 30000 AND rental_price <= 45000),
-        '45000-70000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price > 45000 AND rental_price <= 70000),
-        '70000-100000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price > 70000 AND rental_price <= 100000),
-        '100000--RENT', (SELECT count(*) FROM filtered_props WHERE rental_price > 100000)
+        '15000-20000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price >= 15000 AND rental_price <= 20000),
+        '20000-30000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price >= 20000 AND rental_price <= 30000),
+        '30000-45000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price >= 30000 AND rental_price <= 45000),
+        '45000-70000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price >= 45000 AND rental_price <= 70000),
+        '70000-100000-RENT', (SELECT count(*) FROM filtered_props WHERE rental_price >= 70000 AND rental_price <= 100000),
+        '100000--RENT', (SELECT count(*) FROM filtered_props WHERE rental_price >= 100000)
       )
     ),
     'availableSizes', (

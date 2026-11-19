@@ -108,13 +108,19 @@ export function PropertySearchPage({
     filters.queryString
   );
 
-  // 1b. Separate Lightweight Map Pins Pipeline (loads ONLY when viewMode !== "grid", cached 1 year)
+  // 1b. Lightweight Full-Inventory Pipeline (~15KB gzipped, cached 1 year)
+  // Provides 100% full-inventory client-side parity across grid, split, and map views
   const isMapActive = viewMode !== "grid";
   const {
     pins: mapPins,
     stations: mapStations,
     isLoading: isMapPinsLoading,
-  } = useMapPins(isMapActive);
+  } = useMapPins(true);
+
+  // Full inventory for filtering & facets: prefer full inventory from mapPins if loaded, fallback to properties
+  const inventorySource = useMemo(() => {
+    return mapPins.length > 0 ? mapPins : properties;
+  }, [mapPins, properties]);
 
   // 2. Optimized Analysis Logic (Paginated Grid Stream)
   const {
@@ -130,13 +136,10 @@ export function PropertySearchPage({
     availableStations,
     allStations,
     matchesFilters,
-  } = usePropertyFiltering(properties, { ...filters, keyword: filters.debouncedKeyword }, serverFacets);
+  } = usePropertyFiltering(inventorySource, { ...filters, keyword: filters.debouncedKeyword }, serverFacets);
 
   // 2b. Full-Inventory Filtering for Map Pins (100% filter parity in RAM, 0 network requests)
-  const { filtered: filteredMapPins } = usePropertyFiltering(
-    mapPins,
-    { ...filters, keyword: filters.debouncedKeyword }
-  );
+  const filteredMapPins = filtered;
 
   // 2-Way Sync State (Card Hover <-> Map Pin & Search-as-map-moves)
   const [hoveredPropertyId, setHoveredPropertyId] = useState<string | null>(null);
@@ -202,11 +205,11 @@ export function PropertySearchPage({
 
   // Total count for current active filter state
   const totalAvailableCount = useMemo(() => {
-    // When full map dataset is loaded in RAM, filteredMapPins.length is the exact 100% truth across ALL active inventory
-    if (isMapActive && mapPins.length > 0) {
+    // When full map dataset is loaded in RAM, filtered.length is the exact 100% truth across ALL active inventory
+    if (mapPins.length > 0) {
       return viewMode === "split" && searchAsMove
         ? splitSourceList.length
-        : filteredMapPins.length;
+        : filtered.length;
     }
 
     const hasSpecificPrice = Boolean(
@@ -429,7 +432,7 @@ export function PropertySearchPage({
       <SearchFilterBar
         {...filters}
         isLoading={isLoading}
-        filteredLength={isMapActive && mapPins.length > 0 ? filteredMapPins.length : filtered.length}
+        filteredLength={filtered.length}
         availableAreas={availableAreas}
         availableProvinces={availableProvinces}
         availableTypes={availableTypes}
@@ -440,7 +443,7 @@ export function PropertySearchPage({
         availableBedrooms={availableBedrooms}
         availableStations={availableStations}
         allStations={allStations}
-        properties={isMapActive && mapPins.length > 0 ? mapPins : properties}
+        properties={inventorySource}
         matchesFilters={matchesFilters}
         setBulkFilters={filters.setBulkFilters}
       />

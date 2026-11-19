@@ -552,20 +552,20 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
                     if (isRent && rPrice > 0) {
                       if (rPrice <= 15000) computedPrices["0-15000-RENT"]++;
-                      else if (rPrice <= 20000) computedPrices["15000-20000-RENT"]++;
-                      else if (rPrice <= 30000) computedPrices["20000-30000-RENT"]++;
-                      else if (rPrice <= 45000) computedPrices["30000-45000-RENT"]++;
-                      else if (rPrice <= 70000) computedPrices["45000-70000-RENT"]++;
-                      else if (rPrice <= 100000) computedPrices["70000-100000-RENT"]++;
-                      else computedPrices["100000--RENT"]++;
+                      if (rPrice >= 15000 && rPrice <= 20000) computedPrices["15000-20000-RENT"]++;
+                      if (rPrice >= 20000 && rPrice <= 30000) computedPrices["20000-30000-RENT"]++;
+                      if (rPrice >= 30000 && rPrice <= 45000) computedPrices["30000-45000-RENT"]++;
+                      if (rPrice >= 45000 && rPrice <= 70000) computedPrices["45000-70000-RENT"]++;
+                      if (rPrice >= 70000 && rPrice <= 100000) computedPrices["70000-100000-RENT"]++;
+                      if (rPrice >= 100000) computedPrices["100000--RENT"]++;
                     }
 
                     if (isSale && sPrice > 0) {
                       if (sPrice <= 2000000) computedPrices["0-2000000-SALE"]++;
-                      else if (sPrice <= 5000000) computedPrices["2000000-5000000-SALE"]++;
-                      else if (sPrice <= 10000000) computedPrices["5000000-10000000-SALE"]++;
-                      else if (sPrice <= 20000000) computedPrices["10000000-20000000-SALE"]++;
-                      else computedPrices["20000000--SALE"]++;
+                      if (sPrice >= 2000000 && sPrice <= 5000000) computedPrices["2000000-5000000-SALE"]++;
+                      if (sPrice >= 5000000 && sPrice <= 10000000) computedPrices["5000000-10000000-SALE"]++;
+                      if (sPrice >= 10000000 && sPrice <= 20000000) computedPrices["10000000-20000000-SALE"]++;
+                      if (sPrice >= 20000000) computedPrices["20000000--SALE"]++;
                     }
                   });
 
@@ -581,10 +581,10 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
                     const size = Number(p.size_sqm) || 0;
                     if (size > 0) {
                       if (size <= 30) computedSizes["0-30"]++;
-                      else if (size <= 50) computedSizes["30-50"]++;
-                      else if (size <= 100) computedSizes["50-100"]++;
-                      else if (size <= 200) computedSizes["100-200"]++;
-                      else computedSizes["200-"]++;
+                      if (size >= 30 && size <= 50) computedSizes["30-50"]++;
+                      if (size >= 50 && size <= 100) computedSizes["50-100"]++;
+                      if (size >= 100 && size <= 200) computedSizes["100-200"]++;
+                      if (size >= 200) computedSizes["200-"]++;
                     }
                   });
 
