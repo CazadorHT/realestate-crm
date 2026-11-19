@@ -208,23 +208,39 @@ export function SearchFilterBar({
     const counts = new Map<string, number>();
     const opts = flatPriceOptions.filter((o: any) => o.min !== "" || o.max !== "");
 
-    // 1. Populate from availablePrices if present
-    if (availablePrices && Object.keys(availablePrices).length > 0) {
+    const hasNonPriceFilters = Boolean(
+      (minSize && minSize !== "0") ||
+      maxSize ||
+      (bedrooms && bedrooms !== "ALL") ||
+      keyword ||
+      transitStation ||
+      nearTrain ||
+      petFriendly ||
+      cbd ||
+      fullyFurnished ||
+      isForeigner ||
+      companyRegistered ||
+      isHotDeal ||
+      allowAirbnb ||
+      (area && area !== "ALL")
+    );
+
+    // 1. Populate from availablePrices if present and no conflicting non-price filters are active
+    if (!hasNonPriceFilters && availablePrices && Object.keys(availablePrices).length > 0) {
       opts.forEach((opt: any) => {
         const key = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
         if (key in availablePrices) {
           counts.set(key, availablePrices[key]);
         }
       });
+
+      const allCovered = opts.every((opt: any) => counts.has(`${opt.min}-${opt.max}-${opt.type || "ALL"}`));
+      if (allCovered && counts.size > 0) {
+        return counts;
+      }
     }
 
-    // 2. If all options are covered, return counts
-    const allCovered = opts.every((opt: any) => counts.has(`${opt.min}-${opt.max}-${opt.type || "ALL"}`));
-    if (allCovered && counts.size > 0) {
-      return counts;
-    }
-
-    // 3. Fallback or fill in missing from properties dataset
+    // 2. Contextual calculation from active properties dataset
     if (properties && properties.length > 0) {
       properties.forEach((p: any) => {
         if (matchesFilters && !matchesFilters(p, ["price"])) return;
@@ -234,8 +250,6 @@ export function SearchFilterBar({
 
         opts.forEach((opt: any) => {
           const key = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
-          if (counts.has(key)) return; // Already has server facet count
-
           const min = opt.min ? parseFloat(opt.min) : 0;
           const max = opt.max ? parseFloat(opt.max) : Infinity;
 
@@ -257,7 +271,26 @@ export function SearchFilterBar({
     }
 
     return counts;
-  }, [properties, matchesFilters, flatPriceOptions, availablePrices]);
+  }, [
+    properties,
+    matchesFilters,
+    flatPriceOptions,
+    availablePrices,
+    minSize,
+    maxSize,
+    bedrooms,
+    keyword,
+    transitStation,
+    nearTrain,
+    petFriendly,
+    cbd,
+    fullyFurnished,
+    isForeigner,
+    companyRegistered,
+    isHotDeal,
+    allowAirbnb,
+    area,
+  ]);
 
   const sizeOptions = useMemo(() => {
     const isEn = language === "en";
@@ -280,22 +313,39 @@ export function SearchFilterBar({
     const counts = new Map<string, number>();
     const opts = sizeOptions.filter((o) => o.min !== "" || o.max !== "");
 
-    // 1. Populate from availableSizes if present
-    if (availableSizes && Object.keys(availableSizes).length > 0) {
+    const hasNonSizeFilters = Boolean(
+      (minPrice && minPrice !== "0") ||
+      maxPrice ||
+      (bedrooms && bedrooms !== "ALL") ||
+      keyword ||
+      transitStation ||
+      nearTrain ||
+      petFriendly ||
+      cbd ||
+      fullyFurnished ||
+      isForeigner ||
+      companyRegistered ||
+      isHotDeal ||
+      allowAirbnb ||
+      (area && area !== "ALL")
+    );
+
+    // 1. Populate from availableSizes if present and no conflicting non-size filters are active
+    if (!hasNonSizeFilters && availableSizes && Object.keys(availableSizes).length > 0) {
       opts.forEach((opt) => {
         const key = `${opt.min}-${opt.max}`;
         if (key in availableSizes) {
           counts.set(key, availableSizes[key]);
         }
       });
+
+      const allCovered = opts.every((opt) => counts.has(`${opt.min}-${opt.max}`));
+      if (allCovered && counts.size > 0) {
+        return counts;
+      }
     }
 
-    const allCovered = opts.every((opt) => counts.has(`${opt.min}-${opt.max}`));
-    if (allCovered && counts.size > 0) {
-      return counts;
-    }
-
-    // 2. Fallback or fill in missing from properties dataset
+    // 2. Contextual calculation from active properties dataset
     if (properties && properties.length > 0) {
       properties.forEach((p: any) => {
         if (matchesFilters && !matchesFilters(p, ["size"])) return;
@@ -304,8 +354,6 @@ export function SearchFilterBar({
 
         opts.forEach((opt) => {
           const key = `${opt.min}-${opt.max}`;
-          if (counts.has(key)) return;
-
           const min = opt.min ? parseFloat(opt.min) : 0;
           const max = opt.max ? parseFloat(opt.max) : Infinity;
 
@@ -317,7 +365,26 @@ export function SearchFilterBar({
     }
 
     return counts;
-  }, [properties, matchesFilters, sizeOptions, availableSizes]);
+  }, [
+    properties,
+    matchesFilters,
+    sizeOptions,
+    availableSizes,
+    minPrice,
+    maxPrice,
+    bedrooms,
+    keyword,
+    transitStation,
+    nearTrain,
+    petFriendly,
+    cbd,
+    fullyFurnished,
+    isForeigner,
+    companyRegistered,
+    isHotDeal,
+    allowAirbnb,
+    area,
+  ]);
 
   const currentPriceOption = useMemo(() => {
     const found = flatPriceOptions.find(
