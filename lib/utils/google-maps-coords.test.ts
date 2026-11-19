@@ -94,8 +94,15 @@ describe("google-maps-coords & map-price-utils", () => {
       longitude: 100.5608,
     };
 
-    // Default / SALE mode -> shows ฿ 8.5M + discount
-    const saleResolved = resolvePinPrice(basePin, "ALL", "th");
+    // SALE_AND_RENT in "ALL" filter mode -> shows dual price pill "฿ 35K | ฿ 8.5M"
+    const allResolved = resolvePinPrice(basePin, "ALL", "th");
+    expect(allResolved.mode).toBe("BOTH");
+    expect(allResolved.displayLabel).toBe("฿ 35K | ฿ 8.5M");
+    expect(allResolved.hasDiscount).toBe(true);
+
+    // Explicit "SALE" filter mode -> shows ฿ 8.5M + discount
+    const saleResolved = resolvePinPrice(basePin, "SALE", "th");
+    expect(saleResolved.mode).toBe("SALE");
     expect(saleResolved.displayLabel).toBe("฿ 8.5M");
     expect(saleResolved.hasDiscount).toBe(true);
     expect(saleResolved.discountPercent).toBe(15);
