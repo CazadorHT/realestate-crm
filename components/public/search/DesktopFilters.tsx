@@ -802,21 +802,25 @@ export function DesktopFilters({
                 val: "ALL",
                 label: t("common.all"),
                 active: "bg-slate-700 border-slate-700",
+                hover: "hover:bg-slate-100 hover:text-slate-900",
               },
               {
                 val: "SALE",
                 label: t("search.buy"),
                 active: "bg-emerald-600 border-emerald-600",
+                hover: "hover:bg-emerald-50 hover:text-emerald-700",
               },
               {
                 val: "RENT",
                 label: t("search.rent"),
                 active: "bg-blue-600 border-blue-600",
+                hover: "hover:bg-blue-50 hover:text-blue-700",
               },
               {
                 val: "SALE_AND_RENT",
                 label: t("search.rent_buy"),
                 active: "bg-purple-600 border-purple-600",
+                hover: "hover:bg-purple-50 hover:text-purple-700",
               },
             ].map((opt) => {
               const count = availableListingTypes[opt.val] || 0;
@@ -831,7 +835,7 @@ export function DesktopFilters({
                       ? `${opt.active} text-white shadow-sm`
                       : isDisabled
                         ? "text-slate-300 bg-slate-50 cursor-not-allowed opacity-60"
-                        : "text-slate-600 hover:bg-slate-50"
+                        : `text-slate-600 ${opt.hover}`
                   }`}
                 >
                   {opt.label}

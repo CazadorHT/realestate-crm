@@ -1403,7 +1403,13 @@ export function MobileFilters({
                                     : opt.val === "SALE_AND_RENT"
                                     ? "bg-purple-600 text-white shadow-md shadow-purple-500/20"
                                     : "bg-slate-700 text-white shadow-md shadow-slate-700/20"
-                                  : "text-slate-500 hover:text-slate-900",
+                                  : opt.val === "SALE"
+                                    ? "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                                    : opt.val === "RENT"
+                                    ? "text-slate-600 hover:bg-blue-50 hover:text-blue-700"
+                                    : opt.val === "SALE_AND_RENT"
+                                    ? "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
+                                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                               )}
                             >
                               <span>{opt.label}</span>
