@@ -364,17 +364,18 @@ export function DesktopFilters({
     const isAnySelected = isParentSelected || selectedChildrenCount > 0;
 
     if (!hasChildren) {
+      const isDisabled = a.totalCount === 0;
       return (
         <button
           key={a.name}
-          disabled={a.totalCount === 0}
+          disabled={isDisabled}
           onClick={() => handleToggleArea(a.name)}
           className={`h-[30px] text-xs transition-colors flex items-center gap-1.5 px-3 py-1 shrink-0 rounded-lg whitespace-nowrap ${
             isParentSelected
-              ? "font-bold text-blue-600 bg-blue-50/70"
-              : a.totalCount === 0
-                ? "text-slate-300 cursor-not-allowed opacity-60"
-                : "text-slate-500 hover:text-blue-600 bg-slate-50 hover:bg-blue-50/50"
+              ? "font-bold text-blue-600 bg-blue-50/80 border border-blue-300"
+              : isDisabled
+                ? "text-slate-400 bg-slate-50/80 border border-slate-200/60 cursor-not-allowed opacity-60"
+                : "text-slate-600 hover:text-blue-600 bg-white hover:bg-blue-50/50 border border-slate-200 shadow-2xs"
           }`}
         >
           {isParentSelected && (
@@ -394,29 +395,41 @@ export function DesktopFilters({
           )}
           <span>{a.localizedName}</span>
           <span
-            className={`text-xs ${a.totalCount === 0 ? "opacity-30" : "opacity-60 text-blue-600"}`}
+            className={`text-[11px] px-1.5 py-0.2 rounded-full font-semibold ${
+              isParentSelected
+                ? "bg-blue-600 text-white"
+                : isDisabled
+                ? "bg-slate-100 text-slate-400"
+                : "bg-blue-50 text-blue-600 border border-blue-200/60"
+            }`}
           >
-            ({a.totalCount})
+            {a.totalCount}
           </span>
         </button>
       );
     }
 
     // Compound chip with Dropdown for Parent Zone with children
+    const isZoneDisabled = a.totalCount === 0;
     return (
       <div
         key={a.name}
         className={`h-[30px] inline-flex items-center rounded-lg border text-xs shrink-0 transition-all whitespace-nowrap ${
           isAnySelected
-            ? "bg-blue-50/80 border-blue-200 text-blue-700 shadow-xs"
-            : "bg-slate-50 border-slate-100/80 text-slate-600 hover:border-slate-200"
+            ? "bg-blue-50/80 border-blue-300 text-blue-700 shadow-xs"
+            : isZoneDisabled
+            ? "bg-slate-50/80 border-slate-200/60 text-slate-400 opacity-60"
+            : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 shadow-2xs"
         }`}
       >
         {/* Main button (Select entire zone) */}
         <button
           type="button"
+          disabled={isZoneDisabled}
           onClick={() => handleToggleArea(a.name)}
-          className="h-full flex items-center gap-1.5 px-2.5 py-1 hover:text-blue-600 transition-colors whitespace-nowrap"
+          className={`h-full flex items-center gap-1.5 px-2.5 py-1 transition-colors whitespace-nowrap ${
+            isZoneDisabled ? "cursor-not-allowed text-slate-400" : "hover:text-blue-600"
+          }`}
           title={
             language === "en"
               ? `Select all ${a.localizedName} zone`
@@ -438,7 +451,7 @@ export function DesktopFilters({
               />
             </svg>
           )}
-          <span className={isAnySelected ? "font-bold text-blue-700" : "text-slate-600"}>
+          <span className={isAnySelected ? "font-bold text-blue-700" : isZoneDisabled ? "text-slate-400" : "text-slate-600"}>
             {a.localizedName}
           </span>
           {selectedChildrenCount > 0 && !isParentSelected ? (
@@ -449,8 +462,16 @@ export function DesktopFilters({
               {selectedChildrenCount}
             </span>
           ) : (
-            <span className="text-xs opacity-75 text-blue-600 font-semibold">
-              ({a.totalCount})
+            <span
+              className={`text-[11px] px-1.5 py-0.2 rounded-full font-semibold ${
+                isAnySelected
+                  ? "bg-blue-600 text-white"
+                  : isZoneDisabled
+                  ? "bg-slate-100 text-slate-400"
+                  : "bg-blue-50 text-blue-600 border border-blue-200/60"
+              }`}
+            >
+              {a.totalCount}
             </span>
           )}
         </button>
@@ -685,24 +706,31 @@ export function DesktopFilters({
                   </span>
                 </div>
               </SelectItem>
-              {availableProvinces.map((p) => (
-                <SelectItem
-                  key={p.name}
-                  value={p.name}
-                  disabled={p.count === 0}
-                >
-                  <div className="flex items-center justify-between w-full gap-4">
-                    <span className={p.count === 0 ? "text-slate-400" : ""}>
-                      {getProvinceName(p.name, language)}
-                    </span>
-                    <span
-                      className={`text-xs ${p.count === 0 ? "text-slate-300" : "text-blue-500"}`}
-                    >
-                      ({p.count})
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
+              {availableProvinces.map((p) => {
+                const isDisabled = p.count === 0;
+                return (
+                  <SelectItem
+                    key={p.name}
+                    value={p.name}
+                    disabled={isDisabled}
+                  >
+                    <div className="flex items-center justify-between w-full gap-4">
+                      <span className={isDisabled ? "text-slate-400" : "text-slate-700"}>
+                        {getProvinceName(p.name, language)}
+                      </span>
+                      <span
+                        className={`text-[11px] px-1.5 py-0.2 rounded-full font-semibold ${
+                          isDisabled
+                            ? "bg-slate-100 text-slate-400"
+                            : "bg-blue-50 text-blue-600 border border-blue-200/60"
+                        }`}
+                      >
+                        {p.count}
+                      </span>
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>

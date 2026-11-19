@@ -315,8 +315,34 @@ export function usePropertyFiltering(
     const allStationsMap = new Map<string, { type: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
 
     properties.forEach((p) => {
-      // Collect all stations unfiltered for metadata resolution
-      (p.nearby_transits || []).forEach((t: any) => {
+      // Collect all transit stations for metadata resolution and search select
+      const pTransits: Array<{ station_name: string; type: string; station_name_en?: string | null; station_name_cn?: string | null; station_name_ru?: string | null }> = [];
+      if (Array.isArray(p.nearby_transits)) {
+        p.nearby_transits.forEach((t: any) => {
+          if (t && (t.station_name || t.name)) {
+            pTransits.push({
+              station_name: t.station_name || t.name,
+              type: t.type || "BTS",
+              station_name_en: t.station_name_en || t.name_en || null,
+              station_name_cn: t.station_name_cn || t.name_cn || null,
+              station_name_ru: t.station_name_ru || t.name_ru || null,
+            });
+          }
+        });
+      }
+      if (p.transit_station_name) {
+        if (!pTransits.some(t => t.station_name === p.transit_station_name)) {
+          pTransits.push({
+            station_name: p.transit_station_name,
+            type: p.transit_type || "BTS",
+            station_name_en: p.transit_station_name_en || null,
+            station_name_cn: p.transit_station_name_cn || null,
+            station_name_ru: p.transit_station_name_ru || null,
+          });
+        }
+      }
+
+      pTransits.forEach((t) => {
         const key = `${t.station_name}|${t.type}`;
         if (!allStationsMap.has(key)) {
           allStationsMap.set(key, {
@@ -331,9 +357,11 @@ export function usePropertyFiltering(
       const fullMatch = checkMatch(p);
       if (fullMatch) {
         filteredList.push(p);
-        
-        // Extract available stations from MATCHED properties
-        (p.nearby_transits || []).forEach((t: any) => {
+      }
+
+      // Extract stations from properties matching other active filters (disjunctive facet)
+      if (checkMatch(p, ["transitStation"])) {
+        pTransits.forEach((t) => {
           const key = `${t.station_name}|${t.type}`;
           const existing = stationMap.get(key);
           if (existing) {
@@ -469,11 +497,53 @@ export function usePropertyFiltering(
       isHotDeal || allowAirbnb
     );
 
+    // Contextual provinces: retain all provinces, but reflect matched count (0 if no listings in current filter)
+    const finalProvinces = (serverProvinces.length > 0 ? serverProvinces : results.availableProvinces).map((sp) => {
+      if (!hasActiveRestrictions) return sp;
+      const matched = results.availableProvinces.find((p) => p.name === sp.name);
+      return {
+        ...sp,
+        count: matched ? matched.count : 0,
+      };
+    }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+    // Contextual areas: retain all areas, but reflect matched count (0 if no listings in current filter)
+    const finalAreas = (serverAreas.length > 0 ? serverAreas : results.availableAreas).map((sa) => {
+      if (!hasActiveRestrictions) return sa;
+      const matched = results.availableAreas.find((a) => a.name === sa.name);
+      return {
+        ...sa,
+        count: matched ? matched.count : 0,
+      };
+    }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+    // Full station catalogue for metadata and dropdown discovery
+    const finalAllStations = serverStations.length > 0
+      ? serverStations.map(s => ({
+          name: s.name,
+          type: s.type,
+          name_en: s.name_en,
+          name_cn: s.name_cn,
+          name_ru: s.name_ru
+        }))
+      : results.allStations;
+
+    // Contextual transit stations: stations matching current filters have count > 0, others 0
+    const finalStations = (serverStations.length > 0 ? serverStations : results.availableStations).map((ss) => {
+      if (!hasActiveRestrictions) return ss;
+      const matched = results.availableStations.find((s) => s.name === ss.name);
+      return {
+        ...ss,
+        count: matched ? matched.count : 0,
+      };
+    }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
     return {
       ...results,
-      availableProvinces: serverProvinces.length > 0 ? serverProvinces : results.availableProvinces,
-      availableAreas: serverAreas.length > 0 ? serverAreas : results.availableAreas,
-      availableStations: serverStations.length > 0 && !hasActiveRestrictions ? serverStations : results.availableStations,
+      allStations: finalAllStations,
+      availableProvinces: finalProvinces,
+      availableAreas: finalAreas,
+      availableStations: finalStations,
       availableTypes: serverFacets.availableTypes && !hasActiveRestrictions ? serverFacets.availableTypes : results.availableTypes,
       availableListingTypes: serverFacets.availableListingTypes && !hasActiveRestrictions ? serverFacets.availableListingTypes : results.availableListingTypes,
       availableQuickFilters: serverFacets.availableQuickFilters && !hasActiveRestrictions

@@ -130,6 +130,7 @@ const PUBLIC_LIST_COLUMNS = `
   is_hot_deal,
   near_transit, transit_type, transit_station_name,
   transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
+  nearby_transits,
   google_maps_link, is_fully_furnished, is_bare_shell,
   is_pet_friendly, is_foreigner_quota, is_tax_registered,
   property_images (
@@ -147,6 +148,7 @@ const PUBLIC_DETAIL_COLUMNS = `
   nearby_transits, nearby_places, is_hot_deal, transit_info,
   near_transit, transit_type, transit_station_name,
   transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
+  nearby_transits,
   google_maps_link, is_fully_furnished, is_bare_shell,
   is_pet_friendly, is_foreigner_quota, is_tax_registered,
   amenities,

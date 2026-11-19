@@ -408,6 +408,7 @@ export function StationSearchSelect({
           ) : (
             filteredStations.map((station, idx) => {
               const isSelected = transitStation === station.name;
+              const isDisabled = station.count === 0 && !isSelected;
               const localizedName = getLocaleValue(
                 {
                   name: station.name.split("|")[0],
@@ -425,16 +426,19 @@ export function StationSearchSelect({
                 <button
                   key={`${station.name}-${station.type}-${idx}`}
                   type="button"
+                  disabled={isDisabled}
                   onClick={() => {
                     setTransitStation(isSelected ? "" : station.name);
                     setOpen(false);
                     setSearchQuery("");
                   }}
                   className={cn(
-                    "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 px-2.5 text-xs text-left transition-colors",
+                    "relative flex w-full select-none items-center rounded-lg py-2 px-2.5 text-xs text-left transition-colors",
                     isSelected
-                      ? "bg-blue-50 text-blue-700 font-semibold"
-                      : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      ? "bg-blue-50 text-blue-700 font-semibold cursor-pointer"
+                      : isDisabled
+                      ? "text-slate-400 bg-slate-50/50 cursor-not-allowed opacity-60"
+                      : "text-slate-700 hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
                   )}
                 >
                   <div className="flex items-center gap-2.5 w-full">
@@ -442,7 +446,10 @@ export function StationSearchSelect({
                       const logoPath = LOGO_PATHS[station.type.toUpperCase()];
                       if (logoPath) {
                         return (
-                          <div className="w-7 h-7 rounded-md bg-white border border-slate-200/50 flex items-center justify-center p-0.5 shrink-0 shadow-xs">
+                          <div className={cn(
+                            "w-7 h-7 rounded-md bg-white border border-slate-200/50 flex items-center justify-center p-0.5 shrink-0 shadow-xs",
+                            isDisabled && "grayscale opacity-50"
+                          )}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={logoPath} alt={station.type} className="w-full h-full object-contain" />
                           </div>
@@ -452,7 +459,8 @@ export function StationSearchSelect({
                         <span
                           className={cn(
                             "text-[8px] font-extrabold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0",
-                            getTypeBadgeClass(station.type)
+                            getTypeBadgeClass(station.type),
+                            isDisabled && "opacity-50"
                           )}
                         >
                           {normType}
@@ -468,9 +476,13 @@ export function StationSearchSelect({
                       )}
                     </div>
                     {/* Count indicator */}
-                    {station.count > 0 && (
-                      <span className="text-[10px] text-blue-500 bg-blue-50/50 px-1.5 py-0.5 rounded-md font-medium shrink-0 mr-1">
+                    {station.count > 0 ? (
+                      <span className="text-[10px] text-blue-600 bg-blue-50 border border-blue-200/60 px-1.5 py-0.5 rounded-full font-semibold shrink-0 mr-1">
                         {station.count}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full font-normal shrink-0 mr-1">
+                        0
                       </span>
                     )}
                     {isSelected && (
