@@ -153,10 +153,25 @@ export function PriceRangeSelect({
   const [activeMode, setActiveMode] = useState<"RENT" | "SALE">(initialMode);
 
   useEffect(() => {
-    if (listingType === "SALE") setActiveMode("SALE");
-    else if (listingType === "RENT") setActiveMode("RENT");
-    else if (priceType === "SALE") setActiveMode("SALE");
-    else if (priceType === "RENT") setActiveMode("RENT");
+    if (listingType === "SALE") {
+      setActiveMode("SALE");
+      if (priceType === "RENT") {
+        setMinPrice("");
+        setMaxPrice("");
+        if (setPriceType) setPriceType("SALE");
+      }
+    } else if (listingType === "RENT") {
+      setActiveMode("RENT");
+      if (priceType === "SALE") {
+        setMinPrice("");
+        setMaxPrice("");
+        if (setPriceType) setPriceType("RENT");
+      }
+    } else if (priceType === "SALE") {
+      setActiveMode("SALE");
+    } else if (priceType === "RENT") {
+      setActiveMode("RENT");
+    }
   }, [listingType, priceType]);
 
   // Mode bounds
@@ -192,10 +207,22 @@ export function PriceRangeSelect({
   };
 
   const handleApply = () => {
-    setMinPrice(localMin);
-    setMaxPrice(localMax);
+    let finalMin = localMin ? localMin.replace(/[^0-9]/g, "") : "";
+    let finalMax = localMax ? localMax.replace(/[^0-9]/g, "") : "";
+    if (finalMin && finalMax && Number(finalMin) > Number(finalMax)) {
+      const temp = finalMin;
+      finalMin = finalMax;
+      finalMax = temp;
+    }
+    setMinPrice(finalMin);
+    setMaxPrice(finalMax);
     if (setPriceType) {
-      setPriceType(listingType === "ALL" || listingType === "SALE_AND_RENT" ? activeMode : "");
+      const hasPrice = Boolean((finalMin && finalMin !== "0") || (finalMax && finalMax !== "0"));
+      if (hasPrice) {
+        setPriceType(listingType === "ALL" || listingType === "SALE_AND_RENT" ? activeMode : "");
+      } else {
+        setPriceType("");
+      }
     }
     setIsOpen(false);
   };
@@ -210,6 +237,18 @@ export function PriceRangeSelect({
   };
 
   const handleSelectPreset = (opt: { min: string; max: string; type?: string }) => {
+    const isAlreadySelected = localMin === (opt.min || "") && localMax === (opt.max || "");
+    if (isAlreadySelected) {
+      // Toggle off when clicking an already selected preset
+      setLocalMin("");
+      setLocalMax("");
+      setMinPrice("");
+      setMaxPrice("");
+      if (setPriceType) setPriceType("");
+      setIsOpen(false);
+      return;
+    }
+
     setLocalMin(opt.min || "");
     setLocalMax(opt.max || "");
     setMinPrice(opt.min || "");
@@ -289,7 +328,13 @@ export function PriceRangeSelect({
         <div className="flex bg-slate-100 p-1 rounded-xl">
           <button
             type="button"
-            onClick={() => setActiveMode("RENT")}
+            onClick={() => {
+              if (activeMode !== "RENT") {
+                setActiveMode("RENT");
+                setLocalMin("");
+                setLocalMax("");
+              }
+            }}
             className={cn(
               "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center",
               activeMode === "RENT"
@@ -301,7 +346,13 @@ export function PriceRangeSelect({
           </button>
           <button
             type="button"
-            onClick={() => setActiveMode("SALE")}
+            onClick={() => {
+              if (activeMode !== "SALE") {
+                setActiveMode("SALE");
+                setLocalMin("");
+                setLocalMax("");
+              }
+            }}
             className={cn(
               "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all text-center",
               activeMode === "SALE"

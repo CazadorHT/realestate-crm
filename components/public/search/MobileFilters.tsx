@@ -18,6 +18,8 @@ import {
   Minimize2,
   Maximize2,
   CircleDollarSign,
+  X,
+  DollarSign,
 } from "lucide-react";
 import {
   Sheet,
@@ -76,6 +78,60 @@ const LOGO_PATHS: Record<string, string> = {
   SRT_RED: "/images/transit/SRT_(Bangkok)_Red_logo.svg",
   SRT: "/images/transit/SRT_(Bangkok)_Red_logo.svg",
   BRT: "/images/transit/BRT_(Bangkok)_logo.svg",
+};
+
+const QUICK_COLOR_MAP: Record<string, { activeBg: string; activeBorder: string; activeShadow: string; iconColor: string }> = {
+  blue: { activeBg: "bg-blue-600", activeBorder: "border-blue-600", activeShadow: "shadow-blue-500/20", iconColor: "text-blue-500" },
+  orange: { activeBg: "bg-orange-600", activeBorder: "border-orange-600", activeShadow: "shadow-orange-500/20", iconColor: "text-orange-500" },
+  emerald: { activeBg: "bg-emerald-600", activeBorder: "border-emerald-600", activeShadow: "shadow-emerald-500/20", iconColor: "text-emerald-500" },
+  purple: { activeBg: "bg-purple-600", activeBorder: "border-purple-600", activeShadow: "shadow-purple-500/20", iconColor: "text-purple-500" },
+  indigo: { activeBg: "bg-indigo-600", activeBorder: "border-indigo-600", activeShadow: "shadow-indigo-500/20", iconColor: "text-indigo-500" },
+  rose: { activeBg: "bg-rose-600", activeBorder: "border-rose-600", activeShadow: "shadow-rose-500/20", iconColor: "text-rose-500" },
+  pink: { activeBg: "bg-[#FF5A5F]", activeBorder: "border-[#FF5A5F]", activeShadow: "shadow-pink-500/20", iconColor: "text-[#FF5A5F]" },
+};
+
+const MobileBadge = ({
+  label,
+  onClear,
+  variant = "blue",
+  icon,
+}: {
+  label: string;
+  onClear: () => void;
+  variant?: "blue" | "slate" | "emerald" | "purple" | "rose" | "red" | "teal";
+  icon?: React.ReactNode;
+}) => {
+  const variants = {
+    blue: "bg-blue-50 border-blue-200 text-blue-700",
+    slate: "bg-slate-100 border-slate-200 text-slate-700",
+    emerald: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    purple: "bg-purple-50 border-purple-200 text-purple-700",
+    rose: "bg-rose-50 border-rose-200 text-rose-700",
+    red: "bg-red-50 border-red-200 text-red-700",
+    teal: "bg-teal-50 border-teal-200 text-teal-700",
+  };
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1.5 px-2.5 py-1 border rounded-full text-xs font-semibold shadow-2xs whitespace-nowrap shrink-0 transition-all",
+        variants[variant]
+      )}
+    >
+      {icon}
+      <span>{label}</span>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClear();
+        }}
+        className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 transition-colors"
+      >
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  );
 };
 
 interface MobileFiltersProps {
@@ -163,6 +219,7 @@ interface MobileFiltersProps {
     name_cn?: string | null;
     name_ru?: string | null;
   }[];
+  clearFilters?: () => void;
 }
 
 export function MobileFilters({
@@ -237,6 +294,7 @@ export function MobileFilters({
   transitStation,
   setTransitStation,
   allStations,
+  clearFilters,
 }: MobileFiltersProps) {
   const [trainTypeFilter, setTrainTypeFilter] = useState<string>("ALL");
 
@@ -248,6 +306,51 @@ export function MobileFilters({
     if (!area || area === "ALL") return [];
     return area.split(",").map((s) => s.trim()).filter(Boolean);
   }, [area]);
+
+  const hasActivePrice = Boolean(
+    (minPrice && minPrice !== "0" && minPrice !== "") ||
+    (maxPrice && maxPrice !== "0" && maxPrice !== "")
+  );
+
+  const hasActiveSize = Boolean(
+    (minSize && minSize !== "0" && minSize !== "") ||
+    (maxSize && maxSize !== "0" && maxSize !== "")
+  );
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (keyword && keyword.trim() !== "") count++;
+    if (listingType && listingType !== "ALL") count++;
+    if (type && type !== "ALL") count++;
+    if (province && province !== "ALL") count++;
+    if (selectedAreaList.length > 0) count += selectedAreaList.length;
+    if (hasActivePrice) count++;
+    if (hasActiveSize) count++;
+    if (bedrooms && bedrooms !== "ALL") count++;
+    if (transitStation) count++;
+    if (nearTrain) count++;
+    if (petFriendly) count++;
+    if (fullyFurnished) count++;
+    if (isForeigner) count++;
+    if (companyRegistered) count++;
+    if (isHotDeal) count++;
+    if (allowAirbnb) count++;
+    if (cbd) count++;
+    return count;
+  }, [
+    keyword, listingType, type, province, selectedAreaList,
+    hasActivePrice, hasActiveSize, bedrooms, transitStation,
+    nearTrain, petFriendly, fullyFurnished, isForeigner,
+    companyRegistered, isHotDeal, allowAirbnb, cbd,
+  ]);
+
+  const hasActiveFilters = activeFilterCount > 0;
+
+  const formatPrice = (p: string) => {
+    const num = Number(p);
+    if (!num) return p;
+    return num.toLocaleString();
+  };
 
   const handleToggleArea = (areaName: string) => {
     if (selectedAreaList.includes(areaName)) {
@@ -526,16 +629,21 @@ export function MobileFilters({
           <SheetTrigger asChild>
             <Button
               variant="outline"
-              className="h-12 w-12 p-0 rounded-xl border-slate-200 bg-white shadow-sm shrink-0"
+              className="h-12 w-12 p-0 rounded-xl border-slate-200 bg-white shadow-sm shrink-0 relative"
             >
               <SlidersHorizontal className="h-5 w-5 text-slate-600" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+                  {activeFilterCount}
+                </span>
+              )}
             </Button>
           </SheetTrigger>
           <SheetContent
             side="bottom"
             className="h-[75vh] rounded-t-2xl flex flex-col p-0 bg-slate-50 "
           >
-            <SheetHeader className="px-6 py-5 border-b border-slate-100 bg-white text-slate-900 rounded-t-4xl">
+            <SheetHeader className="px-6 py-4 border-b border-slate-100 bg-white text-slate-900 rounded-t-4xl flex flex-row items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-1.5 bg-blue-50 rounded-2xl">
                   <MdManageSearch className="h-6 w-6 text-blue-600" />
@@ -544,6 +652,15 @@ export function MobileFilters({
                   {t("search.filter_title")}
                 </SheetTitle>
               </div>
+              {hasActiveFilters && clearFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs font-semibold text-rose-500 hover:text-rose-600 px-2.5 py-1.5 rounded-lg bg-rose-50/80 hover:bg-rose-100 transition-colors cursor-pointer mr-6"
+                >
+                  {t("search.clear_all") || "ล้างทั้งหมด"}
+                </button>
+              )}
             </SheetHeader>
             <div className="p-4 flex-1 overflow-y-auto space-y-4">
               {/* Quick Filters Zone */}
@@ -629,6 +746,7 @@ export function MobileFilters({
                   ].map((f) => {
                     const qCount = availableQuickFilters[f.key] || 0;
                     const isDisabled = !f.state && qCount === 0;
+                    const c = QUICK_COLOR_MAP[f.color] || QUICK_COLOR_MAP.blue;
 
                     return (
                       <div
@@ -636,9 +754,7 @@ export function MobileFilters({
                         className={cn(
                           "flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl border-2 transition-colors duration-200 cursor-pointer relative",
                           f.state
-                            ? f.color === "pink"
-                              ? "bg-[#FF5A5F] border-[#FF5A5F] text-white shadow-md shadow-pink-500/20"
-                              : `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
+                            ? `${c.activeBg} ${c.activeBorder} text-white shadow-md ${c.activeShadow}`
                             : isDisabled
                               ? "bg-slate-100 border-transparent text-slate-300 pointer-events-none"
                               : "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200",
@@ -664,9 +780,7 @@ export function MobileFilters({
                               ? "text-white"
                               : isDisabled
                                 ? "text-slate-200"
-                                : f.color === "pink"
-                                  ? "text-[#FF5A5F]"
-                                  : `text-${f.color}-500`,
+                                : c.iconColor,
                           )}
                         />
                         <span className="text-[10px] font-medium text-center leading-tight">
@@ -958,8 +1072,12 @@ export function MobileFilters({
                               <button
                                 key={p.name}
                                 onClick={() => {
-                                  setProvince(p.name);
+                                  const nextProvince = province === p.name ? "ALL" : p.name;
+                                  setProvince(nextProvince);
                                   setArea("ALL");
+                                  if (nextProvince !== "ALL" && nextProvince !== "กรุงเทพมหานคร" && nextProvince !== "Bangkok") {
+                                    setTransitStation("");
+                                  }
                                 }}
                                 className={cn(
                                   "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2",
@@ -1184,13 +1302,14 @@ export function MobileFilters({
                                 key={pt.value}
                                 disabled={!hasItems}
                                 onClick={() => {
-                                  setType(pt.value);
+                                  const nextType = isActive && pt.value !== "ALL" ? "ALL" : pt.value;
+                                  setType(nextType);
                                   pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
                                     filter_type: "property_type",
-                                    filter_value: pt.value,
+                                    filter_value: nextType,
                                     province,
                                     popular_area: area,
-                                    item_category: pt.value,
+                                    item_category: nextType,
                                     listing_type: listingType,
                                   });
                                 }}
@@ -1240,14 +1359,15 @@ export function MobileFilters({
                             <button
                               key={opt.val}
                               onClick={() => {
-                                setListingType(opt.val);
+                                const nextVal = listingType === opt.val && opt.val !== "ALL" ? "ALL" : opt.val;
+                                setListingType(nextVal);
                                 pushToDataLayer(GTM_EVENTS.SEARCH_FILTER, {
                                   filter_type: "listing_type",
-                                  filter_value: opt.val,
+                                  filter_value: nextVal,
                                   province,
                                   popular_area: area,
                                   item_category: type,
-                                  listing_type: opt.val,
+                                  listing_type: nextVal,
                                 });
                               }}
                               className={cn(
@@ -1264,7 +1384,7 @@ export function MobileFilters({
                               {availableListingTypes[opt.val] > 0 && (
                                 <span
                                   className={cn(
-                                    "mtext-[11px] font-semibold px-1 py-0.5 rounded-full transition-all",
+                                    "text-[11px] font-semibold px-1.5 py-0.5 rounded-full transition-all",
                                     listingType === opt.val
                                       ? "bg-white/20 text-white"
                                       : "bg-emerald-50 text-emerald-600",
@@ -1332,7 +1452,7 @@ export function MobileFilters({
                               <button
                                 key={bed}
                                 disabled={isDisabled}
-                                onClick={() => setBedrooms(bed)}
+                                onClick={() => setBedrooms(bedrooms === bed && bed !== "ALL" ? "ALL" : bed)}
                                 className={cn(
                                   "h-11 min-w-14 px-4 rounded-xl border transition-all font-medium text-xs shrink-0 flex items-center justify-center relative",
                                   isSelected
@@ -1379,6 +1499,193 @@ export function MobileFilters({
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Mobile Active Filter Badges Strip */}
+      {hasActiveFilters && (
+        <div className="xl:hidden flex items-center gap-1.5 pb-2.5 overflow-x-auto no-scrollbar -mx-4 px-4 animate-in fade-in slide-in-from-top-1">
+          {keyword && keyword.trim() !== "" && (
+            <MobileBadge
+              label={`"${keyword}"`}
+              onClear={() => setKeyword("")}
+              variant="blue"
+              icon={<Search className="w-3 h-3 text-blue-500" />}
+            />
+          )}
+          {listingType !== "ALL" && (
+            <MobileBadge
+              label={t(`search.listing_${listingType.toLowerCase()}`)}
+              onClear={() => setListingType("ALL")}
+              variant="blue"
+            />
+          )}
+          {type !== "ALL" && (
+            <MobileBadge
+              label={
+                PROPERTY_TYPES.find((pt) => pt.value === type)?.label ||
+                type
+              }
+              onClear={() => setType("ALL")}
+              variant="blue"
+            />
+          )}
+          {province !== "ALL" && (
+            <MobileBadge
+              label={getProvinceName(province, language)}
+              onClear={() => setProvince("ALL")}
+              variant="slate"
+            />
+          )}
+          {area !== "ALL" &&
+            selectedAreaList.map((selectedAreaName) => {
+              const found = availableAreas.find((a) => a.name === selectedAreaName);
+              const label = found
+                ? getLocaleValue(
+                    {
+                      name: found.name,
+                      name_en: found.name_en,
+                      name_cn: found.name_cn,
+                      name_ru: found.name_ru,
+                    },
+                    "name",
+                    language,
+                  )
+                : selectedAreaName.replace("_", " ");
+              return (
+                <MobileBadge
+                  key={selectedAreaName}
+                  label={label}
+                  onClear={() => {
+                    const remaining = selectedAreaList.filter((s) => s !== selectedAreaName);
+                    setArea(remaining.length > 0 ? remaining.join(",") : "ALL");
+                  }}
+                  variant="slate"
+                />
+              );
+            })}
+          {hasActivePrice && (
+            <MobileBadge
+              label={
+                minPrice && maxPrice
+                  ? `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`
+                  : minPrice
+                    ? `> ${formatPrice(minPrice)}`
+                    : `< ${formatPrice(maxPrice!)}`
+              }
+              onClear={() => {
+                setMinPrice("");
+                setMaxPrice("");
+                setPriceType && setPriceType("");
+              }}
+              variant="emerald"
+              icon={<DollarSign className="w-3 h-3" />}
+            />
+          )}
+          {hasActiveSize && (
+            <MobileBadge
+              label={
+                minSize && maxSize
+                  ? `${minSize} - ${maxSize} sqm`
+                  : minSize
+                    ? `> ${minSize} sqm`
+                    : `< ${maxSize} sqm`
+              }
+              onClear={() => {
+                setMinSize("");
+                setMaxSize("");
+              }}
+              variant="emerald"
+              icon={<Maximize2 className="w-3 h-3" />}
+            />
+          )}
+          {bedrooms !== "ALL" && (
+            <MobileBadge
+              label={
+                bedrooms === "4+"
+                  ? `4+ ${t("search.bedrooms")}`
+                  : `${bedrooms} ${t("search.bedrooms")}`
+              }
+              onClear={() => setBedrooms("ALL")}
+              variant="purple"
+            />
+          )}
+          {transitStation && (
+            <MobileBadge
+              label={transitStation.split("|")[0].replace("_", " ")}
+              onClear={() => setTransitStation("")}
+              variant="blue"
+              icon={<TrainIcon className="w-3 h-3" />}
+            />
+          )}
+          {nearTrain && (
+            <MobileBadge
+              label={t("search.near_train")}
+              onClear={() => setNearTrain(false)}
+              variant="blue"
+            />
+          )}
+          {petFriendly && (
+            <MobileBadge
+              label={t("search.pet_allowed")}
+              onClear={() => setPetFriendly(false)}
+              variant="emerald"
+              icon={<PetIcon className="w-3 h-3" />}
+            />
+          )}
+          {cbd && (
+            <MobileBadge
+              label={t("search.cbd_location")}
+              onClear={() => setCbd && setCbd(false)}
+              variant="emerald"
+              icon={<CityIcon className="w-3 h-3" />}
+            />
+          )}
+          {fullyFurnished && (
+            <MobileBadge
+              label={t("search.fully_furnished")}
+              onClear={() => setFullyFurnished(false)}
+              variant="emerald"
+            />
+          )}
+          {isForeigner && (
+            <MobileBadge
+              label={t("search.foreigner")}
+              onClear={() => setIsForeigner(false)}
+              variant="purple"
+            />
+          )}
+          {companyRegistered && (
+            <MobileBadge
+              label={t("search.company_registered")}
+              onClear={() => setCompanyRegistered(false)}
+              variant="blue"
+            />
+          )}
+          {isHotDeal && (
+            <MobileBadge
+              label={t("search.hot_deal")}
+              onClear={() => setIsHotDeal(false)}
+              variant="rose"
+              icon={<FireIcon className="w-3 h-3" />}
+            />
+          )}
+          {allowAirbnb && (
+            <MobileBadge
+              label={t("search.allow_airbnb")}
+              onClear={() => setAllowAirbnb(false)}
+              variant="rose"
+            />
+          )}
+          {clearFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-full whitespace-nowrap shrink-0 hover:bg-rose-100 transition-colors ml-1 cursor-pointer"
+            >
+              {t("search.clear_all") || "ล้างทั้งหมด"}
+            </button>
+          )}
+        </div>
+      )}
     </>
   );
 }

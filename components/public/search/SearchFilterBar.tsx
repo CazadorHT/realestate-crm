@@ -547,6 +547,7 @@ export function SearchFilterBar({
           pushToDataLayer={pushToDataLayer}
           GTM_EVENTS={GTM_EVENTS}
           setBulkFilters={setBulkFilters}
+          clearFilters={clearFilters}
         />
 
         <DesktopFilters

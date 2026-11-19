@@ -669,6 +669,9 @@ export function DesktopFilters({
             onValueChange={(val) => {
               setProvince(val);
               setArea("ALL");
+              if (val !== "ALL" && val !== "กรุงเทพมหานคร" && val !== "Bangkok") {
+                setTransitStation("");
+              }
             }}
           >
             <SelectTrigger className="h-10! w-full rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all text-xs text-left">
@@ -776,7 +779,7 @@ export function DesktopFilters({
                 <button
                   key={opt.val}
                   disabled={isDisabled}
-                  onClick={() => setListingType(opt.val)}
+                  onClick={() => setListingType(listingType === opt.val && opt.val !== "ALL" ? "ALL" : opt.val)}
                   className={`rounded-lg transition-all font-medium text-xs ${
                     listingType === opt.val
                       ? `${opt.active} text-white shadow-sm`
@@ -875,7 +878,7 @@ export function DesktopFilters({
               <button
                 key={bed}
                 disabled={isDisabled}
-                onClick={() => setBedrooms(bed)}
+                onClick={() => setBedrooms(bedrooms === bed && bed !== "ALL" ? "ALL" : bed)}
                 className={`h-8 px-3 rounded-lg transition-all font-medium text-xs flex items-center gap-1.5 ${
                   bedrooms === bed
                     ? "bg-indigo-600 text-white shadow-sm"
@@ -1117,8 +1120,9 @@ export function DesktopFilters({
                                 : `< ${formatPrice(maxPrice)}`
                           }
                           onClear={() => {
-                            setMinPrice("0");
-                            setMaxPrice("0");
+                            setMinPrice("");
+                            setMaxPrice("");
+                            setPriceType && setPriceType("");
                           }}
                           variant="emerald"
                           icon={<DollarSign className="w-3 h-3" />}
@@ -1137,8 +1141,8 @@ export function DesktopFilters({
                                 : `< ${maxSize} sqm`
                           }
                           onClear={() => {
-                            setMinSize("0");
-                            setMaxSize("0");
+                            setMinSize("");
+                            setMaxSize("");
                           }}
                           variant="emerald"
                           icon={<Maximize className="w-3 h-3" />}

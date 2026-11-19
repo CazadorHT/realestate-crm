@@ -145,8 +145,15 @@ export function AreaSizeSelect({
   };
 
   const handleApply = () => {
-    setMinSize(localMin);
-    setMaxSize(localMax);
+    let finalMin = localMin ? localMin.replace(/[^0-9]/g, "") : "";
+    let finalMax = localMax ? localMax.replace(/[^0-9]/g, "") : "";
+    if (finalMin && finalMax && Number(finalMin) > Number(finalMax)) {
+      const temp = finalMin;
+      finalMin = finalMax;
+      finalMax = temp;
+    }
+    setMinSize(finalMin);
+    setMaxSize(finalMax);
     setIsOpen(false);
   };
 
@@ -159,6 +166,17 @@ export function AreaSizeSelect({
   };
 
   const handleSelectPreset = (opt: { min: string; max: string }) => {
+    const isAlreadySelected = localMin === (opt.min || "") && localMax === (opt.max || "");
+    if (isAlreadySelected) {
+      // Toggle off when clicking an already selected preset
+      setLocalMin("");
+      setLocalMax("");
+      setMinSize("");
+      setMaxSize("");
+      setIsOpen(false);
+      return;
+    }
+
     setLocalMin(opt.min || "");
     setLocalMax(opt.max || "");
     setMinSize(opt.min || "");
