@@ -570,21 +570,21 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
                   });
 
                   const computedSizes: Record<string, number> = {
-                    "0-30": 0,
-                    "30-50": 0,
-                    "50-100": 0,
-                    "100-200": 0,
-                    "200-": 0,
+                    "0-30.99": 0,
+                    "31-50.99": 0,
+                    "51-100.99": 0,
+                    "101-200.99": 0,
+                    "201-": 0,
                   };
 
                   priceProps.forEach((p: any) => {
                     const size = Number(p.size_sqm) || 0;
                     if (size > 0) {
-                      if (size <= 30) computedSizes["0-30"]++;
-                      if (size >= 30 && size <= 50) computedSizes["30-50"]++;
-                      if (size >= 50 && size <= 100) computedSizes["50-100"]++;
-                      if (size >= 100 && size <= 200) computedSizes["100-200"]++;
-                      if (size >= 200) computedSizes["200-"]++;
+                      if (size <= 30.99) computedSizes["0-30.99"]++;
+                      else if (size <= 50.99) computedSizes["31-50.99"]++;
+                      else if (size <= 100.99) computedSizes["51-100.99"]++;
+                      else if (size <= 200.99) computedSizes["101-200.99"]++;
+                      else computedSizes["201-"]++;
                     }
                   });
 

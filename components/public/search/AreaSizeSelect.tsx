@@ -213,7 +213,16 @@ export function AreaSizeSelect({
     if (hasActiveSize) {
       const minVal = minSize && minSize !== "0" ? minSize : "";
       const maxVal = maxSize ? maxSize : "";
-      if (minVal && maxVal) return `${minVal} - ${maxVal} ${dict.unit}`;
+      if (maxVal === "30.99" && (!minVal || minVal === "0")) {
+        return language === "th" ? "ไม่เกิน 30 ตร.ม." : `≤ 30 ${dict.unit}`;
+      }
+      if (minVal === "201" && !maxVal) {
+        return `> 200 ${dict.unit}`;
+      }
+      if (minVal && maxVal) {
+        const displayMax = maxVal.endsWith(".99") ? String(Math.floor(Number(maxVal))) : maxVal;
+        return `${minVal} - ${displayMax} ${dict.unit}`;
+      }
       if (minVal) return `> ${minVal} ${dict.unit}`;
       if (maxVal) return `< ${maxVal} ${dict.unit}`;
     }

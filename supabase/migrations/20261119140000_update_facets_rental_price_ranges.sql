@@ -93,11 +93,11 @@ BEGIN
     ),
     'availableSizes', (
       SELECT jsonb_build_object(
-        '0-30', (SELECT count(*) FROM filtered_props WHERE size_sqm > 0 AND size_sqm <= 30),
-        '30-50', (SELECT count(*) FROM filtered_props WHERE size_sqm > 30 AND size_sqm <= 50),
-        '50-100', (SELECT count(*) FROM filtered_props WHERE size_sqm > 50 AND size_sqm <= 100),
-        '100-200', (SELECT count(*) FROM filtered_props WHERE size_sqm > 100 AND size_sqm <= 200),
-        '200-', (SELECT count(*) FROM filtered_props WHERE size_sqm > 200)
+        '0-30.99', (SELECT count(*) FROM filtered_props WHERE size_sqm > 0 AND size_sqm <= 30.99),
+        '31-50.99', (SELECT count(*) FROM filtered_props WHERE size_sqm >= 31 AND size_sqm <= 50.99),
+        '51-100.99', (SELECT count(*) FROM filtered_props WHERE size_sqm >= 51 AND size_sqm <= 100.99),
+        '101-200.99', (SELECT count(*) FROM filtered_props WHERE size_sqm >= 101 AND size_sqm <= 200.99),
+        '201-', (SELECT count(*) FROM filtered_props WHERE size_sqm >= 201)
       )
     ),
     'availableQuickFilters', (

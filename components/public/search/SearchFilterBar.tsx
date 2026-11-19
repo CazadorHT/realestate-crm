@@ -298,13 +298,15 @@ export function SearchFilterBar({
     const isRu = language === "ru";
     const allSizes = isEn ? "All Sizes" : isCn ? "所有面积" : isRu ? "Все размеры" : "ทุกขนาด";
     const sqm = isEn ? "sqm" : isCn ? "平米" : isRu ? "м²" : "ตร.ม.";
+    const under30Label = isEn ? "≤ 30 sqm" : isCn ? "≤ 30 平米" : isRu ? "≤ 30 м²" : "ไม่เกิน 30 ตร.ม.";
+
     return [
       { label: allSizes, min: "", max: "" },
-      { label: `< 30 ${sqm}`, min: "0", max: "30" },
-      { label: `30 - 50 ${sqm}`, min: "30", max: "50" },
-      { label: `50 - 100 ${sqm}`, min: "50", max: "100" },
-      { label: `100 - 200 ${sqm}`, min: "100", max: "200" },
-      { label: `> 200 ${sqm}`, min: "200", max: "" },
+      { label: under30Label, min: "0", max: "30.99" },
+      { label: `31 - 50 ${sqm}`, min: "31", max: "50.99" },
+      { label: `51 - 100 ${sqm}`, min: "51", max: "100.99" },
+      { label: `101 - 200 ${sqm}`, min: "101", max: "200.99" },
+      { label: `> 200 ${sqm}`, min: "201", max: "" },
     ];
   }, [language]);
 
@@ -432,8 +434,13 @@ export function SearchFilterBar({
       const maxVal = maxSize ? maxSize : "";
 
       let label = "";
-      if (minVal && maxVal) {
-        label = `${minVal} - ${maxVal} ${sqm}`;
+      if (maxVal === "30.99" && (!minVal || minVal === "0")) {
+        label = language === "th" ? "ไม่เกิน 30 ตร.ม." : `≤ 30 ${sqm}`;
+      } else if (minVal === "201" && !maxVal) {
+        label = `> 200 ${sqm}`;
+      } else if (minVal && maxVal) {
+        const displayMax = maxVal.endsWith(".99") ? String(Math.floor(Number(maxVal))) : maxVal;
+        label = `${minVal} - ${displayMax} ${sqm}`;
       } else if (minVal) {
         label = `> ${minVal} ${sqm}`;
       } else if (maxVal) {
