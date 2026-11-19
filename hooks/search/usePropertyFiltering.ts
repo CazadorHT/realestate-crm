@@ -474,9 +474,9 @@ export function usePropertyFiltering(
       availableProvinces: serverProvinces.length > 0 ? serverProvinces : results.availableProvinces,
       availableAreas: serverAreas.length > 0 ? serverAreas : results.availableAreas,
       availableStations: serverStations.length > 0 && !hasActiveRestrictions ? serverStations : results.availableStations,
-      availableTypes: serverFacets.availableTypes ? serverFacets.availableTypes : results.availableTypes,
-      availableListingTypes: serverFacets.availableListingTypes ? serverFacets.availableListingTypes : results.availableListingTypes,
-      availableQuickFilters: serverFacets.availableQuickFilters
+      availableTypes: serverFacets.availableTypes && !hasActiveRestrictions ? serverFacets.availableTypes : results.availableTypes,
+      availableListingTypes: serverFacets.availableListingTypes && !hasActiveRestrictions ? serverFacets.availableListingTypes : results.availableListingTypes,
+      availableQuickFilters: serverFacets.availableQuickFilters && !hasActiveRestrictions
         ? serverFacets.availableQuickFilters
         : results.availableQuickFilters,
       availablePrices: serverFacets.availablePrices || undefined,
