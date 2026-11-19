@@ -416,33 +416,36 @@ export function MobileFilters({
     }
   };
 
-  const trainTypes = useMemo(() => {
-    const list =
-      allStations && allStations.length > 0 ? allStations : availableStations;
-    const types = new Set(
-      list
-        .filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD")
-        .map((s) => getNormalizedType(s.type)),
-    );
-    return Array.from(types).filter(Boolean).sort();
-  }, [availableStations, allStations]);
-
   const mergedStations = useMemo(() => {
     const list =
       allStations && allStations.length > 0 ? allStations : availableStations;
     const filteredList = list.filter(
       (s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD",
     );
-    const countsMap = new Map(availableStations.map((s) => [s.name, s.count]));
+    const cleanName = (str: string) => (str || "").split("|")[0].trim().toLowerCase();
+    const countsMap = new Map<string, number>();
+    availableStations.forEach((s) => {
+      countsMap.set(cleanName(s.name), s.count);
+    });
 
     return filteredList
       .map((s) => ({
         ...s,
-        count: countsMap.get(s.name) || 0,
+        count: countsMap.get(cleanName(s.name)) ?? (s as any).count ?? 0,
       }))
       .filter((s) => s.count > 0 || transitStation === s.name)
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   }, [availableStations, allStations, transitStation]);
+
+  const trainTypes = useMemo(() => {
+    const list = mergedStations;
+    const types = new Set(
+      list
+        .filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD")
+        .map((s) => getNormalizedType(s.type)),
+    );
+    return Array.from(types).filter(Boolean).sort();
+  }, [mergedStations]);
 
   const filteredStations = useMemo(() => {
     return mergedStations.filter((station) => {
@@ -1213,7 +1216,9 @@ export function MobileFilters({
                                   </button>
 
                                   {/* Render child chips if parent has children */}
-                                  {hasChildren && a.children.map((c: any) => {
+                                  {hasChildren && a.children
+                                    .filter((c: any) => c.count > 0 || selectedAreaList.includes(c.name))
+                                    .map((c: any) => {
                                     const isChildSelected = selectedAreaList.includes(c.name);
                                     return (
                                       <button
@@ -1298,7 +1303,14 @@ export function MobileFilters({
                           {t("search.property_type")}
                         </label>
                         <div className="flex flex-wrap gap-2">
-                          {PROPERTY_TYPES.map((pt) => {
+                          {PROPERTY_TYPES
+                            .filter((pt) => {
+                              const count = pt.value.includes(",")
+                                ? pt.value.split(",").reduce((sum, val) => sum + (availableTypes[val] || 0), 0)
+                                : (availableTypes[pt.value] || 0);
+                              return pt.value === "ALL" || count > 0 || type === pt.value;
+                            })
+                            .map((pt) => {
                             const count = pt.value.includes(",")
                               ? pt.value.split(",").reduce((sum, val) => sum + (availableTypes[val] || 0), 0)
                               : (availableTypes[pt.value] || 0);
@@ -1334,10 +1346,10 @@ export function MobileFilters({
                                 {count > 0 && pt.value !== "ALL" && (
                                   <span
                                     className={cn(
-                                      "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
+                                      "text-[11px] font-semibold px-1.5 py-0.2 rounded-full",
                                       isActive
                                         ? "bg-white/20 text-white"
-                                        : "bg-emerald-50 text-emerald-600",
+                                        : "bg-blue-50 text-blue-600 border border-blue-200/60",
                                     )}
                                   >
                                     {count}

@@ -285,14 +285,24 @@ export function usePropertyFiltering(
     if (!excludeFilters.includes("transitStation") && transitStation) {
       const [stationName, stationType] = transitStation.toLowerCase().split("|");
       const station = stationName.replace(/_/g, " ");
-      const hasStation = (p.nearby_transits || []).some(t => {
-        const matchesName = t.station_name.toLowerCase() === station ||
+      const pTransitsList = [
+        ...(Array.isArray(p.nearby_transits) ? p.nearby_transits : []),
+        ...(p.transit_station_name ? [{
+          station_name: p.transit_station_name,
+          station_name_en: p.transit_station_name_en,
+          station_name_cn: p.transit_station_name_cn,
+          station_name_ru: p.transit_station_name_ru,
+          type: p.transit_type || "BTS"
+        }] : [])
+      ];
+      const hasStation = pTransitsList.some(t => {
+        const matchesName = (t.station_name || "").toLowerCase() === station ||
           (t.station_name_en || "").toLowerCase() === station ||
           (t.station_name_cn || "").toLowerCase() === station ||
           (t.station_name_ru || "").toLowerCase() === station;
         if (!matchesName) return false;
         if (stationType) {
-          return t.type.toLowerCase() === stationType;
+          return (t.type || "").toLowerCase() === stationType;
         }
         return true;
       });
@@ -529,9 +539,13 @@ export function usePropertyFiltering(
       : results.allStations;
 
     // Contextual transit stations: stations matching current filters have count > 0, others 0
+    const cleanStationName = (s: string) => (s || "").split("|")[0].trim().toLowerCase();
+
     const finalStations = (serverStations.length > 0 ? serverStations : results.availableStations).map((ss) => {
       if (!hasActiveRestrictions) return ss;
-      const matched = results.availableStations.find((s) => s.name === ss.name);
+      const matched = results.availableStations.find(
+        (s) => cleanStationName(s.name) === cleanStationName(ss.name)
+      );
       return {
         ...ss,
         count: matched ? matched.count : 0,

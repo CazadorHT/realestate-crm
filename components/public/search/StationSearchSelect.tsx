@@ -115,31 +115,36 @@ export function StationSearchSelect({
     setSubLineFilter("ALL");
   };
 
-  // Get unique train types from all stations to build type filter tabs (Normalized)
-  const trainTypes = React.useMemo(() => {
+  // Merge counts from availableStations into the complete allStations list
+  const mergedStations = React.useMemo(() => {
     const list = allStations.length > 0 ? allStations : availableStations;
+    const filteredList = list.filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD");
+    
+    const cleanName = (str: string) => (str || "").split("|")[0].trim().toLowerCase();
+    const countsMap = new Map<string, number>();
+    availableStations.forEach((s) => {
+      countsMap.set(cleanName(s.name), s.count);
+    });
+
+    return filteredList
+      .map((s) => ({
+        ...s,
+        count: countsMap.get(cleanName(s.name)) ?? (s as any).count ?? 0,
+      }))
+      .filter((s) => s.count > 0 || transitStation === s.name)
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }, [availableStations, allStations, transitStation]);
+
+  // Get unique train types from active stations with listings to build type filter tabs (Normalized)
+  const trainTypes = React.useMemo(() => {
+    const list = mergedStations;
     const types = new Set(
       list
         .filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD")
         .map((s) => getNormalizedType(s.type))
     );
     return Array.from(types).filter(Boolean).sort();
-  }, [availableStations, allStations]);
-
-  // Merge counts from availableStations into the complete allStations list
-  const mergedStations = React.useMemo(() => {
-    const list = allStations.length > 0 ? allStations : availableStations;
-    const filteredList = list.filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD");
-    const countsMap = new Map(availableStations.map((s) => [s.name, s.count]));
-
-    return filteredList
-      .map((s) => ({
-        ...s,
-        count: countsMap.get(s.name) || 0,
-      }))
-      .filter((s) => s.count > 0 || transitStation === s.name)
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  }, [availableStations, allStations, transitStation]);
+  }, [mergedStations]);
 
   // Filter stations by train type tab and text query
   const filteredStations = React.useMemo(() => {

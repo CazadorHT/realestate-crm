@@ -556,7 +556,9 @@ export function DesktopFilters({
                 <span className="text-slate-400 text-[11px]">({a.count})</span>
               </DropdownMenuItem>
             )}
-            {a.children.map((c: any) => {
+            {a.children
+              .filter((c: any) => c.count > 0 || selectedAreaList.includes(c.name))
+              .map((c: any) => {
               const isChildSelected = selectedAreaList.includes(c.name);
               return (
                 <DropdownMenuItem
@@ -750,38 +752,45 @@ export function DesktopFilters({
               <SelectValue placeholder={t("search.property_type")} />
             </SelectTrigger>
             <SelectContent align="start">
-              {PROPERTY_TYPES.map((pt) => {
-                const count = pt.value.includes(",")
-                  ? pt.value.split(",").reduce((sum, val) => sum + (availableTypes[val] || 0), 0)
-                  : (availableTypes[pt.value] || 0);
-                const isDisabled = count === 0 && pt.value !== "ALL";
-                return (
-                  <SelectItem
-                    key={pt.value}
-                    value={pt.value}
-                    disabled={isDisabled}
-                  >
-                    <div className="flex items-center justify-between w-full gap-4">
-                      <span
-                        className={
-                          pt.value !== "ALL" && count === 0
-                            ? "text-slate-400"
-                            : ""
-                        }
-                      >
-                        {pt.label}
-                      </span>
-                      {pt.value !== "ALL" && (
+              {PROPERTY_TYPES
+                .filter((pt) => {
+                  const count = pt.value.includes(",")
+                    ? pt.value.split(",").reduce((sum, val) => sum + (availableTypes[val] || 0), 0)
+                    : (availableTypes[pt.value] || 0);
+                  return pt.value === "ALL" || count > 0 || type === pt.value;
+                })
+                .map((pt) => {
+                  const count = pt.value.includes(",")
+                    ? pt.value.split(",").reduce((sum, val) => sum + (availableTypes[val] || 0), 0)
+                    : (availableTypes[pt.value] || 0);
+                  const isDisabled = count === 0 && pt.value !== "ALL";
+                  return (
+                    <SelectItem
+                      key={pt.value}
+                      value={pt.value}
+                      disabled={isDisabled}
+                    >
+                      <div className="flex items-center justify-between w-full gap-4">
                         <span
-                          className={`text-xs ${count === 0 ? "text-slate-300" : "text-blue-500"}`}
+                          className={
+                            pt.value !== "ALL" && count === 0
+                              ? "text-slate-400"
+                              : "text-slate-700"
+                          }
                         >
-                          ({count})
+                          {pt.label}
                         </span>
-                      )}
-                    </div>
-                  </SelectItem>
-                );
-              })}
+                        {pt.value !== "ALL" && (
+                          <span
+                            className="text-[11px] px-1.5 py-0.2 rounded-full font-semibold bg-blue-50 text-blue-600 border border-blue-200/60"
+                          >
+                            {count}
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
             </SelectContent>
           </Select>
         </div>

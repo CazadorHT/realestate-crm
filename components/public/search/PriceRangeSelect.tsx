@@ -459,51 +459,59 @@ export function PriceRangeSelect({
             <span>{dict.popular_ranges}</span>
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-[160px] overflow-y-auto pr-1">
-            {currentPresets.map((opt: any) => {
-              const key = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
-              const count = priceCounts.get(key) || 0;
-              const isSelected =
-                localMin === opt.min && localMax === opt.max;
-              const isSweetSpot = key === maxCountPresetKey;
+            {currentPresets
+              .filter((opt: any) => {
+                const key = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
+                const count = priceCounts.get(key) || 0;
+                const isSelected =
+                  localMin === opt.min && localMax === opt.max;
+                return count > 0 || isSelected;
+              })
+              .map((opt: any) => {
+                const key = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
+                const count = priceCounts.get(key) || 0;
+                const isSelected =
+                  localMin === opt.min && localMax === opt.max;
+                const isSweetSpot = key === maxCountPresetKey;
 
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleSelectPreset(opt)}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 text-left cursor-pointer",
-                    isSelected
-                      ? "bg-primary text-white border-primary shadow-xs"
-                      : isSweetSpot
-                      ? "bg-amber-50/70 border-amber-200 text-amber-900 hover:border-amber-400 hover:bg-amber-100/70"
-                      : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                  )}
-                >
-                  {isSweetSpot && (
-                    <Flame
-                      className={cn(
-                        "h-3 w-3 shrink-0",
-                        isSelected ? "text-white" : "text-amber-500 fill-amber-500"
-                      )}
-                    />
-                  )}
-                  <span>{opt.label}</span>
-                  {count > 0 && (
-                    <span
-                      className={cn(
-                        "text-[10px] px-1 py-0.2 rounded-md font-normal",
-                        isSelected
-                          ? "bg-white/20 text-white"
-                          : "bg-slate-100 text-slate-500"
-                      )}
-                    >
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleSelectPreset(opt)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 text-left cursor-pointer",
+                      isSelected
+                        ? "bg-primary text-white border-primary shadow-xs"
+                        : isSweetSpot
+                        ? "bg-amber-50/70 border-amber-200 text-amber-900 hover:border-amber-400 hover:bg-amber-100/70"
+                        : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                    )}
+                  >
+                    {isSweetSpot && (
+                      <Flame
+                        className={cn(
+                          "h-3 w-3 shrink-0",
+                          isSelected ? "text-white" : "text-amber-500 fill-amber-500"
+                        )}
+                      />
+                    )}
+                    <span>{opt.label}</span>
+                    {count > 0 && (
+                      <span
+                        className={cn(
+                          "text-[10px] px-1.5 py-0.2 rounded-full font-semibold",
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-blue-50 text-blue-600 border border-blue-200/60"
+                        )}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
           </div>
         </div>
       )}
