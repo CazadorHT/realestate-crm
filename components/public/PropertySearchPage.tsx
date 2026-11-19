@@ -209,14 +209,61 @@ export function PropertySearchPage({
         : filteredMapPins.length;
     }
 
-    // 1. If we have narrowing compound filters (e.g. specific keyword, bedrooms, price range, property type),
+    const hasSpecificPrice = Boolean(
+      (filters.minPrice !== undefined && filters.minPrice !== "" && Number(filters.minPrice) > 0) ||
+      (filters.maxPrice !== undefined && filters.maxPrice !== "" && Number(filters.maxPrice) > 0)
+    );
+
+    const hasSpecificBedrooms = Boolean(filters.bedrooms && filters.bedrooms !== "ALL");
+    const hasSpecificType = Boolean(filters.type && filters.type !== "ALL");
+    const hasKeyword = Boolean(filters.debouncedKeyword);
+    const hasTransit = Boolean(filters.transitStation);
+    const hasArea = Boolean(filters.area && filters.area !== "ALL");
+    const hasQuickFilter = Boolean(
+      filters.petFriendly ||
+      filters.cbd ||
+      filters.nearTrain ||
+      filters.isForeigner ||
+      filters.companyRegistered ||
+      filters.isHotDeal ||
+      filters.luxuryVilla ||
+      filters.allowAirbnb
+    );
+
+    // 1. If user filtered by price range (and no other narrowing compound filters like keyword, bedrooms, type, area, quick filters)
+    if (hasSpecificPrice && !hasSpecificBedrooms && !hasSpecificType && !hasKeyword && !hasTransit && !hasArea && !hasQuickFilter) {
+      const minStr = String(filters.minPrice ?? "0");
+      const maxStr = String(filters.maxPrice ?? "");
+      const pt = filters.priceType || (filters.listingType !== "ALL" ? filters.listingType : "ALL") || "ALL";
+
+      const candidateKeys = [
+        `${minStr}-${maxStr}-${pt}`,
+        `${minStr}-${maxStr}-RENT`,
+        `${minStr}-${maxStr}-SALE`,
+        `${minStr}-${maxStr}-ALL`,
+      ];
+      for (const k of candidateKeys) {
+        if (serverFacets?.availablePrices?.[k] !== undefined) {
+          return serverFacets.availablePrices[k];
+        }
+      }
+    }
+
+    // 2. If user filtered by property type (and no other narrowing compound filters)
+    if (hasSpecificType && !hasSpecificPrice && !hasSpecificBedrooms && !hasKeyword && !hasTransit && !hasArea && !hasQuickFilter) {
+      if (serverFacets?.availableTypes?.[filters.type] !== undefined) {
+        return serverFacets.availableTypes[filters.type];
+      }
+    }
+
+    // 3. If we have narrowing compound filters (e.g. specific keyword, bedrooms, price range, property type),
     // then local filtered.length reflects the exact intersection of these granular filters in memory
     const hasNarrowingFilters = Boolean(
-      (filters.type && filters.type !== "ALL") ||
-      (filters.bedrooms && filters.bedrooms !== "ALL") ||
-      filters.minPrice || filters.maxPrice ||
-      filters.debouncedKeyword ||
-      filters.transitStation ||
+      hasSpecificType ||
+      hasSpecificBedrooms ||
+      hasSpecificPrice ||
+      hasKeyword ||
+      hasTransit ||
       (filters.petFriendly && (filters.companyRegistered || filters.nearTrain || filters.isForeigner || filters.fullyFurnished || filters.isHotDeal))
     );
 
@@ -224,7 +271,7 @@ export function PropertySearchPage({
       return filtered.length;
     }
 
-    // 2. Listing types
+    // 4. Listing types
     if (filters.listingType === "RENT" && serverFacets?.availableListingTypes?.RENT !== undefined) {
       return serverFacets.availableListingTypes.RENT;
     }
@@ -232,17 +279,17 @@ export function PropertySearchPage({
       return serverFacets.availableListingTypes.SALE;
     }
 
-    // 3. Server facets total count for active query (includes area, quick filters, etc.)
+    // 5. Server facets total count for active query (includes area, quick filters, etc.)
     if (serverFacets?.availableListingTypes?.ALL !== undefined && serverFacets.availableListingTypes.ALL > 0) {
       return serverFacets.availableListingTypes.ALL;
     }
 
-    // 4. Area filters fallback
-    if (filters.area && filters.area !== "ALL" && selectedAreaFacetTotal > 0) {
+    // 6. Area filters fallback
+    if (hasArea && selectedAreaFacetTotal > 0) {
       return selectedAreaFacetTotal;
     }
 
-    // 5. Quick filters
+    // 7. Quick filters
     if (filters.petFriendly && serverFacets?.availableQuickFilters?.petFriendly !== undefined) {
       return serverFacets.availableQuickFilters.petFriendly;
     }
@@ -277,7 +324,10 @@ export function PropertySearchPage({
   ]);
 
   // Can load more if we haven't displayed all local filtered properties OR if server has more properties
-  const hasMore = visibleProperties.length < filtered.length || (properties.length < totalAvailableCount && filtered.length < totalAvailableCount);
+  const hasMore =
+    visibleProperties.length < filtered.length ||
+    (properties.length < totalAvailableCount && filtered.length < totalAvailableCount) ||
+    (filtered.length === properties.length && properties.length >= ITEMS_PER_PAGE && properties.length % ITEMS_PER_PAGE === 0 && !isFetchingMore);
 
   const loadMore = useCallback(() => {
     if (displayCount < filtered.length) {
@@ -538,7 +588,14 @@ export function PropertySearchPage({
                     ? Math.max(0, selectedAreaFacetTotal - visibleProperties.length)
                     : Math.max(0, filtered.length - visibleProperties.length)
                 }
-                totalRemainingCount={Math.max(0, totalAvailableCount - visibleProperties.length)}
+                totalRemainingCount={Math.max(
+                  0,
+                  totalAvailableCount > visibleProperties.length
+                    ? totalAvailableCount - visibleProperties.length
+                    : hasMore
+                    ? 12
+                    : 0
+                )}
                 isFetchingMore={isFetchingMore}
                 loadMore={loadMore}
                 areaFilterName={localizedAreaFilterName}

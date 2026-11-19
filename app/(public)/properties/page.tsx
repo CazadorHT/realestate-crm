@@ -46,6 +46,9 @@ function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
       rawParams["minPrice"] = Number(value);
     } else if (key === "max_price") {
       rawParams["maxPrice"] = Number(value);
+    } else if (key === "price_type") {
+      const pt = value.toUpperCase();
+      if (pt === "RENT" || pt === "SALE" || pt === "SALE-RENT") rawParams["priceType"] = pt;
     } else if (key === "min_size") {
       rawParams["minSize"] = Number(value);
     } else if (key === "max_size") {
