@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Map as MapIcon } from "lucide-react";
@@ -151,9 +151,38 @@ export function PropertySearchPage({
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const [splitDisplayCount, setSplitDisplayCount] = useState(ITEMS_PER_PAGE);
 
+  // 🛡️ Industry-Standard Entity Store: Persistent lookup of rich property records (Separation of Index vs Entity)
+  const propertyEntitiesRef = useRef<Map<string, ApiProperty>>(new Map());
+
+  // Ingest incoming rich properties (SSR initialProperties + paginated usePropertyData)
+  useEffect(() => {
+    if (initialProperties && initialProperties.length > 0) {
+      initialProperties.forEach((p) => {
+        if (p?.id) propertyEntitiesRef.current.set(p.id, p);
+      });
+    }
+  }, [initialProperties]);
+
+  useEffect(() => {
+    if (properties && properties.length > 0) {
+      properties.forEach((p) => {
+        if (p?.id) propertyEntitiesRef.current.set(p.id, p);
+      });
+    }
+  }, [properties]);
+
+  // Hydrate display cards with full rich entities (images, amenities, features) from the Entity Store
   const visibleProperties = useMemo(() => {
-    return filtered.slice(0, displayCount);
-  }, [filtered, displayCount]);
+    return filtered.slice(0, displayCount).map((item) => {
+      const rich = propertyEntitiesRef.current.get(item.id);
+      if (!rich) return item;
+      return {
+        ...item,
+        ...rich,
+        images: (rich.images && rich.images.length > 0) ? rich.images : item.images,
+      };
+    });
+  }, [filtered, displayCount, properties]);
 
   // In Split View: once full map pins are loaded, synchronize left-hand cards directly with map bounds/pins!
   const splitSourceList = useMemo<ApiProperty[]>(() => {
@@ -163,8 +192,16 @@ export function PropertySearchPage({
   }, [mapPins.length, filtered, filteredMapPins, searchAsMove, boundsPins]);
 
   const visibleSplitProperties = useMemo(() => {
-    return splitSourceList.slice(0, splitDisplayCount);
-  }, [splitSourceList, splitDisplayCount]);
+    return splitSourceList.slice(0, splitDisplayCount).map((item) => {
+      const rich = propertyEntitiesRef.current.get(item.id);
+      if (!rich) return item;
+      return {
+        ...item,
+        ...rich,
+        images: (rich.images && rich.images.length > 0) ? rich.images : item.images,
+      };
+    });
+  }, [splitSourceList, splitDisplayCount, properties]);
 
   // Reset split pagination when bounds or filters change
   useEffect(() => {
@@ -470,7 +507,7 @@ export function PropertySearchPage({
         {/* MODE A: SPLIT VIEW 50:50 (Airbnb / Zillow Style with 2-Way Sync) */}
         {viewMode === "split" ? (
           <div className="lg:grid lg:grid-cols-12 lg:gap-6 items-start">
-            <div className="lg:col-span-7 xl:col-span-7 min-w-0">
+            <div className="lg:col-span-6 xl:col-span-6 min-w-0">
               {isLoading && mapPins.length === 0 ? (
                 <PropertyGridSkeleton count={6} />
               ) : splitSourceList.length === 0 ? (
@@ -546,7 +583,7 @@ export function PropertySearchPage({
               )}
             </div>
 
-            <div className="hidden lg:block lg:col-span-5 xl:col-span-5 sticky top-[calc(var(--nav-offset,0px)+148px)] h-[calc(100dvh-var(--nav-offset,0px)-164px)] isolate z-10 rounded-3xl overflow-hidden shadow-lg border border-slate-200/90 bg-slate-100 transition-[top,height] duration-300">
+            <div className="hidden lg:block lg:col-span-6 xl:col-span-6 sticky top-[calc(var(--nav-offset,0px)+148px)] h-[calc(100dvh-var(--nav-offset,0px)-164px)] isolate z-10 rounded-3xl overflow-hidden shadow-lg border border-slate-200/90 bg-slate-100 transition-[top,height] duration-300">
               <PropertyVectorMapLazy
                 filteredPins={filteredMapPins as SlimMapPin[]}
                 stations={mapStations}

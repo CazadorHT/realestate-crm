@@ -75,13 +75,13 @@ export function SearchResultsHeader({
         aria-selected={viewMode === "grid"}
         onClick={() => onViewModeChange("grid")}
         className={cn(
-          "inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer",
+          "h-7 sm:h-8.5 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer",
           viewMode === "grid"
             ? "bg-slate-900 text-white shadow-xs"
             : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
         )}
       >
-        <LayoutGrid className="w-3.5 h-3.5" />
+        <LayoutGrid className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
         <span>{viewLabels.grid}</span>
       </button>
 
@@ -92,7 +92,7 @@ export function SearchResultsHeader({
         aria-selected={viewMode === "split"}
         onClick={() => onViewModeChange("split")}
         className={cn(
-          "hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer",
+          "h-7 sm:h-8.5 hidden lg:inline-flex items-center justify-center gap-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer",
           viewMode === "split"
             ? "bg-slate-900 text-white shadow-xs"
             : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
@@ -109,11 +109,11 @@ export function SearchResultsHeader({
       <Link
         href={mapHref}
         prefetch={false}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50/80 transition-all cursor-pointer"
+        className="h-7 sm:h-8.5 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50 border border-blue-100/70 transition-all cursor-pointer"
       >
-        <MapIcon className="w-3.5 h-3.5 shrink-0" />
+        <MapIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
         <span>{viewLabels.map}</span>
-        <ArrowUpRight className="w-3 h-3 stroke-[2.5] shrink-0" />
+        <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.5] shrink-0" />
       </Link>
     </div>
   ) : null;
@@ -157,52 +157,56 @@ export function SearchResultsHeader({
   }
 
   return (
-    <div className="mb-4 md:mb-6 flex items-center justify-between gap-3 flex-wrap">
-      <div className="text-slate-500 text-xs sm:text-sm font-medium flex items-center flex-wrap gap-1">
+    <div className="mb-4 md:mb-6 flex items-center justify-between gap-2 sm:gap-3">
+      <div className="text-slate-500 text-xs sm:text-sm font-medium flex items-center gap-1 shrink min-w-0">
         {language === "en" ? (
           <>
-            <span>Showing</span>
+            <span className="hidden sm:inline">Showing</span>
             <span className="font-semibold text-slate-800">
               {startIndex + 1}–{displayedCount}
             </span>
-            <span>of</span>
-            <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/60 text-xs">
+            <span className="hidden sm:inline">of</span>
+            <span className="sm:hidden text-slate-400">/</span>
+            <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/60 text-[11px] sm:text-xs shrink-0">
               {grandTotal.toLocaleString()}
             </span>
             <span>properties</span>
           </>
         ) : language === "cn" ? (
           <>
-            <span>正在显示</span>
+            <span className="hidden sm:inline">正在显示</span>
             <span className="font-semibold text-slate-800">
               {startIndex + 1}–{displayedCount}
             </span>
-            <span>/ 共</span>
-            <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/60 text-xs">
+            <span className="text-slate-400">/</span>
+            <span className="hidden sm:inline">共</span>
+            <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/60 text-[11px] sm:text-xs shrink-0">
               {grandTotal.toLocaleString()}
             </span>
             <span>套房源</span>
           </>
         ) : language === "ru" ? (
           <>
-            <span>Показано</span>
+            <span className="hidden sm:inline">Показано</span>
             <span className="font-semibold text-slate-800">
               {startIndex + 1}–{displayedCount}
             </span>
-            <span>из</span>
-            <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/60 text-xs">
+            <span className="hidden sm:inline">из</span>
+            <span className="sm:hidden text-slate-400">/</span>
+            <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/60 text-[11px] sm:text-xs shrink-0">
               {grandTotal.toLocaleString()}
             </span>
             <span>объектов</span>
           </>
         ) : (
           <>
-            <span>แสดง</span>
+            <span className="hidden sm:inline">แสดง</span>
             <span className="font-semibold text-slate-800">
               {startIndex + 1}–{displayedCount}
             </span>
-            <span>จากทั้งหมด</span>
-            <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/60 text-xs">
+            <span className="hidden sm:inline">จากทั้งหมด</span>
+            <span className="sm:hidden text-slate-400">/</span>
+            <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/60 text-[11px] sm:text-xs shrink-0">
               {grandTotal.toLocaleString()}
             </span>
             <span>รายการ</span>
