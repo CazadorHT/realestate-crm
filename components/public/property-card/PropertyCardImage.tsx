@@ -196,6 +196,53 @@ export function PropertyCardImage({
     isHorizontalSwipe.current = null;
   }, []);
 
+  // Mouse drag handling (Desktop drag-to-slide)
+  const isMouseDown = useRef(false);
+  const mouseStartX = useRef(0);
+  const mouseStartScrollLeft = useRef(0);
+  const hasMouseDragged = useRef(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0 || !scrollRef.current) return;
+    isMouseDown.current = true;
+    hasMouseDragged.current = false;
+    mouseStartX.current = e.clientX;
+    mouseStartScrollLeft.current = scrollRef.current.scrollLeft;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown.current || !scrollRef.current) return;
+    const dx = e.clientX - mouseStartX.current;
+    if (Math.abs(dx) > 5) {
+      hasMouseDragged.current = true;
+      scrollRef.current.style.scrollSnapType = "none";
+      scrollRef.current.scrollLeft = mouseStartScrollLeft.current - dx;
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (!isMouseDown.current) return;
+    isMouseDown.current = false;
+    if (scrollRef.current) {
+      scrollRef.current.style.scrollSnapType = "x mandatory";
+      const clientWidth = scrollRef.current.clientWidth;
+      const targetIndex = Math.round(scrollRef.current.scrollLeft / clientWidth);
+      scrollRef.current.scrollTo({
+        left: targetIndex * clientWidth,
+        behavior: "smooth",
+      });
+    }
+    setTimeout(() => {
+      hasMouseDragged.current = false;
+    }, 120);
+  };
+
+  const handleMouseLeave = () => {
+    if (isMouseDown.current) {
+      handleMouseUp();
+    }
+  };
+
   // Handle scroll for pagination dots + tracking
   const handleScroll = () => {
     if (scrollRef.current) {
@@ -323,7 +370,14 @@ export function PropertyCardImage({
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none select-none cursor-grab active:cursor-grabbing"
         >
           {displayImages.map((img, index) => {
             const shouldRender =
@@ -342,7 +396,15 @@ export function PropertyCardImage({
                 key={index}
                 href={propertyUrl}
                 prefetch={false}
-                className="relative h-full w-full shrink-0 snap-start block"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  if (hasMouseDragged.current) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+                }}
+                className="relative h-full w-full shrink-0 snap-start block select-none"
               >
                 {shouldRender ? (
                   <>
@@ -363,8 +425,9 @@ export function PropertyCardImage({
                         areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
                       } - Image ${index + 1}`}
                       fill
+                      draggable={false}
                       sizes="(max-width: 640px) 95vw, (max-width: 768px) 45vw, (max-width: 1280px) 300px, 320px"
-                      className={`object-cover object-center transition-[filter,opacity] duration-300 ${
+                      className={`object-cover object-center transition-[filter,opacity] duration-300 pointer-events-none ${
                         loadedImages[index] ? "blur-0 opacity-100" : "blur-xs opacity-90"
                       }`}
                       priority={priority && index === 0}
@@ -392,7 +455,7 @@ export function PropertyCardImage({
 
       {/* Pagination Dots */}
       {displayImages.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 xl:opacity-0 xl:group-hover/imgwrap:opacity-100 transition-opacity duration-300">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity duration-300">
           {displayImages
             .slice(
               Math.floor(activeImageIndex / 10) * 10,
@@ -415,15 +478,17 @@ export function PropertyCardImage({
       {displayImages.length > 1 && (
         <>
           <button
+            type="button"
             onClick={scrollPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/40 hover:bg-slate-900/70 text-white border border-white/30 opacity-0 group-hover/imgwrap:opacity-100 transition-all duration-300 shadow-md"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white border border-white/40 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
             aria-label="Previous image"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
+            type="button"
             onClick={scrollNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/40 hover:bg-slate-900/70 text-white border border-white/30 opacity-0 group-hover/imgwrap:opacity-100 transition-all duration-300 shadow-md"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white border border-white/40 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
             aria-label="Next image"
           >
             <ChevronRight className="w-5 h-5" />
