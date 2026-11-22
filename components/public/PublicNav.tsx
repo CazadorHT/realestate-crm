@@ -505,6 +505,7 @@ export function PublicNav() {
                           {/* Interactive Map */}
                           <Link
                             href={`${langPrefix}/map`}
+                            prefetch={false}
                             onClick={() => handleNavAction(`${langPrefix}/map`)}
                             className="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
                           >
@@ -522,6 +523,7 @@ export function PublicNav() {
                           {/* Projects */}
                           <Link
                             href={`${langPrefix}/projects`}
+                            prefetch={false}
                             onClick={() => handleNavAction(`${langPrefix}/projects`)}
                             className="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
                           >
@@ -1010,6 +1012,7 @@ export function PublicNav() {
                     <div className="grid grid-cols-3 gap-2">
                       <Link
                         href={`${langPrefix}/projects`}
+                        prefetch={false}
                         onClick={() => handleNavAction(`${langPrefix}/projects`)}
                         className="relative flex flex-col items-center justify-center p-2.5 rounded-xl bg-blue-50/60 hover:bg-blue-100/80 border border-blue-100/90 transition-all text-center group cursor-pointer"
                       >
@@ -1039,6 +1042,7 @@ export function PublicNav() {
 
                       <Link
                         href={`${langPrefix}/map`}
+                        prefetch={false}
                         onClick={() => handleNavAction(`${langPrefix}/map`)}
                         className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-emerald-50/60 hover:bg-emerald-100/80 border border-emerald-100/90 transition-all text-center group cursor-pointer"
                       >

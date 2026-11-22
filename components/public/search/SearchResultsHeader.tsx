@@ -108,6 +108,7 @@ export function SearchResultsHeader({
       {/* Full-Screen Explorer Route (/map) carrying all active filters */}
       <Link
         href={mapHref}
+        prefetch={false}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50/80 transition-all cursor-pointer"
       >
         <MapIcon className="w-3.5 h-3.5 shrink-0" />

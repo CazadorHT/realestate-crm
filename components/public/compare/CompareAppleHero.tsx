@@ -318,6 +318,7 @@ export function CompareAppleHero({
         {canAddMore && (
           <Link
             href={`${langPrefix || ""}/map`}
+            prefetch={false}
             className="rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-200 hover:border-blue-500 bg-slate-50/50 hover:bg-blue-50/40 p-4 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 text-center transition-all group min-h-[280px] sm:min-h-[320px] w-[76vw] xs:w-[280px] sm:w-[320px] lg:w-auto shrink-0 snap-start lg:shrink cursor-pointer"
           >
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white group-hover:bg-blue-600 group-hover:text-white text-slate-500 flex items-center justify-center transition-colors shadow-2xs border border-slate-200 group-hover:border-blue-600">

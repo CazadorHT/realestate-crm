@@ -665,6 +665,7 @@ export function PropertySearchPage({
       <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-30">
         <Link
           href={mapExplorerHref}
+          prefetch={false}
           className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#1B263B] hover:bg-blue-600 text-white font-bold text-xs shadow-2xl border border-white/15 transition-all active:scale-95 cursor-pointer"
         >
           <MapIcon className="w-4 h-4 text-blue-300" />
