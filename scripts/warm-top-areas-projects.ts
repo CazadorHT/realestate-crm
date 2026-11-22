@@ -1,3 +1,5 @@
+export {};
+
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
 
 async function warmUrl(path: string, pass: number): Promise<{ path: string; status: number; vercelCache: string; cfCache: string; timeMs: number }> {
