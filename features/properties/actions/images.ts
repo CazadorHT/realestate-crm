@@ -269,20 +269,20 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       }
 
       processedBuffer = await sharpImg
-        .webp({ quality: 82, effort: 4 })
+        .webp({ quality: 90, effort: 4 })
         .toBuffer();
 
       fileName = `${randomUUID()}.webp`;
 
-      // Generate 600px thumbnail for card & list views (Zero-overhead thumbnail pipeline)
+      // Generate 800px thumbnail for card & list views (Zero-overhead thumbnail pipeline, retina-ready)
       try {
         thumbBuffer = await sharp(inputBuffer)
           .resize({
-            width: 600,
+            width: 800,
             withoutEnlargement: true,
             fit: "inside",
           })
-          .webp({ quality: 80, effort: 4 })
+          .webp({ quality: 85, effort: 4 })
           .toBuffer();
       } catch (thumbErr) {
         console.warn("Sharp thumbnail generation failed:", thumbErr);

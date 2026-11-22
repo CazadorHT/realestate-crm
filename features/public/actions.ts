@@ -100,7 +100,7 @@ export async function uploadDepositPreviewAction(formData: FormData) {
     const sharp = (await import("sharp")).default;
     const compressedBuffer = await sharp(buffer)
       .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
-      .webp({ quality: 80 })
+      .webp({ quality: 85 })
       .toBuffer();
 
     const fileName = `deposit-previews/${Date.now()}_${crypto.randomUUID()}.webp`;
