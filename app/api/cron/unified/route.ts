@@ -16,10 +16,19 @@ interface ExtendedFlexMessage extends FlexMessage {
 }
 
 // PERFORMANCE CONFIG
+export const maxDuration = 60; // Max allowed execution duration for Vercel Hobby/Pro
 const BATCH_SIZE = 5;
-const MAX_RUNTIME_MS = 50000; // 50s (Vercel Pro = 60s, Hobby = 60s for cron)
+const MAX_RUNTIME_MS = 50000; // 50s safety buffer within the 60s window
 
 export async function POST(req: NextRequest) {
+  return handleCron(req);
+}
+
+export async function GET(req: NextRequest) {
+  return handleCron(req);
+}
+
+async function handleCron(req: NextRequest) {
   const startTime = performance.now();
 
   const authHeader = req.headers.get("Authorization");
@@ -79,13 +88,6 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-export async function GET() {
-  return NextResponse.json(
-    { error: "Method Not Allowed" },
-    { status: 405 },
-  );
 }
 
 // ─────────────────────────────────────────────────────
@@ -361,29 +363,18 @@ async function runTrashCleanup() {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString();
 
-    const { data: toDelete, error: fetchError } = await supabase
-      .from("properties")
-      .select("id, title, deleted_at")
-      .not("deleted_at", "is", null)
-      .lt("deleted_at", thirtyDaysAgoStr);
-
-    if (fetchError) throw fetchError;
-    if (!toDelete || toDelete.length === 0) {
-      return { message: "No trash to clean", count: 0 };
-    }
-
-    const idsToDelete = (toDelete || [])
-      .map((p) => p.id)
-      .filter((id): id is string => !!id);
-
-    const { error: deleteError } = await supabase
+    // Direct delete in properties_core without fetching thousands of records into memory first
+    const { data: deleted, error: deleteError } = await supabase
       .from("properties_core")
       .delete()
-      .in("id", idsToDelete);
+      .not("deleted_at", "is", null)
+      .lt("deleted_at", thirtyDaysAgoStr)
+      .select("id");
 
     if (deleteError) throw deleteError;
 
-    return { deleted_count: idsToDelete.length, deleted_ids: idsToDelete };
+    const count = deleted?.length || 0;
+    return { deleted_count: count, message: count === 0 ? "No trash to clean" : `Deleted ${count} properties` };
   } catch (error: unknown) {
     console.error("Trash cleanup error:", error);
     return { error: error instanceof Error ? error.message : "Unknown error" };
@@ -668,7 +659,7 @@ async function runMarketAlerts() {
       marketAverages[key].count += 1;
     });
 
-    let alertsCount = 0;
+    const alertsToInsert: any[] = [];
 
     // 4. Compare vs Market Average
     for (const property of activeProperties) {
@@ -694,10 +685,7 @@ async function runMarketAlerts() {
           100;
 
         if (diffPercent > 15) {
-          alertsCount += 1;
-
-          // Log to system_audit_logs_v3
-          await supabase.from("system_audit_logs_v3").insert({
+          alertsToInsert.push({
             action: "MARKET_DROP_ALERT",
             entity_table: "properties",
             entity_id: property.id,
@@ -714,9 +702,18 @@ async function runMarketAlerts() {
       }
     }
 
+    if (alertsToInsert.length > 0) {
+      const { error: insertError } = await supabase
+        .from("system_audit_logs_v3")
+        .insert(alertsToInsert);
+      if (insertError) {
+        console.error("Failed to batch insert market alerts:", insertError);
+      }
+    }
+
     return {
       success: true,
-      alerts_count: alertsCount,
+      alerts_count: alertsToInsert.length,
     };
   } catch (error: unknown) {
     console.error("Market alerts error:", error);

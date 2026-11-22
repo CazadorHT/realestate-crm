@@ -326,7 +326,15 @@ export async function GET(req: NextRequest) {
       if (imageResponse && imageResponse.headers) {
         imageResponse.headers.set(
           "Cache-Control",
-          "public, max-age=86400, s-maxage=31536000, stale-while-revalidate=86400",
+          "public, max-age=31536000, s-maxage=31536000, immutable",
+        );
+        imageResponse.headers.set(
+          "CDN-Cache-Control",
+          "public, s-maxage=31536000, immutable",
+        );
+        imageResponse.headers.set(
+          "Vercel-CDN-Cache-Control",
+          "public, s-maxage=31536000, immutable",
         );
       }
     } catch (e) {
