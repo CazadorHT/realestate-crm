@@ -3,7 +3,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Scale, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Loader2, Scale, X } from "lucide-react";
 import { readCompareIds, clearCompare, removeCompareId } from "@/lib/compare-store";
 import type { SlimMapPin } from "@/lib/services/map-pins";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,12 @@ export function MapCompareDock({
   className,
 }: MapCompareDockProps) {
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [pathname]);
 
   useEffect(() => {
     setCompareIds(readCompareIds());
@@ -113,10 +120,33 @@ export function MapCompareDock({
         {/* Primary Compare CTA Button */}
         <Link
           href={`${langPrefix || ""}/compare?ids=${compareIds.join(",")}`}
-          className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
+          onClick={(e) => {
+            if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+              setIsNavigating(true);
+            }
+          }}
+          aria-busy={isNavigating}
+          className={cn(
+            "inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer shrink-0",
+            isNavigating && "pointer-events-none opacity-85"
+          )}
         >
-          <Scale className="w-3.5 h-3.5 shrink-0" />
-          <span>{compareLabel}</span>
+          {isNavigating ? (
+            <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
+          ) : (
+            <Scale className="w-3.5 h-3.5 shrink-0" />
+          )}
+          <span>
+            {isNavigating
+              ? language === "en"
+                ? "Loading..."
+                : language === "cn"
+                  ? "加载中..."
+                  : language === "ru"
+                    ? "Загрузка..."
+                    : "กำลังเปิด..."
+              : compareLabel}
+          </span>
         </Link>
 
         {/* Clear All Button */}
