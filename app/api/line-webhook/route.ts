@@ -405,6 +405,132 @@ async function handlePostbackEvent(
     return;
   }
 
+  // ═════════════════════════════════════════════════════
+  // 🏠 ZERO-QUOTA REPLY API: Rent Payment & Renewal Funnel
+  // ═════════════════════════════════════════════════════
+  if (action === "rent_paid" || action === "rent_info") {
+    const ruleId = params.get("ruleId");
+    const pbLang = (["th", "en", "cn", "ru"].includes(params.get("lang") || "") ? params.get("lang") : lang) as BotLang;
+    const supabase = createAdminClient();
+
+    const { data: rule } = ruleId
+      ? await (supabase as any)
+          .from("rent_notification_rules_v3")
+          .select(`
+            id, property_id, channel_id, tenant_id, notification_day,
+            channel:notification_channels_v3 (channel_name),
+            property:properties_core (
+              rent_price, currency,
+              details:properties_details (title, title_en, title_cn, title_ru),
+              deals:crm_deals_v3 (transaction_end_date)
+            )
+          `)
+          .eq("id", ruleId)
+          .maybeSingle()
+      : { data: null };
+
+    const prop = Array.isArray(rule?.property) ? rule.property[0] : rule?.property;
+    const details = Array.isArray(prop?.details) ? prop.details[0] : prop?.details;
+    const ch = Array.isArray(rule?.channel) ? rule.channel[0] : rule?.channel;
+    const propName =
+      (pbLang === "en" ? details?.title_en : pbLang === "cn" ? details?.title_cn : pbLang === "ru" ? details?.title_ru : details?.title) ||
+      details?.title ||
+      "Property";
+    const rentStr = prop?.rent_price ? `${Number(prop.rent_price).toLocaleString()} ${prop?.currency || "THB"}` : "-";
+
+    if (action === "rent_paid") {
+      // 1. Log PAID in v3 history -> activates Smart Paid-Stop & stops Day+3 escalation
+      if (rule) {
+        await (supabase as any).from("rent_notification_history_v3").insert({
+          rule_id: rule.id,
+          property_id: rule.property_id,
+          channel_id: rule.channel_id,
+          tenant_id: rule.tenant_id,
+          status: "PAID",
+          sent_at: new Date().toISOString(),
+        });
+      }
+
+      // 2. Reply to tenant via FREE Reply API (0 LINE quota!)
+      const paidTexts: Record<BotLang, string> = {
+        th: `✅ ขอบคุณครับ! ระบบบันทึกการแจ้งโอนค่าเช่า (${propName}) เรียบร้อยแล้ว\nกรุณาส่งภาพสลิปในกลุ่มนี้เพื่อให้แอดมินตรวจสอบครับ 🙏`,
+        en: `✅ Thank you! Your rent payment notification for "${propName}" has been recorded.\nPlease share the transfer slip photo in this group for verification 🙏`,
+        cn: `✅ 感谢您！系统已记录“${propName}”的租金转账通知。\n请在此群发送转账凭证截图以便管理员核对 🙏`,
+        ru: `✅ Спасибо! Уведомление об оплате аренды (${propName}) зарегистрировано.\nПожалуйста, отправьте фото чека в эту группу для проверки 🙏`,
+      };
+      await replyMessage(event.replyToken, [{ type: "text", text: paidTexts[pbLang] }]);
+
+      // 3. Instant FREE Telegram alert to Admin
+      await sendAdminNotification(
+        `<b>💰 ลูกค้ากด "แจ้งโอนค่าเช่าแล้ว"</b>\n• ทรัพย์: <b>${propName}</b>\n• ยอดเช่า: ${rentStr}\n• กลุ่ม LINE: ${ch?.channel_name || event.source.groupId || "-"}\n<i>(ระบบบันทึกสถานะ PAID และหยุดการทวงอัตโนมัติในรอบเดือนนี้แล้ว)</i>`,
+        { parseMode: "HTML" },
+      );
+      return;
+    }
+
+    // action === "rent_info" (FREE Reply API)
+    const deals = Array.isArray(prop?.deals) ? prop.deals : [];
+    const endDate = deals.find((d: any) => d.transaction_end_date)?.transaction_end_date || "-";
+    const infoTexts: Record<BotLang, string> = {
+      th: `ℹ️ ข้อมูลการชำระค่าเช่า\n• ทรัพย์: ${propName}\n• ยอดค่าเช่า: ${rentStr}\n• กำหนดชำระ: วันที่ ${rule?.notification_day || "-"} ของทุกเดือน\n• วันสิ้นสุดสัญญา: ${endDate}\n\nสามารถส่งสลิปในกลุ่มนี้ได้เลย หรือพิมพ์ติดต่อแอดมินได้ตลอดเวลาครับ`,
+      en: `ℹ️ Rent Payment Details\n• Property: ${propName}\n• Monthly Rent: ${rentStr}\n• Due Day: Day ${rule?.notification_day || "-"} of each month\n• Contract End: ${endDate}\n\nPlease send your transfer slip here or message our team anytime.`,
+      cn: `ℹ️ 租金支付详情\n• 房源: ${propName}\n• 月租金: ${rentStr}\n• 应付日期: 每月 ${rule?.notification_day || "-"} 日\n• 合同到期日: ${endDate}\n\n请直接在此群发送转账凭证，如有疑问请随时联系管理员。`,
+      ru: `ℹ️ Детали оплаты аренды\n• Объект: ${propName}\n• Аренда: ${rentStr}\n• День оплаты: ${rule?.notification_day || "-"} число каждого месяца\n• Окончание договора: ${endDate}\n\nОтправьте чек в эту группу или напишите администратору.`,
+    };
+    await replyMessage(event.replyToken, [{ type: "text", text: infoTexts[pbLang] }]);
+    return;
+  }
+
+  if (action === "contract_renew" || action === "contract_moveout") {
+    const dealId = params.get("dealId");
+    const pbLang = (["th", "en", "cn", "ru"].includes(params.get("lang") || "") ? params.get("lang") : lang) as BotLang;
+    const supabase = createAdminClient();
+
+    const { data: deal } = dealId
+      ? await (supabase as any)
+          .from("crm_deals_v3")
+          .select("id, title, transaction_end_date, total_amount, property:properties_core(rent_price, details:properties_details(title))")
+          .eq("id", dealId)
+          .maybeSingle()
+      : { data: null };
+
+    const prop = Array.isArray(deal?.property) ? deal.property[0] : deal?.property;
+    const details = Array.isArray(prop?.details) ? prop.details[0] : prop?.details;
+    const propName = details?.title || deal?.title || "ทรัพย์สิน";
+    const endDate = deal?.transaction_end_date || "-";
+
+    if (action === "contract_renew") {
+      const renewTexts: Record<BotLang, string> = {
+        th: `✨ ขอบคุณที่ไว้วางใจครับ! ทีมงานได้รับความประสงค์ "สนใจต่อสัญญา" สำหรับ ${propName} แล้ว จะรีบติดต่อกลับเพื่อดูแลเรื่องสัญญาฉบับใหม่ให้ครับ`,
+        en: `✨ Thank you for staying with us! We've received your renewal request for "${propName}". Our team will contact you shortly with the renewal agreement.`,
+        cn: `✨ 感谢您的信任！我们已收到您关于“${propName}”的续租意向，团队将尽快与您联系办理续约手续。`,
+        ru: `✨ Спасибо за доверие! Мы получили ваш запрос на продление договора (${propName}). Наш менеджер скоро свяжется с вами.`,
+      };
+      await replyMessage(event.replyToken, [{ type: "text", text: renewTexts[pbLang] }]);
+
+      await sendAdminNotification(
+        `<b>✨ ลูกค้ากด "สนใจต่อสัญญาเช่า" (60-Day Funnel)</b>\n• ทรัพย์: <b>${propName}</b>\n• หมดสัญญา: <code>${endDate}</code>\n• กลุ่ม LINE: ${event.source.groupId || "-"}\n👉 <i>รีบติดต่อผู้เช่าและเจ้าของห้องเพื่อปิดดีลต่อสัญญาได้เลยครับ!</i>`,
+        { parseMode: "HTML" },
+      );
+      return;
+    }
+
+    // action === "contract_moveout"
+    const moveOutTexts: Record<BotLang, string> = {
+      th: `📦 รับทราบครับ ระบบได้แจ้งทีมงานเรื่องความประสงค์ "แจ้งย้ายออก" สำหรับ ${propName} แล้ว ทีมงานจะประสานงานเรื่องวันนัดตรวจห้องและการคืนเงินมัดจำล่วงหน้าให้ครับ 🙏`,
+      en: `📦 Noted! We've informed our team of your plan to move out of "${propName}". Our team will coordinate the inspection date and deposit refund process with you 🙏`,
+      cn: `📦 已收到！我们已通知团队您关于“${propName}”的退租计划，团队将提前与您协调退房验房及押金退还事宜 🙏`,
+      ru: `📦 Принято! Мы уведомили команду о вашем планируемом выезде (${propName}). Менеджер заранее согласует осмотр и возврат депозита 🙏`,
+    };
+    await replyMessage(event.replyToken, [{ type: "text", text: moveOutTexts[pbLang] }]);
+
+    await sendAdminNotification(
+      `<b>🔴 แจ้งย้ายออกล่วงหน้า! (60-Day Funnel)</b>\n• ทรัพย์: <b>${propName}</b>\n• หมดสัญญา: <code>${endDate}</code>\n• กลุ่ม LINE: ${event.source.groupId || "-"}\n👉 <i>สามารถเตรียมเปิดประกาศหาผู้เช่าใหม่ได้ทันทีเพื่อลดห้องว่าง!</i>`,
+      { parseMode: "HTML" },
+    );
+    return;
+  }
+
   if (action === "contact") {
     // 1. ตอบกลับการ์ด Flex Message ตกลงจะติดต่อกลับอย่างสวยงาม
     const confirmCard = buildHandoverConfirmFlex(lang);

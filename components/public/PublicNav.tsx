@@ -9,6 +9,7 @@ import {
   Building2,
   Home,
   Compass,
+  MapPin,
   Sparkles,
   Palmtree,
   PawPrint,
@@ -71,6 +72,18 @@ const NAV_LOCALIZATION: Record<string, Record<string, string>> = {
     en: "135+ premier residential projects in Bangkok",
     cn: "135+ 曼谷精选住宅楼盘项目",
     ru: "Более 135 жилых комплексов Бангкока",
+  },
+  nav_areas: {
+    th: "ทำเลยอดนิยม",
+    en: "Popular Areas",
+    cn: "热门区域",
+    ru: "Популярные районы",
+  },
+  nav_areas_desc: {
+    th: "สำรวจ 60+ ทำเลทอง คอนโด บ้าน ในกรุงเทพฯ และภูเก็ต",
+    en: "Explore 60+ prime neighborhoods in Bangkok & Phuket",
+    cn: "探索曼谷与普吉 60+ 热门住宅商圈",
+    ru: "Более 60 популярных районов Бангкока и Пхукета",
   },
   nav_all_props: {
     th: "ทรัพย์สินทั้งหมด",
@@ -347,6 +360,7 @@ export function PublicNav() {
   // Schema.org for SEO
   const schemaNavLinks = [
     { name: navStr("nav_projects"), href: `${langPrefix}/projects` },
+    { name: navStr("nav_areas"), href: `${langPrefix}/areas` },
     { name: navStr("nav_all_props"), href: `${langPrefix}/properties` },
     { name: navStr("nav_map"), href: `${langPrefix}/map` },
     { name: navStr("nav_prime_cbd"), href: `${langPrefix}/properties/prime-cbd` },
@@ -536,6 +550,25 @@ export function PublicNav() {
                                 <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">135+</span>
                               </div>
                               <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{navStr("nav_projects_desc")}</p>
+                            </div>
+                          </Link>
+
+                          {/* Popular Areas */}
+                          <Link
+                            href={`${langPrefix}/areas`}
+                            prefetch={false}
+                            onClick={() => handleNavAction(`${langPrefix}/areas`)}
+                            className="flex items-start gap-3 p-3 rounded-xl hover:bg-violet-50/70 transition-colors group/item"
+                          >
+                            <div className="w-9 h-9 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-violet-600 group-hover/item:text-white transition-colors">
+                              <MapPin className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-semibold text-slate-900 group-hover/item:text-violet-600 transition-colors flex items-center gap-1.5">
+                                <span>{navStr("nav_areas")}</span>
+                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-700">60+</span>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{navStr("nav_areas_desc")}</p>
                             </div>
                           </Link>
                         </div>
@@ -1008,25 +1041,8 @@ export function PublicNav() {
 
                 {mobilePropExpanded && (
                   <div className="p-3 space-y-3 bg-white border-t border-slate-100">
-                    {/* Top 3 Primary Explore Items (Grid 3 cols) */}
-                    <div className="grid grid-cols-3 gap-2">
-                      <Link
-                        href={`${langPrefix}/projects`}
-                        prefetch={false}
-                        onClick={() => handleNavAction(`${langPrefix}/projects`)}
-                        className="relative flex flex-col items-center justify-center p-2.5 rounded-xl bg-blue-50/60 hover:bg-blue-100/80 border border-blue-100/90 transition-all text-center group cursor-pointer"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs mb-1.5 group-hover:scale-105 transition-transform">
-                          <Building2 className="w-4 h-4" />
-                        </div>
-                        <span className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-1">
-                          {navStr("nav_projects")}
-                        </span>
-                        <span className="absolute top-1.5 right-1.5 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-blue-600 text-white shadow-xs">
-                          135+
-                        </span>
-                      </Link>
-
+                    {/* Top 4 Primary Explore Items (Grid 2x2) */}
+                    <div className="grid grid-cols-2 gap-2">
                       <Link
                         href={`${langPrefix}/properties`}
                         onClick={() => handleNavAction(`${langPrefix}/properties`)}
@@ -1051,6 +1067,40 @@ export function PublicNav() {
                         </div>
                         <span className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-1">
                           {navStr("nav_map")}
+                        </span>
+                      </Link>
+
+                      <Link
+                        href={`${langPrefix}/projects`}
+                        prefetch={false}
+                        onClick={() => handleNavAction(`${langPrefix}/projects`)}
+                        className="relative flex flex-col items-center justify-center p-2.5 rounded-xl bg-blue-50/60 hover:bg-blue-100/80 border border-blue-100/90 transition-all text-center group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs mb-1.5 group-hover:scale-105 transition-transform">
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-1">
+                          {navStr("nav_projects")}
+                        </span>
+                        <span className="absolute top-1.5 right-1.5 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-blue-600 text-white shadow-xs">
+                          135+
+                        </span>
+                      </Link>
+
+                      <Link
+                        href={`${langPrefix}/areas`}
+                        prefetch={false}
+                        onClick={() => handleNavAction(`${langPrefix}/areas`)}
+                        className="relative flex flex-col items-center justify-center p-2.5 rounded-xl bg-violet-50/60 hover:bg-violet-100/80 border border-violet-100/90 transition-all text-center group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center shadow-xs mb-1.5 group-hover:scale-105 transition-transform">
+                          <MapPin className="w-4 h-4" />
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-800 leading-tight line-clamp-1">
+                          {navStr("nav_areas")}
+                        </span>
+                        <span className="absolute top-1.5 right-1.5 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-violet-600 text-white shadow-xs">
+                          60+
                         </span>
                       </Link>
                     </div>

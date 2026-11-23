@@ -34,6 +34,11 @@ export const PROPERTY_PUBLIC_PATHS = [
   "/en/projects",
   "/zh/projects",
   "/ru/projects",
+  // Popular Areas Hub
+  "/areas",
+  "/en/areas",
+  "/zh/areas",
+  "/ru/areas",
   // Transit & Station Hub
   "/near-station",
   "/en/near-station",

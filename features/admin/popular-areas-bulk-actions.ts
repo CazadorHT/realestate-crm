@@ -3,6 +3,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { purgeCloudflareCache } from "@/lib/cloudflare";
 import { mapDbError } from "@/lib/db-error";
 
 export type BulkDeleteResult = {
@@ -65,10 +66,12 @@ export async function bulkDeletePopularAreasAction(
 
     revalidatePath("/protected/admin/popular-areas");
     revalidatePath("/properties");
+    revalidatePath("/areas");
     revalidatePath("/");
     revalidateTag("popular-areas", "seconds");
     revalidateTag("area-translations", "seconds");
     revalidateTag("public-data", "seconds");
+    await purgeCloudflareCache(["/", "/en", "/zh", "/ru", "/areas", "/en/areas", "/zh/areas", "/ru/areas", "/api/public/popular-areas"]);
 
     const finalCount = count ?? 0;
     return {
@@ -259,10 +262,12 @@ export async function bulkGenerateAreaSeoContentAction(
 
     revalidatePath("/protected/admin/popular-areas");
     revalidatePath("/properties");
+    revalidatePath("/areas");
     revalidatePath("/");
     revalidateTag("popular-areas", "seconds");
     revalidateTag("area-translations", "seconds");
     revalidateTag("public-data", "seconds");
+    await purgeCloudflareCache(["/", "/en", "/zh", "/ru", "/areas", "/en/areas", "/zh/areas", "/ru/areas", "/api/public/popular-areas"]);
 
     return {
       success: true,

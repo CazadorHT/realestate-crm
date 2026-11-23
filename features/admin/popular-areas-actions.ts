@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertAdmin, assertStaff } from "@/lib/authz";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { purgeCloudflareCache } from "@/lib/cloudflare";
 import { z } from "zod";
 import { generateText } from "@/lib/ai/gemini";
 import { popularAreaSchema } from "./popular-areas-validation";
@@ -226,10 +227,12 @@ export async function createPopularArea(
 
     revalidatePath("/protected/admin/popular-areas");
     revalidatePath("/properties");
+    revalidatePath("/areas");
     revalidatePath("/");
     revalidateTag("popular-areas", "seconds");
     revalidateTag("area-translations", "seconds");
     revalidateTag("public-data", "seconds");
+    await purgeCloudflareCache(["/", "/en", "/zh", "/ru", "/areas", "/en/areas", "/zh/areas", "/ru/areas", "/api/public/popular-areas"]);
     return { success: true, message: "สร้างทำเลยอดนิยมสำเร็จ" };
   } catch (error: unknown) {
     console.error("createPopularArea error:", error);
@@ -319,10 +322,12 @@ export async function updatePopularArea(
 
     revalidatePath("/protected/admin/popular-areas");
     revalidatePath("/properties");
+    revalidatePath("/areas");
     revalidatePath("/");
     revalidateTag("popular-areas", "seconds");
     revalidateTag("area-translations", "seconds");
     revalidateTag("public-data", "seconds");
+    await purgeCloudflareCache(["/", "/en", "/zh", "/ru", "/areas", "/en/areas", "/zh/areas", "/ru/areas", "/api/public/popular-areas"]);
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ" };
   } catch (error: unknown) {
     console.error("updatePopularArea error:", error);
@@ -380,10 +385,12 @@ export async function toggleCbdPopularAreaAction(id: string, is_cbd: boolean) {
     revalidatePath("/protected/admin/popular-areas");
     revalidatePath("/properties/prime-cbd");
     revalidatePath("/properties");
+    revalidatePath("/areas");
     revalidatePath("/");
     revalidateTag("popular-areas", "seconds");
     revalidateTag("area-translations", "seconds");
     revalidateTag("public-data", "seconds");
+    await purgeCloudflareCache(["/", "/en", "/zh", "/ru", "/areas", "/en/areas", "/zh/areas", "/ru/areas", "/api/public/popular-areas"]);
 
     return {
       success: true,
@@ -430,10 +437,12 @@ export async function deletePopularArea(id: string) {
 
     revalidatePath("/protected/admin/popular-areas");
     revalidatePath("/properties");
+    revalidatePath("/areas");
     revalidatePath("/");
     revalidateTag("popular-areas", "seconds");
     revalidateTag("area-translations", "seconds");
     revalidateTag("public-data", "seconds");
+    await purgeCloudflareCache(["/", "/en", "/zh", "/ru", "/areas", "/en/areas", "/zh/areas", "/ru/areas", "/api/public/popular-areas"]);
     return { success: true, message: "ลบทำเลสำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePopularArea error:", error);
@@ -535,10 +544,12 @@ export async function reorderPopularAreasAction(
 
     revalidatePath("/protected/admin/popular-areas");
     revalidatePath("/properties");
+    revalidatePath("/areas");
     revalidatePath("/");
     revalidateTag("popular-areas", "seconds");
     revalidateTag("area-translations", "seconds");
     revalidateTag("public-data", "seconds");
+    await purgeCloudflareCache(["/", "/en", "/zh", "/ru", "/areas", "/en/areas", "/zh/areas", "/ru/areas", "/api/public/popular-areas"]);
     return { success: true, message: "ปรับลำดับทำเลสำเร็จ" };
   } catch (error: unknown) {
     console.error("reorderPopularAreasAction error:", error);
@@ -767,10 +778,12 @@ export async function bulkTranslatePopularAreasAction(
 
     revalidatePath("/protected/admin/popular-areas");
     revalidatePath("/properties");
+    revalidatePath("/areas");
     revalidatePath("/");
     revalidateTag("popular-areas", "seconds");
     revalidateTag("area-translations", "seconds");
     revalidateTag("public-data", "seconds");
+    await purgeCloudflareCache(["/", "/en", "/zh", "/ru", "/areas", "/en/areas", "/zh/areas", "/ru/areas", "/api/public/popular-areas"]);
     return {
       success: true,
       message: `แปลภาษาสำเร็จ ${validUpdates.length} รายการ`,

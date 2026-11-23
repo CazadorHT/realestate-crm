@@ -48,19 +48,19 @@ export function ProjectAboutCard({
       return { logo: "/images/transit/Bangkok_BRT_logo.svg", bg: "bg-green-50 border-green-100 text-green-800", lineName: "BRT" };
     }
     if (c.includes("YELLOW")) {
-      return { logo: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg", bg: "bg-amber-50 border-amber-100 text-amber-800", lineName: "MRT Yellow" };
+      return { logo: "/images/transit/mrt-bangkok-yellow-logo.svg", bg: "bg-amber-50 border-amber-100 text-amber-800", lineName: "MRT Yellow" };
     }
     if (c.includes("PINK")) {
-      return { logo: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg", bg: "bg-pink-50 border-pink-100 text-pink-800", lineName: "MRT Pink" };
+      return { logo: "/images/transit/mrt-bangkok-pink-logo.svg", bg: "bg-pink-50 border-pink-100 text-pink-800", lineName: "MRT Pink" };
     }
     if (c.includes("PURPLE")) {
-      return { logo: "/images/transit/MRT_(Bangkok)_Purple_logo.svg", bg: "bg-purple-50 border-purple-100 text-purple-800", lineName: "MRT Purple" };
+      return { logo: "/images/transit/mrt-bangkok-purple-logo.svg", bg: "bg-purple-50 border-purple-100 text-purple-800", lineName: "MRT Purple" };
     }
     if (c.includes("ORANGE")) {
-      return { logo: "/images/transit/MRT_(Bangkok)_Orange_logo.svg", bg: "bg-orange-50 border-orange-100 text-orange-800", lineName: "MRT Orange" };
+      return { logo: "/images/transit/mrt-bangkok-orange-logo.svg", bg: "bg-orange-50 border-orange-100 text-orange-800", lineName: "MRT Orange" };
     }
     if (c.startsWith("MRT")) {
-      return { logo: "/images/transit/MRT_(Bangkok)_logo.svg", bg: "bg-blue-50 border-blue-100 text-blue-800", lineName: "MRT Blue" };
+      return { logo: "/images/transit/mrt-bangkok-logo.svg", bg: "bg-blue-50 border-blue-100 text-blue-800", lineName: "MRT Blue" };
     }
     if (c.startsWith("SRT")) {
       return { logo: "/images/transit/SRT_Red_Lines_icon.svg", bg: "bg-rose-50 border-rose-100 text-rose-800", lineName: "SRT Red" };

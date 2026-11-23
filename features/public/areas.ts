@@ -103,26 +103,46 @@ export async function getAreaBySlug(slug: string): Promise<PublicAreaDetail | nu
       }
 
       if (!data) {
-        // If the provided slug looks like a UUID, try a lookup by id as a fallback
-        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-        if (uuidRegex.test(slug)) {
-          const { data: dataById, error: errorById } = await supabase
+        const decodedSlug = decodeURIComponent(slug).trim();
+
+        // 1. Fallback lookup by Thai/English name (e.g. /areas/พระโขนงเหนือ)
+        try {
+          const { data: dataByName } = await supabase
             .from("popular_areas_v3")
             .select("id, name, province, slug, image_url, description, seo_title, seo_description, is_ai_generated")
-            .eq("id", slug)
+            .or(`name->>th.eq."${decodedSlug}",name->>en.ilike."${decodedSlug}",name_th.eq."${decodedSlug}",name_en.ilike."${decodedSlug}"`)
             .eq("is_active", true)
             .maybeSingle();
 
-          if (errorById || !dataById) {
-            console.error("Fallback lookup by id failed for popular area", { slug, error: errorById, data: dataById });
+          if (dataByName) {
+            data = dataByName as any;
+          }
+        } catch (nameErr) {
+          console.warn("Fallback lookup by name error for popular area:", nameErr);
+        }
+
+        // 2. If the provided slug looks like a UUID, try a lookup by id as a fallback
+        if (!data) {
+          const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+          if (uuidRegex.test(slug)) {
+            const { data: dataById, error: errorById } = await supabase
+              .from("popular_areas_v3")
+              .select("id, name, province, slug, image_url, description, seo_title, seo_description, is_ai_generated")
+              .eq("id", slug)
+              .eq("is_active", true)
+              .maybeSingle();
+
+            if (errorById || !dataById) {
+              console.error("Fallback lookup by id failed for popular area", { slug, error: errorById, data: dataById });
+              return null;
+            }
+
+            console.info("Fallback: found popular area by id for incoming slug", { incoming: slug, resolvedSlug: dataById.slug });
+            data = dataById as any;
+          } else {
+            console.info("No popular area found for slug", { slug });
             return null;
           }
-
-          console.info("Fallback: found popular area by id for incoming slug", { incoming: slug, resolvedSlug: dataById.slug });
-          data = dataById as any;
-        } else {
-          console.info("No popular area found for slug", { slug });
-          return null;
         }
       }
 
@@ -401,11 +421,13 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
 
       const activeAreaNames = new Set<string>();
       const areaImageMap = new Map<string, string>();
+      const areaCountMap = new Map<string, number>();
 
       (propData || []).forEach((p: any) => {
         const areaName = (p.popular_area as string)?.trim();
         if (areaName) {
           activeAreaNames.add(areaName);
+          areaCountMap.set(areaName, (areaCountMap.get(areaName) || 0) + 1);
           if (p.main_image && !areaImageMap.has(areaName)) {
             areaImageMap.set(areaName, p.main_image);
           }
@@ -449,11 +471,12 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
           slug: item.slug || "",
           imageUrl: getPublicImageUrl(imageUrl) || null,
           province: item.province,
+          count: areaCountMap.get(nameTh) || 0,
         });
       }
       return result;
     },
-    ["public-popular-areas", String(limit)],
+    ["public-popular-areas-v2", String(limit)],
     { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
   )();
 }
@@ -510,11 +533,13 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
 
       const activeAreaNames = new Set<string>();
       const areaImageMap = new Map<string, string>();
+      const areaCountMap = new Map<string, number>();
 
       (propData || []).forEach((p: any) => {
         const areaName = (p.popular_area as string)?.trim();
         if (areaName) {
           activeAreaNames.add(areaName);
+          areaCountMap.set(areaName, (areaCountMap.get(areaName) || 0) + 1);
           if (p.main_image && !areaImageMap.has(areaName)) {
             areaImageMap.set(areaName, p.main_image);
           }

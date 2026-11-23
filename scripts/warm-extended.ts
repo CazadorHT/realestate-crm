@@ -35,8 +35,6 @@ async function run() {
   ];
 
   const topProjects = [
-    "/projects/28-chidlom",
-    "/projects/98-wireless",
     "/projects/all-seasons-place",
     "/projects/noble-revolve-ratchada-1",
     "/projects/anasiri-rangsit-khlong-2",

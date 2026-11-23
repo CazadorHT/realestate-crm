@@ -106,7 +106,14 @@ export function LanguageProvider({
       const targetUrl = targetPath + search;
       const currentFullUrl = pathname + search;
       if (targetUrl !== currentFullUrl) {
-        router.push(targetUrl, { scroll: false });
+        // Use hard navigation when switching public locale so Next.js Server Components
+        // behind middleware rewrites (/en, /zh, /ru -> /...) always re-render in the new language
+        // instead of reusing stale Client Router Cache in the previous language.
+        if (typeof window !== "undefined") {
+          window.location.assign(targetUrl);
+        } else {
+          router.push(targetUrl, { scroll: false });
+        }
         return;
       }
     }

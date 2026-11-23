@@ -34,8 +34,9 @@ export async function GET(
 
   try {
     const response = await fetch(GITHUB_RAW_URL, {
-      // Keep revalidation long; stripping redundant fields ensures payload stays under 2MB
-      next: { revalidate: 31536000 },
+      // Raw GitHub sub_district.json exceeds Next.js 2MB Data Cache limit.
+      // Bypass Next.js fetch cache; rely on in-memory module cache + Edge CDN Cache-Control.
+      cache: "no-store",
     });
 
     if (!response.ok) {

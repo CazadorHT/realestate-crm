@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import {
   MapPin,
   ArrowRight,
@@ -13,7 +12,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
-import { getProvinceName, PROVINCES, translateLocation } from "@/lib/utils/provinces";
+import { getProvinceName } from "@/lib/utils/provinces";
 import { m, AnimatePresence } from "framer-motion";
 import {
   Tooltip,
@@ -38,14 +37,14 @@ export function PopularAreasSection({
   initialProvinces,
 }: PopularAreasSectionProps) {
   const { language, langPrefix, t } = useLanguage();
-  const router = useRouter();
   const [items, setItems] = useState<PopularAreaItem[]>(initialItems || []);
   const [isLoading, setIsLoading] = useState(!initialItems);
-  const [isMounted, setIsMounted] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isFirstMount = useRef(true);
+  const hasDraggedRef = useRef(false);
   const areaCache = useRef<Record<string, PopularAreaItem[]>>({});
 
   const [showLeftFade, setShowLeftFade] = useState(false);
@@ -152,7 +151,6 @@ export function PopularAreasSection({
   // Fetch Provinces if not provided
   useEffect(() => {
     if (initialProvinces && initialProvinces.length > 0) {
-      setIsMounted(true);
       return;
     }
 
@@ -185,7 +183,6 @@ export function PopularAreasSection({
     }
 
     fetchProvinces();
-    setIsMounted(true);
   }, [initialProvinces]);
 
   // Handle data fetching for province changes
@@ -220,7 +217,6 @@ export function PopularAreasSection({
         url.searchParams.set("province", activeProvince);
 
         const res = await fetch(url.toString(), {
-          cache: "no-store",
           signal: controller.signal,
         });
         if (!res.ok) throw new Error("failed");
@@ -263,6 +259,7 @@ export function PopularAreasSection({
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!scrollContainerRef.current) return;
     setIsDragging(true);
+    hasDraggedRef.current = false;
     setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
     setScrollLeft(scrollContainerRef.current.scrollLeft);
   };
@@ -274,6 +271,9 @@ export function PopularAreasSection({
     if (!isDragging || !scrollContainerRef.current) return;
     e.preventDefault();
     const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    if (Math.abs(x - startX) > 6) {
+      hasDraggedRef.current = true;
+    }
     const walk = (x - startX) * 1.5;
     scrollContainerRef.current.scrollLeft = scrollLeft - walk;
   };
@@ -282,7 +282,7 @@ export function PopularAreasSection({
     <section className="pt-8 bg-white">
       <div className="max-w-screen-2xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between px-4">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between px-4 sm:px-0">
           <m.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -476,32 +476,22 @@ export function PopularAreasSection({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  {(() => {
-                    const provinceParam =
-                      language === "th"
-                        ? translateLocation(activeProvince, "th") || activeProvince
-                        : PROVINCES[activeProvince]?.en ||
-                          translateLocation(activeProvince, "en") ||
-                          activeProvince;
-                    return (
-                      <Link
-                        href={`${langPrefix}/properties?province=${encodeURIComponent(provinceParam)}`}
-                        className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center"
-                      >
-                        {/* Animated gradient overlay */}
-                        <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Link
+                    href={`${langPrefix}/areas`}
+                    className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center"
+                  >
+                    {/* Animated gradient overlay */}
+                    <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                        {/* Button content */}
-                        <div className="relative flex items-center gap-2">
-                          <span>{t("common.view_all")}</span>
-                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-                        </div>
-                      </Link>
-                    );
-                  })()}
+                    {/* Button content */}
+                    <div className="relative flex items-center gap-2">
+                      <span>{t("common.view_all")}</span>
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    </div>
+                  </Link>
                 </TooltipTrigger>
                 <TooltipContent className="text-sm font-medium">
-                  {t("common.view_all")} {activeDisplay}
+                  {t("common.view_all")} {t("home.popular_areas.title")}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -622,8 +612,16 @@ export function PopularAreasSection({
                 }`}
               >
                 {items.map((it, index) => {
-                  const href = `${langPrefix}/areas/${it.slug}`;
+                  // Route canonical English slugs to /areas/[slug]; route fallback Thai/unmapped areas straight to search (Zero 404!)
+                  const isCanonicalSlug = Boolean(it.slug && /^[a-z0-9-]+$/i.test(it.slug));
+                  const href = isCanonicalSlug
+                    ? `${langPrefix}/areas/${it.slug}`
+                    : `${langPrefix}/properties?q=${encodeURIComponent(it.popular_area || "")}`;
                   const isImgLoaded = loadedImages[it.key];
+                  const imgSrc =
+                    !failedImages[it.key] && it.cover
+                      ? it.cover
+                      : "/images/area-placeholder1.jpg";
                   return (
                     <m.div
                       key={it.key}
@@ -640,14 +638,17 @@ export function PopularAreasSection({
                       <Link
                         href={href}
                         onClick={(e) => {
-                          if (isDragging) return e.preventDefault();
+                          if (hasDraggedRef.current) {
+                            e.preventDefault();
+                            hasDraggedRef.current = false;
+                          }
                         }}
                         className="group w-[220px] sm:w-[260px] relative isolate overflow-hidden bg-slate-900 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 text-left block rounded-2xl sm:rounded-3xl"
                       >
                         {/* Image & Progressive Blur-Up Overlays */}
                         <div className="absolute inset-0 -z-10 bg-slate-800">
                           <Image
-                            src={it.cover || "/images/area-placeholder1.jpg"}
+                            src={imgSrc}
                             alt={it.popular_area}
                             fill
                             sizes="(max-width: 640px) 220px, 260px"
@@ -662,6 +663,16 @@ export function PopularAreasSection({
                                 [it.key]: true,
                               }))
                             }
+                            onError={() => {
+                              setFailedImages((prev) => ({
+                                ...prev,
+                                [it.key]: true,
+                              }));
+                              setLoadedImages((prev) => ({
+                                ...prev,
+                                [it.key]: true,
+                              }));
+                            }}
                           />
                           {/* Lightweight Gradients (No Backdrop Filters) */}
                           <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-300" />

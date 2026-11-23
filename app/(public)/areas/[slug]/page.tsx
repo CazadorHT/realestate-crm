@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { MapPin, Train, Building2, ChevronRight, BarChart3, HelpCircle, Compass } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { formatPrioritySeoTitle, generateAreaFAQSchema, getSeoAlternates } from "@/lib/seo-utils";
@@ -97,7 +97,7 @@ const LOCALIZATION: Record<string, Record<string, string>> = {
   other: { th: "อสังหาริมทรัพย์อื่นๆ", en: "Other Properties", cn: "其他房产", ru: "Другое" },
   sale_median: { th: "ราคากลางซื้อขาย", en: "Median Sale Price", cn: "售价中位数", ru: "Медиана цены продажи" },
   rent_median: { th: "ราคากลางเช่ารายเดือน", en: "Median Rent Price", cn: "月租金中位数", ru: "Медиана стоимости аренды" },
-  sqm_median: { th: "ราคากลางต่อ ตร.ม.", en: "Median Price / Sqm", cn: "平米单价中位数", ru: "มัธยฐานราคาต่อ ตร.ม." },
+  sqm_median: { th: "ราคากลางต่อ ตร.ม.", en: "Median Price / Sqm", cn: "平米单价中位数", ru: "Медиана цены за кв.м." },
   projects_in_area: { th: "โครงการยอดนิยมในย่านนี้", en: "Popular Projects in Area", cn: "该区域热门项目", ru: "Популярные комплексы в районе" },
   transit_in_area: { th: "การคมนาคมเชื่อมต่อหลัก", en: "Transportation Links", cn: "主要交通出行", ru: "Транспортное сообщение" },
   related_areas: { th: "ทำเลทองอื่นๆ ที่น่าสนใจ", en: "Popular Nearby Areas", cn: "其他热门区域", ru: "Другие популярные районы" },
@@ -125,10 +125,25 @@ export default async function AreaDetailPage(
   props: { params: Promise<{ slug: string }> }
 ) {
   const params = await props.params;
+  const decodedParamSlug = decodeURIComponent(params.slug).trim();
   const area = await getAreaBySlugCached(params.slug);
 
   if (!area) {
+    // Safety net: if a Thai subdistrict/district slug (e.g. /areas/พระโขนงเหนือ) is not in popular_areas_v3,
+    // redirect smoothly to property search instead of returning a 404!
+    if (/[\u0E00-\u0E7F]/.test(decodedParamSlug)) {
+      const { language } = await getServerTranslations();
+      const langPrefix = getLangPrefix(language);
+      redirect(`${langPrefix}/properties?q=${encodeURIComponent(decodedParamSlug)}`);
+    }
     notFound();
+  }
+
+  // Canonical redirect if accessed via Thai name or UUID
+  if (area.slug && decodedParamSlug !== area.slug && params.slug !== area.slug) {
+    const { language } = await getServerTranslations();
+    const langPrefix = getLangPrefix(language);
+    redirect(`${langPrefix}/areas/${area.slug}`);
   }
 
   const { language } = await getServerTranslations();
@@ -174,7 +189,9 @@ export default async function AreaDetailPage(
         ? `Просмотрите доступные квартиры и дома на продажу/аренду в районе ${nameText}, Бангкок. Найдите идеальный вариант.`
         : `ค้นหารายการประกาศขายและเช่า คอนโด บ้านเดี่ยว ทาวน์โฮม ในทำเลยอดนิยมย่าน ${nameText} กรุงเทพมหานคร ครบทุกช่วงราคา`;
 
-  const localizedDesc = (area.description as any)?.[language] || area.description?.th;
+  const localizedDesc =
+    (area.description as any)?.[language] ||
+    (language === "th" ? area.description?.th : (area.description as any)?.en || genericDescriptionFallback);
 
   // Fallback cover image from active properties in the area
   let fallbackCover = "";
@@ -229,7 +246,7 @@ export default async function AreaDetailPage(
             <ol className="flex items-center gap-2 text-xs text-slate-300">
               <li><Link href={langPrefix || "/"} className="hover:text-white transition-colors">{breadcrumbHome}</Link></li>
               <li><ChevronRight className="w-3 h-3 opacity-60" /></li>
-              <li><Link href={`${langPrefix}/near-station`} className="hover:text-white transition-colors">{t("related_areas")}</Link></li>
+              <li><Link href={`${langPrefix}/areas`} className="hover:text-white transition-colors">{t("related_areas")}</Link></li>
               <li><ChevronRight className="w-3 h-3 opacity-60" /></li>
               <li className="text-white font-medium">{nameText}</li>
             </ol>

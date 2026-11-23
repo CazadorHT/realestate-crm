@@ -1,24 +1,49 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendLineNotification } from "@/lib/line";
-import { siteConfig } from "@/lib/site-config";
+import { sendAdminNotification } from "@/lib/telegram";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 import {
   generateRentNotificationFlex,
+  generateContractRenewalFlex,
+  generateContractExpiryCarouselFlex,
   getLocaleDateFormat,
-  getPropertyDisplayInfo,
+  type ContractExpiryBubbleItem,
 } from "@/features/rent-notifications/utils";
-import type { CronRule } from "@/lib/supabase/types-helper";
 import { NextRequest, NextResponse } from "next/server";
-import { FlexMessage, FlexBubble } from "@line/bot-sdk";
-
-// EXTENDED TYPES FOR LINE SDK
-interface ExtendedFlexMessage extends FlexMessage {
-  contents: FlexBubble;
-}
 
 // PERFORMANCE CONFIG
 export const maxDuration = 60; // Max allowed execution duration for Vercel Hobby/Pro
 const BATCH_SIZE = 5;
 const MAX_RUNTIME_MS = 50000; // 50s safety buffer within the 60s window
+const DEFAULT_COVER_IMG =
+  "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600";
+
+function getBangkokDate(): Date {
+  const now = new Date();
+  return new Date(now.getTime() + 7 * 60 * 60 * 1000);
+}
+
+async function pushLineMessageToGroup(groupId: string, flexMessage: Record<string, any>) {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) throw new Error("LINE_CHANNEL_ACCESS_TOKEN is not configured");
+
+  const res = await fetch("https://api.line.me/v2/bot/message/push", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      to: groupId,
+      messages: [flexMessage],
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`LINE API ${res.status}: ${errText}`);
+  }
+}
 
 export async function POST(req: NextRequest) {
   return handleCron(req);
@@ -91,262 +116,163 @@ async function handleCron(req: NextRequest) {
 }
 
 // ─────────────────────────────────────────────────────
-// TASK 1: Contract Expiry
+// TASK 1: Contract Expiry (v3: crm_deals_v3 | 60/30/7d | Telegram + LINE Renewal Funnel)
 // ─────────────────────────────────────────────────────
 async function runContractExpiryCheck() {
   try {
     const supabase = createAdminClient();
-    const now = new Date();
-    const thirtyDaysFromNow = new Date(now);
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
+    const bkkNow = getBangkokDate();
+    const todayStr = bkkNow.toISOString().split("T")[0];
 
-    const todayStr = now.toISOString().split("T")[0];
-    const thirtyDaysStr = thirtyDaysFromNow.toISOString().split("T")[0];
+    const sixtyOneDaysLater = new Date(bkkNow);
+    sixtyOneDaysLater.setUTCDate(bkkNow.getUTCDate() + 61);
+    const maxDateStr = sixtyOneDaysLater.toISOString().split("T")[0];
 
-    const { data: expiringContracts, error } = await supabase
-      .from("rental_contracts")
-      .select(
-        "id, deal_id, end_date, start_date, rent_price, deals(property_id, properties(id, title, images))",
-      )
-      .eq("status", "ACTIVE")
-      .not("end_date", "is", null)
-      .gte("end_date", todayStr)
-      .lte("end_date", thirtyDaysStr)
-      .order("end_date", { ascending: true });
+    const { data: deals, error } = await (supabase as any)
+      .from("crm_deals_v3")
+      .select(`
+        id, title, property_id, deal_type, status, total_amount, currency, transaction_end_date,
+        property:properties_core (
+          id, rent_price, currency,
+          details:properties_details (title, title_en, title_cn, title_ru),
+          media:property_media_v3 (url, is_cover)
+        )
+      `)
+      .not("transaction_end_date", "is", null)
+      .gte("transaction_end_date", todayStr)
+      .lte("transaction_end_date", maxDateStr)
+      .in("status", ["CLOSED_WIN", "ACTIVE", "SIGNED", "WON"])
+      .order("transaction_end_date", { ascending: true });
 
-    if (error) throw error;
-    if (!expiringContracts || expiringContracts.length === 0) {
-      return { message: "No expiring contracts", count: 0 };
+    if (error) {
+      if ((error as any).code === "PGRST205") {
+        console.warn("[Cron Contract Expiry] Table crm_deals_v3 not found, skipping.");
+        return { message: "Table crm_deals_v3 not found, skipped", count: 0, skipped: true };
+      }
+      throw error;
     }
 
-    let notificationsSent = 0;
-    let notificationsFailed = 0;
+    if (!deals || deals.length === 0) {
+      return { message: "No expiring contracts in 60-day window", notifications_sent: 0 };
+    }
 
-    for (const contract of expiringContracts) {
-      const endDate = new Date(contract.end_date);
-      const daysUntilExpiry = Math.ceil(
-        (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-      );
+    // Only alert on 3 high-value milestones: 60d (renewal check), 30d (confirm/relist), 7d (handover)
+    const SMART_MILESTONES = [60, 30, 7];
+    const todayMs = Date.UTC(bkkNow.getUTCFullYear(), bkkNow.getUTCMonth(), bkkNow.getUTCDate());
 
-      const notificationDays = [30, 21, 14, 7, 3, 1];
-      const shouldNotify = notificationDays.some(
-        (day) => Math.abs(daysUntilExpiry - day) <= 1,
-      );
+    const matchedDeals = deals
+      .map((deal: any) => {
+        const [y, m, d] = String(deal.transaction_end_date).split("-").map(Number);
+        const endMs = Date.UTC(y, (m || 1) - 1, d || 1);
+        const daysUntilExpiry = Math.round((endMs - todayMs) / (1000 * 60 * 60 * 24));
+        return { ...deal, daysUntilExpiry };
+      })
+      .filter((d: any) => SMART_MILESTONES.includes(d.daysUntilExpiry));
 
-      if (shouldNotify) {
-        const property = (contract.deals as unknown as { properties: { id: string; title: string | null; images: any[] } | null })?.properties;
-        const propertyTitle = property?.title || "ทรัพย์สิน";
-        const propertyId = property?.id;
+    if (matchedDeals.length === 0) {
+      return { message: "No contracts hitting 60/30/7-day milestones today", notifications_sent: 0 };
+    }
 
-        const images = (property?.images as any[]) || [];
-        const coverImageUrl =
-          images.find((img) => img.is_cover)?.url ||
-          images.find((img) => img.is_cover)?.image_url ||
-          images[0]?.url ||
-          images[0]?.image_url;
+    // Lookup linked LINE groups from rent_notification_rules_v3 for 60-day 1-click renewal cards
+    const propIds = matchedDeals.map((d: any) => d.property_id).filter(Boolean);
+    const propChannelMap = new Map<string, { groupId: string; language: "th" | "en" | "cn" | "ru" }>();
 
-        let color = "#1E88E5";
-        let urgencyText = "แจ้งเตือน";
-        if (daysUntilExpiry <= 1) {
-          color = "#D32F2F";
-          urgencyText = "ด่วนที่สุด!";
-        } else if (daysUntilExpiry <= 7) {
-          color = "#F57C00";
-          urgencyText = "สำคัญ";
-        } else if (daysUntilExpiry <= 14) {
-          color = "#FBC02D";
-          urgencyText = "แจ้งเตือน";
-        }
+    if (propIds.length > 0) {
+      const { data: linkedRules } = await (supabase as any)
+        .from("rent_notification_rules_v3")
+        .select("property_id, language, channel:notification_channels_v3(external_channel_id, platform, is_active)")
+        .in("property_id", propIds)
+        .eq("is_active", true);
 
-        const flexMessage: ExtendedFlexMessage = {
-          type: "flex" as const,
-          altText: `🚨 สัญญาใกล้หมดอายุ: ${propertyTitle}`,
-          contents: {
-            type: "bubble" as const,
-            header: {
-              type: "box",
-              layout: "vertical",
-              backgroundColor: color,
-              contents: [
-                {
-                  type: "text",
-                  text: `⏳ สัญญาใกล้หมดอายุ (${urgencyText})`,
-                  weight: "bold",
-                  color: "#FFFFFF",
-                  size: "md",
-                },
-              ],
-            },
-            body: {
-              type: "box",
-              layout: "vertical",
-              spacing: "md",
-              contents: [
-                {
-                  type: "text",
-                  text: propertyTitle,
-                  weight: "bold",
-                  size: "md",
-                  wrap: true,
-                },
-                {
-                  type: "box",
-                  layout: "vertical",
-                  spacing: "sm",
-                  contents: [
-                    {
-                      type: "box",
-                      layout: "baseline",
-                      spacing: "sm",
-                      contents: [
-                        {
-                          type: "text",
-                          text: "📅 หมดสัญญา:",
-                          color: "#aaaaaa",
-                          size: "sm",
-                          flex: 3,
-                        },
-                        {
-                          type: "text",
-                          text: new Date(contract.end_date).toLocaleDateString(
-                            "th-TH",
-                            { year: "numeric", month: "long", day: "numeric" },
-                          ),
-                          wrap: true,
-                          color: "#666666",
-                          size: "sm",
-                          flex: 5,
-                        },
-                      ],
-                    },
-                    {
-                      type: "box",
-                      layout: "baseline",
-                      spacing: "sm",
-                      contents: [
-                        {
-                          type: "text",
-                          text: "⏰ เหลืออีก:",
-                          color: "#aaaaaa",
-                          size: "sm",
-                          flex: 3,
-                        },
-                        {
-                          type: "text",
-                          text: `${daysUntilExpiry} วัน`,
-                          wrap: true,
-                          color: color,
-                          weight: "bold",
-                          size: "sm",
-                          flex: 5,
-                        },
-                      ],
-                    },
-                    {
-                      type: "box",
-                      layout: "baseline",
-                      spacing: "sm",
-                      contents: [
-                        {
-                          type: "text",
-                          text: "💰 ค่าเช่า:",
-                          color: "#aaaaaa",
-                          size: "sm",
-                          flex: 3,
-                        },
-                        {
-                          type: "text",
-                          text: `฿${(contract.rent_price || 0).toLocaleString()}/เดือน`,
-                          wrap: true,
-                          color: "#666666",
-                          size: "sm",
-                          flex: 5,
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-            footer: {
-              type: "box",
-              layout: "vertical",
-              spacing: "sm",
-              contents: [
-                {
-                  type: "button",
-                  style: "primary",
-                  color: color,
-                  action: {
-                    type: "uri",
-                    label: "ดูสัญญา/ต่อสัญญา",
-                    uri: propertyId
-                      ? `${siteConfig.url}/protected/properties/${propertyId}?tab=contracts`
-                      : `${siteConfig.url}/protected/dashboard`,
-                  },
-                },
-              ],
-            },
-          },
-        };
-
-        if (coverImageUrl) {
-          // If we previously routed images through our local proxy for SSR
-          // (e.g. /api/proxy/image?url=...), unwrap it so LINE fetches the
-          // original public URL directly. This avoids Vercel egress for LINE
-          // pulls and lets LINE download straight from Supabase/CDN.
-          let normalizedCover = coverImageUrl;
-          try {
-            const parsed = new URL(String(coverImageUrl));
-            if (parsed.pathname.includes('/api/proxy/image') && parsed.searchParams.has('url')) {
-              const original = parsed.searchParams.get('url');
-              if (original) normalizedCover = original;
-            }
-          } catch (parseErr) {
-            // ignore parse errors and fall back to original coverImageUrl
-          }
-
-          flexMessage.contents.hero = {
-            type: "image",
-            url: normalizedCover,
-            size: "full",
-            aspectRatio: "20:13",
-            aspectMode: "cover",
-            action: {
-              type: "uri",
-              label: "ดูประกาศ",
-              uri: propertyId
-                ? `${siteConfig.url}/protected/properties/${propertyId}`
-                : `${siteConfig.url}/protected/dashboard`,
-            },
-          };
-        }
-
-        try {
-          // Log the final image URL used in the LINE payload for verification
-          try {
-            // @ts-ignore
-            const imgUrlForLine = flexMessage.contents?.hero?.url;
-            console.log('[Cron->LINE] Sending flex message with hero image:', imgUrlForLine);
-          } catch (logErr) {
-            /* ignore */
-          }
-
-          await sendLineNotification(flexMessage as any);
-          notificationsSent += 1;
-        } catch (lineError) {
-          console.error(`Contract ${contract.id} LINE error:`, lineError);
-          notificationsFailed += 1;
+      for (const r of linkedRules || []) {
+        const ch = Array.isArray(r.channel) ? r.channel[0] : r.channel;
+        if (ch?.is_active && ch?.platform === "LINE" && ch?.external_channel_id) {
+          propChannelMap.set(r.property_id, {
+            groupId: ch.external_channel_id,
+            language: (r.language as "th" | "en" | "cn" | "ru") || "th",
+          });
         }
       }
     }
 
+    const carouselItems: ContractExpiryBubbleItem[] = [];
+    const telegramLines: string[] = [
+      `<b>📋 สรุปสัญญาเช่าใกล้ครบกำหนด (${matchedDeals.length} รายการ)</b>`,
+      `วันที่: ${todayStr}`,
+      "",
+    ];
+
+    let tenantRenewalSent = 0;
+
+    for (const deal of matchedDeals) {
+      const prop = Array.isArray(deal.property) ? deal.property[0] : deal.property;
+      const details = Array.isArray(prop?.details) ? prop.details[0] : prop?.details;
+      const media = Array.isArray(prop?.media) ? prop.media : [];
+      const rawCover = media.find((m: any) => m.is_cover)?.url || media[0]?.url;
+      const coverImageUrl = rawCover ? (getPublicImageUrl(rawCover) || DEFAULT_COVER_IMG) : DEFAULT_COVER_IMG;
+
+      const linked = deal.property_id ? propChannelMap.get(deal.property_id) : undefined;
+      const lang = linked?.language || "th";
+      const propName =
+        (lang === "en" ? details?.title_en : lang === "cn" ? details?.title_cn : lang === "ru" ? details?.title_ru : details?.title) ||
+        details?.title ||
+        deal.title ||
+        "ทรัพย์สิน";
+
+      const rentAmount = prop?.rent_price || deal.total_amount;
+      const rentStr = rentAmount ? `฿${Number(rentAmount).toLocaleString()}/เดือน` : "-";
+      const badge = deal.daysUntilExpiry <= 7 ? "🔴 7 วัน" : deal.daysUntilExpiry <= 30 ? "🟠 30 วัน" : "🔵 60 วัน";
+
+      telegramLines.push(
+        `${badge} | <b>${propName}</b>`,
+        `   • หมดสัญญา: <code>${deal.transaction_end_date}</code> | ค่าเช่า: ${rentStr}`,
+      );
+
+      const bubbleItem: ContractExpiryBubbleItem = {
+        dealId: deal.id,
+        propertyName: propName,
+        coverImageUrl,
+        endDate: deal.transaction_end_date,
+        daysUntilExpiry: deal.daysUntilExpiry,
+        rentPrice: rentStr,
+        language: lang,
+      };
+      carouselItems.push(bubbleItem);
+
+      // Feature #7: On 60-day milestone, push 1-click Renewal Funnel Flex to tenant LINE group
+      if (deal.daysUntilExpiry === 60 && linked?.groupId) {
+        try {
+          const renewalFlex = generateContractRenewalFlex(bubbleItem);
+          await pushLineMessageToGroup(linked.groupId, renewalFlex);
+          tenantRenewalSent += 1;
+        } catch (lineErr) {
+          console.error(`[Cron Contract 60d] Failed LINE push for deal ${deal.id}:`, lineErr);
+        }
+      }
+    }
+
+    // Feature #1 & #2: Internal Team alert via FREE Telegram (0 LINE quota); fallback to 1 bundled LINE Carousel
+    let adminNotifiedVia = "none";
+    if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_ADMIN_GROUP_ID) {
+      await sendAdminNotification(telegramLines.join("\n"), { parseMode: "HTML" });
+      adminNotifiedVia = "telegram";
+    } else if (carouselItems.length > 0) {
+      const carouselFlex = generateContractExpiryCarouselFlex(carouselItems);
+      await sendLineNotification(carouselFlex as any);
+      adminNotifiedVia = "line_carousel";
+    }
+
     return {
-      total_contracts: expiringContracts.length,
-      notifications_sent: notificationsSent,
-      notifications_failed: notificationsFailed,
+      total_contracts: matchedDeals.length,
+      notifications_sent: tenantRenewalSent + (adminNotifiedVia !== "none" ? 1 : 0),
+      tenant_renewal_cards_sent: tenantRenewalSent,
+      admin_channel: adminNotifiedVia,
     };
-  } catch (error: unknown) {
+  } catch (error: any) {
+    if (error?.code === "PGRST205") {
+      console.warn("[Cron Contract Expiry] Table not in database, skipping gracefully.");
+      return { skipped: true, reason: "table_not_found" };
+    }
     console.error("Contract expiry error:", error);
     return { error: error instanceof Error ? error.message : "Unknown error" };
   }
@@ -382,215 +308,226 @@ async function runTrashCleanup() {
 }
 
 // ─────────────────────────────────────────────────────
-// TASK 3: Rent Notifications
+// TASK 3: Rent Notifications (v3: rent_notification_rules_v3 | Paid-Stop | Day+3 Escalation | Multi-Lang | Idempotency)
 // ─────────────────────────────────────────────────────
 async function runRentNotifications(startTime: number) {
   try {
     const supabase = createAdminClient();
-    const today = new Date();
-    const currentDay = today.getDate();
-    const todayStr = today.toISOString().split("T")[0];
+    const bkkNow = getBangkokDate();
+    const currentDay = bkkNow.getUTCDate();
+    const currentYearMonth = bkkNow.toISOString().slice(0, 7); // YYYY-MM in Bangkok time
+    const monthStartIso = `${currentYearMonth}-01T00:00:00+07:00`;
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    const isLastDayOfMonth = tomorrow.getDate() === 1;
+    const tomorrow = new Date(bkkNow);
+    tomorrow.setUTCDate(bkkNow.getUTCDate() + 1);
+    const isLastDayOfMonth = tomorrow.getUTCDate() === 1;
 
-    let query = supabase
-      .from("rent_notification_rules")
-      .select(
-        `
-        id, property_id, line_group_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
-        properties (id, title, property_type, listing_type, status, price, rental_price, bedrooms, bathrooms, size_sqm),
-        line_groups (group_id, group_name),
-        rent_notification_history (status, created_at, retry_count)
-      `,
-      )
-      // Unified cron runs once daily — fetch ALL active rules for today's date
-      // regardless of notification_hour (since we only invoke once at 9am)
+    // Day +3 overdue check (3 days ago in Bangkok time)
+    const threeDaysAgo = new Date(bkkNow);
+    threeDaysAgo.setUTCDate(bkkNow.getUTCDate() - 3);
+    const overdueDay = threeDaysAgo.getUTCDate();
+    const overdueYearMonth = threeDaysAgo.toISOString().slice(0, 7);
+
+    // 1. Fetch all active v3 rules with channel + property + deal details in 1 query
+    const { data: allActiveRules, error } = await (supabase as any)
+      .from("rent_notification_rules_v3")
+      .select(`
+        id, property_id, channel_id, notification_day, notification_hour, language, is_active, last_sent_at, tenant_id,
+        channel:notification_channels_v3!inner (id, platform, external_channel_id, channel_name, is_active),
+        property:properties_core!inner (
+          id, rent_price, currency, bedrooms, bathrooms, floor_area,
+          details:properties_details (title, title_en, title_cn, title_ru),
+          media:property_media_v3 (url, is_cover),
+          deals:crm_deals_v3 (transaction_end_date, status)
+        )
+      `)
       .eq("is_active", true);
 
-    if (isLastDayOfMonth) {
-      query = query.gte("notification_day", currentDay);
-    } else {
-      query = query.eq("notification_day", currentDay);
+    if (error) {
+      if ((error as any).code === "PGRST205") {
+        console.warn("[Cron Rent Notifications] Table rent_notification_rules_v3 not found, skipping.");
+        return { message: "Table rent_notification_rules_v3 not found, skipped", sent: 0, skipped: true };
+      }
+      throw error;
     }
 
-    const { data: rules, error } = await query;
-    if (error) throw error;
-    if (!rules || rules.length === 0) {
-      return { message: "No rent notifications for this slot" };
+    if (!allActiveRules || allActiveRules.length === 0) {
+      return { message: "No active v3 rent notification rules", sent: 0 };
     }
 
-    // Filter rules: no SUCCESS today, retry < 3
-    const pendingRules = (rules as CronRule[] || []).filter((rule: CronRule) => {
-      const todayHistory = rule.rent_notification_history?.filter((h) =>
-        h.created_at.startsWith(todayStr),
-      );
-      const hasSuccess = todayHistory?.some((h) => h.status === "SUCCESS");
-      if (hasSuccess) return false;
+    // 2. Fetch this month history logs for Smart Paid-Stop + Idempotency + Overdue check
+    const { data: monthHistory } = await (supabase as any)
+      .from("rent_notification_history_v3")
+      .select("rule_id, status, sent_at, created_at")
+      .gte("created_at", monthStartIso);
 
-      const latestError = todayHistory
-        ?.filter((h) => h.status === "ERROR")
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        )[0];
-
-      if (!latestError) return true;
-      return (latestError.retry_count || 0) < 3;
-    });
-
-    if (pendingRules.length === 0) {
-      return { message: "No pending rent notifications" };
+    const historyByRule = new Map<string, Array<{ status: string | null; sent_at: string | null }>>();
+    for (const h of monthHistory || []) {
+      if (!h.rule_id) continue;
+      const list = historyByRule.get(h.rule_id) || [];
+      list.push(h);
+      historyByRule.set(h.rule_id, list);
     }
 
-    const results = [];
-    const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-    if (!token) throw new Error("Missing LINE Token");
+    const dueTodayRules: any[] = [];
+    const overdueForAdmin: Array<{ propName: string; channelName: string; rentStr: string; day: number }> = [];
+    let skippedAlreadySentOrPaid = 0;
 
-    for (let i = 0; i < pendingRules.length; i += BATCH_SIZE) {
-      if (performance.now() - startTime > MAX_RUNTIME_MS) {
-        console.warn(
-          `[Cron] Exiting early. Remaining: ${pendingRules.length - i}`,
-        );
-        break;
+    for (const rule of allActiveRules) {
+      const ch = Array.isArray(rule.channel) ? rule.channel[0] : rule.channel;
+      if (!ch?.is_active || ch?.platform !== "LINE" || !ch?.external_channel_id) continue;
+
+      const ruleLogs = historyByRule.get(rule.id) || [];
+      const isPaidThisMonth = ruleLogs.some((l) => l.status === "PAID");
+      const hasSuccessThisMonth = ruleLogs.some((l) => l.status === "SUCCESS");
+
+      // Feature #9: Idempotency Guard via last_sent_at (Bangkok YYYY-MM)
+      let sentThisMonthByTimestamp = false;
+      if (rule.last_sent_at) {
+        const sentBkk = new Date(new Date(rule.last_sent_at).getTime() + 7 * 60 * 60 * 1000);
+        sentThisMonthByTimestamp = sentBkk.toISOString().slice(0, 7) === currentYearMonth;
       }
 
-      const chunk = pendingRules.slice(i, i + BATCH_SIZE);
+      const notifDay = Number(rule.notification_day || 1);
+      const isDueToday = isLastDayOfMonth ? notifDay >= currentDay : notifDay === currentDay;
 
-      const chunkPromises = chunk.map(async (rule) => {
-        try {
-          if (!rule.property_id) {
-            return { ruleId: rule.id, status: "skipped_no_property_id" };
-          }
+      if (isDueToday) {
+        // Feature #5 (Smart Paid-Stop) + Feature #9 (Idempotency Guard)
+        if (isPaidThisMonth || hasSuccessThisMonth || sentThisMonthByTimestamp) {
+          skippedAlreadySentOrPaid += 1;
+          continue;
+        }
+        dueTodayRules.push(rule);
+      } else if (
+        overdueYearMonth === currentYearMonth &&
+        notifDay === overdueDay &&
+        (hasSuccessThisMonth || sentThisMonthByTimestamp) &&
+        !isPaidThisMonth
+      ) {
+        // Feature #6: Day +3 Overdue Auto-Escalation -> Internal Telegram (0 LINE quota!)
+        const prop = Array.isArray(rule.property) ? rule.property[0] : rule.property;
+        const details = Array.isArray(prop?.details) ? prop.details[0] : prop?.details;
+        overdueForAdmin.push({
+          propName: details?.title || "ทรัพย์สิน",
+          channelName: ch.channel_name || ch.external_channel_id,
+          rentStr: prop?.rent_price ? `฿${Number(prop.rent_price).toLocaleString()}` : "-",
+          day: notifDay,
+        });
+      }
+    }
 
-          const { data: activeContract } = await supabase
-            .from("rental_contracts")
-            .select("id, deal_id, tenant_id, start_date, end_date, rent_price, status, created_at, deal:deals!inner(property_id)")
-            .eq("deal.property_id", rule.property_id)
-            .eq("status", "ACTIVE")
-            .gte("end_date", todayStr)
-            .maybeSingle();
+    // 3. Send due today rent notifications in safe batches
+    let sentCount = 0;
+    let errorCount = 0;
 
-          if (!activeContract)
-            return { ruleId: rule.id, status: "skipped_no_active_contract" };
+    for (let i = 0; i < dueTodayRules.length; i += BATCH_SIZE) {
+      if (performance.now() - startTime > MAX_RUNTIME_MS) break;
 
-          const {
-            propertyName,
+      const batch = dueTodayRules.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (rule) => {
+          const ch = Array.isArray(rule.channel) ? rule.channel[0] : rule.channel;
+          const prop = Array.isArray(rule.property) ? rule.property[0] : rule.property;
+          const details = Array.isArray(prop?.details) ? prop.details[0] : prop?.details;
+          const media = Array.isArray(prop?.media) ? prop.media : [];
+          const deals = Array.isArray(prop?.deals) ? prop.deals : [];
+
+          const lang = (["th", "en", "cn", "ru"].includes(rule.language) ? rule.language : "th") as "th" | "en" | "cn" | "ru";
+          const propName =
+            (lang === "en" ? details?.title_en : lang === "cn" ? details?.title_cn : lang === "ru" ? details?.title_ru : details?.title) ||
+            details?.title ||
+            "Property";
+
+          const rawCover = media.find((m: any) => m.is_cover)?.url || media[0]?.url;
+          const coverImageUrl = rawCover ? (getPublicImageUrl(rawCover) || DEFAULT_COVER_IMG) : DEFAULT_COVER_IMG;
+          const price = prop?.rent_price ? `${Number(prop.rent_price).toLocaleString()} ${prop?.currency || "THB"}` : "-";
+
+          const locale = getLocaleDateFormat(lang);
+          const monthYear = bkkNow.toLocaleDateString(locale, { month: "long", year: "numeric" });
+          const activeDeal = deals.find((d: any) => d.transaction_end_date) || deals[0];
+          const contractEndDate = activeDeal?.transaction_end_date
+            ? new Date(activeDeal.transaction_end_date).toLocaleDateString(locale)
+            : "-";
+
+          // Feature #3 (Interactive Reply API Buttons) + Feature #8 (Multi-Language)
+          const flexMsg = generateRentNotificationFlex({
+            propertyName: propName,
             price,
             coverImageUrl,
-            bedrooms,
-            bathrooms,
-            sizeSqm,
-          } = getPropertyDisplayInfo(rule);
-          const lang = (rule.language as "th" | "en" | "cn" | "ru") || "th";
-          const dateFormat = getLocaleDateFormat(lang);
-
-          // Normalize image URL: if it's a proxied URL like /api/proxy/image?url=..., extract the original
-          let normalizedCover = coverImageUrl;
-          try {
-            if (typeof coverImageUrl === 'string' && coverImageUrl.includes('/api/proxy/image')) {
-              const m = coverImageUrl.match(/[?&]url=([^&]+)/);
-              if (m && m[1]) {
-                normalizedCover = decodeURIComponent(m[1]);
-              }
-            }
-          } catch (e) {
-            console.warn('Failed to normalize coverImageUrl', e);
-          }
-
-          const message = generateRentNotificationFlex({
-            propertyName,
-            price,
-            coverImageUrl: normalizedCover,
-            bedrooms,
-            bathrooms,
-            sizeSqm,
-            monthYear: today.toLocaleDateString(dateFormat, {
-              month: "long",
-              year: "numeric",
-            }),
-            contractEndDate: activeContract.end_date
-              ? new Date(activeContract.end_date).toLocaleDateString(
-                dateFormat,
-                { day: "numeric", month: "short", year: "numeric" },
-              )
-              : "-",
+            bedrooms: prop?.bedrooms ?? "-",
+            bathrooms: prop?.bathrooms ?? "-",
+            sizeSqm: prop?.floor_area ?? "-",
+            monthYear,
+            contractEndDate,
             language: lang,
-            isTest: false,
+            ruleId: rule.id,
           });
 
-          const response = await fetch(
-            "https://api.line.me/v2/bot/message/push",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                to: rule.line_group_id,
-                messages: [message],
-              }),
-            },
-          );
+          try {
+            await pushLineMessageToGroup(ch.external_channel_id, flexMsg);
+            const sentIso = new Date().toISOString();
 
-          if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`LINE API: ${response.status} - ${errText}`);
+            await Promise.all([
+              (supabase as any)
+                .from("rent_notification_rules_v3")
+                .update({ last_sent_at: sentIso })
+                .eq("id", rule.id),
+              (supabase as any)
+                .from("rent_notification_history_v3")
+                .insert({
+                  rule_id: rule.id,
+                  property_id: rule.property_id,
+                  channel_id: rule.channel_id,
+                  tenant_id: rule.tenant_id,
+                  status: "SUCCESS",
+                  sent_at: sentIso,
+                }),
+            ]);
+            sentCount += 1;
+          } catch (sendErr: any) {
+            errorCount += 1;
+            const errMsg = sendErr instanceof Error ? sendErr.message : String(sendErr);
+            console.error(`[Cron Rent v3] Failed rule ${rule.id}:`, errMsg);
+            await (supabase as any)
+              .from("rent_notification_history_v3")
+              .insert({
+                rule_id: rule.id,
+                property_id: rule.property_id,
+                channel_id: rule.channel_id,
+                tenant_id: rule.tenant_id,
+                status: "FAILED",
+                error_message: errMsg.slice(0, 500),
+              });
           }
+        }),
+      );
+    }
 
-          await supabase.from("rent_notification_history").insert({
-            rule_id: rule.id,
-            tenant_id: rule.tenant_id,
-            property_id: rule.property_id,
-            line_group_id: rule.line_group_id,
-            status: "SUCCESS",
-          });
-
-          await supabase
-            .from("rent_notification_rules")
-            .update({ last_sent_at: new Date().toISOString() })
-            .eq("id", rule.id);
-          return { ruleId: rule.id, status: "sent" };
-        } catch (err: unknown) {
-          const errorMessage = (err as Error).message;
-          console.error(`[Cron] Rule ${rule.id} failed:`, errorMessage);
-
-          const todayHistory = rule.rent_notification_history?.filter(
-            (h) => h.created_at.startsWith(todayStr),
-          );
-          const latestCount =
-            todayHistory?.reduce(
-              (max: number, h) => Math.max(max, h.retry_count || 0),
-              0,
-            ) || 0;
-
-          await supabase.from("rent_notification_history").insert({
-            rule_id: rule.id,
-            tenant_id: rule.tenant_id,
-            property_id: rule.property_id,
-            line_group_id: rule.line_group_id,
-            status: "ERROR",
-            error_message: (err as Error).message || "Unknown error",
-            retry_count: latestCount + 1,
-          });
-
-          return { ruleId: rule.id, status: "error", error: errorMessage };
-        }
-      });
-
-      const chunkResults = await Promise.all(chunkPromises);
-      results.push(...chunkResults);
+    // 4. Send consolidated Day +3 Overdue Escalation to Admin Telegram (0 LINE quota!)
+    if (overdueForAdmin.length > 0 && process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_ADMIN_GROUP_ID) {
+      const lines = [
+        `<b>⏰ แจ้งเตือนค่าเช่าเกินกำหนด +3 วัน (${overdueForAdmin.length} ห้อง)</b>`,
+        `<i>(ระบบไม่ทวงซ้ำใน LINE ลูกค้า เพื่อให้แอดมินติดตามอย่างสุภาพ)</i>`,
+        "",
+        ...overdueForAdmin.map(
+          (o, idx) => `${idx + 1}. <b>${o.propName}</b> — ${o.rentStr} (ครบกำหนดวันที่ ${o.day}) | กลุ่ม: ${o.channelName}`,
+        ),
+      ];
+      await sendAdminNotification(lines.join("\n"), { parseMode: "HTML" });
     }
 
     return {
-      processed: results.length,
-      sent: results.filter((r) => r.status === "sent").length,
-      error: results.filter((r) => r.status === "error").length,
-      skipped: results.filter((r) => r.status?.startsWith("skipped")).length,
+      processed: dueTodayRules.length,
+      sent: sentCount,
+      error: errorCount,
+      skipped_paid_or_sent: skippedAlreadySentOrPaid,
+      overdue_escalated_telegram: overdueForAdmin.length,
     };
-  } catch (error: unknown) {
+  } catch (error: any) {
+    if (error?.code === "PGRST205") {
+      console.warn("[Cron Rent Notifications] Table not in database, skipping gracefully.");
+      return { skipped: true, reason: "table_not_found" };
+    }
     console.error("Rent notifications error:", error);
     return { error: error instanceof Error ? error.message : "Unknown error" };
   }
@@ -613,7 +550,13 @@ async function runMarketAlerts() {
       .not("size_sqm", "is", null)
       .not("original_price", "is", null);
 
-    if (propertiesError) throw propertiesError;
+    if (propertiesError) {
+      if ((propertiesError as any).code === "PGRST205") {
+        console.warn("[Cron] View/Table 'properties' not found in schema cache, skipping market alerts.");
+        return { message: "Table 'properties' not found, skipped", skipped: true };
+      }
+      throw propertiesError;
+    }
     if (!activeProperties || activeProperties.length === 0) {
       return { message: "No active properties to analyze" };
     }
@@ -628,7 +571,13 @@ async function runMarketAlerts() {
       .order("created_at", { ascending: false })
       .limit(100);
 
-    if (dealsError) throw dealsError;
+    if (dealsError) {
+      if ((dealsError as any).code === "PGRST205") {
+        console.warn("[Cron] View/Table 'deals' not found in schema cache, skipping market alerts.");
+        return { message: "Table 'deals' not found, skipped", skipped: true };
+      }
+      throw dealsError;
+    }
 
     // 3. Group closed deals by Area + PropertyType
     const marketAverages: Record<

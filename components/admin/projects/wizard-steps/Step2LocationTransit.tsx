@@ -37,35 +37,35 @@ function getTransitLogoInfo(code: string, transitType?: string) {
   }
   if (c.includes("YELLOW") || t === "MRT_YELLOW" || t === "YELLOW") {
     return {
-      logo: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
+      logo: "/images/transit/mrt-bangkok-yellow-logo.svg",
       bg: "bg-amber-50/40 border-amber-200 text-amber-800",
       lineName: "MRT Yellow",
     };
   }
   if (c.includes("PINK") || t === "MRT_PINK" || t === "PINK") {
     return {
-      logo: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
+      logo: "/images/transit/mrt-bangkok-pink-logo.svg",
       bg: "bg-pink-50/40 border-pink-200 text-pink-800",
       lineName: "MRT Pink",
     };
   }
   if (c.includes("PURPLE") || t === "MRT_PURPLE" || t === "PURPLE") {
     return {
-      logo: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
+      logo: "/images/transit/mrt-bangkok-purple-logo.svg",
       bg: "bg-purple-50/40 border-purple-200 text-purple-800",
       lineName: "MRT Purple",
     };
   }
   if (c.includes("ORANGE") || t === "MRT_ORANGE" || t === "ORANGE") {
     return {
-      logo: "/images/transit/MRT_(Bangkok)_Orange_logo.svg",
+      logo: "/images/transit/mrt-bangkok-orange-logo.svg",
       bg: "bg-orange-50/40 border-orange-200 text-orange-800",
       lineName: "MRT Orange",
     };
   }
   if (c.startsWith("MRT") || t === "MRT" || t === "MRT_BLUE") {
     return {
-      logo: "/images/transit/MRT_(Bangkok)_logo.svg",
+      logo: "/images/transit/mrt-bangkok-logo.svg",
       bg: "bg-blue-50/40 border-blue-200 text-blue-800",
       lineName: "MRT Blue",
     };

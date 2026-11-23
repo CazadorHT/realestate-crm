@@ -19,6 +19,23 @@ export default function PublicError({
   const { t, langPrefix } = useLanguage();
 
   useEffect(() => {
+    const isStaleAction =
+      error?.message?.includes("Failed to find Server Action") ||
+      error?.digest?.includes("Failed to find Server Action");
+
+    if (isStaleAction && typeof window !== "undefined") {
+      try {
+        const lastReload = Number(sessionStorage.getItem("vcc_stale_action_reload") || "0");
+        if (Date.now() - lastReload > 15000) {
+          sessionStorage.setItem("vcc_stale_action_reload", String(Date.now()));
+          window.location.reload();
+          return;
+        }
+      } catch {
+        // Ignore sessionStorage errors in restricted browser contexts
+      }
+    }
+
     console.error(error);
     Sentry.captureException(error);
   }, [error]);

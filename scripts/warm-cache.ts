@@ -21,13 +21,19 @@ async function warmUrl(path: string, pass: number): Promise<{ path: string; stat
   }
 }
 
+const EXTRA_API_PATHS = [
+  "/api/public/properties?listing_type=SALE&limit=12",
+  "/api/public/properties?listing_type=RENT&limit=12",
+];
+
 async function run() {
+  const targetPaths = [...PROPERTY_PUBLIC_PATHS, ...EXTRA_API_PATHS];
   console.log(`\n🚀 [CACHE WARMER] Starting cache warm-up on ${BASE_URL}...`);
-  console.log(`Total URLs to warm: ${PROPERTY_PUBLIC_PATHS.length}\n`);
+  console.log(`Total URLs to warm: ${targetPaths.length}\n`);
 
   // Pass 1: Initial load (populates serverless & CDN)
   console.log(`--- [PASS 1: Populating Origin & Edge CDN] ---`);
-  for (const path of PROPERTY_PUBLIC_PATHS) {
+  for (const path of targetPaths) {
     const r = await warmUrl(path, 1);
     console.log(`[PASS 1] ${r.status} | Vercel: ${r.vercelCache.padEnd(8)} | CF: ${r.cfCache.padEnd(8)} | ${r.timeMs}ms | ${path}`);
   }
@@ -39,7 +45,7 @@ async function run() {
   // Pass 2: Verify MISS -> HIT transition
   console.log(`\n--- [PASS 2: Verifying MISS -> HIT Transition] ---`);
   let hitCount = 0;
-  for (const path of PROPERTY_PUBLIC_PATHS) {
+  for (const path of targetPaths) {
     const r = await warmUrl(path, 2);
     const isHit = r.vercelCache === "HIT" || r.cfCache === "HIT";
     if (isHit) hitCount++;
@@ -47,7 +53,7 @@ async function run() {
   }
 
   console.log(`\n========================================`);
-  console.log(`🎉 [COMPLETED] Cache warmed: ${hitCount}/${PROPERTY_PUBLIC_PATHS.length} routes in HIT state.`);
+  console.log(`🎉 [COMPLETED] Cache warmed: ${hitCount}/${targetPaths.length} routes in HIT state.`);
   console.log(`========================================\n`);
 }
 

@@ -130,6 +130,30 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/images/transit/MRT_:prefix(.*)Purple:suffix(.*)",
+        destination: "/images/transit/mrt-bangkok-purple-logo.svg",
+      },
+      {
+        source: "/images/transit/MRT_:prefix(.*)Yellow:suffix(.*)",
+        destination: "/images/transit/mrt-bangkok-yellow-logo.svg",
+      },
+      {
+        source: "/images/transit/MRT_:prefix(.*)Orange:suffix(.*)",
+        destination: "/images/transit/mrt-bangkok-orange-logo.svg",
+      },
+      {
+        source: "/images/transit/MRT_:prefix(.*)Pink:suffix(.*)",
+        destination: "/images/transit/mrt-bangkok-pink-logo.svg",
+      },
+      {
+        source: "/images/transit/MRT_:prefix(.*)logo.svg",
+        destination: "/images/transit/mrt-bangkok-logo.svg",
+      },
+    ];
+  },
   async headers() {
     return [
       {

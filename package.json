@@ -22,7 +22,11 @@
     "seed:line": "tsx scripts/seed-line.ts",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "warm:core": "tsx scripts/warm-cache.ts",
+    "warm:extended": "tsx scripts/warm-extended.ts",
+    "warm:top": "tsx scripts/warm-top-areas-projects.ts",
+    "warm:all": "tsx scripts/warm-cache.ts && tsx scripts/warm-extended.ts && tsx scripts/warm-top-areas-projects.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
