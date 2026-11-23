@@ -335,38 +335,85 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
       rentPrice === minRentPrice &&
       properties.filter((x) => Boolean(x.rental_price || x.original_rental_price)).length > 1;
 
+    const anyHasSaleTopRow = properties.some((x) => {
+      const sp = x.price || x.original_price;
+      const hasDisc = Boolean(x.price && x.original_price && x.original_price > x.price);
+      const isLow =
+        Boolean(sp) &&
+        minSalePrice !== null &&
+        sp === minSalePrice &&
+        properties.filter((item) => Boolean(item.price || item.original_price)).length > 1;
+      return hasDisc || isLow;
+    });
+
+    const anyHasRentTopRow = properties.some((x) => {
+      const rp = x.rental_price || x.original_rental_price;
+      const hasDisc = Boolean(
+        x.rental_price && x.original_rental_price && x.original_rental_price > x.rental_price
+      );
+      const isLow =
+        Boolean(rp) &&
+        minRentPrice !== null &&
+        rp === minRentPrice &&
+        properties.filter((item) => Boolean(item.rental_price || item.original_rental_price)).length > 1;
+      return hasDisc || isLow;
+    });
+
+    const hasSaleDiscount = Boolean(p.price && p.original_price && p.original_price > p.price);
+    const saleDiscountPct = hasSaleDiscount
+      ? Math.round(((p.original_price! - p.price!) / p.original_price!) * 100)
+      : 0;
+
+    const hasRentDiscount = Boolean(
+      p.rental_price && p.original_rental_price && p.original_rental_price > p.rental_price
+    );
+    const rentDiscountPct = hasRentDiscount
+      ? Math.round(((p.original_rental_price! - p.rental_price!) / p.original_rental_price!) * 100)
+      : 0;
+
     const saleContent =
       showSale && salePrice ? (
-        <div className="block mb-1.5">
-          {isLowestSale && (
-            <div className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full mb-1 shadow-2xs">
-              <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
-              <span>
-                {t("compare_page.values.lowest_sale_price") ||
-                  (language === "th"
-                    ? "ราคาขายต่ำสุด"
-                    : language === "cn"
-                      ? "最低售价"
-                      : language === "ru"
-                        ? "Мин. цена продажи"
-                        : "Lowest Sale Price")}
-              </span>
+        <div className="flex flex-col gap-1.5 mb-2 last:mb-0">
+          {(anyHasSaleTopRow || isLowestSale || hasSaleDiscount) && (
+            <div className="flex items-center gap-1.5 flex-wrap min-h-[22px]">
+              {isLowestSale && (
+                <div className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full shadow-2xs">
+                  <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                  <span>
+                    {t("compare_page.values.lowest_sale_price") ||
+                      (language === "th"
+                        ? "ราคาขายต่ำสุด"
+                        : language === "cn"
+                          ? "最低售价"
+                          : language === "ru"
+                            ? "Мин. цена продажи"
+                            : "Lowest Sale Price")}
+                  </span>
+                </div>
+              )}
+              {hasSaleDiscount && (
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-slate-400 line-through">
+                    {formatMoney(p.original_price!, locale)}
+                  </span>
+                  {saleDiscountPct > 0 && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200/70 leading-none">
+                      -{saleDiscountPct}%
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0 self-center">
               {language === "th" ? "ขาย" : language === "cn" ? "售价" : language === "ru" ? "Продажа" : "Sale"}
             </span>
-            {p.price && p.original_price && p.original_price > p.price && (
-              <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1">
-                {formatMoney(p.original_price, locale)}
-              </span>
-            )}
             <span
               className={
                 isLowestSale
-                  ? "text-emerald-600 font-extrabold text-sm md:text-base"
-                  : "text-amber-600 font-bold text-sm md:text-base"
+                  ? "text-emerald-600 font-extrabold text-sm md:text-base tabular-nums"
+                  : "text-emerald-700 font-bold text-sm md:text-base tabular-nums"
               }
             >
               {formatMoney(salePrice, locale)}
@@ -377,38 +424,47 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
 
     const rentContent =
       showRent && rentPrice ? (
-        <div className="block">
-          {isLowestRent && (
-            <div className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full mb-1 shadow-2xs">
-              <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
-              <span>
-                {t("compare_page.values.lowest_rent_price") ||
-                  (language === "th"
-                    ? "ค่าเช่าต่ำสุด"
-                    : language === "cn"
-                      ? "最低租金"
-                      : language === "ru"
-                        ? "Мин. аренда"
-                        : "Lowest Rent")}
-              </span>
+        <div className="flex flex-col gap-1.5">
+          {(anyHasRentTopRow || isLowestRent || hasRentDiscount) && (
+            <div className="flex items-center gap-1.5 flex-wrap min-h-[22px]">
+              {isLowestRent && (
+                <div className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full shadow-2xs">
+                  <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                  <span>
+                    {t("compare_page.values.lowest_rent_price") ||
+                      (language === "th"
+                        ? "ค่าเช่าต่ำสุด"
+                        : language === "cn"
+                          ? "最低租金"
+                          : language === "ru"
+                            ? "Мин. аренда"
+                            : "Lowest Rent")}
+                  </span>
+                </div>
+              )}
+              {hasRentDiscount && (
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-slate-400 line-through">
+                    {formatMoney(p.original_rental_price!, locale)}
+                  </span>
+                  {rentDiscountPct > 0 && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200/70 leading-none">
+                      -{rentDiscountPct}%
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0 self-center">
               {language === "th" ? "เช่า" : language === "cn" ? "租金" : language === "ru" ? "Аренда" : "Rent"}
             </span>
-            {p.rental_price &&
-              p.original_rental_price &&
-              p.original_rental_price > p.rental_price && (
-                <span className="text-[10px] md:text-xs text-slate-400 line-through mr-1">
-                  {formatMoney(p.original_rental_price, locale)}
-                </span>
-              )}
             <span
               className={
                 isLowestRent
-                  ? "text-emerald-600 font-extrabold text-sm md:text-base"
-                  : "text-blue-600 font-bold text-sm md:text-base"
+                  ? "text-emerald-600 font-extrabold text-sm md:text-base tabular-nums"
+                  : "text-blue-600 font-bold text-sm md:text-base tabular-nums"
               }
             >
               {formatMoney(rentPrice, locale)}{" "}
