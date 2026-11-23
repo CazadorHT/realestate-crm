@@ -431,8 +431,8 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         const effectiveSort = options.sort || "NEWEST";
 
         if (effectiveSort === "NEWEST") {
-          // Use indexed updated_at sort (which preserves bumped listings since bump updates updated_at)
-          query = query.order("updated_at", { ascending: false, nullsFirst: false });
+          // Dedicated indexed sort timestamp: new listings stay on top, edits keep their rank, only explicit Bump jumps to #1
+          query = query.order("display_order_at", { ascending: false, nullsFirst: false });
         } else if (effectiveSort === "PRICE_ASC") {
           const effectivePriceType = options.priceType || options.listingType;
           if (effectivePriceType === "RENT") {
@@ -452,14 +452,25 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         } else if (effectiveSort === "AREA_DESC") {
           query = query.order("size_sqm", { ascending: false, nullsFirst: false });
         } else {
-          query = query.order("updated_at", { ascending: false, nullsFirst: false });
+          query = query.order("display_order_at", { ascending: false, nullsFirst: false });
         }
 
         let { data: propertiesData, error } = (await query.limit(itemsPerPage)) as { data: any[] | null; error: any };
         
-        // 🛡️ [RESILIENCE] If unindexed JSON sort times out (error 57014), fallback to indexed updated_at sort (which preserves bumped listings)
-        if (error && (error.code === "57014" || error.message?.includes("statement timeout"))) {
-          console.warn("[DB TIMEOUT] Query timed out on unindexed sort. Retrying with indexed updated_at sort (which preserves bump order)...");
+        // 🛡️ [RESILIENCE] Fallback to indexed updated_at sort if statement times out (57014)
+        // or before display_order_at migration is applied in Supabase (42703)
+        if (
+          error &&
+          (error.code === "57014" ||
+            error.code === "42703" ||
+            error.message?.includes("statement timeout") ||
+            error.message?.includes("display_order_at"))
+        ) {
+          console.warn(
+            error.code === "42703"
+              ? "[DB COMPAT] display_order_at not migrated yet; falling back to updated_at sort."
+              : "[DB TIMEOUT] Query timed out. Retrying with indexed updated_at sort...",
+          );
           let fallbackQuery = supabase
             .from("properties")
             .select(PUBLIC_LIST_COLUMNS)

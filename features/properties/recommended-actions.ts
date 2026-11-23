@@ -63,17 +63,51 @@ export async function getRecommendedProperties(
         `,
         )
         .eq("status", "ACTIVE")
-        .order("meta_data->>bumped_at", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false })
+        .order("display_order_at", { ascending: false, nullsFirst: false })
         .limit(limit);
 
-      if (error || !properties) {
+      let resolvedProperties = properties;
+      if (error && (error.code === "42703" || error.message?.includes("display_order_at"))) {
+        const fallbackRes = await supabase
+          .from("properties")
+          .select(
+            `
+          id,
+          title,
+          title_en,
+          title_cn,
+          title_ru,
+          popular_area,
+          district,
+          province,
+          property_type,
+          listing_type,
+          bedrooms,
+          bathrooms,
+          price,
+          original_price,
+          rental_price,
+          original_rental_price,
+          price_per_sqm,
+          rent_price_per_sqm,
+          size_sqm,
+          slug,
+          property_images(image_url, is_cover)
+        `,
+          )
+          .eq("status", "ACTIVE")
+          .order("created_at", { ascending: false })
+          .limit(limit);
+        resolvedProperties = fallbackRes.data;
+      }
+
+      if (!resolvedProperties) {
         return [];
       }
 
       const popularAreaNames = Array.from(
         new Set(
-          properties
+          resolvedProperties
             .map((p: { popular_area: string | null }) => p.popular_area)
             .filter((area: string | null): area is string => !!area),
         ),
@@ -108,7 +142,7 @@ export async function getRecommendedProperties(
         property_images: { image_url: string; is_cover: boolean }[];
       }
 
-      return (properties as unknown as RecommendedRow[]).map((prop) => {
+      return (resolvedProperties as unknown as RecommendedRow[]).map((prop) => {
         const images = prop.property_images as { image_url: string; is_cover: boolean }[];
         const coverImage =
           images?.find((img) => img.is_cover) ||

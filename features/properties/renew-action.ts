@@ -48,11 +48,12 @@ export async function renewPropertyAction(id: string) {
       bumped_at: bumpIso,
     };
 
-    // 2. Update properties_details and properties_core
+    // 2. Update properties_core.display_order_at (dedicated sort timestamp — editing other fields won't bump!)
+    //    and keep properties_details.meta_data.bumped_at synced for backwards compatibility.
     const [coreRes, detailsRes] = await Promise.all([
-      supabase
+      (supabase as any)
         .from("properties_core")
-        .update({ updated_at: bumpIso })
+        .update({ display_order_at: bumpIso, updated_at: bumpIso })
         .eq("id", id),
       supabase
         .from("properties_details")
@@ -60,7 +61,16 @@ export async function renewPropertyAction(id: string) {
         .eq("property_id", id),
     ]);
 
-    if (coreRes.error) throw coreRes.error;
+    // Graceful fallback if display_order_at column migration hasn't been applied yet
+    if (coreRes.error && (coreRes.error.code === "42703" || coreRes.error.code === "PGRST204")) {
+      const fallbackCore = await supabase
+        .from("properties_core")
+        .update({ updated_at: bumpIso })
+        .eq("id", id);
+      if (fallbackCore.error) throw fallbackCore.error;
+    } else if (coreRes.error) {
+      throw coreRes.error;
+    }
     if (detailsRes.error) throw detailsRes.error;
 
     await logAudit(
