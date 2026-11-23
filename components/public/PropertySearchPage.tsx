@@ -153,12 +153,17 @@ export function PropertySearchPage({
 
   // 🛡️ Industry-Standard Entity Store: Persistent lookup of rich property records (Separation of Index vs Entity)
   const propertyEntitiesRef = useRef<Map<string, ApiProperty>>(new Map());
+  const hydratedRequestedIdsRef = useRef<Set<string>>(new Set());
+  const [hydrationVersion, setHydrationVersion] = useState(0);
 
   // Ingest incoming rich properties (SSR initialProperties + paginated usePropertyData)
   useEffect(() => {
     if (initialProperties && initialProperties.length > 0) {
       initialProperties.forEach((p) => {
-        if (p?.id) propertyEntitiesRef.current.set(p.id, p);
+        if (p?.id) {
+          propertyEntitiesRef.current.set(p.id, p);
+          hydratedRequestedIdsRef.current.add(p.id);
+        }
       });
     }
   }, [initialProperties]);
@@ -166,7 +171,10 @@ export function PropertySearchPage({
   useEffect(() => {
     if (properties && properties.length > 0) {
       properties.forEach((p) => {
-        if (p?.id) propertyEntitiesRef.current.set(p.id, p);
+        if (p?.id) {
+          propertyEntitiesRef.current.set(p.id, p);
+          hydratedRequestedIdsRef.current.add(p.id);
+        }
       });
     }
   }, [properties]);
@@ -182,7 +190,7 @@ export function PropertySearchPage({
         images: (rich.images && rich.images.length > 0) ? rich.images : item.images,
       };
     });
-  }, [filtered, displayCount, properties]);
+  }, [filtered, displayCount, properties, hydrationVersion]);
 
   // In Split View: once full map pins are loaded, synchronize left-hand cards directly with map bounds/pins!
   const splitSourceList = useMemo<ApiProperty[]>(() => {
@@ -201,7 +209,82 @@ export function PropertySearchPage({
         images: (rich.images && rich.images.length > 0) ? rich.images : item.images,
       };
     });
-  }, [splitSourceList, splitDisplayCount, properties]);
+  }, [splitSourceList, splitDisplayCount, properties, hydrationVersion]);
+
+  // ⚡ On-Demand ID Hydration: Fetch full gallery images ONLY for currently visible cards missing from Entity Store
+  // Covers ALL edge cases: ALL-tab PRICE_ASC sort, Split View map panning, and +12 load more — zero facet overhead!
+  useEffect(() => {
+    if (isLoading || isRefetching || isFetchingMore) return;
+
+    const activeSlice =
+      viewMode === "split"
+        ? splitSourceList.slice(0, splitDisplayCount)
+        : filtered.slice(0, displayCount);
+
+    const missingIds = activeSlice
+      .map((item) => item.id)
+      .filter(
+        (id) =>
+          Boolean(id) &&
+          !propertyEntitiesRef.current.has(id) &&
+          !hydratedRequestedIdsRef.current.has(id)
+      )
+      .slice(0, 24);
+
+    if (missingIds.length === 0) return;
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      missingIds.forEach((id) => hydratedRequestedIdsRef.current.add(id));
+      try {
+        const params = new URLSearchParams({
+          ids: missingIds.join(","),
+          limit: String(missingIds.length),
+          includeFacets: "false",
+        });
+        const res = await fetch(`/api/public/properties?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Hydration failed: ${res.status}`);
+        const data = await res.json();
+        const hydratedList: ApiProperty[] = Array.isArray(data?.properties)
+          ? data.properties
+          : Array.isArray(data)
+            ? data
+            : [];
+
+        if (hydratedList.length > 0) {
+          hydratedList.forEach((p) => {
+            if (p?.id) propertyEntitiesRef.current.set(p.id, p);
+          });
+          setHydrationVersion((v) => v + 1);
+        }
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          // Allow re-requesting if user navigates back to these cards later
+          missingIds.forEach((id) => {
+            if (!propertyEntitiesRef.current.has(id)) {
+              hydratedRequestedIdsRef.current.delete(id);
+            }
+          });
+        }
+      }
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [
+    viewMode,
+    filtered,
+    displayCount,
+    splitSourceList,
+    splitDisplayCount,
+    isLoading,
+    isRefetching,
+    isFetchingMore,
+  ]);
 
   // Reset split pagination when bounds or filters change
   useEffect(() => {
@@ -370,15 +453,21 @@ export function PropertySearchPage({
     (filtered.length === properties.length && properties.length >= ITEMS_PER_PAGE && properties.length % ITEMS_PER_PAGE === 0 && !isFetchingMore);
 
   const loadMore = useCallback(() => {
-    if (displayCount < filtered.length) {
-      // Reveal more locally fetched properties
-      setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
-    } else {
-      // Request next page/batch from server
-      loadMoreProperties();
-      setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
+    const nextDisplayCount = displayCount + ITEMS_PER_PAGE;
+    setDisplayCount(nextDisplayCount);
+    // Hydrate newly revealed cards with full gallery images from server so image carousel works on +12 cards
+    if (properties.length < nextDisplayCount && !isFetchingMore) {
+      loadMoreProperties(nextDisplayCount);
     }
-  }, [displayCount, filtered.length, loadMoreProperties]);
+  }, [displayCount, properties.length, isFetchingMore, loadMoreProperties]);
+
+  const loadMoreSplit = useCallback(() => {
+    const nextSplitCount = splitDisplayCount + ITEMS_PER_PAGE;
+    setSplitDisplayCount(nextSplitCount);
+    if (properties.length < nextSplitCount && !isFetchingMore) {
+      loadMoreProperties(nextSplitCount);
+    }
+  }, [splitDisplayCount, properties.length, isFetchingMore, loadMoreProperties]);
 
   // 4. Analytics Layer (Hardened Effects)
   useEffect(() => {
@@ -574,9 +663,8 @@ export function PropertySearchPage({
                       0,
                       splitSourceList.length - visibleSplitProperties.length
                     )}
-                    loadMore={() =>
-                      setSplitDisplayCount((prev) => prev + ITEMS_PER_PAGE)
-                    }
+                    isFetchingMore={isFetchingMore}
+                    loadMore={loadMoreSplit}
                     areaFilterName={localizedAreaFilterName}
                   />
                 </>

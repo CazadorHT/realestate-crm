@@ -76,10 +76,7 @@ const SLIM_MAP_COLUMNS = `
   near_transit, transit_type, transit_station_name,
   transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
   is_fully_furnished, is_pet_friendly, is_foreigner_quota, is_tax_registered,
-  amenities, images,
-  property_images (
-    image_url, storage_path, is_cover, sort_order
-  )
+  amenities, images
 `;
 
 import {
@@ -125,23 +122,27 @@ function pickSingleCoverImage(
 
 const fetchCachedMapPinsPayload = unstable_cache(
   async (): Promise<MapPinsPayload> => {
-    const supabase = createPublicClient();
+    try {
+      const supabase = createPublicClient();
 
-    // 1. Fetch all active properties using range(0, 4999) to bypass PostgREST's 1,000-row silent truncation
-    const { data: rows, error } = await supabase
-      .from("properties")
-      .select(SLIM_MAP_COLUMNS)
-      .eq("status", "ACTIVE")
-      .is("deleted_at", null)
-      .order("updated_at", { ascending: false, nullsFirst: false })
-      .range(0, 4999);
+      // 1. Fetch all active properties using range(0, 4999) to bypass PostgREST's 1,000-row silent truncation
+      const { data: rows, error } = await supabase
+        .from("properties")
+        .select(SLIM_MAP_COLUMNS)
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null)
+        .order("updated_at", { ascending: false, nullsFirst: false })
+        .range(0, 4999);
 
-    if (error) {
-      if (process.env.NEXT_PHASE === "phase-production-build") {
+      if (error) {
+        console.error("[fetchCachedMapPinsPayload] Supabase error:", error.message);
+        const stale = getMapPinsMemoryCache();
+        if (stale && stale.pins.length > 0) {
+          console.warn("[fetchCachedMapPinsPayload] Serving stale in-memory cache due to DB error");
+          return stale;
+        }
         return { pins: [], stations: [], generatedAt: Date.now() };
       }
-      throw new Error(`Failed to fetch map pins: ${error.message}`);
-    }
 
     const rawRows = (rows || []) as any[];
 
@@ -424,13 +425,22 @@ const fetchCachedMapPinsPayload = unstable_cache(
       // Non-fatal if station master list is unavailable
     }
 
-    return {
-      pins,
-      stations,
-      generatedAt: Date.now(),
-    };
+      return {
+        pins,
+        stations,
+        generatedAt: Date.now(),
+      };
+    } catch (err: any) {
+      console.error("[fetchCachedMapPinsPayload] Unexpected error:", err?.message || err);
+      const stale = getMapPinsMemoryCache();
+      if (stale && stale.pins.length > 0) {
+        console.warn("[fetchCachedMapPinsPayload] Serving stale in-memory cache after exception");
+        return stale;
+      }
+      return { pins: [], stations: [], generatedAt: Date.now() };
+    }
   },
-  ["public-map-pins-v3"],
+  ["public-map-pins-v4"],
   {
     revalidate: 31536000, // 1 year cache (purged on-demand via revalidatePropertyPublicCache)
     tags: ["properties", "public-data", "public-properties", "projects", "transit-stations"],
@@ -439,10 +449,18 @@ const fetchCachedMapPinsPayload = unstable_cache(
 
 export const getPublicMapPins = cache(async (): Promise<MapPinsPayload> => {
   const cached = getMapPinsMemoryCache();
-  if (cached) {
+  if (cached && cached.pins.length > 0) {
     return cached;
   }
-  const payload = await fetchCachedMapPinsPayload();
-  setMapPinsMemoryCache(payload);
-  return payload;
+  try {
+    const payload = await fetchCachedMapPinsPayload();
+    if (payload && payload.pins.length > 0) {
+      setMapPinsMemoryCache(payload);
+    }
+    return payload;
+  } catch (err: any) {
+    console.error("[getPublicMapPins] Exception in getPublicMapPins:", err?.message || err);
+    if (cached) return cached;
+    return { pins: [], stations: [], generatedAt: Date.now() };
+  }
 });

@@ -237,7 +237,7 @@ export function usePropertyFilters(
   // Compute current serialized query string for instant data fetching
   const queryString = useMemo(() => {
     const p = new URLSearchParams();
-    if (keyword) p.set("keyword", keyword);
+    if (debouncedKeyword) p.set("keyword", debouncedKeyword);
     if (type !== "ALL") p.set("property_type", type);
     if (listingType !== "ALL") p.set("listing_type", listingType);
     if (minPrice) p.set("min_price", minPrice);
@@ -258,11 +258,12 @@ export function usePropertyFilters(
     if (minSize) p.set("min_size", minSize);
     if (maxSize) p.set("max_size", maxSize);
     if (priceType && (minPrice || maxPrice)) p.set("price_type", priceType);
+    if (sort && sort !== "NEWEST") p.set("sort", sort);
     return p.toString();
   }, [
-    keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
+    debouncedKeyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
-    companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, cbd, minSize, maxSize, transitStation
+    companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, cbd, minSize, maxSize, transitStation, sort
   ]);
 
   /**

@@ -156,21 +156,42 @@ export async function proxy(request: NextRequest) {
     const isAiTarget = (path.includes("/ai-") || path.startsWith("/api/ai") || path.includes("/translate")) && 
                       !path.includes("-monitor") && !path.includes("-config") && !path.includes("smart-match");
 
-    if (path.startsWith("/auth")) {
+    // ⚡ [CPU OPTIMIZATION] Public GET requests bypass Redis rate-limiting
+    // Cloudflare WAF + Bot Fight Mode protects the public edge.
+    // Saving ~50ms of Serverless Function Active CPU on every public pageview.
+    const isPublicGet =
+      request.method === "GET" &&
+      !path.startsWith("/protected") &&
+      !path.startsWith("/auth") &&
+      !isAiTarget &&
+      !isHeavyResource;
+
+    if (isPublicGet) {
+      limiter = null;
+    } else if (path.startsWith("/auth")) {
       limiter = ratelimitAuth;
       limiterName = "auth";
       identifier = ip || getFingerprint(request); 
     } else if (isAiTarget) {
       limiter = ratelimitAI;
       limiterName = "ai";
-    } else if (isHeavyResource || isPublicAPI) {
+    } else if (isHeavyResource) {
       limiter = ratelimitActions;
-      limiterName = isHeavyResource ? "heavy-resource" : "public-api";
-    } else if (path.includes("/actions") || path.startsWith("/api/protected") || path.includes("-config") || path.includes("smart-match")) {
+      limiterName = "heavy-resource";
+    } else if (
+      request.method !== "GET" ||
+      path.includes("/actions") ||
+      path.startsWith("/api/protected") ||
+      path.includes("-config") ||
+      path.includes("smart-match")
+    ) {
       limiter = ratelimitActions;
       limiterName = "actions";
-    } else {
+    } else if (path.startsWith("/protected")) {
+      limiter = ratelimitGeneral;
       identifier = `${identifier}:${path}`;
+    } else {
+      limiter = null;
     }
 
     if (limiter) {

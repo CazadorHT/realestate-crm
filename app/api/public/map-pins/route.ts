@@ -19,17 +19,24 @@ export async function GET(request: NextRequest) {
       invalidateMapPinsMemoryCache();
     }
     const payload = await getPublicMapPins();
+    const cacheHeader =
+      payload.pins.length > 0
+        ? "public, max-age=3600, s-maxage=2592000, stale-while-revalidate=31536000"
+        : "no-cache, no-store, must-revalidate";
+
     return NextResponse.json(payload, {
       headers: {
-        "Cache-Control":
-          "public, max-age=3600, s-maxage=2592000, stale-while-revalidate=31536000",
+        "Cache-Control": cacheHeader,
       },
     });
   } catch (error) {
     console.error("[API /api/public/map-pins] Error:", error);
     return NextResponse.json(
       { pins: [], stations: [], generatedAt: Date.now() },
-      { status: 500 }
+      {
+        status: 200,
+        headers: { "Cache-Control": "no-cache, no-store, must-revalidate" },
+      }
     );
   }
 }

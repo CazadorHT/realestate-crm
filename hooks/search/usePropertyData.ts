@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -33,13 +33,18 @@ export function usePropertyData(
 
   // Effective query string (active state query or URL search params)
   const effectiveQuery = activeQueryString !== undefined ? activeQueryString : searchParams.toString();
-
-  // Reset limit when query changes
-  useEffect(() => {
-    setLimit(12);
-  }, [effectiveQuery]);
+  const prevQueryRef = useRef(effectiveQuery);
 
   useEffect(() => {
+    if (prevQueryRef.current !== effectiveQuery) {
+      prevQueryRef.current = effectiveQuery;
+      if (limit !== 12) {
+        // Reset limit first and let the next render fetch cleanly with limit=12 (prevents double fetch)
+        setLimit(12);
+        return;
+      }
+    }
+
     if (isFirstLoadRef.current && initialProperties && initialProperties.length > 0 && limit === 12) {
       isFirstLoadRef.current = false;
       return;
@@ -142,9 +147,9 @@ export function usePropertyData(
     };
   }, [effectiveQuery, limit, t]);
 
-  const loadMoreProperties = () => {
-    setLimit((prev) => prev + 12);
-  };
+  const loadMoreProperties = useCallback((targetLimit?: number) => {
+    setLimit((prev) => Math.max(prev + 12, targetLimit || 0));
+  }, []);
 
   return { properties, facets, isLoading, isRefetching, isFetchingMore, loadMoreProperties };
 }

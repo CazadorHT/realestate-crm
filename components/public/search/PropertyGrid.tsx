@@ -71,15 +71,11 @@ export function PropertyGrid({
             onMouseLeave={
               onHoverProperty ? () => onHoverProperty(null) : undefined
             }
-            className={cn(
-              "rounded-3xl transition-shadow duration-200",
-              hoveredPropertyId === item.id &&
-                "ring-2 ring-blue-600 shadow-xl shadow-blue-500/15"
-            )}
           >
             <PropertyCard
               property={item}
               priority={i < 4 && currentPage === 1}
+              isHighlighted={hoveredPropertyId === item.id}
             />
           </m.div>
         ))}

@@ -109,11 +109,11 @@ export function SearchResultsHeader({
       <Link
         href={mapHref}
         prefetch={false}
-        className="h-7 sm:h-8.5 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50 border border-blue-100/70 transition-all cursor-pointer"
+        className="h-7 sm:h-8.5 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50/70 transition-all cursor-pointer"
       >
         <MapIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
         <span>{viewLabels.map}</span>
-        <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.5] shrink-0" />
+        <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.5] shrink-0 opacity-70" />
       </Link>
     </div>
   ) : null;

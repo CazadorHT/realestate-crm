@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getServerTranslations, normalizeLocale, getLangPrefix } from "@/lib/i18n";
 import { getSeoAlternates } from "@/lib/seo-utils";
-import { getPublicMapPins } from "@/lib/services/map-pins";
 import { MapExplorerClient } from "@/components/public/map/MapExplorerClient";
 
 export const revalidate = 31536000; // 1 year ISR cache (purged on-demand via revalidatePropertyPublicCache)
@@ -42,10 +41,7 @@ export async function generateMetadata(props: {
 }
 
 export default async function PublicMapExplorerPage() {
-  const [{ language }, initialMapPayload] = await Promise.all([
-    getServerTranslations(),
-    getPublicMapPins(),
-  ]);
+  const { language } = await getServerTranslations();
 
   const loadingText =
     language === "en"
@@ -64,7 +60,7 @@ export default async function PublicMapExplorerPage() {
         </div>
       }
     >
-      <MapExplorerClient initialPayload={initialMapPayload} />
+      <MapExplorerClient initialPayload={null} />
     </Suspense>
   );
 }

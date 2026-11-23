@@ -15,24 +15,38 @@ export function useMapPins(
   enabled: boolean,
   initialPayload?: MapPinsPayload | null
 ) {
-  const [data, setData] = useState<MapPinsPayload | null>(
-    initialPayload || clientPinsSingleton
+  const hasInitialValidData = Boolean(
+    initialPayload && Array.isArray(initialPayload.pins) && initialPayload.pins.length > 0
   );
+  const hasSingletonValidData = Boolean(
+    clientPinsSingleton && Array.isArray(clientPinsSingleton.pins) && clientPinsSingleton.pins.length > 0
+  );
+
+  const [data, setData] = useState<MapPinsPayload | null>(() => {
+    if (hasInitialValidData) return initialPayload!;
+    if (hasSingletonValidData) return clientPinsSingleton;
+    return null;
+  });
+
   const [isLoading, setIsLoading] = useState<boolean>(
-    Boolean(enabled && !initialPayload && !clientPinsSingleton)
+    Boolean(enabled && !hasInitialValidData && !hasSingletonValidData)
   );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialPayload && !clientPinsSingleton) {
-      clientPinsSingleton = initialPayload;
+    if (hasInitialValidData && !hasSingletonValidData) {
+      clientPinsSingleton = initialPayload!;
     }
-  }, [initialPayload]);
+  }, [hasInitialValidData, hasSingletonValidData, initialPayload]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    if (clientPinsSingleton) {
+    if (
+      clientPinsSingleton &&
+      Array.isArray(clientPinsSingleton.pins) &&
+      clientPinsSingleton.pins.length > 0
+    ) {
       setData(clientPinsSingleton);
       setIsLoading(false);
       return;
@@ -49,7 +63,9 @@ export function useMapPins(
         .then(async (res) => {
           if (!res.ok) throw new Error("Failed to load map pins");
           const json = (await res.json()) as MapPinsPayload;
-          clientPinsSingleton = json;
+          if (Array.isArray(json.pins) && json.pins.length > 0) {
+            clientPinsSingleton = json;
+          }
           return json;
         })
         .finally(() => {
