@@ -199,6 +199,7 @@ export interface GetPropertiesOptions {
   cbd?: boolean;
   transitStation?: string;
   includeFacets?: boolean;
+  compact?: boolean;
   sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "AREA_ASC" | "AREA_DESC";
 }
 
@@ -211,7 +212,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         const normalizedProvince = normalizeProvinceInput(options.province);
         const effectiveProvince = (normalizedProvince && normalizedProvince !== "ALL") ? normalizedProvince : undefined;
 
-        const selectColumns = (options.ids && options.ids.length > 0) ? PUBLIC_DETAIL_COLUMNS : PUBLIC_LIST_COLUMNS;
+        const selectColumns = (options.ids && options.ids.length > 0 && !options.compact) ? PUBLIC_DETAIL_COLUMNS : PUBLIC_LIST_COLUMNS;
         let query = (supabase.from("properties") as any)
           .select(selectColumns)
           .eq("status", "ACTIVE")

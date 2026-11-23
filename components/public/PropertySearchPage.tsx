@@ -241,6 +241,7 @@ export function PropertySearchPage({
           ids: missingIds.join(","),
           limit: String(missingIds.length),
           includeFacets: "false",
+          compact: "true",
         });
         const res = await fetch(`/api/public/properties?${params.toString()}`, {
           signal: controller.signal,

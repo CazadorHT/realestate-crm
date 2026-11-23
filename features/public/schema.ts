@@ -74,6 +74,7 @@ export const publicPropertyFilterSchema = z.object({
   cbd: z.coerce.boolean().optional(),
   transitStation: z.string().optional(),
   includeFacets: z.coerce.boolean().default(true).optional(),
+  compact: z.coerce.boolean().optional(),
   sort: z.enum(["NEWEST", "PRICE_ASC", "PRICE_DESC", "AREA_ASC", "AREA_DESC"]).optional(),
 });
 
