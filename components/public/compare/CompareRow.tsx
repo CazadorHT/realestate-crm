@@ -493,7 +493,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
         idx % 2 === 0 ? "bg-slate-50/40" : "bg-white"
       }`}
       style={{
-        gridTemplateColumns: `var(--compare-label-w, 105px) repeat(${properties.length}, minmax(145px, 1fr))`,
+        gridTemplateColumns: `var(--compare-label-w, 92px) repeat(${properties.length}, minmax(var(--compare-col-min, 132px), 1fr))`,
       }}
     >
       {/* Sticky Left Label Column */}
