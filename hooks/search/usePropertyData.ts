@@ -78,7 +78,6 @@ export function usePropertyData(
 
         const res = await fetch(url, {
           signal: controller.signal,
-          cache: "no-store",
         });
 
         if (!res.ok) {
