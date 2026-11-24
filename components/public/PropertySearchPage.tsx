@@ -156,33 +156,35 @@ export function PropertySearchPage({
   const hydratedRequestedIdsRef = useRef<Set<string>>(new Set());
   const [hydrationVersion, setHydrationVersion] = useState(0);
 
-  // Ingest incoming rich properties (SSR initialProperties + paginated usePropertyData)
-  useEffect(() => {
+  // Build synchronous merged Entity Map during render so newly loaded +12 cards IMMEDIATELY get full image carousels
+  // (Prevents stale-ref race where useMemo ran before useEffect and left cards stuck with 1-photo slim mapPins)
+  const entityMap = useMemo(() => {
+    const merged = new Map<string, ApiProperty>(propertyEntitiesRef.current);
     if (initialProperties && initialProperties.length > 0) {
       initialProperties.forEach((p) => {
         if (p?.id) {
+          merged.set(p.id, p);
           propertyEntitiesRef.current.set(p.id, p);
           hydratedRequestedIdsRef.current.add(p.id);
         }
       });
     }
-  }, [initialProperties]);
-
-  useEffect(() => {
     if (properties && properties.length > 0) {
       properties.forEach((p) => {
         if (p?.id) {
+          merged.set(p.id, p);
           propertyEntitiesRef.current.set(p.id, p);
           hydratedRequestedIdsRef.current.add(p.id);
         }
       });
     }
-  }, [properties]);
+    return merged;
+  }, [initialProperties, properties, hydrationVersion]);
 
   // Hydrate display cards with full rich entities (images, amenities, features) from the Entity Store
   const visibleProperties = useMemo(() => {
     return filtered.slice(0, displayCount).map((item) => {
-      const rich = propertyEntitiesRef.current.get(item.id);
+      const rich = entityMap.get(item.id);
       if (!rich) return item;
       return {
         ...item,
@@ -190,7 +192,7 @@ export function PropertySearchPage({
         images: (rich.images && rich.images.length > 0) ? rich.images : item.images,
       };
     });
-  }, [filtered, displayCount, properties, hydrationVersion]);
+  }, [filtered, displayCount, entityMap]);
 
   // In Split View: once full map pins are loaded, synchronize left-hand cards directly with map bounds/pins!
   const splitSourceList = useMemo<ApiProperty[]>(() => {
@@ -201,7 +203,7 @@ export function PropertySearchPage({
 
   const visibleSplitProperties = useMemo(() => {
     return splitSourceList.slice(0, splitDisplayCount).map((item) => {
-      const rich = propertyEntitiesRef.current.get(item.id);
+      const rich = entityMap.get(item.id);
       if (!rich) return item;
       return {
         ...item,
@@ -209,7 +211,7 @@ export function PropertySearchPage({
         images: (rich.images && rich.images.length > 0) ? rich.images : item.images,
       };
     });
-  }, [splitSourceList, splitDisplayCount, properties, hydrationVersion]);
+  }, [splitSourceList, splitDisplayCount, entityMap]);
 
   // ⚡ On-Demand ID Hydration: Fetch full gallery images ONLY for currently visible cards missing from Entity Store
   // Covers ALL edge cases: ALL-tab PRICE_ASC sort, Split View map panning, and +12 load more — zero facet overhead!
@@ -261,14 +263,12 @@ export function PropertySearchPage({
           setHydrationVersion((v) => v + 1);
         }
       } catch (err: any) {
-        if (err?.name === "AbortError") {
-          // Allow re-requesting if user navigates back to these cards later
-          missingIds.forEach((id) => {
-            if (!propertyEntitiesRef.current.has(id)) {
-              hydratedRequestedIdsRef.current.delete(id);
-            }
-          });
-        }
+        // Allow re-requesting on AbortError OR transient network/server failure so cards don't stay stuck with 1 photo
+        missingIds.forEach((id) => {
+          if (!propertyEntitiesRef.current.has(id)) {
+            hydratedRequestedIdsRef.current.delete(id);
+          }
+        });
       }
     }, 250);
 
@@ -499,11 +499,51 @@ export function PropertySearchPage({
     filters.petFriendly, filters.fullyFurnished, filters.bedrooms, 
     filters.isForeigner, filters.isHotDeal, filters.luxuryVilla, filters.cbd, filters.transitStation
   ]);
+  const storageKey = `vcc_prop_count:${basePath}:${filterFingerprint}`;
+  const prevFilterFingerprintRef = useRef<string | null>(null);
 
+  // Restore persisted displayCount on page refresh / back navigation; reset only on real filter change
   useEffect(() => {
-    setDisplayCount(ITEMS_PER_PAGE);
-    setSplitDisplayCount(ITEMS_PER_PAGE);
-  }, [filterFingerprint]);
+    if (prevFilterFingerprintRef.current === null) {
+      prevFilterFingerprintRef.current = filterFingerprint;
+      try {
+        const saved = Number(sessionStorage.getItem(storageKey) || "0");
+        if (saved > ITEMS_PER_PAGE && Number.isFinite(saved)) {
+          const clamped = Math.min(saved, 120);
+          setDisplayCount(clamped);
+          setSplitDisplayCount(clamped);
+          if (properties.length < clamped) {
+            loadMoreProperties(clamped);
+          }
+        }
+      } catch {
+        // Ignore sessionStorage errors in restricted browsers
+      }
+      return;
+    }
+
+    if (prevFilterFingerprintRef.current !== filterFingerprint) {
+      prevFilterFingerprintRef.current = filterFingerprint;
+      setDisplayCount(ITEMS_PER_PAGE);
+      setSplitDisplayCount(ITEMS_PER_PAGE);
+      try {
+        sessionStorage.removeItem(storageKey);
+      } catch {
+        // Ignore
+      }
+    }
+  }, [filterFingerprint, storageKey]);
+
+  // Persist displayCount whenever user clicks "Load More" so refresh / back keeps loaded cards
+  useEffect(() => {
+    if (displayCount > ITEMS_PER_PAGE) {
+      try {
+        sessionStorage.setItem(storageKey, String(displayCount));
+      } catch {
+        // Ignore
+      }
+    }
+  }, [displayCount, storageKey]);
 
   // Localized Area Filter Name for NoResultsView and PropertyGrid
   const localizedAreaFilterName = useMemo(() => {
