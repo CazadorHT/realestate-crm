@@ -105,7 +105,7 @@ export default async function AreasLandingPage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50/40 pb-24">
       {/* Luxury Editorial Hero Banner (Proper clearance below fixed white navbar) */}
-      <section className="relative overflow-hidden mt-16 pt-12 pb-24 md:pt-16 md:pb-28 bg-linear-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
+      <section className="relative overflow-hidden mt-12 pt-12 pb-24 md:pt-16 md:pb-28 bg-linear-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
         {/* Subtle ambient architectural glow */}
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />

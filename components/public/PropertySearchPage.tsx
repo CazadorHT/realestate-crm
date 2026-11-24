@@ -788,11 +788,11 @@ export function PropertySearchPage({
       </div>
 
       {/* Mobile Floating Price Map CTA -> Opens Dedicated /map Explorer with Active Filters */}
-      <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-30">
+      <div className="lg:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-30">
         <Link
           href={mapExplorerHref}
           prefetch={false}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#1B263B] hover:bg-blue-600 text-white font-bold text-xs shadow-2xl border border-white/15 transition-all active:scale-95 cursor-pointer"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#1B263B]/90 hover:bg-slate-900 backdrop-blur-md text-white font-bold text-xs shadow-[0_8px_28px_rgba(27,38,59,0.35)] border border-white/15 transition-all active:scale-95 cursor-pointer"
         >
           <MapIcon className="w-4 h-4 text-blue-300" />
           <span>

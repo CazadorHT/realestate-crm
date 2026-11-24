@@ -411,13 +411,40 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
     async () => {
       const supabase = createPublicClient();
 
-      // 1. Fetch active properties with popular_area and main_image in 1 single query (Batch)
-      const { data: propData } = await supabase
+      // 1. Fetch active properties with popular_area and main_image
+      //    If the correlated main_image subquery times out under burst load, retry with a lightweight
+      //    popular_area-only query (<30ms) so we NEVER return an empty list and poison the 1-year cache.
+      let { data: propData, error: propError } = await supabase
         .from("properties")
         .select("popular_area, main_image")
         .eq("status", "ACTIVE")
         .is("deleted_at", null)
         .not("popular_area", "is", null);
+
+      if (propError || !propData) {
+        console.warn("[getPopularAreas] Full prop query failed/timed out, retrying lightweight query:", propError?.message);
+        const lightRes = await supabase
+          .from("properties")
+          .select("popular_area")
+          .eq("status", "ACTIVE")
+          .is("deleted_at", null)
+          .not("popular_area", "is", null);
+        propData = (lightRes.data as any) || null;
+        propError = lightRes.error;
+      }
+
+      // 2. Fetch candidate areas from master table
+      const { data, error } = await supabase
+        .from("popular_areas_v3")
+        .select("id, name, name_th, name_en, name_cn, name_ru, slug, image_url, province")
+        .eq("is_active", true)
+        .order("sort_order")
+        .limit(200);
+
+      if (error || !data) {
+        if (process.env.NEXT_PHASE === "phase-production-build") return [];
+        throw new Error(`Failed to fetch popular_areas_v3: ${error?.message || "empty"}`);
+      }
 
       const activeAreaNames = new Set<string>();
       const areaImageMap = new Map<string, string>();
@@ -434,15 +461,12 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
         }
       });
 
-      // 2. Fetch candidate areas
-      const { data, error } = await supabase
-        .from("popular_areas_v3")
-        .select("id, name, name_th, name_en, name_cn, name_ru, slug, image_url, province")
-        .eq("is_active", true)
-        .order("sort_order")
-        .limit(200);
-
-      if (error || !data) return [];
+      // Anti-Cache-Poisoning Guard: if propData failed completely at runtime, throw so Next.js/Cloudflare
+      // serves stale valid cache instead of caching "0 areas" for 1 year.
+      if (activeAreaNames.size === 0 && propError) {
+        if (process.env.NEXT_PHASE === "phase-production-build") return [];
+        throw new Error(`Failed to fetch active property areas: ${propError.message}`);
+      }
 
       const result = [];
       for (const item of data) {
@@ -451,7 +475,7 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
         const nameObj = (item.name as Record<string, string> | null) || {};
         const nameTh = (item.name_th || nameObj.th || (typeof item.name === "string" ? item.name : "")).trim();
 
-        if (!activeAreaNames.has(nameTh)) continue;
+        if (activeAreaNames.size > 0 && !activeAreaNames.has(nameTh)) continue;
 
         const imageUrl = item.image_url || areaImageMap.get(nameTh) || null;
         const dict = LOCALE_DICTIONARY_FALLBACKS[nameTh] || {};
@@ -476,7 +500,7 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
       }
       return result;
     },
-    ["public-popular-areas-v2", String(limit)],
+    ["public-popular-areas-v3", String(limit)],
     { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
   )();
 }
