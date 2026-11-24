@@ -69,6 +69,10 @@ export const PROPERTY_PUBLIC_PATHS = [
   // Public APIs and Syndication Feeds
   "/sitemap.xml",
   "/api/public/properties",
+  "/api/public/properties?limit=12",
+  "/api/public/properties?limit=24",
+  "/api/public/properties?limit=36",
+  "/api/public/properties?limit=48",
   "/api/public/map-pins",
   "/api/public/popular-areas",
   "/api/public/search-suggestions",
@@ -96,6 +100,7 @@ export interface PropertyCacheRevalidateOptions {
   oldSlug?: string | null;
   projectSlug?: string | null;
   oldProjectSlug?: string | null;
+  purgeAll?: boolean;
 }
 
 function cleanPathSegment(segment?: string | null): string | null {
@@ -163,8 +168,9 @@ export async function revalidatePropertyPublicCache(options?: PropertyCacheReval
     );
   }
 
-  // 1. Next.js On-Demand ISR Route Revalidation
-  for (const p of paths) {
+  // 1. Next.js On-Demand ISR Route Revalidation (deduplicate pathnames without query strings)
+  const uniqueRoutePaths = Array.from(new Set(paths.map((p) => p.split("?")[0])));
+  for (const p of uniqueRoutePaths) {
     try {
       revalidatePath(p);
     } catch {
@@ -199,8 +205,12 @@ export async function revalidatePropertyPublicCache(options?: PropertyCacheReval
 
   // 3. Purge Cloudflare Edge CDN Cache
   try {
-    await purgeCloudflareCache(paths);
+    if (options?.purgeAll) {
+      await purgeCloudflareCache();
+    } else {
+      await purgeCloudflareCache(paths);
+    }
   } catch (error) {
-    console.error("[Cloudflare] Targeted edge cache purge failed:", error);
+    console.error("[Cloudflare] Edge cache purge failed:", error);
   }
 }

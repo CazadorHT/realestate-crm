@@ -80,9 +80,27 @@ export async function GET(request: Request) {
   try {
     // ⚡ Execute Optimized Server-Side Fetch
     const result = await getPublicProperties(options);
+
+    // 1-year Edge CDN cache for canonical/default pagination URLs explicitly purged on CRUD,
+    // 1-hour Edge CDN cache for arbitrary filter combinations that cannot be targeted individually on CF Free/Pro.
+    const paramKeys = Array.from(searchParams.keys());
+    const isPurgedDefaultQuery =
+      paramKeys.length === 0 ||
+      (paramKeys.length === 1 &&
+        paramKeys[0] === "limit" &&
+        ["12", "24", "36", "48"].includes(searchParams.get("limit") || ""));
+
+    const cdnTtl = isPurgedDefaultQuery ? 31536000 : 3600;
+    const cdnSwr = isPurgedDefaultQuery ? 31536000 : 86400;
+
     return NextResponse.json(result, {
       headers: {
-        "Cache-Control": "public, max-age=60, s-maxage=2592000, stale-while-revalidate=31536000",
+        // Browser: 60s cache (fresh quickly after CRUD while preventing redundant reload requests)
+        "Cache-Control": `public, max-age=60, s-maxage=${cdnTtl}, stale-while-revalidate=${cdnSwr}`,
+        // Vercel Edge CDN: consumes this header and strips s-maxage from Cache-Control downstream
+        "Vercel-CDN-Cache-Control": `public, s-maxage=${cdnTtl}, stale-while-revalidate=${cdnSwr}`,
+        // Cloudflare Edge CDN (RFC 9213): passed through untouched by Vercel, prioritized over Cache-Control by CF
+        "Cloudflare-CDN-Cache-Control": `public, max-age=${cdnTtl}, stale-while-revalidate=${cdnSwr}`,
       },
     });
   } catch (error) {

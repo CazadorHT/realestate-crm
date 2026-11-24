@@ -48,11 +48,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const purgeAll = req.nextUrl.searchParams.get("all") === "true";
+
   try {
     const supabase = await createClient();
-    await revalidatePropertyPublicCache();
+    await revalidatePropertyPublicCache({ purgeAll });
     await refreshProjectStatsView(supabase);
-    return NextResponse.json({ success: true, message: "Multilingual cache purged and view refreshed successfully" });
+    return NextResponse.json({
+      success: true,
+      purgeAll,
+      message: purgeAll
+        ? "Full Cloudflare zone & multilingual cache purged and view refreshed successfully"
+        : "Multilingual cache purged and view refreshed successfully",
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -63,11 +71,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const purgeAll = req.nextUrl.searchParams.get("all") === "true";
+
   try {
     const supabase = await createClient();
-    await revalidatePropertyPublicCache();
+    await revalidatePropertyPublicCache({ purgeAll });
     await refreshProjectStatsView(supabase);
-    return NextResponse.json({ success: true, message: "Multilingual cache purged and view refreshed successfully" });
+    return NextResponse.json({
+      success: true,
+      purgeAll,
+      message: purgeAll
+        ? "Full Cloudflare zone & multilingual cache purged and view refreshed successfully"
+        : "Multilingual cache purged and view refreshed successfully",
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
