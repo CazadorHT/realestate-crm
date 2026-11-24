@@ -421,7 +421,7 @@ async function handlePostbackEvent(
             channel:notification_channels_v3 (channel_name),
             property:properties_core (
               rent_price, currency,
-              details:properties_details (title, title_en, title_cn, title_ru),
+              details:properties_details (title),
               deals:crm_deals_v3 (transaction_end_date)
             )
           `)
@@ -432,10 +432,11 @@ async function handlePostbackEvent(
     const prop = Array.isArray(rule?.property) ? rule.property[0] : rule?.property;
     const details = Array.isArray(prop?.details) ? prop.details[0] : prop?.details;
     const ch = Array.isArray(rule?.channel) ? rule.channel[0] : rule?.channel;
+    const rawTitle = details?.title;
     const propName =
-      (pbLang === "en" ? details?.title_en : pbLang === "cn" ? details?.title_cn : pbLang === "ru" ? details?.title_ru : details?.title) ||
-      details?.title ||
-      "Property";
+      typeof rawTitle === "string"
+        ? rawTitle || "Property"
+        : (rawTitle?.[pbLang] || rawTitle?.th || rawTitle?.en || "Property");
     const rentStr = prop?.rent_price ? `${Number(prop.rent_price).toLocaleString()} ${prop?.currency || "THB"}` : "-";
 
     if (action === "rent_paid") {
@@ -496,7 +497,13 @@ async function handlePostbackEvent(
 
     const prop = Array.isArray(deal?.property) ? deal.property[0] : deal?.property;
     const details = Array.isArray(prop?.details) ? prop.details[0] : prop?.details;
-    const propName = details?.title || deal?.title || "ทรัพย์สิน";
+    const rawDealTitle = details?.title;
+    const propName =
+      (typeof rawDealTitle === "string"
+        ? rawDealTitle
+        : (rawDealTitle?.[pbLang] || rawDealTitle?.th || rawDealTitle?.en)) ||
+      deal?.title ||
+      "ทรัพย์สิน";
     const endDate = deal?.transaction_end_date || "-";
 
     if (action === "contract_renew") {

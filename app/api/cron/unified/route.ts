@@ -115,6 +115,21 @@ async function handleCron(req: NextRequest) {
   }
 }
 
+// Helper: properties_details.title is JSONB { th, en, cn, ru }
+function extractLocalizedTitle(
+  titleField: unknown,
+  lang: "th" | "en" | "cn" | "ru" = "th",
+  fallback = "ทรัพย์สิน",
+): string {
+  if (!titleField) return fallback;
+  if (typeof titleField === "string") return titleField.trim() || fallback;
+  if (typeof titleField === "object") {
+    const t = titleField as Record<string, string | undefined>;
+    return (t[lang] || t.th || t.en || Object.values(t).find(Boolean) || fallback).trim();
+  }
+  return fallback;
+}
+
 // ─────────────────────────────────────────────────────
 // TASK 1: Contract Expiry (v3: crm_deals_v3 | 60/30/7d | Telegram + LINE Renewal Funnel)
 // ─────────────────────────────────────────────────────
@@ -134,7 +149,7 @@ async function runContractExpiryCheck() {
         id, title, property_id, deal_type, status, total_amount, currency, transaction_end_date,
         property:properties_core (
           id, rent_price, currency,
-          details:properties_details (title, title_en, title_cn, title_ru),
+          details:properties_details (title),
           media:property_media_v3 (url, is_cover)
         )
       `)
@@ -213,11 +228,7 @@ async function runContractExpiryCheck() {
 
       const linked = deal.property_id ? propChannelMap.get(deal.property_id) : undefined;
       const lang = linked?.language || "th";
-      const propName =
-        (lang === "en" ? details?.title_en : lang === "cn" ? details?.title_cn : lang === "ru" ? details?.title_ru : details?.title) ||
-        details?.title ||
-        deal.title ||
-        "ทรัพย์สิน";
+      const propName = extractLocalizedTitle(details?.title, lang, deal.title || "ทรัพย์สิน");
 
       const rentAmount = prop?.rent_price || deal.total_amount;
       const rentStr = rentAmount ? `฿${Number(rentAmount).toLocaleString()}/เดือน` : "-";
@@ -336,7 +347,7 @@ async function runRentNotifications(startTime: number) {
         channel:notification_channels_v3!inner (id, platform, external_channel_id, channel_name, is_active),
         property:properties_core!inner (
           id, rent_price, currency, bedrooms, bathrooms, floor_area,
-          details:properties_details (title, title_en, title_cn, title_ru),
+          details:properties_details (title),
           media:property_media_v3 (url, is_cover),
           deals:crm_deals_v3 (transaction_end_date, status)
         )
@@ -408,7 +419,7 @@ async function runRentNotifications(startTime: number) {
         const prop = Array.isArray(rule.property) ? rule.property[0] : rule.property;
         const details = Array.isArray(prop?.details) ? prop.details[0] : prop?.details;
         overdueForAdmin.push({
-          propName: details?.title || "ทรัพย์สิน",
+          propName: extractLocalizedTitle(details?.title, "th", "ทรัพย์สิน"),
           channelName: ch.channel_name || ch.external_channel_id,
           rentStr: prop?.rent_price ? `฿${Number(prop.rent_price).toLocaleString()}` : "-",
           day: notifDay,
@@ -433,10 +444,7 @@ async function runRentNotifications(startTime: number) {
           const deals = Array.isArray(prop?.deals) ? prop.deals : [];
 
           const lang = (["th", "en", "cn", "ru"].includes(rule.language) ? rule.language : "th") as "th" | "en" | "cn" | "ru";
-          const propName =
-            (lang === "en" ? details?.title_en : lang === "cn" ? details?.title_cn : lang === "ru" ? details?.title_ru : details?.title) ||
-            details?.title ||
-            "Property";
+          const propName = extractLocalizedTitle(details?.title, lang, "Property");
 
           const rawCover = media.find((m: any) => m.is_cover)?.url || media[0]?.url;
           const coverImageUrl = rawCover ? (getPublicImageUrl(rawCover) || DEFAULT_COVER_IMG) : DEFAULT_COVER_IMG;
