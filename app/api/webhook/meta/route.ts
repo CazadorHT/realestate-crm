@@ -5681,7 +5681,7 @@ Never make up facts not provided in context.`;
 
     const aiRes = await generateText(
       `Context Information:\n${contextStr}\n\nCustomer Inquiry: "${text}"\n\nAssistant Response:`,
-      "gemini-1.5-flash",
+      "gemini-flash-lite-latest",
       0,
       { systemInstruction, maxOutputTokens: 250, temperature: 0.3 }
     );

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     const { history, message } = await request.json();
 
     const aiConfig = await getAiModelConfig();
-    const modelName = aiConfig.chatbot_model || "gemini-1.5-flash";
+    const modelName = aiConfig.chatbot_model || "gemini-flash-lite-latest";
     const model = getModel(modelName);
 
     if (!model) {

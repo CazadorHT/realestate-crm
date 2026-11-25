@@ -411,24 +411,22 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
     async () => {
       const supabase = createPublicClient();
 
-      // 1. Fetch active properties with popular_area and main_image
-      //    If the correlated main_image subquery times out under burst load, retry with a lightweight
-      //    popular_area-only query (<30ms) so we NEVER return an empty list and poison the 1-year cache.
+      // 1. Direct projection query on properties_core + properties_details + cover-only media
+      //    (~10x faster than public.properties view, eliminates 57014 statement timeouts under burst traffic / warm:all).
       let { data: propData, error: propError } = await supabase
-        .from("properties")
-        .select("popular_area, main_image")
-        .eq("status", "ACTIVE")
+        .from("properties_core")
+        .select("id, details:properties_details!inner(address_info), media:property_media_v3(url, is_cover)")
+        .eq("status", 1)
         .is("deleted_at", null)
-        .not("popular_area", "is", null);
+        .eq("media.is_cover", true);
 
       if (propError || !propData) {
-        console.warn("[getPopularAreas] Full prop query failed/timed out, retrying lightweight query:", propError?.message);
+        console.warn("[getPopularAreas] Core+media query failed/timed out, retrying lightweight query:", propError?.message);
         const lightRes = await supabase
-          .from("properties")
-          .select("popular_area")
-          .eq("status", "ACTIVE")
-          .is("deleted_at", null)
-          .not("popular_area", "is", null);
+          .from("properties_core")
+          .select("id, details:properties_details!inner(address_info)")
+          .eq("status", 1)
+          .is("deleted_at", null);
         propData = (lightRes.data as any) || null;
         propError = lightRes.error;
       }
@@ -451,12 +449,17 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
       const areaCountMap = new Map<string, number>();
 
       (propData || []).forEach((p: any) => {
-        const areaName = (p.popular_area as string)?.trim();
+        const details = Array.isArray(p.details) ? p.details[0] : p.details;
+        const areaName = (details?.address_info?.popular_area as string)?.trim();
         if (areaName) {
           activeAreaNames.add(areaName);
           areaCountMap.set(areaName, (areaCountMap.get(areaName) || 0) + 1);
-          if (p.main_image && !areaImageMap.has(areaName)) {
-            areaImageMap.set(areaName, p.main_image);
+          if (!areaImageMap.has(areaName)) {
+            const mediaList = Array.isArray(p.media) ? p.media : [];
+            const coverUrl = mediaList.find((m: any) => m?.is_cover)?.url || mediaList[0]?.url;
+            if (coverUrl) {
+              areaImageMap.set(areaName, coverUrl);
+            }
           }
         }
       });

@@ -16,16 +16,23 @@ export type AiLogInput = {
 
 export async function calculateAiCost(model: string, promptTokens: number, completionTokens: number) {
   const rates: Record<string, { input: number; output: number }> = {
+    "gemini-3.1-flash-lite": { input: 0.05, output: 0.15 },
+    "gemini-3-flash-preview": { input: 0.1, output: 0.4 },
+    "gemini-3.1-pro-preview": { input: 1.25, output: 5.0 },
+    "gemini-flash-lite-latest": { input: 0.05, output: 0.15 },
+    "gemini-flash-latest": { input: 0.1, output: 0.4 },
+    "gemini-pro-latest": { input: 1.25, output: 5.0 },
+    "gemini-2.5-flash": { input: 0.1, output: 0.4 },
+    "gemini-2.5-pro": { input: 1.25, output: 5.0 },
+    // Legacy keys kept for historical ai_usage_logs cost calculation
     "gemini-1.5-flash": { input: 0.1, output: 0.4 },
     "gemini-1.5-pro": { input: 1.25, output: 5.0 },
-    "gemini-flash-latest": { input: 0.1, output: 0.4 },
-    "gemini-flash-lite-latest": { input: 0.05, output: 0.15 },
     "gemini-2.0-flash-exp": { input: 0.1, output: 0.4 },
   };
 
   const exchangeRate = 32; // 1 USD = 32 THB
   const modelKey = Object.keys(rates).find((k) => model.includes(k));
-  const rate = modelKey ? rates[modelKey] : rates["gemini-1.5-flash"];
+  const rate = modelKey ? rates[modelKey] : rates["gemini-3-flash-preview"];
 
   const inputCostUsd = (promptTokens / 1_000_000) * rate.input;
   const outputCostUsd = (completionTokens / 1_000_000) * rate.output;
