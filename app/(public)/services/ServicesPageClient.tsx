@@ -131,7 +131,7 @@ function ServicesContent() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 animate-in fade-in-0 zoom-in-95 duration-1000 delay-300">
-            <Link href="#services" onClick={scrollToServices}>
+            <Link prefetch={false} href="#services" onClick={scrollToServices}>
               <Button
                 size="lg"
                 className="rounded-lg h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-900/20 border-none transition-all hover:scale-105"
@@ -139,7 +139,7 @@ function ServicesContent() {
                 {t("common.start_search")}
               </Button>
             </Link>
-            <Link href={`${langPrefix}/contact`}>
+            <Link prefetch={false} href={`${langPrefix}/contact`}>
               <Button
                 size="lg"
                 variant="outline"
@@ -202,6 +202,7 @@ function ServicesContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               {services.map((service) => (
                 <Link
+                  prefetch={false}
                   href={`${langPrefix}/services/${service.slug}`}
                   key={service.id}
                   className="group relative bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 flex flex-col h-full border border-slate-100"
@@ -312,7 +313,7 @@ function ServicesContent() {
                     {t("contact.sidebar_line_button")}
                   </Button>
                 </a>
-                <Link href={`${langPrefix}/contact`} className="w-full sm:w-auto">
+                <Link prefetch={false} href={`${langPrefix}/contact`} className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"

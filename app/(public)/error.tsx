@@ -66,7 +66,7 @@ export default function PublicError({
           variant="outline"
           className="h-11 px-8 rounded-xl font-semibold border-slate-200"
         >
-          <Link href={`${langPrefix}/properties`}>
+          <Link prefetch={false} href={`${langPrefix}/properties`}>
             {t("error_boundary.view_all")}
           </Link>
         </Button>

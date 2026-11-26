@@ -63,6 +63,7 @@ export function BlogDetailSidebar({
                 );
                 return (
                   <Link
+                    prefetch={false}
                     key={relatedPost.id}
                     href={`${langPrefix}/blog/${relatedPost.slug}`}
                     className="block group"
@@ -87,7 +88,7 @@ export function BlogDetailSidebar({
           <p className="text-sm text-slate-300 mb-4">
             {t("blog.need_help_desc")}
           </p>
-          <Link href={`${langPrefix}/contact`}>
+          <Link prefetch={false} href={`${langPrefix}/contact`}>
             <button className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium transition-colors">
               {t("blog.contact_us_btn")}
             </button>

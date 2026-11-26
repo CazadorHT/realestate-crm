@@ -288,6 +288,7 @@ export function CompareAppleHero({
               {/* Apple-Style Pill CTA Buttons */}
               <div className="flex flex-col gap-2 pt-2">
                 <Link
+                  prefetch={false}
                   href={detailHref}
                   target="_blank"
                   className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-full bg-[#1B263B] hover:bg-blue-600 text-white font-bold text-xs transition-all shadow-xs active:scale-98"
@@ -297,6 +298,7 @@ export function CompareAppleHero({
                 </Link>
 
                 <Link
+                  prefetch={false}
                   href={`${detailHref}#contact`}
                   target="_blank"
                   className="w-full text-center text-xs font-semibold text-blue-600 hover:text-blue-800 py-1"

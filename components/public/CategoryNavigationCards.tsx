@@ -187,6 +187,7 @@ export function CategoryNavigationCards({
             className="h-full flex"
           >
             <Link
+              prefetch={false}
               href={card.href}
               className={`group cursor-pointer relative overflow-hidden rounded-3xl border ${card.themeBorder} ${card.themeBg} p-6 md:p-7 shadow-sm hover:shadow-2xl ${card.themeShadow} transition-all duration-300 flex items-center justify-between min-h-[210px] md:min-h-[225px] w-full gap-4`}
             >

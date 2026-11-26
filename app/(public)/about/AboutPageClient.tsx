@@ -326,6 +326,7 @@ export default function AboutPageClient() {
             </p>
             <div className="pt-4">
               <Link
+                prefetch={false}
                 href={`${langPrefix}/contact`}
                 className="h-14 px-8 rounded-2xl bg-blue-600 text-white font-bold inline-flex items-center gap-3 hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 group"
               >
@@ -361,7 +362,7 @@ export default function AboutPageClient() {
               {t("contact.subtitle")}
             </p>
           </div>
-          <Link href={`${langPrefix}/contact`} className="block">
+          <Link prefetch={false} href={`${langPrefix}/contact`} className="block">
             <button className="h-16 px-12 rounded-[24px] bg-slate-900 text-white font-bold text-lg hover:bg-black transition-all active:scale-95 shadow-2xl shadow-slate-300">
               {t("nav.contact")}
             </button>

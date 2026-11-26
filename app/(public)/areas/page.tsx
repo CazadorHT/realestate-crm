@@ -117,7 +117,7 @@ export default async function AreasLandingPage() {
             aria-label="Breadcrumb"
             className="flex items-center gap-2 text-xs sm:text-sm text-slate-300/80 mb-6"
           >
-            <Link href={langPrefix || "/"} className="hover:text-white transition-colors">
+            <Link prefetch={false} href={langPrefix || "/"} className="hover:text-white transition-colors">
               {t("breadcrumb_home")}
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-500" />

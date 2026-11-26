@@ -48,6 +48,7 @@ export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
         {excerpt && <meta itemProp="description" content={excerpt} />}
 
         <Link
+          prefetch={false}
           href={`${langPrefix}/blog/${post.slug}`}
           className="relative h-[280px] lg:h-full overflow-hidden block"
           itemProp="url"
@@ -84,7 +85,7 @@ export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
               </span>
             )}
           </div>
-          <Link href={`${langPrefix}/blog/${post.slug}`} className="block">
+          <Link prefetch={false} href={`${langPrefix}/blog/${post.slug}`} className="block">
             <h3
               className="text-xl lg:text-2xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-700 group-hover:to-purple-700 transition-all leading-tight"
               itemProp="name"

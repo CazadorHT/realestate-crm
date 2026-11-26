@@ -27,6 +27,7 @@ export function SearchBreadcrumbs({
           aria-label="Breadcrumb"
         >
           <Link
+            prefetch={false}
             href={langPrefix || "/"}
             className="hover:text-blue-600 transition-colors flex items-center gap-1 shrink-0"
           >

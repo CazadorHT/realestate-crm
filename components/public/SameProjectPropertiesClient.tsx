@@ -145,6 +145,7 @@ export function SameProjectPropertiesClient({
 
         {displayProjectName && (
           <Link
+            prefetch={false}
             href={viewAllHref}
             className="inline-flex items-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-indigo-600 hover:text-white bg-indigo-50/80 hover:bg-indigo-600 border border-indigo-200/80 hover:border-indigo-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 group shrink-0 self-end sm:self-auto"
           >

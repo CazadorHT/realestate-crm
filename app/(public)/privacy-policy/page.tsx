@@ -56,6 +56,7 @@ export default async function PrivacyPolicyPage() {
       <nav className="border-b bg-slate-50/50">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <Link
+            prefetch={false}
             href={langPrefix || "/"}
             className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
           >

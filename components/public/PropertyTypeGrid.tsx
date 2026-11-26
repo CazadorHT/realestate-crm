@@ -32,7 +32,7 @@ export function PropertyTypeCard({
 }: PropertyTypeCardProps) {
   const { t } = useLanguage();
   return (
-    <Link href={href} className="group flex flex-col items-center">
+    <Link prefetch={false} href={href} className="group flex flex-col items-center">
       {/* Outer wrapper that handles translate-y to prevent clipping overflow-hidden */}
       <div className="transition-transform duration-300 group-hover:-translate-y-1 py-1">
         {/* Circle Image Wrapper - Using rounded-full and overflow-hidden for clean circle masking */}

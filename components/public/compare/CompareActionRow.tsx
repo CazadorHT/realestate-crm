@@ -25,7 +25,7 @@ export function CompareActionRow({ properties }: CompareActionRowProps) {
             className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 transition-all text-xs sm:text-sm py-2 sm:py-2.5 font-bold shadow-xs cursor-pointer"
             asChild
           >
-            <Link href={`${langPrefix || ""}/properties/${p.slug || p.id}`}>
+            <Link prefetch={false} href={`${langPrefix || ""}/properties/${p.slug || p.id}`}>
               {t("compare_page.view_details") || "ดูรายละเอียด"}
             </Link>
           </Button>

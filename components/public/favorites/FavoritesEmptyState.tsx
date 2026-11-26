@@ -19,7 +19,7 @@ export function FavoritesEmptyState() {
         className="text-slate-500 text-center max-w-md mb-8"
         dangerouslySetInnerHTML={{ __html: t("favorites.empty_desc") }}
       />
-      <Link href={`${langPrefix}/properties`}>
+      <Link prefetch={false} href={`${langPrefix}/properties`}>
         <Button
           size="lg"
           className="rounded-xl bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all hover:scale-105"

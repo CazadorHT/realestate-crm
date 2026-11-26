@@ -434,6 +434,7 @@ export function MapSlideablePropertyCard({
             </h4>
             {isProjectHeadline && projectHref && (
               <Link
+                prefetch={false}
                 href={projectHref}
                 className="inline-flex items-center gap-0.5 text-[10px] font-bold text-blue-600 hover:text-blue-700 shrink-0"
               >
@@ -749,6 +750,7 @@ export function MapSlideablePropertyCard({
           )}
 
           <Link
+            prefetch={false}
             href={detailHref}
             className="w-full inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition-colors shadow-xs"
           >

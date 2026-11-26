@@ -409,6 +409,7 @@ export function PropertyHeader({
 
                       {popularAreaStr && (
                         <Link
+                          prefetch={false}
                           href={
                             property.popular_area_slug
                               ? `/areas/${property.popular_area_slug}`
@@ -491,6 +492,7 @@ export function PropertyHeader({
                       return (
                         <div className="mb-2 lg:mb-3">
                           <Link
+                            prefetch={false}
                             href={`${langPrefix}/projects/${property.project.slug}`}
                             className="group/proj h-auto min-h-9 lg:min-h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
                             title={projectTooltip}

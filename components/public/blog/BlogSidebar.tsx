@@ -57,6 +57,7 @@ export function BlogSidebar({
                 const isActive = currentCategory === cat;
                 return (
                   <Link
+                    prefetch={false}
                     href={`${langPrefix}/blog?category=${cat}`}
                     key={cat}
                     className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 border flex items-center justify-between group ${
@@ -132,6 +133,7 @@ export function BlogSidebar({
                 const isActive = currentTag === tag;
                 return (
                   <Link
+                    prefetch={false}
                     key={tag}
                     href={isActive ? (langPrefix || "/blog") : `${langPrefix}/blog?tag=${tag}`}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all duration-300 hover:shadow-lg hover:scale-105 ${

@@ -76,7 +76,7 @@ export default function PublicNotFound() {
             variant="default"
             className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 transition-all active:scale-95 gap-2 cursor-pointer"
           >
-            <Link href={langPrefix || "/"}>
+            <Link prefetch={false} href={langPrefix || "/"}>
               <Home className="h-4 w-4" />
               {t.backHome}
             </Link>
@@ -88,7 +88,7 @@ export default function PublicNotFound() {
               variant="outline"
               className="h-11 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-blue-600! font-semibold gap-2 transition-all active:scale-95 cursor-pointer"
             >
-              <Link href={`${langPrefix}/properties`}>
+              <Link prefetch={false} href={`${langPrefix}/properties`}>
                 <Search className="h-4 w-4 text-slate-500" />
                 {t.searchProp}
               </Link>

@@ -137,7 +137,7 @@ export function CTASection() {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-4"
         >
-          <Link href={`${langPrefix}/properties`}>
+          <Link prefetch={false} href={`${langPrefix}/properties`}>
             <Button
               size="lg"
               variant="outline"

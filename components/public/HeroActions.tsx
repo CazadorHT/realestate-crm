@@ -18,7 +18,7 @@ export function HeroActions({ t: initialT }: HeroActionsProps) {
   const ctaDeposit = t("home.hero.cta_deposit") || initialT?.cta_deposit || "ฝากทรัพย์";
 
   return (
-    <Link href={`${langPrefix}/deposit`} className="w-full sm:w-auto">
+    <Link prefetch={false} href={`${langPrefix}/deposit`} className="w-full sm:w-auto">
       <Button
         size="lg"
         variant="outline"

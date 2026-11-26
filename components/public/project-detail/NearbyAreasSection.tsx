@@ -221,6 +221,7 @@ export function NearbyAreasSection({
                 className="shrink-0 snap-start w-44 sm:w-70"
               >
                 <Link
+                  prefetch={false}
                   href={`${langPrefix}/areas/${item.slug}`}
                   className="group relative block h-36 sm:h-40 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 border border-slate-200/40"
                 >

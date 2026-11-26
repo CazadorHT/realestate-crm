@@ -746,7 +746,7 @@ export function ContactForm() {
       {!isSuccess && (
         <p className="text-[10px] text-white/60 text-center mt-10 px-4 leading-relaxed">
           {t("contact.privacy_prefix")}
-          <Link href={`${langPrefix}/privacy-policy`} className="text-blue-400/60 hover:underline inline-block ml-1 font-medium transition-colors">
+          <Link prefetch={false} href={`${langPrefix}/privacy-policy`} className="text-blue-400/60 hover:underline inline-block ml-1 font-medium transition-colors">
             {t("nav.privacy_policy")}
           </Link>
         </p>

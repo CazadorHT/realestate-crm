@@ -24,7 +24,7 @@ export function CompareEmptyState() {
         className="rounded-xl bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:translaty-y-1 transition-all text-sm md:text-base"
         asChild
       >
-        <Link href={`${langPrefix}/properties`}>{t("compare_page.go_search")}</Link>
+        <Link prefetch={false} href={`${langPrefix}/properties`}>{t("compare_page.go_search")}</Link>
       </Button>
     </div>
   );

@@ -31,6 +31,7 @@ export function RecentlyViewedCard({
 
   const cardContent = (
     <Link
+      prefetch={false}
       href={propertyUrl}
       className="block w-full h-full bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all! duration-500! group relative isolate hover:-translate-y-1"
       onClick={(e) => {

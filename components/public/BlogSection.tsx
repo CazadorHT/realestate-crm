@@ -127,6 +127,7 @@ export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }
             </p>
           </div>
           <Link
+            prefetch={false}
             href={`${langPrefix}/blog`}
             className="group self-end  inline-flex items-center  gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 font-medium transition-all duration-300 shadow-sm hover:shadow-md"
           >
@@ -207,6 +208,7 @@ export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }
                     )}
 
                     <Link
+                      prefetch={false}
                       href={`${langPrefix}/blog/${post.slug}`}
                       className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 border border-slate-200 hover:border-blue-200 flex flex-col h-full"
                       itemProp="url"

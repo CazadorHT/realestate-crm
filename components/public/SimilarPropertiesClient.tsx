@@ -118,6 +118,7 @@ export function SimilarPropertiesClient({
         </div>
 
         <Link
+          prefetch={false}
           href={viewAllHref}
           className="inline-flex items-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-blue-600 hover:text-white bg-blue-50/80 hover:bg-blue-600 border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 group shrink-0 self-end sm:self-auto"
         >

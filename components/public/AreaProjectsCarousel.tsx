@@ -263,6 +263,7 @@ export function AreaProjectsCarousel({
 
           return (
             <Link
+              prefetch={false}
               key={proj.id}
               href={`${langPrefix}/projects/${proj.slug}`}
               className="group bg-white rounded-2xl overflow-hidden border border-slate-200/60 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 flex flex-col shrink-0 w-44 sm:w-70 snap-start"

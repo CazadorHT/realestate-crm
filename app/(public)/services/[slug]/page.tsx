@@ -85,6 +85,7 @@ async function ServiceDetail({ params }: PageProps) {
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
           <Link
+            prefetch={false}
             href={`${langPrefix}/services`}
             className="absolute top-8 left-4 md:left-8 text-white/80 hover:text-white flex items-center gap-2 transition-all py-2 px-5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95"
           >
@@ -183,7 +184,7 @@ async function ServiceDetail({ params }: PageProps) {
                     </Button>
                   </a>
                   {!service.contact_link && (
-                    <Link href={`${langPrefix}/contact`} className="block w-full transition-transform active:scale-95">
+                    <Link prefetch={false} href={`${langPrefix}/contact`} className="block w-full transition-transform active:scale-95">
                       <Button
                         variant="outline"
                         className="w-full h-14 text-lg border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl"

@@ -53,6 +53,7 @@ export function CompareBar() {
     <div className="fixed bottom-20 right-3 sm:bottom-12 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto z-40 animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="flex items-center gap-1.5 bg-[#1B263B]/95 hover:bg-slate-900 text-white p-1.5 pl-3 rounded-full shadow-2xl border border-white/20 backdrop-blur-md transition-all hover:scale-105 group">
         <Link
+          prefetch={false}
           href={`${langPrefix || ""}/compare?ids=${ids.join(",")}`}
           onClick={(e) => {
             if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {

@@ -297,6 +297,7 @@ export function NearbyPlaces({
                         {typeLabel}
                       </span>
                       <Link
+                        prefetch={false}
                         href={targetHref}
                         className="text-xs lg:text-sm text-slate-600 leading-tight hover:text-blue-600 hover:underline transition-colors decoration-blue-300 underline-offset-4"
                       >

@@ -169,7 +169,7 @@ export default async function NearStationHubPage() {
           {/* Breadcrumbs */}
           <nav aria-label="breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-sm text-slate-300 flex-wrap">
-              <li><Link href={langPrefix || "/"} className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
+              <li><Link prefetch={false} href={langPrefix || "/"} className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
               <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
               <li className="text-white font-medium">{getPageString("breadcrumb_near_transit")}</li>
             </ol>
@@ -309,6 +309,7 @@ function TransitLineSection({ line, language, langPrefix = "" }: { line: Transit
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
           {line.stations.map((station) => (
             <Link
+              prefetch={false}
               key={station.code}
               href={`${langPrefix}/near-station/${station.slug}`}
               className="group flex items-center gap-2.5 px-3.5 py-3 rounded-xl bg-slate-50/80 hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all duration-200 hover:shadow-sm"

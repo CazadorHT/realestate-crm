@@ -47,7 +47,7 @@ export default async function TermsPage() {
       {/* Navigation */}
       <nav className="border-b bg-slate-50/50">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href={langPrefix || "/"} className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors">
+          <Link prefetch={false} href={langPrefix || "/"} className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors">
             <Home className="w-4 h-4" />
             <span className="text-sm font-medium">{t("nav.home")}</span>
           </Link>
@@ -206,6 +206,7 @@ export default async function TermsPage() {
               </h3>
               <p className="text-slate-400 mb-8 max-w-md mx-auto">{t("terms.help_desc")}</p>
               <Link
+                prefetch={false}
                 href={`${langPrefix}/contact`}
                 className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-blue-600/20"
               >

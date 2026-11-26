@@ -70,7 +70,7 @@ export default function NotFound() {
           variants={itemVariants}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12 w-full sm:w-auto"
         >
-          <Link href={`${langPrefix}/properties`}>
+          <Link prefetch={false} href={`${langPrefix}/properties`}>
             <Button
               size="lg"
               className="rounded-full px-10 h-14 text-base font-semibold shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 hover:scale-105 transition-all group w-full sm:w-auto"
@@ -80,7 +80,7 @@ export default function NotFound() {
             </Button>
           </Link>
 
-          <Link href={langPrefix || "/"}>
+          <Link prefetch={false} href={langPrefix || "/"}>
             <Button
               variant="outline"
               size="lg"

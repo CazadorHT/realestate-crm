@@ -297,6 +297,7 @@ export function MapCompareTransitModal({
 
                 {/* Bottom CTA */}
                 <Link
+                  prefetch={false}
                   href={detailHref}
                   target="_blank"
                   className="mt-2.5 sm:mt-3.5 w-full inline-flex items-center justify-center gap-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg sm:rounded-xl bg-slate-900 hover:bg-black text-white text-[11px] sm:text-xs font-bold transition-colors cursor-pointer"
@@ -318,6 +319,7 @@ export function MapCompareTransitModal({
           </p>
 
           <Link
+            prefetch={false}
             href={`${langPrefix || ""}/compare?ids=${compareIds.join(",")}`}
             className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors"
           >

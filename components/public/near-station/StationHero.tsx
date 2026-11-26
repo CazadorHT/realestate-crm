@@ -50,9 +50,9 @@ export function StationHero({
         {/* Breadcrumbs */}
         <nav aria-label="breadcrumb" className="mb-6">
           <ol className="flex items-center gap-2 text-sm text-slate-300 flex-wrap">
-            <li><Link href={langPrefix || "/"} className="hover:text-white transition-colors">{getString("breadcrumb_home")}</Link></li>
+            <li><Link prefetch={false} href={langPrefix || "/"} className="hover:text-white transition-colors">{getString("breadcrumb_home")}</Link></li>
             <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
-            <li><Link href={`${langPrefix}/near-station`} className="hover:text-white transition-colors">{getString("breadcrumb_near_transit")}</Link></li>
+            <li><Link prefetch={false} href={`${langPrefix}/near-station`} className="hover:text-white transition-colors">{getString("breadcrumb_near_transit")}</Link></li>
             <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
             <li className="text-white font-medium">{stationNameFormatted}</li>
           </ol>

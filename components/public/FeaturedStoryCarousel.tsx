@@ -489,6 +489,7 @@ export function FeaturedStoryCarousel({
 
             {/* Compact Action Button */}
             <Link
+              prefetch={false}
               href={detailLink}
               className={cn(
                 "inline-flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 px-2.5 sm:px-3.5 rounded-lg sm:rounded-xl text-white font-semibold text-[11px] sm:text-xs shadow-md transition-all shrink-0 active:scale-95 whitespace-nowrap",

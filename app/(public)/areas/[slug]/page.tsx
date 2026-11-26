@@ -244,9 +244,9 @@ export default async function AreaDetailPage(
           {/* Breadcrumbs */}
           <nav aria-label="breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-xs text-slate-300">
-              <li><Link href={langPrefix || "/"} className="hover:text-white transition-colors">{breadcrumbHome}</Link></li>
+              <li><Link prefetch={false} href={langPrefix || "/"} className="hover:text-white transition-colors">{breadcrumbHome}</Link></li>
               <li><ChevronRight className="w-3 h-3 opacity-60" /></li>
-              <li><Link href={`${langPrefix}/areas`} className="hover:text-white transition-colors">{t("related_areas")}</Link></li>
+              <li><Link prefetch={false} href={`${langPrefix}/areas`} className="hover:text-white transition-colors">{t("related_areas")}</Link></li>
               <li><ChevronRight className="w-3 h-3 opacity-60" /></li>
               <li className="text-white font-medium">{nameText}</li>
             </ol>
@@ -391,6 +391,7 @@ export default async function AreaDetailPage(
                   <div className="grid grid-cols-1 gap-2.5 max-h-60 overflow-y-auto pr-1">
                     {connections.stations.map(station => (
                       <Link
+                        prefetch={false}
                         key={station.code}
                         href={`${langPrefix}/near-station/${station.slug}`}
                         className="group flex items-center justify-between p-3 rounded-xl bg-slate-50/80 hover:bg-slate-100/50 transition-colors"

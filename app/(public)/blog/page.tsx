@@ -132,7 +132,7 @@ export default async function BlogListingPage({
                       : t("blog.latest_articles")}
                 </h2>
                 {(categoryFilter || tagFilter) && (
-                  <Link href={`${langPrefix}/blog`} className="text-sm text-blue-600 hover:underline">
+                  <Link prefetch={false} href={`${langPrefix}/blog`} className="text-sm text-blue-600 hover:underline">
                     {t("blog.view_all")}
                   </Link>
                 )}

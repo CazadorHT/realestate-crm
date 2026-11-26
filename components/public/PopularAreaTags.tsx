@@ -108,7 +108,7 @@ export function PopularAreaTags({
   const renderTag = (area: AreaItem, index: number) => {
     const label = getLocalizedArea(area);
     return (
-      <Link 
+      <Link prefetch={false} 
         key={area.name || label || index}
         href={`${basePath}?popular_area=${encodeURIComponent(area.name)}`}
         className={`px-3 py-1.5 rounded-full border text-xs font-semibold ${bgClass} ${activeTheme.hoverBg} group hover:text-white transition-all shadow-3xs flex items-center gap-1.5 shrink-0`}

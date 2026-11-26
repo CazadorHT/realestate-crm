@@ -204,7 +204,7 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
               asChild
               className="rounded-full bg-white text-slate-900 hover:bg-slate-100 font-semibold px-6 h-12 w-full md:w-auto md:h-10 text-sm shadow-lg hover:shadow-xl hover:scale-105 duration-300 hover:shadow-white/20 transition-all group"
             >
-              <Link href={`${langPrefix}/properties?sortBy=price&sortOrder=asc&filter=hot_deals`}>
+              <Link prefetch={false} href={`${langPrefix}/properties?sortBy=price&sortOrder=asc&filter=hot_deals`}>
                 {t("home.hot_deals.view_all")}
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>

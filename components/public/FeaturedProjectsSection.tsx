@@ -185,6 +185,7 @@ export function FeaturedProjectsSection({
           </m.div>
           
           <Link
+            prefetch={false}
             href={`${langPrefix}/projects`}
             className="inline-flex justify-center items-center gap-2 px-8 py-3 bg-linear-to-r h-12 from-blue-600 to-purple-600 text-white sm:text-sm font-bold rounded-2xl hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105"
           >
@@ -280,6 +281,7 @@ export function FeaturedProjectsSection({
                   className="shrink-0 snap-start will-change-transform"
                 >
                   <Link
+                    prefetch={false}
                     href={`${langPrefix}/projects/${proj.slug}`}
                     className="group bg-white rounded-3xl overflow-hidden border border-slate-200/70 hover:border-slate-300 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col w-72 md:w-80 h-full"
                   >

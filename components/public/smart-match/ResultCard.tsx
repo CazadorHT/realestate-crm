@@ -97,6 +97,7 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
   return (
     <div className="group relative bg-white border border-slate-200/90 hover:border-blue-400/80 rounded-2xl p-3 sm:p-3.5 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 overflow-hidden">
       <Link
+        prefetch={false}
         href={resultUrl}
         target="_blank"
         className="block"

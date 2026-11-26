@@ -344,6 +344,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </h2>
               </div>
               <Link
+                prefetch={false}
                 href={morePropertiesLink}
                 className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
               >

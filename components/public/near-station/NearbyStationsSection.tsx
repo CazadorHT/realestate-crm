@@ -117,6 +117,7 @@ function StationCard({
       layout
     >
       <Link
+        prefetch={false}
         href={`${langPrefix}/near-station/${station.slug}`}
         aria-current={isCurrent ? "page" : undefined}
         className={[
@@ -277,6 +278,7 @@ export function NearbyStationsSection({
           </div>
 
           <Link
+            prefetch={false}
             href={`${langPrefix}/near-station`}
             className="text-xs font-bold flex items-center gap-0.5 hover:underline shrink-0 self-start sm:self-end pb-0.5 transition-colors"
             style={{ color: lineColor }}

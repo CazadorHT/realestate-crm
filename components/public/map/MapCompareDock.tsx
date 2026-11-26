@@ -119,6 +119,7 @@ export function MapCompareDock({
 
         {/* Primary Compare CTA Button */}
         <Link
+          prefetch={false}
           href={`${langPrefix || ""}/compare?ids=${compareIds.join(",")}`}
           onClick={(e) => {
             if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {

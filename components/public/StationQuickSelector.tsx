@@ -241,6 +241,7 @@ export function StationQuickSelector({
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                       {filteredAllStations.map(({ station, lineColor }) => (
                         <Link
+                          prefetch={false}
                           key={station.code}
                           href={`${langPrefix}/near-station/${station.slug}`}
                           onClick={() => setSearchQuery("")}
@@ -335,6 +336,7 @@ export function StationQuickSelector({
                         const isCurrent = station.slug === currentStationSlug;
                         return (
                           <Link
+                            prefetch={false}
                             key={station.code}
                             href={`${langPrefix}/near-station/${station.slug}`}
                             className="group/item flex items-center justify-between gap-2 p-2.5 rounded-xl border transition-all text-xs font-medium w-[150px] xs:w-[170px] lg:w-auto shrink-0 lg:shrink snap-start"

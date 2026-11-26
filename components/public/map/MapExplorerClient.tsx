@@ -269,6 +269,7 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <Link
+                prefetch={false}
                 href={gridReturnHref}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-[#1B263B] text-slate-700 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                 title={gridReturnLabel}
@@ -495,6 +496,7 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
               </span>
             </button>
             <Link
+              prefetch={false}
               href={gridReturnHref}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#1B263B] hover:bg-blue-600 text-white font-bold text-xs shadow-lg border border-white/15 transition-colors cursor-pointer"
             >
@@ -630,6 +632,7 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
 
               <div className="px-3 mb-1.5 flex items-center justify-between gap-2">
                 <Link
+                  prefetch={false}
                   href={gridReturnHref}
                   className="pointer-events-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1B263B]/95 backdrop-blur-xs text-white text-[11px] font-bold shadow-md border border-white/15 cursor-pointer"
                 >
@@ -884,6 +887,7 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
                               )}
                             </div>
                             <Link
+                              prefetch={false}
                               href={detailHref}
                               onClick={(e) => e.stopPropagation()}
                               className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white transition-colors shrink-0"

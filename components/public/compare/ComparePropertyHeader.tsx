@@ -73,7 +73,7 @@ export function ComparePropertyHeader({
             className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-900 line-clamp-2 leading-snug hover:text-blue-600 transition-colors"
             title={title}
           >
-            <Link href={detailHref} target="_blank">
+            <Link prefetch={false} href={detailHref} target="_blank">
               {title}
             </Link>
           </h4>
@@ -110,6 +110,7 @@ export function ComparePropertyHeader({
 
         {/* View Details Link */}
         <Link
+          prefetch={false}
           href={detailHref}
           target="_blank"
           className="inline-flex items-center justify-center gap-1 w-full py-1 sm:py-1.5 px-1.5 sm:px-3 rounded-md sm:rounded-lg bg-slate-900 hover:bg-blue-600 text-white font-bold text-[10px] sm:text-xs transition-colors shadow-2xs mt-1"
