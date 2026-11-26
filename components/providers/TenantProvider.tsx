@@ -8,7 +8,7 @@ import React, {
   useTransition,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { setActiveTenantCookieAction } from "@/lib/actions/tenant-context";
 import { type Json } from "@/lib/database.types.generated";
@@ -42,6 +42,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [isPending, startTransition] = useTransition();
   const supabase = createClient();
   const router = useRouter();
+  const pathname = usePathname();
+  const isProtectedRoute = Boolean(pathname?.startsWith("/protected"));
 
   const fetchTenantsAndConfig = async () => {
     try {
@@ -170,8 +172,12 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    if (!isProtectedRoute) {
+      setIsLoading(false);
+      return;
+    }
     fetchTenantsAndConfig();
-  }, [supabase]);
+  }, [supabase, isProtectedRoute]);
 
   const setTenantId = (id: string) => {
     if (id === "ALL") {

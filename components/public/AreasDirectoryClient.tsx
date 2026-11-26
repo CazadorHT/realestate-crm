@@ -304,6 +304,7 @@ export function AreasDirectoryClient({
 
             return (
               <Link
+                prefetch={false}
                 key={area.id || area.slug}
                 href={href}
                 className="group bg-white rounded-3xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-2xl hover:shadow-blue-950/10 hover:border-blue-200 transition-all duration-300 hover:-translate-y-1.5 flex flex-col"

@@ -538,6 +538,7 @@ export function SidebarNav({
     <Tooltip>
       <TooltipTrigger asChild>
         <Link
+          prefetch={false}
           href={item.href}
           aria-label={item.title}
           onClick={() => {
@@ -663,6 +664,7 @@ export function SidebarNav({
             )}
           >
             <Link
+              prefetch={false}
               href="/protected"
               className={cn(
                 "flex items-center justify-center transition-all duration-200 group/brand cursor-pointer",
@@ -728,6 +730,7 @@ export function SidebarNav({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
+                  prefetch={false}
                   href="/protected"
                   aria-label={isEn ? "Dashboard" : "แดชบอร์ด"}
                   className={cn(

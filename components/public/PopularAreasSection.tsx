@@ -477,6 +477,7 @@ export function PopularAreasSection({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
+                    prefetch={false}
                     href={`${langPrefix}/areas`}
                     className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center"
                   >
@@ -636,6 +637,7 @@ export function PopularAreasSection({
                       className="shrink-0 snap-start will-change-transform"
                     >
                       <Link
+                        prefetch={false}
                         href={href}
                         onClick={(e) => {
                           if (hasDraggedRef.current) {

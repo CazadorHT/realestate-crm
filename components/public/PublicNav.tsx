@@ -432,6 +432,7 @@ export function PublicNav() {
               {/* Logo (Vertically centered, balanced left/right layout) */}
               <div className="shrink-0 flex items-center h-full">
                 <Link
+                  prefetch={false}
                   href={homePath}
                   onClick={handleLogoClick}
                   className="relative flex items-center active:scale-95 transition-transform duration-150 cursor-pointer group"
@@ -501,6 +502,7 @@ export function PublicNav() {
                         <div className="space-y-1">
                           {/* All Properties */}
                           <Link
+                            prefetch={false}
                             href={`${langPrefix}/properties`}
                             onClick={() => handleNavAction(`${langPrefix}/properties`)}
                             className="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
@@ -582,6 +584,7 @@ export function PublicNav() {
                         <div className="space-y-1">
                           {/* Prime CBD */}
                           <Link
+                            prefetch={false}
                             href={`${langPrefix}/properties/prime-cbd`}
                             onClick={() => handleNavAction(`${langPrefix}/properties/prime-cbd`)}
                             className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group/item"
@@ -599,6 +602,7 @@ export function PublicNav() {
 
                           {/* Luxury Villa */}
                           <Link
+                            prefetch={false}
                             href={`${langPrefix}/properties/luxury-villa`}
                             onClick={() => handleNavAction(`${langPrefix}/properties/luxury-villa`)}
                             className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group/item"
@@ -616,6 +620,7 @@ export function PublicNav() {
 
                           {/* Pet Friendly */}
                           <Link
+                            prefetch={false}
                             href={`${langPrefix}/properties/pet-friendly-condo`}
                             onClick={() => handleNavAction(`${langPrefix}/properties/pet-friendly-condo`)}
                             className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group/item"
@@ -633,6 +638,7 @@ export function PublicNav() {
 
                           {/* Office */}
                           <Link
+                            prefetch={false}
                             href={`${langPrefix}/properties/office-for-rent`}
                             onClick={() => handleNavAction(`${langPrefix}/properties/office-for-rent`)}
                             className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group/item"
@@ -655,6 +661,7 @@ export function PublicNav() {
 
                 {/* 2. Services */}
                 <Link
+                  prefetch={false}
                   href={`${langPrefix}/services`}
                   onClick={() => handleNavAction(`${langPrefix}/services`)}
                   className="text-slate-700 hover:text-blue-600 transition-colors font-medium text-sm relative group py-5"
@@ -665,6 +672,7 @@ export function PublicNav() {
 
                 {/* 3. Blog */}
                 <Link
+                  prefetch={false}
                   href={`${langPrefix}/blog`}
                   onClick={() => handleNavAction(`${langPrefix}/blog`)}
                   className="text-slate-700 hover:text-blue-600 transition-colors font-medium text-sm relative group py-5"
@@ -703,6 +711,7 @@ export function PublicNav() {
                   >
                     <div className="w-[280px] p-2 bg-white rounded-2xl shadow-xl border border-slate-100 space-y-1 ring-1 ring-slate-900/5">
                       <Link
+                        prefetch={false}
                         href={`${langPrefix}/about`}
                         onClick={() => handleNavAction(`${langPrefix}/about`)}
                         className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
@@ -719,6 +728,7 @@ export function PublicNav() {
                       </Link>
 
                       <Link
+                        prefetch={false}
                         href={`${langPrefix}/contact`}
                         onClick={() => handleNavAction(`${langPrefix}/contact`)}
                         className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-blue-50/70 transition-colors group/item"
@@ -832,6 +842,7 @@ export function PublicNav() {
 
                   {/* Favorites */}
                   <Link
+                    prefetch={false}
                     href={`${langPrefix}/favorites`}
                     onClick={() => handleNavAction(`${langPrefix}/favorites`)}
                     className="text-slate-600 hover:text-red-500 hover:bg-red-50/60 transition-colors w-9 h-9 rounded-lg flex items-center justify-center relative group"
@@ -861,6 +872,7 @@ export function PublicNav() {
                       className="cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xs font-semibold text-white px-4 h-9.5 rounded-xl outline-none ring-0 border-0"
                     >
                       <Link
+                        prefetch={false}
                         href={`${langPrefix}/deposit`}
                         onClick={() => handleNavAction(`${langPrefix}/deposit`)}
                       >
@@ -978,6 +990,7 @@ export function PublicNav() {
 
                 {/* Mobile Favorites */}
                 <Link
+                  prefetch={false}
                   href={`${langPrefix}/favorites`}
                   className="relative group p-2"
                   aria-label="favorites"
@@ -1044,6 +1057,7 @@ export function PublicNav() {
                     {/* Top 4 Primary Explore Items (Grid 2x2) */}
                     <div className="grid grid-cols-2 gap-2">
                       <Link
+                        prefetch={false}
                         href={`${langPrefix}/properties`}
                         onClick={() => handleNavAction(`${langPrefix}/properties`)}
                         className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-indigo-50/60 hover:bg-indigo-100/80 border border-indigo-100/90 transition-all text-center group cursor-pointer"
@@ -1113,6 +1127,7 @@ export function PublicNav() {
 
                       <div className="grid grid-cols-2 gap-2">
                         <Link
+                          prefetch={false}
                           href={`${langPrefix}/properties/prime-cbd`}
                           onClick={() => handleNavAction(`${langPrefix}/properties/prime-cbd`)}
                           className="flex items-center gap-2 p-2 rounded-xl border border-amber-100/80 bg-amber-50/40 hover:bg-amber-100/60 transition-colors group cursor-pointer"
@@ -1126,6 +1141,7 @@ export function PublicNav() {
                         </Link>
 
                         <Link
+                          prefetch={false}
                           href={`${langPrefix}/properties/luxury-villa`}
                           onClick={() => handleNavAction(`${langPrefix}/properties/luxury-villa`)}
                           className="flex items-center gap-2 p-2 rounded-xl border border-purple-100/80 bg-purple-50/40 hover:bg-purple-100/60 transition-colors group cursor-pointer"
@@ -1139,6 +1155,7 @@ export function PublicNav() {
                         </Link>
 
                         <Link
+                          prefetch={false}
                           href={`${langPrefix}/properties/pet-friendly-condo`}
                           onClick={() => handleNavAction(`${langPrefix}/properties/pet-friendly-condo`)}
                           className="flex items-center gap-2 p-2 rounded-xl border border-pink-100/80 bg-pink-50/40 hover:bg-pink-100/60 transition-colors group cursor-pointer"
@@ -1152,6 +1169,7 @@ export function PublicNav() {
                         </Link>
 
                         <Link
+                          prefetch={false}
                           href={`${langPrefix}/properties/office-for-rent`}
                           onClick={() => handleNavAction(`${langPrefix}/properties/office-for-rent`)}
                           className="flex items-center gap-2 p-2 rounded-xl border border-cyan-100/80 bg-cyan-50/40 hover:bg-cyan-100/60 transition-colors group cursor-pointer"
@@ -1171,6 +1189,7 @@ export function PublicNav() {
 
               {/* Services */}
               <Link
+                prefetch={false}
                 href={`${langPrefix}/services`}
                 onClick={() => handleNavAction(`${langPrefix}/services`)}
                 className="block p-3.5 text-sm font-bold text-slate-900 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors"
@@ -1180,6 +1199,7 @@ export function PublicNav() {
 
               {/* Blog */}
               <Link
+                prefetch={false}
                 href={`${langPrefix}/blog`}
                 onClick={() => handleNavAction(`${langPrefix}/blog`)}
                 className="block p-3.5 text-sm font-bold text-slate-900 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors"
@@ -1208,6 +1228,7 @@ export function PublicNav() {
                 {mobileAboutExpanded && (
                   <div className="px-3 pb-3 pt-1 space-y-1 bg-white border-t border-slate-100">
                     <Link
+                      prefetch={false}
                       href={`${langPrefix}/about`}
                       onClick={() => handleNavAction(`${langPrefix}/about`)}
                       className="flex items-center gap-2.5 p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
@@ -1217,6 +1238,7 @@ export function PublicNav() {
                     </Link>
 
                     <Link
+                      prefetch={false}
                       href={`${langPrefix}/contact`}
                       onClick={() => handleNavAction(`${langPrefix}/contact`)}
                       className="flex items-center gap-2.5 p-2.5 rounded-lg text-xs font-semibold text-slate-800 hover:bg-blue-50 hover:text-blue-600"
@@ -1239,6 +1261,7 @@ export function PublicNav() {
                   className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-base font-bold shadow-md outline-none ring-0 border-0 text-white rounded-xl"
                 >
                   <Link
+                    prefetch={false}
                     href={`${langPrefix}/deposit`}
                     onClick={() => handleNavAction(`${langPrefix}/deposit`)}
                   >

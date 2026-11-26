@@ -352,6 +352,7 @@ export function TransitStationsSection({
             </p>
           </m.div>
           <Link
+            prefetch={false}
             href={`${langPrefix}/near-station`}
             className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-0.5 hover:underline shrink-0 self-start md:self-end transition-all pb-1 row-start-1"
           >
@@ -513,6 +514,7 @@ export function TransitStationsSection({
                         className="w-full"
                       >
                         <Link
+                          prefetch={false}
                           href={`${langPrefix}/near-station/${station.slug}`}
                           className="group relative flex items-center justify-between px-2 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs overflow-hidden w-full"
                         >
@@ -627,6 +629,7 @@ export function TransitStationsSection({
                               return (
                                 <div key={station.code}>
                                   <Link
+                                    prefetch={false}
                                     href={`${langPrefix}/near-station/${station.slug}`}
                                     onClick={() => {
                                       setDrawerOpen(false);
@@ -730,6 +733,7 @@ export function TransitStationsSection({
                               return (
                                 <div key={station.code}>
                                   <Link
+                                    prefetch={false}
                                     href={`${langPrefix}/near-station/${station.slug}`}
                                     onClick={() => {
                                       setDrawerOpen(false);
