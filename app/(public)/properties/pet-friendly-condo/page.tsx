@@ -12,6 +12,7 @@ import {
 } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { Heart, ShieldCheck, Sparkles, Star, Briefcase, MapPin } from "lucide-react";
 import Link from "next/link";
 import { ScrollToProperties } from "@/components/public/ScrollToProperties";
@@ -409,7 +410,7 @@ export default async function PetFriendlyCondoPage(props: {
       {/* Main Search Component */}
       <div id="pet-condos-list" className="animate-fade-in-up delay-200 scroll-mt-20">
         <PropertySearchPage
-          initialProperties={initialData.properties}
+          initialProperties={initialData.properties.map((p) => slimPropertyForCard(p))}
           initialFacets={initialData.facets}
           basePath={`${langPrefix}/properties/pet-friendly-condo`}
           defaultFilters={{

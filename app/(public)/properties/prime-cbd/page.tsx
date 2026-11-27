@@ -10,6 +10,7 @@ import {
 } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { FaqAccordion } from "@/components/public/FaqAccordion";
 import { ScrollToProperties } from "@/components/public/ScrollToProperties";
 import { PrimeCbdHeroContent } from "@/components/public/PrimeCbdHeroContent";
@@ -395,7 +396,7 @@ export default async function PrimeCbdPage(props: {
       {/* Main Search Component */}
       <div id="cbd-properties-list" className="animate-fade-in-up delay-200 scroll-mt-20">
         <PropertySearchPage
-          initialProperties={initialData.properties}
+          initialProperties={initialData.properties.map((p) => slimPropertyForCard(p))}
           initialFacets={initialData.facets}
           basePath={`${langPrefix}/properties/prime-cbd`}
           defaultFilters={{

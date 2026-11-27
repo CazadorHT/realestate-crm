@@ -295,6 +295,34 @@ const AREA_SYNONYMS: Record<string, string> = {
 };
 
 /**
+ * Strict version of getNearbyNeighborhoods that ONLY returns truly adjacent mapped areas
+ * (returns [] when the area is not in NEARBY_AREAS_MAP/AREA_SYNONYMS instead of falling back to Bangkok CBD).
+ */
+export function getStrictNearbyNeighborhoods(
+  area?: string | null,
+  province?: string | null,
+  limit: number = 6
+): NearbyAreaItem[] {
+  const normalizedArea = (area || "").trim();
+  if (!normalizedArea) return [];
+  const lowerArea = normalizedArea.toLowerCase();
+  const resolvedKey =
+    NEARBY_AREAS_MAP[normalizedArea] ? normalizedArea : AREA_SYNONYMS[lowerArea] || null;
+
+  if (!resolvedKey || !NEARBY_AREAS_MAP[resolvedKey]) return [];
+
+  const list = NEARBY_AREAS_MAP[resolvedKey];
+  if (province) {
+    const pNorm = province.trim();
+    const filtered = list.filter(
+      (item) => item.province === pNorm || (pNorm === "กรุงเทพมหานคร" && item.province === "กรุงเทพมหานคร")
+    );
+    if (filtered.length > 0) return filtered.slice(0, limit);
+  }
+  return list.slice(0, limit);
+}
+
+/**
  * Returns nearby neighborhoods strictly within the same province.
  */
 export function getNearbyNeighborhoods(

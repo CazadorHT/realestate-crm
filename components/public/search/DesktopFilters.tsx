@@ -349,17 +349,20 @@ export function DesktopFilters({
     });
   }, [availableAreas, language, getLocaleValue, selectedAreaList]);
 
-  const { row1Areas, row2Areas } = useMemo(() => {
-    const r1: any[] = [];
-    const r2: any[] = [];
-    sortedAvailableAreas.forEach((item: any, idx: number) => {
-      if (idx % 2 === 0) {
-        r1.push(item);
-      } else {
-        r2.push(item);
-      }
-    });
-    return { row1Areas: r1, row2Areas: r2 };
+  const { row1Areas, row2Areas, row3Areas } = useMemo(() => {
+    const total = sortedAvailableAreas.length;
+    if (total === 0) {
+      return { row1Areas: [], row2Areas: [], row3Areas: [] };
+    }
+    if (total <= 6) {
+      return { row1Areas: sortedAvailableAreas, row2Areas: [], row3Areas: [] };
+    }
+    const rowSize = Math.ceil(total / 3);
+    return {
+      row1Areas: sortedAvailableAreas.slice(0, rowSize),
+      row2Areas: sortedAvailableAreas.slice(rowSize, rowSize * 2),
+      row3Areas: sortedAvailableAreas.slice(rowSize * 2),
+    };
   }, [sortedAvailableAreas]);
 
   const renderAreaChip = (a: any) => {
@@ -1293,7 +1296,7 @@ export function DesktopFilters({
     {/* กล่องบรรจุรายการทำเลทั้งหมด: จะทำงานและแสดงผลก็ต่อเมื่อ showAreaSection เป็น true เท่านั้น */}
     {showAreaSection && (
       <div className="relative flex-1 overflow-hidden px-8 animate-in ease-in-out duration-500">
-        {/* กล่องโครงสร้าง 2 แถว เลื่อนซ้าย-ขวา แบบอิสระ (ความกว้างของใครของมัน ไม่ยืด) */}
+        {/* กล่องโครงสร้าง 3 แถว เลื่อนซ้าย-ขวา แบบอิสระ (ความกว้างของใครของมัน ไม่ยืด) */}
         <div
           ref={scrollRef}
           className="overflow-x-auto flex flex-col gap-1.5 py-1 scroll-smooth [&::-webkit-scrollbar]:hidden"
@@ -1318,6 +1321,13 @@ export function DesktopFilters({
           {row2Areas.length > 0 && (
             <div className="flex items-center gap-2 shrink-0">
               {row2Areas.map(renderAreaChip)}
+            </div>
+          )}
+
+          {/* แถวที่ 3 */}
+          {row3Areas.length > 0 && (
+            <div className="flex items-center gap-2 shrink-0">
+              {row3Areas.map(renderAreaChip)}
             </div>
           )}
         </div>

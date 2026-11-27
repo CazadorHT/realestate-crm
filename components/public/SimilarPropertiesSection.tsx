@@ -4,7 +4,7 @@ import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { PropertyType } from "@/features/properties/types";
 import { unstable_cache } from "next/cache";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
-import { getNearbyNeighborhoods, type NearbyAreaItem } from "@/lib/utils/nearby-areas";
+import { getStrictNearbyNeighborhoods } from "@/lib/utils/nearby-areas";
 
 interface SimilarPropertiesSectionProps {
   currentPropertyId: string;
@@ -62,7 +62,12 @@ const getCachedSmartSimilarProperties = (
           ? normProvince
           : guessProvinceFromArea(popularArea);
 
-      const collected: any[] = [];
+      type PublicPropertyItem = Awaited<ReturnType<typeof getPublicProperties>>["properties"][number];
+      type CollectedSimilarProperty = PublicPropertyItem & {
+        matchTier: "same_area" | "nearby_area" | "province";
+      };
+
+      const collected: CollectedSimilarProperty[] = [];
       const seenIds = new Set<string>([currentPropertyId]);
 
       let sameAreaMatchCount = 0;
@@ -74,15 +79,15 @@ const getCachedSmartSimilarProperties = (
           const tier1Limit = limit + 8;
           const { properties: areaProps } = await getPublicProperties({
             popular_area: popularArea,
-            propertyType: propertyType as any,
+            propertyType: propertyType || undefined,
             province: effectiveProvince,
             limit: tier1Limit,
             includeFacets: false,
           });
           const rawAreaProps = areaProps || [];
           sameAreaHasMore = rawAreaProps.length >= tier1Limit;
-          sameAreaMatchCount = rawAreaProps.filter((p: any) => p.id !== currentPropertyId).length;
-          rawAreaProps.forEach((p: any) => {
+          sameAreaMatchCount = rawAreaProps.filter((p) => p.id !== currentPropertyId).length;
+          rawAreaProps.forEach((p) => {
             // Skip current property and sibling units of same project to prevent duplicate cards
             if (projectId && p.project_id === projectId) return;
             if (!seenIds.has(p.id) && collected.length < limit) {
@@ -95,9 +100,9 @@ const getCachedSmartSimilarProperties = (
         }
       }
 
-      // Tier 1.5: True Adjacent Neighborhoods (e.g. Ekkamai -> Thonglor, Phra Khanong, Phrom Phong, On Nut, Sukhumvit)
+      // Tier 1.5: True Adjacent Neighborhoods (strictly mapped only — never falsely tags CBD as "nearby" a suburb)
       if (collected.length < limit && popularArea) {
-        const nearbyList = getNearbyNeighborhoods(popularArea, effectiveProvince);
+        const nearbyList = getStrictNearbyNeighborhoods(popularArea, effectiveProvince);
         const nearbyNames = nearbyList
           .map((n) => n.name?.trim())
           .filter((n) => Boolean(n) && n !== popularArea.trim());
@@ -106,12 +111,12 @@ const getCachedSmartSimilarProperties = (
           try {
             const { properties: nearbyProps } = await getPublicProperties({
               popular_area: nearbyNames.join(","),
-              propertyType: propertyType as any,
+              propertyType: propertyType || undefined,
               province: effectiveProvince,
               limit: limit + 8,
               includeFacets: false,
             });
-            (nearbyProps || []).forEach((p: any) => {
+            (nearbyProps || []).forEach((p) => {
               if (projectId && p.project_id === projectId) return;
               if (!seenIds.has(p.id) && collected.length < limit) {
                 seenIds.add(p.id);
@@ -129,12 +134,12 @@ const getCachedSmartSimilarProperties = (
         try {
           const { properties: districtProps } = await getPublicProperties({
             district,
-            propertyType: propertyType as any,
+            propertyType: propertyType || undefined,
             province: effectiveProvince,
             limit: limit + 8,
             includeFacets: false,
           });
-          (districtProps || []).forEach((p: any) => {
+          (districtProps || []).forEach((p) => {
             if (projectId && p.project_id === projectId) return;
             if (!seenIds.has(p.id) && collected.length < limit) {
               seenIds.add(p.id);
@@ -150,12 +155,12 @@ const getCachedSmartSimilarProperties = (
       if (collected.length < limit && propertyType) {
         try {
           const { properties: provinceProps } = await getPublicProperties({
-            propertyType: propertyType as any,
+            propertyType: propertyType || undefined,
             province: effectiveProvince,
             limit: limit + 8,
             includeFacets: false,
           });
-          (provinceProps || []).forEach((p: any) => {
+          (provinceProps || []).forEach((p) => {
             if (projectId && p.project_id === projectId) return;
             if (!seenIds.has(p.id) && collected.length < limit) {
               seenIds.add(p.id);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPublicProperties, GetPropertiesOptions } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 
 /**
  * [S-Tier] High-Velocity Public Properties API
@@ -81,6 +82,17 @@ export async function GET(request: Request) {
     // ⚡ Execute Optimized Server-Side Fetch
     const result = await getPublicProperties(options);
 
+    // Slim list/filter card payloads (keep full payload for ?ids= used by Compare & Favorites)
+    const isIdHydration = Array.isArray(options.ids) && options.ids.length > 0;
+    const responsePayload = isIdHydration
+      ? result
+      : {
+          ...result,
+          properties: Array.isArray(result.properties)
+            ? result.properties.map(slimPropertyForCard)
+            : result.properties,
+        };
+
     // 1-year Edge CDN cache for canonical/default pagination URLs explicitly purged on CRUD,
     // 1-hour Edge CDN cache for arbitrary filter combinations that cannot be targeted individually on CF Free/Pro.
     const paramKeys = Array.from(searchParams.keys());
@@ -93,7 +105,7 @@ export async function GET(request: Request) {
     const cdnTtl = isPurgedDefaultQuery ? 31536000 : 3600;
     const cdnSwr = isPurgedDefaultQuery ? 31536000 : 86400;
 
-    return NextResponse.json(result, {
+    return NextResponse.json(responsePayload, {
       headers: {
         // Browser: 60s cache (fresh quickly after CRUD while preventing redundant reload requests)
         "Cache-Control": `public, max-age=60, s-maxage=${cdnTtl}, stale-while-revalidate=${cdnSwr}`,

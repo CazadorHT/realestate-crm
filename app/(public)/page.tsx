@@ -15,6 +15,7 @@ import {
   getPublicProvincesAction 
 } from "@/features/public/popular-areas";
 import { getPublicProperties } from "@/lib/services/properties";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { getBlogPosts } from "@/lib/services/blog";
 import { getPublicPartnersCached } from "@/features/admin/partners-actions";
 import { getServerFAQs, type FAQItem } from "@/lib/services/faqs";
@@ -179,6 +180,7 @@ export default async function LandingPage(props: { locale?: string } = {}) {
   const popularAreas = await getPopularAreasAction(initialProvinceId);
 
   const initialProperties = initialPropertiesData.properties;
+  const slimInitialProperties = initialProperties.map(slimPropertyForCard);
   const hotDeals = hotDealsData.properties;
 
   // 4. Build FAQPage JSON-LD server-side so Googlebot sees real mainEntity[]
@@ -315,7 +317,7 @@ export default async function LandingPage(props: { locale?: string } = {}) {
       {/* STRATEGIC CONVERSION: Hot Deals with optimized skeleton height */}
       {hotDeals && hotDeals.length > 0 && (
         <div className="min-h-[700px] md:min-h-[800px]">
-          <HotDealsSection initialProperties={hotDeals} />
+          <HotDealsSection initialProperties={hotDeals.map(slimPropertyForCard)} />
         </div>
       )}
       
@@ -344,10 +346,10 @@ export default async function LandingPage(props: { locale?: string } = {}) {
       })()}
       
       {/* BELOW THE FOLD: Dynamic / Lazy with realistic height placeholders */}
-      <div className={initialProperties && initialProperties.length > 0 ? "min-h-[1000px] md:min-h-[1100px] flex flex-col" : "py-12 flex flex-col"}>
-        {initialProperties && initialProperties.length > 0 ? (
+      <div className={slimInitialProperties.length > 0 ? "min-h-[1000px] md:min-h-[1100px] flex flex-col" : "py-12 flex flex-col"}>
+        {slimInitialProperties.length > 0 ? (
           <PropertyListingSection
-            initialProperties={initialProperties}
+            initialProperties={slimInitialProperties}
             initialFacets={initialPropertiesData.facets}
           />
         ) : (
@@ -370,7 +372,7 @@ export default async function LandingPage(props: { locale?: string } = {}) {
       </div>
       
       <div>
-        <RecentlyViewedSection recommendedProperties={initialProperties} />
+        <RecentlyViewedSection recommendedProperties={slimInitialProperties} />
       </div>
       
       <div className="min-h-[500px] md:min-h-[600px]">

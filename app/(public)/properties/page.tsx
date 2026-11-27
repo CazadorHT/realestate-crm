@@ -17,6 +17,7 @@ import { ExploreMapBanner } from "@/components/public/search/ExploreMapBanner";
 import { FeaturedStoryCarousel } from "@/components/public/FeaturedStoryCarousel";
 import { PropertiesHeroBanner } from "@/components/public/PropertiesHeroBanner";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 
 
 export const revalidate = 31536000; // 1 year long-term cache (ISR with on-demand purge)
@@ -339,7 +340,7 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
         <ExploreMapBanner language={language} />
 
         <div id="properties-list-section" >
-          <PropertySearchPage initialProperties={initialData.properties} initialFacets={initialData.facets} />
+          <PropertySearchPage initialProperties={initialData.properties.map(slimPropertyForCard)} initialFacets={initialData.facets} />
         </div>
       </div>
     </>

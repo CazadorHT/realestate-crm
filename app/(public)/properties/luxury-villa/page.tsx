@@ -11,6 +11,7 @@ import {
 } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { Award, Compass, ShieldCheck, Star, Briefcase, Heart, MapPin } from "lucide-react";
 import { FaqAccordion } from "@/components/public/FaqAccordion";
 import Link from "next/link";
@@ -346,7 +347,7 @@ export default async function LuxuryVillaPage(props: {
       {/* Main Search Component */}
       <div id="villas-list" className="bg-[#0B1120] text-slate-300 py-6 border-t border-slate-800/80 scroll-mt-20">
         <PropertySearchPage
-          initialProperties={initialData.properties}
+          initialProperties={initialData.properties.map((p) => slimPropertyForCard(p))}
           initialFacets={initialData.facets}
           basePath={`${langPrefix}/properties/luxury-villa`}
           defaultFilters={{

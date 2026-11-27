@@ -69,10 +69,10 @@ describe("Public Data - Popular Areas (เทสโหดๆ แบบไม่�
 
     it("should aggregate popular areas with cover images in public mode", async () => {
       mockSupabase
-        .mockTableResult("properties", [
-          { popular_area: "Asoke" },
-          { popular_area: "Asoke" },
-          { popular_area: "Thonglor" },
+        .mockTableResult("properties_core", [
+          { details: { address_info: { popular_area: "Asoke", province: "กรุงเทพมหานคร" } } },
+          { details: { address_info: { popular_area: "Asoke", province: "กรุงเทพมหานคร" } } },
+          { details: { address_info: { popular_area: "Thonglor", province: "กรุงเทพมหานคร" } } },
         ])
         .mockTableResult("popular_areas_v3", [
           { id: "a1", name: { th: "Asoke", en: "Asoke" }, slug: "asoke", image_url: "http://img.com/asoke.jpg", province: "กรุงเทพมหานคร", is_active: true },
@@ -90,7 +90,7 @@ describe("Public Data - Popular Areas (เทสโหดๆ แบบไม่�
     });
 
     it("should return empty array if no active properties found", async () => {
-      mockSupabase.mockTableResult("properties", []);
+      mockSupabase.mockTableResult("properties_core", []);
 
       const areas = await getPopularAreasAction();
       expect(areas).toEqual([]);

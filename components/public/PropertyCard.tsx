@@ -73,6 +73,7 @@ export type PropertyCardProps = {
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   image_url?: string | null;
   images?: (string | { url: string })[] | null;
+  total_images?: number;
   location?: string | null;
   size_sqm?: number | null;
   land_size_sqwah?: number | null;

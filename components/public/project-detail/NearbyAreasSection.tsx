@@ -17,6 +17,8 @@ interface NearbyArea {
   slug: string;
   imageUrl: string | null;
   province: string | null;
+  count?: number | null;
+  propertyCount?: number | null;
 }
 
 interface NearbyAreasSectionProps {
@@ -41,6 +43,7 @@ const I18N: Record<string, Record<string, string>> = {
   bangkok:  { th: "กรุงเทพฯ",             en: "Bangkok",                     cn: "曼谷",         ru: "Бангкок"               },
   phuket:   { th: "ภูเก็ต",               en: "Phuket",                      cn: "普吉岛",       ru: "Пхукет"                },
   chonburi: { th: "ชลบุรี",               en: "Chonburi",                    cn: "春武里",       ru: "Чонбури"               },
+  listings: { th: "รายการ",               en: "listings",                    cn: "套房源",       ru: "объявл."               },
 };
 
 // ============================================================
@@ -212,7 +215,14 @@ export function NearbyAreasSection({
             ref={scrollRef}
             className="flex gap-3 overflow-x-auto pb-1 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
-            {areas.map((item, i) => (
+            {areas.map((item, i) => {
+              const areaCount =
+                typeof item.count === "number"
+                  ? item.count
+                  : typeof item.propertyCount === "number"
+                    ? item.propertyCount
+                    : 0;
+              return (
               <m.div
                 key={item.id}
                 initial={{ opacity: 0, y: 12 }}
@@ -240,6 +250,16 @@ export function NearbyAreasSection({
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
 
+                  {/* Count Pill (Top Right) */}
+                  {areaCount > 0 && (
+                    <span className="absolute top-2.5 right-2.5 z-10 rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-semibold text-slate-800 shadow-sm">
+                      {areaCount}{" "}
+                      {language === "en" && areaCount === 1
+                        ? "listing"
+                        : I18N.listings[language] || I18N.listings.th}
+                    </span>
+                  )}
+
                   {/* Text */}
                   <div className="absolute bottom-3 left-3 right-3 text-left">
                     <span className="block text-sm font-bold text-white tracking-tight drop-shadow-xs line-clamp-1">
@@ -251,7 +271,8 @@ export function NearbyAreasSection({
                   </div>
                 </Link>
               </m.div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </>

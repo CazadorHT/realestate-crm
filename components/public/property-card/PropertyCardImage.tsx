@@ -52,6 +52,7 @@ export function PropertyCardImage({
     ? `${window.location.origin}${langPrefix}/properties/${property.slug || property.id}`
     : `${langPrefix}/properties/${property.slug || property.id}`;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [hasHovered, setHasHovered] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   const [failedThumbnails, setFailedThumbnails] = useState<Record<number, boolean>>({});
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
@@ -154,6 +155,15 @@ export function PropertyCardImage({
   // Progressive loading: only render visibleCount images in DOM to reduce egress.
   // When user swipes near the end, expand to show all images for this card.
   const displayImages = allImages.slice(0, visibleCount);
+  const rawTotalImages = property.total_images;
+  const totalImagesCount =
+    typeof rawTotalImages === "number" && Number.isFinite(rawTotalImages)
+      ? Math.max(rawTotalImages, allImages.length)
+      : allImages.length;
+  const remainingImagesCount = Math.max(0, totalImagesCount - allImages.length);
+  const hasMoreImagesSlide =
+    remainingImagesCount > 0 && displayImages.length === allImages.length;
+  const totalRenderedSlides = displayImages.length + (hasMoreImagesSlide ? 1 : 0);
 
   const badge = getListingBadge(property.listing_type);
 
@@ -364,7 +374,8 @@ export function PropertyCardImage({
 
   return (
     <div 
-      className="group/image relative aspect-square sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5"
+      onMouseEnter={() => { if (!hasHovered) setHasHovered(true); }}
+      className="group/image relative aspect-square sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-100 group-hover:after:bg-black/5"
     >
       {displayImages.length > 0 ? (
         <div
@@ -380,10 +391,15 @@ export function PropertyCardImage({
           className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none select-none cursor-grab active:cursor-grabbing"
         >
           {displayImages.map((img, index) => {
+            const isActiveCard = hasHovered || activeImageIndex > 0;
+            const isHighIntent = activeImageIndex >= 5;
             const shouldRender =
+              isHighIntent ||
               index === activeImageIndex ||
+              index === activeImageIndex - 1 ||
               index === activeImageIndex + 1 ||
-              index === activeImageIndex - 1;
+              (isActiveCard && index === activeImageIndex + 2) ||
+              Boolean(loadedImages[index]);
 
             const isThumbFailed = failedThumbnails[index];
             const currentSrc = isThumbFailed ? img : getThumbnailUrl(img);
@@ -409,7 +425,7 @@ export function PropertyCardImage({
                 {shouldRender ? (
                   <>
                     {!loadedImages[index] && (
-                      <div className="absolute inset-0 bg-slate-200 z-10 pointer-events-none" />
+                      <div className="absolute inset-0 bg-linear-to-r from-slate-100 via-white/80 to-slate-100 animate-pulse pointer-events-none" />
                     )}
                     <Image
                       src={currentSrc}
@@ -427,11 +443,19 @@ export function PropertyCardImage({
                       fill
                       draggable={false}
                       sizes="(max-width: 640px) 95vw, (max-width: 768px) 45vw, (max-width: 1280px) 300px, 320px"
-                      className={`object-cover object-center transition-[filter,opacity] duration-300 pointer-events-none ${
-                        loadedImages[index] ? "blur-0 opacity-100" : "blur-xs opacity-90"
+                      className={`object-cover object-center transition-opacity duration-300 pointer-events-none ${
+                        loadedImages[index] ? "opacity-100" : "opacity-0"
                       }`}
                       priority={priority && index === 0}
-                      {...(!(priority && index === 0) && { loading: "lazy" })}
+                      {...(!(priority && index === 0) && {
+                        loading:
+                          isHighIntent ||
+                          index === activeImageIndex ||
+                          (isActiveCard &&
+                            (index === activeImageIndex + 1 || index === activeImageIndex + 2))
+                            ? "eager"
+                            : "lazy",
+                      })}
                       onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
                       onError={() => {
                         if (!isThumbFailed) {
@@ -441,11 +465,75 @@ export function PropertyCardImage({
                     />
                   </>
                 ) : (
-                  <div className="absolute inset-0 bg-slate-100" />
+                  <div className="absolute inset-0 bg-slate-50" />
                 )}
               </Link>
             );
           })}
+          {hasMoreImagesSlide && (() => {
+            const lastImg = displayImages[displayImages.length - 1];
+            const lastIdx = displayImages.length - 1;
+            const bgSrc = failedThumbnails[lastIdx] ? lastImg : getThumbnailUrl(lastImg);
+            const propertyUrl = `${langPrefix}/properties/${property.slug || property.id}`;
+            const moreLabel =
+              language === "en"
+                ? remainingImagesCount === 1
+                  ? "more photo"
+                  : "more photos"
+                : language === "cn"
+                  ? "张更多照片"
+                  : language === "ru"
+                    ? "ещё фото"
+                    : "รูปเพิ่มเติม";
+            const viewAllLabel =
+              language === "en"
+                ? "View all photos"
+                : language === "cn"
+                  ? "查看全部照片"
+                  : language === "ru"
+                    ? "Смотреть все фото"
+                    : "ดูรูปทั้งหมด";
+            return (
+              <Link
+                key="more-images-cta"
+                href={propertyUrl}
+                prefetch={false}
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  if (hasMouseDragged.current) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+                }}
+                className="relative h-full w-full shrink-0 snap-start block select-none overflow-hidden bg-slate-900"
+              >
+                {activeImageIndex >= displayImages.length - 1 && bgSrc && (
+                  <Image
+                    src={bgSrc}
+                    alt=""
+                    aria-hidden="true"
+                    fill
+                    draggable={false}
+                    sizes="(max-width: 640px) 95vw, (max-width: 768px) 45vw, (max-width: 1280px) 300px, 320px"
+                    className="object-cover object-center scale-110 blur-md brightness-50 pointer-events-none"
+                  />
+                )}
+                <div className="absolute inset-0 bg-slate-950/35 flex flex-col items-center justify-center text-white px-6 text-center pointer-events-none">
+                  <span className="text-3xl font-bold tracking-tight drop-shadow-sm">
+                    +{remainingImagesCount}
+                  </span>
+                  <span className="text-xs font-medium text-white/90 mt-0.5">
+                    {moreLabel}
+                  </span>
+                  <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-white/95 text-slate-900 px-3.5 py-1.5 text-xs font-semibold shadow-md">
+                    {viewAllLabel}
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </Link>
+            );
+          })()}
         </div>
       ) : (
         <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
@@ -454,9 +542,9 @@ export function PropertyCardImage({
       )}
 
       {/* Pagination Dots */}
-      {displayImages.length > 1 && (
+      {totalRenderedSlides > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity duration-300">
-          {displayImages
+          {Array.from({ length: totalRenderedSlides })
             .slice(
               Math.floor(activeImageIndex / 10) * 10,
               Math.floor(activeImageIndex / 10) * 10 + 10
@@ -475,24 +563,28 @@ export function PropertyCardImage({
       )}
 
       {/* Navigation Arrows (Desktop Only) */}
-      {displayImages.length > 1 && (
+      {totalRenderedSlides > 1 && (
         <>
-          <button
-            type="button"
-            onClick={scrollPrev}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white border border-white/40 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
-            aria-label="Previous image"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            onClick={scrollNext}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white border border-white/40 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
-            aria-label="Next image"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+          {activeImageIndex > 0 && (
+            <button
+              type="button"
+              onClick={scrollPrev}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white border border-white/40 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+          {activeImageIndex < totalRenderedSlides - 1 && (
+            <button
+              type="button"
+              onClick={scrollNext}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-900 text-white border border-white/40 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg cursor-pointer hover:scale-110 active:scale-95"
+              aria-label="Next image"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
         </>
       )}
 

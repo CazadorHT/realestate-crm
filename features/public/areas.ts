@@ -611,11 +611,12 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
           slug: item.slug || "",
           imageUrl: getPublicImageUrl(imageUrl) || null,
           province: item.province,
+          count: areaCountMap.get(nameTh) || 0,
         });
       }
       return result;
     },
-    ["public-related-areas", excludeId, String(limit)],
+    ["public-related-areas-v2", excludeId, String(limit)],
     { revalidate: 31536000, tags: ["popular-areas", "public-data"] }
   )();
 }

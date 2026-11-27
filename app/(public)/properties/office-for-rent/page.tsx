@@ -11,6 +11,7 @@ import {
 } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import {
   Briefcase,
   Building,
@@ -345,7 +346,7 @@ export default async function OfficeForRentPage(props: {
       {/* Main Search Component */}
       <div id="offices-list" className="scroll-mt-20">
         <PropertySearchPage
-          initialProperties={initialData.properties}
+          initialProperties={initialData.properties.map((p) => slimPropertyForCard(p))}
           initialFacets={initialData.facets}
           basePath={`${langPrefix}/properties/office-for-rent`}
           defaultFilters={{

@@ -69,6 +69,7 @@ const ImageWithFallback = ({
   className,
   containerClassName,
   priority = false,
+  loading,
   sizes,
   fill = true,
   onImageError,
@@ -80,6 +81,7 @@ const ImageWithFallback = ({
   className?: string;
   containerClassName?: string;
   priority?: boolean;
+  loading?: "eager" | "lazy";
   sizes?: string;
   fill?: boolean;
   onImageError: (id: string) => void;
@@ -138,7 +140,7 @@ const ImageWithFallback = ({
         priority={priority}
         {...(priority ? { fetchPriority: "high" } : {})}
         decoding="async"
-        loading={priority ? "eager" : "lazy"}
+        loading={loading ?? (priority ? "eager" : "lazy")}
         className={cn("transition-all duration-500", className)}
         sizes={sizes}
         onError={() => onImageError(imgId)}
@@ -636,7 +638,7 @@ export function PropertyGallery({
                 return (
                   <div
                     key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
-                    className={`relative cursor-pointer overflow-hidden group/sub ${
+                    className={`relative cursor-pointer overflow-hidden bg-slate-100 group/sub ${
                       isFirstOfThree ? "col-span-2" : ""
                     }`}
                     onClick={() => {
@@ -655,23 +657,13 @@ export function PropertyGallery({
                       } catch (e) {}
                     }}
                   >
-                    {/* Blurred Background */}
-                    <ImageWithFallback
-                      img={img}
-                      alt=""
-                      containerClassName="absolute inset-0"
-                      className="object-cover blur-lg opacity-40 scale-105 group-hover/sub:scale-110 transition-transform duration-500"
-                      sizes="10vw"
-                      onImageError={handleImageError}
-                      failedImages={failedImages}
-                      showFallback={false}
-                    />
-                    {/* Main Image */}
+                    {/* Main Image (object-cover fills 100%, no redundant blurred duplicate needed) */}
                     <ImageWithFallback
                       img={img}
                       alt={`${imageAlt || title} - ${idx + 2}`}
                       containerClassName="relative z-10"
                       className="object-cover group-hover/sub:scale-105 transition-transform duration-500"
+                      loading="eager"
                       sizes="25vw"
                       onImageError={handleImageError}
                       failedImages={failedImages}

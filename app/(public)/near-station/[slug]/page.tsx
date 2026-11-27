@@ -293,7 +293,21 @@ export default async function StationDetailPage(
 
       {/* Properties Section */}
       <PropertySearchPage
-        initialProperties={properties.map(slimPropertyForCard) as any}
+        initialProperties={properties.map((p) =>
+          slimPropertyForCard({
+            ...p,
+            title: p.title ?? "",
+            created_at: p.created_at ?? "",
+            updated_at: p.updated_at ?? "",
+            listing_type:
+              p.listing_type === "SALE" ||
+              p.listing_type === "RENT" ||
+              p.listing_type === "SALE_AND_RENT"
+                ? p.listing_type
+                : null,
+            verified: p.verified ?? undefined,
+          })
+        )}
         initialTransitStation={`${station.label.th}|${station.transitType}`}
         basePath={`${langPrefix}/near-station/${station.slug}`}
       />
