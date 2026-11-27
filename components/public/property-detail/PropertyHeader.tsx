@@ -494,23 +494,23 @@ export function PropertyHeader({
                           <Link
                             prefetch={false}
                             href={`${langPrefix}/projects/${property.project.slug}`}
-                            className="group/proj h-auto min-h-9 lg:min-h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-blue-700 bg-linear-to-r from-blue-50 to-indigo-50/70 hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-blue-200/80 hover:border-blue-600 shadow-2xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
+                            className="group/proj h-auto min-h-9 lg:min-h-10 w-full lg:w-fit justify-between inline-flex items-center gap-2 lg:gap-4 px-3.5 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 shadow-xs hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation"
                             title={projectTooltip}
                           >
                             <div className="flex items-center gap-2">
-                              <ProjectIcon className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 group-hover/proj:text-white shrink-0 transition-colors" />
+                              <ProjectIcon className="w-4 h-4 lg:w-5 lg:h-5 text-slate-300 group-hover/proj:text-white shrink-0 transition-colors" />
                               <div className="flex flex-col text-left">
-                                <span className="font-semibold leading-tight">
+                                <span className="font-semibold leading-tight text-white">
                                   {displayProjectName}
                                 </span>
                                 {hasEnglishLine && (
-                                  <span className="text-[11px] font-medium text-slate-600 group-hover/proj:text-blue-100 transition-colors leading-tight mt-0.5">
+                                  <span className="text-[11px] font-medium text-slate-300 group-hover/proj:text-slate-200 transition-colors leading-tight mt-0.5">
                                     {cleanEn}
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <ChevronRight className="w-3.5 h-3.5 text-blue-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform ml-1.5" />
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover/proj:text-white group-hover/proj:translate-x-0.5 shrink-0 transition-transform ml-1.5" />
                           </Link>
                         </div>
                       );
