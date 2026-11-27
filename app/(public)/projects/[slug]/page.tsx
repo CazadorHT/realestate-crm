@@ -10,6 +10,7 @@ import { getProjectBySlug, getPropertiesInProject, getAllProjectSlugs, getRelate
 const getProjectBySlugCached = cache(getProjectBySlug);
 import { getPopularAreas } from "@/features/public/areas";
 import { ProjectPropertiesClient } from "@/components/public/ProjectPropertiesClient";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { ProjectHero } from "@/components/public/project-detail/ProjectHero";
 import { ProjectAboutCard } from "@/components/public/project-detail/ProjectAboutCard";
 import { ProjectFacilitiesCard } from "@/components/public/project-detail/ProjectFacilitiesCard";
@@ -224,7 +225,7 @@ export default async function ProjectDetailPage(
         {/* Left column (2 cols) - Listings */}
         <div className="lg:flex-1 w-full space-y-10 ">
           <ProjectPropertiesClient 
-            initialProperties={properties} 
+            initialProperties={properties.map(slimPropertyForCard)} 
             initialTotal={total}
             project={project} 
           />

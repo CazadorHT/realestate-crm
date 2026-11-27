@@ -15,6 +15,7 @@ import {
 } from "@/features/public/stations";
 const getStationBySlugCached = cache(getStationBySlug);
 import { PropertySearchPage } from "@/components/public/PropertySearchPage";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { StationQuickSelector } from "@/components/public/StationQuickSelector";
 import { StationHero } from "@/components/public/near-station/StationHero";
 import { StationSeoContent } from "@/components/public/near-station/StationSeoContent";
@@ -292,7 +293,7 @@ export default async function StationDetailPage(
 
       {/* Properties Section */}
       <PropertySearchPage
-        initialProperties={properties as any}
+        initialProperties={properties.map(slimPropertyForCard) as any}
         initialTransitStation={`${station.label.th}|${station.transitType}`}
         basePath={`${langPrefix}/near-station/${station.slug}`}
       />

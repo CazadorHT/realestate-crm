@@ -16,6 +16,7 @@ import {
 } from "@/features/public/areas";
 const getAreaBySlugCached = cache(getAreaBySlug);
 import { AreaPropertiesClient } from "@/components/public/AreaPropertiesClient";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 import { getProvinceName } from "@/lib/utils/provinces";
@@ -299,7 +300,7 @@ export default async function AreaDetailPage(
                 </span>
               </div>
               <AreaPropertiesClient 
-                initialProperties={properties} 
+                initialProperties={properties.map(slimPropertyForCard)} 
                 initialTotal={total}
                 areaNameTh={area.name.th}
                 areaName={nameText} 
