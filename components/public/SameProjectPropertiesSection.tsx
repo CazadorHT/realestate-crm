@@ -1,5 +1,6 @@
 import { SameProjectPropertiesClient } from "./SameProjectPropertiesClient";
 import { getPublicProperties } from "@/lib/services/properties";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { unstable_cache } from "next/cache";
 
 interface SameProjectPropertiesSectionProps {
@@ -27,15 +28,17 @@ const getCachedProjectProperties = (
       const { properties } = await getPublicProperties({
         projectId,
         limit: limit + 4, // Buffer to exclude current ID
+        includeFacets: false,
       });
 
       const filtered = (properties || [])
         .filter((p) => p.id !== currentPropertyId)
-        .slice(0, limit);
+        .slice(0, limit)
+        .map(slimPropertyForCard);
 
       return filtered;
     },
-    ["same-project-properties-v2", projectId, currentPropertyId, String(limit)],
+    ["same-project-properties-v3", projectId, currentPropertyId, String(limit)],
     { revalidate: 604800, tags: ["properties", `project-${projectId}`] }
   )();
 

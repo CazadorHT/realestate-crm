@@ -44,6 +44,7 @@ export function Breadcrumb({
       {backHref && (
         <>
           <Link
+            prefetch={false}
             href={backHref}
             className={cn(
               // Responsive button size
@@ -88,6 +89,7 @@ export function Breadcrumb({
 
             {item.href && !isLast ? (
               <Link
+                prefetch={false}
                 href={item.href}
                 className={cn(
                   "transition-colors whitespace-nowrap truncate max-w-[80px] sm:max-w-[120px] md:max-w-none",

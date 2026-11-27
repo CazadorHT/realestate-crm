@@ -97,7 +97,7 @@ export default function Error({
               variant="ghost"
               className="h-11 rounded-xl font-semibold gap-2 cursor-pointer"
             >
-              <Link href="/">
+              <Link prefetch={false} href="/">
                 <Home className="h-4 w-4" />
                 {isEn ? "Home" : "หน้าหลัก"}
               </Link>

@@ -1,4 +1,5 @@
 import { getPublicProperties } from "@/lib/services/properties";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { createPublicClient } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
 
@@ -112,8 +113,8 @@ export async function getBlogContextualProperties(
   // 5. Query primary contextual properties
   let matchedProperties: any[] = [];
   try {
-    const res = await getPublicProperties(filterOptions);
-    matchedProperties = res.properties || [];
+    const res = await getPublicProperties({ ...filterOptions, includeFacets: false });
+    matchedProperties = (res.properties || []).map(slimPropertyForCard);
   } catch (err) {
     console.warn("Failed to fetch contextual properties for blog:", err);
   }
@@ -122,8 +123,14 @@ export async function getBlogContextualProperties(
   if (matchedProperties.length < limit) {
     try {
       const existingIds = new Set(matchedProperties.map((p) => p.id));
-      const fallbackRes = await getPublicProperties({ limit: limit + existingIds.size, sort: "NEWEST" });
-      const fallbacks = (fallbackRes.properties || []).filter((p: any) => !existingIds.has(p.id));
+      const fallbackRes = await getPublicProperties({
+        limit: limit + existingIds.size,
+        sort: "NEWEST",
+        includeFacets: false,
+      });
+      const fallbacks = (fallbackRes.properties || [])
+        .filter((p: any) => !existingIds.has(p.id))
+        .map(slimPropertyForCard);
       matchedProperties = [...matchedProperties, ...fallbacks].slice(0, limit);
     } catch (err) {
       console.warn("Failed to backfill fallback properties:", err);

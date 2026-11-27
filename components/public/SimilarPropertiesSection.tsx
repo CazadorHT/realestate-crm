@@ -1,5 +1,6 @@
 import { SimilarPropertiesClient } from "./SimilarPropertiesClient";
 import { getPublicProperties } from "@/lib/services/properties";
+import { slimPropertyForCard } from "@/lib/utils/slim-property-card";
 import { PropertyType } from "@/features/properties/types";
 import { unstable_cache } from "next/cache";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
@@ -72,6 +73,7 @@ const getCachedSmartSimilarProperties = (
             propertyType: propertyType as any,
             province: effectiveProvince,
             limit: limit + 8,
+            includeFacets: false,
           });
           (areaProps || []).forEach((p: any) => {
             // Skip current property and sibling units of same project to prevent duplicate cards
@@ -94,6 +96,7 @@ const getCachedSmartSimilarProperties = (
             propertyType: propertyType as any,
             province: effectiveProvince,
             limit: limit + 8,
+            includeFacets: false,
           });
           (districtProps || []).forEach((p: any) => {
             if (projectId && p.project_id === projectId) return;
@@ -114,6 +117,7 @@ const getCachedSmartSimilarProperties = (
             propertyType: propertyType as any,
             province: effectiveProvince,
             limit: limit + 8,
+            includeFacets: false,
           });
           (provinceProps || []).forEach((p: any) => {
             if (projectId && p.project_id === projectId) return;
@@ -128,12 +132,12 @@ const getCachedSmartSimilarProperties = (
       }
 
       return {
-        properties: collected.slice(0, limit),
+        properties: collected.slice(0, limit).map(slimPropertyForCard),
         effectiveProvince,
       };
     },
     [
-      "smart-similar-properties-v4",
+      "smart-similar-properties-v5",
       currentPropertyId,
       propertyType || "",
       province || "",

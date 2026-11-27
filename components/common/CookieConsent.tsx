@@ -176,6 +176,7 @@ export function CookieConsent() {
                         <p className="text-slate-600 leading-relaxed max-w-2xl text-sm md:text-base">
                           {T("common.cookie_consent.description")}{" "}
                           <Link
+                            prefetch={false}
                             href={`${langPrefix}/privacy-policy`}
                             className="text-blue-600 hover:text-blue-700 underline underline-offset-4 font-medium transition-colors"
                           >
