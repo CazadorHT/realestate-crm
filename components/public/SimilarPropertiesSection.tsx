@@ -65,26 +65,62 @@ const getCachedSmartSimilarProperties = (
       const collected: any[] = [];
       const seenIds = new Set<string>([currentPropertyId]);
 
+      let sameAreaMatchCount = 0;
+      let sameAreaHasMore = false;
+
       // Tier 1: Same Popular Area & Property Type (Distinct developments in same area & province)
       if (popularArea) {
         try {
+          const tier1Limit = limit + 8;
           const { properties: areaProps } = await getPublicProperties({
             popular_area: popularArea,
             propertyType: propertyType as any,
             province: effectiveProvince,
-            limit: limit + 8,
+            limit: tier1Limit,
             includeFacets: false,
           });
-          (areaProps || []).forEach((p: any) => {
+          const rawAreaProps = areaProps || [];
+          sameAreaHasMore = rawAreaProps.length >= tier1Limit;
+          sameAreaMatchCount = rawAreaProps.filter((p: any) => p.id !== currentPropertyId).length;
+          rawAreaProps.forEach((p: any) => {
             // Skip current property and sibling units of same project to prevent duplicate cards
             if (projectId && p.project_id === projectId) return;
             if (!seenIds.has(p.id) && collected.length < limit) {
               seenIds.add(p.id);
-              collected.push(p);
+              collected.push({ ...p, matchTier: "same_area" as const });
             }
           });
         } catch (err) {
           console.warn("Error fetching area similar properties:", err);
+        }
+      }
+
+      // Tier 1.5: True Adjacent Neighborhoods (e.g. Ekkamai -> Thonglor, Phra Khanong, Phrom Phong, On Nut, Sukhumvit)
+      if (collected.length < limit && popularArea) {
+        const nearbyList = getNearbyNeighborhoods(popularArea, effectiveProvince);
+        const nearbyNames = nearbyList
+          .map((n) => n.name?.trim())
+          .filter((n) => Boolean(n) && n !== popularArea.trim());
+
+        if (nearbyNames.length > 0) {
+          try {
+            const { properties: nearbyProps } = await getPublicProperties({
+              popular_area: nearbyNames.join(","),
+              propertyType: propertyType as any,
+              province: effectiveProvince,
+              limit: limit + 8,
+              includeFacets: false,
+            });
+            (nearbyProps || []).forEach((p: any) => {
+              if (projectId && p.project_id === projectId) return;
+              if (!seenIds.has(p.id) && collected.length < limit) {
+                seenIds.add(p.id);
+                collected.push({ ...p, matchTier: "nearby_area" as const });
+              }
+            });
+          } catch (err) {
+            console.warn("Error fetching nearby neighborhood properties:", err);
+          }
         }
       }
 
@@ -102,7 +138,7 @@ const getCachedSmartSimilarProperties = (
             if (projectId && p.project_id === projectId) return;
             if (!seenIds.has(p.id) && collected.length < limit) {
               seenIds.add(p.id);
-              collected.push(p);
+              collected.push({ ...p, matchTier: "nearby_area" as const });
             }
           });
         } catch (err) {
@@ -123,7 +159,7 @@ const getCachedSmartSimilarProperties = (
             if (projectId && p.project_id === projectId) return;
             if (!seenIds.has(p.id) && collected.length < limit) {
               seenIds.add(p.id);
-              collected.push(p);
+              collected.push({ ...p, matchTier: "province" as const });
             }
           });
         } catch (err) {
@@ -134,10 +170,12 @@ const getCachedSmartSimilarProperties = (
       return {
         properties: collected.slice(0, limit).map(slimPropertyForCard),
         effectiveProvince,
+        sameAreaMatchCount,
+        sameAreaHasMore,
       };
     },
     [
-      "smart-similar-properties-v5",
+      "smart-similar-properties-v7",
       currentPropertyId,
       propertyType || "",
       province || "",
@@ -171,7 +209,7 @@ export async function SimilarPropertiesSection({
 }: SimilarPropertiesSectionProps) {
   if (!propertyType) return null;
 
-  const { properties, effectiveProvince } = await getCachedSmartSimilarProperties(
+  const { properties, effectiveProvince, sameAreaMatchCount, sameAreaHasMore } = await getCachedSmartSimilarProperties(
     currentPropertyId,
     propertyType,
     province || undefined,
@@ -202,6 +240,8 @@ export async function SimilarPropertiesSection({
       popularAreaRu={popularAreaRu}
       province={effectiveProvince}
       hasSameProjectUnits={hasSameProjectUnits}
+      sameAreaMatchCount={sameAreaMatchCount}
+      sameAreaHasMore={sameAreaHasMore}
     />
   );
 }
