@@ -115,6 +115,11 @@ export async function POST(req: NextRequest) {
       .replace(/^```(?:\w+)?\s*/i, "")
       .replace(/\s*```$/i, "")
       .replace(/https?:\/\/\S+/gi, "")
+      .replace(/\r\n/g, "\n")
+      // Keep lines tight inside each section while preserving 1 clean blank line between sections
+      .replace(/\n{2,}(?=(?:💰|📏|📩))/g, "\n")
+      .replace(/(^[✅✨][^\n]*)\n{2,}(?=[✅✨])/gm, "$1\n")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
 
     const firstComment = trackingUrl
