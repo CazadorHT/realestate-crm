@@ -405,7 +405,10 @@ export function PropertyForm({
             }
           | undefined;
 
-        if (ownerDraft?.full_name) {
+        if (
+          ownerDraft?.full_name &&
+          !/^(ไม่ระบุชื่อ|เจ้าของทรัพย์|Unknown)$/i.test(ownerDraft.full_name.trim())
+        ) {
           try {
             const { createOwnerAction } = await import("@/features/owners/actions");
             const ownerRes = await createOwnerAction({
