@@ -393,11 +393,48 @@ export function PropertyForm({
           }
         }
 
+        // Auto-create or match Owner in Step 4 using official encrypted createOwnerAction
+        let ownerStatusText = "";
+        const ownerDraft = json.draft.ownerDraft as
+          | {
+              full_name?: string;
+              phone?: string;
+              line_id?: string;
+              facebook_url?: string;
+              other_contact?: string;
+            }
+          | undefined;
+
+        if (ownerDraft?.full_name) {
+          try {
+            const { createOwnerAction } = await import("@/features/owners/actions");
+            const ownerRes = await createOwnerAction({
+              full_name: ownerDraft.full_name,
+              phone: ownerDraft.phone || "",
+              line_id: ownerDraft.line_id || "",
+              facebook_url: ownerDraft.facebook_url || "",
+              other_contact: ownerDraft.other_contact || "",
+              owner_type: "INDIVIDUAL",
+            });
+
+            if (ownerRes.success && ownerRes.id) {
+              form.setValue("owner_id", ownerRes.id, { shouldDirty: true });
+              refreshOwners?.();
+              ownerStatusText = ` + สร้างเจ้าของ "${ownerDraft.full_name}" ให้อัตโนมัติแล้ว`;
+            } else if ("duplicateId" in ownerRes && ownerRes.duplicateId) {
+              form.setValue("owner_id", ownerRes.duplicateId, { shouldDirty: true });
+              ownerStatusText = ` + ผูกเจ้าของเดิม "${ownerRes.duplicateName || ownerDraft.full_name}" ให้อัตโนมัติแล้ว`;
+            }
+          } catch (ownerErr) {
+            console.warn("[VCC Import] auto-create owner skipped:", ownerErr);
+          }
+        }
+
         toast.success(
-          `✨ นำเข้าจาก VCC Search + เกลาโพสต์ 7 ส่วนแล้ว (เจ้าของ: ${json.draft.authorName})`,
+          `✨ นำเข้าจาก VCC Search + เกลาโพสต์ 7 ส่วนแล้ว${ownerStatusText}`,
           {
-            description: "กรอกข้อมูล Step 1–4 และลิงก์อ้างอิงใน Step 4 ให้เรียบร้อยแล้ว",
-            duration: 8000,
+            description: "กรอกข้อมูล Step 1–4, เจ้าของทรัพย์ และลิงก์อ้างอิงใน Step 4 ให้ครบแล้ว",
+            duration: 9000,
           },
         );
       } catch (err) {

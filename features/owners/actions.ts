@@ -168,9 +168,11 @@ export async function createOwnerAction(input: CreateOwnerInput) {
 
     const inputPhoneNormalized = validated.phone?.trim().replace(/[- ]/g, "") || null;
     const inputLineNormalized = validated.line_id?.trim().toLowerCase() || null;
+    const inputFbNormalized = validated.facebook_url?.trim().split("?")[0]?.replace(/\/+$/, "").toLowerCase() || null;
     const phoneHash = inputPhoneNormalized ? generateBlindIndex(inputPhoneNormalized) : null;
+    const nameHash = validated.full_name?.trim() ? generateBlindIndex(validated.full_name.trim()) : null;
 
-    // 🛡️ O(1) Fast Duplicate Check via Blind Index
+    // 🛡️ O(1) Fast Duplicate Check via Blind Index (Phone)
     if (phoneHash) {
       let dupQuery = ctx.supabase
         .from("identities_v3")
@@ -205,15 +207,14 @@ export async function createOwnerAction(input: CreateOwnerInput) {
       }
     }
 
-    // Secondary fallback for legacy unindexed records (scoped check)
-    if (inputPhoneNormalized || inputLineNormalized) {
+    // Secondary check for Phone, LINE ID, and Facebook URL across existing owners
+    if (inputPhoneNormalized || inputLineNormalized || inputFbNormalized) {
       let legacyQuery = ctx.supabase
         .from("identities_v3")
-        .select("id, display_name, phone, line_id")
+        .select("id, display_name, phone, line_id, social_links")
         .eq("category", 2)
         .eq("role", "OWNER")
-        .is("social_links->>phone_hash", null)
-        .limit(200);
+        .limit(300);
 
       if (targetTenantId) {
         legacyQuery = legacyQuery.or(`tenant_id.eq.${targetTenantId},tenant_id.is.null`);
@@ -223,10 +224,12 @@ export async function createOwnerAction(input: CreateOwnerInput) {
 
       const { data: legacyOwners } = await legacyQuery;
 
-      if (legacyOwners) {
+      if (Array.isArray(legacyOwners)) {
         for (const row of legacyOwners) {
           const decryptedPhone = decrypt(row.phone);
           const decryptedLine = decrypt(row.line_id);
+          const socialObj = (row.social_links || {}) as { facebook_url?: string | null };
+          const decryptedFb = decrypt(socialObj.facebook_url);
 
           if (inputPhoneNormalized && decryptedPhone) {
             const dbPhoneNormalized = decryptedPhone.trim().replace(/[- ]/g, "");
@@ -259,7 +262,57 @@ export async function createOwnerAction(input: CreateOwnerInput) {
               };
             }
           }
+
+          if (inputFbNormalized && decryptedFb) {
+            const dbFbNormalized = decryptedFb.trim().split("?")[0]?.replace(/\/+$/, "").toLowerCase();
+            if (dbFbNormalized && dbFbNormalized === inputFbNormalized) {
+              const ownerName = decrypt(row.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
+              return {
+                success: false,
+                code: "DUPLICATE",
+                message: isEn
+                  ? `This Facebook profile is already registered in the system (Owner: K. ${ownerName})`
+                  : `ลิงก์ Facebook นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+                duplicateId: row.id,
+                duplicateName: ownerName,
+              };
+            }
+          }
         }
+      }
+    }
+
+    // 🛡️ Fallback Blind Index check by exact full name when owner has no phone & no LINE ID
+    if (!inputPhoneNormalized && !inputLineNormalized && nameHash) {
+      let nameDupQuery = ctx.supabase
+        .from("identities_v3")
+        .select("id, display_name")
+        .eq("category", 2)
+        .eq("role", "OWNER")
+        .eq("social_links->>full_name_hash", nameHash);
+
+      if (targetTenantId) {
+        nameDupQuery = nameDupQuery.or(`tenant_id.eq.${targetTenantId},tenant_id.is.null`);
+      } else {
+        nameDupQuery = nameDupQuery.is("tenant_id", null);
+      }
+
+      const { data: nameDupOwner } = await nameDupQuery.maybeSingle();
+      const targetNameDup = Array.isArray(nameDupOwner)
+        ? (nameDupOwner.length > 0 ? nameDupOwner[0] : null)
+        : nameDupOwner;
+
+      if (targetNameDup) {
+        const ownerName = decrypt(targetNameDup.display_name) || (isEn ? "Unknown" : "ไม่ทราบชื่อ");
+        return {
+          success: false,
+          code: "DUPLICATE",
+          message: isEn
+            ? `This owner name is already registered in the system (Owner: K. ${ownerName})`
+            : `ชื่อเจ้าของนี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+          duplicateId: targetNameDup.id,
+          duplicateName: ownerName,
+        };
       }
     }
 

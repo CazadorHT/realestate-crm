@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import sharp from "sharp";
 import { generateText } from "@/lib/ai/gemini";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redis } from "@/lib/redis";
 
@@ -99,6 +98,13 @@ interface StoredImportDraft {
   authorName: string;
   postUrl: string;
   socialPost: string;
+  ownerDraft?: {
+    full_name: string;
+    phone?: string;
+    line_id?: string;
+    facebook_url?: string;
+    other_contact?: string;
+  };
   formValues: Record<string, unknown>;
 }
 
@@ -240,7 +246,11 @@ ${rawText}
   "is_renovated": boolean,
   "is_corner_unit": boolean,
   "has_pool_view": boolean,
-  "has_city_view": boolean
+  "has_city_view": boolean,
+  "owner_name_in_post": "ชื่อเจ้าของที่ระบุในโพสต์ เช่น คุณมิน หรือ K'Aoomeko (ถ้าไม่มีใส่ null)" หรือ null,
+  "owner_phone": "เบอร์โทรเจ้าของจากโพสต์ (เฉพาะตัวเลข เช่น 0869266699) หรือ null" หรือ null,
+  "owner_line_id": "LINE ID เจ้าของจากโพสต์ เช่น Aoomeko หรือ null" หรือ null,
+  "owner_other_contact": "ช่องทางติดต่ออื่นๆ เช่น WhatsApp / WeChat / Email ถ้ามี หรือ null" หรือ null
 }`;
 
     const aiResponse = await generateText(prompt);
@@ -261,39 +271,28 @@ ${rawText}
       parsed = JSON.parse(match[0]);
     }
 
-    // Best-effort match existing owner in Supabase if user has an active session
-    let matchedOwnerId: string | null = null;
-    try {
-      const supabase = await createClient();
-      if (phones[0]) {
-        const { data } = await supabase
-          .from("owners")
-          .select("id")
-          .ilike("phone", `%${phones[0].slice(-8)}%`)
-          .limit(1)
-          .maybeSingle();
-        if (data?.id) matchedOwnerId = data.id;
-      }
-      if (!matchedOwnerId && authorName && authorName !== "เจ้าของทรัพย์") {
-        const { data } = await supabase
-          .from("owners")
-          .select("id")
-          .ilike("name", `%${authorName}%`)
-          .limit(1)
-          .maybeSingle();
-        if (data?.id) matchedOwnerId = data.id;
-      }
-    } catch {
-      // Non-blocking if called without cookie session
-    }
+    const resolvedOwnerName =
+      (typeof parsed.owner_name_in_post === "string" && parsed.owner_name_in_post.trim()) ||
+      authorName;
+    const resolvedPhone =
+      (typeof parsed.owner_phone === "string" && parsed.owner_phone.trim()) ||
+      phones[0] ||
+      "";
+    const resolvedLineId =
+      (typeof parsed.owner_line_id === "string" && parsed.owner_line_id.trim()) ||
+      lineIds[0] ||
+      "";
+    const resolvedOtherContact =
+      typeof parsed.owner_other_contact === "string" ? parsed.owner_other_contact.trim() : "";
+    const resolvedFacebookUrl = body.authorUrl?.trim() || "";
 
-    const sourceParts = [
-      `เจ้าของ: ${authorName}`,
-      phones.length > 0 ? `โทร: ${phones.join(", ")}` : "",
-      lineIds.length > 0 ? `LINE: ${lineIds.join(", ")}` : "",
-      body.groupName ? `กลุ่ม: ${body.groupName}` : "",
-      postUrl ? `ลิงก์อ้างอิง: ${postUrl}` : "",
-    ].filter(Boolean);
+    const ownerDraft = {
+      full_name: resolvedOwnerName,
+      phone: resolvedPhone || undefined,
+      line_id: resolvedLineId || undefined,
+      facebook_url: resolvedFacebookUrl || undefined,
+      other_contact: resolvedOtherContact || undefined,
+    };
 
     const priceNum = typeof parsed.price === "number" ? parsed.price : null;
     const rentNum = typeof parsed.rental_price === "number" ? parsed.rental_price : null;
@@ -338,10 +337,9 @@ ${rawText}
       is_corner_unit: Boolean(parsed.is_corner_unit),
       has_pool_view: Boolean(parsed.has_pool_view),
       has_city_view: Boolean(parsed.has_city_view),
-      // Step 4: Images, Owner & Source Reference
+      // Step 4: Images & Clean Reference Post URL
       images: uploadedImagePaths.length > 0 ? uploadedImagePaths : undefined,
-      owner_id: matchedOwnerId,
-      property_source: sourceParts.join(" | "),
+      property_source: postUrl || `Facebook: ${resolvedOwnerName}`,
     };
 
     const socialPost =
@@ -349,9 +347,10 @@ ${rawText}
 
     await saveImportDraft(draftId, {
       createdAt: Date.now(),
-      authorName,
+      authorName: resolvedOwnerName,
       postUrl,
       socialPost,
+      ownerDraft,
       formValues,
     });
 
@@ -360,7 +359,7 @@ ${rawText}
         ok: true,
         draftId,
         crmPath: `/protected/properties/new?vcc_import=${draftId}`,
-        matchedOwnerId,
+        ownerDraft,
         uploadedImageCount: uploadedImagePaths.length,
         socialPost,
         formValues,
