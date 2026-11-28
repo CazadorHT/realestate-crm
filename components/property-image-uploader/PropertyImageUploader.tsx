@@ -536,9 +536,106 @@ export function PropertyImageUploader({
             ? `Pasted ${files.length} images from clipboard ✨`
             : `วางรูปภาพจากคลิปบอร์ดสำเร็จ ${files.length} รูป ✨`
         );
+        return;
+      }
+
+      // 3. Support pasting an array or newline-separated list of image URLs (e.g. from VCC Search)
+      if (!allowPaste) return;
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea" || (document.activeElement as HTMLElement | null)?.isContentEditable) {
+        return;
+      }
+
+      const rawText = e.clipboardData?.getData("text/plain")?.trim();
+      if (!rawText) return;
+
+      let candidateUrls: string[] = [];
+      try {
+        if (rawText.startsWith("[")) {
+          const parsed = JSON.parse(rawText);
+          if (Array.isArray(parsed)) {
+            candidateUrls = parsed.filter((u): u is string => typeof u === "string");
+          }
+        }
+      } catch {
+        // Fallback to line-by-line parsing below
+      }
+
+      if (candidateUrls.length === 0) {
+        candidateUrls = rawText
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+      }
+
+      const imageUrls = candidateUrls.filter(
+        (u) =>
+          /^https?:\/\//i.test(u) &&
+          (/(fbcdn\.net|scontent|supabase\.co)/i.test(u) ||
+            /\.(jpg|jpeg|png|webp)(?:[?#]|$)/i.test(u)),
+      );
+
+      if (imageUrls.length > 0) {
+        e.preventDefault();
+        const toastId = toast.loading(
+          isEn
+            ? `Importing ${imageUrls.length} images from pasted URLs...`
+            : `⏳ กำลังดูดและอัปโหลดรูปภาพ ${imageUrls.length} รูป...`,
+        );
+
+        fetch("/api/extension/upload-urls", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ urls: imageUrls }),
+        })
+          .then((res) => res.json())
+          .then((json) => {
+            if (!json?.ok || !Array.isArray(json.paths) || json.paths.length === 0) {
+              toast.error(
+                isEn ? "Failed to import pasted image URLs" : "ไม่สามารถดึงรูปจากลิงก์ที่วางได้",
+                { id: toastId },
+              );
+              return;
+            }
+
+            const newPaths: string[] = json.paths;
+            setImages((prev) => {
+              const remaining = Math.max(0, maxFiles - prev.length);
+              const accepted = newPaths.slice(0, remaining);
+              const appended: ImageItem[] = accepted.map((storagePath, idx) => ({
+                id: `paste-url-${Date.now()}-${idx}`,
+                storage_path: storagePath,
+                preview_url: getPublicImageUrl(storagePath),
+                is_cover: prev.length === 0 && idx === 0,
+                origin: "temp" as const,
+                originalIndex: prev.length + idx,
+                timestamp: Date.now() + idx,
+              }));
+              const nextList = [...prev, ...appended];
+              onChange?.(
+                nextList
+                  .map((item) => item.storage_path)
+                  .filter((p): p is string => Boolean(p)),
+              );
+              return nextList;
+            });
+
+            toast.success(
+              isEn
+                ? `Imported ${newPaths.length} images into gallery ✨`
+                : `วางและอัปโหลดรูปภาพสำเร็จ ${newPaths.length} รูป ✨`,
+              { id: toastId },
+            );
+          })
+          .catch(() => {
+            toast.error(
+              isEn ? "Failed to import pasted image URLs" : "เกิดข้อผิดพลาดในการอัปโหลดรูปจากลิงก์",
+              { id: toastId },
+            );
+          });
       }
     },
-    [disabled, onDrop, isEn],
+    [disabled, allowPaste, onDrop, onChange, maxFiles, isEn],
   );
 
   useEffect(() => {

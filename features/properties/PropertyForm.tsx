@@ -372,6 +372,40 @@ export function PropertyForm({
     }
   }, [defaultValues]);
 
+  // Handle prefill from VCC Search Chrome Extension (?vcc_import=<draftId>)
+  const hasImportedVccRef = useRef(false);
+  React.useEffect(() => {
+    const vccImportId = searchParams?.get("vcc_import");
+    if (mode !== "create" || !vccImportId || hasImportedVccRef.current) return;
+    hasImportedVccRef.current = true;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/extension/polish-property?id=${encodeURIComponent(vccImportId)}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!json?.ok || !json?.draft?.formValues) return;
+
+        const fv = json.draft.formValues as Record<string, unknown>;
+        for (const [key, val] of Object.entries(fv)) {
+          if (val !== undefined && val !== null && val !== "") {
+            form.setValue(key as keyof PropertyFormValues, val as never, { shouldDirty: true });
+          }
+        }
+
+        toast.success(
+          `✨ นำเข้าจาก VCC Search + เกลาโพสต์ 7 ส่วนแล้ว (เจ้าของ: ${json.draft.authorName})`,
+          {
+            description: "กรอกข้อมูล Step 1–4 และลิงก์อ้างอิงใน Step 4 ให้เรียบร้อยแล้ว",
+            duration: 8000,
+          },
+        );
+      } catch (err) {
+        console.error("[VCC Import] failed:", err);
+      }
+    })();
+  }, [mode, searchParams, form]);
+
   // Handle prefill from Lead Deposit (via sessionStorage or searchParams)
   const [depositLeadBanner, setDepositLeadBanner] = React.useState<{
     ownerName: string;
