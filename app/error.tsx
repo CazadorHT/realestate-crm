@@ -15,13 +15,27 @@ export default function Error({
   reset: () => void;
 }) {
   let isEn = false;
+  let langPrefix = "";
   try {
-    const { language } = useLanguage();
-    isEn = language === "en";
+    const ctx = useLanguage();
+    isEn = ctx.language === "en";
+    langPrefix = ctx.langPrefix || "";
   } catch {
     // Fallback if rendered outside LanguageProvider
-    if (typeof document !== "undefined") {
-      isEn = document.cookie.includes("NEXT_LOCALE=en");
+    if (typeof window !== "undefined") {
+      const seg = window.location.pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+      if (seg === "en") {
+        isEn = true;
+        langPrefix = "/en";
+      } else if (seg === "zh" || seg === "cn") {
+        langPrefix = "/zh";
+      } else if (seg === "ru") {
+        langPrefix = "/ru";
+      }
+    }
+    if (!langPrefix && typeof document !== "undefined" && document.cookie.includes("NEXT_LOCALE=en")) {
+      isEn = true;
+      langPrefix = "/en";
     }
   }
 
@@ -97,7 +111,7 @@ export default function Error({
               variant="ghost"
               className="h-11 rounded-xl font-semibold gap-2 cursor-pointer"
             >
-              <Link prefetch={false} href="/">
+              <Link prefetch={false} href={langPrefix || "/"}>
                 <Home className="h-4 w-4" />
                 {isEn ? "Home" : "หน้าหลัก"}
               </Link>

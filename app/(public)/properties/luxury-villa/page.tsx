@@ -89,9 +89,9 @@ export async function generateMetadata(props: {
 
   const initialData = await getPublicProperties({
     ...options,
-    limit: 1,
-    includeFacets: false,
-  }).catch(() => ({ properties: [] }));
+    limit: 12,
+    includeFacets: true,
+  }).catch(() => ({ properties: [], facets: null }));
   const hasNoResults = initialData.properties.length === 0;
   const langPrefix = getLangPrefix(language);
   const canonicalUrl = `${siteConfig.url}${langPrefix}/properties/luxury-villa`;

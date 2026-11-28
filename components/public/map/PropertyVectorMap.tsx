@@ -1117,19 +1117,21 @@ export function PropertyVectorMap({
           </div>
         )}
 
-        {/* Loading Pill Indicator */}
+        {/* Loading Pill Indicator (Top-Center, Airbnb/Zillow style — visible on both Desktop & Mobile) */}
         {isLoading && (
-          <div className="absolute bottom-4 left-4 z-30 inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-900/90 text-white text-xs font-bold shadow-lg">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
-            <span>
-              {language === "th"
-                ? "กำลังโหลดหมุดทรัพย์..."
-                : language === "cn"
-                  ? "正在加载房源坐标..."
-                  : language === "ru"
-                    ? "Загрузка объектов на карте..."
-                    : "Loading map pins..."}
-            </span>
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 backdrop-blur-md text-white text-xs font-bold shadow-xl border border-white/15 whitespace-nowrap">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400 shrink-0" />
+              <span>
+                {language === "th"
+                  ? "กำลังโหลดหมุดทรัพย์..."
+                  : language === "cn"
+                    ? "正在加载房源坐标..."
+                    : language === "ru"
+                      ? "Загрузка объектов на карте..."
+                      : "Loading map pins..."}
+              </span>
+            </div>
           </div>
         )}
 

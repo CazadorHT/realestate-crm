@@ -258,13 +258,21 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
                       : "สำรวจทรัพย์โดยแผนที่"}
               </h1>
               <p className="text-xs text-slate-500 font-medium">
-                {language === "en"
-                  ? `${activeList.length.toLocaleString()} properties in area (${filteredPins.length.toLocaleString()} matched)`
-                  : language === "cn"
-                    ? `视野内 ${activeList.length} 套 (共匹配 ${filteredPins.length} 套)`
-                    : language === "ru"
-                      ? `${activeList.length} в этой зоне (всего ${filteredPins.length})`
-                      : `ในพื้นที่นี้ ${activeList.length.toLocaleString()} ยูนิต (ตรงเงื่อนไข ${filteredPins.length.toLocaleString()} ยูนิต)`}
+                {isLoading && pins.length === 0
+                  ? language === "en"
+                    ? "Loading properties..."
+                    : language === "cn"
+                      ? "正在加载房源..."
+                      : language === "ru"
+                        ? "Загрузка объектов..."
+                        : "กำลังโหลดรายการทรัพย์..."
+                  : language === "en"
+                    ? `${activeList.length.toLocaleString()} properties in area (${filteredPins.length.toLocaleString()} matched)`
+                    : language === "cn"
+                      ? `视野内 ${activeList.length} 套 (共匹配 ${filteredPins.length} 套)`
+                      : language === "ru"
+                        ? `${activeList.length} в этой зоне (всего ${filteredPins.length})`
+                        : `ในพื้นที่นี้ ${activeList.length.toLocaleString()} ยูนิต (ตรงเงื่อนไข ${filteredPins.length.toLocaleString()} ยูนิต)`}
               </p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -373,7 +381,30 @@ export function MapExplorerClient({ initialPayload }: MapExplorerClientProps) {
           )}
 
           <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
-            {activeList.length === 0 ? (
+            {isLoading && pins.length === 0 ? (
+              <div className="space-y-4" aria-busy="true" aria-label="Loading properties">
+                {[0, 1, 2].map((idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs animate-pulse"
+                  >
+                    <div className="aspect-[16/10] w-full bg-slate-200/80" />
+                    <div className="p-3.5 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="h-4 w-20 bg-slate-200 rounded-md" />
+                        <div className="h-4 w-16 bg-slate-100 rounded-md" />
+                      </div>
+                      <div className="h-4 w-4/5 bg-slate-200 rounded-md" />
+                      <div className="h-3.5 w-3/5 bg-slate-100 rounded-md" />
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <div className="h-5 w-24 bg-slate-200 rounded-md" />
+                        <div className="h-3.5 w-14 bg-slate-100 rounded-md" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : activeList.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center my-4">
                 <p className="text-sm font-bold text-slate-800 mb-1">
                   {language === "th"

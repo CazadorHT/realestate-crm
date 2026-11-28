@@ -18,6 +18,10 @@ import { AREA_PARENT_MAP } from "@/lib/utils/area-hierarchy";
 import { isCbdProperty } from "@/lib/property-utils";
 import { normalizeProvinceInput } from "@/lib/utils/provinces";
 import { parseCoordinatesFromUrlSync } from "@/lib/utils/google-maps-coords";
+import {
+  queryPublicPropertiesView,
+  fetchPropertyImagesBatched,
+} from "@/lib/supabase/public-list-view";
 
 // 🚀 Fast Memory Cache for Public Search Facets (1-hour TTL) for zero database egress across search queries
 const facetsMemoryCache = new Map<string, { data: any; timestamp: number }>();
@@ -132,10 +136,7 @@ const PUBLIC_LIST_COLUMNS = `
   transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
   nearby_transits,
   google_maps_link, is_fully_furnished, is_bare_shell,
-  is_pet_friendly, is_foreigner_quota, is_tax_registered,
-  property_images (
-    image_url, storage_path, is_cover, sort_order
-  )
+  is_pet_friendly, is_foreigner_quota, is_tax_registered
 `;
 
 const PUBLIC_DETAIL_COLUMNS = `
@@ -205,7 +206,19 @@ export interface GetPropertiesOptions {
 
 import { unstable_cache } from "next/cache";
 
+function serializeCacheOptions(options: GetPropertiesOptions): string {
+  const normalized: Record<string, unknown> = {};
+  for (const key of Object.keys(options).sort()) {
+    const val = (options as Record<string, unknown>)[key];
+    if (val !== undefined) {
+      normalized[key] = Array.isArray(val) ? [...val].sort() : val;
+    }
+  }
+  return JSON.stringify(normalized);
+}
+
 export const getPublicProperties = cache(async (options: GetPropertiesOptions = {}) => {
+    const cacheKeyOptions = serializeCacheOptions(options);
     return unstable_cache(
       async () => {
         const supabase = createPublicClient();
@@ -213,30 +226,36 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         const effectiveProvince = (normalizedProvince && normalizedProvince !== "ALL") ? normalizedProvince : undefined;
 
         const selectColumns = (options.ids && options.ids.length > 0 && !options.compact) ? PUBLIC_DETAIL_COLUMNS : PUBLIC_LIST_COLUMNS;
-        let query = (supabase.from("properties") as any)
-          .select(selectColumns)
-          .eq("status", "ACTIVE")
-          .is("deleted_at", null);
-
-        if (options.ids && options.ids.length > 0)
-          query = query.in("id", options.ids);
-        
-        if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal")
-          query = query.eq("is_hot_deal", true);
-
-        if (effectiveProvince) {
-          query = query.eq("province", effectiveProvince);
-        }
-
-        if (options.projectId) {
-          query = query.eq("project_id", options.projectId);
-        }
-
-        if (options.district) {
-          query = query.ilike("district", `%${options.district}%`);
-        }
         const targetArea = options.area || options.popular_area;
-        if (targetArea && targetArea !== "ALL") {
+        const itemsPerPage = Math.min(options.limit || 12, 100);
+        const effectiveSort = options.sort || "NEWEST";
+
+        const buildFilteredViewQuery = async (viewName: string) => {
+          // Filter by indexed `status_int = 1` (matches partial B-Tree indexes WHERE status = 1 AND deleted_at IS NULL)
+          // instead of computed CASE column `status = 'ACTIVE'` which forces full table scans and 57014 timeouts.
+          let query = (supabase.from(viewName) as any)
+            .select(selectColumns)
+            .eq("status_int", 1)
+            .is("deleted_at", null);
+
+          if (options.ids && options.ids.length > 0)
+            query = query.in("id", options.ids);
+          
+          if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal")
+            query = query.eq("is_hot_deal", true);
+
+          if (effectiveProvince) {
+            query = query.eq("province", effectiveProvince);
+          }
+
+          if (options.projectId) {
+            query = query.eq("project_id", options.projectId);
+          }
+
+          if (options.district) {
+            query = query.ilike("district", `%${options.district}%`);
+          }
+          if (targetArea && targetArea !== "ALL") {
           const rawTokens = targetArea.split(",").map((s: string) => s.trim()).filter(Boolean);
           const expandedTokens = new Set<string>();
           rawTokens.forEach((tok: string) => {
@@ -426,38 +445,129 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           query = query.or(textConditions.join(","));
         }
 
-        const itemsPerPage = Math.min(options.limit || 12, 100);
-
-        const effectiveSort = options.sort || "NEWEST";
-
-        if (effectiveSort === "NEWEST") {
-          // Dedicated indexed sort timestamp: new listings stay on top, edits keep their rank, only explicit Bump jumps to #1
-          query = query.order("display_order_at", { ascending: false, nullsFirst: false });
-        } else if (effectiveSort === "PRICE_ASC") {
-          const effectivePriceType = options.priceType || options.listingType;
-          if (effectivePriceType === "RENT") {
-            query = query.order("rental_price", { ascending: true, nullsFirst: false });
+          if (effectiveSort === "NEWEST") {
+            // Dedicated indexed sort timestamp: new listings stay on top, edits keep their rank, only explicit Bump jumps to #1
+            query = query.order("display_order_at", { ascending: false, nullsFirst: false });
+          } else if (effectiveSort === "PRICE_ASC") {
+            const effectivePriceType = options.priceType || options.listingType;
+            if (effectivePriceType === "RENT") {
+              query = query.order("rental_price", { ascending: true, nullsFirst: false });
+            } else {
+              query = query.order("price", { ascending: true, nullsFirst: false });
+            }
+          } else if (effectiveSort === "PRICE_DESC") {
+            const effectivePriceType = options.priceType || options.listingType;
+            if (effectivePriceType === "RENT") {
+              query = query.order("rental_price", { ascending: false, nullsFirst: false });
+            } else {
+              query = query.order("price", { ascending: false, nullsFirst: false });
+            }
+          } else if (effectiveSort === "AREA_ASC") {
+            query = query.order("size_sqm", { ascending: true, nullsFirst: false });
+          } else if (effectiveSort === "AREA_DESC") {
+            query = query.order("size_sqm", { ascending: false, nullsFirst: false });
           } else {
-            query = query.order("price", { ascending: true, nullsFirst: false });
+            query = query.order("display_order_at", { ascending: false, nullsFirst: false });
           }
-        } else if (effectiveSort === "PRICE_DESC") {
-          const effectivePriceType = options.priceType || options.listingType;
-          if (effectivePriceType === "RENT") {
-            query = query.order("rental_price", { ascending: false, nullsFirst: false });
+
+          return (await query.limit(itemsPerPage)) as { data: any[] | null; error: any };
+        };
+
+        // ⚡ [FAST-PATH] When no properties_details/JSONB filters are active, query `properties_core`
+        // directly using its partial B-Tree index (~100ms) instead of sorting the `properties` view (~1,360ms+),
+        // then hydrate only the exact matched IDs from the view without ORDER BY (~130ms).
+        const canUseCoreFastPath =
+          !(options.ids && options.ids.length > 0) &&
+          !effectiveProvince &&
+          !options.district &&
+          !(targetArea && targetArea !== "ALL") &&
+          !(options.propertyType && options.propertyType !== "ALL") &&
+          !options.luxuryVilla &&
+          !options.cbd &&
+          !options.minPrice &&
+          !options.maxPrice &&
+          !options.minSize &&
+          !options.maxSize &&
+          !options.nearTrain &&
+          !options.petFriendly &&
+          !options.fullyFurnished &&
+          !options.isForeigner &&
+          !options.companyRegistered &&
+          !options.allowAirbnb &&
+          !options.transitStation &&
+          !options.q;
+
+        let propertiesData: any[] | null = null;
+        let error: any = null;
+
+        if (canUseCoreFastPath) {
+          let coreQuery = (supabase.from("properties_core") as any)
+            .select("id")
+            .eq("status", 1)
+            .is("deleted_at", null);
+
+          if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal") {
+            coreQuery = coreQuery.eq("is_hot_deal", true);
+          }
+          if (options.projectId) {
+            coreQuery = coreQuery.eq("project_id", options.projectId);
+          }
+          if (options.listingType && options.listingType !== "ALL") {
+            if (options.listingType === "SALE") coreQuery = coreQuery.in("listing_type", [0, 2]);
+            else if (options.listingType === "RENT") coreQuery = coreQuery.in("listing_type", [1, 2]);
+            else if (options.listingType === "SALE_AND_RENT") coreQuery = coreQuery.eq("listing_type", 2);
+          }
+
+          if (effectiveSort === "NEWEST") {
+            coreQuery = coreQuery.order("display_order_at", { ascending: false, nullsFirst: false });
+          } else if (effectiveSort === "PRICE_ASC") {
+            const effectivePriceType = options.priceType || options.listingType;
+            coreQuery = coreQuery.order(effectivePriceType === "RENT" ? "rent_price" : "sale_price", { ascending: true, nullsFirst: false });
+          } else if (effectiveSort === "PRICE_DESC") {
+            const effectivePriceType = options.priceType || options.listingType;
+            coreQuery = coreQuery.order(effectivePriceType === "RENT" ? "rent_price" : "sale_price", { ascending: false, nullsFirst: false });
+          } else if (effectiveSort === "AREA_ASC") {
+            coreQuery = coreQuery.order("floor_area", { ascending: true, nullsFirst: false });
+          } else if (effectiveSort === "AREA_DESC") {
+            coreQuery = coreQuery.order("floor_area", { ascending: false, nullsFirst: false });
           } else {
-            query = query.order("price", { ascending: false, nullsFirst: false });
+            coreQuery = coreQuery.order("display_order_at", { ascending: false, nullsFirst: false });
           }
-        } else if (effectiveSort === "AREA_ASC") {
-          query = query.order("size_sqm", { ascending: true, nullsFirst: false });
-        } else if (effectiveSort === "AREA_DESC") {
-          query = query.order("size_sqm", { ascending: false, nullsFirst: false });
-        } else {
-          query = query.order("display_order_at", { ascending: false, nullsFirst: false });
+
+          const coreRes = (await coreQuery.limit(itemsPerPage)) as { data: { id: string }[] | null; error: any };
+          if (!coreRes.error && coreRes.data) {
+            if (coreRes.data.length === 0) {
+              propertiesData = [];
+            } else {
+              const orderedIds = coreRes.data.map((r) => r.id);
+              const hydrateRes = await queryPublicPropertiesView<any[]>((viewName) =>
+                (supabase.from(viewName) as any)
+                  .select(selectColumns)
+                  .in("id", orderedIds)
+              );
+              if (!hydrateRes.error && hydrateRes.data) {
+                const byId = new Map(hydrateRes.data.map((row: any) => [row.id, row]));
+                propertiesData = orderedIds.map((id) => byId.get(id)).filter(Boolean);
+              } else {
+                error = hydrateRes.error;
+              }
+            }
+          } else {
+            error = coreRes.error;
+          }
         }
 
-        let { data: propertiesData, error } = (await query.limit(itemsPerPage)) as { data: any[] | null; error: any };
+        if (!canUseCoreFastPath || error) {
+          error = null;
+          const viewRes =
+            selectColumns === PUBLIC_LIST_COLUMNS
+              ? await queryPublicPropertiesView<any[]>(buildFilteredViewQuery)
+              : await buildFilteredViewQuery("properties");
+          propertiesData = viewRes.data;
+          error = viewRes.error;
+        }
         
-        // 🛡️ [RESILIENCE] Fallback to indexed updated_at sort if statement times out (57014)
+        // 🛡️ [RESILIENCE] Fallback to indexed `properties_core` updated_at sort if statement times out (57014)
         // or before display_order_at migration is applied in Supabase (42703)
         if (
           error &&
@@ -469,25 +579,51 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
           console.warn(
             error.code === "42703"
               ? "[DB COMPAT] display_order_at not migrated yet; falling back to updated_at sort."
-              : "[DB TIMEOUT] Query timed out. Retrying with indexed updated_at sort...",
+              : "[DB TIMEOUT] Query timed out. Retrying via indexed properties_core updated_at sort...",
           );
-          let fallbackQuery = supabase
-            .from("properties")
-            .select(PUBLIC_LIST_COLUMNS)
-            .eq("status", "ACTIVE")
+          let fallbackCore = (supabase.from("properties_core") as any)
+            .select("id")
+            .eq("status", 1)
             .is("deleted_at", null)
             .order("updated_at", { ascending: false, nullsFirst: false });
 
-          if (effectiveProvince) {
-            fallbackQuery = fallbackQuery.eq("province", effectiveProvince);
-          }
           if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal") {
-            fallbackQuery = fallbackQuery.eq("is_hot_deal", true);
+            fallbackCore = fallbackCore.eq("is_hot_deal", true);
           }
-          const retryRes = await fallbackQuery.limit(itemsPerPage);
-          if (!retryRes.error && retryRes.data) {
-            propertiesData = retryRes.data;
-            error = null;
+          if (options.projectId) {
+            fallbackCore = fallbackCore.eq("project_id", options.projectId);
+          }
+          if (options.listingType && options.listingType !== "ALL") {
+            if (options.listingType === "SALE") fallbackCore = fallbackCore.in("listing_type", [0, 2]);
+            else if (options.listingType === "RENT") fallbackCore = fallbackCore.in("listing_type", [1, 2]);
+            else if (options.listingType === "SALE_AND_RENT") fallbackCore = fallbackCore.eq("listing_type", 2);
+          }
+          const fallbackLimit = effectiveProvince ? Math.min(itemsPerPage * 5, 100) : itemsPerPage;
+          const coreRetry = (await fallbackCore.limit(fallbackLimit)) as { data: { id: string }[] | null; error: any };
+          if (!coreRetry.error && coreRetry.data) {
+            if (coreRetry.data.length === 0) {
+              propertiesData = [];
+              error = null;
+            } else {
+              const orderedIds = coreRetry.data.map((r) => r.id);
+              const hydrateRetry = await queryPublicPropertiesView<any[]>((viewName) => {
+                let hydrateQuery = (supabase.from(viewName) as any)
+                  .select(PUBLIC_LIST_COLUMNS)
+                  .in("id", orderedIds);
+                if (effectiveProvince) {
+                  hydrateQuery = hydrateQuery.eq("province", effectiveProvince);
+                }
+                return hydrateQuery;
+              });
+              if (!hydrateRetry.error && hydrateRetry.data) {
+                const byId = new Map(hydrateRetry.data.map((row: any) => [row.id, row]));
+                propertiesData = orderedIds
+                  .map((id) => byId.get(id))
+                  .filter(Boolean)
+                  .slice(0, itemsPerPage);
+                error = null;
+              }
+            }
           }
         }
 
@@ -522,10 +658,10 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
               async () => {
                 const [{ data: facetData }, { data: priceProps }] = await Promise.all([
                   supabase.rpc("get_public_property_facets_v2", rpcParams),
-                  (() => {
-                    let q = (supabase.from("properties") as any)
+                  queryPublicPropertiesView<any[]>((viewName) => {
+                    let q = (supabase.from(viewName) as any)
                       .select("price, rental_price, listing_type, property_type, province, size_sqm")
-                      .eq("status", "ACTIVE")
+                      .eq("status_int", 1)
                       .is("deleted_at", null);
                     if (effectiveProvince) q = q.eq("province", effectiveProvince);
                     if (options.propertyType && options.propertyType !== "ALL") {
@@ -536,7 +672,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
                       }
                     }
                     return q;
-                  })(),
+                  }),
                 ]);
 
                 const facetsObj = ((facetData as any) || {}) as Record<string, any>;
@@ -635,35 +771,35 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
                 `popular_area_en.ilike.%${t}%`
               ]);
 
-              let areaCountQuery = supabase
-                .from("properties")
-                .select("id, popular_area, near_transit, is_pet_friendly, is_fully_furnished, is_foreigner_quota, is_tax_registered, is_hot_deal, listing_type, property_type, amenities")
-                .eq("status", "ACTIVE")
-                .is("deleted_at", null);
+              const { data: areaCountRows } = await queryPublicPropertiesView<any[]>((viewName) => {
+                let areaCountQuery = (supabase.from(viewName) as any)
+                  .select("id, popular_area, near_transit, is_pet_friendly, is_fully_furnished, is_foreigner_quota, is_tax_registered, is_hot_deal, listing_type, property_type, amenities")
+                  .eq("status_int", 1)
+                  .is("deleted_at", null);
 
-              if (effectiveProvince) {
-                areaCountQuery = areaCountQuery.eq("province", effectiveProvince);
-              }
-              if (options.propertyType && options.propertyType !== "ALL") {
-                if (options.propertyType.includes(",")) {
-                  areaCountQuery = areaCountQuery.in("property_type", options.propertyType.split(","));
-                } else {
-                  areaCountQuery = areaCountQuery.eq("property_type", options.propertyType);
+                if (effectiveProvince) {
+                  areaCountQuery = areaCountQuery.eq("province", effectiveProvince);
                 }
-              }
-              if (options.listingType && options.listingType !== "ALL") {
-                if (options.listingType === "SALE")
-                  areaCountQuery = areaCountQuery.in("listing_type", ["SALE", "SALE_AND_RENT"]);
-                else if (options.listingType === "RENT")
-                  areaCountQuery = areaCountQuery.in("listing_type", ["RENT", "SALE_AND_RENT"]);
-                else if (options.listingType === "SALE_AND_RENT")
-                  areaCountQuery = areaCountQuery.eq("listing_type", "SALE_AND_RENT");
-              }
-              if (orConditions.length > 0) {
-                areaCountQuery = areaCountQuery.or(orConditions.join(","));
-              }
-
-              const { data: areaCountRows } = await areaCountQuery;
+                if (options.propertyType && options.propertyType !== "ALL") {
+                  if (options.propertyType.includes(",")) {
+                    areaCountQuery = areaCountQuery.in("property_type", options.propertyType.split(","));
+                  } else {
+                    areaCountQuery = areaCountQuery.eq("property_type", options.propertyType);
+                  }
+                }
+                if (options.listingType && options.listingType !== "ALL") {
+                  if (options.listingType === "SALE")
+                    areaCountQuery = areaCountQuery.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+                  else if (options.listingType === "RENT")
+                    areaCountQuery = areaCountQuery.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+                  else if (options.listingType === "SALE_AND_RENT")
+                    areaCountQuery = areaCountQuery.eq("listing_type", "SALE_AND_RENT");
+                }
+                if (orConditions.length > 0) {
+                  areaCountQuery = areaCountQuery.or(orConditions.join(","));
+                }
+                return areaCountQuery;
+              });
               if (areaCountRows) {
                 const areaQuickCounts = {
                   nearTrain: areaCountRows.filter(p => p.near_transit).length,
@@ -730,29 +866,38 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
               .filter((id: string | null): id is string => !!id),
           ),
         );
+        const propertyIds = (propertiesData || [])
+          .map((row: any) => row.id)
+          .filter((id: string | null): id is string => !!id);
+        const needsSeparateImages =
+          selectColumns === PUBLIC_LIST_COLUMNS && propertyIds.length > 0;
+
         const projectMap = new Map<string, { name_th: string | null; name_en: string | null; slug: string | null; latitude: number | null; longitude: number | null }>();
 
-        if (projectIds.length > 0) {
-          const { data: projectsData } = await supabase
-            .from("projects")
-            .select("id, name, slug, latitude, longitude")
-            .in("id", projectIds);
-          (projectsData || []).forEach((p: any) => {
-            if (p.id) {
-              // `name` is a JSON column: { th: "...", en: "..." } or a plain string
-              const nameObj = p.name;
-              const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
-              const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
-              projectMap.set(p.id, {
-                name_th: nameTh,
-                name_en: nameEn,
-                slug: p.slug || null,
-                latitude: typeof p.latitude === "number" ? p.latitude : p.latitude ? parseFloat(p.latitude) : null,
-                longitude: typeof p.longitude === "number" ? p.longitude : p.longitude ? parseFloat(p.longitude) : null,
-              });
-            }
-          });
-        }
+        const [projectsRes, imagesByPropertyId] = await Promise.all([
+          projectIds.length > 0
+            ? supabase.from("projects").select("id, name, slug, latitude, longitude").in("id", projectIds)
+            : Promise.resolve({ data: null }),
+          needsSeparateImages
+            ? fetchPropertyImagesBatched(supabase, propertyIds)
+            : Promise.resolve(new Map()),
+        ]);
+
+        ((projectsRes as any)?.data || []).forEach((p: any) => {
+          if (p.id) {
+            // `name` is a JSON column: { th: "...", en: "..." } or a plain string
+            const nameObj = p.name;
+            const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
+            const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
+            projectMap.set(p.id, {
+              name_th: nameTh,
+              name_en: nameEn,
+              slug: p.slug || null,
+              latitude: typeof p.latitude === "number" ? p.latitude : p.latitude ? parseFloat(p.latitude) : null,
+              longitude: typeof p.longitude === "number" ? p.longitude : p.longitude ? parseFloat(p.longitude) : null,
+            });
+          }
+        });
 
         const safeParseJson = (val: unknown) => {
           if (typeof val === "string") {
@@ -821,7 +966,8 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             parsedCoords = parseCoordinatesFromUrlSync(row.google_maps_link);
           }
 
-          const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
+          const { structured_data: _, property_features: __, property_images: embeddedPi, images: legacyImages, ...cardBase } = row;
+          const pi = embeddedPi && embeddedPi.length > 0 ? embeddedPi : imagesByPropertyId.get(row.id) || [];
           
           const sortedPi = (pi && pi.length > 0)
             ? [...pi].sort((a: any, b: any) => {
@@ -889,7 +1035,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         return { properties: finalProperties, facets };
       },
-      [`public-properties-v4-${JSON.stringify(options)}`],
+      [`public-properties-v4-${cacheKeyOptions}`],
       {
         revalidate: 31536000, // 1 year long-term cache (tag-invalidated)
         tags: ["properties", "public-data"],
@@ -902,7 +1048,13 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
   return unstable_cache(
     async () => {
       const supabase = createPublicClient();
-      const { data, error } = await supabase.from("properties").select(PUBLIC_DETAIL_COLUMNS).eq("slug", slug).eq("status", "ACTIVE").single();
+      const { data, error } = await supabase
+        .from("properties")
+        .select(PUBLIC_DETAIL_COLUMNS)
+        .eq("slug", slug)
+        .eq("status_int", 1)
+        .is("deleted_at", null)
+        .single();
       if (error || !data) return null;
 
       const typedRow = data as unknown as PropertyRow;
@@ -978,7 +1130,8 @@ export const getAllPropertySlugs = unstable_cache(
     const { data, error } = await supabase
       .from("properties")
       .select("slug, updated_at, title_en, description_en, title_cn, description_cn, title_ru, description_ru, images")
-      .eq("status", "ACTIVE")
+      .eq("status_int", 1)
+      .is("deleted_at", null)
       .not("slug", "is", null);
 
     if (error || !data) return [];

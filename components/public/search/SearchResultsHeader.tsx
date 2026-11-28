@@ -26,9 +26,10 @@ export function SearchResultsHeader({
   isLoading = false,
   viewMode = "grid",
   onViewModeChange,
-  mapHref = "/map",
+  mapHref,
 }: SearchResultsHeaderProps) {
-  const { language } = useLanguage();
+  const { language, langPrefix } = useLanguage();
+  const resolvedMapHref = mapHref ?? `${langPrefix}/map`;
 
   const grandTotal =
     totalAvailableCount && totalAvailableCount > totalFound
@@ -107,7 +108,7 @@ export function SearchResultsHeader({
 
       {/* Full-Screen Explorer Route (/map) carrying all active filters */}
       <Link
-        href={mapHref}
+        href={resolvedMapHref}
         prefetch={false}
         className="h-7 sm:h-8.5 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50/70 transition-all cursor-pointer"
       >

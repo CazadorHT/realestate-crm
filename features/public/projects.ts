@@ -104,7 +104,7 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
       const { data: recentProps } = await supabase
         .from("properties")
         .select("project_id, main_image, price, rental_price, updated_at, created_at, bumped_at:meta_data->>bumped_at, popular_area_en, popular_area_cn, popular_area_ru")
-        .eq("status", "ACTIVE")
+        .eq("status_int", 1)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
@@ -268,7 +268,7 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
           .from("properties")
           .select("main_image")
           .eq("project_id", p.id)
-          .eq("status", "ACTIVE")
+          .eq("status_int", 1)
           .is("deleted_at", null)
           .not("main_image", "is", null)
           .order("created_at", { ascending: false })
@@ -306,7 +306,7 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
           .from("properties")
           .select("price, rental_price", { count: "exact" })
           .eq("project_id", p.id)
-          .eq("status", "ACTIVE")
+          .eq("status_int", 1)
           .is("deleted_at", null);
 
         if (count && count > 0) {
@@ -388,7 +388,7 @@ export async function getPropertiesInProject(
           { count: "exact" }
         )
         .eq("project_id", projectId)
-        .eq("status", "ACTIVE")
+        .eq("status_int", 1)
         .is("deleted_at", null);
 
       if (filters?.listing_type && filters.listing_type !== "ALL") {

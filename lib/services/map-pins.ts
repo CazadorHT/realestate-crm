@@ -76,7 +76,7 @@ const SLIM_MAP_COLUMNS = `
   near_transit, transit_type, transit_station_name,
   transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
   is_fully_furnished, is_pet_friendly, is_foreigner_quota, is_tax_registered,
-  amenities, images
+  amenities
 `;
 
 import {
@@ -84,6 +84,10 @@ import {
   invalidateMapPinsMemoryCache,
   setMapPinsMemoryCache,
 } from "./map-pins-memory";
+import {
+  queryPublicPropertiesView,
+  fetchPropertyImagesBatched,
+} from "@/lib/supabase/public-list-view";
 
 export { invalidateMapPinsMemoryCache };
 
@@ -125,14 +129,15 @@ const fetchCachedMapPinsPayload = unstable_cache(
     try {
       const supabase = createPublicClient();
 
-      // 1. Fetch all active properties using range(0, 4999) to bypass PostgREST's 1,000-row silent truncation
-      const { data: rows, error } = await supabase
-        .from("properties")
-        .select(SLIM_MAP_COLUMNS)
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null)
-        .order("updated_at", { ascending: false, nullsFirst: false })
-        .range(0, 4999);
+      // 1. Fetch all active properties from lightweight view (with automatic fallback to `properties`)
+      const { data: rows, error } = await queryPublicPropertiesView<any[]>((viewName) =>
+        (supabase.from(viewName) as any)
+          .select(SLIM_MAP_COLUMNS)
+          .eq("status_int", 1)
+          .is("deleted_at", null)
+          .order("updated_at", { ascending: false, nullsFirst: false })
+          .range(0, 4999)
+      );
 
       if (error) {
         console.error("[fetchCachedMapPinsPayload] Supabase error:", error.message);
@@ -146,7 +151,7 @@ const fetchCachedMapPinsPayload = unstable_cache(
 
     const rawRows = (rows || []) as any[];
 
-    // 2. Batch-fetch referenced projects once
+    // 2. Batch-fetch referenced projects + cover images in parallel
     const projectIds = Array.from(
       new Set(
         rawRows
@@ -154,6 +159,9 @@ const fetchCachedMapPinsPayload = unstable_cache(
           .filter((id: string | null | undefined): id is string => !!id)
       )
     );
+    const propertyIds = rawRows
+      .map((r) => r.id)
+      .filter((id: string | null | undefined): id is string => !!id);
 
     const projectMap = new Map<
       string,
@@ -169,40 +177,57 @@ const fetchCachedMapPinsPayload = unstable_cache(
       }
     >();
 
-    if (projectIds.length > 0) {
-      const { data: projectsData } = await supabase
-        .from("projects")
-        .select("id, name, slug, latitude, longitude, image_url")
-        .in("id", projectIds);
+    const [projectsRes, coverImagesMap] = await Promise.all([
+      projectIds.length > 0
+        ? supabase
+            .from("projects")
+            .select("id, name, slug, latitude, longitude, image_url")
+            .in("id", projectIds)
+        : Promise.resolve({ data: null }),
+      fetchPropertyImagesBatched(supabase, propertyIds, {
+        coverOnly: true,
+        batchSize: 100,
+      }),
+    ]);
 
-      (projectsData || []).forEach((p: any) => {
-        if (!p?.id) return;
-        const n = p.name;
-        const nameTh =
-          typeof n === "object" && n !== null
-            ? n.th || n.name_th || null
-            : typeof n === "string"
-              ? n
-              : null;
-        const nameEn =
-          typeof n === "object" && n !== null ? n.en || n.name_en || null : null;
-        const nameCn =
-          typeof n === "object" && n !== null ? n.cn || null : null;
-        const nameRu =
-          typeof n === "object" && n !== null ? n.ru || null : null;
-
-        projectMap.set(p.id, {
-          name_th: nameTh,
-          name_en: nameEn,
-          name_cn: nameCn,
-          name_ru: nameRu,
-          slug: p.slug || null,
-          latitude: typeof p.latitude === "number" ? p.latitude : null,
-          longitude: typeof p.longitude === "number" ? p.longitude : null,
-          image_url: p.image_url || null,
-        });
+    // Fallback: for properties without an explicit `is_cover = true` row, fetch their images in safe 25-ID batches
+    const missingCoverIds = propertyIds.filter((id) => !coverImagesMap.has(id));
+    if (missingCoverIds.length > 0) {
+      const fallbackImagesMap = await fetchPropertyImagesBatched(supabase, missingCoverIds, {
+        batchSize: 25,
       });
+      for (const [id, imgs] of fallbackImagesMap.entries()) {
+        if (imgs.length > 0) coverImagesMap.set(id, imgs);
+      }
     }
+
+    ((projectsRes as any)?.data || []).forEach((p: any) => {
+      if (!p?.id) return;
+      const n = p.name;
+      const nameTh =
+        typeof n === "object" && n !== null
+          ? n.th || n.name_th || null
+          : typeof n === "string"
+            ? n
+            : null;
+      const nameEn =
+        typeof n === "object" && n !== null ? n.en || n.name_en || null : null;
+      const nameCn =
+        typeof n === "object" && n !== null ? n.cn || null : null;
+      const nameRu =
+        typeof n === "object" && n !== null ? n.ru || null : null;
+
+      projectMap.set(p.id, {
+        name_th: nameTh,
+        name_en: nameEn,
+        name_cn: nameCn,
+        name_ru: nameRu,
+        slug: p.slug || null,
+        latitude: typeof p.latitude === "number" ? p.latitude : null,
+        longitude: typeof p.longitude === "number" ? p.longitude : null,
+        image_url: p.image_url || null,
+      });
+    });
 
     // 3. Popular area multilingual lookup (shared cached map)
     let areaLookup: Record<string, any> = {};
@@ -259,7 +284,7 @@ const fetchCachedMapPinsPayload = unstable_cache(
         ? getPublicImageUrl(proj.image_url)
         : null;
       const coverUrl = pickSingleCoverImage(
-        row.property_images,
+        coverImagesMap.get(row.id) || row.property_images,
         row.images,
         proj?.image_url || null
       );

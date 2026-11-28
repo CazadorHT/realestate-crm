@@ -153,7 +153,7 @@ function PropertyCardComponent({
   className?: string;
   isHighlighted?: boolean;
 }) {
-  const { t, language } = useLanguage();
+  const { t, language, langPrefix } = useLanguage();
   const [isInCompare, setIsInCompare] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const router = useRouter();
@@ -280,7 +280,7 @@ function PropertyCardComponent({
 
   const handleMouseEnter = () => {
     prefetchTimerRef.current = setTimeout(() => {
-      router.prefetch(`/properties/${property.slug || property.id}`);
+      router.prefetch(`${langPrefix}/properties/${property.slug || property.id}`);
     }, 100);
   };
 

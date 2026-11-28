@@ -3,6 +3,10 @@ import { unstable_cache } from "next/cache";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getPopularAreasLookupMap } from "./popular-areas";
+import {
+  queryPublicPropertiesView,
+  fetchPropertyImagesBatched,
+} from "@/lib/supabase/public-list-view";
 import { getNearbyNeighborhoods } from "@/lib/utils/nearby-areas";
 import { LOCALE_DICTIONARY_FALLBACKS } from "@/lib/utils/locale-utils";
 import type { PublicPropertyNearStation } from "./stations";
@@ -177,12 +181,13 @@ export async function getAreaMarketInsights(areaNameTh: string): Promise<AreaMar
     async () => {
       const supabase = createPublicClient();
 
-      const { data, error } = await supabase
-        .from("properties")
-        .select("price, rental_price, size_sqm, property_type, listing_type")
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null)
-        .eq("popular_area", areaNameTh);
+      const { data, error } = await queryPublicPropertiesView<any[]>((viewName) =>
+        (supabase.from(viewName) as any)
+          .select("price, rental_price, size_sqm, property_type, listing_type")
+          .eq("status_int", 1)
+          .is("deleted_at", null)
+          .eq("popular_area", areaNameTh)
+      );
 
       if (error || !data) {
         console.error("Error fetching properties for market insights:", error?.message);
@@ -270,12 +275,13 @@ export async function getTransitAndProjectsInArea(
       const supabase = createPublicClient();
 
       // Fetch properties matching this popular area name
-      const { data: props, error } = await supabase
-        .from("properties")
-        .select("project_id, transit_station_name, transit_type")
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null)
-        .eq("popular_area", areaNameTh);
+      const { data: props, error } = await queryPublicPropertiesView<any[]>((viewName) =>
+        (supabase.from(viewName) as any)
+          .select("project_id, transit_station_name, transit_type")
+          .eq("status_int", 1)
+          .is("deleted_at", null)
+          .eq("popular_area", areaNameTh)
+      );
 
       if (error || !props) {
         console.error("Error querying relations in area:", error?.message);
@@ -315,7 +321,7 @@ export async function getTransitAndProjectsInArea(
               .from("properties")
               .select("project_id, main_image")
               .in("project_id", missingImageProjIds)
-              .eq("status", "ACTIVE")
+              .eq("status_int", 1)
               .is("deleted_at", null);
 
             if (propImages) {
@@ -554,7 +560,7 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
       const { data: propData } = await supabase
         .from("properties")
         .select("popular_area, main_image")
-        .eq("status", "ACTIVE")
+        .eq("status_int", 1)
         .is("deleted_at", null)
         .not("popular_area", "is", null);
 
@@ -658,30 +664,29 @@ export async function getPropertiesInArea(
       const limit = filters?.limit || 12;
       const offset = filters?.offset || 0;
 
-      let query = supabase
-        .from("properties")
-        .select(
-          `id, slug, title, title_en, title_cn, title_ru, project_id, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`,
-          { count: "exact" }
-        )
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null)
-        .eq("popular_area", areaNameTh);
+      const { data, error, count } = await queryPublicPropertiesView<any[]>((viewName) => {
+        let query = (supabase.from(viewName) as any)
+          .select(
+            `id, slug, title, title_en, title_cn, title_ru, project_id, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`,
+            { count: "exact" }
+          )
+          .eq("status_int", 1)
+          .is("deleted_at", null)
+          .eq("popular_area", areaNameTh);
 
-      if (filters?.listing_type && filters.listing_type !== "ALL") {
-        query = query.eq("listing_type", filters.listing_type);
-      }
-      if (filters?.property_type && filters.property_type !== "ALL") {
-        query = query.eq("property_type", filters.property_type);
-      }
+        if (filters?.listing_type && filters.listing_type !== "ALL") {
+          query = query.eq("listing_type", filters.listing_type);
+        }
+        if (filters?.property_type && filters.property_type !== "ALL") {
+          query = query.eq("property_type", filters.property_type);
+        }
 
-      query = query
-        .order("is_featured", { ascending: false })
-        .order("is_hot_deal", { ascending: false })
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      const { data, error, count } = await query;
+        return query
+          .order("is_featured", { ascending: false })
+          .order("is_hot_deal", { ascending: false })
+          .order("created_at", { ascending: false })
+          .range(offset, offset + limit - 1);
+      });
 
       if (error || !data) {
         console.error("Error fetching properties in area:", error?.message);
@@ -695,22 +700,24 @@ export async function getPropertiesInArea(
             .filter((id: string | null): id is string => !!id),
         ),
       );
+      const propertyIds = (data || []).map((row: any) => row.id).filter(Boolean);
       const projectMap = new Map<string, { name_th: string | null; name_en: string | null; slug: string | null }>();
 
-      if (projectIds.length > 0) {
-        const { data: projectsData } = await supabase
-          .from("projects")
-          .select("id, name, slug")
-          .in("id", projectIds);
-        (projectsData || []).forEach((p: any) => {
-          if (p.id) {
-            const nameObj = p.name;
-            const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
-            const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
-            projectMap.set(p.id, { name_th: nameTh, name_en: nameEn, slug: p.slug || null });
-          }
-        });
-      }
+      const [projectsRes, imagesByPropertyId] = await Promise.all([
+        projectIds.length > 0
+          ? supabase.from("projects").select("id, name, slug").in("id", projectIds)
+          : Promise.resolve({ data: null }),
+        fetchPropertyImagesBatched(supabase, propertyIds),
+      ]);
+
+      ((projectsRes as any)?.data || []).forEach((p: any) => {
+        if (p.id) {
+          const nameObj = p.name;
+          const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
+          const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
+          projectMap.set(p.id, { name_th: nameTh, name_en: nameEn, slug: p.slug || null });
+        }
+      });
 
       let areaSlug: string | null = null;
       try {
@@ -729,9 +736,15 @@ export async function getPropertiesInArea(
           : null;
         const finalProjectName = projectsObj?.name_th || projectsObj?.name_en || null;
         const finalProjectSlug = projectInfo?.slug || null;
+        const propImages = imagesByPropertyId.get(row.id) || [];
+        const resolvedUrls = propImages
+          .map((img) => getPublicImageUrl(img.image_url || img.storage_path || ""))
+          .filter(Boolean);
 
         return {
           ...rest,
+          images: resolvedUrls.length > 0 ? resolvedUrls : row.images || [],
+          main_image: resolvedUrls[0] || getPublicImageUrl(row.main_image) || null,
           project_name: finalProjectName,
           project_slug: finalProjectSlug,
           projects: projectsObj,

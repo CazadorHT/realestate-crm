@@ -3,6 +3,10 @@ import { unstable_cache } from "next/cache";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getPopularAreasLookupMap } from "./popular-areas";
+import {
+  queryPublicPropertiesView,
+  fetchPropertyImagesBatched,
+} from "@/lib/supabase/public-list-view";
 
 // ============================================================
 // Types
@@ -423,37 +427,36 @@ export async function getPropertiesNearStation(
       const jsonTh = `[{"station_name":"${cleanTh}"}]`;
       const jsonEn = `[{"station_name_en":"${cleanEn}"}]`;
 
-      let query = supabase
-        .from("properties")
-        .select(
-          `id, slug, title, title_en, title_cn, title_ru, project_id, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`,
-          { count: "exact" }
-        )
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null)
-        .or(
-          `nearby_transits.cs."${jsonTh.replace(/"/g, '\\"')}",` +
-          `nearby_transits.cs."${jsonEn.replace(/"/g, '\\"')}",` +
-          `transit_station_name.eq."${cleanTh}",` +
-          `transit_station_name_en.eq."${cleanEn}"`
-        );
+      const { data, error, count } = await queryPublicPropertiesView<any[]>((viewName) => {
+        let query = (supabase.from(viewName) as any)
+          .select(
+            `id, slug, title, title_en, title_cn, title_ru, project_id, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months`,
+            { count: "exact" }
+          )
+          .eq("status_int", 1)
+          .is("deleted_at", null)
+          .or(
+            `nearby_transits.cs."${jsonTh.replace(/"/g, '\\"')}",` +
+            `nearby_transits.cs."${jsonEn.replace(/"/g, '\\"')}",` +
+            `transit_station_name.eq."${cleanTh}",` +
+            `transit_station_name_en.eq."${cleanEn}"`
+          );
 
-      // Apply optional filters
-      if (filters?.listing_type && filters.listing_type !== "ALL") {
-        query = query.eq("listing_type", filters.listing_type);
-      }
-      if (filters?.property_type && filters.property_type !== "ALL") {
-        query = query.eq("property_type", filters.property_type);
-      }
+        // Apply optional filters
+        if (filters?.listing_type && filters.listing_type !== "ALL") {
+          query = query.eq("listing_type", filters.listing_type);
+        }
+        if (filters?.property_type && filters.property_type !== "ALL") {
+          query = query.eq("property_type", filters.property_type);
+        }
 
-      // Ordering: featured first, then hot deals, then by price
-      query = query
-        .order("is_featured", { ascending: false })
-        .order("is_hot_deal", { ascending: false })
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      const { data, error, count } = await query;
+        // Ordering: featured first, then hot deals, then by created_at
+        return query
+          .order("is_featured", { ascending: false })
+          .order("is_hot_deal", { ascending: false })
+          .order("created_at", { ascending: false })
+          .range(offset, offset + limit - 1);
+      });
 
       if (error) {
         console.error("Error fetching properties near station:", error.message);
@@ -467,22 +470,24 @@ export async function getPropertiesNearStation(
             .filter((id: string | null): id is string => !!id),
         ),
       );
+      const propertyIds = (data || []).map((row: any) => row.id).filter(Boolean);
       const projectMap = new Map<string, { name_th: string | null; name_en: string | null; slug: string | null }>();
 
-      if (projectIds.length > 0) {
-        const { data: projectsData } = await supabase
-          .from("projects")
-          .select("id, name, slug")
-          .in("id", projectIds);
-        (projectsData || []).forEach((p: any) => {
-          if (p.id) {
-            const nameObj = p.name;
-            const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
-            const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
-            projectMap.set(p.id, { name_th: nameTh, name_en: nameEn, slug: p.slug || null });
-          }
-        });
-      }
+      const [projectsRes, imagesByPropertyId] = await Promise.all([
+        projectIds.length > 0
+          ? supabase.from("projects").select("id, name, slug").in("id", projectIds)
+          : Promise.resolve({ data: null }),
+        fetchPropertyImagesBatched(supabase, propertyIds),
+      ]);
+
+      ((projectsRes as any)?.data || []).forEach((p: any) => {
+        if (p.id) {
+          const nameObj = p.name;
+          const nameTh = typeof nameObj === "object" && nameObj !== null ? (nameObj.th || nameObj.name_th || null) : (typeof nameObj === "string" ? nameObj : null);
+          const nameEn = typeof nameObj === "object" && nameObj !== null ? (nameObj.en || nameObj.name_en || null) : null;
+          projectMap.set(p.id, { name_th: nameTh, name_en: nameEn, slug: p.slug || null });
+        }
+      });
 
       let areaLookup: Record<string, any> = {};
       try {
@@ -501,14 +506,20 @@ export async function getPropertiesNearStation(
         const finalProjectSlug = projectInfo?.slug || null;
 
         const areaRecord = row.popular_area ? areaLookup[row.popular_area.trim().toLowerCase()] : null;
+        const propImages = imagesByPropertyId.get(row.id) || [];
+        const resolvedUrls = propImages
+          .map((img) => getPublicImageUrl(img.image_url || img.storage_path || ""))
+          .filter(Boolean);
+        const mainImg = resolvedUrls[0] || getPublicImageUrl(row.main_image) || null;
 
         return {
           ...rest,
+          images: resolvedUrls.length > 0 ? resolvedUrls : row.images || [],
           project_name: finalProjectName,
           project_slug: finalProjectSlug,
           projects: projectsObj,
           popular_area_slug: areaRecord?.slug || null,
-          main_image: getPublicImageUrl(row.main_image) || null,
+          main_image: mainImg,
           features: (property_features || []).map((pf: any) => pf.features).filter((f: any) => !!f),
         };
       });
@@ -592,17 +603,18 @@ export async function getPropertyCountNearStation(
       const jsonTh = `[{"station_name":"${cleanTh}"}]`;
       const jsonEn = `[{"station_name_en":"${cleanEn}"}]`;
 
-      const { count, error } = await supabase
-        .from("properties")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null)
-        .or(
-          `nearby_transits.cs."${jsonTh.replace(/"/g, '\\"')}",` +
-          `nearby_transits.cs."${jsonEn.replace(/"/g, '\\"')}",` +
-          `transit_station_name.eq."${cleanTh}",` +
-          `transit_station_name_en.eq."${cleanEn}"`
-        );
+      const { count, error } = await queryPublicPropertiesView<any[]>((viewName) =>
+        (supabase.from(viewName) as any)
+          .select("id", { count: "exact", head: true })
+          .eq("status_int", 1)
+          .is("deleted_at", null)
+          .or(
+            `nearby_transits.cs."${jsonTh.replace(/"/g, '\\"')}",` +
+            `nearby_transits.cs."${jsonEn.replace(/"/g, '\\"')}",` +
+            `transit_station_name.eq."${cleanTh}",` +
+            `transit_station_name_en.eq."${cleanEn}"`
+          )
+      );
 
       if (error) {
         console.error("Error counting properties near station:", error.message);

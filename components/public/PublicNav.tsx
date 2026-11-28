@@ -455,7 +455,9 @@ export function PublicNav() {
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 rounded-full shadow-md border border-slate-200/80 backdrop-blur-xs">
                         <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
-                        <span className="text-[11px] font-bold text-slate-700">กำลังโหลด...</span>
+                        <span className="text-[11px] font-bold text-slate-700 whitespace-nowrap">
+                          {t("common.loading")}
+                        </span>
                       </div>
                     </div>
                   )}

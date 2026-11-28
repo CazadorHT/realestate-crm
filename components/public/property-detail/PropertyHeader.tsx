@@ -412,8 +412,8 @@ export function PropertyHeader({
                           prefetch={false}
                           href={
                             property.popular_area_slug
-                              ? `/areas/${property.popular_area_slug}`
-                              : `/properties?popular_area=${encodeURIComponent(
+                              ? `${langPrefix}/areas/${property.popular_area_slug}`
+                              : `${langPrefix}/properties?popular_area=${encodeURIComponent(
                                   typeof property.popular_area === "object"
                                     ? property.popular_area?.th || popularAreaStr
                                     : property.popular_area || popularAreaStr,

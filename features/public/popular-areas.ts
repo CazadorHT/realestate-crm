@@ -196,7 +196,7 @@ export const getPopularAreasAction = unstable_cache(
         const { data: areaProps } = await client
           .from("properties")
           .select("subdistrict, district, province, main_image")
-          .eq("status", "ACTIVE")
+          .eq("status_int", 1)
           .is("deleted_at", null)
           .in("province", targetProvinces);
 
@@ -257,7 +257,7 @@ export const getPopularAreasAction = unstable_cache(
       let propsCoverQuery = client
         .from("properties")
         .select("popular_area, subdistrict, district, main_image")
-        .eq("status", "ACTIVE")
+        .eq("status_int", 1)
         .is("deleted_at", null)
         .not("main_image", "is", null)
         .order("created_at", { ascending: false });
@@ -344,7 +344,7 @@ export const getDynamicSearchSuggestionsAction = unstable_cache(
       const { data: activeProps, error: propErr } = await client
         .from("properties")
         .select("project_id, popular_area, nearby_transits, property_type")
-        .eq("status", "ACTIVE")
+        .eq("status_int", 1)
         .is("deleted_at", null);
 
       if (propErr || !activeProps) {

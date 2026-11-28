@@ -16,6 +16,7 @@ import { type Language } from "@/lib/i18n";
 import {
   useLanguage,
   dictionaries,
+  getLangPrefix,
 } from "@/components/providers/LanguageProvider";
 import { useEffect } from "react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
@@ -79,6 +80,7 @@ export function NearbyPlaces({
 }: NearbyPlacesProps) {
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
+  const langPrefix = getLangPrefix(language);
 
   useEffect(() => {
     try {
@@ -278,10 +280,10 @@ export function NearbyPlaces({
                 const slugPrefix = type.toLowerCase().replace(/_/g, "-");
 
                 const targetHref = transit.slug
-                  ? `/near-station/${transit.slug}`
+                  ? `${langPrefix}/near-station/${transit.slug}`
                   : isValidSlug
-                    ? `/near-station/${slugPrefix}-${cleanName}`
-                    : `/properties?transit_station=${encodeURIComponent(
+                    ? `${langPrefix}/near-station/${slugPrefix}-${cleanName}`
+                    : `${langPrefix}/properties?transit_station=${encodeURIComponent(
                         getLocaleValue(transit, "station_name", language)
                       )}`;
 

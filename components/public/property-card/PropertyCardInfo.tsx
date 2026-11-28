@@ -207,7 +207,7 @@ export function PropertyCardInfo({
                     <Link
                       href={
                         projectSlug
-                          ? `/projects/${projectSlug}`
+                          ? `${langPrefix}/projects/${projectSlug}`
                           : `${langPrefix}/properties/${property.slug || property.id}`
                       }
                       prefetch={false}

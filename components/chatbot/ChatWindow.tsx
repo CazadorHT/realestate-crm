@@ -33,7 +33,7 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
-  const { t } = useLanguage();
+  const { t, langPrefix } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -327,7 +327,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                   {msg.properties.map((prop) => (
                     <a
                       key={prop.id}
-                      href={`/properties/${prop.slug}`}
+                      href={`${langPrefix}/properties/${prop.slug || prop.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="snap-center shrink-0 w-[200px] bg-slate-50 border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"

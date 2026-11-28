@@ -152,7 +152,7 @@ export async function generateMetadata(props: {
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
   
-  const initialData = await getPublicProperties({ limit: 1, ...options, includeFacets: true });
+  const initialData = await getPublicProperties({ limit: 12, ...options, includeFacets: true });
   const hasNoResults = initialData.properties.length === 0;
 
   let title = t("metadata.search_title");
