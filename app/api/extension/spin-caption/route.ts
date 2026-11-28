@@ -26,6 +26,7 @@ interface SpinCaptionRequest {
     publicUrl?: string;
   };
   groupName?: string;
+  groupId?: string;
   angle?: "general" | "expat_en" | "investor" | "pet_friendly";
 }
 
@@ -64,8 +65,10 @@ export async function POST(req: NextRequest) {
       pet_friendly: "เน้นจุดขาย Pet-Friendly / พื้นที่กว้าง / เหมาะกับคนเลี้ยงสัตว์",
     };
 
+    const cleanGroupId = (body.groupId || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40);
+    const srcTag = cleanGroupId ? `fb_grp_${cleanGroupId}` : "fb_grp";
     const trackingUrl = p.publicUrl
-      ? `${p.publicUrl}${p.publicUrl.includes("?") ? "&" : "?"}src=fb_grp`
+      ? `${p.publicUrl}${p.publicUrl.includes("?") ? "&" : "?"}src=${srcTag}`
       : "";
 
     const prompt = `คุณคือนายหน้ามืออาชีพของ VCC Asset

@@ -62,6 +62,9 @@ export async function GET(req: NextRequest) {
         floor_area,
         land_area,
         updated_at,
+        projects (
+          name
+        ),
         properties_details (
           title,
           description,
@@ -101,8 +104,21 @@ export async function GET(req: NextRequest) {
             subdistrict?: string;
             popular_area?: string;
           };
-          meta_data?: { slug?: string };
+          meta_data?: {
+            slug?: string;
+            project_name?: string;
+            project_name_en?: string;
+          };
         };
+
+        const projectRaw = Array.isArray(row.projects) ? row.projects[0] : row.projects;
+        const projectObj = (projectRaw || {}) as { name?: string | { th?: string; en?: string } };
+        const joinedProjectName =
+          typeof projectObj.name === "string"
+            ? projectObj.name
+            : projectObj.name?.en || projectObj.name?.th || "";
+        const projectName =
+          (details.meta_data?.project_name_en || joinedProjectName || details.meta_data?.project_name || "").trim();
 
         const titleTh =
           typeof details.title === "string"
@@ -152,6 +168,7 @@ export async function GET(req: NextRequest) {
           id: String(row.id),
           title: titleTh,
           titleEn,
+          projectName,
           description: stripHtml(descRaw),
           listingType,
           propertyType,
